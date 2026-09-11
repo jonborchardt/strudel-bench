@@ -139,3 +139,17 @@ test('structural axes reject signals', async () => {
   const g = await ready;
   assert.throws(() => onsets(g.drums({ density: g.saw }, ctx)), /structural/);
 });
+
+test('sound, sounds and level are material: defaults equal omission, values reach the events', async () => {
+  const g = await ready;
+  assert.equal(sig(onsets(g.bass({ sound: 'sawtooth', level: 1 }, ctx))), sig(onsets(g.bass({}, ctx))));
+  assert.ok(onsets(g.bass({ sound: 'triangle' }, ctx)).every((h) => h.value.s === 'triangle'));
+  assert.ok(onsets(g.melody({ sound: 'square' }, ctx)).every((h) => h.value.s === 'square'));
+  assert.ok(onsets(g.pad({ sound: 'triangle' }, ctx)).every((h) => h.value.s === 'triangle'));
+  const d = onsets(g.drums({ sounds: { sd: 'rim' } }, ctx));
+  assert.ok(d.some((h) => h.value.s === 'rim') && !d.some((h) => h.value.s === 'sd') && d.some((h) => h.value.s === 'bd'));
+  const base = onsets(g.pad({}, ctx))[0].value.gain, half = onsets(g.pad({ level: .5 }, ctx))[0].value.gain;
+  assert.ok(Math.abs(half - base / 2) < 1e-9, `${half} vs ${base}`);
+  assert.throws(() => g.drums({ sounds: { tom: 'lt' } }, ctx), /sounds/);
+  assert.throws(() => g.bass({ level: 'loud' }, ctx), /level/);
+});

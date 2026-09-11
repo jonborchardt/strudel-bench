@@ -40,3 +40,11 @@ test('a bad numeral names the section', async () => {
   const g = await ready;
   assert.throws(() => g.song({}, [g.section('drop', 1, { progression: 'i V7' })]), /section "drop".*numeral "V7"/);
 });
+
+test('section kit overrides the song kit', async () => {
+  const g = await ready;
+  const m = g.song({ kit: 'RolandTR909' }, [g.section('a', 1, { drums: {} }), g.section('b', 1, { kit: 'LinnLM2', drums: {} })]).strudle;
+  const bank = (i) => m.sections[i].layers.drums.pattern.queryArc(0, 1)[0].value.bank;
+  assert.equal(bank(0), 'RolandTR909');
+  assert.equal(bank(1), 'LinnLM2');
+});
