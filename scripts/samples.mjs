@@ -30,7 +30,10 @@ export function fileList(json) {
   return out;
 }
 
-const encodePath = (rel) => rel.split('/').map(encodeURIComponent).join('/');
+// some packs (vcsl) ship paths already percent-encoded, others (tidal-drum-machines) have literal spaces
+const safeDecode = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
+const decodePath = (rel) => rel.split('/').map(safeDecode).join('/');
+const encodePath = (rel) => rel.split('/').map((seg) => encodeURIComponent(safeDecode(seg))).join('/');
 
 async function download(url, dest) {
   if (fs.existsSync(dest) && fs.statSync(dest).size > 0) return 'skipped';
@@ -60,7 +63,7 @@ async function fetchPack(name) {
   let downloaded = 0, skipped = 0;
   await pool(files, async (rel) => {
     try {
-      const r = await download(remoteBase + encodePath(rel), path.join(dir, rel));
+      const r = await download(remoteBase + encodePath(rel), path.join(dir, decodePath(rel)));
       r === 'skipped' ? skipped++ : downloaded++;
     } catch (e) { failed.push(e.message); }
   });
