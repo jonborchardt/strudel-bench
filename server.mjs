@@ -40,7 +40,7 @@ const readBody = (req) => new Promise((r) => { let s = ''; req.on('data', (d) =>
 
 function serveStatic(res, urlPath) {
   const file = path.resolve(ROOT, '.' + decodeURIComponent(urlPath));
-  const allowed = [path.join(ROOT, 'node_modules'), path.join(ROOT, 'samples')];
+  const allowed = [path.join(ROOT, 'node_modules'), path.join(ROOT, 'samples'), path.join(ROOT, 'lib')];
   if (!allowed.some((d) => file.startsWith(d + path.sep)) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
     return send(res, 404, 'not found');
   }
@@ -86,7 +86,7 @@ export function createServer() {
     }
 
     if (p === '/samples/user/strudel.json') return json(res, userMap());
-    if (p.startsWith('/node_modules/') || p.startsWith('/samples/')) return serveStatic(res, p);
+    if (p.startsWith('/node_modules/') || p.startsWith('/samples/') || p.startsWith('/lib/')) return serveStatic(res, p);
     send(res, 404, 'not found');
   });
 

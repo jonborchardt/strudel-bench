@@ -34,6 +34,7 @@
         strudel.samples('/samples/user/strudel.json'),
       ]);
       if (packs.includes('tidal-drum-machines')) strudel.aliasBank('/samples/packs/tidal-drum-machines-alias.json');
+      await import('/lib/index.mjs');
       $('status').textContent = `packs: ${packs.join(', ') || 'none (run npm run samples)'}`;
     },
   });

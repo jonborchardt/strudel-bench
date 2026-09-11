@@ -21,6 +21,7 @@ const ensureScope = () => (scopeReady ??= (async () => {
   await evalScope(import('@strudel/core'), import('@strudel/mini'), import('@strudel/tonal'),
     { setcps: () => {}, setcpm: () => {}, setCps: () => {}, setCpm: () => {}, samples: async () => {}, hush: () => {} });
   miniAllStrings();
+  await import('../lib/index.mjs');
 })());
 
 function knownSounds() {
