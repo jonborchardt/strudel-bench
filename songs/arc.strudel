@@ -25,7 +25,7 @@ song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909' }, [
     pad:    { space: .5, brightness: .9, width: .8, drive: .65, articulation: .6 },
   }),
   section('outro', 8, { role: 'release',
-    drums:  { density: .6, drive: .9, groove: .8, brightness: .7, articulation: .7, variation: .7 },
+    drums:  { density: .6, drive: .4, groove: .8, brightness: .05, articulation: .35, variation: .8, space: 1, width: .7, aggression: .15 },
     bass:   { weight: .6, register: .6, brightness: 1, drive: .8, articulation: .7, variation: .7, groove: .7 },
     melody: { density: .5, width: .7, brightness: 1, articulation: .7, variation: .7, groove: .7, register: .6 },
     pad:    { space: .7, brightness: 1, width: .8, drive: .8, articulation: .7, register: .6 },
