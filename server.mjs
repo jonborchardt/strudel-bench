@@ -60,6 +60,7 @@ export function createServer() {
     const p = new URL(req.url, 'http://x').pathname;
 
     if (p === '/') return send(res, 200, fs.readFileSync(path.join(ROOT, 'index.html')), 'text/html');
+    if (p === '/favicon.ico') return send(res, 204, '');
 
     if (p === '/songs') {
       return json(res, fs.readdirSync(SONGS).filter((f) => SONG_NAME.test(f)).sort());
