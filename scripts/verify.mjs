@@ -67,7 +67,7 @@ const verdicts = Object.keys(plan.parsed.deltas).map((a) => {
   // this layer (skipped), or a signal that refused rewriting. Either way there is nothing to measure.
   const skippedEntry = plan.report.find((r) => r.axis === a && r.skipped);
   if (skippedEntry) return `${a} not applicable to ${layerSel} (${skippedEntry.skipped})`;
-  const refusedEntry = plan.refused.find((r) => r.axis === a);
+  const refusedEntry = plan.refused.find((r) => r.axis === a || r.axis === '-'); // '-': the whole layer was refused (spread)
   if (refusedEntry) return `${a} refused (${refusedEntry.reason})`;
   const applied = plan.report.find((r) => r.axis === a && !r.skipped);
   if (!applied) return `${a} unchanged (already at the bound)`;

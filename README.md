@@ -141,9 +141,11 @@ Material is a literal value on a layer or a section, never an axis (rule 4). Omi
 | song | `bpm` | number | instead of `cps`: beats per minute on the meter's denominator |
 | section | `bpm` or `cps` | number | that section plays at its own tempo |
 
+A key that is neither an axis nor that layer's material throws, naming both lists: a typo (`arpp: 'up'`) is a build error, not a silent no-op.
+
 `ramp(a, b)` is an axis value that sweeps over exactly the section: `brightness: ramp(.3, .8)`.
 
-Sections are JavaScript, so reuse them with spread: `const verse = { drums: {...}, bass: {...} }; section('verse2', 8, { ...verse, drums: { ...verse.drums, variation: .5 } })`.
+Sections are JavaScript, so reuse them with spread: `const verse = { drums: {...}, bass: {...} }; section('verse2', 8, { ...verse, drums: { ...verse.drums, variation: .5 } })`. The resolver reads literal values only, so it refuses a layer built with spread (it cannot see the baseline it would be editing) — set those axes by hand.
 
 Progressions accept `b`/`#` before a numeral, `m`/`M`/`dim` and `7` after it, and `[..]` to put chords in one bar: `'i bVI [III VII] V7'`. Case never changes a diatonic chord's quality; write `IVm` for a borrowed iv.
 
