@@ -32,3 +32,11 @@ test('num() rejects signals on structural axes', async () => {
   const g = await ready;
   assert.throws(() => g.strudleLib.num(g.saw, 'density'), /density is structural/);
 });
+
+test('every proxy axis with a metric names a key analyze() returns', async () => {
+  const { AXES } = await import('../lib/axes.mjs');
+  const { analyze, synth } = await import('../scripts/analyze.mjs');
+  const keys = Object.keys(analyze({ rate: 44100, channels: 1, frames: [synth.tone(44100, 440, 1)] }, { cps: 0.5 }));
+  for (const a of AXES) if (a.verify.metric) assert.ok(keys.includes(a.verify.metric), `${a.name}: ${a.verify.metric}`);
+  for (const n of ['groove', 'organicness', 'variation', 'aggression']) assert.ok(AXES.find((a) => a.name === n).verify.metric, n);
+});

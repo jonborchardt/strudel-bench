@@ -60,7 +60,7 @@ function fft(re, im) { // in-place radix-2
   }
 }
 
-export function analyze({ rate, channels, frames }, { cps = 0.5 } = {}) {
+export function analyze({ rate, channels, frames }, { cps = 0.5, steps = 16 } = {}) {
   const n = frames[0].length;
   if (n === 0) throw new Error('empty audio: no samples');
   const mono = new Float32Array(n);
@@ -73,7 +73,7 @@ export function analyze({ rate, channels, frames }, { cps = 0.5 } = {}) {
   // spectral metrics over active frames
   const win = Float32Array.from({ length: FRAME }, (_, i) => 0.5 - 0.5 * Math.cos(2 * Math.PI * i / FRAME));
   const gate = peak * Math.pow(10, -ACTIVE_FRAME_DB / 20);
-  let cSum = 0, cW = 0, hi = 0, lo = 0, tot = 0, active = 0;
+  let cSum = 0, cW = 0, hi = 0, lo = 0, tot = 0, active = 0, flatSum = 0;
   const binHz = rate / FRAME;
   for (let start = 0; peak > 0 && start + FRAME <= n; start += HOP) {
     let fr = 0; for (let i = 0; i < FRAME; i++) fr += mono[start + i] ** 2; fr = Math.sqrt(fr / FRAME);
@@ -88,8 +88,12 @@ export function analyze({ rate, channels, frames }, { cps = 0.5 } = {}) {
       if (f >= 4000) hi += mag;
       if (f < 150) lo += mag;
     }
+    let logSum = 0, linSum = 0;
+    for (let k = 1; k < FRAME / 2; k++) { const m = Math.sqrt(re[k] * re[k] + im[k] * im[k]) + 1e-12; logSum += Math.log(m); linSum += m; }
+    flatSum += Math.exp(logSum / (FRAME / 2 - 1)) / (linSum / (FRAME / 2 - 1));
   }
   const centroidHz = cW ? cSum / cW : 0;
+  const flatness = active ? flatSum / active : 0;
 
   // width: side/mid energy
   let mid = 0, side = 0;
@@ -104,7 +108,8 @@ export function analyze({ rate, channels, frames }, { cps = 0.5 } = {}) {
   const thr = Math.max(...flux) * 0.25;
   let onsets = 0;
   let lastOnset = -10;
-  for (let i = 1; i < flux.length - 1; i++) if (flux[i] > thr && flux[i] >= flux[i - 1] && flux[i] > flux[i + 1] && (onsets === 0 || i - lastOnset > 3)) { onsets++; lastOnset = i; }
+  const onsetTimes = [];
+  for (let i = 1; i < flux.length - 1; i++) if (flux[i] > thr && flux[i] >= flux[i - 1] && flux[i] > flux[i + 1] && (onsets === 0 || i - lastOnset > 3)) { onsets++; lastOnset = i; onsetTimes.push(i * hop / rate); }
   const onsetsPerSec = onsets / (n / rate);
 
   // tail: energy in the last 10% of each cycle window vs the first 10%
@@ -113,8 +118,32 @@ export function analyze({ rate, channels, frames }, { cps = 0.5 } = {}) {
   for (let c = 0; c + cyc <= n; c += cyc) { let h = 0, t = 0; for (let k = 0; k < tenth; k++) { h += mono[c + k] ** 2; t += mono[c + cyc - tenth + k] ** 2; } head += h; tail += t; cycles++; }
   const tailRatio = cycles ? tail / ((head + tail) || 1e-9) : 0;
 
+  // swing: mean lateness of onsets nearest an off-beat eighth, in eighths. jitter: std dev (ms) of distance to the nearest sixteenth.
+  const sixteenth = 1 / cps / steps, eighth = 2 * sixteenth;
+  const late = [], dev = [];
+  for (const t of onsetTimes) {
+    const k = Math.round(t / eighth);
+    if (k % 2 === 1) late.push(t / eighth - k);
+    dev.push((t - Math.round(t / sixteenth) * sixteenth) * 1000);
+  }
+  const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
+  const swing = Math.max(0, mean(late));
+  const jitter = Math.sqrt(mean(dev.map((d) => (d - mean(dev)) ** 2)));
+
+  // novelty: 1 - mean correlation between consecutive cycles' 10 ms energy envelopes
+  const per = Math.round(cyc / hop);
+  const corrs = [];
+  for (let c = 0; (c + 2) * per <= env.length; c++) {
+    const a = env.slice(c * per, (c + 1) * per), b = env.slice((c + 1) * per, (c + 2) * per);
+    const ma = mean(a), mb = mean(b);
+    let num = 0, da = 0, db = 0;
+    for (let i = 0; i < per; i++) { num += (a[i] - ma) * (b[i] - mb); da += (a[i] - ma) ** 2; db += (b[i] - mb) ** 2; }
+    corrs.push(da && db ? num / Math.sqrt(da * db) : 1);
+  }
+  const novelty = corrs.length ? 1 - mean(corrs) : 0;
+
   const r = (x, d = 3) => +x.toFixed(d);
-  return { rms: r(rms, 4), peak: r(peak, 3), crest: r(crest, 2), onsetsPerSec: r(onsetsPerSec, 2), centroidHz: Math.round(centroidHz), highRatio: r(tot ? hi / tot : 0), lowRatio: r(tot ? lo / tot : 0), width: r(width), tail: r(tailRatio), activeFrames: active };
+  return { rms: r(rms, 4), peak: r(peak, 3), crest: r(crest, 2), onsetsPerSec: r(onsetsPerSec, 2), centroidHz: Math.round(centroidHz), highRatio: r(tot ? hi / tot : 0), lowRatio: r(tot ? lo / tot : 0), width: r(width), tail: r(tailRatio), activeFrames: active, swing: r(swing), jitter: r(jitter, 1), novelty: r(novelty), flatness: r(flatness, 4) };
 }
 
 export const synth = { tone: (rate, hz, secs, amp = .5) => Float32Array.from({ length: rate * secs }, (_, i) => amp * Math.sin(2 * Math.PI * hz * i / rate)) };
