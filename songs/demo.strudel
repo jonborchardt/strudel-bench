@@ -11,7 +11,7 @@ song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909' }, [
     melody: { density: .5, brightness: saw.range(.3, .7).slow(8) },
     pad:    { space: .6 },
   }),
-  section('drop', 8, { role: 'climax',
+  section('drop', 8, { role: 'climax', progression: 'i VI III VII',
     drums:  { density: .9, drive: .8, articulation: .7 },
     bass:   { weight: .9, aggression: .6, density: .75 },
     melody: { density: .7, width: .8, brightness: .7 },

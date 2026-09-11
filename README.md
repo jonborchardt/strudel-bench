@@ -44,6 +44,8 @@ Songs can be written as sections × layers × axis values (see `songs/demo.strud
     npm run resolve -- songs/demo.strudel drop drums "punchier"          # what would change
     npm run resolve -- songs/demo.strudel drop drums "punchier" --write  # do it
     npm run render -- songs/demo.strudel --section drop                  # renders/demo.drop.wav (page must be open, stopped)
+    npm run render -- songs/demo.strudel --mp3                           # same, then renders/demo.mp3 (or the page's "export mp3" button)
+    npm run mp3 -- renders/demo.wav                                      # convert an existing render
     node scripts/analyze.mjs renders/a.wav renders/b.wav                 # metrics and deltas
     npm run verify -- songs/demo.strudel drop drums "punchier"           # the whole chain with a report
     npm run vocab                                                         # regenerate the skill's vocabulary reference
@@ -82,6 +84,18 @@ Kind, meaning and verification class are the ones declared in `lib/axes.mjs` (`A
 | register | structural | low to high | code |
 
 Phase order (`PHASES`): structural → timing → pitch → articulation → spectral → spatial → level.
+
+### Harmony
+
+Rule 4 stands: harmony is material on the section, not an axis. Two reserved section keys next to `role`:
+
+    section('drop', 8, { role: 'climax', key: 'Eb:major', progression: 'I V vi IV', drums: {...}, bass: {...} })
+
+- `key` overrides the song key for that section (any Strudel scale name, so `C:harmonic minor` gives a real V in minor).
+- `progression` is roman numerals `I..VII`, any case, one chord per cycle, looping. Degrees are diatonic to the section key; `npm run check` prints the chords you actually got (`I` in C minor prints `Cm`). Default is `i VI`.
+- Pad voices the chord, bass transposes its line by the chord root, melody stays in key.
+- Resolve phrases accept harmony words as states: progressions (`resolved`, `tense`, `pop`, `epic`, `circular`, `static`, `unresolved`), modes (`major`, `minor`, `dorian`, `lydian`, `mixolydian`, `phrygian`) and `relative`. `npm run resolve -- songs/x.strudel drop '*' "relative major, pop"` writes both fields.
+- Not modeled: accidentals, sevenths, borrowed chords, sub-cycle chord changes.
 
 The full design spec and plan live in `docs/superpowers/`, which is not versioned in this repo; the skill in
 `.claude/skills/strudle/` likewise.

@@ -10,6 +10,7 @@ import { AXIS_NAMES, cells, describeCell } from '../lib/axes.mjs';
 import '../lib/layers.mjs';
 import { parsePhrase, applyDeltas } from '../lib/vocab.mjs';
 import { parseProgression, applyHarmonyWords, describeHarmony, DEFAULT_PROGRESSION } from '../lib/harmony.mjs';
+import { ensureScope } from './check.mjs';
 
 const isNumLit = (n) => (n.type === 'Literal' && typeof n.value === 'number') || (n.type === 'UnaryExpression' && n.operator === '-' && n.argument.type === 'Literal');
 const numOf = (n) => (n.type === 'Literal' ? n.value : -n.argument.value);
@@ -140,6 +141,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const write = args.includes('--write');
   const [file, sectionSel = '*', layerSel = '*', phrase] = args.filter((a) => a !== '--write');
   if (!file || !phrase) { console.error('usage: node scripts/resolve.mjs songs/x.strudel <section|*> <layer|*> "phrase" [--write]'); process.exit(2); }
+  await ensureScope(); // describeHarmony's chordName() needs Strudel's scale() live, same as check.mjs.
   const src = fs.readFileSync(file, 'utf8');
   let plan;
   try { plan = planEdits(src, sectionSel, layerSel, phrase); } catch (e) { console.error(e.message); process.exit(2); }
