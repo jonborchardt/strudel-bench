@@ -12,16 +12,39 @@ if (!phrase) { console.error('usage: node scripts/verify.mjs songs/x.strudel <se
 if (sectionSel === '*' || layerSel === '*') { console.error('verify needs a concrete <section> and <layer> (not "*"): render targets a single song build'); process.exit(2); }
 const run = (args) => execFileSync(process.execPath, args, { encoding: 'utf8' }).trim();
 const render = (name) => run(['scripts/render.mjs', file, '--section', sectionSel, '--layer', layerSel, '--name', name]);
+const restore = (f, text) => fs.writeFileSync(f, text);
+// execFileSync errors carry stdout/stderr as separate strings (we pass encoding: 'utf8'); join what's present.
+const combineOutput = (e) => [e.stdout, e.stderr].map((s) => s?.trim()).filter(Boolean).join('\n') || e.message;
+const port = process.env.PORT || 3000;
 
 const before = fs.readFileSync(file, 'utf8');
 const plan = planEdits(before, sectionSel, layerSel, phrase);
-const wavA = render(`verify.before`);
+if (plan.report.length === 0 && plan.refused.length === 0) {
+  console.error(`no matching section/layer for ${sectionSel}/${layerSel}`);
+  process.exit(2);
+}
+
+let wavA;
+try { wavA = render('verify.before'); }
+catch (e) { console.error(`render failed: ${combineOutput(e)}. Is the page open at http://localhost:${port} and stopped?`); process.exit(1); }
+
+// nothing has been written to the song yet, so a failure up to here needs no restore.
 fs.writeFileSync(file, applyEdits(before, plan.edits));
 try { run(['scripts/check.mjs', file]); }
-catch (e) { fs.writeFileSync(file, before); console.error('check failed after edit; file restored\n' + ((e.stdout || '') + (e.stderr || '') || e.message)); process.exit(1); }
-const wavB = render(`verify.after`);
-const cps = Number(/cps:\s*([\d.]+)/.exec(before)?.[1] ?? 0.5);
-const A = analyze(readWav(fs.readFileSync(wavA)), { cps }), B = analyze(readWav(fs.readFileSync(wavB)), { cps });
+catch (e) { restore(file, before); console.error('check failed after edit; file restored\n' + combineOutput(e)); process.exit(1); }
+
+// from here on the file holds the edit: any failure (render, or reading/analyzing either wav) must restore it.
+let wavB, A, B;
+try {
+  wavB = render('verify.after');
+  const cps = Number(/cps:\s*([\d.]+)/.exec(before)?.[1] ?? 0.5);
+  A = analyze(readWav(fs.readFileSync(wavA)), { cps });
+  B = analyze(readWav(fs.readFileSync(wavB)), { cps });
+} catch (e) {
+  restore(file, before);
+  console.error('render/analyze failed after edit; file restored\n' + combineOutput(e));
+  process.exit(1);
+}
 
 const sign = (x) => (x >= 0 ? '+' : '') + x.toFixed(2);
 console.log('Requested:  ' + Object.entries(plan.parsed.deltas).map(([a, d]) => `${a} ${sign(d)}`).join(', '));
@@ -37,7 +60,9 @@ const verdicts = Object.keys(plan.parsed.deltas).map((a) => {
   const refusedEntry = plan.refused.find((r) => r.axis === a);
   if (refusedEntry) return `${a} refused (${refusedEntry.reason})`;
   const applied = plan.report.find((r) => r.axis === a && !r.skipped);
-  if (!applied || applied.appliedDelta === 0) return `${a} unchanged (already at the bound)`;
+  if (!applied) return `${a} unchanged (already at the bound)`;
+  if (applied.requestedDelta === 0) return `${a} unchanged (net delta 0)`;
+  if (applied.appliedDelta === 0) return `${a} unchanged (already at the bound)`;
   if (!ax.verify.metric) return `${a} ${ax.verify.class === 'code' ? 'verified (code)' : 'not measured in v1'}`;
   const m = ax.verify.metric, moved = (B[m] - A[m]) * Math.sign(d) * ax.verify.sign;
   const rel = Math.abs(B[m] - A[m]) / (Math.abs(A[m]) || 1);
