@@ -37,7 +37,10 @@ const send = (res, status, body, type = 'text/plain') => {
   res.end(body);
 };
 const json = (res, obj) => send(res, 200, JSON.stringify(obj), 'application/json');
-const readBody = (req) => new Promise((r) => { let s = ''; req.on('data', (d) => (s += d)).on('end', () => r(s)); });
+const readBody = (req) => new Promise((resolve, reject) => {
+  let s = '';
+  req.on('data', (d) => (s += d)).on('end', () => resolve(s)).on('error', reject);
+});
 
 function serveStatic(res, urlPath) {
   const file = path.resolve(ROOT, '.' + decodeURIComponent(urlPath));
@@ -59,6 +62,11 @@ export function createServer() {
   });
 
   const server = http.createServer(async (req, res) => {
+    try { await handle(req, res); }
+    catch (e) { console.error(`${req.method} ${req.url}:`, e); if (!res.headersSent) send(res, 500, 'internal error'); else res.end(); }
+  });
+
+  async function handle(req, res) {
     const p = new URL(req.url, 'http://x').pathname;
 
     if (p === '/') return send(res, 200, fs.readFileSync(path.join(ROOT, 'index.html')), 'text/html');
@@ -130,7 +138,7 @@ export function createServer() {
     if (p === '/samples/user/strudel.json') return json(res, userMap());
     if (p.startsWith('/node_modules/') || p.startsWith('/samples/') || p.startsWith('/lib/')) return serveStatic(res, p);
     send(res, 404, 'not found');
-  });
+  }
 
   server.on('close', () => watcher.close());
   return server;

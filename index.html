@@ -107,6 +107,8 @@
       const code = await (await fetch(`/songs/${song}`)).text();
       let pat = await strudel.evaluate(code, false);
       let begin = 0, end = cycles ?? (pat.strudle ? pat.strudle.total : 8);
+      // read cps off the song pattern before a layer selector replaces it with a sub-pattern that has no .strudle
+      const cps = pat.strudle?.meta.cps ?? 0.5;
       if (section || layer) {
         if (layer && !section) return fail('layer requires --section');
         const s = pat.strudle?.sections.find((x) => x.name === section);
@@ -117,7 +119,6 @@
           pat = src.pattern; begin = 0; end = cycles ?? s.cycles;
         } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles); }
       }
-      const cps = pat.strudle?.meta.cps ?? 0.5;
       let blob = null;
       const origCreate = URL.createObjectURL, origClick = HTMLAnchorElement.prototype.click;
       URL.createObjectURL = (b) => { blob = b; return 'blob:captured'; };
@@ -127,7 +128,12 @@
       if (!blob) return fail('renderer produced no file');
       await fetch(`/renders/${name}.wav`, { method: 'PUT', body: blob });
       $('status').textContent = `rendered ${name}.wav (${(end - begin)} cycles)`;
-    } catch (e) { fail(e.message); }
+    } catch (e) {
+      fail(e.message);
+      // the render stubs/audio context may be half-torn-down: say so instead of looking idle
+      $('status').textContent = `render failed: ${e.message}. Reload the page before playing.`;
+      $('err').textContent = e.message;
+    }
   }
 
   loadList();

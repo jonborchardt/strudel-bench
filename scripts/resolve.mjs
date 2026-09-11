@@ -109,6 +109,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const src = fs.readFileSync(file, 'utf8');
   let plan;
   try { plan = planEdits(src, sectionSel, layerSel, phrase); } catch (e) { console.error(e.message); process.exit(2); }
+  if (plan.report.length === 0 && plan.refused.length === 0) {
+    console.error(`no matching section/layer for ${sectionSel}/${layerSel}`);
+    process.exit(2);
+  }
   printReport(plan);
   if (write && plan.edits.length) { fs.writeFileSync(file, applyEdits(src, plan.edits)); console.log(`wrote ${file}`); }
   else if (write) console.log('nothing to write');

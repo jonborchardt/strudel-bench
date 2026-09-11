@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import '../scripts/esm-fix.mjs';
 import { AXES } from '../lib/axes.mjs';
 import { planEdits, applyEdits } from './resolve.mjs';
+import { checkFile } from './check.mjs';
 import { analyze, readWav } from './analyze.mjs';
 
 const [file, sectionSel, layerSel, phrase] = process.argv.slice(2);
@@ -28,10 +29,16 @@ let wavA;
 try { wavA = render('verify.before'); }
 catch (e) { console.error(`render failed: ${combineOutput(e)}. Is the page open at http://localhost:${port} and stopped?`); process.exit(1); }
 
+// code-class axes (drive, register) have no audio metric, so their evidence comes from check: the same
+// onsetsPerCycle for the selected section/layer, read off the file before and after the edit.
+const onsetsPerCycle = (r) => r.sections?.find((s) => s.name === sectionSel)?.layers?.[layerSel]?.onsetsPerCycle;
+const onsetsA = onsetsPerCycle(await checkFile(file)); // file still holds `before`
+
 // nothing has been written to the song yet, so a failure up to here needs no restore.
 fs.writeFileSync(file, applyEdits(before, plan.edits));
-try { run(['scripts/check.mjs', file]); }
-catch (e) { restore(file, before); console.error('check failed after edit; file restored\n' + combineOutput(e)); process.exit(1); }
+const checked = await checkFile(file);
+if (!checked.ok) { restore(file, before); console.error('check failed after edit; file restored\n' + checked.problems.join('\n')); process.exit(1); }
+const onsetsB = onsetsPerCycle(checked);
 
 // from here on the file holds the edit: any failure (render, or reading/analyzing either wav) must restore it.
 let wavB, A, B;
@@ -63,7 +70,14 @@ const verdicts = Object.keys(plan.parsed.deltas).map((a) => {
   if (!applied) return `${a} unchanged (already at the bound)`;
   if (applied.requestedDelta === 0) return `${a} unchanged (net delta 0)`;
   if (applied.appliedDelta === 0) return `${a} unchanged (already at the bound)`;
-  if (!ax.verify.metric) return `${a} ${ax.verify.class === 'code' ? 'verified (code)' : 'not measured in v1'}`;
+  if (a === 'drive') {
+    if (onsetsA === undefined || onsetsB === undefined) return 'drive not code-checked: no onset count for this section/layer';
+    return onsetsA === onsetsB
+      ? `drive code-checked: onset count unchanged (${onsetsA}/cyc), positions not measured`
+      : `drive NOT verified: onset count changed ${onsetsA} -> ${onsetsB}`;
+  }
+  if (a === 'register') return 'register code-checked: applied (pitch not measured in v1)';
+  if (!ax.verify.metric) return `${a} not measured in v1`;
   const m = ax.verify.metric, moved = (B[m] - A[m]) * Math.sign(d) * ax.verify.sign;
   const rel = Math.abs(B[m] - A[m]) / (Math.abs(A[m]) || 1);
   return `${a} ${moved > 0 && rel > 0.02 ? 'verified' : 'NOT verified'} (${m} ${A[m]} → ${B[m]})`;

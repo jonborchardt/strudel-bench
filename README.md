@@ -50,3 +50,38 @@ Songs can be written as sections × layers × axis values (see `songs/demo.strud
 
 The `strudle` skill (`.claude/skills/strudle/SKILL.md`, not versioned — `.claude/` is gitignored in this repo)
 encodes the baseline → resolve → check → render/verify → report workflow for an agent editing songs by ear.
+
+### Rules
+
+1. A primitive axis exists only if it has a deterministic, layer-aware implementation; everything else is a descriptor or an overlay.
+2. Axes are semantic, adapters are mechanical — an empty cell honestly says "no implementation on this layer".
+3. Descriptors are deltas, not states: *dreamier* applies relative to the current values.
+4. Harmony is a separate subsystem, not an axis.
+5. No new trajectory concept: an axis value is a constant in 0..1 or a Strudel signal.
+6. Adapter(0.5) is a no-op — literally the material's baseline, verified by test; a direction with no honest implementation is a documented no-op, not a guess.
+7. Adapters run in fixed phases, because transformations do not commute.
+8. The resolver edits declarative state, never hand-authored Strudel expressions.
+
+### The twelve axes
+
+Kind, meaning and verification class are the ones declared in `lib/axes.mjs` (`AXES`).
+
+| Axis | Kind | Meaning | Verification |
+|---|---|---|---|
+| density | structural | amount of musical activity | direct: onsetsPerSec |
+| drive | structural | rhythmic insistence toward the primary pulse: where onsets fall and which are accented, not how many | code |
+| brightness | continuous | spectral character, dark to bright | direct: centroidHz |
+| weight | continuous | perceived low end and body | direct: lowRatio |
+| space | continuous | dry and close to spacious | proxy: tail |
+| articulation | continuous | sustained and smooth to short and punchy | proxy: crest |
+| aggression | continuous | smooth to abrasive | proxy |
+| groove | continuous | rigid to swung | proxy |
+| variation | structural | repetitive to variable (0 = pure loop) | proxy |
+| organicness | continuous | mechanical to humanized | proxy |
+| width | continuous | narrow to wide | direct: width |
+| register | structural | low to high | code |
+
+Phase order (`PHASES`): structural → timing → pitch → articulation → spectral → spatial → level.
+
+The full design spec and plan live in `docs/superpowers/`, which is not versioned in this repo; the skill in
+`.claude/skills/strudle/` likewise.

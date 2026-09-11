@@ -23,10 +23,12 @@ test('adapter at exactly 0.5 equals no adapter, for every cell', async () => {
   }
 });
 
-test('every cell is queryable at 0 and 1', async () => {
+test('every cell moves something at 0 or at 1', async () => {
   const g = await ready;
   for (const L of LAYERS) for (const a of Object.keys(g.strudleLib.cells[L] ?? {})) {
-    for (const v of [0, 1]) assert.ok(onsets(g[L]({ [a]: v }, ctx)).length >= 0, `${L}.${a}@${v}`);
+    const mid = sig(onsets(g[L]({ [a]: .5 }, ctx)));
+    const lo = sig(onsets(g[L]({ [a]: 0 }, ctx))), hi = sig(onsets(g[L]({ [a]: 1 }, ctx)));
+    assert.ok(lo !== mid || hi !== mid, `${L}.${a} changes nothing at either end`);
   }
 });
 
@@ -45,6 +47,26 @@ test('drive never changes onset count', async () => {
     if (!g.strudleLib.cells[L]?.drive) continue;
     const n = [0, .25, .5, .75, 1].map((v) => onsets(g[L]({ drive: v }, ctx)).length);
     assert.ok(n.every((x) => x === n[0]), `${L} drive counts ${n}`);
+  }
+});
+
+test('groove never changes onset count', async () => {
+  const g = await ready;
+  for (const L of LAYERS) {
+    if (!g.strudleLib.cells[L]?.groove) continue;
+    const n = [0, .25, .5, .75, 1].map((v) => onsets(g[L]({ groove: v }, ctx)).length);
+    assert.ok(n.every((x) => x === n[0]), `${L} groove counts ${n}`);
+  }
+});
+
+// density 1 so every layer has material finer than a swing slice: quarter notes sit on slice starts and
+// have nothing to swing, which is why the bass default (4/cycle) would not move here.
+test('groove 1 displaces onsets relative to groove .5', async () => {
+  const g = await ready;
+  const at = (L, v) => onsets(g[L]({ density: 1, groove: v }, ctx)).map((h) => h.whole.begin.valueOf()).sort((a, b) => a - b);
+  for (const L of LAYERS) {
+    if (!g.strudleLib.cells[L]?.groove) continue;
+    assert.notDeepEqual(at(L, 1), at(L, .5), `${L} groove 1 must move at least one onset`);
   }
 });
 
