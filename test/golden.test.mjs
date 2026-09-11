@@ -15,13 +15,14 @@ const songs = fs.readdirSync(path.join(ROOT, 'songs')).filter((f) => f.endsWith(
 const r3 = (x) => (typeof x === 'number' ? x.toFixed(3) : String(x ?? ''));
 
 async function fingerprint(file) {
-  const { events, problems } = await checkFile(file);
+  const { events, problems, cps, cycles } = await checkFile(file);
   assert.deepEqual(problems, [], file);
-  const lines = events.map((e) => {
+  // tempo and length are part of the song even though they move no event inside a cycle
+  const lines = [`cps=${cps ?? ''} total=${cycles}`].concat(events.map((e) => {
     const sp = e.indexOf(' {');
     const v = JSON.parse(e.slice(sp + 1));
     return `${e.slice(0, sp)} ${v.s ?? ''} ${v.bank ?? ''} ${r3(v.note)} ${r3(v.gain)}`;
-  });
+  }));
   return createHash('sha256').update(lines.join('\n')).digest('hex');
 }
 
