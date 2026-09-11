@@ -12,6 +12,8 @@ test('parseProgression maps numerals to degrees, rejects junk, defaults to i VI'
   assert.deepEqual(parseProgression(''), parseProgression(DEFAULT_PROGRESSION));
   assert.equal(chordPatterns('C:major', parseProgression('i VI III VII')).roots, '<0 5 2 6>');
   assert.equal(chordPatterns('C:major', parseProgression('i')).roots, '<0>');
+  // 2 tones is a power chord (root + fifth), not root + third
+  assert.equal(chordPatterns('C:minor', parseProgression('i VI')).tones(2), '<[0,7] [0,7]>');
 });
 
 test('chordName and describeHarmony read the key\'s diatonic quality', async () => {

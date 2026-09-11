@@ -152,6 +152,8 @@ test('sound, sounds and level are material: defaults equal omission, values reac
   assert.ok(Math.abs(half - base / 2) < 1e-9, `${half} vs ${base}`);
   assert.throws(() => g.drums({ sounds: { tom: 'lt' } }, ctx), /sounds/);
   assert.throws(() => g.bass({ level: 'loud' }, ctx), /level/);
+  assert.throws(() => g.bass({ level: NaN }, ctx), /level/, 'NaN is not a level');
+  assert.throws(() => g.fx({ riser: NaN }, ctx), /riser/, 'NaN is not a riser length');
 });
 
 test('fill adds a snare roll only in the last cycle, by request or before a climax', async () => {
@@ -178,6 +180,8 @@ test('pad arp spreads the chord into 8 notes per cycle; omitted equals baseline'
   const down = onsets(g.pad({ arp: 'down' }, ctx), 1).map((h) => h.value.note);
   assert.ok(down[0] > down[1] && down[1] > down[2]);
   assert.equal(onsets(g.pad({ arp: '0 2' }, ctx), 1).length, 2);
+  const ud = onsets(g.pad({ arp: 'updown' }, ctx), 1).map((h) => h.value.note);
+  assert.ok(ud[0] < ud[1] && ud[1] < ud[2] && ud[3] === ud[1], `updown on a triad: ${ud.join()}`);
   assert.throws(() => g.pad({ arp: 'Up' }, ctx), /arp/);
   // a seventh chord's real voice count (4) can exceed plan.tones (3, the default); the named order must
   // still reach every voice, not just the first plan.tones of them.

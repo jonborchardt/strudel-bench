@@ -23,6 +23,14 @@ test('unknown layer name throws with a useful message', async () => {
   assert.throws(() => g.song({}, [g.section('a', 1, { nope: {} })]), /unknown layer "nope"/);
 });
 
+test('an unknown key on a layer throws, naming the layer and the section', async () => {
+  const g = await ready;
+  assert.throws(() => g.song({}, [g.section('a', 1, { pad: { arpp: 'up' } })]), /unknown key "arpp" on pad in section "a".*material: .*arp/s);
+  assert.doesNotThrow(() => g.song({}, [g.section('a', 1, { pad: { arp: 'up', sound: 'sawtooth', level: .8, density: .6 } })]));
+  // a layer registered without a materials list (tests, experiments) still accepts axis names
+  assert.throws(() => g.song({}, [g.section('a', 1, { blip: { nope: 1 } })]), /unknown key "nope" on blip/);
+});
+
 test('section key and progression override the song key and reach the layer ctx', async () => {
   const g = await ready;
   const seen = [];
@@ -84,4 +92,7 @@ test('a section with its own tempo plays its bars faster inside a shorter span',
   assert.equal(count(1, 3), 8, 'two bars of b in two song cycles');
   const bpm = g.song({ bpm: 120 }, [g.section('a', 4, { bpm: 240, tick: {} })]).strudle.sections[0];
   assert.equal(bpm.span, 2);
+  assert.throws(() => g.song({}, [g.section('a', 1, { bpm: 120, cps: .5, tick: {} })]), /bpm/);
+  assert.throws(() => g.song({ cps: 0 }, [g.section('a', 1, { tick: {} })]), /tempo must be positive/);
+  assert.throws(() => g.song({}, [g.section('a', 1, { cps: -1, tick: {} })]), /section "a".*tempo must be positive/);
 });
