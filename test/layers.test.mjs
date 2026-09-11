@@ -178,6 +178,7 @@ test('pad arp spreads the chord into 8 notes per cycle; omitted equals baseline'
   const down = onsets(g.pad({ arp: 'down' }, ctx), 1).map((h) => h.value.note);
   assert.ok(down[0] > down[1] && down[1] > down[2]);
   assert.equal(onsets(g.pad({ arp: '0 2' }, ctx), 1).length, 2);
+  assert.throws(() => g.pad({ arp: 'Up' }, ctx), /arp/);
 });
 
 test('melody follow transposes by the chord root; phrase lengthens the line', async () => {
