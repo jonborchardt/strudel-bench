@@ -1,0 +1,33 @@
+// arc: a longer take on demo.strudel that travels from sad to happy.
+// intro → verse (sad) → lift (turning) → drop → outro (happy). 40 cycles.
+// Axis values are 0..1 with 0.5 = the layer's baseline.
+song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909' }, [
+  section('intro', 8, { role: 'establish',
+    drums: { density: .3, space: .9, brightness: .1, drive: .1, articulation: .2 },
+    pad:   { space: 1, articulation: 0, brightness: 0, drive: .1, register: .3 },
+  }),
+  section('verse', 8, { role: 'develop',
+    drums:  { density: .6, groove: .6, brightness: .3, drive: .3, space: .65, articulation: .35 },
+    bass:   { weight: .7, register: .2, brightness: .3, drive: .3, space: .65, articulation: .35 },
+    melody: { density: .5, brightness: saw.range(.2, .5).slow(8), space: .65, register: .4, articulation: .35 },
+    pad:    { space: .75, brightness: .3, drive: .3, register: .4, articulation: .35 },
+  }),
+  section('lift', 8, { role: 'develop',
+    drums:  { density: .7, groove: .6, drive: .68, brightness: .6, articulation: .55 },
+    bass:   { weight: .7, register: .4, brightness: .6, drive: .57, articulation: .55 },
+    melody: { density: .6, brightness: .6, width: .6, articulation: .55 },
+    pad:    { space: .6, brightness: .6, drive: .57, articulation: .55 },
+  }),
+  section('drop', 8, { role: 'climax',
+    drums:  { density: .9, drive: .95, articulation: .8, brightness: .7 },
+    bass:   { weight: .9, aggression: .6, density: .75, brightness: .7, drive: .65, articulation: .6 },
+    melody: { density: .7, width: .8, brightness: .9, articulation: .6 },
+    pad:    { space: .5, brightness: .9, width: .8, drive: .65, articulation: .6 },
+  }),
+  section('outro', 8, { role: 'release',
+    drums:  { density: .6, drive: .9, groove: .8, brightness: .7, articulation: .7, variation: .7 },
+    bass:   { weight: .6, register: .6, brightness: 1, drive: .8, articulation: .7, variation: .7, groove: .7 },
+    melody: { density: .5, width: .7, brightness: 1, articulation: .7, variation: .7, groove: .7, register: .6 },
+    pad:    { space: .7, brightness: 1, width: .8, drive: .8, articulation: .7, register: .6 },
+  }),
+])
