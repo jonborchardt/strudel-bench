@@ -15,7 +15,6 @@ const machine = song({ cps: .375, key: 'E:minor', seed: 23, kit: 'RolandTR909' }
   section('verse', 8, { role: 'develop', progression: 'i',
     drums:  { ...M, density: .55, drive: .95, articulation: .85, brightness: .3, space: .15, weight: .8, variation: .1 },
     bass:   { ...M, weight: .85, density: .6, drive: .9, articulation: .8, register: .15, brightness: .25, space: .05, aggression: .6, variation: 0 },
-    melody: { ...M, density: .25, articulation: .85, register: .2, brightness: .3, space: .2, width: .3, aggression: .65, variation: .1 },
   }),
   section('build', 4, { role: 'develop', progression: 'i',
     drums:  { ...M, density: .7, drive: .95, articulation: .85, brightness: .4, space: .2, weight: .85, variation: .2 },
@@ -41,7 +40,6 @@ const machine = song({ cps: .375, key: 'E:minor', seed: 23, kit: 'RolandTR909' }
   section('verse2', 8, { role: 'develop', progression: 'i',
     drums:  { ...M, density: .6, drive: .95, articulation: .85, brightness: .35, space: .15, weight: .85, aggression: .65, variation: .35 },
     bass:   { ...M, weight: .9, density: .6, drive: .9, articulation: .8, register: .15, brightness: .3, space: .05, aggression: .75, variation: .1 },
-    melody: { ...M, density: .35, articulation: .85, register: .2, brightness: .35, space: .2, width: .3, aggression: .85, variation: .3 },
     pad:    { density: .15, articulation: .1, brightness: .1, weight: .95, space: .3, width: .5, aggression: .9, register: .1 },
   }),
   section('chorus2', 8, { role: 'climax', progression: 'i',
@@ -70,6 +68,7 @@ const hiss    = s("pink").hpf(3500).clip(1).gain(.12);
 const bursts  = s("white").struct("~ ~ ~ x ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~").clip(.12).hpf(2000).distort(.6).gain(.35).degradeBy(.4);
 const scrapes = s("metal").n("<5 7 3 9>").speed("<-1 -.7 -1.3>").struct("~ ~ x ~ ~ ~ ~ ~").lpf(2500).room(.3).gain(.4);
 const squeals = note("<e5 ~ g5 ~ ~ b5 ~ ~>").s("sawtooth").distort(.7).lpf(sine.range(800, 4000).fast(2)).clip(.2).release(.05).gain(.22).pan(sine.slow(3));
+const breaths = s("brown").struct("~ ~ ~ ~ ~ ~ x ~").attack(.15).release(.4).lpf(sine.range(300, 1500).slow(2)).distort(.4).gain(.25);
 const drone   = note("e1").s("sawtooth").distort(.75).lpf(perlin.range(120, 500)).clip(1).gain(.45);
 const scream  = note("<b5 e6>").s("sine").vib(9).vibmod(.6).distort(.9).lpf(sine.slow(3).range(1000, 6000)).clip(1).gain(.18).pan(sine.fast(.7));
 const decay   = pulse.lpf(saw.range(1800, 300).slow(8)).degradeBy(saw.range(0, .8).slow(8)).gain(saw.range(.45, .15).slow(8));
@@ -77,12 +76,12 @@ const decay   = pulse.lpf(saw.range(1800, 300).slow(8)).degradeBy(saw.range(0, .
 const textures = arrange(
   [4, stack(pulse, hiss)],
   [4, stack(pulse, hiss)],
-  [8, stack(hiss, ticks, bursts, scrapes, squeals)],
+  [8, stack(hiss, ticks, bursts, scrapes, squeals, breaths)],
   [4, stack(hiss, ticks, bursts, scrapes, drone.gain(.3))],
   [8, stack(hiss, ticks.degradeBy(.2), bursts, scrapes, squeals, drone)],
-  [4, stack(hiss.gain(.2), ticks)],
+  [4, stack(hiss.gain(.2), ticks, breaths)],
   [4, stack(hiss, ticks, bursts, scrapes, drone.gain(.35))],
-  [8, stack(hiss, ticks, bursts.degradeBy(.1), scrapes, squeals, drone.gain(.3))],
+  [8, stack(hiss, ticks, bursts.degradeBy(.1), scrapes, squeals, breaths, drone.gain(.3))],
   [8, stack(hiss, ticks, bursts, scrapes, squeals, drone, scream.gain(.1))],
   [8, stack(hiss, ticks, bursts, scrapes, squeals, drone, scream)],
   [8, stack(hiss.gain(saw.range(.12, .3).slow(8)), decay, drone.gain(saw.range(.45, .2).slow(8)), scream.gain(saw.range(.18, 0).slow(8)))],
