@@ -85,6 +85,34 @@ test('drive below .5 moves onsets off the pulse without changing their number', 
   }
 });
 
+test('drums width keeps its baseline spread at .5 and widens from there', async () => {
+  const g = await ready;
+  const near = (a, b) => Math.abs(a - b) < 1e-9;
+  const pans = (w) => Object.fromEntries(onsets(g.drums({ density: .75, width: w }, ctx)).map((h) => [h.value.s, h.value.pan]));
+  const mid = pans(.5);
+  assert.ok(near(mid.hh, .6), `hh pan at width .5 should be .6, got ${mid.hh}`);
+  assert.ok(near(mid.oh, .4), `oh pan at width .5 should be .4, got ${mid.oh}`);
+  for (const [s, p] of Object.entries(pans(0))) assert.ok(near(p, .5), `${s} pan at width 0 should be .5, got ${p}`);
+  assert.ok(near(pans(1).hh, 1), `hh pan at width 1 should be 1, got ${pans(1).hh}`);
+});
+
+test('the articulation choke puts only the hats in a cut group', async () => {
+  const g = await ready;
+  const cuts = Object.fromEntries(onsets(g.drums({ density: .75, articulation: .9 }, ctx)).map((h) => [h.value.s, h.value.cut]));
+  assert.equal(cuts.hh, 1, 'hh must choke');
+  assert.equal(cuts.oh, 1, 'oh must choke');
+  assert.equal(cuts.bd, undefined, 'bd must not be in a cut group');
+  assert.equal(cuts.sd, undefined, 'sd must not be in a cut group');
+});
+
+test('drive 1 pulls the kick onto the pulse and leaves the snare on the backbeat', async () => {
+  const g = await ready;
+  const steps = (s) => [...new Set(onsets(g.drums({ drive: 1 }, ctx)).filter((h) => h.value.s === s)
+    .map((h) => h.whole.begin.valueOf() % 1).sort((a, b) => a - b))];
+  assert.deepEqual(steps('sd'), [.25, .75], 'snare must stay on the backbeat, not double the kick');
+  assert.deepEqual(steps('bd'), [0, .25, .5, .75], 'kick must stay on the pulse');
+});
+
 test('structural axes reject signals', async () => {
   const g = await ready;
   assert.throws(() => onsets(g.drums({ density: g.saw }, ctx)), /structural/);
