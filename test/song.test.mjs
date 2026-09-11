@@ -58,3 +58,16 @@ test('ramp(a, b) resolves to a section-length saw; structural axes still refuse 
   assert.equal(String(g.ramp(.2, .8)), 'ramp(0.2, 0.8)');
   assert.throws(() => g.song({}, [g.section('a', 4, { drums: { density: g.ramp(0, 1) } })]), /structural/);
 });
+
+test('meter and bpm: grid follows the meter, cps follows bpm', async () => {
+  const g = await ready;
+  const m = g.song({ meter: '3/4', bpm: 120 }, [g.section('a', 1, { drums: {}, bass: {} })]).strudle;
+  assert.ok(Math.abs(m.meta.cps - 120 / 60 / 3) < 1e-9);
+  const kicks = m.sections[0].layers.drums.pattern.queryArc(0, 1).filter((h) => h.hasOnset() && h.value.s === 'bd').map((h) => h.whole.begin.valueOf());
+  assert.deepEqual(kicks, [0, 1 / 3, 2 / 3]);
+  assert.equal(m.sections[0].layers.bass.pattern.queryArc(0, 1).filter((h) => h.hasOnset()).length, 3);
+  assert.throws(() => g.song({ bpm: 120, cps: .5 }, []), /bpm/);
+  assert.throws(() => g.song({ meter: '5/3' }, []), /meter/);
+  const s = g.song({}, [g.section('a', 1, { meter: '7/8', drums: {} })]).strudle.sections[0];
+  assert.equal(s.grid.steps, 14);
+});
