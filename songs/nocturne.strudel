@@ -1,12 +1,12 @@
 // nocturne: dark, sleek pop-funk at 117 BPM. Drums alone, then the bass arrives and
 // becomes the hook. Choruses open the same machine up; verses pull the width back.
-// intro → arrive → verse → chorus → verse2 → chorus2 → breakdown → rebuild → final → outro. 68 cycles.
+// intro → arrive → verse → chorus → verse2 → chorus2 → breakdown → rebuild → final → outro. 62 cycles.
 // Axis values are 0..1 with 0.5 = the layer's baseline. Hypnotic: variation low, groove nearly straight.
 song({ cps: .4875, key: 'E:minor', seed: 11, kit: 'LinnLM2' }, [
-  section('intro', 4, { role: 'establish',
+  section('intro', 2, { role: 'establish',
     drums: { density: .55, drive: .7, articulation: .8, space: .25, groove: .45, variation: .2, organicness: .4, brightness: .45 },
   }),
-  section('arrive', 8, { role: 'establish',
+  section('arrive', 4, { role: 'establish',
     drums:  { density: .55, drive: .7, articulation: .8, space: .25, groove: .45, variation: .2, organicness: .4, brightness: .45 },
     bass:   { weight: .75, density: .6, drive: .3, articulation: .75, register: .35, brightness: .4, space: .2, variation: .1, groove: .45 },
     melody: { density: .2, articulation: .9, register: .45, brightness: .4, space: .3, width: .4, variation: .2 },
