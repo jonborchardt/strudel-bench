@@ -9,23 +9,33 @@ import '../scripts/esm-fix.mjs';
 import { AXIS_NAMES, cells, describeCell } from '../lib/axes.mjs';
 import '../lib/layers.mjs';
 import { parsePhrase, applyDeltas } from '../lib/vocab.mjs';
+import { parseProgression, applyHarmonyWords, describeHarmony, DEFAULT_PROGRESSION } from '../lib/harmony.mjs';
 
 const isNumLit = (n) => (n.type === 'Literal' && typeof n.value === 'number') || (n.type === 'UnaryExpression' && n.operator === '-' && n.argument.type === 'Literal');
 const numOf = (n) => (n.type === 'Literal' ? n.value : -n.argument.value);
 const keyName = (p) => (p.key.type === 'Identifier' ? p.key.name : p.key.value);
+const isStrLit = (n) => n.type === 'Literal' && typeof n.value === 'string';
 
 export function locate(src) {
   const ast = acorn.parse(src, { ecmaVersion: 'latest', sourceType: 'module', allowAwaitOutsideFunction: true });
   const sections = [];
+  let songKey = 'C:minor';
   (function walk(node) {
     if (!node || typeof node.type !== 'string') return;
+    if (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'song' && node.arguments[0]?.type === 'ObjectExpression') {
+      const k = node.arguments[0].properties.find((p) => p.type === 'Property' && keyName(p) === 'key');
+      if (k && isStrLit(k.value)) songKey = k.value.value;
+    }
     if (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'section' && node.arguments[2]?.type === 'ObjectExpression') {
       const [nameNode, cyclesNode, spec] = node.arguments;
-      const s = { name: nameNode.value, cycles: cyclesNode.value, node, layers: {} };
+      const s = { name: nameNode.value, cycles: cyclesNode.value, node, spec, layers: {} };
       for (const prop of spec.properties) {
         if (prop.type !== 'Property') continue;
         const layer = keyName(prop);
-        if (layer === 'role' || prop.value.type !== 'ObjectExpression') continue;
+        if (layer === 'role') { s.roleNode = prop; continue; }
+        if (layer === 'key') { s.keyNode = prop.value; continue; }
+        if (layer === 'progression') { s.progressionNode = prop.value; continue; }
+        if (prop.value.type !== 'ObjectExpression') continue;
         const axes = {};
         for (const ap of prop.value.properties) {
           if (ap.type !== 'Property') continue;
@@ -43,18 +53,41 @@ export function locate(src) {
     }
   })(ast);
   if (!sections.length) throw new Error('not a song() file: no section() calls found');
-  return { sections };
+  return { sections, songKey };
 }
 
 const fmt = (x) => (x === 0 || x === 1 ? String(x) : String(+x.toFixed(2)).replace(/^0\./, '.'));
 
 export function planEdits(src, sectionSel, layerSel, phrase) {
-  const { sections } = locate(src);
+  const { sections, songKey } = locate(src);
   const parsed = parsePhrase(phrase);
   if (parsed.unknown.length) console.error(`unknown words ignored: ${parsed.unknown.join(', ')}`);
-  const edits = [], refused = [], report = [];
+  const edits = [], refused = [], report = [], harmonyReport = [];
   for (const s of sections) {
     if (sectionSel !== '*' && s.name !== sectionSel) continue;
+    if (parsed.harmony.length) {
+      const bad = ['key', 'progression'].find((f) => s[`${f}Node`] && !isStrLit(s[`${f}Node`]));
+      if (bad) refused.push({ section: s.name, layer: '-', axis: bad, reason: `${bad} is an expression here; change it by hand` });
+      else {
+        const from = { key: s.keyNode?.value ?? songKey, progression: s.progressionNode?.value ?? DEFAULT_PROGRESSION };
+        let to;
+        try { to = applyHarmonyWords(from, parsed.harmony); } catch (e) { refused.push({ section: s.name, layer: '-', axis: 'key', reason: e.message }); to = from; }
+        const inserts = [];
+        for (const field of ['key', 'progression']) {
+          if (to[field] === from[field]) continue;
+          const line = { section: s.name, field, from: from[field], to: to[field] };
+          if (field === 'progression') line.describe = describeHarmony(to.key, parseProgression(to.progression));
+          harmonyReport.push(line);
+          const node = s[`${field}Node`];
+          if (node) edits.push({ start: node.start, end: node.end, text: `'${to[field]}'` });
+          else inserts.push(`${field}: '${to[field]}'`);
+        }
+        if (inserts.length) {
+          const at = s.roleNode ? s.roleNode.end : s.spec.start + 1;
+          edits.push({ start: at, end: at, text: s.roleNode ? `, ${inserts.join(', ')}` : ` ${inserts.join(', ')},` });
+        }
+      }
+    }
     for (const [layer, L] of Object.entries(s.layers)) {
       if (layerSel !== '*' && layer !== layerSel) continue;
       const current = Object.fromEntries(Object.entries(L.axes).filter(([, a]) => a.value !== 'expr').map(([k, a]) => [k, a.value]));
@@ -78,7 +111,7 @@ export function planEdits(src, sectionSel, layerSel, phrase) {
       }
     }
   }
-  return { edits, refused, report, parsed };
+  return { edits, refused, report, harmonyReport, parsed };
 }
 
 export function applyEdits(src, edits) {
@@ -87,7 +120,7 @@ export function applyEdits(src, edits) {
   return out;
 }
 
-export function printReport({ report, refused, parsed }) {
+export function printReport({ report, refused, parsed, harmonyReport = [] }) {
   for (const [axis, cs] of Object.entries(parsed.contributions)) {
     if (cs.length < 2) continue;
     const signs = new Set(cs.map((c) => Math.sign(c.delta)));
@@ -98,6 +131,7 @@ export function printReport({ report, refused, parsed }) {
     const sat = r.saturated ? `   applied ${r.appliedDelta >= 0 ? '+' : ''}${r.appliedDelta} of requested ${r.requestedDelta >= 0 ? '+' : ''}${r.requestedDelta.toFixed(2)}   saturated` : '';
     console.log(`  ${r.section}.${r.layer}.${r.axis} ${fmt(r.from)} → ${fmt(r.to)}${r.describe ? '   ' + r.describe : ''}${sat}`);
   }
+  for (const h of harmonyReport) console.log(`  ${h.section}.${h.field} ${h.from} → ${h.to}${h.describe ? '   ' + h.describe : ''}`);
   for (const r of refused) console.log(`  ${r.section}.${r.layer}.${r.axis}: refused, ${r.reason}`);
 }
 
@@ -109,7 +143,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const src = fs.readFileSync(file, 'utf8');
   let plan;
   try { plan = planEdits(src, sectionSel, layerSel, phrase); } catch (e) { console.error(e.message); process.exit(2); }
-  if (plan.report.length === 0 && plan.refused.length === 0) {
+  if (plan.report.length === 0 && plan.refused.length === 0 && plan.harmonyReport.length === 0) {
     console.error(`no matching section/layer for ${sectionSel}/${layerSel}`);
     process.exit(2);
   }

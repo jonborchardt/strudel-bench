@@ -41,3 +41,31 @@ test('non-song file exits with code 2', async () => {
   const { locate } = await import('../scripts/resolve.mjs');
   assert.throws(() => locate('note("c3")'), /not a song\(\) file/);
 });
+
+test('harmony words write key and progression on the section, once', async () => {
+  await ready;
+  const { planEdits, applyEdits } = await import('../scripts/resolve.mjs');
+  const src = `song({ cps: .5, key: 'C:minor' }, [
+  section('drop', 8, { role: 'climax',
+    drums: { density: .9 },
+  }),
+])`;
+  const plan = planEdits(src, 'drop', 'drums', 'happy, relative major, pop');
+  const out = applyEdits(src, plan.edits);
+  assert.ok(out.includes("section('drop', 8, { role: 'climax', key: 'Eb:major', progression: 'I V vi IV',\n    drums:"), out);
+  assert.ok(/drums: \{ density: \.9, brightness: \.7/.test(out), 'axis edit still applied');
+  assert.deepEqual(plan.harmonyReport.map((r) => [r.field, r.from, r.to]), [['key', 'C:minor', 'Eb:major'], ['progression', 'i VI', 'I V vi IV']]);
+  assert.match(plan.harmonyReport[1].describe, /Eb Bb Cm Ab/);
+  // idempotent: second run finds nothing to change
+  const again = planEdits(out, 'drop', '*', 'relative major, pop');
+  assert.deepEqual(again.harmonyReport, []);
+  assert.equal(again.edits.length, 0);
+});
+
+test('harmony refuses a non-literal key', async () => {
+  await ready;
+  const { planEdits } = await import('../scripts/resolve.mjs');
+  const src = `song({}, [ section('a', 1, { key: KEY, drums: {} }) ])`;
+  const plan = planEdits(src, 'a', '*', 'major');
+  assert.ok(plan.refused.some((r) => r.section === 'a' && /key/.test(r.reason)));
+});
