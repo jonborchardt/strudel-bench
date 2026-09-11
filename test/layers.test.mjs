@@ -167,3 +167,28 @@ test('fill adds a snare roll only in the last cycle, by request or before a clim
   assert.equal(n(1), plain, 'b has no climax after it');
   assert.equal(n(2), plain, 'fill: false wins');
 });
+
+test('pad arp spreads the chord into 8 notes per cycle; omitted equals baseline', async () => {
+  const g = await ready;
+  assert.equal(sig(onsets(g.pad({ arp: undefined }, ctx))), sig(onsets(g.pad({}, ctx))));
+  const up = onsets(g.pad({ arp: 'up' }, ctx), 1);
+  assert.equal(up.length, 8);
+  const notes = up.map((h) => h.value.note);
+  assert.ok(notes[0] < notes[1] && notes[1] < notes[2] && notes[3] === notes[0], notes.join());
+  const down = onsets(g.pad({ arp: 'down' }, ctx), 1).map((h) => h.value.note);
+  assert.ok(down[0] > down[1] && down[1] > down[2]);
+  assert.equal(onsets(g.pad({ arp: '0 2' }, ctx), 1).length, 2);
+});
+
+test('melody follow transposes by the chord root; phrase lengthens the line', async () => {
+  const g = await ready;
+  const c1 = (p) => onsets(p, 2).filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);
+  const c0 = (p) => onsets(p, 1).map((h) => h.value.note);
+  const plain = g.melody({}, ctx), follow = g.melody({ follow: true }, ctx);
+  assert.deepEqual(c0(follow), c0(plain), 'cycle 0 is degree i either way');
+  // default progression is i VI: cycle 1 is a sixth up in scale steps
+  assert.deepEqual(c1(follow).map((n, i) => n - c1(plain)[i]).every((d) => d === 8 || d === 9), true);
+  const two = g.melody({ phrase: 2 }, ctx);
+  assert.equal(onsets(two, 1).length, onsets(plain, 1).length);
+  assert.notEqual(JSON.stringify(c1(two)), JSON.stringify(c0(two)), 'a 2-cycle phrase does not repeat after one cycle (pick another ctx.seed if this seed happens to)');
+});
