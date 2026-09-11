@@ -2,3 +2,7 @@ node_modules/
 samples/packs/*
 !samples/packs/.gitkeep
 .playwright-mcp/
+.claude
+/docs
+/samples/packs
+renders/

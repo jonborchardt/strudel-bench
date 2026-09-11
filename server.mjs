@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = import.meta.dirname;
 const SONGS = path.join(ROOT, 'songs');
+const RENDERS = path.join(ROOT, 'renders');
 const USER = path.join(ROOT, 'samples', 'user');
 const SONG_NAME = /^[\w.-]+\.strudel$/;
 const AUDIO = new Set(['.wav', '.mp3', '.ogg', '.flac', '.aif', '.aiff', '.m4a', '.webm']);
@@ -50,6 +51,7 @@ function serveStatic(res, urlPath) {
 
 export function createServer() {
   const clients = new Set();
+  const waiters = new Map();
   fs.mkdirSync(SONGS, { recursive: true });
   const watcher = fs.watch(SONGS, (_ev, file) => {
     if (!file || !SONG_NAME.test(file)) return;
@@ -83,6 +85,36 @@ export function createServer() {
       clients.add(res);
       req.on('close', () => clients.delete(res));
       return;
+    }
+
+    if (p === '/render' && req.method === 'POST') {
+      if (!clients.size) return send(res, 409, 'no page connected: open http://localhost:3000 first');
+      const body = JSON.parse((await readBody(req)) || '{}');
+      const name = (body.name || `${body.song.replace(/\.strudel$/, '')}${body.section ? '.' + body.section : ''}${body.layer ? '.' + body.layer : ''}`).replace(/[^\w.-]/g, '_');
+      const done = new Promise((resolve, reject) => {
+        waiters.set(`${name}.wav`, { resolve, reject });
+        setTimeout(() => { if (waiters.delete(`${name}.wav`)) reject(new Error('render timed out')); }, 60_000);
+      });
+      for (const c of clients) c.write(`data: ${JSON.stringify({ render: { ...body, name } })}\n\n`);
+      try { await done; return json(res, { path: path.join('renders', `${name}.wav`) }); }
+      catch (e) { return send(res, e.status || 504, e.message); }
+    }
+    if (p === '/render-error' && req.method === 'POST') {
+      const { name, message } = JSON.parse((await readBody(req)) || '{}');
+      const w = waiters.get(`${name}.wav`);
+      if (w) { waiters.delete(`${name}.wav`); w.reject(Object.assign(new Error(message), { status: 409 })); }
+      return send(res, 204, '');
+    }
+    if (p.startsWith('/renders/') && req.method === 'PUT') {
+      const name = decodeURIComponent(p.slice('/renders/'.length));
+      if (!/^[\w.-]+\.wav$/.test(name)) return send(res, 400, 'bad render name');
+      fs.mkdirSync(RENDERS, { recursive: true });
+      const chunks = [];
+      for await (const c of req) chunks.push(c);
+      fs.writeFileSync(path.join(RENDERS, name), Buffer.concat(chunks));
+      const w = waiters.get(name);
+      if (w) { waiters.delete(name); w.resolve(); }
+      return send(res, 204, '');
     }
 
     if (p === '/samples/user/strudel.json') return json(res, userMap());

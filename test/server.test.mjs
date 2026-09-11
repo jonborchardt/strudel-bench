@@ -60,3 +60,24 @@ test('static files and user sample map', async () => {
     assert.equal(m._base, '/samples/user/');
   });
 });
+
+test('render route: 409 without a page, PUT stores a wav and releases the waiter', async () => {
+  await withServer(async (base) => {
+    const r409 = await fetch(`${base}/render`, { method: 'POST', body: JSON.stringify({ song: 'demo.strudel' }) });
+    assert.equal(r409.status, 409);
+    // fake a page: open the SSE stream, then answer the render command with a PUT
+    const es = await fetch(`${base}/events`);
+    const reader = es.body.getReader();
+    const pending = fetch(`${base}/render`, { method: 'POST', body: JSON.stringify({ song: 'demo.strudel', name: '_t_probe' }) });
+    let text = '';
+    while (!text.includes('"render"')) text += new TextDecoder().decode((await reader.read()).value);
+    assert.match(text, /"name":"_t_probe"/);
+    const put = await fetch(`${base}/renders/_t_probe.wav`, { method: 'PUT', body: new Uint8Array([82, 73, 70, 70]) });
+    assert.equal(put.status, 204);
+    const done = await pending;
+    assert.equal(done.status, 200);
+    assert.match((await done.json()).path, /renders[\\/]_t_probe\.wav$/);
+    fs.rmSync(path.join(ROOT, 'renders', '_t_probe.wav'));
+    reader.cancel();
+  });
+});

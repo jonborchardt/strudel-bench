@@ -7,7 +7,9 @@
     "start": "node server.mjs",
     "test": "node --test",
     "check": "node scripts/check.mjs",
-    "samples": "node scripts/samples.mjs"
+    "samples": "node scripts/samples.mjs",
+    "render": "node scripts/render.mjs",
+    "resolve": "node scripts/resolve.mjs"
   },
   "dependencies": {
     "@strudel/core": "^1.2.6",

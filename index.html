@@ -84,7 +84,9 @@
   // reload from disk when the current song file changes (fs.watch fires twice on Windows, hence the debounce)
   let timer;
   new EventSource('/events').onmessage = (e) => {
-    if (JSON.parse(e.data).changed !== $('song').value) return;
+    const msg = JSON.parse(e.data);
+    if (msg.render) return renderToServer(msg.render);
+    if (msg.changed !== $('song').value) return;
     clearTimeout(timer);
     timer = setTimeout(async () => {
       if ($('code').value !== loaded) {
@@ -96,6 +98,36 @@
       if (playing) play();
     }, 200);
   };
+
+  async function renderToServer({ song, cycles, section, layer, name }) {
+    const fail = (message) => fetch('/render-error', { method: 'POST', body: JSON.stringify({ name, message }) });
+    if (playing) return fail('page is playing; stop first (render replaces the audio context)');
+    try {
+      await ready;
+      const code = await (await fetch(`/songs/${song}`)).text();
+      let pat = await strudel.evaluate(code, false);
+      let begin = 0, end = cycles ?? (pat.strudle ? pat.strudle.total : 8);
+      if (section || layer) {
+        const s = pat.strudle?.sections.find((x) => x.name === section);
+        if (section && !s) return fail(`no section "${section}"`);
+        if (layer) {
+          const src = s ? s.layers[layer] : null;
+          if (!src) return fail(`no layer "${layer}" in section "${section}"`);
+          pat = src.pattern; begin = 0; end = cycles ?? s.cycles;
+        } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles); }
+      }
+      const cps = pat.strudle?.meta.cps ?? 0.5;
+      let blob = null;
+      const origCreate = URL.createObjectURL, origClick = HTMLAnchorElement.prototype.click;
+      URL.createObjectURL = (b) => { blob = b; return 'blob:captured'; };
+      HTMLAnchorElement.prototype.click = function () {};
+      try { await strudel.renderPatternAudio(pat, cps, begin, end, 44100, 128, false, name); }
+      finally { URL.createObjectURL = origCreate; HTMLAnchorElement.prototype.click = origClick; }
+      if (!blob) return fail('renderer produced no file');
+      await fetch(`/renders/${name}.wav`, { method: 'PUT', body: blob });
+      $('status').textContent = `rendered ${name}.wav (${(end - begin)} cycles)`;
+    } catch (e) { fail(e.message); }
+  }
 
   loadList();
 </script>
