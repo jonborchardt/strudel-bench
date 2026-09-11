@@ -59,7 +59,7 @@ Songs can be written as sections × layers × axis values (see `songs/demo.strud
       section('drop', 8, { role: 'climax', drums: { density: .7, drive: .8 }, bass: { weight: .8 }, melody: {}, pad: { space: .7 } }),
     ])
 
-Each layer takes axis values in 0..1 where 0.5 is that layer's baseline. Then:
+Five layers — drums, bass, melody, pad, fx — each take axis values in 0..1 where 0.5 is that layer's baseline. Then:
 
     npm run resolve -- songs/demo.strudel drop drums "punchier"          # what would change
     npm run resolve -- songs/demo.strudel drop drums "punchier" --write  # do it
@@ -83,7 +83,7 @@ encodes the baseline → resolve → check → render/verify → report workflow
 2. Axes are semantic, adapters are mechanical — an empty cell honestly says "no implementation on this layer".
 3. Descriptors are deltas, not states: *dreamier* applies relative to the current values.
 4. Harmony is a separate subsystem, not an axis.
-5. No new trajectory concept: an axis value is a constant in 0..1 or a Strudel signal.
+5. No new trajectory concept: an axis value is a constant in 0..1, a Strudel signal, or `ramp(a, b)`.
 6. Adapter(0.5) is a no-op — literally the material's baseline, verified by test; a direction with no honest implementation is a documented no-op, not a guess.
 7. Adapters run in fixed phases, because transformations do not commute.
 8. The resolver edits declarative state, never hand-authored Strudel expressions.
@@ -100,10 +100,10 @@ Kind, meaning and verification class are the ones declared in `lib/axes.mjs` (`A
 | weight | continuous | perceived low end and body | direct: lowRatio |
 | space | continuous | dry and close to spacious | proxy: tail |
 | articulation | continuous | sustained and smooth to short and punchy | proxy: crest |
-| aggression | continuous | smooth to abrasive | proxy |
-| groove | continuous | rigid to swung | proxy |
-| variation | structural | repetitive to variable (0 = pure loop) | proxy |
-| organicness | continuous | mechanical to humanized | proxy |
+| aggression | continuous | smooth to abrasive | proxy: flatness |
+| groove | continuous | rigid to swung | proxy: swing |
+| variation | structural | repetitive to variable (0 = pure loop) | proxy: novelty |
+| organicness | continuous | mechanical to humanized | proxy: jitter |
 | width | continuous | narrow to wide | direct: width |
 | register | structural | low to high | code |
 
@@ -119,7 +119,33 @@ Rule 4 stands: harmony is material on the section, not an axis. Two reserved sec
 - `progression` is roman numerals `I..VII`, any case, one chord per cycle, looping. Degrees are diatonic to the section key; `npm run check` prints the chords you actually got (`I` in C minor prints `Cm`). Default is `i VI`.
 - Pad voices the chord, bass transposes its line by the chord root, melody stays in key.
 - Resolve phrases accept harmony words as states: progressions (`resolved`, `tense`, `pop`, `epic`, `circular`, `static`, `unresolved`), modes (`major`, `minor`, `dorian`, `lydian`, `mixolydian`, `phrygian`) and `relative`. `npm run resolve -- songs/x.strudel drop '*' "relative major, pop"` writes both fields.
-- Not modeled: accidentals, sevenths, borrowed chords, sub-cycle chord changes.
+- Not modeled: inversions and voice leading, chords longer than a bar.
+
+### Material
+
+Material is a literal value on a layer or a section, never an axis (rule 4). Omit it and nothing changes.
+
+| Where | Key | Value | Effect |
+|---|---|---|---|
+| bass, melody, pad, fx | `sound` | any local synth or sample name | replaces the sawtooth |
+| any layer | `level` | number, 1 = untouched | gain multiplier, applied after every axis |
+| drums | `sounds` | `{ sd: 'rim', hh: 'hh:2' }` | per-voice sound; the kit still applies |
+| drums | `fill` | `true`/`false` | snare roll in the last half bar of the section; on by default before a `climax` section |
+| pad | `arp` | `'up'`, `'down'`, `'updown'` or `"0 2 1 2"` | arpeggiates the chord, 8 notes a bar |
+| melody | `follow` | `true` | the line moves with the chord root |
+| melody | `phrase` | integer bars | the seeded line spans that many bars |
+| fx | `riser` | `true` (4 bars) or bars | noise sweep into the next section |
+| fx | `impact` | `true` (`bd`) or a sound | one hit on the downbeat, half speed, big room |
+| song, section | `kit` | drum machine name | section overrides song |
+| song, section | `meter` | `'4/4'`, `'3/4'`, `'6/8'`, `'7/8'`, `'5/4'` | one bar is still one cycle; 16th grid |
+| song | `bpm` | number | instead of `cps`: beats per minute on the meter's denominator |
+| section | `bpm` or `cps` | number | that section plays at its own tempo |
+
+`ramp(a, b)` is an axis value that sweeps over exactly the section: `brightness: ramp(.3, .8)`.
+
+Sections are JavaScript, so reuse them with spread: `const verse = { drums: {...}, bass: {...} }; section('verse2', 8, { ...verse, drums: { ...verse.drums, variation: .5 } })`.
+
+Progressions accept `b`/`#` before a numeral, `m`/`M`/`dim` and `7` after it, and `[..]` to put chords in one bar: `'i bVI [III VII] V7'`. Case never changes a diatonic chord's quality; write `IVm` for a borrowed iv.
 
 The full design spec and plan live in `docs/superpowers/`, which is not versioned in this repo; the skill in
 `.claude/skills/strudle/` likewise.

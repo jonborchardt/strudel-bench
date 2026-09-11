@@ -51,11 +51,11 @@ The `strudle` skill (`.claude/skills/strudle/SKILL.md`, gitignored) is the song-
 
 ## Axes
 
-A song can be written declaratively: `song({ cps, key, seed, kit }, [section(name, cycles, { role, key, progression, drums: {...}, bass: {...}, melody: {...}, pad: {...} })])`. Each layer takes axis values in 0..1, where **0.5 is the baseline no-op** (enforced by test) and a continuous axis may also take a Strudel signal; structural axes take numbers only. `key` and `progression` are per-section harmony (rule 4: harmony is material, not an axis).
+A song can be written declaratively: `song({ cps, key, seed, kit }, [section(name, cycles, { role, key, progression, drums: {...}, bass: {...}, melody: {...}, pad: {...}, fx: {...} })])`. Each layer takes axis values in 0..1, where **0.5 is the baseline no-op** (enforced by test) and a continuous axis may also take a Strudel signal or `ramp(a, b)`; structural axes take numbers only. `key` and `progression` are per-section harmony (rule 4: harmony is material, not an axis); material keys (`sound`, `level`, `fill`, `arp`, `follow`, `kit`, `meter`, `bpm`, ...) live next to axes in the same layer/section objects. `test/golden.test.mjs` pins the full event stream of every song in `songs/`; regenerate it (`UPDATE_GOLDEN=1 node --test test/golden.test.mjs`) only on purpose, and check that only the songs you meant to change moved.
 
 - `lib/axes.mjs` — the 12-axis registry (`AXES`), `PHASES` (structural → timing → pitch → articulation → spectral → spatial → level), and the `ctl`/`piece` mapping helpers.
-- `lib/layers.mjs` — the four layers (drums, bass, melody, pad) and their per-axis cells.
-- `lib/grid.mjs` (step grids and placement), `lib/song.mjs` (`song`/`section`/`registerLayer`), `lib/harmony.mjs` (roman-numeral progressions over a section key, `chordName`, harmony words), `lib/vocab.mjs` (phrase → axis deltas; `MODIFIERS` scale them).
+- `lib/layers.mjs` — the five layers (drums, bass, melody, pad, fx) and their per-axis cells.
+- `lib/grid.mjs` (step grids and placement, parametric on meter), `lib/song.mjs` (`song`/`section`/`registerLayer`), `lib/harmony.mjs` (roman-numeral progressions over a section key, `chordName`, harmony words), `lib/vocab.mjs` (phrase → axis deltas; `MODIFIERS` scale them).
 - `lib/index.mjs` loads all of it into the current scope and defines `song`, `section`, `strudleLib` and one global per layer (`drums({ density: .8 })` returns just that layer's pattern) on `globalThis`.
 - Vocabulary is data, not code: `lib/descriptors.json` (control words), `lib/overlays.json` (emotions/genres), `lib/harmony.json` (progression and mode words). Node reads them eagerly, the page fetches them via `/lib/`. Add words there, then `npm run vocab`.
 
