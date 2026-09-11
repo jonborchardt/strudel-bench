@@ -11,7 +11,7 @@ async function withServer(fn) {
   const server = createServer();
   await new Promise((r) => server.listen(0, r));
   const base = `http://localhost:${server.address().port}`;
-  try { await fn(base); } finally { server.close(); }
+  try { await fn(base); } finally { server.closeAllConnections(); server.close(); }
 }
 
 test('userMap turns folders into sounds and loose files into single sounds', () => {
@@ -78,6 +78,37 @@ test('render route: 409 without a page, PUT stores a wav and releases the waiter
     assert.equal(done.status, 200);
     assert.match((await done.json()).path, /renders[\\/]_t_probe\.wav$/);
     fs.rmSync(path.join(ROOT, 'renders', '_t_probe.wav'));
+    reader.cancel();
+  });
+});
+
+test('render route: malformed body returns 400 and the server keeps serving', async () => {
+  await withServer(async (base) => {
+    const es = await fetch(`${base}/events`);
+    const reader = es.body.getReader();
+    assert.equal((await fetch(`${base}/render`, { method: 'POST', body: JSON.stringify({}) })).status, 400);
+    assert.equal((await fetch(`${base}/render`, { method: 'POST', body: 'not json' })).status, 400);
+    assert.equal((await fetch(`${base}/render-error`, { method: 'POST', body: 'not json' })).status, 400);
+    assert.equal((await fetch(`${base}/render-error`, { method: 'POST', body: JSON.stringify({ message: 'no name here' }) })).status, 204);
+    assert.equal((await fetch(`${base}/songs`)).status, 200);
+    reader.cancel();
+  });
+});
+
+test('render route: a second POST for a name already pending gets 409, the first still resolves', async () => {
+  await withServer(async (base) => {
+    const es = await fetch(`${base}/events`);
+    const reader = es.body.getReader();
+    const first = fetch(`${base}/render`, { method: 'POST', body: JSON.stringify({ song: 'demo.strudel', name: '_t_dup' }) });
+    let text = '';
+    while (!text.includes('"render"')) text += new TextDecoder().decode((await reader.read()).value);
+    const second = await fetch(`${base}/render`, { method: 'POST', body: JSON.stringify({ song: 'demo.strudel', name: '_t_dup' }) });
+    assert.equal(second.status, 409);
+    const put = await fetch(`${base}/renders/_t_dup.wav`, { method: 'PUT', body: new Uint8Array([82, 73, 70, 70]) });
+    assert.equal(put.status, 204);
+    const done = await first;
+    assert.equal(done.status, 200);
+    fs.rmSync(path.join(ROOT, 'renders', '_t_dup.wav'));
     reader.cancel();
   });
 });

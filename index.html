@@ -108,10 +108,11 @@
       let pat = await strudel.evaluate(code, false);
       let begin = 0, end = cycles ?? (pat.strudle ? pat.strudle.total : 8);
       if (section || layer) {
+        if (layer && !section) return fail('layer requires --section');
         const s = pat.strudle?.sections.find((x) => x.name === section);
         if (section && !s) return fail(`no section "${section}"`);
         if (layer) {
-          const src = s ? s.layers[layer] : null;
+          const src = s.layers[layer];
           if (!src) return fail(`no layer "${layer}" in section "${section}"`);
           pat = src.pattern; begin = 0; end = cycles ?? s.cycles;
         } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles); }

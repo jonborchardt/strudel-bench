@@ -89,20 +89,30 @@ export function createServer() {
 
     if (p === '/render' && req.method === 'POST') {
       if (!clients.size) return send(res, 409, 'no page connected: open http://localhost:3000 first');
-      const body = JSON.parse((await readBody(req)) || '{}');
+      let body;
+      try { body = JSON.parse((await readBody(req)) || '{}'); } catch { return send(res, 400, 'bad json'); }
+      if (typeof body.song !== 'string' || !body.song) return send(res, 400, 'song required');
+      if (!SONG_NAME.test(body.song)) return send(res, 400, 'bad song name');
       const name = (body.name || `${body.song.replace(/\.strudel$/, '')}${body.section ? '.' + body.section : ''}${body.layer ? '.' + body.layer : ''}`).replace(/[^\w.-]/g, '_');
+      const key = `${name}.wav`;
+      if (waiters.has(key)) return send(res, 409, `render "${name}" already pending`);
       const done = new Promise((resolve, reject) => {
-        waiters.set(`${name}.wav`, { resolve, reject });
-        setTimeout(() => { if (waiters.delete(`${name}.wav`)) reject(new Error('render timed out')); }, 60_000);
+        const timer = setTimeout(() => { if (waiters.delete(key)) reject(new Error('render timed out')); }, 60_000);
+        timer.unref?.();
+        waiters.set(key, { resolve, reject, timer });
       });
       for (const c of clients) c.write(`data: ${JSON.stringify({ render: { ...body, name } })}\n\n`);
       try { await done; return json(res, { path: path.join('renders', `${name}.wav`) }); }
       catch (e) { return send(res, e.status || 504, e.message); }
     }
     if (p === '/render-error' && req.method === 'POST') {
-      const { name, message } = JSON.parse((await readBody(req)) || '{}');
-      const w = waiters.get(`${name}.wav`);
-      if (w) { waiters.delete(`${name}.wav`); w.reject(Object.assign(new Error(message), { status: 409 })); }
+      let body;
+      try { body = JSON.parse((await readBody(req)) || '{}'); } catch { return send(res, 400, 'bad json'); }
+      const { name, message } = body;
+      if (name) {
+        const w = waiters.get(`${name}.wav`);
+        if (w) { waiters.delete(`${name}.wav`); clearTimeout(w.timer); w.reject(Object.assign(new Error(message), { status: 409 })); }
+      }
       return send(res, 204, '');
     }
     if (p.startsWith('/renders/') && req.method === 'PUT') {
@@ -113,7 +123,7 @@ export function createServer() {
       for await (const c of req) chunks.push(c);
       fs.writeFileSync(path.join(RENDERS, name), Buffer.concat(chunks));
       const w = waiters.get(name);
-      if (w) { waiters.delete(name); w.resolve(); }
+      if (w) { waiters.delete(name); clearTimeout(w.timer); w.resolve(); }
       return send(res, 204, '');
     }
 
