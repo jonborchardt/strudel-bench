@@ -71,3 +71,17 @@ test('meter and bpm: grid follows the meter, cps follows bpm', async () => {
   const s = g.song({}, [g.section('a', 1, { meter: '7/8', drums: {} })]).strudle.sections[0];
   assert.equal(s.grid.steps, 14);
 });
+
+test('a section with its own tempo plays its bars faster inside a shorter span', async () => {
+  const g = await ready;
+  g.strudleLib.registerLayer('tick', () => g.s('hh*4'));
+  const pat = g.song({ cps: .5 }, [g.section('a', 2, { cps: 1, tick: {} }), g.section('b', 2, { tick: {} })]);
+  const m = pat.strudle;
+  assert.deepEqual(m.sections.map((s) => [s.cycles, s.span, s.offset]), [[2, 1, 0], [2, 2, 1]]);
+  assert.equal(m.total, 3);
+  const count = (a, b) => pat.queryArc(a, b).filter((h) => h.hasOnset()).length;
+  assert.equal(count(0, 1), 8, 'two bars of a in one song cycle');
+  assert.equal(count(1, 3), 8, 'two bars of b in two song cycles');
+  const bpm = g.song({ bpm: 120 }, [g.section('a', 4, { bpm: 240, tick: {} })]).strudle.sections[0];
+  assert.equal(bpm.span, 2);
+});

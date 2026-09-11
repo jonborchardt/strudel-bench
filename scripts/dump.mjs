@@ -96,7 +96,7 @@ export async function dumpFile(file) {
   const id = (s, l) => `${s.replace(/\W/g, '_')}_${l}`;
   const lines = [`setcps(${m.meta.cps})`, ''];
   for (const s of m.sections) {
-    lines.push(`// ${s.name} [${s.offset}-${s.offset + s.cycles})${s.role ? ' ' + s.role : ''}`);
+    lines.push(`// ${s.name} [${s.offset}-${s.offset + s.span})${s.role ? ' ' + s.role : ''}`);
     for (const [layer, l] of Object.entries(s.layers)) {
       lines.push(`// ${layer} ${JSON.stringify(l.attrs, (k, v) => (isPattern(v) ? srcOf(v) ?? 'signal' : v))}`);
       lines.push(`const ${id(s.name, layer)} = ${fmt(srcOf(l.pattern) ?? '/*pattern*/')}`, '');
@@ -104,9 +104,13 @@ export async function dumpFile(file) {
   }
   // a file may wrap the song, e.g. stack(song, textures) with the metadata copied over: name the song and print the wrapper
   const wrapped = pattern !== m.pattern;
-  lines.push(`${wrapped ? 'const layers = ' : ''}arrange(`);
-  for (const s of m.sections) lines.push(`  [${s.cycles}, stack(${Object.keys(s.layers).map((l) => id(s.name, l)).join(', ')})],`);
-  lines.push(')');
+  const timed = m.sections.some((s) => s.span !== s.cycles);
+  lines.push(`${wrapped ? 'const layers = ' : ''}${timed ? 'stepcat' : 'arrange'}(`);
+  for (const s of m.sections) {
+    const stack = `stack(${Object.keys(s.layers).map((l) => id(s.name, l)).join(', ')})`;
+    lines.push(timed ? `  [${s.span}, ${stack}.fast(${s.cycles})],` : `  [${s.cycles}, ${stack}],`);
+  }
+  lines.push(timed ? `).slow(${m.total})` : ')');
   if (wrapped) { src.set(m.pattern, 'layers'); lines.push('', fmt(srcOf(pattern) ?? '/*pattern*/')); }
   const out = lines.join('\n');
   // signal-driven axes keep an fmap(piece(...)); define it so the dump pastes into the strudel repl as-is

@@ -170,7 +170,7 @@
           const src = s.layers[layer];
           if (!src) return fail(`no layer "${layer}" in section "${section}"`);
           pat = src.pattern; begin = 0; end = cycles ?? s.cycles;
-        } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles); }
+        } else { begin = s.offset; end = s.offset + (cycles ?? s.span); }
       }
       const blob = await renderWav(pat, cps, begin, end);
       const out = await (await fetch(`renders/${name}.wav${mp3 ? '?mp3' : ''}`, { method: 'PUT', body: blob })).text();
