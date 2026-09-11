@@ -153,3 +153,17 @@ test('sound, sounds and level are material: defaults equal omission, values reac
   assert.throws(() => g.drums({ sounds: { tom: 'lt' } }, ctx), /sounds/);
   assert.throws(() => g.bass({ level: 'loud' }, ctx), /level/);
 });
+
+test('fill adds a snare roll only in the last cycle, by request or before a climax', async () => {
+  const g = await ready;
+  const inCycle = (hs, c) => hs.filter((h) => Math.floor(h.whole.begin.valueOf()) === c).length;
+  const base = onsets(g.drums({}, ctx)), filled = onsets(g.drums({ fill: true }, ctx));
+  for (const c of [0, 1, 2]) assert.equal(inCycle(filled, c), inCycle(base, c), `cycle ${c}`);
+  assert.equal(inCycle(filled, 3), inCycle(base, 3) + 8);
+  const m = g.song({}, [g.section('a', 2, { drums: {} }), g.section('b', 2, { role: 'climax', drums: {} }), g.section('c', 2, { drums: { fill: false } })]).strudle;
+  const n = (i) => onsets(m.sections[i].layers.drums.pattern, 2).length;
+  const plain = onsets(g.drums({}, { ...ctx, cycles: 2 }), 2).length;
+  assert.equal(n(0), plain + 8, 'a fills into the climax');
+  assert.equal(n(1), plain, 'b has no climax after it');
+  assert.equal(n(2), plain, 'fill: false wins');
+});
