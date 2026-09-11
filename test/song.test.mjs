@@ -48,3 +48,13 @@ test('section kit overrides the song kit', async () => {
   assert.equal(bank(0), 'RolandTR909');
   assert.equal(bank(1), 'LinnLM2');
 });
+
+test('ramp(a, b) resolves to a section-length saw; structural axes still refuse it', async () => {
+  const g = await ready;
+  g.strudleLib.registerLayer('probe', (attrs) => attrs.brightness);
+  const p = g.song({}, [g.section('a', 4, { probe: { brightness: g.ramp(.2, .8) } })]).strudle.sections[0].layers.probe.pattern;
+  const at = (t) => p.queryArc(t, t + 1e-3)[0].value;
+  assert.ok(Math.abs(at(0) - .2) < .01 && Math.abs(at(3.99) - .8) < .02, `${at(0)} ${at(3.99)}`);
+  assert.equal(String(g.ramp(.2, .8)), 'ramp(0.2, 0.8)');
+  assert.throws(() => g.song({}, [g.section('a', 4, { drums: { density: g.ramp(0, 1) } })]), /structural/);
+});
