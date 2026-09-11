@@ -1,0 +1,99 @@
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = import.meta.dirname;
+const SONGS = path.join(ROOT, 'songs');
+const USER = path.join(ROOT, 'samples', 'user');
+const SONG_NAME = /^[\w.-]+\.strudel$/;
+const AUDIO = new Set(['.wav', '.mp3', '.ogg', '.flac', '.aif', '.aiff', '.m4a', '.webm']);
+const MIME = {
+  '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
+  '.css': 'text/css', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.flac': 'audio/flac',
+  '.aif': 'audio/aiff', '.aiff': 'audio/aiff', '.m4a': 'audio/mp4', '.webm': 'audio/webm', '.strudel': 'text/plain',
+};
+
+const isAudio = (f) => AUDIO.has(path.extname(f).toLowerCase());
+
+/** Sample map for samples/user: each subfolder is a sound, loose audio files are single-variant sounds. */
+export function userMap() {
+  const map = { _base: '/samples/user/' };
+  if (!fs.existsSync(USER)) return map;
+  for (const e of fs.readdirSync(USER, { withFileTypes: true })) {
+    if (e.isDirectory()) {
+      const files = fs.readdirSync(path.join(USER, e.name)).filter(isAudio).sort();
+      if (files.length) map[e.name] = files.map((f) => `${e.name}/${f}`);
+    } else if (isAudio(e.name)) {
+      map[path.parse(e.name).name] = [e.name];
+    }
+  }
+  return map;
+}
+
+const send = (res, status, body, type = 'text/plain') => {
+  res.writeHead(status, { 'content-type': type });
+  res.end(body);
+};
+const json = (res, obj) => send(res, 200, JSON.stringify(obj), 'application/json');
+const readBody = (req) => new Promise((r) => { let s = ''; req.on('data', (d) => (s += d)).on('end', () => r(s)); });
+
+function serveStatic(res, urlPath) {
+  const file = path.resolve(ROOT, '.' + decodeURIComponent(urlPath));
+  const allowed = [path.join(ROOT, 'node_modules'), path.join(ROOT, 'samples')];
+  if (!allowed.some((d) => file.startsWith(d + path.sep)) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+    return send(res, 404, 'not found');
+  }
+  res.writeHead(200, { 'content-type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream' });
+  fs.createReadStream(file).pipe(res);
+}
+
+export function createServer() {
+  const clients = new Set();
+  fs.mkdirSync(SONGS, { recursive: true });
+  const watcher = fs.watch(SONGS, (_ev, file) => {
+    if (!file || !SONG_NAME.test(file)) return;
+    for (const res of clients) res.write(`data: ${JSON.stringify({ changed: file })}\n\n`);
+  });
+
+  const server = http.createServer(async (req, res) => {
+    const p = new URL(req.url, 'http://x').pathname;
+
+    if (p === '/') return send(res, 200, fs.readFileSync(path.join(ROOT, 'index.html')), 'text/html');
+
+    if (p === '/songs') {
+      return json(res, fs.readdirSync(SONGS).filter((f) => SONG_NAME.test(f)).sort());
+    }
+    if (p.startsWith('/songs/')) {
+      const name = decodeURIComponent(p.slice('/songs/'.length));
+      if (!SONG_NAME.test(name)) return send(res, 400, 'bad song name');
+      const file = path.join(SONGS, name);
+      if (req.method === 'PUT') {
+        fs.writeFileSync(file, await readBody(req));
+        return send(res, 204, '');
+      }
+      if (!fs.existsSync(file)) return send(res, 404, 'no such song');
+      return send(res, 200, fs.readFileSync(file), 'text/plain; charset=utf-8');
+    }
+
+    if (p === '/events') {
+      res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' });
+      res.write('\n');
+      clients.add(res);
+      req.on('close', () => clients.delete(res));
+      return;
+    }
+
+    if (p === '/samples/user/strudel.json') return json(res, userMap());
+    if (p.startsWith('/node_modules/') || p.startsWith('/samples/')) return serveStatic(res, p);
+    send(res, 404, 'not found');
+  });
+
+  server.on('close', () => watcher.close());
+  return server;
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const port = Number(process.env.PORT) || 3000;
+  createServer().listen(port, () => console.log(`strudle -> http://localhost:${port}`));
+}
