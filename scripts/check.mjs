@@ -46,7 +46,7 @@ export async function checkFile(file, cycles = 4) {
     pattern = await pattern;
     if (!pattern?.queryArc) throw new Error('last expression is not a pattern');
   } catch (e) {
-    return { ok: false, events, problems: [`${path.basename(file)}: ${e.message}`] };
+    return { ok: false, events, problems: [`${path.basename(file)}: ${e.message}`], cycles };
   }
   cycles = pattern.strudle?.total ?? cycles;
   const known = knownSounds();
@@ -71,12 +71,12 @@ export async function checkFile(file, cycles = 4) {
     sections = pattern.strudle.sections.map((s) => ({
       name: s.name, cycles: s.cycles, offset: s.offset, role: s.role,
       layers: Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, {
-        attrs: Object.fromEntries(Object.entries(l.attrs).map(([a, v]) => [a, typeof v === 'number' ? v : `signal`])),
+        attrs: Object.fromEntries(Object.entries(l.attrs).map(([a, v]) => [a, typeof v === 'number' || typeof v === 'string' ? v : `signal`])),
         onsetsPerCycle: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).length / s.cycles).toFixed(2),
       }])),
     }));
   }
-  return { ok: problems.length === 0, events, problems, sections };
+  return { ok: problems.length === 0, events, problems, sections, cycles };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -86,7 +86,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   let bad = 0;
   for (const f of files) {
     const r = await checkFile(f);
-    console.log(`== ${path.relative(ROOT, f)} (${r.events.length} events in 4 cycles)`);
+    console.log(`== ${path.relative(ROOT, f)} (${r.events.length} events in ${r.cycles} cycles)`);
     if (files.length === 1) console.log(r.events.join('\n'));
     for (const sct of r.sections ?? []) {
       console.log(`  [${sct.offset}-${sct.offset + sct.cycles}) ${sct.name}${sct.role ? ' (' + sct.role + ')' : ''}`);
