@@ -179,6 +179,13 @@ test('pad arp spreads the chord into 8 notes per cycle; omitted equals baseline'
   assert.ok(down[0] > down[1] && down[1] > down[2]);
   assert.equal(onsets(g.pad({ arp: '0 2' }, ctx), 1).length, 2);
   assert.throws(() => g.pad({ arp: 'Up' }, ctx), /arp/);
+  // a seventh chord's real voice count (4) can exceed plan.tones (3, the default); the named order must
+  // still reach every voice, not just the first plan.tones of them.
+  const cyc1 = (pat) => onsets(pat, 2).filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);
+  const up7 = cyc1(g.song(ctx, [g.section('_', 2, { progression: 'i V7', pad: { arp: 'up' } })]).strudle.sections[0].layers.pad.pattern);
+  assert.equal(new Set(up7).size, 4, `V7 arp up should sound 4 distinct voices, got ${up7.join(',')}`);
+  const down7 = cyc1(g.song(ctx, [g.section('_', 2, { progression: 'i V7', pad: { arp: 'down' } })]).strudle.sections[0].layers.pad.pattern);
+  assert.equal(down7[0], Math.max(...up7), 'down starts on the highest note');
 });
 
 test('bass and pad follow altered roots, sevenths and sub-cycle chords', async () => {
