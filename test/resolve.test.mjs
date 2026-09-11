@@ -56,6 +56,7 @@ test('harmony words write key and progression on the section, once', async () =>
   assert.ok(/drums: \{ density: \.9, brightness: \.7/.test(out), 'axis edit still applied');
   assert.deepEqual(plan.harmonyReport.map((r) => [r.field, r.from, r.to]), [['key', 'C:minor', 'Eb:major'], ['progression', 'i VI', 'I V vi IV']]);
   assert.match(plan.harmonyReport[1].describe, /Eb Bb Cm Ab/);
+  assert.equal(plan.harmonyNotice, true);
   // idempotent: second run finds nothing to change
   const again = planEdits(out, 'drop', '*', 'relative major, pop');
   assert.deepEqual(again.harmonyReport, []);

@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { userMap } from '../server.mjs';
 import './esm-fix.mjs'; // must run before the strudel imports below are resolved, hence dynamic imports
-import { parseProgression, chordName } from '../lib/harmony.mjs';
+import { parseProgression, chordNames } from '../lib/harmony.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
 const { transpiler } = await import('@strudel/transpiler');
 const { miniAllStrings } = await import('@strudel/mini');
@@ -70,10 +70,9 @@ export async function checkFile(file, cycles = 4) {
   let sections;
   if (pattern.strudle) {
     sections = pattern.strudle.sections.map((s) => {
-      const prog = parseProgression(s.progression);
       return {
         name: s.name, cycles: s.cycles, offset: s.offset, role: s.role,
-        harmony: `${s.key}  ${prog.map((c) => c.numeral).join(' ')} → ${prog.map((c) => chordName(s.key, c.degree)).join(' ')}`,
+        harmony: `${s.key}  ${s.progression} → ${chordNames(s.key, parseProgression(s.progression))}`,
         layers: Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, {
           attrs: Object.fromEntries(Object.entries(l.attrs).map(([a, v]) => [a, typeof v === 'number' || typeof v === 'string' ? v : `signal`])),
           onsetsPerCycle: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).length / s.cycles).toFixed(2),

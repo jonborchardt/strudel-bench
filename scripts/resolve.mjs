@@ -9,7 +9,7 @@ import '../scripts/esm-fix.mjs';
 import { AXIS_NAMES, cells, describeCell } from '../lib/axes.mjs';
 import '../lib/layers.mjs';
 import { parsePhrase, applyDeltas } from '../lib/vocab.mjs';
-import { parseProgression, applyHarmonyWords, describeHarmony, DEFAULT_PROGRESSION } from '../lib/harmony.mjs';
+import { parseProgression, applyHarmonyWords, chordNames, DEFAULT_PROGRESSION } from '../lib/harmony.mjs';
 import { ensureScope } from './check.mjs';
 
 const isNumLit = (n) => (n.type === 'Literal' && typeof n.value === 'number') || (n.type === 'UnaryExpression' && n.operator === '-' && n.argument.type === 'Literal');
@@ -77,7 +77,7 @@ export function planEdits(src, sectionSel, layerSel, phrase) {
         for (const field of ['key', 'progression']) {
           if (to[field] === from[field]) continue;
           const line = { section: s.name, field, from: from[field], to: to[field] };
-          if (field === 'progression') line.describe = describeHarmony(to.key, parseProgression(to.progression));
+          if (field === 'progression') line.describe = chordNames(to.key, parseProgression(to.progression));
           harmonyReport.push(line);
           const node = s[`${field}Node`];
           if (node) edits.push({ start: node.start, end: node.end, text: `'${to[field]}'` });
@@ -112,7 +112,8 @@ export function planEdits(src, sectionSel, layerSel, phrase) {
       }
     }
   }
-  return { edits, refused, report, harmonyReport, parsed };
+  const harmonyNotice = parsed.harmony.length > 0 && layerSel !== '*' && harmonyReport.length > 0;
+  return { edits, refused, report, harmonyReport, parsed, harmonyNotice };
 }
 
 export function applyEdits(src, edits) {
@@ -121,7 +122,7 @@ export function applyEdits(src, edits) {
   return out;
 }
 
-export function printReport({ report, refused, parsed, harmonyReport = [] }) {
+export function printReport({ report, refused, parsed, harmonyReport = [], harmonyNotice }) {
   for (const [axis, cs] of Object.entries(parsed.contributions)) {
     if (cs.length < 2) continue;
     const signs = new Set(cs.map((c) => Math.sign(c.delta)));
@@ -133,6 +134,7 @@ export function printReport({ report, refused, parsed, harmonyReport = [] }) {
     console.log(`  ${r.section}.${r.layer}.${r.axis} ${fmt(r.from)} → ${fmt(r.to)}${r.describe ? '   ' + r.describe : ''}${sat}`);
   }
   for (const h of harmonyReport) console.log(`  ${h.section}.${h.field} ${h.from} → ${h.to}${h.describe ? '   ' + h.describe : ''}`);
+  if (harmonyNotice) console.log('  harmony applies per section; layer selector ignored for key/progression');
   for (const r of refused) console.log(`  ${r.section}.${r.layer}.${r.axis}: refused, ${r.reason}`);
 }
 

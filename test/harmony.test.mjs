@@ -23,6 +23,8 @@ test('chordName and describeHarmony read the key\'s diatonic quality', async () 
   assert.equal(chordName('C:minor', 1), 'Ddim');
   assert.equal(chordName('C:major', 4), 'G');
   assert.equal(chordName('Eb:major', 5), 'Cm');
+  assert.equal(chordName('E:minor', 1), 'F#dim');
+  assert.equal(chordName('B:minor', 4), 'F#m');
   assert.equal(describeHarmony('C:minor', parseProgression('i VI III VII')), 'i VI III VII in C:minor → Cm Ab Eb Bb');
 });
 
@@ -74,4 +76,5 @@ test('relativeKey, withMode and applyHarmonyWords', async () => {
   assert.deepEqual(applyHarmonyWords(s0, parsePhrase('relative').harmony), { key: 'Eb:major', progression: 'i VI' });
   assert.deepEqual(applyHarmonyWords(s0, parsePhrase('punchier').harmony), s0, 'no harmony words: unchanged');
   assert.deepEqual(applyHarmonyWords(s0, parsePhrase('tense, resolved').harmony).progression, 'I IV V I', 'last progression word wins');
+  assert.deepEqual(applyHarmonyWords({ key: 'C:aeolian', progression: 'i VI' }, parsePhrase('relative minor').harmony), { key: 'C:minor', progression: 'i VI' });
 });

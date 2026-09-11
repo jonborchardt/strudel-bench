@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 import '../scripts/esm-fix.mjs';
 import { AXES } from '../lib/axes.mjs';
 import { planEdits, applyEdits } from './resolve.mjs';
-import { checkFile } from './check.mjs';
+import { checkFile, ensureScope } from './check.mjs';
 import { analyze, readWav } from './analyze.mjs';
 
 const [file, sectionSel, layerSel, phrase] = process.argv.slice(2);
@@ -19,8 +19,9 @@ const combineOutput = (e) => [e.stdout, e.stderr].map((s) => s?.trim()).filter(B
 const port = process.env.PORT || 3000;
 
 const before = fs.readFileSync(file, 'utf8');
+await ensureScope(); // describeHarmony's chordName() needs Strudel's scale() live, same as check.mjs/resolve.mjs.
 const plan = planEdits(before, sectionSel, layerSel, phrase);
-if (plan.report.length === 0 && plan.refused.length === 0) {
+if (plan.report.length === 0 && plan.refused.length === 0 && plan.harmonyReport.length === 0) {
   console.error(`no matching section/layer for ${sectionSel}/${layerSel}`);
   process.exit(2);
 }
