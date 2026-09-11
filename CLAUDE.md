@@ -63,4 +63,4 @@ README.md carries the rules, the axis table, the phase order and the harmony con
 
 ## Deliberate deferrals
 
-Plain textarea editor (CodeMirror via `@strudel/codemirror` is the agreed follow-up). GM soundfont instruments (`gm_*`) still stream from GitHub. Harmony does not model accidentals, sevenths, borrowed chords or sub-cycle chord changes. Design spec and plan: `docs/superpowers/`.
+Plain textarea editor (CodeMirror via `@strudel/codemirror` is the agreed follow-up). GM soundfont instruments (`gm_*`) still stream from GitHub. Harmony does not model inversions, voice leading, or chords longer than a bar. Design spec and plan: `docs/superpowers/`.
