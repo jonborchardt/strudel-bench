@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { userMap } from '../server.mjs';
 import './esm-fix.mjs'; // must run before the strudel imports below are resolved, hence dynamic imports
+import { parseProgression, chordName } from '../lib/harmony.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
 const { transpiler } = await import('@strudel/transpiler');
 const { miniAllStrings } = await import('@strudel/mini');
@@ -17,7 +18,7 @@ const SYNTHS = ['sine', 'square', 'triangle', 'sawtooth', 'sin', 'sqr', 'tri', '
   'white', 'pink', 'brown', 'crackle', 'z_sine', 'z_sawtooth', 'z_square', 'z_triangle', 'z_tan', 'z_noise', 'bytebeat'];
 
 let scopeReady;
-const ensureScope = () => (scopeReady ??= (async () => {
+export const ensureScope = () => (scopeReady ??= (async () => {
   await evalScope(import('@strudel/core'), import('@strudel/mini'), import('@strudel/tonal'),
     { setcps: () => {}, setcpm: () => {}, setCps: () => {}, setCpm: () => {}, samples: async () => {}, hush: () => {} });
   miniAllStrings();
@@ -68,13 +69,17 @@ export async function checkFile(file, cycles = 4) {
   for (const u of unknown) problems.push(`${path.basename(file)}: unknown sound "${u}"`);
   let sections;
   if (pattern.strudle) {
-    sections = pattern.strudle.sections.map((s) => ({
-      name: s.name, cycles: s.cycles, offset: s.offset, role: s.role,
-      layers: Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, {
-        attrs: Object.fromEntries(Object.entries(l.attrs).map(([a, v]) => [a, typeof v === 'number' || typeof v === 'string' ? v : `signal`])),
-        onsetsPerCycle: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).length / s.cycles).toFixed(2),
-      }])),
-    }));
+    sections = pattern.strudle.sections.map((s) => {
+      const prog = parseProgression(s.progression);
+      return {
+        name: s.name, cycles: s.cycles, offset: s.offset, role: s.role,
+        harmony: `${s.key}  ${prog.map((c) => c.numeral).join(' ')} → ${prog.map((c) => chordName(s.key, c.degree)).join(' ')}`,
+        layers: Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, {
+          attrs: Object.fromEntries(Object.entries(l.attrs).map(([a, v]) => [a, typeof v === 'number' || typeof v === 'string' ? v : `signal`])),
+          onsetsPerCycle: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).length / s.cycles).toFixed(2),
+        }])),
+      };
+    });
   }
   return { ok: problems.length === 0, events, problems, sections, cycles };
 }
@@ -90,6 +95,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (files.length === 1) console.log(r.events.join('\n'));
     for (const sct of r.sections ?? []) {
       console.log(`  [${sct.offset}-${sct.offset + sct.cycles}) ${sct.name}${sct.role ? ' (' + sct.role + ')' : ''}`);
+      console.log(`    harmony ${sct.harmony}`);
       for (const [layer, l] of Object.entries(sct.layers)) {
         const attrs = Object.entries(l.attrs).map(([a, v]) => `${a}=${v}`).join(' ');
         console.log(`    ${layer.padEnd(7)} ${String(l.onsetsPerCycle).padStart(5)}/cyc  ${attrs}`);

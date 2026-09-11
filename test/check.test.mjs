@@ -44,3 +44,21 @@ test('song() files report per-section, per-layer state', async () => {
   assert.ok(drop.layers.drums.onsetsPerCycle > r.sections.find((s) => s.name === 'intro').layers.drums.onsetsPerCycle);
   assert.equal(typeof drop.layers.drums.attrs.density, 'number');
 });
+
+test('harmony line per section, default visible', async () => {
+  const f = tmp('_t_harm.strudel', `song({ key: 'C:minor' }, [
+  section('a', 1, { pad: {} }),
+  section('b', 1, { key: 'Eb:major', progression: 'I V vi IV', pad: {} }),
+])`);
+  try {
+    const r = await checkFile(f);
+    assert.deepEqual(r.problems, []);
+    assert.deepEqual(r.sections.map((s) => s.harmony), ['C:minor  i VI → Cm Ab', 'Eb:major  I V vi IV → Eb Bb Cm Ab']);
+  } finally { fs.rmSync(f); }
+});
+
+test('bad numeral is a problem, not a crash', async () => {
+  const f = tmp('_t_harm_bad.strudel', `song({}, [ section('drop', 1, { progression: 'i V7', pad: {} }) ])`);
+  try { const r = await checkFile(f); assert.equal(r.ok, false); assert.match(r.problems[0], /section "drop".*numeral "V7"/); }
+  finally { fs.rmSync(f); }
+});
