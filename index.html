@@ -12,8 +12,12 @@
 <div class="bar">
   <select id="song"></select>
   <button id="play">&#9654; play</button>
+  <button id="pause">&#10074;&#10074; pause</button>
   <button id="stop">&#9632; stop</button>
+  <label id="scrub" hidden><input id="pos" type="range" min="0" max="1" step="0.05" list="marks" style="width:16rem;vertical-align:middle"><datalist id="marks"></datalist> <span id="where"></span></label>
   <button id="save">save</button>
+  <button id="export">export mp3</button>
+  <button id="dump">export strudel</button>
   <span id="status"></span>
   <kbd>ctrl+enter play &middot; ctrl+. stop</kbd>
 </div>
@@ -24,8 +28,11 @@
   const $ = (id) => document.getElementById(id);
   let loaded = '';      // text as last loaded from disk (or saved)
   let playing = false;
+  let sections = []; // of the song last evaluated, for the scrubber
+  let paused = null; // cycle to resume from; the worker clock resets to 0 on stop, so pause must remember it
 
   const ready = initStrudel({
+    sync: true, // worker clock: the only scheduler with setCycle (section jump)
     onEvalError: (e) => ($('err').textContent = e.message),
     prebake: async () => {
       const packs = await fetch('/samples/packs/packs.json').then((r) => (r.ok ? r.json() : []));
@@ -61,11 +68,22 @@
   async function play() {
     $('err').textContent = '';
     await ready;
-    await strudel.evaluate($('code').value);
+    const pat = await strudel.evaluate($('code').value);
+    if (pat?.strudle) setcps(pat.strudle.meta.cps); // song() files carry their tempo in metadata; render and export already honour it
     playing = true;
+    sections = pat?.strudle?.sections ?? []; // only song() files have sections to scrub through
+    $('scrub').hidden = !sections.length;
+    $('pos').max = pat?.strudle?.total ?? 1;
+    $('marks').innerHTML = sections.map((s) => `<option value="${s.offset}" label="${s.name}">`).join(''); // tick marks at section starts
+    if (paused != null) { (await ready).scheduler.setCycle(paused); paused = null; }
     console.log('[strudle] evaluated', $('song').value);
   }
-  function stop() { strudel.hush(); playing = false; }
+  function stop() { strudel.hush(); playing = false; paused = null; }
+  async function pause() {
+    if (!playing) return play(); // resumes from `paused` if set
+    paused = (await ready).scheduler.now();
+    strudel.hush(); playing = false;
+  }
   async function save() {
     await fetch(`/songs/${$('song').value}`, { method: 'PUT', body: $('code').value });
     loaded = $('code').value;
@@ -73,8 +91,36 @@
   }
 
   $('play').onclick = play;
+  $('pause').onclick = pause;
   $('stop').onclick = stop;
+  $('pos').oninput = async (e) => {
+    paused = null;
+    if (!playing) await play();
+    (await ready).scheduler.setCycle(Number(e.target.value)); // clock worker jumps; already-sounding notes keep ringing
+  };
+  setInterval(async () => { // follow the clock: slider position + "section · cycle/total"
+    if (!sections.length) return;
+    const c = playing ? (await ready).scheduler.now() : paused ?? 0; // now() drifts after stop
+    if (document.activeElement !== $('pos')) $('pos').value = c; // don't yank the knob mid-drag
+    const s = sections.findLast((x) => x.offset <= c);
+    $('where').textContent = `${s?.name ?? '…'} · ${c.toFixed(1)}/${$('pos').max}`;
+  }, 250);
   $('save').onclick = save;
+  $('export').onclick = async () => {
+    const song = $('song').value;
+    await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
+    renderToServer({ song, name: song.replace(/\.strudel$/, ''), mp3: true });
+  };
+  $('dump').onclick = async () => {
+    const song = $('song').value;
+    $('status').textContent = `dumping ${song}…`;
+    const r = await fetch(`/dump/${song}`, { method: 'POST' });
+    if (!r.ok) { $('status').textContent = `dump failed: ${await r.text()}`; return; }
+    const { path, code } = await r.json();
+    const url = `https://strudel.cc/#${strudel.code2hash(code)}`;
+    $('status').innerHTML = `wrote ${path} · <a href="${url}" target="_blank">open in strudel.cc</a>`;
+    window.open(url, '_blank'); // popup blockers may eat this; the status link is the fallback
+  };
   $('song').onchange = loadSong;
   $('code').addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); play(); }
@@ -99,8 +145,9 @@
     }, 200);
   };
 
-  async function renderToServer({ song, cycles, section, layer, name }) {
-    const fail = (message) => fetch('/render-error', { method: 'POST', body: JSON.stringify({ name, message }) });
+  async function renderToServer({ song, cycles, section, layer, name, mp3 }) {
+    const fail = (message) => { $('status').textContent = message; return fetch('/render-error', { method: 'POST', body: JSON.stringify({ name, message }) }); };
+    $('status').textContent = `rendering ${name}…`;
     if (playing) return fail('page is playing; stop first (render replaces the audio context)');
     try {
       await ready;
@@ -119,21 +166,67 @@
           pat = src.pattern; begin = 0; end = cycles ?? s.cycles;
         } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles); }
       }
-      let blob = null;
-      const origCreate = URL.createObjectURL, origClick = HTMLAnchorElement.prototype.click;
-      URL.createObjectURL = (b) => { blob = b; return 'blob:captured'; };
-      HTMLAnchorElement.prototype.click = function () {};
-      try { await strudel.renderPatternAudio(pat, cps, begin, end, 44100, 128, false, name); }
-      finally { URL.createObjectURL = origCreate; HTMLAnchorElement.prototype.click = origClick; }
-      if (!blob) return fail('renderer produced no file');
-      await fetch(`/renders/${name}.wav`, { method: 'PUT', body: blob });
-      $('status').textContent = `rendered ${name}.wav (${(end - begin)} cycles)`;
+      const blob = await renderWav(pat, cps, begin, end);
+      const out = await (await fetch(`/renders/${name}.wav${mp3 ? '?mp3' : ''}`, { method: 'PUT', body: blob })).text();
+      $('status').textContent = `rendered ${out} (${(end - begin)} cycles)`;
     } catch (e) {
       fail(e.message);
       // the render stubs/audio context may be half-torn-down: say so instead of looking idle
       $('status').textContent = `render failed: ${e.message}. Reload the page before playing.`;
       $('err').textContent = e.message;
     }
+  }
+
+  // Offline render, one cycle at a time. strudel.renderPatternAudio builds every event's node chain up front and
+  // Chrome runs the whole graph every quantum, so a long dense song renders ~40x slower than realtime. Suspending
+  // the context at each cycle boundary and scheduling only that cycle keeps the live graph to what is sounding.
+  async function renderWav(pat, cps, begin, end) {
+    const live = strudel.getAudioContext();
+    // a pending worklet load on the live context is aborted by close() and strudel caches the failure forever
+    if (live.state === 'running') await strudel.initAudio();
+    await live.close();
+    const rate = 44100;
+    const ctx = new OfflineAudioContext(2, Math.ceil((end - begin) / cps * rate), rate);
+    strudel.setAudioContext(ctx);
+    strudel.resetGlobalEffects();
+    strudel.setSuperdoughAudioController(null); // rebuilt lazily on the offline context
+    await strudel.initAudio({ maxPolyphony: 128 });
+    const schedule = async (from, to) => {
+      for (const h of pat.queryArc(from, to, { _cps: cps })) {
+        if (!h.hasOnset()) continue;
+        h.ensureObjectValue();
+        const at = (h.whole.begin.valueOf() - begin) / cps;
+        try { await strudel.superdough(h.value, at, h.duration / cps, cps, at); } catch (e) { console.warn('[render]', e.message); }
+      }
+    };
+    try {
+      const starts = [];
+      for (let b = begin + 1; b < end; b++) starts.push(b);
+      const suspends = starts.map((b) => ctx.suspend((b - begin) / cps - 0.05)); // a hair early: the cycle's first onset must still be ahead
+      await schedule(begin, Math.min(begin + 1, end));
+      const done = ctx.startRendering();
+      for (let i = 0; i < starts.length; i++) {
+        await suspends[i];
+        await schedule(starts[i], Math.min(starts[i] + 1, end));
+        await ctx.resume();
+      }
+      return toWav(await done);
+    } finally {
+      strudel.resetGlobalEffects();
+      strudel.setSuperdoughAudioController(null);
+      strudel.setAudioContext(null); // strudel makes a fresh live context on next use
+    }
+  }
+  function toWav(buf) { // 16-bit PCM, interleaved
+    const n = buf.length, ch = buf.numberOfChannels, bytes = n * ch * 2, v = new DataView(new ArrayBuffer(44 + bytes));
+    const tag = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+    tag(0, 'RIFF'); v.setUint32(4, 36 + bytes, true); tag(8, 'WAVEfmt '); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true); v.setUint16(22, ch, true); v.setUint32(24, buf.sampleRate, true);
+    v.setUint32(28, buf.sampleRate * ch * 2, true); v.setUint16(32, ch * 2, true); v.setUint16(34, 16, true);
+    tag(36, 'data'); v.setUint32(40, bytes, true);
+    const chans = Array.from({ length: ch }, (_, c) => buf.getChannelData(c));
+    for (let i = 0, o = 44; i < n; i++) for (const c of chans) { const s = Math.max(-1, Math.min(1, c[i])); v.setInt16(o, s < 0 ? s * 32768 : s * 32767, true); o += 2; }
+    return new Blob([v], { type: 'audio/wav' });
   }
 
   loadList();

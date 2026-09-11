@@ -9,11 +9,14 @@
     "check": "node scripts/check.mjs",
     "samples": "node scripts/samples.mjs",
     "render": "node scripts/render.mjs",
+    "mp3": "node scripts/mp3.mjs",
     "resolve": "node scripts/resolve.mjs",
+    "dump": "node scripts/dump.mjs",
     "verify": "node scripts/verify.mjs",
     "vocab": "node scripts/vocab.mjs > .claude/skills/strudle/reference/vocab.md"
   },
   "dependencies": {
+    "@breezystack/lamejs": "^1.2.7",
     "@strudel/core": "^1.2.6",
     "@strudel/mini": "^1.2.6",
     "@strudel/tonal": "^1.2.6",

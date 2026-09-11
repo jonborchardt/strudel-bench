@@ -2,6 +2,8 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFile } from 'node:child_process';
+import { wavToMp3 } from './scripts/mp3.mjs';
 
 const ROOT = import.meta.dirname;
 const SONGS = path.join(ROOT, 'songs');
@@ -67,7 +69,7 @@ export function createServer() {
   });
 
   async function handle(req, res) {
-    const p = new URL(req.url, 'http://x').pathname;
+    const { pathname: p, searchParams } = new URL(req.url, 'http://x');
 
     if (p === '/') return send(res, 200, fs.readFileSync(path.join(ROOT, 'index.html')), 'text/html');
     if (p === '/favicon.ico') return send(res, 204, '');
@@ -110,8 +112,24 @@ export function createServer() {
         waiters.set(key, { resolve, reject, timer });
       });
       for (const c of clients) c.write(`data: ${JSON.stringify({ render: { ...body, name } })}\n\n`);
-      try { await done; return json(res, { path: path.join('renders', `${name}.wav`) }); }
+      try { await done; return json(res, { path: path.join('renders', `${name}.${body.mp3 ? 'mp3' : 'wav'}`) }); }
       catch (e) { return send(res, e.status || 504, e.message); }
+    }
+    // dump runs in a child process: scripts/dump.mjs installs the esm-fix hook and patches strudel globals,
+    // neither of which belongs in the server process.
+    if (p.startsWith('/dump/') && req.method === 'POST') {
+      const song = decodeURIComponent(p.slice('/dump/'.length));
+      if (!SONG_NAME.test(song)) return send(res, 400, 'bad song name');
+      if (!fs.existsSync(path.join(SONGS, song))) return send(res, 404, 'no such song');
+      const out = await new Promise((resolve, reject) =>
+        execFile(process.execPath, [path.join(ROOT, 'scripts', 'dump.mjs'), path.join(SONGS, song)], { maxBuffer: 1 << 24 },
+          (err, stdout, stderr) => (err ? reject(new Error(stderr.trim().split('\n').pop() || err.message)) : resolve(stdout))))
+        .catch((e) => e);
+      if (out instanceof Error) return send(res, 422, out.message);
+      fs.mkdirSync(RENDERS, { recursive: true });
+      const file = path.join(RENDERS, `${song.replace(/\.strudel$/, '')}.dump.txt`); // .txt: it is meant to be pasted into the strudel repl
+      fs.writeFileSync(file, out);
+      return json(res, { path: path.relative(ROOT, file), code: out });
     }
     if (p === '/render-error' && req.method === 'POST') {
       let body;
@@ -129,13 +147,17 @@ export function createServer() {
       fs.mkdirSync(RENDERS, { recursive: true });
       const chunks = [];
       for await (const c of req) chunks.push(c);
-      fs.writeFileSync(path.join(RENDERS, name), Buffer.concat(chunks));
+      const file = path.join(RENDERS, name);
+      fs.writeFileSync(file, Buffer.concat(chunks));
+      const out = searchParams.has('mp3') ? wavToMp3(file) : file;
       const w = waiters.get(name);
       if (w) { waiters.delete(name); clearTimeout(w.timer); w.resolve(); }
-      return send(res, 204, '');
+      return send(res, 200, path.relative(ROOT, out));
     }
 
     if (p === '/samples/user/strudel.json') return json(res, userMap());
+    // strudel's UMD build resolves its clock SharedWorker against the page URL, so /assets/ must alias dist/assets
+    if (p.startsWith('/assets/')) return serveStatic(res, '/node_modules/@strudel/web/dist' + p);
     if (p.startsWith('/node_modules/') || p.startsWith('/samples/') || p.startsWith('/lib/')) return serveStatic(res, p);
     send(res, 404, 'not found');
   }

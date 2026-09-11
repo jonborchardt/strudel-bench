@@ -1,10 +1,10 @@
-// machine: filthy mechanical industrial rock at 90 BPM, straight 4/4, one dark minor centre (E minor, i only).
+// machine: filthy mechanical industrial rock at 120 BPM, straight 4/4, one dark minor centre (E minor, i only).
 // The groove is a physical loop; everything around it corrodes. Tension comes from density, drive, distortion,
 // filtering and texture, never from harmony. Each rebuild is more damaged than the last; the ending is not a resolution.
 // intro → arrive → verse → build → chorus → breakdown → rebuild → verse2 → chorus2 → chorus3 → burnout. 68 cycles.
 // Axis values are 0..1 with 0.5 = the layer's baseline. Mechanical: organicness 0, groove 0, variation low until it isn't.
 const M = { organicness: 0, groove: 0 };
-const machine = song({ cps: .375, key: 'E:minor', seed: 23, kit: 'RolandTR909' }, [
+const machine = song({ cps: .5, key: 'E:minor', seed: 23, kit: 'RolandTR909' }, [
   section('intro', 4, { role: 'establish', progression: 'i',
     drums: { ...M, template: 'minimal', density: .2, drive: .9, articulation: .9, brightness: .2, space: .1, variation: 0 },
   }),
