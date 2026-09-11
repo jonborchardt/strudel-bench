@@ -58,3 +58,20 @@ test('no progression keeps the pad exactly as before (default i VI)', async () =
   const sig = (p) => JSON.stringify(onsets(p, 2).map((h) => [h.whole.begin.valueOf(), h.value.note]));
   assert.equal(sig(withDefault), sig(explicit));
 });
+
+test('relativeKey, withMode and applyHarmonyWords', async () => {
+  await ready;
+  const { relativeKey, withMode, applyHarmonyWords } = await import('../lib/harmony.mjs');
+  const { parsePhrase } = await import('../lib/vocab.mjs');
+  assert.equal(relativeKey('C:minor'), 'Eb:major');
+  assert.equal(relativeKey('A:major'), 'F#:minor');
+  assert.equal(relativeKey('Db:major'), 'Bb:minor');
+  assert.throws(() => relativeKey('D:dorian'), /relative/);
+  assert.equal(withMode('C:minor', 'major'), 'C:major');
+  const s0 = { key: 'C:minor', progression: 'i VI' };
+  assert.deepEqual(applyHarmonyWords(s0, parsePhrase('relative major, pop').harmony), { key: 'Eb:major', progression: 'I V vi IV' });
+  assert.deepEqual(applyHarmonyWords(s0, parsePhrase('major').harmony), { key: 'C:major', progression: 'i VI' });
+  assert.deepEqual(applyHarmonyWords(s0, parsePhrase('relative').harmony), { key: 'Eb:major', progression: 'i VI' });
+  assert.deepEqual(applyHarmonyWords(s0, parsePhrase('punchier').harmony), s0, 'no harmony words: unchanged');
+  assert.deepEqual(applyHarmonyWords(s0, parsePhrase('tense, resolved').harmony).progression, 'I IV V I', 'last progression word wins');
+});

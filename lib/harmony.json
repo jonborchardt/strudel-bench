@@ -1,0 +1,12 @@
+{
+  "progressions": {
+    "static":     "i",
+    "resolved":   "I IV V I",
+    "unresolved": "i VI VII",
+    "tense":      "i VII VI VII",
+    "pop":        "I V vi IV",
+    "epic":       "vi IV I V",
+    "circular":   "i VI III VII"
+  },
+  "modes": ["major", "minor", "dorian", "lydian", "mixolydian", "phrygian"]
+}
