@@ -113,9 +113,15 @@ export async function dumpFile(file) {
   lines.push(timed ? `).slow(${m.total})` : ')');
   if (wrapped) { src.set(m.pattern, 'layers'); lines.push('', fmt(srcOf(pattern) ?? '/*pattern*/')); }
   const out = lines.join('\n');
-  // signal-driven axes keep an fmap(piece(...)); define it so the dump pastes into the strudel repl as-is
-  const helper = out.includes('piece(') ? `const piece = ${globalThis.strudleLib.piece.toString().replace(/^.*f\.toString.*\r?\n/m, '').replace(/\r\n/g, '\n')}\n\n` : '';
-  return helper + out;
+  // lib closures the dump prints reference library helpers by name (piece from a signal axis, arpIndices from
+  // an arped pad); define the ones used so the dump pastes into the strudel repl as-is.
+  const L = globalThis.strudleLib;
+  const helpers = [];
+  if (out.includes('piece(')) helpers.push(`const piece = ${L.piece.toString().replace(/^.*f\.toString.*\r?\n/m, '').replace(/\r\n/g, '\n')}`);
+  if (out.includes('arpIndices(')) helpers.push(
+    `const ARP_ORDERS = { ${Object.entries(L.ARP_ORDERS).map(([k, f]) => `${k}: ${f}`).join(', ')} }`,
+    `const arpIndices = ${L.arpIndices}`);
+  return helpers.length ? `${helpers.join('\n\n')}\n\n${out}` : out;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

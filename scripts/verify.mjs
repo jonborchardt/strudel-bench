@@ -45,9 +45,11 @@ const onsetsB = onsetsPerCycle(checked);
 let wavB, A, B;
 try {
   wavB = render('verify.after');
-  const cps = Number(/cps:\s*([\d.]+)/.exec(before)?.[1] ?? 0.5);
-  A = analyze(readWav(fs.readFileSync(wavA)), { cps });
-  B = analyze(readWav(fs.readFileSync(wavB)), { cps });
+  // song() files carry the tempo in metadata (bpm: songs have no `cps:` to grep); plain strudel files still need the regex.
+  const cps = checked.cps ?? Number(/cps:\s*([\d.]+)/.exec(before)?.[1] ?? 0.5);
+  const steps = checked.sections?.find((s) => s.name === sectionSel)?.grid?.steps ?? 16;
+  A = analyze(readWav(fs.readFileSync(wavA)), { cps, steps });
+  B = analyze(readWav(fs.readFileSync(wavB)), { cps, steps });
 } catch (e) {
   restore(file, before);
   console.error('render/analyze failed after edit; file restored\n' + combineOutput(e));

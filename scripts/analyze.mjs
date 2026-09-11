@@ -153,9 +153,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const jsonOut = args.includes('--json');
   const cpsIdx = args.indexOf('--cps');
   const cps = cpsIdx >= 0 ? Number(args[cpsIdx + 1]) : 0.5;
+  const stepsIdx = args.indexOf('--steps');
+  const steps = stepsIdx >= 0 ? Number(args[stepsIdx + 1]) : 16; // swing/jitter grid: 16 for 4/4, 12 for 3/4, 14 for 7/8
   const files = args.filter((a) => a.endsWith('.wav'));
-  if (!files.length) { console.error('usage: node scripts/analyze.mjs a.wav [b.wav] [--json] [--cps .5]'); process.exit(2); }
-  const results = files.map((f) => analyze(readWav(fs.readFileSync(f)), { cps }));
+  if (!files.length) { console.error('usage: node scripts/analyze.mjs a.wav [b.wav] [--json] [--cps .5] [--steps 16]'); process.exit(2); }
+  const results = files.map((f) => analyze(readWav(fs.readFileSync(f)), { cps, steps }));
   if (jsonOut) { console.log(JSON.stringify(Object.fromEntries(files.map((f, i) => [f, results[i]])), null, 1)); process.exit(0); }
   const keys = Object.keys(results[0]);
   for (const k of keys) {

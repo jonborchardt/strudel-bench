@@ -31,8 +31,18 @@ test('unknown sound is reported', async () => {
 
 test('raw (non-song) files are queried over the default 4 cycles', async () => {
   const f = tmp('_t_raw.strudel', 's("bd*4")');
-  try { const r = await checkFile(f); assert.equal(r.cycles, 4); }
+  try { const r = await checkFile(f); assert.equal(r.cycles, 4); assert.equal(r.cps, undefined); }
   finally { fs.rmSync(f); }
+});
+
+test('checkFile reports the song cps and each section grid (verify/analyze read them from here)', async () => {
+  const f = tmp('_t_bpm.strudel', `song({ bpm: 120, meter: '3/4' }, [ section('a', 1, { drums: {} }) ])`);
+  try {
+    const r = await checkFile(f);
+    assert.deepEqual(r.problems, []);
+    assert.ok(Math.abs(r.cps - 120 / 60 / 3) < 1e-9, String(r.cps));
+    assert.equal(r.sections[0].grid.steps, 12);
+  } finally { fs.rmSync(f); }
 });
 
 test('song() files report per-section, per-layer state', async () => {

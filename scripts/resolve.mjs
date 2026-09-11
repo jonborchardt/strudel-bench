@@ -38,13 +38,15 @@ export function locate(src) {
         if (layer === 'progression') { s.progressionNode = prop.value; continue; }
         if (prop.value.type !== 'ObjectExpression') continue;
         const axes = {};
+        let spread = null; // a spread hides values we cannot see; planEdits refuses the whole layer
         for (const ap of prop.value.properties) {
+          if (ap.type === 'SpreadElement') { spread ??= src.slice(ap.start, ap.end); continue; }
           if (ap.type !== 'Property') continue;
           const a = keyName(ap);
           if (!AXIS_NAMES.includes(a)) continue;
           axes[a] = { node: ap.value, value: isNumLit(ap.value) ? numOf(ap.value) : 'expr' };
         }
-        s.layers[layer] = { node: prop.value, axes };
+        s.layers[layer] = { node: prop.value, axes, spread };
       }
       sections.push(s);
     }
@@ -91,6 +93,10 @@ export function planEdits(src, sectionSel, layerSel, phrase) {
     }
     for (const [layer, L] of Object.entries(s.layers)) {
       if (layerSel !== '*' && layer !== layerSel) continue;
+      if (L.spread) {
+        refused.push({ section: s.name, layer, axis: '-', reason: `uses spread (${L.spread}); resolve edits literal values only — set the axis by hand` });
+        continue;
+      }
       const current = Object.fromEntries(Object.entries(L.axes).filter(([, a]) => a.value !== 'expr').map(([k, a]) => [k, a.value]));
       const applied = applyDeltas(current, parsed.deltas);
       const inserts = [];

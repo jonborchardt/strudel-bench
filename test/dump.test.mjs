@@ -16,6 +16,19 @@ test('dump prints the plain strudel behind demo.strudel', async () => {
   assert.doesNotMatch(out, /_opIn|\/\*pattern\*\//);
 });
 
+test('an arped pad dumps self-contained: no plan.*, arpIndices defined', async () => {
+  const fs = await import('node:fs');
+  const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_arp.strudel');
+  fs.writeFileSync(file, `song({ cps: .5 }, [section('a', 2, { pad: { arp: 'up' } })])`);
+  try {
+    const out = await dumpFile(file);
+    assert.doesNotMatch(out, /plan\./);
+    assert.match(out, /^const arpIndices = /m);
+    assert.match(out, /^const ARP_ORDERS = \{ up: /m);
+    assert.match(out, /arpWith\(\(haps\) => seq\(\.\.\.arpIndices\("up", haps\.length\)\)/);
+  } finally { fs.unlinkSync(file); }
+});
+
 test('dump keeps patterns stacked around a song(), not just the song sections', async () => {
   const fs = await import('node:fs');
   const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_wrap.strudel');
