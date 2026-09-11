@@ -242,3 +242,15 @@ test('melody follow transposes by the chord root; phrase lengthens the line', as
   assert.equal(onsets(two, 1).length, onsets(plain, 1).length);
   assert.notEqual(JSON.stringify(c1(two)), JSON.stringify(c0(two)), 'a 2-cycle phrase does not repeat after one cycle (pick another ctx.seed if this seed happens to)');
 });
+
+test('follow + phrase: the chord root still advances once per cycle', async () => {
+  const g = await ready;
+  const build = (melody) => g.song(ctx, [g.section('_', 4, { progression: 'i VI III VII', melody })]).strudle.sections[0].layers.melody.pattern;
+  const inCycle = (p, c) => onsets(p, 4).filter((h) => h.whole.begin.valueOf() >= c && h.whole.begin.valueOf() < c + 1).map((h) => h.value.note);
+  const plain = build({ phrase: 2 }), follow = build({ follow: true, phrase: 2 });
+  for (const [c, want] of [[1, [8, 9]], [2, [3, 4]]]) {
+    const base = inCycle(plain, c);
+    const diff = inCycle(follow, c).map((n, i) => n - base[i]);
+    assert.ok(diff.length > 0 && diff.every((d) => want.includes(d)), `cycle ${c}: ${diff.join()}`);
+  }
+});
