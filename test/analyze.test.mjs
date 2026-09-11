@@ -34,3 +34,13 @@ test('active-frame gating ignores silence', () => {
   const r = analyze({ rate, channels: 1, frames: [half] });
   assert.ok(r.centroidHz > 3000, 'silence must not drag the centroid');
 });
+
+test('empty audio throws instead of returning NaN', () => {
+  assert.throws(() => analyze({ rate: 44100, channels: 1, frames: [new Float32Array(0)] }), /empty audio/);
+});
+
+test('all-silence audio reports zero active frames', () => {
+  const silence = new Float32Array(rate * 2);
+  const r = analyze({ rate, channels: 1, frames: [silence] });
+  assert.equal(r.activeFrames, 0);
+});

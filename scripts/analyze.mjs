@@ -62,6 +62,7 @@ function fft(re, im) { // in-place radix-2
 
 export function analyze({ rate, channels, frames }, { cps = 0.5 } = {}) {
   const n = frames[0].length;
+  if (n === 0) throw new Error('empty audio: no samples');
   const mono = new Float32Array(n);
   for (let i = 0; i < n; i++) { let s = 0; for (const ch of frames) s += ch[i]; mono[i] = s / channels; }
   let peak = 0, sq = 0;
@@ -74,7 +75,7 @@ export function analyze({ rate, channels, frames }, { cps = 0.5 } = {}) {
   const gate = peak * Math.pow(10, -ACTIVE_FRAME_DB / 20);
   let cSum = 0, cW = 0, hi = 0, lo = 0, tot = 0, active = 0;
   const binHz = rate / FRAME;
-  for (let start = 0; start + FRAME <= n; start += HOP) {
+  for (let start = 0; peak > 0 && start + FRAME <= n; start += HOP) {
     let fr = 0; for (let i = 0; i < FRAME; i++) fr += mono[start + i] ** 2; fr = Math.sqrt(fr / FRAME);
     if (fr < gate) continue;
     active++;
@@ -130,7 +131,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const keys = Object.keys(results[0]);
   for (const k of keys) {
     const a = results[0][k], b = results[1]?.[k];
-    const delta = b === undefined ? '' : `   ${b > a ? '↑' : b < a ? '↓' : '='} ${a ? Math.round((b - a) / Math.abs(a) * 100) : 0}%`;
+    const pct = a ? `${Math.round((b - a) / Math.abs(a) * 100)}%` : b === 0 ? '0%' : 'n/a';
+    const delta = b === undefined ? '' : `   ${b > a ? '↑' : b < a ? '↓' : '='} ${pct}`;
     console.log(`${k.padEnd(14)} ${String(a).padStart(9)}${b === undefined ? '' : String(b).padStart(10)}${delta}`);
   }
 }
