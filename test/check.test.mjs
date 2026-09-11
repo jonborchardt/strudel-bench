@@ -28,3 +28,12 @@ test('unknown sound is reported', async () => {
   try { const r = await checkFile(f); assert.equal(r.ok, false); assert.match(r.problems[0], /unknown sound/); }
   finally { fs.rmSync(f); }
 });
+
+test('song() files report per-section, per-layer state', async () => {
+  const r = await checkFile(path.resolve(import.meta.dirname, '..', 'songs', 'demo.strudel'));
+  assert.deepEqual(r.problems, []);
+  assert.ok(r.sections.length >= 3);
+  const drop = r.sections.find((s) => s.name === 'drop');
+  assert.ok(drop.layers.drums.onsetsPerCycle > r.sections.find((s) => s.name === 'intro').layers.drums.onsetsPerCycle);
+  assert.equal(typeof drop.layers.drums.attrs.density, 'number');
+});

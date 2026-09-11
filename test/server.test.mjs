@@ -37,7 +37,7 @@ test('song list, read, write, and name validation', async () => {
     assert.ok(list.includes('demo.strudel'));
 
     const text = await (await fetch(`${base}/songs/demo.strudel`)).text();
-    assert.match(text, /setcps/);
+    assert.match(text, /song\(/);
 
     const put = await fetch(`${base}/songs/_t_new.strudel`, { method: 'PUT', body: 'note("c")' });
     assert.equal(put.status, 204);

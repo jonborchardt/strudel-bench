@@ -48,6 +48,7 @@ export async function checkFile(file, cycles = 4) {
   } catch (e) {
     return { ok: false, events, problems: [`${path.basename(file)}: ${e.message}`] };
   }
+  cycles = pattern.strudle?.total ?? cycles;
   const known = knownSounds();
   const unknown = new Set();
   const haps = pattern.queryArc(0, cycles).filter((h) => h.hasOnset())
@@ -65,7 +66,17 @@ export async function checkFile(file, cycles = 4) {
     }
   }
   for (const u of unknown) problems.push(`${path.basename(file)}: unknown sound "${u}"`);
-  return { ok: problems.length === 0, events, problems };
+  let sections;
+  if (pattern.strudle) {
+    sections = pattern.strudle.sections.map((s) => ({
+      name: s.name, cycles: s.cycles, offset: s.offset, role: s.role,
+      layers: Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, {
+        attrs: Object.fromEntries(Object.entries(l.attrs).map(([a, v]) => [a, typeof v === 'number' ? v : `signal`])),
+        onsetsPerCycle: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).length / s.cycles).toFixed(2),
+      }])),
+    }));
+  }
+  return { ok: problems.length === 0, events, problems, sections };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -77,6 +88,13 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const r = await checkFile(f);
     console.log(`== ${path.relative(ROOT, f)} (${r.events.length} events in 4 cycles)`);
     if (files.length === 1) console.log(r.events.join('\n'));
+    for (const sct of r.sections ?? []) {
+      console.log(`  [${sct.offset}-${sct.offset + sct.cycles}) ${sct.name}${sct.role ? ' (' + sct.role + ')' : ''}`);
+      for (const [layer, l] of Object.entries(sct.layers)) {
+        const attrs = Object.entries(l.attrs).map(([a, v]) => `${a}=${v}`).join(' ');
+        console.log(`    ${layer.padEnd(7)} ${String(l.onsetsPerCycle).padStart(5)}/cyc  ${attrs}`);
+      }
+    }
     for (const p of r.problems) console.error('  ' + p);
     if (!r.ok) bad++;
   }

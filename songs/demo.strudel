@@ -1,7 +1,20 @@
-// demo: 909 drums + a slow bass line. bd/sd/hh come from uzu-drumkit,
-// .bank() swaps them for RolandTR909_* from tidal-drum-machines.
-setcps(0.5)
-stack(
-  s("bd*2, [~ sd]*2, hh*8").bank("RolandTR909"),
-  note("<c2 eb2 g2 bb1>").s("sawtooth").lpf(600).gain(.5)
-)
+// demo: intro → verse → drop, written in the strudle axis vocabulary.
+// Axis values are 0..1 with 0.5 = the layer's baseline. See docs/superpowers/specs/2026-09-11-musical-axes-design.md
+song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909' }, [
+  section('intro', 4, { role: 'establish',
+    drums: { density: .3, space: .6 },
+    pad:   { space: .8, articulation: .2, brightness: .35 },
+  }),
+  section('verse', 8, { role: 'develop',
+    drums:  { density: .6, groove: .6 },
+    bass:   { weight: .7, register: .3 },
+    melody: { density: .5, brightness: saw.range(.3, .7).slow(8) },
+    pad:    { space: .6 },
+  }),
+  section('drop', 8, { role: 'climax',
+    drums:  { density: .9, drive: .8, articulation: .7 },
+    bass:   { weight: .9, aggression: .6, density: .75 },
+    melody: { density: .7, width: .8, brightness: .7 },
+    pad:    { space: .5, brightness: .7, width: .8 },
+  }),
+])
