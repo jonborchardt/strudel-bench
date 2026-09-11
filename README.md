@@ -35,3 +35,18 @@ Local [Strudel](https://strudel.cc) harness: edit `songs/*.strudel`, press play 
 ## Not local
 
 GM soundfont instruments (`gm_*`) still stream from GitHub when used. Built-in synths and every downloaded pack are local.
+
+## Axes
+
+Songs can be written as sections × layers × axis values (see `songs/demo.strudel` and
+`docs/superpowers/specs/2026-09-11-musical-axes-design.md`). Then:
+
+    npm run resolve -- songs/demo.strudel drop drums "punchier"          # what would change
+    npm run resolve -- songs/demo.strudel drop drums "punchier" --write  # do it
+    npm run render -- songs/demo.strudel --section drop                  # renders/demo.drop.wav (page must be open, stopped)
+    node scripts/analyze.mjs renders/a.wav renders/b.wav                 # metrics and deltas
+    npm run verify -- songs/demo.strudel drop drums "punchier"           # the whole chain with a report
+    npm run vocab                                                         # regenerate the skill's vocabulary reference
+
+The `strudle` skill (`.claude/skills/strudle/SKILL.md`, not versioned — `.claude/` is gitignored in this repo)
+encodes the baseline → resolve → check → render/verify → report workflow for an agent editing songs by ear.

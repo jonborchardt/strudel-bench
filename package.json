@@ -9,7 +9,9 @@
     "check": "node scripts/check.mjs",
     "samples": "node scripts/samples.mjs",
     "render": "node scripts/render.mjs",
-    "resolve": "node scripts/resolve.mjs"
+    "resolve": "node scripts/resolve.mjs",
+    "verify": "node scripts/verify.mjs",
+    "vocab": "node scripts/vocab.mjs > .claude/skills/strudle/reference/vocab.md"
   },
   "dependencies": {
     "@strudel/core": "^1.2.6",
