@@ -22,3 +22,21 @@ test('unknown layer name throws with a useful message', async () => {
   const g = await ready;
   assert.throws(() => g.song({}, [g.section('a', 1, { nope: {} })]), /unknown layer "nope"/);
 });
+
+test('section key and progression override the song key and reach the layer ctx', async () => {
+  const g = await ready;
+  const seen = [];
+  g.strudleLib.registerLayer('probe', (attrs, ctx) => { seen.push({ key: ctx.key, chords: ctx.chords }); return g.s('hh'); });
+  const pat = g.song({ key: 'C:minor' }, [
+    g.section('a', 1, { probe: {} }),
+    g.section('b', 1, { key: 'Eb:major', progression: 'I V vi IV', probe: {} }),
+  ]);
+  assert.deepEqual(seen, [{ key: 'C:minor', chords: '<0 5>' }, { key: 'Eb:major', chords: '<0 4 5 3>' }]);
+  assert.deepEqual(pat.strudle.sections.map((s) => [s.key, s.progression]), [['C:minor', 'i VI'], ['Eb:major', 'I V vi IV']]);
+  assert.deepEqual(Object.keys(pat.strudle.sections[1].layers), ['probe'], 'key/progression are not layers');
+});
+
+test('a bad numeral names the section', async () => {
+  const g = await ready;
+  assert.throws(() => g.song({}, [g.section('drop', 1, { progression: 'i V7' })]), /section "drop".*numeral "V7"/);
+});
