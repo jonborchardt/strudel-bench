@@ -1,8 +1,9 @@
 node_modules/
 samples/packs/*
 !samples/packs/.gitkeep
+!samples/packs/*.json
 .playwright-mcp/
 .claude
 /docs
-/samples/packs
+dist/
 renders/

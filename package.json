@@ -8,6 +8,7 @@
     "test": "node --test",
     "check": "node scripts/check.mjs",
     "samples": "node scripts/samples.mjs",
+    "pages": "node scripts/pages.mjs",
     "render": "node scripts/render.mjs",
     "mp3": "node scripts/mp3.mjs",
     "resolve": "node scripts/resolve.mjs",

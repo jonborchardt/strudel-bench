@@ -4,18 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const CDN = 'https://strudel.b-cdn.net';
-// name -> where the JSON lives, and the base URL its paths are relative to (falls back to the JSON's _base)
-const PACKS = {
-  'uzu-drumkit': { json: `${CDN}/uzu-drumkit.json`, base: `${CDN}/uzu-drumkit/` },
-  'tidal-drum-machines': { json: `${CDN}/tidal-drum-machines.json`, base: `${CDN}/tidal-drum-machines/machines/` },
-  piano: { json: `${CDN}/piano.json`, base: `${CDN}/piano/` },
-  'Dirt-Samples': { json: 'https://raw.githubusercontent.com/felixroos/dough-samples/main/Dirt-Samples.json' },
-  mridangam: { json: `${CDN}/mridangam.json`, base: `${CDN}/mrid/` },
-  vcsl: { json: `${CDN}/vcsl.json`, base: `${CDN}/VCSL/` },
-  'uzu-wavetables': { json: `${CDN}/uzu-wavetables.json`, base: `${CDN}/uzu-wavetables/` },
-};
-const ALIAS_URL = `${CDN}/tidal-drum-machines-alias.json`;
+// pack list lives in lib/packs.json so the page can stream the same packs from the CDN when none are downloaded
+const { packs: PACKS, alias: ALIAS_URL } = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, '..', 'lib', 'packs.json'), 'utf8'));
 const OUT = path.resolve(import.meta.dirname, '..', 'samples', 'packs');
 const CONCURRENCY = 8;
 

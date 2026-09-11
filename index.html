@@ -23,7 +23,7 @@
 </div>
 <textarea id="code" spellcheck="false"></textarea>
 <pre id="err"></pre>
-<script src="/node_modules/@strudel/web/dist/index.js"></script>
+<script src="node_modules/@strudel/web/dist/index.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
   let loaded = '';      // text as last loaded from disk (or saved)
@@ -35,14 +35,17 @@
     sync: true, // worker clock: the only scheduler with setCycle (section jump)
     onEvalError: (e) => ($('err').textContent = e.message),
     prebake: async () => {
-      const packs = await fetch('/samples/packs/packs.json').then((r) => (r.ok ? r.json() : []));
+      // local packs (npm run samples) when present; otherwise stream from the Strudel CDN like strudel.cc does (github pages)
+      const local = await fetch('samples/packs/packs.json').then((r) => (r.ok ? r.json() : null));
+      const cdn = local ? null : await fetch('lib/packs.json').then((r) => r.json());
+      const packs = local ?? Object.keys(cdn.packs);
       await Promise.all([
-        ...packs.map((p) => strudel.samples(`/samples/packs/${p}.json`)),
-        strudel.samples('/samples/user/strudel.json'),
+        ...packs.map((p) => (local ? strudel.samples(`samples/packs/${p}.json`) : strudel.samples(cdn.packs[p].json, cdn.packs[p].base))),
+        strudel.samples('samples/user/strudel.json'),
       ]);
-      if (packs.includes('tidal-drum-machines')) strudel.aliasBank('/samples/packs/tidal-drum-machines-alias.json');
-      await import('/lib/index.mjs');
-      $('status').textContent = `packs: ${packs.join(', ') || 'none (run npm run samples)'}`;
+      if (packs.includes('tidal-drum-machines')) strudel.aliasBank(local ? 'samples/packs/tidal-drum-machines-alias.json' : cdn.alias);
+      await import('./lib/index.mjs');
+      $('status').textContent = `packs: ${packs.join(', ')}${local ? '' : ' (cdn)'}`;
     },
   });
 
@@ -52,7 +55,7 @@
   });
 
   async function loadList() {
-    const names = await (await fetch('/songs')).json();
+    const names = await (await fetch('songs/index.json')).json();
     $('song').innerHTML = names.map((n) => `<option>${n}</option>`).join('');
     const want = decodeURIComponent(location.hash.slice(1));
     if (names.includes(want)) $('song').value = want;
@@ -61,7 +64,7 @@
   async function loadSong() {
     const name = $('song').value;
     location.hash = name;
-    loaded = await (await fetch(`/songs/${name}`)).text();
+    loaded = await (await fetch(`songs/${name}`)).text();
     $('code').value = loaded;
     $('err').textContent = '';
   }
@@ -85,7 +88,7 @@
     strudel.hush(); playing = false;
   }
   async function save() {
-    await fetch(`/songs/${$('song').value}`, { method: 'PUT', body: $('code').value });
+    await fetch(`songs/${$('song').value}`, { method: 'PUT', body: $('code').value });
     loaded = $('code').value;
     $('status').textContent = 'saved';
   }
@@ -114,7 +117,7 @@
   $('dump').onclick = async () => {
     const song = $('song').value;
     $('status').textContent = `dumping ${song}…`;
-    const r = await fetch(`/dump/${song}`, { method: 'POST' });
+    const r = await fetch(`dump/${song}`, { method: 'POST' });
     if (!r.ok) { $('status').textContent = `dump failed: ${await r.text()}`; return; }
     const { path, code } = await r.json();
     const url = `https://strudel.cc/#${strudel.code2hash(code)}`;
@@ -129,7 +132,10 @@
 
   // reload from disk when the current song file changes (fs.watch fires twice on Windows, hence the debounce)
   let timer;
-  new EventSource('/events').onmessage = (e) => {
+  const events = new EventSource('events');
+  // a static host (github pages) answers /events with 404, which closes the stream for good: hide what needs the server
+  events.onerror = () => { if (events.readyState === EventSource.CLOSED) for (const id of ['save', 'export', 'dump']) $(id).hidden = true; };
+  events.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     if (msg.render) return renderToServer(msg.render);
     if (msg.changed !== $('song').value) return;
@@ -146,12 +152,12 @@
   };
 
   async function renderToServer({ song, cycles, section, layer, name, mp3 }) {
-    const fail = (message) => { $('status').textContent = message; return fetch('/render-error', { method: 'POST', body: JSON.stringify({ name, message }) }); };
+    const fail = (message) => { $('status').textContent = message; return fetch('render-error', { method: 'POST', body: JSON.stringify({ name, message }) }); };
     $('status').textContent = `rendering ${name}…`;
     if (playing) return fail('page is playing; stop first (render replaces the audio context)');
     try {
       await ready;
-      const code = await (await fetch(`/songs/${song}`)).text();
+      const code = await (await fetch(`songs/${song}`)).text();
       let pat = await strudel.evaluate(code, false);
       let begin = 0, end = cycles ?? (pat.strudle ? pat.strudle.total : 8);
       // read cps off the song pattern before a layer selector replaces it with a sub-pattern that has no .strudle
@@ -167,7 +173,7 @@
         } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles); }
       }
       const blob = await renderWav(pat, cps, begin, end);
-      const out = await (await fetch(`/renders/${name}.wav${mp3 ? '?mp3' : ''}`, { method: 'PUT', body: blob })).text();
+      const out = await (await fetch(`renders/${name}.wav${mp3 ? '?mp3' : ''}`, { method: 'PUT', body: blob })).text();
       $('status').textContent = `rendered ${out} (${(end - begin)} cycles)`;
     } catch (e) {
       fail(e.message);

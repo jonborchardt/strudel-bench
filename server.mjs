@@ -17,6 +17,7 @@ const MIME = {
   '.aif': 'audio/aiff', '.aiff': 'audio/aiff', '.m4a': 'audio/mp4', '.webm': 'audio/webm', '.strudel': 'text/plain',
 };
 
+export const songList = () => fs.readdirSync(SONGS).filter((f) => SONG_NAME.test(f)).sort();
 const isAudio = (f) => AUDIO.has(path.extname(f).toLowerCase());
 
 /** Sample map for samples/user: each subfolder is a sound, loose audio files are single-variant sounds. */
@@ -74,8 +75,8 @@ export function createServer() {
     if (p === '/') return send(res, 200, fs.readFileSync(path.join(ROOT, 'index.html')), 'text/html');
     if (p === '/favicon.ico') return send(res, 204, '');
 
-    if (p === '/songs') {
-      return json(res, fs.readdirSync(SONGS).filter((f) => SONG_NAME.test(f)).sort());
+    if (p === '/songs' || p === '/songs/index.json') {
+      return json(res, songList());
     }
     if (p.startsWith('/songs/')) {
       const name = decodeURIComponent(p.slice('/songs/'.length));

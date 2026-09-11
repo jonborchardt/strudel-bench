@@ -1,0 +1,12 @@
+{
+  "alias": "https://strudel.b-cdn.net/tidal-drum-machines-alias.json",
+  "packs": {
+    "uzu-drumkit": { "json": "https://strudel.b-cdn.net/uzu-drumkit.json", "base": "https://strudel.b-cdn.net/uzu-drumkit/" },
+    "tidal-drum-machines": { "json": "https://strudel.b-cdn.net/tidal-drum-machines.json", "base": "https://strudel.b-cdn.net/tidal-drum-machines/machines/" },
+    "piano": { "json": "https://strudel.b-cdn.net/piano.json", "base": "https://strudel.b-cdn.net/piano/" },
+    "Dirt-Samples": { "json": "https://raw.githubusercontent.com/felixroos/dough-samples/main/Dirt-Samples.json" },
+    "mridangam": { "json": "https://strudel.b-cdn.net/mridangam.json", "base": "https://strudel.b-cdn.net/mrid/" },
+    "vcsl": { "json": "https://strudel.b-cdn.net/vcsl.json", "base": "https://strudel.b-cdn.net/VCSL/" },
+    "uzu-wavetables": { "json": "https://strudel.b-cdn.net/uzu-wavetables.json", "base": "https://strudel.b-cdn.net/uzu-wavetables/" }
+  }
+}
