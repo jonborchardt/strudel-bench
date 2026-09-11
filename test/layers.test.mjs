@@ -67,6 +67,24 @@ test('weight never raises register (mean note non-increasing)', async () => {
   }
 });
 
+test('brightness and weight both act on the bass filter, neither overwrites the other', async () => {
+  const g = await ready;
+  const cutoff = (attrs) => onsets(g.bass(attrs, ctx))[0].value.cutoff;
+  const both = cutoff({ brightness: .9, weight: .9 });
+  assert.ok(both > cutoff({ brightness: .5, weight: .9 }), `brightness must still raise the cutoff under weight: ${both} vs ${cutoff({ brightness: .5, weight: .9 })}`);
+  assert.ok(cutoff({ brightness: .9, weight: .5 }) > both, `weight must still lower the cutoff under brightness: ${cutoff({ brightness: .9, weight: .5 })} vs ${both}`);
+});
+
+test('drive below .5 moves onsets off the pulse without changing their number', async () => {
+  const g = await ready;
+  const at = (L, v) => onsets(g[L]({ drive: v }, ctx)).map((h) => h.whole.begin.valueOf()).sort((a, b) => a - b);
+  for (const L of ['drums', 'bass']) {
+    const base = at(L, .5), low = at(L, 0);
+    assert.equal(low.length, base.length, `${L} drive 0 must keep the onset count`);
+    assert.notDeepEqual(low, base, `${L} drive 0 must move onsets`);
+  }
+});
+
 test('structural axes reject signals', async () => {
   const g = await ready;
   assert.throws(() => onsets(g.drums({ density: g.saw }, ctx)), /structural/);
