@@ -200,6 +200,36 @@ test('bass and pad follow altered roots, sevenths and sub-cycle chords', async (
   assert.equal(sig(build('i VI', 'pad')), sig(onsets(g.song(ctx, [g.section('_', 2, { pad: {} })]).strudle.sections[0].layers.pad.pattern, 2)), 'explicit default equals default');
 });
 
+test('fx layer: silent by default; riser fills the last k cycles; impact hits the first downbeat', async () => {
+  const g = await ready;
+  const c = { ...ctx, cycles: 8 };
+  assert.equal(onsets(g.fx({}, c), 8).length, 0);
+  const r = onsets(g.fx({ riser: 2 }, c), 8);
+  assert.equal(r.length, 16);
+  assert.ok(r.every((h) => h.whole.begin.valueOf() >= 6 && h.value.s === 'white'));
+  const lp = r.map((h) => h.value.cutoff); // .lpf() writes the hap's `cutoff` field, per Strudel's own control naming (see the bass brightness/weight test above)
+  assert.ok(lp[0] < 800 && lp[15] > 6000 && lp[0] < lp[8], lp.join());
+  assert.ok(r[0].value.gain < r[15].value.gain);
+  const i = onsets(g.fx({ impact: true }, c), 8);
+  assert.equal(i.length, 1);
+  assert.equal(i[0].whole.begin.valueOf(), 0);
+  assert.equal(i[0].value.s, 'bd');
+  assert.equal(onsets(g.fx({ riser: true }, { ...ctx, cycles: 2 }), 2).length, 16, 'riser capped at the section length');
+  const bright = onsets(g.fx({ riser: 2, brightness: 1 }, c), 8).map((h) => h.value.cutoff);
+  assert.ok(bright[15] > lp[15]);
+  for (const a of ['density', 'drive', 'variation', 'register']) assert.equal(g.strudleLib.cells.fx[a], undefined, `${a} has no fx cell`);
+});
+
+test('fx cells: 0.5 is a no-op and the ends move something, over a riser', async () => {
+  const g = await ready;
+  const c = { ...ctx, cycles: 8 };
+  const base = sig(onsets(g.fx({ riser: 2 }, c), 8));
+  for (const a of Object.keys(g.strudleLib.cells.fx)) {
+    assert.equal(sig(onsets(g.fx({ riser: 2, [a]: .5 }, c), 8)), base, `fx.${a} at .5`);
+    assert.ok(sig(onsets(g.fx({ riser: 2, [a]: 1 }, c), 8)) !== base || sig(onsets(g.fx({ riser: 2, [a]: 0 }, c), 8)) !== base, `fx.${a} moves`);
+  }
+});
+
 test('melody follow transposes by the chord root; phrase lengthens the line', async () => {
   const g = await ready;
   const c1 = (p) => onsets(p, 2).filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);
