@@ -181,6 +181,18 @@ test('pad arp spreads the chord into 8 notes per cycle; omitted equals baseline'
   assert.throws(() => g.pad({ arp: 'Up' }, ctx), /arp/);
 });
 
+test('bass and pad follow altered roots, sevenths and sub-cycle chords', async () => {
+  const g = await ready;
+  const build = (progression, layer, attrs = {}) => onsets(g.song(ctx, [g.section('_', 2, { progression, [layer]: attrs })]).strudle.sections[0].layers[layer].pattern, 2);
+  const bassPlain = build('i VI', 'bass'), bassFlat = build('i bVI', 'bass');
+  const c1 = (hs) => hs.filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);
+  assert.deepEqual(c1(bassFlat), c1(bassPlain).map((n) => n - 1));
+  const roots = build('i [VI VII]', 'bass').filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);
+  assert.ok(new Set(roots).size >= 2, 'two chords in cycle 1');
+  assert.equal(c1(build('i V7', 'pad')).length, 4, 'V7 voices four tones at the default density');
+  assert.equal(sig(build('i VI', 'pad')), sig(onsets(g.song(ctx, [g.section('_', 2, { pad: {} })]).strudle.sections[0].layers.pad.pattern, 2)), 'explicit default equals default');
+});
+
 test('melody follow transposes by the chord root; phrase lengthens the line', async () => {
   const g = await ready;
   const c1 = (p) => onsets(p, 2).filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);

@@ -58,7 +58,7 @@ test('harmony line per section, default visible', async () => {
 });
 
 test('bad numeral is a problem, not a crash', async () => {
-  const f = tmp('_t_harm_bad.strudel', `song({}, [ section('drop', 1, { progression: 'i V7', pad: {} }) ])`);
-  try { const r = await checkFile(f); assert.equal(r.ok, false); assert.match(r.problems[0], /section "drop".*numeral "V7"/); }
+  const f = tmp('_t_harm_bad.strudel', `song({}, [ section('drop', 1, { progression: 'i ix', pad: {} }) ])`);
+  try { const r = await checkFile(f); assert.equal(r.ok, false); assert.match(r.problems[0], /section "drop".*numeral "ix"/); }
   finally { fs.rmSync(f); }
 });

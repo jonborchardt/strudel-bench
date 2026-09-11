@@ -4,28 +4,46 @@ import { ready } from './_scope.mjs';
 
 test('parseProgression maps numerals to degrees, rejects junk, defaults to i VI', async () => {
   await ready;
-  const { parseProgression, DEFAULT_PROGRESSION, degreeMini } = await import('../lib/harmony.mjs');
-  assert.deepEqual(parseProgression('i VI III VII').map((c) => c.degree), [0, 5, 2, 6]);
-  assert.deepEqual(parseProgression('I  v').map((c) => c.numeral), ['I', 'v']);
-  assert.throws(() => parseProgression('V7'), /numeral/);
+  const { parseProgression, DEFAULT_PROGRESSION, chordPatterns } = await import('../lib/harmony.mjs');
+  assert.deepEqual(parseProgression('i VI III VII').map((cy) => cy[0].degree), [0, 5, 2, 6]);
+  assert.deepEqual(parseProgression('I  v').map((cy) => cy[0].numeral), ['I', 'v']);
   assert.throws(() => parseProgression('ix'), /numeral/);
   assert.deepEqual(parseProgression(undefined), parseProgression(DEFAULT_PROGRESSION));
   assert.deepEqual(parseProgression(''), parseProgression(DEFAULT_PROGRESSION));
-  assert.equal(degreeMini(parseProgression('i VI III VII')), '<0 5 2 6>');
-  assert.equal(degreeMini(parseProgression('i')), '<0>');
+  assert.equal(chordPatterns('C:major', parseProgression('i VI III VII')).roots, '<0 5 2 6>');
+  assert.equal(chordPatterns('C:major', parseProgression('i')).roots, '<0>');
 });
 
 test('chordName and describeHarmony read the key\'s diatonic quality', async () => {
   await ready;
   const { chordName, describeHarmony, parseProgression } = await import('../lib/harmony.mjs');
-  assert.equal(chordName('C:minor', 0), 'Cm');
-  assert.equal(chordName('C:minor', 5), 'Ab');
-  assert.equal(chordName('C:minor', 1), 'Ddim');
-  assert.equal(chordName('C:major', 4), 'G');
-  assert.equal(chordName('Eb:major', 5), 'Cm');
-  assert.equal(chordName('E:minor', 1), 'F#dim');
-  assert.equal(chordName('B:minor', 4), 'F#m');
+  assert.equal(chordName('C:minor', parseProgression('i')[0][0]), 'Cm');
+  assert.equal(chordName('C:minor', parseProgression('vi')[0][0]), 'Ab');
+  assert.equal(chordName('C:minor', parseProgression('ii')[0][0]), 'Ddim');
+  assert.equal(chordName('C:major', parseProgression('v')[0][0]), 'G');
+  assert.equal(chordName('Eb:major', parseProgression('vi')[0][0]), 'Cm');
+  assert.equal(chordName('E:minor', parseProgression('ii')[0][0]), 'F#dim');
+  assert.equal(chordName('B:minor', parseProgression('v')[0][0]), 'F#m');
   assert.equal(describeHarmony('C:minor', parseProgression('i VI III VII')), 'i VI III VII in C:minor → Cm Ab Eb Bb');
+});
+
+test('v2 grammar: accidentals, suffixes, sevenths, groups', async () => {
+  await ready;
+  const { parseProgression, chordNames, chordPatterns, chordSpec } = await import('../lib/harmony.mjs');
+  assert.equal(chordNames('C:major', parseProgression('I bVII IV7 IVm ii7 vii V')), 'C Bb Fmaj7 Fm Dm7 Bdim G');
+  assert.equal(chordNames('C:minor', parseProgression('i VM7 #ivdim')), 'Cm Gmaj7 F#dim');
+  const prog = parseProgression('i [VI VII]');
+  assert.equal(prog.length, 2);
+  assert.equal(prog[1].length, 2);
+  assert.equal(chordNames('C:minor', prog), 'Cm [Ab Bb]');
+  const cp = chordPatterns('C:minor', prog);
+  assert.equal(cp.roots, '<0 [5 6]>');
+  assert.equal(cp.acc, '<0 [0 0]>');
+  assert.equal(cp.tones(3), '<[0,3,7] [[0,4,7] [0,4,7]]>');
+  assert.equal(chordPatterns('C:minor', parseProgression('i V7')).tones(3), '<[0,3,7] [0,3,7,10]>', '7 floors that chord at 4 tones');
+  assert.deepEqual(chordSpec('C:major', parseProgression('bVII')[0][0]), { degree: 6, acc: -1, intervals: [0, 4, 7, 10] });
+  assert.throws(() => parseProgression('i [VI'), /unclosed/);
+  assert.throws(() => parseProgression('X'), /bad numeral/);
 });
 
 const onsets = (p, cycles) => p.queryArc(0, cycles).filter((h) => h.hasOnset()).sort((a, b) => a.whole.begin.valueOf() - b.whole.begin.valueOf());

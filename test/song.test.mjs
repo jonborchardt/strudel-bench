@@ -38,7 +38,7 @@ test('section key and progression override the song key and reach the layer ctx'
 
 test('a bad numeral names the section', async () => {
   const g = await ready;
-  assert.throws(() => g.song({}, [g.section('drop', 1, { progression: 'i V7' })]), /section "drop".*numeral "V7"/);
+  assert.throws(() => g.song({}, [g.section('drop', 1, { progression: 'i ix' })]), /section "drop".*numeral "ix"/);
 });
 
 test('section kit overrides the song kit', async () => {
