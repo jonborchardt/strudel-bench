@@ -1,3 +1,4 @@
 node_modules/
 samples/packs/*
 !samples/packs/.gitkeep
+.playwright-mcp/
