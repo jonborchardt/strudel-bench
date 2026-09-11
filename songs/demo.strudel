@@ -1,0 +1,7 @@
+// demo: 909 drums + a slow bass line. bd/sd/hh come from uzu-drumkit,
+// .bank() swaps them for RolandTR909_* from tidal-drum-machines.
+setcps(0.5)
+stack(
+  s("bd*2, [~ sd]*2, hh*8").bank("RolandTR909"),
+  note("<c2 eb2 g2 bb1>").s("sawtooth").lpf(600).gain(.5)
+)

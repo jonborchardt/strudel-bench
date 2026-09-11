@@ -1,0 +1,19 @@
+{
+  "name": "strudle",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test/",
+    "check": "node scripts/check.mjs",
+    "samples": "node scripts/samples.mjs"
+  },
+  "dependencies": {
+    "@strudel/core": "^1.2.6",
+    "@strudel/mini": "^1.2.6",
+    "@strudel/tonal": "^1.2.6",
+    "@strudel/transpiler": "^1.2.6",
+    "@strudel/web": "^1.3.0"
+  }
+}
