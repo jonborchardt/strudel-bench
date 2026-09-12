@@ -11,8 +11,8 @@ const core = await import('@strudel/core');
 const mini = await import('@strudel/mini');
 const tonal = await import('@strudel/tonal');
 const { transpiler } = await import('@strudel/transpiler');
+const { isPattern } = await import('../lib/strudel.mjs');
 
-const isPattern = (x) => !!x && typeof x.queryArc === 'function';
 const src = new WeakMap(); // pattern -> source string, or a thunk producing it (resolved and memoised on first read)
 const srcOf = (p) => { let s = src.get(p); if (typeof s === 'function') { s = s(); src.set(p, s); } return s; };
 const names = new Map(); // wrapped core function -> name

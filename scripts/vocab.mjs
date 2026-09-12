@@ -1,5 +1,4 @@
 // Generates the skill's vocabulary reference from code so it cannot drift. usage: node scripts/vocab.mjs > .claude/skills/strudle/reference/vocab.md
-import '../scripts/esm-fix.mjs';
 import { AXES, PHASES, cells } from '../lib/axes.mjs';
 import { DESCRIPTORS, OVERLAYS, MODIFIERS, HARMONY } from '../lib/vocab.mjs';
 import '../lib/layers.mjs';

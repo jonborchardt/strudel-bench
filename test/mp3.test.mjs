@@ -2,13 +2,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { writeWav, synth } from '../scripts/analyze.mjs';
+import { writeWav, tone } from '../scripts/analyze.mjs';
 import { wavToMp3 } from '../scripts/mp3.mjs';
 
 test('wavToMp3 writes an mp3 next to the wav', () => {
   const wav = path.join(import.meta.dirname, '_t_tone.wav');
-  const tone = synth.tone(44100, 440, 1);
-  writeWav(wav, 44100, [tone, tone]);
+  const t = tone(44100, 440, 1);
+  writeWav(wav, 44100, [t, t]);
   try {
     const mp3 = wavToMp3(wav);
     assert.equal(mp3, wav.replace(/\.wav$/, '.mp3'));

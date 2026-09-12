@@ -2,7 +2,6 @@
 // usage: node scripts/verify.mjs songs/x.strudel <section> <layer> "punchier"
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import '../scripts/esm-fix.mjs';
 import { AXES } from '../lib/axes.mjs';
 import { planEdits, applyEdits } from './resolve.mjs';
 import { checkFile, ensureScope } from './check.mjs';
@@ -13,13 +12,12 @@ if (!phrase) { console.error('usage: node scripts/verify.mjs songs/x.strudel <se
 if (sectionSel === '*' || layerSel === '*') { console.error('verify needs a concrete <section> and <layer> (not "*"): render targets a single song build'); process.exit(2); }
 const run = (args) => execFileSync(process.execPath, args, { encoding: 'utf8' }).trim();
 const render = (name) => run(['scripts/render.mjs', file, '--section', sectionSel, '--layer', layerSel, '--name', name]);
-const restore = (f, text) => fs.writeFileSync(f, text);
 // execFileSync errors carry stdout/stderr as separate strings (we pass encoding: 'utf8'); join what's present.
 const combineOutput = (e) => [e.stdout, e.stderr].map((s) => s?.trim()).filter(Boolean).join('\n') || e.message;
 const port = process.env.PORT || 3000;
 
 const before = fs.readFileSync(file, 'utf8');
-await ensureScope(); // describeHarmony's chordName() needs Strudel's scale() live, same as check.mjs/resolve.mjs.
+await ensureScope(); // chordName() needs Strudel's scale() live, same as check.mjs/resolve.mjs.
 const plan = planEdits(before, sectionSel, layerSel, phrase);
 if (plan.report.length === 0 && plan.refused.length === 0 && plan.harmonyReport.length === 0) {
   console.error(`no matching section/layer for ${sectionSel}/${layerSel}`);
@@ -38,7 +36,7 @@ const onsetsA = onsetsPerCycle(await checkFile(file)); // file still holds `befo
 // nothing has been written to the song yet, so a failure up to here needs no restore.
 fs.writeFileSync(file, applyEdits(before, plan.edits));
 const checked = await checkFile(file);
-if (!checked.ok) { restore(file, before); console.error('check failed after edit; file restored\n' + checked.problems.join('\n')); process.exit(1); }
+if (!checked.ok) { fs.writeFileSync(file, before); console.error('check failed after edit; file restored\n' + checked.problems.join('\n')); process.exit(1); }
 const onsetsB = onsetsPerCycle(checked);
 
 // from here on the file holds the edit: any failure (render, or reading/analyzing either wav) must restore it.
@@ -51,7 +49,7 @@ try {
   A = analyze(readWav(fs.readFileSync(wavA)), { cps, steps });
   B = analyze(readWav(fs.readFileSync(wavB)), { cps, steps });
 } catch (e) {
-  restore(file, before);
+  fs.writeFileSync(file, before);
   console.error('render/analyze failed after edit; file restored\n' + combineOutput(e));
   process.exit(1);
 }

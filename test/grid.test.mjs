@@ -1,12 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { rankings, ON_PULSE, OFF_PULSE, SNARE_ON, fit, bassGrid, place, accents } from '../lib/grid.mjs';
+import { rankings, fit, bassGrid, place, accents } from '../lib/grid.mjs';
 
-test('generated 16/4 rankings equal the hand-written constants', () => {
+test('16/4 rankings', () => {
   assert.deepEqual(rankings(16, 4).on, [0, 8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15]);
   assert.deepEqual(rankings(16, 4).off, [2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15, 4, 12, 0, 8]);
   assert.deepEqual(rankings(16, 4).snare, [4, 12, 6, 14, 2, 10, 0, 8, 1, 3, 5, 7, 9, 11, 13, 15]);
-  assert.deepEqual([ON_PULSE, OFF_PULSE, SNARE_ON], [rankings(16, 4).on, rankings(16, 4).off, rankings(16, 4).snare]);
 });
 
 test('other meters: rankings cover every step once, templates tile, bass grids land on the pulse', () => {

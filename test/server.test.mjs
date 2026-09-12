@@ -33,7 +33,7 @@ test('userMap turns folders into sounds and loose files into single sounds', () 
 
 test('song list, read, write, and name validation', async () => {
   await withServer(async (base) => {
-    const list = await (await fetch(`${base}/songs`)).json();
+    const list = await (await fetch(`${base}/songs/index.json`)).json();
     assert.ok(list.includes('demo.strudel'));
 
     const text = await (await fetch(`${base}/songs/demo.strudel`)).text();
@@ -86,7 +86,7 @@ test('render route: 409 without a page, PUT stores a wav and releases the waiter
 });
 
 test('PUT /renders/x.wav?mp3 converts and returns the mp3 path; /render with mp3 reports it', async () => {
-  const { writeWav, synth } = await import('../scripts/analyze.mjs');
+  const { writeWav, tone } = await import('../scripts/analyze.mjs');
   await withServer(async (base) => {
     const es = await fetch(`${base}/events`);
     const reader = es.body.getReader();
@@ -95,7 +95,7 @@ test('PUT /renders/x.wav?mp3 converts and returns the mp3 path; /render with mp3
     while (!text.includes('"render"')) text += new TextDecoder().decode((await reader.read()).value);
     assert.match(text, /"mp3":true/);
     const tmp = path.join(ROOT, 'test', '_t_mp3.wav');
-    writeWav(tmp, 44100, [synth.tone(44100, 440, 0.2)]);
+    writeWav(tmp, 44100, [tone(44100, 440, 0.2)]);
     const put = await fetch(`${base}/renders/_t_mp3.wav?mp3`, { method: 'PUT', body: fs.readFileSync(tmp) });
     fs.rmSync(tmp);
     assert.equal(put.status, 200);
@@ -115,7 +115,7 @@ test('render route: malformed body returns 400 and the server keeps serving', as
     assert.equal((await fetch(`${base}/render`, { method: 'POST', body: 'not json' })).status, 400);
     assert.equal((await fetch(`${base}/render-error`, { method: 'POST', body: 'not json' })).status, 400);
     assert.equal((await fetch(`${base}/render-error`, { method: 'POST', body: JSON.stringify({ message: 'no name here' }) })).status, 204);
-    assert.equal((await fetch(`${base}/songs`)).status, 200);
+    assert.equal((await fetch(`${base}/songs/index.json`)).status, 200);
     reader.cancel();
   });
 });

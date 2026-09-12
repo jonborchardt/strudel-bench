@@ -146,7 +146,7 @@ export function analyze({ rate, channels, frames }, { cps = 0.5, steps = 16 } = 
   return { rms: r(rms, 4), peak: r(peak, 3), crest: r(crest, 2), onsetsPerSec: r(onsetsPerSec, 2), centroidHz: Math.round(centroidHz), highRatio: r(tot ? hi / tot : 0), lowRatio: r(tot ? lo / tot : 0), width: r(width), tail: r(tailRatio), activeFrames: active, swing: r(swing), jitter: r(jitter, 1), novelty: r(novelty), flatness: r(flatness, 4) };
 }
 
-export const synth = { tone: (rate, hz, secs, amp = .5) => Float32Array.from({ length: rate * secs }, (_, i) => amp * Math.sin(2 * Math.PI * hz * i / rate)) };
+export const tone = (rate, hz, secs, amp = .5) => Float32Array.from({ length: rate * secs }, (_, i) => amp * Math.sin(2 * Math.PI * hz * i / rate));
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);

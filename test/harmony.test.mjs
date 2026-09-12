@@ -16,9 +16,9 @@ test('parseProgression maps numerals to degrees, rejects junk, defaults to i VI'
   assert.equal(chordPatterns('C:minor', parseProgression('i VI')).tones(2), '<[0,7] [0,7]>');
 });
 
-test('chordName and describeHarmony read the key\'s diatonic quality', async () => {
+test('chordName and chordNames read the key\'s diatonic quality', async () => {
   await ready;
-  const { chordName, describeHarmony, parseProgression } = await import('../lib/harmony.mjs');
+  const { chordName, chordNames, parseProgression } = await import('../lib/harmony.mjs');
   assert.equal(chordName('C:minor', parseProgression('i')[0][0]), 'Cm');
   assert.equal(chordName('C:minor', parseProgression('vi')[0][0]), 'Ab');
   assert.equal(chordName('C:minor', parseProgression('ii')[0][0]), 'Ddim');
@@ -26,7 +26,7 @@ test('chordName and describeHarmony read the key\'s diatonic quality', async () 
   assert.equal(chordName('Eb:major', parseProgression('vi')[0][0]), 'Cm');
   assert.equal(chordName('E:minor', parseProgression('ii')[0][0]), 'F#dim');
   assert.equal(chordName('B:minor', parseProgression('v')[0][0]), 'F#m');
-  assert.equal(describeHarmony('C:minor', parseProgression('i VI III VII')), 'i VI III VII in C:minor → Cm Ab Eb Bb');
+  assert.equal(chordNames('C:minor', parseProgression('i VI III VII')), 'Cm Ab Eb Bb');
 });
 
 test('v2 grammar: accidentals, suffixes, sevenths, groups', async () => {
