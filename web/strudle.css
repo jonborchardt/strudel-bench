@@ -24,6 +24,22 @@ code { font: var(--mono); }
 .top .status a { color: #9cf; padding: 0; }
 
 main { max-width: 84rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; display: grid; gap: 1rem; }
+/* site footer: author line, links, copyright; same width as main */
+footer.site { max-width: 84rem; margin: 0 auto; padding: 1.5rem 1.25rem 2.5rem; border-top: 1px solid var(--line); font-size: .85rem; display: grid; gap: .4rem; }
+footer.site p { margin: 0; }
+footer.site nav { display: flex; gap: 1rem; flex-wrap: wrap; }
+/* back-to-top: fixed bottom-right, fades in once the page is scrolled (scroll-driven animation; always visible where unsupported) */
+html { scroll-behavior: smooth; }
+.totop { position: fixed; right: 1.25rem; bottom: 1.25rem; width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: 50%; background: #1c1c1c; color: #fff; text-decoration: none; font-size: 1.2rem; box-shadow: 0 2px 8px rgba(0,0,0,.3); z-index: 2; }
+@supports (animation-timeline: scroll()) {
+  .totop { animation: totop linear both; animation-timeline: scroll(); animation-range: 0 200px; }
+  @keyframes totop { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
+}
+/* long-form pages (about, legal) */
+.prose { max-width: 46rem; }
+.prose h1 { margin-bottom: .5rem; }
+.prose h2 { margin-top: 1.5rem; }
+.prose p, .prose ul { margin: .5rem 0; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: .75rem 1rem; }
 .card > h2, .card > header { margin-bottom: .5rem; }
 .card > header { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
@@ -106,6 +122,10 @@ pre.gen .hl { display: inline-block; width: 100%; animation: flash 20s ease-out;
 @keyframes flash { from { background: #ffe58a; } to { background: transparent; } }
 .err { color: var(--err); white-space: pre-wrap; }
 .stale { color: #a05a00; font-size: .85rem; }
+/* the song's declared sample packs: deployed ships with the site, local stays on this machine, missing will not play */
+.pack { display: inline-block; font-size: .8rem; padding: .1rem .5rem; border-radius: 99px; background: #e6f5ea; color: #1b6b32; }
+.pack.local { background: #fff3d6; color: #7a4b00; }
+.pack.missing { background: #fbe9ec; color: var(--err); }
 textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; border: 1px solid var(--line); border-radius: 6px; resize: vertical; }
 .notes li { margin: .25rem 0; }
 .prompt { margin: 0 0 .5rem; padding: .4rem .6rem; border-left: 3px solid var(--accent); background: var(--gen); font-style: italic; } /* the request the song came from */
@@ -133,6 +153,7 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .ex .viz svg { display: block; width: 219px; height: 135px; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
 .ex details { margin-top: .5rem; }
 .ex details summary { cursor: pointer; color: var(--muted); }
+.ex:not(.playing) .stop { display: none; }
 .ex.playing { border-color: var(--accent); box-shadow: 0 0 0 2px #e6eefc; }
 .ex.stub { border-style: dashed; background: transparent; }
 .ex.stub p { color: var(--muted); }

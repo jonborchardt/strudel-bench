@@ -1,0 +1,57 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>strudel-bench · legal &amp; privacy</title>
+<meta name="description" content="Privacy and legal notes for strudle: no cookies, no analytics, no accounts; what stays in your browser, which third-party services the page talks to, and the disclaimers.">
+<link rel="canonical" href="https://jonborchardt.github.io/strudel-bench/legal.html">
+<meta name="robots" content="noindex, follow">
+<link rel="icon" href="web/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="web/strudle.css">
+<nav class="top" id="nav"></nav>
+<main>
+  <article class="card prose">
+    <h1>Legal &amp; Privacy</h1>
+    <p class="muted">Last updated 11 September 2026</p>
+
+    <h2>Privacy</h2>
+    <p><strong>No cookies, no analytics, no accounts.</strong> This site sets no cookies and runs no analytics, comment system,
+      newsletter, form or login. No personal information is collected or shared.</p>
+    <p><strong>What stays in your browser.</strong> On the hosted site, songs you create or save are kept in your browser's local
+      storage (keys starting with <code>strudle:</code>) so they survive a reload. They never leave your device; clearing site data
+      removes them. Exported MP3 and Strudel files are rendered and encoded in the browser and downloaded directly.</p>
+    <p><strong>Hosting.</strong> The site is static and served by GitHub Pages. GitHub may log standard request data (IP address,
+      user agent, requested URL) under the <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub
+      privacy statement</a>. The author has no access to those logs.</p>
+    <p><strong>Third-party requests the page makes.</strong> Sample packs stream from the Strudel CDN (the same source
+      <a href="https://strudel.cc">strudel.cc</a> uses) and, for general MIDI soundfonts, from GitHub. Those services see the
+      requests needed to fetch the audio files, nothing more. The "REPL" button opens your expanded code on strudel.cc, which puts
+      the code in that page's URL; that is a request to a site with its own privacy policy, and it happens only when you press it.</p>
+    <p><strong>Links.</strong> Linked sites (GitHub, LinkedIn, YouTube, the author's blog, Strudel) have their own privacy policies.</p>
+
+    <h2>Content and code</h2>
+    <p>The source of this site is in <a href="https://github.com/jonborchardt/strudel-bench">its repository</a> under the MIT license.
+      It runs on <a href="https://github.com/tidalcycles/strudel">Strudel</a> (AGPL-3.0-or-later) and encodes MP3 with
+      <a href="https://github.com/zhuker/lamejs">lamejs</a> (LGPL-3.0); those parts keep their own licenses, and the repository is the
+      complete corresponding source for the site. Text on this site is © Jonathan Borchardt; quote it with attribution and a link. Songs and example snippets may be
+      copied and adapted freely. Sound samples are not the author's: each pack carries its own license (the Strudel packs list
+      theirs at <a href="https://strudel.cc/learn/samples/">strudel.cc</a>; local packs that ship with this site declare a
+      license in their <code>pack.json</code>), and any reuse of the audio is governed by those terms.</p>
+
+    <h2>Disclaimers</h2>
+    <p><strong>Personal project.</strong> Views expressed here are the author's own and do not represent an employer or any
+      affiliate; nothing here is endorsed by them.</p>
+    <p><strong>No warranty.</strong> The site, its code and its output are provided "as is", without warranty of any kind, including
+      accuracy, completeness, fitness for a particular purpose or uninterrupted availability. The tool makes sound; keep your volume
+      sensible.</p>
+    <p><strong>Limitation of liability.</strong> To the extent permitted by law, the author is not liable for any loss or damage
+      arising from use of this site, its code, or reliance on its content.</p>
+    <p><strong>Changes.</strong> This page may change; the date at the top says when it last did.</p>
+    <p>Questions: open an issue on the repository.</p>
+  </article>
+</main>
+<footer class="site" id="foot"></footer>
+<script type="module">
+  import { nav, footer } from './web/boot.mjs';
+  document.getElementById('nav').innerHTML = nav('Legal');
+  document.getElementById('foot').innerHTML = footer();
+</script>

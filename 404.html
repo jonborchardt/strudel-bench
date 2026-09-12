@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>strudel-bench · not found</title>
+<meta name="robots" content="noindex">
+<script>
+  // github pages serves this file for any unknown path, at any depth, so relative links must resolve from the site root:
+  // a project page lives under /<repo>/, so the root is the first path segment; anywhere else (localhost) it is the origin
+  const root = location.hostname.endsWith('github.io') ? location.pathname.replace(/^(\/[^/]+\/).*$/, '$1') : location.origin + '/';
+  document.head.appendChild(Object.assign(document.createElement('base'), { href: new URL(root, location.origin).href }));
+</script>
+<link rel="icon" href="web/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="web/strudle.css">
+<nav class="top" id="nav"></nav>
+<main>
+  <article class="card prose">
+    <h1>Not found</h1>
+    <p>There is no page at this address. The site has three: <a href="./">Compose</a>, <a href="examples.html">Examples</a> and
+      <a href="about.html">About</a>.</p>
+    <p>If a link on this site brought you here, please <a href="https://github.com/jonborchardt/strudel-bench/issues">open an issue</a>.</p>
+  </article>
+</main>
+<footer class="site" id="foot"></footer>
+<script type="module">
+  import { nav, footer } from './web/boot.mjs';
+  document.getElementById('nav').innerHTML = nav('');
+  document.getElementById('foot').innerHTML = footer();
+</script>

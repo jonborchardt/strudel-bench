@@ -1,13 +1,22 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>strudle · examples</title>
+<title>strudel-bench · examples</title>
+<meta name="description" content="Playable examples of every strudel-bench axis, descriptor, modifier and harmony word, each shown next to the plain Strudel it expands to.">
+<link rel="canonical" href="https://jonborchardt.github.io/strudel-bench/examples.html">
+<meta property="og:title" content="strudel-bench · examples">
+<meta property="og:description" content="Playable examples of every axis, descriptor, modifier and harmony word, next to the Strudel they expand to.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jonborchardt.github.io/strudel-bench/examples.html">
+<meta property="og:image" content="https://jonborchardt.github.io/strudel-bench/web/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="web/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="web/strudle.css">
 <nav class="top" id="nav"></nav>
 <main>
   <section class="card intro">
     <h1>How the vocabulary becomes Strudel</h1>
-    <p>Strudle songs are written with a small musical vocabulary: five layers (drums, bass, melody, pad, fx), twelve axes from 0 to 1 where
+    <p>strudel-bench songs are written with a small musical vocabulary: five layers (drums, bass, melody, pad, fx), twelve axes from 0 to 1 where
       0.5 is each layer's baseline, descriptors that move several axes at once, modifiers that scale them, and harmony words that pick keys
       and progressions. A song is a list of sections, each with its own layer settings, and an edit request names the section it is about.
       An axis can also be a signal that moves through its section instead of a constant.</p>
@@ -21,13 +30,21 @@
     <nav class="subnav" id="subnav"></nav>
   </section>
   <div id="groups"></div>
+  <section class="card intro">
+    <h2>Now go try it yourself</h2>
+    <p>Every example above was a sentence before it was a pattern. Head over to <a href="./">Compose</a>, open a song, and ask for it to be
+      darker, punchier, sparser, or more dreamy. The vocabulary does the arithmetic; you do the listening. And if it sounds wrong, that is
+      not a bug, that is a request for the next word.</p>
+  </section>
 </main>
+<footer class="site" id="foot"></footer>
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
-  import { boot, playCode, expandCode, nav } from './web/boot.mjs';
+  import { boot, playCode, expandCode, nav, footer } from './web/boot.mjs';
   import { GROUPS } from './web/examples.mjs';
   const $ = (id) => document.getElementById(id);
   $('nav').innerHTML = nav('Examples');
+  $('foot').innerHTML = footer();
   const status = (text) => ($('status').textContent = text);
   const ready = boot({ onError: status, onStatus: status });
 
@@ -64,7 +81,7 @@
       try { await playCode(ready, hll.value); status(`playing ${ex.title}${label ? `: ${label}` : ''}`); } catch (e) { status(e.message); }
     };
     let firstBtn = null;
-    const playBtn = document.createElement('button'); playBtn.innerHTML = '&#9654; Play'; playBtn.title = 'play the source as edited'; playBtn.onclick = () => play(playBtn);
+    const playBtn = document.createElement('button'); playBtn.innerHTML = '&#9654;'; playBtn.title = 'play the source as edited'; playBtn.onclick = () => play(playBtn);
     if (ex.variants.length > 1) for (const v of ex.variants) { // A/B: each variant loads its code (dropping edits) and plays it
       const b = document.createElement('button');
       b.innerHTML = `&#9654; ${v.label}`;
@@ -72,7 +89,7 @@
       if (v === ex.variants[0]) firstBtn = b;
       vs.append(b);
     }
-    const stop = document.createElement('button'); stop.innerHTML = '&#9632; Stop'; stop.onclick = stopAll;
+    const stop = document.createElement('button'); stop.className = 'stop'; stop.innerHTML = '&#9632;'; stop.title = 'stop (ctrl+.)'; stop.onclick = stopAll;
     vs.append(playBtn, stop);
     let timer;
     hll.oninput = () => { sync(); clearTimeout(timer); timer = setTimeout(async () => { await expand(); if (current?.card === el) play(edited() ? playBtn : baseBtn ?? playBtn); }, 300); };

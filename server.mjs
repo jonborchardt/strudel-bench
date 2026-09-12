@@ -20,20 +20,34 @@ const MIME = {
 export const songList = () => fs.readdirSync(SONGS).filter((f) => SONG_NAME.test(f)).sort();
 const isAudio = (f) => AUDIO.has(path.extname(f).toLowerCase());
 
-/** Sample map for samples/user: each subfolder is a sound, loose audio files are single-variant sounds. */
-export function userMap() {
-  const map = { _base: '/samples/user/' };
-  if (!fs.existsSync(USER)) return map;
-  for (const e of fs.readdirSync(USER, { withFileTypes: true })) {
-    if (e.isDirectory()) {
-      const files = fs.readdirSync(path.join(USER, e.name)).filter(isAudio).sort();
-      if (files.length) map[e.name] = files.map((f) => `${e.name}/${f}`);
-    } else if (isAudio(e.name)) {
-      map[path.parse(e.name).name] = [e.name];
+/**
+ * Local sample packs: each folder samples/user/<pack>/ is one pack, inside it a subfolder is a sound with variants
+ * and a loose audio file a single-variant sound. `<pack>/pack.json` carries the deployment policy
+ * (`{ deploy: true | false | ['sound', ...], license, source }`); without one the pack is local-only.
+ * Returns `{ <pack>: { sounds: { name: [paths relative to samples/user/] }, deploy, license, source } }`.
+ */
+export function userPacks() {
+  const packs = {};
+  if (!fs.existsSync(USER)) return packs;
+  for (const p of fs.readdirSync(USER, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort()) {
+    const dir = path.join(USER, p);
+    const sounds = {};
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) {
+        const files = fs.readdirSync(path.join(dir, e.name)).filter(isAudio).sort();
+        if (files.length) sounds[e.name] = files.map((f) => `${p}/${e.name}/${f}`);
+      } else if (isAudio(e.name)) {
+        sounds[path.parse(e.name).name] = [`${p}/${e.name}`];
+      }
     }
+    const metaFile = path.join(dir, 'pack.json');
+    const meta = fs.existsSync(metaFile) ? JSON.parse(fs.readFileSync(metaFile, 'utf8')) : {};
+    packs[p] = { sounds, deploy: meta.deploy ?? false, license: meta.license, source: meta.source };
   }
-  return map;
+  return packs;
 }
+/** One Strudel sample map over every sound in `packs` (default: all local packs), the shape `samples()` loads. */
+export const userMap = (packs = userPacks()) => Object.assign({ _base: '/samples/user/' }, ...Object.values(packs).map((p) => p.sounds));
 
 const send = (res, status, body, type = 'text/plain') => {
   res.writeHead(status, { 'content-type': type });
@@ -72,8 +86,8 @@ export function createServer() {
   async function handle(req, res) {
     const { pathname: p, searchParams } = new URL(req.url, 'http://x');
 
-    if (p === '/') return send(res, 200, fs.readFileSync(path.join(ROOT, 'index.html')), 'text/html');
-    if (p === '/examples.html') return send(res, 200, fs.readFileSync(path.join(ROOT, 'examples.html')), 'text/html');
+    const page = p === '/' ? 'index.html' : p.slice(1); // the html pages at the root: index, examples, about, legal, 404
+    if (/^[\w-]+\.html$/.test(page) && fs.existsSync(path.join(ROOT, page))) return send(res, 200, fs.readFileSync(path.join(ROOT, page)), 'text/html');
     if (p === '/favicon.ico') return send(res, 204, '');
 
     if (p === '/songs/index.json') return json(res, songList()); // same path the static pages build writes
@@ -141,6 +155,7 @@ export function createServer() {
     }
 
     if (p === '/samples/user/strudel.json') return json(res, userMap());
+    if (p === '/samples/user/packs.json') return json(res, userPacks()); // the pack index: what the page shows as deployed / local-only
     // strudel's UMD build resolves its clock SharedWorker against the page URL, so /assets/ must alias dist/assets
     if (p.startsWith('/assets/')) return serveStatic(res, '/node_modules/@strudel/web/dist' + p);
     if (p.startsWith('/node_modules/') || p.startsWith('/samples/') || p.startsWith('/lib/') || p.startsWith('/web/')) return serveStatic(res, p);

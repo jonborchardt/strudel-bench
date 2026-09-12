@@ -29,6 +29,28 @@ test('unknown sound is reported', async () => {
   finally { fs.rmSync(f); }
 });
 
+test('local pack sounds: declared plays, undeclared and missing packs are problems, unknown stays unknown', async () => {
+  const packs = { mine: { sounds: { thud: ['mine/thud.wav'] }, deploy: false } };
+  const f = tmp('_t_packs.strudel', `song({ packs: ['mine'] }, [ section('a', 1, { melody: { sound: 'thud' } }) ])`);
+  try {
+    assert.deepEqual((await checkFile(f, 4, packs)).problems, []);
+    fs.writeFileSync(f, `s("thud")`);
+    assert.match((await checkFile(f, 4, packs)).problems[0], /sound "thud" is in local pack "mine".*packs: \['mine'\]/);
+    fs.writeFileSync(f, `// packs: ['mine', 'gone']\ns("thud")`);
+    assert.deepEqual((await checkFile(f, 4, packs)).problems, ['_t_packs.strudel: missing pack "gone" (declared, not in samples/user/)']);
+    fs.writeFileSync(f, `// packs: ['mine']\ns("nope")`);
+    assert.match((await checkFile(f, 4, packs)).problems[0], /unknown sound "nope"/);
+    fs.writeFileSync(f, `song({ packs: 'mine' }, [])`);
+    assert.match((await checkFile(f, 4, packs)).problems[0], /packs must list/);
+  } finally { fs.rmSync(f); }
+});
+
+test('the shipped demo pack checks clean from disk', async () => {
+  const r = await checkFile(path.resolve(import.meta.dirname, '..', 'songs', 'ping.strudel'));
+  assert.deepEqual(r.problems, []);
+  assert.ok(r.events.some((l) => l.includes('"s":"ping"')));
+});
+
 test('raw (non-song) files are queried over the default 4 cycles', async () => {
   const f = tmp('_t_raw.strudel', 's("bd*4")');
   try { const r = await checkFile(f); assert.equal(r.cycles, 4); assert.equal(r.cps, undefined); }

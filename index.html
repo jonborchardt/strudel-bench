@@ -1,7 +1,16 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>strudle · compose</title>
+<title>strudel-bench · compose</title>
+<meta name="description" content="Compose music in strudle: a vocabulary of layers and axes (darker, punchier, more dreamy) that compiles to Strudel live-coding patterns. Play, edit, export MP3, in the browser.">
+<link rel="canonical" href="https://jonborchardt.github.io/strudel-bench/">
+<meta property="og:title" content="strudel-bench · compose">
+<meta property="og:description" content="A vocabulary of layers and axes that compiles to Strudel patterns. Play, edit and export in the browser.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jonborchardt.github.io/strudel-bench/">
+<meta property="og:image" content="https://jonborchardt.github.io/strudel-bench/web/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="web/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="web/strudle.css">
 <nav class="top" id="nav"></nav>
 <main>
@@ -11,32 +20,32 @@
     <button id="new" title="create a song from the minimal template">+ New song</button>
     <span class="field" title="drum kit for the whole song (a section's own kit: still wins); kits listed are the loaded ones with kick, snare and hats">Kit <button id="kit" popovertarget="kits" disabled>&mdash;</button></span>
     <div id="kits" popover class="menu"><input id="kitq" type="search" placeholder="filter by name or description" autocomplete="off"><div id="kitlist" role="listbox"></div><div class="key" id="kitkey" title="what the icons mean: line texture, height = weight, colour = brightness, extras = character"></div></div>
+    <span class="field" id="packs" title="sample packs this song declares (packs: [...]): deployed ships with the site, local stays on this machine, missing is not in samples/user/ so its sounds will not play" hidden></span>
     <span class="grow"></span>
-    <button id="save" title="write the source back to songs/">Save</button>
+    <button id="save" title="write the source back to songs/" disabled>Save</button>
     <span class="group" id="exports" aria-label="export">
       <span class="lbl">Export</span>
       <button id="export" title="render the source offline in this browser and download <song>.mp3 (stops playback)">MP3</button>
       <button id="dump" title="download the expanded Strudel as <song>.strudel.txt, ready to paste into the strudel.cc REPL">Strudel</button>
-      <button id="open" title="open the expanded Strudel in the strudel.cc REPL">Open &#8599;</button>
+      <button id="open" title="open the expanded Strudel in the strudel.cc REPL">REPL &#8599;</button>
       <span class="xstate" id="xstate" role="status" aria-live="polite" hidden></span>
     </span>
   </header>
 
   <!-- transport: one play/pause toggle, stop, the position slider with a tick per section, and where the playhead is -->
   <section class="card transport" id="transport" aria-label="transport">
-    <button id="play" class="primary" title="ctrl+enter">&#9654; Play</button>
-    <button id="stop" title="ctrl+." disabled>&#9632; Stop</button>
-    <button id="update" title="the source changed since it was last evaluated: play the new version from here (ctrl+enter)" hidden>&#8635; Update</button>
+    <button id="play" class="primary">&#9654; Play</button>
+    <button id="stop" disabled>&#9632; Stop</button>
+    <button id="update" title="the source changed since it was last evaluated: play the new version from here" hidden>&#8635; Update</button>
     <input id="pos" type="range" min="0" max="1" step="0.05" value="0" list="marks" disabled aria-label="position">
     <datalist id="marks"></datalist>
     <span class="where" id="where">&mdash;</span>
-    <kbd>ctrl+enter play &middot; ctrl+. stop &middot; space pause</kbd>
   </section>
 
-  <!-- source workspace: editable strudle source next to the generated strudel -->
+  <!-- source workspace: editable song source next to the generated strudel -->
   <section class="panes">
     <div class="card pane">
-      <header><h2>Strudle source</h2><small>editable &middot; axes 0..1, 0.5 is baseline</small><span class="grow"></span><span class="stale" id="stale"></span></header>
+      <header><h2>Song source</h2><small>editable &middot; axes 0..1, 0.5 is baseline</small><span class="grow"></span><span class="stale" id="stale"></span></header>
       <textarea id="code" spellcheck="false"></textarea>
       <pre id="err" class="err"></pre>
     </div>
@@ -68,19 +77,22 @@
       <pre id="fbout" class="gen" hidden style="margin-top:.5rem;padding:.5rem"></pre>
     </div>
     <div class="card">
-      <header><h2>Why it sounds this way</h2><small>comments in the source and decisions recorded in <code id="notesfile"></code>, grouped by section</small><span class="grow"></span><small id="notesum"></small></header>
+      <header><h2>Why it sounds this way</h2><span class="grow"></span><small id="notesum"></small></header>
       <p id="prompt" class="prompt" hidden></p>
       <ul class="notes" id="notes"></ul>
     </div>
   </section>
 </main>
+<footer class="site" id="foot"></footer>
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
-  import { boot, playCode, expandCode, evalCode, nav, drumMachines } from './web/boot.mjs';
+  import { boot, playCode, expandCode, evalCode, nav, footer, drumMachines, localPacks } from './web/boot.mjs';
   import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile } from './web/compose.mjs';
+  import { packsOf, packKind } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   const $ = (id) => document.getElementById(id);
   $('nav').innerHTML = nav('Compose');
+  $('foot').innerHTML = footer();
   const status = (text) => ($('status').textContent = text);
   let loaded = '';      // text as last loaded from disk (or saved)
   let playing = false;
@@ -147,17 +159,21 @@
     $('kitlist').innerHTML = [...new Set([kit, ...kits])].map((k) => `<button role="option" aria-selected="${k === kit}" data-kit="${k}" title="${kitInfo[k]?.about ?? ''}">${icon(k)}<span>${k}</span><small>${kitInfo[k]?.label ?? ''}</small></button>`).join('');
     filterKits();
     $('kit').disabled = !kits.length || !/song\(\s*\{/.test(src); // plain strudel files have no kit to set
+    // the song's declared sample packs and what they are here; a missing pack plays silence for its sounds, never a substitute
+    const want = packsOf(src);
+    $('packs').hidden = !want.length;
+    $('packs').innerHTML = 'Packs ' + want.map((p) => { const k = packKind(localPacks[p]); return `<span class="pack ${k}">${p} · ${k}</span>`; }).join('');
     // why it sounds this way: source comments + the metadata file's changes, per section; a change shows where it
     // landed (layer.axis, from → to) and keeps its request's date and ask in the tooltip
     const esc = (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
     const view = notesView(src, meta);
-    $('notesfile').textContent = notesFile($('song').value);
     $('notesum').textContent = view.requests ? `${view.requests} request${view.requests === 1 ? '' : 's'}, ${view.changes} change${view.changes === 1 ? '' : 's'}, last ${view.last}` : '';
     $('prompt').hidden = !view.prompt;
     $('prompt').textContent = view.prompt;
     const item = (n) => `<li${n.detail ? ` title="${esc(n.detail)}"` : ''}>${n.where ? `<span class="tag">${esc(n.where)}</span>` : ''}${esc(n.text)}${n.change ? ` <small>${esc(n.change)}</small>` : ''}</li>`;
     $('notes').innerHTML = view.sections.map((s) => `<li><b>${esc(s.name)}</b><ul>${s.items.map(item).join('')}</ul></li>`).join('') || '<li class="muted">no comments in this song yet</li>';
     $('stale').textContent = src !== loaded ? 'unsaved' : '';
+    $('save').disabled = src === loaded;
     fbRender(); // the request quotes the source, so it follows edits
     syncTransport(); // an edit while playing offers Update
   }
@@ -276,9 +292,6 @@
     syncTransport();
   };
   setInterval(async () => { if (playing) showPosition((await ready).scheduler.now() % Number($('pos').max)); }, 250); // the song repeats every `total`, so wrap
-  document.addEventListener('keydown', (e) => { // space toggles unless typing somewhere
-    if (e.key === ' ' && !/^(TEXTAREA|INPUT|SELECT|BUTTON)$/.test(e.target.tagName)) { e.preventDefault(); toggle(); }
-  });
   $('save').onclick = save;
   $('new').onclick = newSong;
   // exports work the same everywhere: render/expand in this browser, download the file; with the server it also lands in renders/
@@ -365,10 +378,6 @@
     $('kitlist').querySelector('button:not([hidden])')?.click();
   };
   $('code').addEventListener('input', () => { sourceChanged(); expandSoon(); });
-  $('code').addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); play(); }
-    if ((e.ctrlKey || e.metaKey) && e.key === '.') { e.preventDefault(); stop(); }
-  });
 
   // feedback: comments pinned at the playhead's cycle become one paste-ready Claude request. Each shows as a dot on
   // the card's timeline: click a dot to edit its text, drag it to move it.

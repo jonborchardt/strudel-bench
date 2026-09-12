@@ -1,4 +1,4 @@
-# strudle
+# strudel-bench
 
 Local [Strudel](https://strudel.cc) harness: edit `songs/*.strudel`, press play in a browser, hear it. All code and samples are served from this folder.
 
@@ -8,18 +8,19 @@ Local [Strudel](https://strudel.cc) harness: edit `songs/*.strudel`, press play 
     npm run samples          # one-time, downloads Strudel's default packs (~300 MB, resumable, re-run if any fail)
     npm start                # http://localhost:3000
 
-The same page is deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to main (`npm run pages` builds it into `dist/`). There it has no server: save and new song keep songs in the browser's localStorage instead of `songs/`, sample packs stream from the Strudel CDN instead of `samples/packs/`, and `samples/user/` ships with the site. Export works the same as locally (the browser renders and encodes), it just downloads instead of also writing `renders/`.
+The same page is deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to main (`npm run pages` builds it into `dist/`). There it has no server: save and new song keep songs in the browser's localStorage instead of `songs/`, sample packs stream from the Strudel CDN instead of `samples/packs/`, and of the local packs in `samples/user/` only those whose `pack.json` says `deploy` ship with the site (songs that need the others are left out of the list there). Export works the same as locally (the browser renders and encodes), it just downloads instead of also writing `renders/`.
 
 ## Use
 
 The page has two views: **Compose** (index.html) and **Examples** (examples.html, a scrollable showcase of playable snippets for every axis, descriptor, modifier, harmony word and section edit; entries marked "example coming" are placeholders).
 
-- Pick a song, press ▶ (or ctrl+enter). ■ or ctrl+. stops; pause remembers the cycle and resumes from it. Save writes the textarea back to the file. **+ New song** writes a minimal `song()` template to `songs/<name>.strudel`.
+- Pick a song, press ▶. ■ stops; pause remembers the cycle and resumes from it. Save writes the textarea back to the file. **+ New song** writes a minimal `song()` template to `songs/<name>.strudel`.
 - The editable source and the expanded Strudel it reduces to sit side by side (stacked on narrow screens). The expanded pane follows the textarea as you type (expanded in the browser by `lib/dump.mjs`, also on GitHub Pages); lines the last edit changed flash briefly, and the source pane says "unsaved" until you save. Switching or creating a song asks before discarding unsaved edits.
 - **Change comments** collects notes pinned at the cycle the playhead is on (pause where it bothers you, write what should change, Add note here) and builds one paste-ready request: song name, section map, the numbered notes with their bar, a line saying each note may be about that exact spot, its section, or what led into it, and the source of the sections around those spots (a first-bar note also quotes the section before). **Why it sounds this way** lists, per section, the `//` comments in the source and the decisions recorded in `songs/<name>.notes.json` (the prompt the song came from, then one entry per request with the changes it made: section, layer, axis, from → to, why; the card shows the why with the request's date and ask as a tooltip). `npm run note -- songs/x.strudel --ask "..." --change "drop.melody.brightness .5>.7 raised because ..."` appends one; `--prompt "..."` sets the summary. On GitHub Pages the request card is hidden. The **Kit** selector lists the drum kits the loaded packs actually have (a `<kit>_bd/sd/hh` prefix, local or CDN), rewrites the song-level `kit:` in the source, re-evaluates if playing, and saves like any other edit.
 - Editing a song file on disk reloads it in the page. If it was playing, it re-evaluates so you hear the change. If you have unsaved edits in the textarea, you get a reload link instead.
 - **Export MP3** stops playback, renders the source offline in the browser, encodes it there and downloads `<song>.mp3`. **Export Strudel** downloads the expanded pane as `<song>.strudel.txt`, ready to paste into the strudel.cc REPL, and **Open** opens it there. The badge next to the buttons shows the state (rendering with a percentage, ✓ file, ✗ why) and the buttons lock while a render runs. All work identically on localhost and GitHub Pages; with the local server the file is also written to `renders/` (the ✓ tooltip says so).
-- Drop your own samples in `samples/user/<sound>/*.wav`, then `s("<sound>")` plays them and `s("<sound>:2")` picks the third file. Loose files at the top level work too, named after the file.
+- Your own samples live in **local packs**: one folder per pack, `samples/user/<pack>/`. Inside it `<sound>/*.wav` is a sound with variants (`s("<sound>:2")` picks the third file) and a loose audio file is a single sound named after the file. A song declares the packs it uses, `song({ ..., packs: ['<pack>'] })` (a comment line `packs: ['<pack>']` does the same in a plain Strudel file), and `npm run check` refuses a pack sound the song does not declare, a declared pack that is not in `samples/user/`, and any sound in no pack at all. Nothing is ever substituted: a missing pack plays silence for its sounds, and the page says so. The header shows the song's packs as **deployed**, **local** or **missing**; the status line lists every local pack this environment has. Adding a pack touches no code: a folder, and a `pack.json` only if it should ship. `samples/user/demo-pack` (a generated sine blip, CC0) and `songs/ping.strudel` are the worked example.
+- **Deploying local packs** (GitHub Pages) is opt-in per pack through `samples/user/<pack>/pack.json`: `{ "deploy": true, "license": "CC0-1.0", "source": "..." }` ships the whole pack, `"deploy": ["kick", "snare"]` ships only those sounds, no file (or `"deploy": false`) keeps it local-only. `npm run pages` copies only what ships, refuses to deploy a pack with no `license`, leaves songs that declare a non-shipping pack out of the deployed song list (their files do not ship either), and re-checks every deployed song against exactly the shipped sounds, so a subset that drops a sound a song uses fails the build instead of playing silence online. Built-in packs are unaffected: they come from `samples/packs/` locally and stream from the Strudel CDN on Pages.
 
 ## Scripts
 
@@ -33,11 +34,12 @@ The page has two views: **Compose** (index.html) and **Examples** (examples.html
     server.mjs           stdlib http server: static files, song api, sse reload, render/dump routes, user sample map
     index.html           Compose: song header, transport, source + expanded strudel, section feedback, offline renderer
     examples.html        Examples: data-driven playable cards (GROUPS at the top of its script), stubs where content is pending
-    web/                 boot.mjs (shared initStrudel/prebake, playCode, nav) and strudle.css for both pages
+    about.html           About: what strudel-bench is and why; legal.html: privacy and disclaimers (static, no strudel loaded)
+    web/                 boot.mjs (shared initStrudel/prebake, playCode, nav, footer), strudle.css and icon.svg for every page
     songs/               one .strudel file per song
     lib/                 the axis system (see below), loaded by both the page and the Node scripts
     samples/packs/       downloaded packs (gitignored) + <pack>.json maps + packs.json
-    samples/user/        your samples
+    samples/user/        your sample packs, one folder each; pack.json = deploy policy (see Use)
     renders/             wav/mp3 renders and dumps (gitignored)
     scripts/samples.mjs  pack downloader
     scripts/check.mjs    headless checker
