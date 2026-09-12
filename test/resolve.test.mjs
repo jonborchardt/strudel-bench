@@ -1,5 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { ready } from './_scope.mjs';
 
 const SRC = `song({ cps: .5 }, [
@@ -14,7 +16,7 @@ const SRC = `song({ cps: .5 }, [
 
 test('locate finds sections, layers and numeric axes', async () => {
   await ready;
-  const { locate } = await import('../scripts/resolve.mjs');
+  const { locate } = await import('../lib/resolve.mjs');
   const m = locate(SRC);
   assert.deepEqual(m.sections.map((s) => s.name), ['verse', 'drop']);
   assert.equal(m.sections[0].layers.drums.axes.density.value, .6);
@@ -23,7 +25,7 @@ test('locate finds sections, layers and numeric axes', async () => {
 
 test('planEdits rewrites numbers, inserts missing axes, refuses expressions, preserves formatting', async () => {
   await ready;
-  const { planEdits, applyEdits } = await import('../scripts/resolve.mjs');
+  const { planEdits, applyEdits } = await import('../lib/resolve.mjs');
   const { edits, refused, report } = planEdits(SRC, 'verse', '*', 'much darker');
   const out = applyEdits(SRC, edits);
   // dark = brightness -0.30, register -0.10; "much" x2 -> brightness -0.60, register -0.20.
@@ -38,7 +40,7 @@ test('planEdits rewrites numbers, inserts missing axes, refuses expressions, pre
 
 test('a layer built with spread is refused, not silently baselined', async () => {
   await ready;
-  const { planEdits } = await import('../scripts/resolve.mjs');
+  const { planEdits } = await import('../lib/resolve.mjs');
   const src = `const base = { density: .8, weight: .7 };
 song({ cps: .5 }, [
   section('verse', 8, { drums: { ...base, brightness: .25 } }),
@@ -49,15 +51,15 @@ song({ cps: .5 }, [
   assert.deepEqual(plan.report, []);
 });
 
-test('non-song file exits with code 2', async () => {
+test('locate refuses a non-song file', async () => {
   await ready;
-  const { locate } = await import('../scripts/resolve.mjs');
+  const { locate } = await import('../lib/resolve.mjs');
   assert.throws(() => locate('note("c3")'), /not a song\(\) file/);
 });
 
 test('harmony words write key and progression on the section, once', async () => {
   await ready;
-  const { planEdits, applyEdits } = await import('../scripts/resolve.mjs');
+  const { planEdits, applyEdits } = await import('../lib/resolve.mjs');
   const src = `song({ cps: .5, key: 'C:minor' }, [
   section('drop', 8, { role: 'climax',
     drums: { density: .9 },
@@ -78,10 +80,18 @@ test('harmony words write key and progression on the section, once', async () =>
 
 test('harmony refuses a non-literal key', async () => {
   await ready;
-  const { planEdits } = await import('../scripts/resolve.mjs');
+  const { planEdits } = await import('../lib/resolve.mjs');
   const src = `song({}, [ section('a', 1, { key: KEY, drums: {} }) ])`;
   const plan = planEdits(src, 'a', '*', 'major');
   assert.ok(plan.refused.some((r) => r.section === 'a' && /key/.test(r.reason)));
+});
+
+test('the cli prints the plan for a song and exits 2 for a non-song file', () => {
+  const run = (...args) => spawnSync(process.execPath, [fileURLToPath(new URL('../scripts/resolve.mjs', import.meta.url)), ...args], { encoding: 'utf8' });
+  const ok = run(fileURLToPath(new URL('../songs/arc.strudel', import.meta.url)), '*', 'drums', 'darker');
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.match(ok.stdout, /drums\.brightness .+ → /);
+  assert.equal(run(fileURLToPath(import.meta.url), '*', '*', 'darker').status, 2);
 });
 
 test('setAxis rewrites a literal, inserts a missing axis, refuses expressions and spread', async () => {

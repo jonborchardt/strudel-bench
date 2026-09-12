@@ -88,7 +88,7 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .knobs b { display: flex; align-items: center; gap: .2rem; }
 .knobs b button { border: 0; background: none; padding: 0 .2rem; color: var(--muted); line-height: 1; opacity: .5; }
 .knobs b:hover button { opacity: 1; }
-.strip .blk { position: relative; flex: 1 1 0; min-width: 0; display: grid; gap: 2px; padding: .3rem .45rem; border: 1px solid #111; border-radius: 5px; color: #ddd; background: linear-gradient(#2c2c30, #222225); box-shadow: inset 0 1px 0 #48484e; cursor: pointer; }
+.strip .blk { position: relative; flex: 1 1 0; min-width: 5.5rem; display: grid; gap: 2px; padding: .3rem .45rem; border: 1px solid #111; border-radius: 5px; color: #ddd; background: linear-gradient(#2c2c30, #222225); box-shadow: inset 0 1px 0 #48484e; cursor: pointer; }
 .strip .blk .nm { font-size: .65rem; line-height: 1.6; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .strip .blk i { display: block; height: 4px; border-radius: 2px; background: var(--accent); box-shadow: inset 0 1px 2px #000; }
 .strip .blk.on { border-color: var(--accent); box-shadow: inset 0 1px 0 #48484e, 0 0 0 1px var(--accent), 0 0 8px #2f6fed88; color: #fff; }
@@ -122,23 +122,13 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 /* the whole mix card is the plugin chassis: a lighter dark shell, the strip and knob panels sit inset in it, controls go dark */
 .rack { color: #ddd; background: linear-gradient(#3a3a3f, #2e2e33); border-color: #111; box-shadow: inset 0 1px 0 #55555c, 0 2px 6px rgba(0, 0, 0, .35); }
 .rack h2 { font-size: .85rem; letter-spacing: .1em; text-transform: uppercase; color: #fff; }
-.rack small, .rack .muted, .rack .vt th, .rack .words summary { color: #9a9aa2; }
-.rack button, .rack .pills { background: #1e1e22; border-color: #111; color: #ddd; box-shadow: inset 0 1px 0 #3c3c42, 0 1px 0 #48484e; }
+.rack small, .rack .muted, .rack .vt th { color: #9a9aa2; }
+.rack button { background: #1e1e22; border-color: #111; color: #ddd; box-shadow: inset 0 1px 0 #3c3c42, 0 1px 0 #48484e; }
 .rack button:hover:not(:disabled) { border-color: #111; color: #fff; background: #2a2a2f; }
 .rack button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
-.rack .pills input { color: #eee; }
-.rack .pills input::placeholder { color: #77777f; }
-.rack .pill { background: #48484e; color: #eee; }
-.rack .pill.layer { background: var(--accent); }
 .rack .tag { background: #48484e; color: #ddd; }
 .rack .vt .ok { color: #6fd08a; } .rack .vt .no { color: #ff7a8a; }
 .rack .strip .blk:hover { border-color: #55555c; }
-.rack .pill.mod { background: #6a4a10; } .rack .pill.harmony { background: #1f5a33; } .rack .pill.mood { background: #4a2a70; }
-.rack .pill button, .rack .menu button { background: none; border: 0; box-shadow: none; color: inherit; }
-.rack .pill button { color: #bbb; }
-.rack .menu { background: #1e1e22; border-color: #111; color: #ddd; }
-.rack .menu small { color: #9a9aa2; }
-.rack .menu button:hover, .rack .menu button:focus-visible, .rack .menu button[aria-selected="true"], .rack .suggest button.on { background: #2f6fed44; color: #fff; }
 /* mix card: layers down, axes across, a fader per cell the layer adapts; styled like a plugin panel:
    dark inset groove, a detent tick at the .5 baseline, a fill from the detent to a machined cap (--v is the value, set by the page) */
 .knobs { display: grid; grid-template-columns: 4.5rem repeat(12, minmax(4rem, 1fr)); gap: .3rem .5rem; align-items: center; overflow-x: auto; font-size: .8rem;
@@ -161,18 +151,14 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .rack input[type=range]:hover::-webkit-slider-thumb { background-color: #fff; }
 .rack input[type=range]:hover::-moz-range-thumb { background-color: #fff; }
 .rack input[type=range]:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
-/* the pill box: pills in typed order, the input after them, suggestions dropped under it */
-.pills { position: relative; flex: 1 1 18rem; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; padding: .2rem .4rem; border: 1px solid #bbb; border-radius: 6px; background: #fff; }
-.pills input { flex: 1; min-width: 7rem; border: 0; outline: 0; padding: .15rem .2rem; font: inherit; background: transparent; }
+/* the pill box: pills in typed order, the input after them, the browser's datalist under it */
+.pills { flex: 1 1 18rem; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; padding: .2rem .4rem; border: 1px solid #111; border-radius: 6px; background: #1e1e22; color: #ddd; box-shadow: inset 0 1px 0 #3c3c42, 0 1px 0 #48484e; }
+.pills input { flex: 1; min-width: 7rem; border: 0; outline: 0; padding: .15rem .2rem; font: inherit; background: transparent; color: #eee; }
+.pills input::placeholder { color: #77777f; }
 .pills input.bad { color: var(--err); text-decoration: underline wavy var(--err); } /* not a word it knows: stays text, never a pill */
-.pill { display: inline-flex; align-items: center; gap: .15rem; padding: .05rem .2rem .05rem .55rem; border-radius: 99px; font-size: .85rem; background: #eee; }
-.pill button { border: 0; background: none; padding: 0 .2rem; line-height: 1; color: var(--muted); }
-.pill.layer, .suggest .layer span { background: var(--ink); color: #fff; }
-.pill.mod { background: #fff3d6; } .pill.harmony { background: #e6f5ea; } .pill.mood { background: #f3e8ff; }
-.suggest { position: absolute; top: 100%; left: 0; z-index: 3; width: 18rem; margin-top: .2rem; }
-.suggest button { grid-template-columns: auto 1fr; }
-.suggest button span { padding: 0 .4rem; border-radius: 99px; }
-.suggest button.on { background: #e6eefc; }
+.pill { display: inline-flex; align-items: center; gap: .15rem; padding: .05rem .2rem .05rem .55rem; border-radius: 99px; font-size: .85rem; background: #48484e; color: #eee; }
+.pill button { border: 0; background: none; box-shadow: none; padding: 0 .2rem; line-height: 1; color: #bbb; }
+.pill.layer { background: var(--accent); } .pill.mod { background: #6a4a10; } .pill.harmony { background: #1f5a33; } .pill.mood { background: #4a2a70; }
 .addrow { margin-top: .4rem; font-size: .85rem; }
 .addrow button { padding: .1rem .5rem; font-size: .85rem; }
 /* collapsible inset panels in the mix card: axes (open by default) and materials (closed); the knob grid loses its own frame inside one */
@@ -198,7 +184,6 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .vt { border-collapse: collapse; font: var(--mono); margin-top: .5rem; }
 .vt th, .vt td { padding: .1rem .6rem; text-align: right; }
 .vt th { color: var(--muted); font-weight: normal; }
-.vt .ok { color: #1b6b32; } .vt .no { color: var(--err); }
 #vout .row { margin-top: .5rem; }
 #vout audio { height: 2rem; }
 
@@ -216,7 +201,6 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .lane { position: relative; flex: 1; min-width: 12rem; display: flex; align-items: center; padding-top: .6rem; margin-top: -.6rem; } /* the padding holds the dots; the negative margin keeps the slider on the buttons' centre line */
 .lane input[type=range] { width: 100%; margin: 0; }
 .fbbar { flex-wrap: nowrap; margin-bottom: .5rem; }
-.fbbar button { padding: .2rem .55rem; border-radius: 99px; font-size: .8rem; }
 .lane.small { margin: 0; min-width: 0; }
 .lane.small input { accent-color: var(--accent); }
 .lane .dot { position: absolute; top: 0; width: .7rem; height: .7rem; padding: 0; border-radius: 50%; background: var(--c, var(--accent)); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--c, var(--accent)); transform: translateX(-50%); cursor: grab; touch-action: none; }
@@ -271,9 +255,6 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .ex.playing { border-color: var(--accent); box-shadow: 0 0 0 2px #e6eefc; }
 .ex.stub { border-style: dashed; background: transparent; }
 .ex.stub p { color: var(--muted); }
-
-/* a section too short for its ops keeps room for them instead of spilling them past the card */
-.strip .blk { min-width: 5.5rem; }
 
 /* renaming a section: the box takes the name's place inside the block */
 .strip .rn { width: 100%; font: inherit; font-size: .75rem; padding: 0 .2rem; border: 1px solid var(--accent); border-radius: 3px; background: #fff; color: var(--ink); }

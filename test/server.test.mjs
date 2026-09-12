@@ -105,7 +105,8 @@ test('render route: 409 without a page, PUT stores a wav and releases the waiter
 });
 
 test('PUT /renders/x.wav?mp3 converts and returns the mp3 path; /render with mp3 reports it', async () => {
-  const { writeWav, tone } = await import('../scripts/analyze.mjs');
+  const { writeWav } = await import('../scripts/analyze.mjs');
+  const { tone } = await import('../lib/analyze.mjs');
   await withServer(async (base) => {
     const es = await fetch(`${base}/events`);
     const reader = es.body.getReader();
