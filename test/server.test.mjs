@@ -53,6 +53,9 @@ test('song list, read, write, and name validation', async () => {
 test('static files and user sample map', async () => {
   await withServer(async (base) => {
     assert.equal((await fetch(`${base}/`)).headers.get('content-type'), 'text/html');
+    assert.equal((await fetch(`${base}/examples.html`)).headers.get('content-type'), 'text/html');
+    assert.equal((await fetch(`${base}/web/strudle.css`)).headers.get('content-type'), 'text/css');
+    assert.equal((await fetch(`${base}/web/boot.mjs`)).status, 200);
     const js = await fetch(`${base}/node_modules/@strudel/web/dist/index.js`);
     assert.equal(js.status, 200);
     assert.equal((await fetch(`${base}/node_modules/../package.json`)).status, 404);

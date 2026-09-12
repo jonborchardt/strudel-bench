@@ -8,11 +8,15 @@ Local [Strudel](https://strudel.cc) harness: edit `songs/*.strudel`, press play 
     npm run samples          # one-time, downloads Strudel's default packs (~300 MB, resumable, re-run if any fail)
     npm start                # http://localhost:3000
 
-The same page is deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to main (`npm run pages` builds it into `dist/`). There it has no server: save and export are hidden, sample packs stream from the Strudel CDN instead of `samples/packs/`, and `samples/user/` ships with the site.
+The same page is deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to main (`npm run pages` builds it into `dist/`). There it has no server: save, new song and export are disabled, the expanded Strudel pane says why, sample packs stream from the Strudel CDN instead of `samples/packs/`, and `samples/user/` ships with the site.
 
 ## Use
 
-- Pick a song, press ▶ (or ctrl+enter). ■ or ctrl+. stops; pause remembers the cycle and resumes from it. Save writes the textarea back to the file.
+The page has two views: **Compose** (index.html) and **Examples** (examples.html, a scrollable showcase of playable snippets for every axis, descriptor, modifier, harmony word and section edit; entries marked "example coming" are placeholders).
+
+- Pick a song, press ▶ (or ctrl+enter). ■ or ctrl+. stops; pause remembers the cycle and resumes from it. Save writes the textarea back to the file. **+ New song** writes a minimal `song()` template to `songs/<name>.strudel`.
+- The editable source and the expanded Strudel it reduces to sit side by side (stacked on narrow screens). The expanded pane is generated from the saved file by the dump route and flags itself stale while the textarea has unsaved edits.
+- **Ask Claude about a section** builds a paste-ready request from the song name, the chosen section's source and your comment. **Why it sounds this way** lists the `//` comments in the source grouped by section; a metadata file for Claude-made decisions is the follow-up. On GitHub Pages the request card is hidden. The kit selector shows the song's kit and is not yet switchable.
 - Editing a song file on disk reloads it in the page. If it was playing, it re-evaluates so you hear the change. If you have unsaved edits in the textarea, you get a reload link instead.
 - **export mp3** renders the whole song offline (page must be stopped) to `renders/<song>.mp3`. **export strudel** writes the plain Strudel a `song()` file reduces to, to `renders/<song>.dump.txt`, ready to paste into the strudel.cc REPL.
 - Drop your own samples in `samples/user/<sound>/*.wav`, then `s("<sound>")` plays them and `s("<sound>:2")` picks the third file. Loose files at the top level work too, named after the file.
@@ -27,7 +31,9 @@ The same page is deployed to GitHub Pages by `.github/workflows/pages.yml` on ev
 ## Layout
 
     server.mjs           stdlib http server: static files, song api, sse reload, render/dump routes, user sample map
-    index.html           the play page (play/pause/stop, save, export mp3, export strudel, offline renderer)
+    index.html           Compose: song header, transport, source + expanded strudel, section feedback, offline renderer
+    examples.html        Examples: data-driven playable cards (GROUPS at the top of its script), stubs where content is pending
+    web/                 boot.mjs (shared initStrudel/prebake, playCode, nav) and strudle.css for both pages
     songs/               one .strudel file per song
     lib/                 the axis system (see below), loaded by both the page and the Node scripts
     samples/packs/       downloaded packs (gitignored) + <pack>.json maps + packs.json

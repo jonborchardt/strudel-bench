@@ -1,81 +1,146 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>strudle</title>
-<style>
-  body { font: 14px system-ui, sans-serif; margin: 1rem; max-width: 64rem; }
-  .bar { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-bottom: .5rem; }
-  textarea { width: 100%; height: 26rem; font: 13px/1.4 ui-monospace, Consolas, monospace; box-sizing: border-box; }
-  #err { color: #b00; white-space: pre-wrap; }
-  #status { color: #555; }
-  kbd { font: inherit; color: #777; }
-</style>
-<div class="bar">
-  <select id="song"></select>
-  <button id="play">&#9654; play</button>
-  <button id="pause">&#10074;&#10074; pause</button>
-  <button id="stop">&#9632; stop</button>
-  <label id="scrub" hidden><input id="pos" type="range" min="0" max="1" step="0.05" list="marks" style="width:16rem;vertical-align:middle"><datalist id="marks"></datalist> <span id="where"></span></label>
-  <button id="save">save</button>
-  <button id="export">export mp3</button>
-  <button id="dump">export strudel</button>
-  <span id="status"></span>
-  <kbd>ctrl+enter play &middot; ctrl+. stop</kbd>
-</div>
-<textarea id="code" spellcheck="false"></textarea>
-<pre id="err"></pre>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>strudle · compose</title>
+<link rel="stylesheet" href="web/strudle.css">
+<nav class="top" id="nav"></nav>
+<main>
+  <!-- song header: which song, new, kit, save, export -->
+  <header class="card row" id="head">
+    <label class="field">Song <select id="song"></select></label>
+    <button id="new" title="create a song from the minimal template">+ New song</button>
+    <label class="field" title="kit switching is a follow-up: shows the song's kit for now">Kit <select id="kit" disabled></select></label>
+    <span class="grow"></span>
+    <button id="save" title="write the source back to songs/">Save</button>
+    <span class="group" aria-label="export">
+      <span class="lbl">Export</span>
+      <button id="export" title="render the whole song offline to renders/<song>.mp3 (page must be stopped)">MP3</button>
+      <button id="dump" title="write the expanded Strudel to renders/<song>.dump.txt and open it in strudel.cc">Strudel</button>
+    </span>
+  </header>
+
+  <!-- transport -->
+  <section class="card transport" aria-label="transport">
+    <button id="play" class="primary">&#9654; Play</button>
+    <button id="pause">&#10074;&#10074; Pause</button>
+    <button id="stop">&#9632; Stop</button>
+    <input id="pos" type="range" min="0" max="1" step="0.05" value="0" list="marks" disabled aria-label="position">
+    <datalist id="marks"></datalist>
+    <span class="where" id="where">&mdash;</span>
+    <kbd>ctrl+enter play &middot; ctrl+. stop</kbd>
+  </section>
+
+  <!-- source workspace: editable strudle source next to the generated strudel -->
+  <section class="panes">
+    <div class="card pane">
+      <header><h2>Strudle source</h2><small>editable &middot; axes 0..1, 0.5 is baseline</small></header>
+      <textarea id="code" spellcheck="false"></textarea>
+      <pre id="err" class="err"></pre>
+    </div>
+    <div class="card pane">
+      <header><h2>Expanded Strudel</h2><small>generated &middot; read-only</small><span class="grow"></span><span class="stale" id="stale"></span><button id="expand" title="regenerate from the saved file">&#8635; regenerate</button></header>
+      <pre id="expanded" class="gen"></pre>
+    </div>
+  </section>
+
+  <!-- feedback: pick a section, say what should change, get a request to paste to Claude -->
+  <section class="panes">
+    <div class="card" id="feedback">
+      <header><h2>Ask Claude about a section</h2><small>listen, pick the section, say what should change</small></header>
+      <div class="row">
+        <label class="field">Section <select id="fbsection"></select></label>
+        <span class="muted" id="fbwhere"></span>
+      </div>
+      <textarea id="fbcomment" class="note" placeholder="Make this heavier and less predictable."></textarea>
+      <div class="row" style="margin-top:.5rem">
+        <button id="fbbuild" class="primary">Build request</button>
+        <button id="fbcopy" disabled>Copy</button>
+        <small id="fbstatus"></small>
+      </div>
+      <pre id="fbout" class="gen" hidden style="margin-top:.5rem;padding:.5rem"></pre>
+    </div>
+    <div class="card">
+      <header><h2>Why it sounds this way</h2><small>comments in the source, grouped by section</small></header>
+      <ul class="notes" id="notes"></ul>
+      <div class="placeholder">Comments in the song file are the notes: a <code>//</code> line above a section or after a value says why it is set that way. Decisions made through Claude requests will also be recorded in a metadata file next to the song and merged into this list (follow-up).</div>
+    </div>
+  </section>
+</main>
 <script src="node_modules/@strudel/web/dist/index.js"></script>
-<script>
+<script type="module">
+  import { boot, playCode, nav } from './web/boot.mjs';
   const $ = (id) => document.getElementById(id);
+  $('nav').innerHTML = nav('Compose');
+  const status = (text) => ($('status').textContent = text);
   let loaded = '';      // text as last loaded from disk (or saved)
   let playing = false;
   let sections = []; // of the song last evaluated, for the scrubber
   let paused = null; // cycle to resume from; the worker clock resets to 0 on stop, so pause must remember it
+  let server = true; // false on a static host (github pages): no save, export, dump, new
+  const NAME = /^[\w.-]+\.strudel$/;
+  const KITS = ['RolandTR909', 'RolandTR808', 'RolandTR707', 'RolandTR606', 'LinnDrum', 'AkaiMPC60', 'OberheimDMX'];
+  const TEMPLATE = `song({ cps: .5, key: 'C:minor', seed: 1, kit: 'RolandTR909' }, [ // axis values are 0..1, 0.5 = the layer's baseline
+  section('intro', 4, { role: 'establish', drums: { density: .4 }, pad: { space: .7 } }),
+  section('main', 8, { role: 'develop', drums: { density: .7 }, bass: { weight: .7 }, pad: {} }),
+])
+`;
 
-  const ready = initStrudel({
-    sync: true, // worker clock: the only scheduler with setCycle (section jump)
-    onEvalError: (e) => ($('err').textContent = e.message),
-    prebake: async () => {
-      // local packs (npm run samples) when present; otherwise stream from the Strudel CDN like strudel.cc does (github pages)
-      const local = await fetch('samples/packs/packs.json').then((r) => (r.ok ? r.json() : null));
-      const cdn = local ? null : await fetch('lib/packs.json').then((r) => r.json());
-      const packs = local ?? Object.keys(cdn.packs);
-      await Promise.all([
-        ...packs.map((p) => (local ? strudel.samples(`samples/packs/${p}.json`) : strudel.samples(cdn.packs[p].json, cdn.packs[p].base))),
-        strudel.samples('samples/user/strudel.json'),
-      ]);
-      if (packs.includes('tidal-drum-machines')) strudel.aliasBank(local ? 'samples/packs/tidal-drum-machines-alias.json' : cdn.alias);
-      await import('./lib/index.mjs');
-      $('status').textContent = `packs: ${packs.join(', ')}${local ? '' : ' (cdn)'}`;
-    },
-  });
+  const ready = boot({ onError: (m) => ($('err').textContent = m), onStatus: status });
 
-  // surface strudel's own error log lines (e.g. "sound not found")
-  document.addEventListener('strudel.log', (e) => {
-    if (e.detail.type === 'error') $('err').textContent = e.detail.message;
-  });
-
-  async function loadList() {
+  async function loadList(want = decodeURIComponent(location.hash.slice(1))) {
     const names = await (await fetch('songs/index.json')).json();
     $('song').innerHTML = names.map((n) => `<option>${n}</option>`).join('');
-    const want = decodeURIComponent(location.hash.slice(1));
     if (names.includes(want)) $('song').value = want;
     await loadSong();
   }
   async function loadSong() {
     const name = $('song').value;
     location.hash = name;
-    loaded = await (await fetch(`songs/${name}`)).text();
+    loaded = (await (await fetch(`songs/${name}`)).text()).replace(/\r\n/g, '\n'); // the textarea normalises line breaks, so compare like for like
     $('code').value = loaded;
     $('err').textContent = '';
+    sourceChanged();
+    expand();
   }
+  // everything derived from the source text: section list, kit, header notes, stale flag
+  function sourceChanged() {
+    const src = $('code').value;
+    const names = [...src.matchAll(/section\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]);
+    const cur = $('fbsection').value;
+    $('fbsection').innerHTML = ['(whole song)', ...names].map((n) => `<option>${n}</option>`).join('');
+    if (names.includes(cur)) $('fbsection').value = cur;
+    const kit = src.match(/kit:\s*['"]([^'"]+)['"]/)?.[1] ?? 'RolandTR909';
+    $('kit').innerHTML = [...new Set([kit, ...KITS])].map((k) => `<option>${k}</option>`).join('');
+    $('kit').value = kit;
+    // every line comment, attributed to the section it sits in (before the first section = the song)
+    const notes = {}; let at = 'song';
+    for (const line of src.split('\n')) {
+      at = line.match(/section\(\s*['"]([^'"]+)['"]/)?.[1] ?? at;
+      const c = line.match(/(?:^|\s)\/\/\s?(.*)$/)?.[1].trim(); // whitespace before // keeps https:// out
+      if (c) (notes[at] ??= []).push(c);
+    }
+    const esc = (s) => s.replace(/</g, '&lt;');
+    $('notes').innerHTML = Object.entries(notes).map(([sec, ls]) => `<li><b>${esc(sec)}</b><ul>${ls.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></li>`).join('') || '<li class="muted">no comments in this song yet</li>';
+    $('stale').textContent = src !== loaded ? 'edited since generated · save to refresh' : '';
+  }
+  // the dump route expands the saved file (scripts/dump.mjs runs in a child process), so the pane reflects disk, not the textarea
+  async function expand() {
+    if (!server) { $('expanded').textContent = 'Generated Strudel needs the local server for now (npm start). In-browser expansion is a follow-up.'; return null; }
+    const song = $('song').value;
+    $('expanded').textContent = `expanding ${song}…`;
+    const r = await fetch(`dump/${song}`, { method: 'POST' });
+    if (!r.ok) { $('expanded').textContent = `expand failed: ${await r.text()}`; return null; }
+    const out = await r.json();
+    if ($('song').value === song) $('expanded').textContent = out.code;
+    return out;
+  }
+
   async function play() {
     $('err').textContent = '';
-    await ready;
-    const pat = await strudel.evaluate($('code').value);
-    if (pat?.strudle) setcps(pat.strudle.meta.cps); // song() files carry their tempo in metadata; render and export already honour it
+    const pat = await playCode(ready, $('code').value);
     playing = true;
     sections = pat?.strudle?.sections ?? []; // only song() files have sections to scrub through
-    $('scrub').hidden = !sections.length;
+    $('pos').disabled = !sections.length;
     $('pos').max = pat?.strudle?.total ?? 1;
     $('marks').innerHTML = sections.map((s) => `<option value="${s.offset}" label="${s.name}">`).join(''); // tick marks at section starts
     if (paused != null) { (await ready).scheduler.setCycle(paused); paused = null; }
@@ -90,7 +155,20 @@
   async function save() {
     await fetch(`songs/${$('song').value}`, { method: 'PUT', body: $('code').value });
     loaded = $('code').value;
-    $('status').textContent = 'saved';
+    status('saved');
+    sourceChanged();
+    expand();
+  }
+  async function newSong() {
+    if ($('code').value !== loaded && !confirm('Discard unsaved edits?')) return;
+    const raw = prompt('New song name', 'untitled')?.trim();
+    if (!raw) return;
+    const name = raw.endsWith('.strudel') ? raw : `${raw}.strudel`;
+    if (!NAME.test(name)) return status(`bad name: ${name} (letters, digits, . _ -)`);
+    if ([...$('song').options].some((o) => o.value === name) && !confirm(`${name} exists. Overwrite it?`)) return;
+    await fetch(`songs/${name}`, { method: 'PUT', body: TEMPLATE });
+    await loadList(name);
+    status(`created ${name}`);
   }
 
   $('play').onclick = play;
@@ -107,34 +185,53 @@
     if (document.activeElement !== $('pos')) $('pos').value = c; // don't yank the knob mid-drag
     const s = sections.findLast((x) => x.offset <= c);
     $('where').textContent = `${s?.name ?? '…'} · ${c.toFixed(1)}/${$('pos').max}`;
+    $('fbwhere').textContent = playing && s ? `playing: ${s.name}` : '';
   }, 250);
   $('save').onclick = save;
+  $('new').onclick = newSong;
+  $('expand').onclick = expand;
   $('export').onclick = async () => {
     const song = $('song').value;
     await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
     renderToServer({ song, name: song.replace(/\.strudel$/, ''), mp3: true });
   };
   $('dump').onclick = async () => {
-    const song = $('song').value;
-    $('status').textContent = `dumping ${song}…`;
-    const r = await fetch(`dump/${song}`, { method: 'POST' });
-    if (!r.ok) { $('status').textContent = `dump failed: ${await r.text()}`; return; }
-    const { path, code } = await r.json();
-    const url = `https://strudel.cc/#${strudel.code2hash(code)}`;
-    $('status').innerHTML = `wrote ${path} · <a href="${url}" target="_blank">open in strudel.cc</a>`;
+    const out = await expand();
+    if (!out) return;
+    const url = `https://strudel.cc/#${strudel.code2hash(out.code)}`;
+    $('status').innerHTML = `wrote ${out.path} · <a href="${url}" target="_blank">open in strudel.cc</a>`;
     window.open(url, '_blank'); // popup blockers may eat this; the status link is the fallback
   };
-  $('song').onchange = loadSong;
+  $('song').onchange = () => loadSong();
+  $('code').addEventListener('input', sourceChanged);
   $('code').addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); play(); }
     if ((e.ctrlKey || e.metaKey) && e.key === '.') { e.preventDefault(); stop(); }
   });
 
+  // feedback → Claude request: song name, section, the section's source, and the comment
+  $('fbbuild').onclick = () => {
+    const song = $('song').value, sec = $('fbsection').value, comment = $('fbcomment').value.trim();
+    const src = $('code').value;
+    const block = sec === '(whole song)' ? src : src.match(new RegExp(`section\\(\\s*['"]${sec}['"][\\s\\S]*?\\n\\s*\\}\\),?`))?.[0] ?? '';
+    $('fbout').textContent = [`Song: ${song}`, `Section: ${sec}`, '', `Request: ${comment || '(describe the change)'}`, '', 'Current source:', '```', block.trim(), '```'].join('\n');
+    $('fbout').hidden = false;
+    $('fbcopy').disabled = false;
+    $('fbstatus').textContent = '';
+  };
+  $('fbcopy').onclick = async () => { await navigator.clipboard.writeText($('fbout').textContent); $('fbstatus').textContent = 'copied'; };
+
   // reload from disk when the current song file changes (fs.watch fires twice on Windows, hence the debounce)
   let timer;
   const events = new EventSource('events');
-  // a static host (github pages) answers /events with 404, which closes the stream for good: hide what needs the server
-  events.onerror = () => { if (events.readyState === EventSource.CLOSED) for (const id of ['save', 'export', 'dump']) $(id).hidden = true; };
+  // a static host (github pages) answers /events with 404, which closes the stream for good: disable what needs the server
+  events.onerror = () => {
+    if (events.readyState !== EventSource.CLOSED) return;
+    server = false;
+    for (const id of ['save', 'export', 'dump', 'new']) { $(id).disabled = true; $(id).title = 'needs the local server (npm start); GitHub Pages support is a follow-up'; }
+    $('feedback').hidden = true; // the request workflow is local-dev only
+    expand();
+  };
   events.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     if (msg.render) return renderToServer(msg.render);
@@ -143,7 +240,7 @@
     timer = setTimeout(async () => {
       if ($('code').value !== loaded) {
         $('status').innerHTML = 'file changed on disk. <a href="#" id="reload">reload</a>';
-        $('reload').onclick = async (ev) => { ev.preventDefault(); await loadSong(); $('status').textContent = ''; if (playing) play(); };
+        $('reload').onclick = async (ev) => { ev.preventDefault(); await loadSong(); status(''); if (playing) play(); };
         return;
       }
       await loadSong();
@@ -152,8 +249,8 @@
   };
 
   async function renderToServer({ song, cycles, section, layer, name, mp3 }) {
-    const fail = (message) => { $('status').textContent = message; return fetch('render-error', { method: 'POST', body: JSON.stringify({ name, message }) }); };
-    $('status').textContent = `rendering ${name}…`;
+    const fail = (message) => { status(message); return fetch('render-error', { method: 'POST', body: JSON.stringify({ name, message }) }); };
+    status(`rendering ${name}…`);
     if (playing) return fail('page is playing; stop first (render replaces the audio context)');
     try {
       await ready;
@@ -175,11 +272,11 @@
       }
       const blob = await renderWav(pat, cps, begin, end);
       const out = await (await fetch(`renders/${name}.wav${mp3 ? '?mp3' : ''}`, { method: 'PUT', body: blob })).text();
-      $('status').textContent = `rendered ${out} (${(end - begin)} cycles)`;
+      status(`rendered ${out} (${(end - begin)} cycles)`);
     } catch (e) {
       fail(e.message);
       // the render stubs/audio context may be half-torn-down: say so instead of looking idle
-      $('status').textContent = `render failed: ${e.message}. Reload the page before playing.`;
+      status(`render failed: ${e.message}. Reload the page before playing.`);
       $('err').textContent = e.message;
     }
   }

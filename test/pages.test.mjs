@@ -10,11 +10,12 @@ test('pages build assembles a static site that works under /<repo>/', () => {
   const out = path.join(ROOT, 'test', '_t_dist');
   try {
     execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'pages.mjs'), out]);
-    for (const f of ['index.html', '.nojekyll', 'lib/index.mjs', 'lib/packs.json', 'songs/demo.strudel', 'node_modules/@strudel/web/dist/index.js', 'assets'])
+    for (const f of ['index.html', 'examples.html', 'web/strudle.css', 'web/boot.mjs', '.nojekyll', 'lib/index.mjs', 'lib/packs.json', 'songs/demo.strudel', 'node_modules/@strudel/web/dist/index.js', 'assets'])
       assert.ok(fs.existsSync(path.join(out, f)), f);
     assert.ok(JSON.parse(fs.readFileSync(path.join(out, 'songs/index.json'), 'utf8')).includes('demo.strudel'));
     assert.equal(JSON.parse(fs.readFileSync(path.join(out, 'samples/user/strudel.json'), 'utf8'))._base, 'samples/user/');
     assert.ok(!fs.existsSync(path.join(out, 'samples/packs')), 'packs stream from the cdn');
-    assert.ok(!/['`"]\//.test(fs.readFileSync(path.join(out, 'index.html'), 'utf8')), 'root-absolute url in index.html');
+    for (const f of ['index.html', 'examples.html', 'web/boot.mjs'])
+      assert.ok(!/['`"]\//.test(fs.readFileSync(path.join(out, f), 'utf8')), `root-absolute url in ${f}`);
   } finally { fs.rmSync(out, { recursive: true, force: true }); }
 });

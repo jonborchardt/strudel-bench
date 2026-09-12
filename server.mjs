@@ -47,7 +47,7 @@ const readBody = (req) => new Promise((resolve, reject) => {
 
 function serveStatic(res, urlPath) {
   const file = path.resolve(ROOT, '.' + decodeURIComponent(urlPath));
-  const allowed = [path.join(ROOT, 'node_modules'), path.join(ROOT, 'samples'), path.join(ROOT, 'lib')];
+  const allowed = [path.join(ROOT, 'node_modules'), path.join(ROOT, 'samples'), path.join(ROOT, 'lib'), path.join(ROOT, 'web')];
   if (!allowed.some((d) => file.startsWith(d + path.sep)) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
     return send(res, 404, 'not found');
   }
@@ -73,6 +73,7 @@ export function createServer() {
     const { pathname: p, searchParams } = new URL(req.url, 'http://x');
 
     if (p === '/') return send(res, 200, fs.readFileSync(path.join(ROOT, 'index.html')), 'text/html');
+    if (p === '/examples.html') return send(res, 200, fs.readFileSync(path.join(ROOT, 'examples.html')), 'text/html');
     if (p === '/favicon.ico') return send(res, 204, '');
 
     if (p === '/songs/index.json') return json(res, songList()); // same path the static pages build writes
@@ -157,7 +158,7 @@ export function createServer() {
     if (p === '/samples/user/strudel.json') return json(res, userMap());
     // strudel's UMD build resolves its clock SharedWorker against the page URL, so /assets/ must alias dist/assets
     if (p.startsWith('/assets/')) return serveStatic(res, '/node_modules/@strudel/web/dist' + p);
-    if (p.startsWith('/node_modules/') || p.startsWith('/samples/') || p.startsWith('/lib/')) return serveStatic(res, p);
+    if (p.startsWith('/node_modules/') || p.startsWith('/samples/') || p.startsWith('/lib/') || p.startsWith('/web/')) return serveStatic(res, p);
     send(res, 404, 'not found');
   }
 

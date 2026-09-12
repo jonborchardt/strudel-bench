@@ -12,6 +12,8 @@ if (ROOT.startsWith(OUT)) throw new Error(`refusing to wipe ${OUT}`);
 fs.rmSync(OUT, { recursive: true, force: true });
 const copy = (rel, to = rel) => fs.cpSync(path.join(ROOT, rel), path.join(OUT, to), { recursive: true });
 copy('index.html');
+copy('examples.html');
+copy('web');
 copy('lib');
 copy('songs');
 copy('samples/user');
