@@ -192,9 +192,11 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .matrow .tb input.snd { padding-right: 1.5rem; }
 .matrow .tb .pv { position: absolute; right: .15rem; top: 50%; transform: translateY(-50%); display: none; color: #ccc; }
 .matrow .tb:focus-within .pv, .matrow .tb .pv.on { display: inline-block; }
-#mats .pvlvl { display: flex; align-items: center; gap: .4rem; margin: .2rem 0 .5rem; font-size: .8rem; color: #9a9aa2; }
-#mats .pvlvl input { width: 7rem; margin: 0; accent-color: var(--accent); }
-#mats .pvlvl output { min-width: 2.2rem; font-variant-numeric: tabular-nums; color: #ccc; }
+.pvlvl { display: flex; align-items: center; gap: .4rem; margin: .4rem 0 .1rem; font-size: .8rem; color: #9a9aa2; }
+.pvlvl input { position: static; width: 7rem; margin: 0; padding: 0; border: 0; accent-color: var(--accent); }
+.pvlvl output { min-width: 2.2rem; font-variant-numeric: tabular-nums; color: #ccc; }
+.menu .pvlvl { padding: 0 .6rem .3rem; color: var(--muted); }
+.menu .pvlvl output { color: var(--ink); }
 .menu .row { display: flex; align-items: center; gap: .6rem; padding: .2rem .3rem .2rem .6rem; border-radius: 4px; cursor: pointer; line-height: 1.3; }
 .menu .row span { flex: 1; }
 .menu .row:hover { background: #eef3fd; }

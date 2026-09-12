@@ -49,11 +49,11 @@
     <div class="strip" id="strip"></div>
     <details class="panel" id="axes" open><summary>axes</summary><div class="knobs" id="knobs"></div></details>
     <!-- materials: the strings behind each part (drum template and per-voice samples, the synth or sample a part plays, arp order, follow); sound names autocomplete from the loaded packs -->
-    <details class="panel" id="mats"><summary>materials</summary><label class="pvlvl" title="how loud the previews play (every &#9654; in this panel and its menu); not written to the song">preview level <input id="pvlvl" type="range" min="0" max="4" step=".1" value="1"><output>x1.0</output></label><div id="matlist"></div></details>
+    <details class="panel" id="mats"><summary>materials</summary><div id="matlist"></div><label class="pvlvl" title="how loud the previews play (every &#9654; in this panel and its menu); not written to the song">preview level <input class="pvin" type="range" min="-1" max="1.7" step=".01" value="0"><output>x1.0</output></label></details>
     <div class="row addrow" id="addrow"></div>
     <datalist id="snds"></datalist>
     <!-- the materials menu: one popover for every pick button, rows carry a play button that auditions without selecting -->
-    <div id="pick" popover class="menu"><input id="pickq" type="search" placeholder="filter" autocomplete="off"><div id="picklist" role="listbox"></div></div>
+    <div id="pick" popover class="menu"><input id="pickq" type="search" placeholder="filter" autocomplete="off"><label class="pvlvl" title="how loud the previews play; the same control as in the materials panel">preview level <input class="pvin" type="range" min="-1" max="1.7" step=".01" value="0"><output>x1.0</output></label><div id="picklist" role="listbox"></div></div>
     <div class="row" style="margin-top:.5rem">
       <span class="pills" id="pills" title="type a word and pick it from the list: control words, moods, modifiers (much, a little, less), harmony words, or a part name to aim the words after it at that part. Enter on an empty box applies."><input id="phrase" list="terms" placeholder="darker, much sparser, drums &hellip;" autocomplete="off"><datalist id="terms"></datalist></span>
       <button id="apply" title="rewrite this section's axis literals from the words">Apply</button>
@@ -111,7 +111,7 @@
   import { fmt, locate, setAxis, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection } from './lib/resolve.mjs';
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase } from './lib/song.mjs';
-  import { ARP_ORDERS } from './lib/layers.mjs';
+  import { ARP_ORDERS, voiceSound } from './lib/layers.mjs';
   import { TEMPLATES, fit, gridToMini } from './lib/grid.mjs';
   import { analyze } from './lib/analyze.mjs';
   import { DESCRIPTORS, OVERLAYS, HARMONY, MODIFIERS, COMPARATIVE } from './lib/vocab.mjs';
@@ -601,17 +601,23 @@
     btn.classList.add('on');
     let part = s.layers[layer].pattern, what = `${key} ${text ?? 'removed'}`;
     if (voice) { // one drum voice alone on its template grid: the whole part would drown it, or not even include it (voices join as density rises)
-      const name = s.layers[layer].attrs.sounds?.[voice] ?? voice;
-      part = strudel.s(name).struct(gridToMini(fit(TEMPLATES[s.layers[layer].attrs.template ?? 'house'][voice], s.grid.steps))).bank(s.kit);
-      what = `${voice} ${name}`;
+      const name = s.layers[layer].attrs.sounds?.[voice];
+      part = voiceSound(name, voice, s.kit, gridToMini(fit(TEMPLATES[s.layers[layer].attrs.template ?? 'house'][voice], s.grid.steps))); // the same rule as the drums part: kit voice or bare sample
+      what = `${voice} ${name ?? `${s.kit} ${voice}`}`;
     }
     $('mixstatus').textContent = `hearing ${mixSection} ${layer} ${what}${pvGain === 1 ? '' : ` at x${pvGain}`}`;
     r.setCps(s.cps); r.setPattern(part.mul(strudel.gain(pvGain)), true); // the repl's own setCps: the `setcps` global only exists once the song has been evaluated
     pvTimer = setTimeout(() => { strudel.hush(); btn.classList.remove('on'); pvBtn = null; }, 2000 / s.cps + 200);
   }
-  $('pvlvl').value = pvGain; $('pvlvl').nextElementSibling.value = `x${pvGain.toFixed(1)}`;
-  $('pvlvl').oninput = (e) => { pvGain = Number(e.target.value); e.target.nextElementSibling.value = `x${pvGain.toFixed(1)}`; localStorage.setItem('strudel:pvlvl', pvGain); };
-  $('pvlvl').onchange = () => { if (pvBtn) { clearTimeout(pvTimer); hear(pvBtn, ...pvLast); } }; // a running preview restarts at the new level
+  // two copies of the same control, one under the part rows and one in the menu: both show pvGain
+  // the sliders run -1..1.7 and the gain is 10^x (x0.1 .. x50), so the first half of the travel is the fine x0.1..x1 range and the far end still reaches a whisper-quiet sample
+  const pvIns = [...document.querySelectorAll('input.pvin')];
+  const showPvGain = () => { for (const i of pvIns) { i.value = Math.log10(pvGain); i.nextElementSibling.value = `x${pvGain < 10 ? pvGain.toFixed(1) : Math.round(pvGain)}`; } };
+  showPvGain();
+  for (const i of pvIns) {
+    i.oninput = (e) => { pvGain = +(10 ** Number(e.target.value)).toFixed(2); localStorage.setItem('strudel:pvlvl', pvGain); showPvGain(); };
+    i.onchange = () => { if (pvBtn) { clearTimeout(pvTimer); hear(pvBtn, ...pvLast); } }; // a running preview restarts at the new level
+  }
   $('mats').oninput = (e) => { if (e.target.dataset.mat === 'level') e.target.nextElementSibling.value = `x${e.target.value}`; }; // the readout follows the drag; the source changes on release (change)
   $('mats').onmousedown = (e) => { if (e.target.closest('[data-pv]')) e.preventDefault(); }; // keep the text box focused, so its play button stays
   $('mats').onclick = (e) => {
