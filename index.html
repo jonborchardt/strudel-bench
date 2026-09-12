@@ -127,7 +127,7 @@
   import { packsOf, packKind, SYNTHS } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
-  import { SCHEMA } from './web/hll-schema.mjs';
+  import { SCHEMA, host } from './web/hll-schema.mjs';
   import { fmt, locate, setAxis, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection } from './lib/resolve.mjs';
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase } from './lib/song.mjs';
@@ -172,6 +172,7 @@
     kitInfo = info;
     kits = kitsIn(Object.keys(info), Object.keys(strudel.soundMap.get()));
     $('snds').innerHTML = [...new Set([...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()])].map((n) => `<option value="${esc(n)}">`).join(''); // what a sound picker can autocomplete to (the map has most synths already)
+    host.sounds = () => [...new Set([...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()])]; host.kits = () => kits; // the section pane's sound and kit controls list what is loaded
     sourceChanged();
   });
 
