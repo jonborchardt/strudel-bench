@@ -508,6 +508,7 @@
   // unsaved until Save, re-evaluated in place while playing, undoable.
   let mixSection = null; // name of the section the card shows
   let secAt = { start: 0, end: 0 }; // where that section's call sits in the source; the source pane's text replaces exactly this span
+  let knobDrag = false; // set for the life of a knob drag (a focused knob is not enough: it keeps focus after the drag ends, and the rebuild on change must happen)
   $('sectext').addEventListener('input', () => {
     const src = $('code').value, text = $('sectext').value;
     const next = src.slice(0, secAt.start) + text + src.slice(secAt.end);
@@ -526,13 +527,13 @@
     return true;
   }
   function mixRender() {
-    if (document.activeElement?.type === 'range' && $('knobs').contains(document.activeElement)) return; // a knob is being dragged: its value is already right
     let m; try { m = locate($('code').value); } catch (e) { if (!(e instanceof SyntaxError)) $('mix').hidden = true; return; } // plain strudel: nothing to mix; mid-edit syntax error: keep the last card
     const typing = document.activeElement === $('sectext'); // the section pane is being edited: keep its section by position (its name may be mid-edit) and leave its text alone
     const s = typing ? m.sections.find((x) => x.node.start === secAt.start) : m.sections.find((x) => x.name === (pinned ?? mixSection)) ?? m.sections[0];
     if (!s) return;
     mixSection = s.name;
     if (!typing) { secAt = { start: s.node.start, end: s.node.end }; $('sectext').value = $('code').value.slice(secAt.start, secAt.end); }
+    if (knobDrag) return; // a knob is being dragged: its value is already right, and rebuilding the knobs would drop the drag; the pane above still followed
     parts = Object.keys(s.layers); listTerms(); // the pill box offers this section's part names
     $('mix').hidden = false;
     $('mixsec').textContent = `· ${s.name}${pinned === s.name ? ' (pinned)' : ''}`;
@@ -708,10 +709,11 @@
   };
   $('knobs').oninput = (e) => {
     const k = e.target; if (k.type !== 'range') return;
+    knobDrag = true;
     if (!did(() => setAxis($('code').value, mixSection, k.dataset.layer, k.dataset.axis, Number(k.value)), `${k.dataset.layer} ${k.dataset.axis} ${k.value}`, true)) return;
     k.title = `${k.dataset.layer} ${k.dataset.axis}: ${k.value}`; k.style.setProperty('--v', k.value);
   };
-  $('knobs').onchange = () => { stamp = 0; mixRender(); }; // the drag ended: its own undo step, and a rebuild so an inserted axis reads as in the source
+  $('knobs').onchange = () => { knobDrag = false; stamp = 0; mixRender(); }; // the drag ended: its own undo step, and a rebuild so an inserted axis reads as in the source
 
   // the pill box: only a known term becomes a pill, so a typo cannot be applied. Terms are the vocabulary tables plus
   // the section's part names, offered in a native datalist that mixRender rebuilds; a part pill aims every pill after
