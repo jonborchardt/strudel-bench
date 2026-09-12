@@ -43,9 +43,11 @@ const onsetsB = onsetsPerCycle(checked);
 let wavB, A, B;
 try {
   wavB = render('verify.after');
-  // song() files carry the tempo in metadata (bpm: songs have no `cps:` to grep); plain strudel files still need the regex.
-  const cps = checked.cps ?? Number(/cps:\s*([\d.]+)/.exec(before)?.[1] ?? 0.5);
-  const steps = checked.sections?.find((s) => s.name === sectionSel)?.grid?.steps ?? 16;
+  // the render is one layer of one section, so measure on that section's tempo and grid (a section may carry its own
+  // bpm). song() files carry the tempo in metadata; plain strudel files still need the regex.
+  const sec = checked.sections?.find((s) => s.name === sectionSel);
+  const cps = sec?.cps ?? checked.cps ?? Number(/cps:\s*([\d.]+)/.exec(before)?.[1] ?? 0.5);
+  const steps = sec?.grid?.steps ?? 16;
   A = analyze(readWav(fs.readFileSync(wavA)), { cps, steps });
   B = analyze(readWav(fs.readFileSync(wavB)), { cps, steps });
 } catch (e) {

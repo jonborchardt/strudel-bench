@@ -1,5 +1,6 @@
 // Ask the open page to render a song (or a section / layer) offline and save renders/<name>.wav
 // usage: node scripts/render.mjs songs/x.strudel [--section s] [--layer l] [--cycles n] [--name out] [--mp3]   (PORT env overrides 3000)
+// --cycles n: song cycles for a whole-song render, bars of the section when --section is given
 import path from 'node:path';
 
 const args = process.argv.slice(2);

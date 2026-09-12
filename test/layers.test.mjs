@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 
 const LAYERS = ['drums', 'bass', 'melody', 'pad'];
-const ctx = { cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909', cycles: 4 };
+const meta = { cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909' }, ctx = { ...meta, cycles: 4 };
 const onsets = (p, cycles = 4) => p.queryArc(0, cycles).filter((h) => h.hasOnset());
 const stripRandom = (h) => { const v = { ...h.value }; delete v.nudge; return v; };
 const sig = (haps) => JSON.stringify(haps.map((h) => [h.whole.begin.valueOf(), h.whole.end.valueOf(), stripRandom(h)]));
@@ -186,22 +186,22 @@ test('pad arp spreads the chord into 8 notes per cycle; omitted equals baseline'
   // a seventh chord's real voice count (4) can exceed plan.tones (3, the default); the named order must
   // still reach every voice, not just the first plan.tones of them.
   const cyc1 = (pat) => onsets(pat, 2).filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);
-  const up7 = cyc1(g.song(ctx, [g.section('_', 2, { progression: 'i V7', pad: { arp: 'up' } })]).strudle.sections[0].layers.pad.pattern);
+  const up7 = cyc1(g.song(meta, [g.section('_', 2, { progression: 'i V7', pad: { arp: 'up' } })]).strudle.sections[0].layers.pad.pattern);
   assert.equal(new Set(up7).size, 4, `V7 arp up should sound 4 distinct voices, got ${up7.join(',')}`);
-  const down7 = cyc1(g.song(ctx, [g.section('_', 2, { progression: 'i V7', pad: { arp: 'down' } })]).strudle.sections[0].layers.pad.pattern);
+  const down7 = cyc1(g.song(meta, [g.section('_', 2, { progression: 'i V7', pad: { arp: 'down' } })]).strudle.sections[0].layers.pad.pattern);
   assert.equal(down7[0], Math.max(...up7), 'down starts on the highest note');
 });
 
 test('bass and pad follow altered roots, sevenths and sub-cycle chords', async () => {
   const g = await ready;
-  const build = (progression, layer, attrs = {}) => onsets(g.song(ctx, [g.section('_', 2, { progression, [layer]: attrs })]).strudle.sections[0].layers[layer].pattern, 2);
+  const build = (progression, layer, attrs = {}) => onsets(g.song(meta, [g.section('_', 2, { progression, [layer]: attrs })]).strudle.sections[0].layers[layer].pattern, 2);
   const bassPlain = build('i VI', 'bass'), bassFlat = build('i bVI', 'bass');
   const c1 = (hs) => hs.filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);
   assert.deepEqual(c1(bassFlat), c1(bassPlain).map((n) => n - 1));
   const roots = build('i [VI VII]', 'bass').filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);
   assert.ok(new Set(roots).size >= 2, 'two chords in cycle 1');
   assert.equal(c1(build('i V7', 'pad')).length, 4, 'V7 voices four tones at the default density');
-  assert.equal(sig(build('i VI', 'pad')), sig(onsets(g.song(ctx, [g.section('_', 2, { pad: {} })]).strudle.sections[0].layers.pad.pattern, 2)), 'explicit default equals default');
+  assert.equal(sig(build('i VI', 'pad')), sig(onsets(g.song(meta, [g.section('_', 2, { pad: {} })]).strudle.sections[0].layers.pad.pattern, 2)), 'explicit default equals default');
 });
 
 test('fx layer: silent by default; riser fills the last k cycles; impact hits the first downbeat', async () => {
@@ -249,7 +249,7 @@ test('melody follow transposes by the chord root; phrase lengthens the line', as
 
 test('follow + phrase: the chord root still advances once per cycle', async () => {
   const g = await ready;
-  const build = (melody) => g.song(ctx, [g.section('_', 4, { progression: 'i VI III VII', melody })]).strudle.sections[0].layers.melody.pattern;
+  const build = (melody) => g.song(meta, [g.section('_', 4, { progression: 'i VI III VII', melody })]).strudle.sections[0].layers.melody.pattern;
   const inCycle = (p, c) => onsets(p, 4).filter((h) => h.whole.begin.valueOf() >= c && h.whole.begin.valueOf() < c + 1).map((h) => h.value.note);
   const plain = build({ phrase: 2 }), follow = build({ follow: true, phrase: 2 });
   for (const [c, want] of [[1, [8, 9]], [2, [3, 4]]]) {
@@ -257,4 +257,26 @@ test('follow + phrase: the chord root still advances once per cycle', async () =
     const diff = inCycle(follow, c).map((n, i) => n - base[i]);
     assert.ok(diff.length > 0 && diff.every((d) => want.includes(d)), `cycle ${c}: ${diff.join()}`);
   }
+});
+
+test('fractional section lengths: fill rolls into the real end, riser sounds, impact fires once', async () => {
+  const g = await ready;
+  const c = { ...ctx, cycles: 2.5 };
+  const plain = onsets(g.drums({ fill: false }, c), 2.5).length;
+  const roll = onsets(g.drums({ fill: true }, c), 2.5).filter((h) => h.whole.begin.valueOf() >= 2 && h.value.s === 'sd');
+  assert.equal(onsets(g.drums({ fill: true }, c), 2.5).length - plain, 8, 'the roll adds 8 hits');
+  assert.ok(roll.length >= 8, 'and they sit in the last half bar of a 2.5-bar section');
+  const fx = onsets(g.fx({ riser: 1, impact: true }, c), 2.5);
+  assert.ok(fx.filter((h) => h.value.s === 'white').every((h) => h.whole.begin.valueOf() >= 1.5) && fx.some((h) => h.value.s === 'white'), 'riser over the last bar');
+  assert.equal(fx.filter((h) => h.value.s === 'bd').length, 1, 'one impact');
+});
+
+test('drive below .5 leaves the pulse in 6/8; arp follows the meter grid; drums.sound is refused', async () => {
+  const g = await ready;
+  const kicks = onsets(g.drums({ drive: 0 }, { ...ctx, meter: '6/8', cycles: 1 }), 1).filter((h) => h.value.s === 'bd');
+  assert.ok(kicks.length > 0 && kicks.every((h) => (h.whole.begin.valueOf() * 12) % 2 !== 0), 'kicks off the beat');
+  const arp = onsets(g.pad({ arp: 'up' }, { ...ctx, meter: '3/4', cycles: 1 }), 1).map((h) => h.whole.begin.valueOf() * 12);
+  assert.ok(arp.length === 6 && arp.every(Number.isInteger), `arp on the 12-step grid: ${arp}`);
+  assert.throws(() => g.drums({ sound: 'rim' }, ctx), /unknown key "sound"/);
+  assert.throws(() => g.song({ bmp: 120 }, []), /unknown song key "bmp"/);
 });

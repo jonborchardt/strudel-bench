@@ -116,7 +116,7 @@ Rule 4 stands: harmony is material on the section, not an axis. Two reserved sec
     section('drop', 8, { role: 'climax', key: 'Eb:major', progression: 'I V vi IV', drums: {...}, bass: {...} })
 
 - `key` overrides the song key for that section (any Strudel scale name, so `C:harmonic minor` gives a real V in minor).
-- `progression` is roman numerals `I..VII`, any case, one chord per cycle, looping. Degrees are diatonic to the section key; `npm run check` prints the chords you actually got (`I` in C minor prints `Cm`). Default is `i VI`.
+- `progression` is roman numerals `I..VII`, any case, one chord per cycle (or several in `[..]`), looping. Degrees are diatonic to the section key; `npm run check` prints the chords you actually got (`I` in C minor prints `Cm`). Default is `i VI`.
 - Pad voices the chord, bass transposes its line by the chord root, melody stays in key.
 - Resolve phrases accept harmony words as states: progressions (`resolved`, `tense`, `pop`, `epic`, `circular`, `static`, `unresolved`), modes (`major`, `minor`, `dorian`, `lydian`, `mixolydian`, `phrygian`) and `relative`. `npm run resolve -- songs/x.strudel drop '*' "relative major, pop"` writes both fields.
 - Not modeled: inversions and voice leading, chords longer than a bar.
@@ -127,11 +127,11 @@ Material is a literal value on a layer or a section, never an axis (rule 4). Omi
 
 | Where | Key | Value | Effect |
 |---|---|---|---|
-| bass, melody, pad, fx | `sound` | any local synth or sample name | replaces the sawtooth |
+| bass, melody, pad, fx | `sound` | any local synth or sample name | replaces the default (sawtooth; white noise for fx). Drums take `sounds` instead |
 | any layer | `level` | number, 1 = untouched | gain multiplier, applied after every axis |
 | drums | `sounds` | `{ sd: 'rim', hh: 'hh:2' }` | per-voice sound; the kit still applies |
 | drums | `fill` | `true`/`false` | snare roll in the last half bar of the section; on by default before a `climax` section |
-| pad | `arp` | `'up'`, `'down'`, `'updown'` or `"0 2 1 2"` | arpeggiates the chord, 8 notes a bar |
+| pad | `arp` | `'up'`, `'down'`, `'updown'` or `"0 2 1 2"` | arpeggiates the chord in 8ths (8 notes a bar in 4/4, 6 in 3/4) |
 | melody | `follow` | `true` | the line moves with the chord root |
 | melody | `phrase` | integer bars | the seeded line spans that many bars |
 | fx | `riser` | `true` (4 bars) or bars | noise sweep into the next section |
@@ -141,13 +141,13 @@ Material is a literal value on a layer or a section, never an axis (rule 4). Omi
 | song | `bpm` | number | instead of `cps`: beats per minute on the meter's denominator |
 | section | `bpm` or `cps` | number | that section plays at its own tempo |
 
-A key that is neither an axis nor that layer's material throws, naming both lists: a typo (`arpp: 'up'`) is a build error, not a silent no-op.
+A key that is neither an axis nor that layer's material throws, naming both lists: a typo (`arpp: 'up'`) is a build error, not a silent no-op. The same goes for song metadata (`bmp: 120` throws).
 
 `ramp(a, b)` is an axis value that sweeps over exactly the section: `brightness: ramp(.3, .8)`.
 
 Sections are JavaScript, so reuse them with spread: `const verse = { drums: {...}, bass: {...} }; section('verse2', 8, { ...verse, drums: { ...verse.drums, variation: .5 } })`. The resolver reads literal values only, so it refuses a layer built with spread (it cannot see the baseline it would be editing) — set those axes by hand.
 
-Progressions accept `b`/`#` before a numeral, `m`/`M`/`dim` and `7` after it, and `[..]` to put chords in one bar: `'i bVI [III VII] V7'`. Case never changes a diatonic chord's quality; write `IVm` for a borrowed iv.
+Progressions accept `b`/`#` before a numeral, `m`/`M`/`dim` and `7`/`M7` after it, and `[..]` to put chords in one bar: `'i bVI [III VII] V7'`. Case never changes a plain diatonic triad's quality (write `IVm` for a borrowed iv), but it does set the triad under a seventh: `V7` is the dominant seventh in any key (G7 in C minor), `v7` the diatonic one (Gm7), `VM7` a major seventh (Gmaj7), and a lowercase diatonic seventh keeps its quality (`vii7` in C major is Bm7b5). `npm run check` prints the chord names you actually got.
 
 The full design spec and plan live in `docs/superpowers/`, which is not versioned in this repo; the skill in
 `.claude/skills/strudle/` likewise.

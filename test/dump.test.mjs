@@ -25,7 +25,7 @@ test('an arped pad dumps self-contained: no plan.*, arpIndices defined', async (
     assert.doesNotMatch(out, /plan\./);
     assert.match(out, /^const arpIndices = /m);
     assert.match(out, /^const ARP_ORDERS = \{ up: /m);
-    assert.match(out, /arpWith\(\(haps\) => seq\(\.\.\.arpIndices\("up", haps\.length\)\)/);
+    assert.match(out, /arpWith\(\(haps\) => seq\(\.\.\.arpIndices\("up", haps\.length, 8\)\)/);
   } finally { fs.unlinkSync(file); }
 });
 

@@ -22,3 +22,10 @@ test('other meters: rankings cover every step once, templates tile, bass grids l
   assert.equal(place('x...x...x...', 1).split('x').length - 1, 3);
   assert.equal(accents(1, { steps: 12, pulse: 4 }).split(' ').length, 12);
 });
+
+test('x/8 meters: off ranking never lands on a beat, on ranking prefers the half-bar beat', () => {
+  const r = rankings(12, 2);
+  assert.ok(r.off.slice(0, 6).every((i) => i % 2 === 1), `first off targets ${r.off.slice(0, 6)}`);
+  assert.deepEqual(r.on.slice(0, 2), [0, 6]);
+  assert.deepEqual(rankings(12, 4).on.slice(0, 3), [0, 4, 8], '3/4 has no half-bar');
+});

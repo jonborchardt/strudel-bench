@@ -82,14 +82,14 @@ export function analyze({ rate, channels, frames }, { cps = 0.5, steps = 16 } = 
     const re = new Float32Array(FRAME), im = new Float32Array(FRAME);
     for (let i = 0; i < FRAME; i++) re[i] = mono[start + i] * win[i];
     fft(re, im);
+    let logSum = 0, linSum = 0;
     for (let k = 1; k < FRAME / 2; k++) {
       const mag = re[k] * re[k] + im[k] * im[k], f = k * binHz;
       cSum += f * mag; cW += mag; tot += mag;
       if (f >= 4000) hi += mag;
       if (f < 150) lo += mag;
+      const m = Math.sqrt(mag) + 1e-12; logSum += Math.log(m); linSum += m; // spectral flatness on the magnitude spectrum
     }
-    let logSum = 0, linSum = 0;
-    for (let k = 1; k < FRAME / 2; k++) { const m = Math.sqrt(re[k] * re[k] + im[k] * im[k]) + 1e-12; logSum += Math.log(m); linSum += m; }
     flatSum += Math.exp(logSum / (FRAME / 2 - 1)) / (linSum / (FRAME / 2 - 1));
   }
   const centroidHz = cW ? cSum / cW : 0;

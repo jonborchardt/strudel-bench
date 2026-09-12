@@ -32,7 +32,7 @@ test('chordName and chordNames read the key\'s diatonic quality', async () => {
 test('v2 grammar: accidentals, suffixes, sevenths, groups', async () => {
   await ready;
   const { parseProgression, chordNames, chordPatterns, chordSpec } = await import('../lib/harmony.mjs');
-  assert.equal(chordNames('C:major', parseProgression('I bVII IV7 IVm ii7 vii V')), 'C Bb Fmaj7 Fm Dm7 Bdim G');
+  assert.equal(chordNames('C:major', parseProgression('I bVII IV7 IVm ii7 vii V')), 'C Bb F7 Fm Dm7 Bdim G');
   assert.equal(chordNames('C:minor', parseProgression('i VM7 #ivdim')), 'Cm Gmaj7 F#dim');
   const prog = parseProgression('i [VI VII]');
   assert.equal(prog.length, 2);
@@ -42,7 +42,9 @@ test('v2 grammar: accidentals, suffixes, sevenths, groups', async () => {
   assert.equal(cp.roots, '<0 [5 6]>');
   assert.equal(cp.acc, '<0 [0 0]>');
   assert.equal(cp.tones(3), '<[0,3,7] [[0,4,7] [0,4,7]]>');
-  assert.equal(chordPatterns('C:minor', parseProgression('i V7')).tones(3), '<[0,3,7] [0,3,7,10]>', '7 floors that chord at 4 tones');
+  assert.equal(chordPatterns('C:minor', parseProgression('i V7')).tones(3), '<[0,3,7] [0,4,7,10]>', '7 floors that chord at 4 tones; V7 is the dominant seventh');
+  assert.equal(chordNames('C:minor', parseProgression('V7 v7 VM7 vii7')), 'G7 Gm7 Gmaj7 Bb7');
+  assert.equal(chordNames('C:major', parseProgression('vii7 ii7')), 'Bm7b5 Dm7', 'a diminished triad with a minor seventh is half-diminished');
   assert.deepEqual(chordSpec('C:major', parseProgression('bVII')[0][0]), { degree: 6, acc: -1, intervals: [0, 4, 7, 10] });
   assert.throws(() => parseProgression('i [VI'), /unclosed/);
   assert.throws(() => parseProgression('X'), /bad numeral/);

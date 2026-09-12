@@ -71,7 +71,7 @@ export async function checkFile(file, cycles = 4) {
   if (pattern.strudle) {
     sections = pattern.strudle.sections.map((s) => {
       return {
-        name: s.name, cycles: s.cycles, offset: s.offset, span: s.span, role: s.role, grid: s.grid,
+        name: s.name, cycles: s.cycles, offset: s.offset, span: s.span, role: s.role, grid: s.grid, cps: s.cps,
         harmony: `${s.key}  ${s.progression} → ${chordNames(s.key, parseProgression(s.progression))}`,
         layers: Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, {
           attrs: Object.fromEntries(Object.entries(l.attrs).map(([a, v]) => [a,
