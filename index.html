@@ -537,7 +537,7 @@
   function matsRender(s, eff) {
     const clean = (v) => String(v).replace(/['"\\]/g, '');
     const val = (L, e, key) => (L.mats[key] ? L.mats[key].value : e?.[key]);
-    const text = (L, e, key, list, ph) => { const v = val(L, e, key); return v === 'expr' || (v && typeof v === 'object' && key !== 'sounds') ? `<i title="an expression: edit it in the source">expr</i>` : `<input class="snd" list="${list}" data-mat="${key}" value="${v == null ? '' : esc(clean(v))}" placeholder="${ph}" spellcheck="false">`; };
+    const text = (L, e, key, list, ph) => { const v = val(L, e, key); return v === 'expr' || (v && typeof v === 'object' && key !== 'sounds') ? `<i title="an expression: edit it in the source">expr</i>` : `<input class="snd${list ? '' : ' wide'}"${list ? ` list="${list}"` : ''} data-mat="${key}" value="${v == null ? '' : esc(clean(v))}" placeholder="${ph}" spellcheck="false">`; };
     const select = (L, e, key, names, ph) => { const v = val(L, e, key); return v === 'expr' ? '<i>expr</i>' : `<select data-mat="${key}"><option value="">${ph}</option>${names.map((n) => `<option${n === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`; };
     $('matlist').innerHTML = Object.entries(s.layers).map(([layer, L]) => {
       const e = eff[layer], base = layerBase(layer), bits = [];
@@ -546,7 +546,13 @@
         const snd = val(L, e, 'sounds');
         bits.push(snd === 'expr' ? '<label>sounds <i>expr</i></label>' : `<label>sounds</label>${VOICES.map((v) => `<label class="voice">${v} <input class="snd" list="snds" data-mat="sounds" data-voice="${v}" value="${esc(clean(snd?.[v] ?? ''))}" placeholder="kit" spellcheck="false"></label>`).join('')}`);
       } else bits.push(`<label>sound ${text(L, e, 'sound', 'snds', 'default')}</label>`);
-      if (base === 'melody') { const f = val(L, e, 'follow'); bits.push(`<label><input type="checkbox" data-mat="follow"${f === true ? ' checked' : ''}${f === 'expr' ? ' disabled' : ''}> follow the chords</label>`); }
+      // notes: the written line in mini-notation (scale degrees, ~ rests, @2 holds); the seeded line plays when it is empty
+      if (base === 'bass' || base === 'melody') bits.push(`<label>notes ${text(L, e, 'notes', '', 'seeded line')}</label>`);
+      if (base === 'melody') {
+        const ph = val(L, e, 'phrase');
+        bits.push(`<label>bars ${ph === 'expr' ? '<i>expr</i>' : `<input class="snd num" type="number" min="1" step="1" data-mat="phrase" value="${ph ?? ''}" placeholder="1">`}</label>`);
+        const f = val(L, e, 'follow'); bits.push(`<label><input type="checkbox" data-mat="follow"${f === true ? ' checked' : ''}${f === 'expr' ? ' disabled' : ''}> follow the chords</label>`);
+      }
       if (base === 'pad') bits.push(`<label>arp ${select(L, e, 'arp', Object.keys(ARP_ORDERS), 'none')}</label>`);
       return `<div class="matrow" data-layer="${esc(layer)}"><b>${esc(layer)}</b>${bits.join('')}</div>`;
     }).join('');
@@ -557,6 +563,7 @@
     const q = (v) => `'${String(v).replace(/['"\\]/g, '').trim()}'`;
     let text;
     if (key === 'follow') text = el.checked ? 'true' : null;
+    else if (key === 'phrase') text = el.value > 1 ? String(Math.round(el.value)) : null; // 1 is the default, so it is dropped
     else if (key === 'sounds') { const set = [...el.closest('.matrow').querySelectorAll('[data-voice]')].filter((i) => i.value.trim()).map((i) => `${i.dataset.voice}: ${q(i.value)}`); text = set.length ? `{ ${set.join(', ')} }` : null; }
     else text = el.value.trim() ? q(el.value) : null;
     did(() => setMaterial($('code').value, mixSection, layer, key, text), `${layer}.${key} ${text ?? 'removed'}`);

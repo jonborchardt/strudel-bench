@@ -178,6 +178,8 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .matrow input.snd::placeholder { color: #77777f; }
 .matrow input.snd { width: 7.5rem; }
 .matrow label.voice input.snd { width: 5.5rem; }
+.matrow input.snd.wide { width: 15rem; font-family: ui-monospace, monospace; }
+.matrow input.snd.num { width: 3.2rem; }
 .matrow i { color: #8a8a92; font-style: italic; }
 #code + .err { margin-top: .25rem; }
 .pane header button { padding: .1rem .45rem; line-height: 1.2; }
