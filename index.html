@@ -52,6 +52,8 @@
     <details class="panel" id="mats"><summary>materials</summary><div id="matlist"></div></details>
     <div class="row addrow" id="addrow"></div>
     <datalist id="snds"></datalist>
+    <!-- the materials menu: one popover for every pick button, rows carry a play button that auditions without selecting -->
+    <div id="pick" popover class="menu"><input id="pickq" type="search" placeholder="filter" autocomplete="off"><div id="picklist" role="listbox"></div></div>
     <div class="row" style="margin-top:.5rem">
       <span class="pills" id="pills" title="type a word and pick it from the list: control words, moods, modifiers (much, a little, less), harmony words, or a part name to aim the words after it at that part. Enter on an empty box applies."><input id="phrase" list="terms" placeholder="darker, much sparser, drums &hellip;" autocomplete="off"><datalist id="terms"></datalist></span>
       <button id="apply" title="rewrite this section's axis literals from the words">Apply</button>
@@ -537,37 +539,92 @@
   function matsRender(s, eff) {
     const clean = (v) => String(v).replace(/['"\\]/g, '');
     const val = (L, e, key) => (L.mats[key] ? L.mats[key].value : e?.[key]);
-    const text = (L, e, key, list, ph) => { const v = val(L, e, key); return v === 'expr' || (v && typeof v === 'object' && key !== 'sounds') ? `<i title="an expression: edit it in the source">expr</i>` : `<input class="snd${list ? '' : ' wide'}"${list ? ` list="${list}"` : ''} data-mat="${key}" value="${v == null ? '' : esc(clean(v))}" placeholder="${ph}" spellcheck="false">`; };
-    const select = (L, e, key, names, ph) => { const v = val(L, e, key); return v === 'expr' ? '<i>expr</i>' : `<select data-mat="${key}"><option value="">${ph}</option>${names.map((n) => `<option${n === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`; };
-    $('matlist').innerHTML = Object.entries(s.layers).map(([layer, L]) => {
-      const e = eff[layer], base = layerBase(layer), bits = [];
+    const expr = '<i title="an expression: edit it in the source">expr</i>';
+    // a text box with a play button that shows while the box has focus: hear this part with what is typed, before or after committing it
+    const text = (L, e, key, ph, extra = '') => { const v = val(L, e, key); return v === 'expr' || (v && typeof v === 'object') ? expr : `<span class="tb"><input class="snd${extra ? ' num' : ' wide'}" ${extra} data-mat="${key}" value="${v == null ? '' : esc(clean(v))}" placeholder="${ph}" spellcheck="false"><button class="pv" data-pv title="hear ${esc(layer(L))} with this (pauses the song)">&#9654;</button></span>`; };
+    // a menu button: the popover lists `names` with a play button per row, so a choice can be heard before it is picked
+    const pick = (L, e, key, ph, voice) => { const v = val(L, e, key); const cur = voice ? v?.[voice] : v; return v === 'expr' ? expr : `<button class="pick" data-mat="${key}"${voice ? ` data-voice="${voice}"` : ''} data-ph="${esc(ph)}">${cur ? esc(clean(cur)) : `<i>${esc(ph)}</i>`}</button>`; };
+    const layer = (L) => L.layerName;
+    $('matlist').innerHTML = Object.entries(s.layers).map(([name, L]) => {
+      L.layerName = name;
+      const e = eff[name], base = layerBase(name), bits = [];
       if (base === 'drums') {
-        bits.push(`<label>template ${select(L, e, 'template', Object.keys(TEMPLATES), 'house (default)')}</label>`);
-        const snd = val(L, e, 'sounds');
-        bits.push(snd === 'expr' ? '<label>sounds <i>expr</i></label>' : `<label>sounds</label>${VOICES.map((v) => `<label class="voice">${v} <input class="snd" list="snds" data-mat="sounds" data-voice="${v}" value="${esc(clean(snd?.[v] ?? ''))}" placeholder="kit" spellcheck="false"></label>`).join('')}`);
-      } else bits.push(`<label>sound ${text(L, e, 'sound', 'snds', 'default')}</label>`);
+        bits.push(`<label>template ${pick(L, e, 'template', 'house')}</label>`);
+        bits.push(val(L, e, 'sounds') === 'expr' ? `<label>sounds ${expr}</label>` : `<label>sounds</label>${VOICES.map((v) => `<label class="voice">${v} ${pick(L, e, 'sounds', 'kit', v)}</label>`).join('')}`);
+      } else bits.push(`<label>sound ${pick(L, e, 'sound', 'default')}</label>`);
       // notes: the written line in mini-notation (scale degrees, ~ rests, @2 holds); the seeded line plays when it is empty
-      if (base === 'bass' || base === 'melody') bits.push(`<label>notes ${text(L, e, 'notes', '', 'seeded line')}</label>`);
+      if (base === 'bass' || base === 'melody') bits.push(`<label>notes ${text(L, e, 'notes', 'seeded line')}</label>`);
       if (base === 'melody') {
-        const ph = val(L, e, 'phrase');
-        bits.push(`<label>bars ${ph === 'expr' ? '<i>expr</i>' : `<input class="snd num" type="number" min="1" step="1" data-mat="phrase" value="${ph ?? ''}" placeholder="1">`}</label>`);
+        bits.push(`<label>bars ${text(L, e, 'phrase', '1', 'type="number" min="1" step="1"')}</label>`);
         const f = val(L, e, 'follow'); bits.push(`<label><input type="checkbox" data-mat="follow"${f === true ? ' checked' : ''}${f === 'expr' ? ' disabled' : ''}> follow the chords</label>`);
       }
-      if (base === 'pad') bits.push(`<label>arp ${select(L, e, 'arp', Object.keys(ARP_ORDERS), 'none')}</label>`);
-      return `<div class="matrow" data-layer="${esc(layer)}"><b>${esc(layer)}</b>${bits.join('')}</div>`;
+      if (base === 'pad') bits.push(`<label>arp ${pick(L, e, 'arp', 'none')}</label>`);
+      return `<div class="matrow" data-layer="${esc(name)}"><b>${esc(name)}</b>${bits.join('')}</div>`;
     }).join('');
   }
+  const q = (v) => `'${String(v).replace(/['"\\]/g, '').trim()}'`;
+  // the source text for material `key` at `value` ('' removes it); `sounds` is the whole voice map with one voice replaced
+  function matText(layer, key, value, voice) {
+    if (key === 'follow') return value ? 'true' : null;
+    if (key === 'phrase') return value > 1 ? String(Math.round(value)) : null; // 1 is the default, so it is dropped
+    if (key === 'sounds') {
+      const cur = { ...(locate($('code').value).sections.find((x) => x.name === mixSection)?.layers[layer]?.mats.sounds?.value ?? effective()[mixSection]?.[layer]?.sounds ?? {}), [voice]: value };
+      const set = Object.entries(cur).filter(([, v]) => v && typeof v === 'string').map(([k, v]) => `${k}: ${q(v)}`);
+      return set.length ? `{ ${set.join(', ')} }` : null;
+    }
+    return String(value).trim() ? q(value) : null;
+  }
+  const setMat = (layer, key, text) => did(() => setMaterial($('code').value, mixSection, layer, key, text), `${layer}.${key} ${text ?? 'removed'}`);
   $('mats').onchange = (e) => {
     const el = e.target, key = el.dataset.mat; if (!key) return;
-    const layer = el.closest('[data-layer]').dataset.layer;
-    const q = (v) => `'${String(v).replace(/['"\\]/g, '').trim()}'`;
-    let text;
-    if (key === 'follow') text = el.checked ? 'true' : null;
-    else if (key === 'phrase') text = el.value > 1 ? String(Math.round(el.value)) : null; // 1 is the default, so it is dropped
-    else if (key === 'sounds') { const set = [...el.closest('.matrow').querySelectorAll('[data-voice]')].filter((i) => i.value.trim()).map((i) => `${i.dataset.voice}: ${q(i.value)}`); text = set.length ? `{ ${set.join(', ')} }` : null; }
-    else text = el.value.trim() ? q(el.value) : null;
-    did(() => setMaterial($('code').value, mixSection, layer, key, text), `${layer}.${key} ${text ?? 'removed'}`);
+    setMat(el.closest('[data-layer]').dataset.layer, key, matText(null, key, el.type === 'checkbox' ? el.checked : el.value));
   };
+  // audition: pause the song, then play only this section's `layer` with material `key` set to `text`, for two bars
+  let pvTimer, pvBtn;
+  async function audition(btn, layer, key, text) {
+    clearTimeout(pvTimer); pvBtn?.classList.remove('on');
+    if (pvBtn === btn) { pvBtn = null; strudel.hush(); return; } // the same button again stops it
+    if (playing) await pause();
+    strudel.hush();
+    let pat; try { pat = await evalCode(ready, setMaterial($('code').value, mixSection, layer, key, text)); } catch (err) { $('mixstatus').textContent = err.message; return; }
+    const s = pat.strudel.sections.find((x) => x.name === mixSection);
+    pvBtn = btn; btn.classList.add('on');
+    $('mixstatus').textContent = `hearing ${mixSection} ${layer} with ${key} ${text ?? 'removed'}`;
+    setcps(s.cps); (await ready).setPattern(s.layers[layer].pattern, true);
+    pvTimer = setTimeout(() => { strudel.hush(); btn.classList.remove('on'); pvBtn = null; }, 2000 / s.cps + 200);
+  }
+  $('mats').onmousedown = (e) => { if (e.target.closest('[data-pv]')) e.preventDefault(); }; // keep the text box focused, so its play button stays
+  $('mats').onclick = (e) => {
+    const layer = e.target.closest('[data-layer]')?.dataset.layer;
+    const pv = e.target.closest('[data-pv]');
+    if (pv) { const el = pv.parentElement.querySelector('input'); return audition(pv, layer, el.dataset.mat, matText(layer, el.dataset.mat, el.value)); }
+    const b = e.target.closest('button.pick');
+    if (b) openPick(b, layer);
+  };
+  let pickFor = null; // the menu button that opened #pick: { layer, key, voice }
+  function openPick(btn, layer) {
+    const { mat: key, voice, ph } = btn.dataset;
+    const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS) : [...$('snds').options].map((o) => o.value);
+    const cur = btn.querySelector('i') ? '' : btn.textContent;
+    pickFor = { layer, key, voice };
+    $('picklist').innerHTML = ['', ...names].map((n) => `<div class="row" role="option" aria-selected="${n === cur}" data-v="${esc(n)}"><span>${n ? esc(n) : `<i>${esc(ph)}</i>`}</span><button class="pv" title="hear it (pauses the song)">&#9654;</button></div>`).join('');
+    const r = btn.getBoundingClientRect();
+    Object.assign($('pick').style, { top: `${r.bottom + 4}px`, left: `${Math.min(r.left, innerWidth - 400)}px` });
+    $('pick').showPopover();
+    $('pickq').value = ''; filterPick(); $('pickq').focus();
+    $('picklist').querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'center' });
+  }
+  function filterPick() { const words = $('pickq').value.toLowerCase().split(/\s+/).filter(Boolean); for (const b of $('picklist').children) b.hidden = !words.every((w) => b.textContent.toLowerCase().includes(w)); }
+  $('pickq').oninput = filterPick;
+  $('pickq').onkeydown = (e) => { if (e.key !== 'Enter') return; e.preventDefault(); $('picklist').querySelector('.row:not([hidden])')?.click(); };
+  $('pick').onclick = (e) => {
+    const row = e.target.closest('.row'); if (!row) return;
+    const { layer, key, voice } = pickFor, text = matText(layer, key, row.dataset.v, voice);
+    if (e.target.closest('.pv')) return audition(e.target.closest('.pv'), layer, key, text); // hear it, keep the menu open, pick nothing
+    $('pick').hidePopover();
+    setMat(layer, key, text);
+  };
+  $('pick').ontoggle = (e) => { if (e.newState === 'closed' && pvBtn && $('pick').contains(pvBtn)) audition(pvBtn); }; // closing the menu ends its preview
   const effective = () => Object.fromEntries(sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([l, x]) => [l, x.attrs]))])); // the evaluated song's resolved attrs per section and layer
   $('addrow').onclick = (e) => {
     const l = e.target.closest('[data-add]')?.dataset.add; if (!l) return;
