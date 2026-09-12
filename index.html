@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>strudel-bench · compose</title>
-<meta name="description" content="Compose music in strudle: a vocabulary of layers and axes (darker, punchier, more dreamy) that compiles to Strudel live-coding patterns. Play, edit, export MP3, in the browser.">
+<meta name="description" content="Compose music in strudel-bench: a vocabulary of layers and axes (darker, punchier, more dreamy) that compiles to Strudel live-coding patterns. Play, edit, export MP3, in the browser.">
 <link rel="canonical" href="https://jonborchardt.github.io/strudel-bench/">
 <meta property="og:title" content="strudel-bench · compose">
 <meta property="og:description" content="A vocabulary of layers and axes that compiles to Strudel patterns. Play, edit and export in the browser.">
@@ -11,7 +11,7 @@
 <meta property="og:image" content="https://jonborchardt.github.io/strudel-bench/web/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="web/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="web/strudle.css">
+<link rel="stylesheet" href="web/strudel.css">
 <nav class="top" id="nav"></nav>
 <main>
   <!-- song header: which song, new, kit, save, export -->
@@ -100,7 +100,7 @@
   let paused = null; // cycle to resume from; the worker clock resets to 0 on stop, so pause (and scrubbing while paused) must remember it
   let evaluated = null; // source text the scheduler is playing, so an edit while playing offers Update instead of silently drifting
   let server = true; // false on a static host (github pages): no export/dump, songs save to this browser
-  const DRAFT = 'strudle:'; // github pages cannot write songs/, so songs made there live in localStorage under this prefix
+  const DRAFT = 'strudel:'; // github pages cannot write songs/, so songs made there live in localStorage under this prefix
   const drafts = () => Object.keys(localStorage).filter((k) => k.startsWith(DRAFT)).map((k) => k.slice(DRAFT.length));
   const NAME = /^[\w.-]+\.strudel$/;
   let kits = []; // drum kits the loaded packs actually have (filled once strudel is ready)
@@ -212,8 +212,8 @@
   // edit lands at the current cycle); pause remembers the cycle and stops the clock; stop resets to 0. Scrubbing
   // jumps the clock while playing and moves the resume point otherwise, so Play always starts where the knob is.
   function setSections(pat) {
-    sections = pat?.strudle?.sections ?? []; // only song() files have sections to scrub through
-    for (const p of [$('pos'), $('mpos')]) { p.disabled = !sections.length; p.max = pat?.strudle?.total ?? 1; }
+    sections = pat?.strudel?.sections ?? []; // only song() files have sections to scrub through
+    for (const p of [$('pos'), $('mpos')]) { p.disabled = !sections.length; p.max = pat?.strudel?.total ?? 1; }
     $('fbadd').disabled = !sections.length;
     $('marks').innerHTML = sections.map((s) => `<option value="${s.offset}" label="${s.name}">`).join(''); // tick marks at section starts
   }
@@ -224,7 +224,7 @@
     evaluated = src; playing = true;
     setSections(pat);
     if (paused != null) { (await ready).scheduler.setCycle(paused); paused = null; }
-    console.log('[strudle] evaluated', $('song').value);
+    console.log('[strudel] evaluated', $('song').value);
     syncTransport();
     expand();
   }
@@ -488,12 +488,12 @@
     await ready;
     let pat = await strudel.evaluate(code, false);
     if (!pat) throw new Error('source does not evaluate (see the error under it)'); // evaluate logs syntax errors instead of throwing
-    let begin = 0, end = cycles ?? (pat.strudle ? pat.strudle.total : 8);
-    // read cps off the song pattern before a layer selector replaces it with a sub-pattern that has no .strudle
-    let cps = pat.strudle?.meta.cps ?? 0.5;
+    let begin = 0, end = cycles ?? (pat.strudel ? pat.strudel.total : 8);
+    // read cps off the song pattern before a layer selector replaces it with a sub-pattern that has no .strudel
+    let cps = pat.strudel?.meta.cps ?? 0.5;
     if (section || layer) {
       if (layer && !section) throw new Error('layer requires --section');
-      const s = pat.strudle?.sections.find((x) => x.name === section);
+      const s = pat.strudel?.sections.find((x) => x.name === section);
       if (section && !s) throw new Error(`no section "${section}"`);
       // --cycles counts bars of the section in both branches; a section with its own tempo has span != cycles
       if (layer) {

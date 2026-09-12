@@ -159,6 +159,8 @@ export function createServer() {
     // strudel's UMD build resolves its clock SharedWorker against the page URL, so /assets/ must alias dist/assets
     if (p.startsWith('/assets/')) return serveStatic(res, '/node_modules/@strudel/web/dist' + p);
     if (p.startsWith('/node_modules/') || p.startsWith('/samples/') || p.startsWith('/lib/') || p.startsWith('/web/')) return serveStatic(res, p);
+    // anything else a browser navigates to gets the same 404 page github pages serves; fetches keep the plain text
+    if (req.headers.accept?.includes('text/html')) return send(res, 404, fs.readFileSync(path.join(ROOT, '404.html')), 'text/html');
     send(res, 404, 'not found');
   }
 
@@ -168,5 +170,5 @@ export function createServer() {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT) || 3000;
-  createServer().listen(port, () => console.log(`strudle -> http://localhost:${port}`));
+  createServer().listen(port, () => console.log(`strudel-bench -> http://localhost:${port}`));
 }

@@ -91,5 +91,5 @@ const textures = arrange(
 
 // stack() drops the song metadata the checker, resolver and page use for section tables; put it back.
 const out = stack(machine, textures);
-out.strudle = machine.strudle;
+out.strudel = machine.strudel;
 out

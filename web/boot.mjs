@@ -42,7 +42,7 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
 export async function playCode(ready, code) {
   await ready;
   const pat = await strudel.evaluate(code);
-  setcps(pat?.strudle?.meta.cps ?? 0.5);
+  setcps(pat?.strudel?.meta.cps ?? 0.5);
   return pat;
 }
 

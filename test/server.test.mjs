@@ -63,7 +63,10 @@ test('static files and user sample map', async () => {
     assert.equal((await fetch(`${base}/`)).headers.get('content-type'), 'text/html');
     for (const p of ['examples.html', 'about.html', 'legal.html', '404.html']) assert.equal((await fetch(`${base}/${p}`)).headers.get('content-type'), 'text/html', p);
     assert.equal((await fetch(`${base}/nope.html`)).status, 404);
-    assert.equal((await fetch(`${base}/web/strudle.css`)).headers.get('content-type'), 'text/css');
+    const lost = await fetch(`${base}/no/such/page`, { headers: { accept: 'text/html' } }); // a browser navigation gets the 404 page
+    assert.equal(lost.status, 404);
+    assert.match(await lost.text(), /A bar of rests/);
+    assert.equal((await fetch(`${base}/web/strudel.css`)).headers.get('content-type'), 'text/css');
     assert.equal((await fetch(`${base}/web/boot.mjs`)).status, 200);
     const js = await fetch(`${base}/node_modules/@strudel/web/dist/index.js`);
     assert.equal(js.status, 200);

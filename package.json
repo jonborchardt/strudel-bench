@@ -1,5 +1,5 @@
 {
-  "name": "strudle",
+  "name": "strudel-bench",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
@@ -16,7 +16,7 @@
     "dump": "node scripts/dump.mjs",
     "note": "node scripts/note.mjs",
     "verify": "node scripts/verify.mjs",
-    "vocab": "node scripts/vocab.mjs > .claude/skills/strudle/reference/vocab.md"
+    "vocab": "node scripts/vocab.mjs > .claude/skills/strudel/reference/vocab.md"
   },
   "dependencies": {
     "@breezystack/lamejs": "^1.2.7",

@@ -35,7 +35,7 @@ The page has two views: **Compose** (index.html) and **Examples** (examples.html
     index.html           Compose: song header, transport, source + expanded strudel, section feedback, offline renderer
     examples.html        Examples: data-driven playable cards (GROUPS at the top of its script), stubs where content is pending
     about.html           About: what strudel-bench is and why; legal.html: privacy and disclaimers (static, no strudel loaded)
-    web/                 boot.mjs (shared initStrudel/prebake, playCode, nav, footer), strudle.css and icon.svg for every page
+    web/                 boot.mjs (shared initStrudel/prebake, playCode, nav, footer), strudel.css and icon.svg for every page
     songs/               one .strudel file per song
     lib/                 the axis system (see below), loaded by both the page and the Node scripts
     samples/packs/       downloaded packs (gitignored) + <pack>.json maps + packs.json
@@ -81,7 +81,7 @@ Five layers — drums, bass, melody, pad, fx — each take axis values in 0..1 w
 Vocabulary is data: `lib/descriptors.json` (control words → axis deltas), `lib/overlays.json` (emotions and genres),
 `lib/harmony.json` (progression and mode words). Modifiers like `slightly`, `much`, `extremely` scale a delta.
 
-The `strudle` skill (`.claude/skills/strudle/SKILL.md`, not versioned — `.claude/` is gitignored in this repo)
+The `strudel` skill (`.claude/skills/strudel/SKILL.md`, not versioned — `.claude/` is gitignored in this repo)
 encodes the baseline → resolve → check → render/verify → report workflow for an agent editing songs by ear.
 `blog-ideas/making-machine-with-claude.md` is a worked example of that loop from the user's side.
 
@@ -161,4 +161,4 @@ Sections are JavaScript, so reuse them with spread: `const verse = { drums: {...
 Progressions accept `b`/`#` before a numeral, `m`/`M`/`dim` and `7`/`M7` after it, and `[..]` to put chords in one bar: `'i bVI [III VII] V7'`. Case never changes a plain diatonic triad's quality (write `IVm` for a borrowed iv), but it does set the triad under a seventh: `V7` is the dominant seventh in any key (G7 in C minor), `v7` the diatonic one (Gm7), `VM7` a major seventh (Gmaj7), and a lowercase diatonic seventh keeps its quality (`vii7` in C major is Bm7b5). `npm run check` prints the chord names you actually got.
 
 The full design spec and plan live in `docs/superpowers/`, which is not versioned in this repo; the skill in
-`.claude/skills/strudle/` likewise.
+`.claude/skills/strudel/` likewise.

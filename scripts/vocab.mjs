@@ -1,10 +1,10 @@
-// Generates the skill's vocabulary reference from code so it cannot drift. usage: node scripts/vocab.mjs > .claude/skills/strudle/reference/vocab.md
+// Generates the skill's vocabulary reference from code so it cannot drift. usage: node scripts/vocab.mjs > .claude/skills/strudel/reference/vocab.md
 import { AXES, PHASES, cells } from '../lib/axes.mjs';
 import { DESCRIPTORS, OVERLAYS, MODIFIERS, HARMONY } from '../lib/vocab.mjs';
 import '../lib/layers.mjs';
 
 const out = [];
-out.push('# strudle vocabulary (generated, do not edit)\n');
+out.push('# strudel-bench vocabulary (generated, do not edit)\n');
 out.push('## Axes (0..1, 0.5 = layer baseline)\n');
 out.push('| axis | kind | meaning | verification |', '|---|---|---|---|');
 for (const a of AXES) out.push(`| ${a.name} | ${a.kind} | ${a.meaning} | ${a.verify.class}${a.verify.metric ? ': ' + a.verify.metric : ''} |`);

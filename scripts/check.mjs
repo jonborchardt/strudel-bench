@@ -54,7 +54,7 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   } catch (e) {
     return { ok: false, events, problems: [`${path.basename(file)}: ${e.message}`], cycles };
   }
-  cycles = pattern.strudle?.total ?? cycles;
+  cycles = pattern.strudel?.total ?? cycles;
   const known = builtinSounds();
   const local = localSounds(packs);
   const declared = packsOf(code);
@@ -80,8 +80,8 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   for (const u of unknown) problems.push(`${path.basename(file)}: unknown sound "${u}"`);
   for (const [s, p] of undeclared) problems.push(`${path.basename(file)}: sound "${s}" is in local pack "${p}" which the song does not declare: add packs: ['${p}']`);
   let sections;
-  if (pattern.strudle) {
-    sections = pattern.strudle.sections.map((s) => {
+  if (pattern.strudel) {
+    sections = pattern.strudel.sections.map((s) => {
       return {
         name: s.name, cycles: s.cycles, offset: s.offset, span: s.span, role: s.role, grid: s.grid, cps: s.cps,
         harmony: `${s.key}  ${s.progression} → ${chordNames(s.key, parseProgression(s.progression))}`,
@@ -94,7 +94,7 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
       };
     });
   }
-  return { ok: problems.length === 0, events, problems, sections, cycles, cps: pattern.strudle?.meta.cps };
+  return { ok: problems.length === 0, events, problems, sections, cycles, cps: pattern.strudel?.meta.cps };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

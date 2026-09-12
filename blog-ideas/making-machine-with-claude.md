@@ -1,4 +1,4 @@
-# How I made "machine" with Claude in the strudle harness
+# How I made "machine" with Claude in the strudel-bench harness
 
 An outline of the conversation that produced `songs/machine.strudel`, an industrial rock track at 90 BPM.
 

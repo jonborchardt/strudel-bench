@@ -43,7 +43,7 @@ test('dump keeps patterns stacked around a song(), not just the song sections', 
   const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_wrap.strudel');
   fs.writeFileSync(file, `const x = song({ cps: .5 }, [section('a', 2, { drums: {} })]);
 const out = stack(x, s("metal").gain(.3));
-out.strudle = x.strudle;
+out.strudel = x.strudel;
 out`);
   try {
     const out = await dumpFile(file);
