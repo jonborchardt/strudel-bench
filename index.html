@@ -112,6 +112,7 @@
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase } from './lib/song.mjs';
   import { ARP_ORDERS, voiceSound } from './lib/layers.mjs';
+  import { hasSound } from './lib/strudel.mjs';
   import { TEMPLATES, fit, gridToMini } from './lib/grid.mjs';
   import { analyze } from './lib/analyze.mjs';
   import { DESCRIPTORS, OVERLAYS, HARMONY, MODIFIERS, COMPARATIVE } from './lib/vocab.mjs';
@@ -616,13 +617,31 @@
     }
     return { pattern, cps: s.cps, what: `${mixSection} ${layer} ${what}` };
   });
-  // a kit: the same two bars of kick, snare, hats, open hat and clap (the house template) through every kit, at the song's tempo
-  const KIT_VOICES = ['bd', 'sd', 'hh', 'oh', 'cp'];
-  const auditionKit = (btn, kit) => preview(btn, async () => ({
-    pattern: strudel.stack(...KIT_VOICES.map((v) => strudel.s(v).struct(gridToMini(TEMPLATES.house[v])).bank(kit))),
-    cps: sections.find((x) => x.name === mixSection)?.cps ?? sections[0]?.cps ?? 0.5,
-    what: `kit ${kit}`,
-  }));
+  // a kit: the same two bars through every kit, at the song's tempo. Twelve voices: the house groove with rim ghosts and
+  // cowbell in bar one, ride for hats and a crash on the downbeat in bar two, clap joining the snare there, and a tom
+  // fill down the last beat. Voices the kit lacks are left out (and named), rather than logged as sound-not-found.
+  const KIT_GRIDS = {
+    bd:  'x...x...x...x...x...x...x...x...',
+    sd:  '....x.......x.......x.......x...',
+    hh:  'x.x.x.x.x.x.x.x.................',
+    oh:  '..x...x...x...x...x...x...x.....',
+    rim: '.......x.......x.......x........',
+    cb:  '......x.......x.......x.......x.',
+    rd:  '................x.x.x.x.x.x.x.x.',
+    cr:  '................x...............',
+    cp:  '....................x.......x...',
+    ht:  '............................x...',
+    mt:  '.............................x..',
+    lt:  '..............................xx',
+  };
+  const auditionKit = (btn, kit) => preview(btn, async () => {
+    const has = Object.keys(KIT_GRIDS).filter((v) => hasSound(`${kit}_${v}`) !== false), missing = Object.keys(KIT_GRIDS).filter((v) => !has.includes(v));
+    return {
+      pattern: strudel.stack(...has.map((v) => strudel.s(v).struct(gridToMini(KIT_GRIDS[v])).bank(kit))).slow(2),
+      cps: sections.find((x) => x.name === mixSection)?.cps ?? sections[0]?.cps ?? 0.5,
+      what: `kit ${kit}${missing.length ? ` (no ${missing.join(', ')})` : ''}`,
+    };
+  });
   // two copies of the same control, one under the part rows and one in the menu: both show pvGain
   // the sliders run -1..1.7 and the gain is 10^x (x0.1 .. x50), so the first half of the travel is the fine x0.1..x1 range and the far end still reaches a whisper-quiet sample
   const pvIns = [...document.querySelectorAll('input.pvin')];
