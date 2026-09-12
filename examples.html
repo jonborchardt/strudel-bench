@@ -32,8 +32,8 @@
     const el = document.createElement('article');
     el.className = `card ex${ex.stub ? ' stub' : ''}`;
     const tags = ex.tags.map((t) => `<span class="tag">${t}</span>`).join('');
-    // body row: blurb, explanation and tags stacked on the left; the svg on the right
-    el.innerHTML = `<header><h3>${ex.title}</h3></header><div class="body"><div><p>${ex.blurb}</p>${ex.explain ? `<p>${ex.explain}</p>` : ''}<div class="tags">${tags}</div></div>${ex.svg ? `<figure class="viz">${ex.svg}</figure>` : ''}</div>`;
+    // body row: title, blurb, explanation and tags stacked on the left; the svg on the right, level with the title
+    el.innerHTML = `<div class="body"><div><h3>${ex.title}</h3><p>${ex.blurb}</p>${ex.explain ? `<p>${ex.explain}</p>` : ''}<div class="tags">${tags}</div></div>${ex.svg ? `<figure class="viz">${ex.svg}</figure>` : ''}</div>`;
     if (ex.stub) { el.insertAdjacentHTML('beforeend', `<div class="variants"><button disabled>&#9654; Play</button></div><div class="placeholder">example coming: not yet written</div>`); return el; }
     const vs = document.createElement('div'); vs.className = 'variants';
     const hll = document.createElement('textarea'); hll.className = 'hll'; hll.spellcheck = false; hll.title = 'edit me: the expanded Strudel follows, and so does the sound while this example plays';
