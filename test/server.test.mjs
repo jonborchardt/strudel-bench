@@ -110,6 +110,37 @@ test('PUT /renders/x.wav?mp3 converts and returns the mp3 path; /render with mp3
   });
 });
 
+test('notes file lives next to its song: GET/PUT songs/<name>.notes.json, absent is 404, not listed as a song', async () => {
+  await withServer(async (base) => {
+    assert.equal((await fetch(`${base}/songs/_t_x.notes.json`)).status, 404);
+    const put = await fetch(`${base}/songs/_t_x.notes.json`, { method: 'PUT', body: '{"prompt":"p"}' });
+    assert.equal(put.status, 204);
+    try {
+      const r = await fetch(`${base}/songs/_t_x.notes.json`);
+      assert.equal(r.headers.get('content-type'), 'application/json');
+      assert.deepEqual(await r.json(), { prompt: 'p' });
+      assert.ok(!(await (await fetch(`${base}/songs/index.json`)).json()).includes('_t_x.notes.json'));
+      const demo = await (await fetch(`${base}/songs/demo.notes.json`)).json();
+      assert.ok(demo.prompt && demo.requests.length, 'demo ships with provenance');
+    } finally { fs.rmSync(path.join(ROOT, 'songs', '_t_x.notes.json')); }
+    assert.equal((await fetch(`${base}/songs/_t_x.other.json`, { method: 'PUT', body: '' })).status, 400);
+  });
+});
+
+test('PUT /renders/<name>.mp3 and .txt store what the page exported, as-is', async () => {
+  await withServer(async (base) => {
+    for (const [ext, body] of [['mp3', new Uint8Array([0xff, 0xfb, 0, 0])], ['txt', 's("bd sd")']]) {
+      const r = await fetch(`${base}/renders/_t_exp.${ext}`, { method: 'PUT', body });
+      assert.equal(r.status, 200);
+      assert.match(await r.text(), new RegExp(`renders[\\\\/]_t_exp\\.${ext}$`));
+      assert.equal(fs.statSync(path.join(ROOT, 'renders', `_t_exp.${ext}`)).size, body.length);
+      fs.rmSync(path.join(ROOT, 'renders', `_t_exp.${ext}`));
+    }
+    assert.equal((await fetch(`${base}/renders/_t_exp.exe`, { method: 'PUT', body: '' })).status, 400);
+    assert.equal((await fetch(`${base}/dump/demo.strudel`, { method: 'POST' })).status, 404, 'dump route is gone: the page expands in the browser');
+  });
+});
+
 test('render route: malformed body returns 400 and the server keeps serving', async () => {
   await withServer(async (base) => {
     const es = await fetch(`${base}/events`);
@@ -141,18 +172,3 @@ test('render route: a second POST for a name already pending gets 409, the first
   });
 });
 
-test('POST /dump/<song> writes renders/<name>.dump.txt with the plain strudel', async () => {
-  fs.copyFileSync(path.join(ROOT, 'songs', 'demo.strudel'), path.join(ROOT, 'songs', '_t_dump.strudel'));
-  const out = path.join(ROOT, 'renders', '_t_dump.dump.txt');
-  try {
-    await withServer(async (base) => {
-      assert.equal((await fetch(`${base}/dump/nope.strudel`, { method: 'POST' })).status, 404);
-      const r = await fetch(`${base}/dump/_t_dump.strudel`, { method: 'POST' });
-      assert.equal(r.status, 200);
-      const body = await r.json();
-      assert.match(body.path, /renders[\\/]_t_dump\.dump\.txt$/);
-      assert.equal(body.code, fs.readFileSync(out, 'utf8'));
-      assert.match(body.code, /^const piece = [\s\S]*setcps\(0\.5\)[\s\S]*arrange\(/);
-    });
-  } finally { fs.rmSync(path.join(ROOT, 'songs', '_t_dump.strudel')); fs.rmSync(out, { force: true }); }
-});

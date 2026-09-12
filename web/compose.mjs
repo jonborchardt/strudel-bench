@@ -64,3 +64,40 @@ export function buildRequest({ song, src, notes, sections = [] }) {
     '```',
   ].filter((l, i, a) => l !== '' || a[i - 1] !== '').join('\n');
 }
+
+/** Every line comment (double slash) in `src`, keyed by the section it sits in (before the first section: `song`), in source order. */
+export function sourceComments(src) {
+  const out = {}; let at = 'song';
+  for (const line of src.split('\n')) {
+    at = line.match(/section\(\s*['"]([^'"]+)['"]/)?.[1] ?? at;
+    const c = line.match(/(?:^|\s)\/\/\s?(.*)$/)?.[1].trim(); // whitespace before // keeps https:// out
+    if (c) (out[at] ??= []).push(c);
+  }
+  return out;
+}
+
+/** The metadata file next to `song`: `demo.strudel` -> `demo.notes.json`. */
+export const notesFile = (song) => song.replace(/\.strudel$/, '.notes.json');
+
+/**
+ * The "Why it sounds this way" card: source comments merged with the song's metadata file (`songs/<name>.notes.json`,
+ * `{ prompt, requests: [{ date, ask, changes: [{ section, layer, axis, from, to, why }] }] }`), grouped by section in
+ * source order. The file may hold more than the card shows: each change keeps its request's date and ask as `detail`.
+ */
+export function notesView(src, meta = {}) {
+  const groups = new Map([['song', []], ...[...src.matchAll(/section\(\s*['"]([^'"]+)['"]/g)].map((m) => [m[1], []])]);
+  for (const [sec, ls] of Object.entries(sourceComments(src))) groups.get(sec).push(...ls.map((text) => ({ text })));
+  const requests = meta.requests ?? [];
+  for (const r of requests) for (const c of r.changes ?? []) {
+    const sec = c.section ?? 'song';
+    if (!groups.has(sec)) groups.set(sec, []);
+    groups.get(sec).push({
+      text: c.why ?? r.ask ?? '',
+      where: [c.layer, c.axis].filter(Boolean).join('.'),
+      change: c.from != null && c.to != null ? `${c.from} → ${c.to}` : '',
+      detail: [r.date, r.ask].filter(Boolean).join(': '),
+    });
+  }
+  const changes = requests.reduce((n, r) => n + (r.changes?.length ?? 0), 0);
+  return { prompt: meta.prompt ?? '', requests: requests.length, changes, last: requests.at(-1)?.date ?? '', sections: [...groups].filter(([, items]) => items.length).map(([name, items]) => ({ name, items })) };
+}

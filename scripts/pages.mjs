@@ -18,6 +18,7 @@ copy('lib');
 copy('songs');
 copy('samples/user');
 copy('node_modules/@strudel/web/dist');
+copy('node_modules/@breezystack/lamejs/dist'); // web/mp3.mjs: the mp3 export encodes in the browser
 copy('node_modules/@strudel/web/dist/assets', 'assets'); // strudel resolves its clock SharedWorker against the page url
 const write = (rel, obj) => fs.writeFileSync(path.join(OUT, rel), JSON.stringify(obj));
 write('songs/index.json', songList());

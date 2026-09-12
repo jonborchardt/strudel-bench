@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { kitsIn, kitOf, setKit, sectionSource, buildRequest } from '../web/compose.mjs';
+import { kitsIn, kitOf, setKit, sectionSource, buildRequest, sourceComments, notesView, notesFile } from '../web/compose.mjs';
+import { parseChange, addNote } from '../scripts/note.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const demo = fs.readFileSync(path.join(ROOT, 'songs', 'demo.strudel'), 'utf8');
@@ -50,6 +51,50 @@ test('buildRequest places each note at its cycle and quotes the sections around 
   assert.ok(early.includes(sectionSource(demo, 'verse')) && early.includes(sectionSource(demo, 'drop')));
   assert.equal(early.split("section('drop'").length, 2);
   assert.ok(!early.includes("section('intro'"));
+});
+
+test('notesView merges source comments with the metadata file, per section in source order', () => {
+  const src = "// the song\nsong({ cps: .5 }, [ // header note https://x.y/not-a-comment\n  section('a', 4, { drums: { density: .3 } }), // sparse\n  section('b', 4, { drums: {} }),\n])\n";
+  assert.deepEqual(sourceComments(src), { song: ['the song', 'header note https://x.y/not-a-comment'], a: ['sparse'] });
+  assert.equal(notesFile('demo.strudel'), 'demo.notes.json');
+  const bare = notesView(src);
+  assert.deepEqual(bare.sections.map((s) => s.name), ['song', 'a']);
+  assert.equal(bare.requests, 0);
+  assert.equal(bare.prompt, '');
+  const meta = { prompt: 'two sparse sections', requests: [
+    { date: '2026-09-10', ask: 'make b busier', changes: [{ section: 'b', layer: 'drums', axis: 'density', from: 0.5, to: 0.8, why: 'raised so b lifts off a' }] },
+    { date: '2026-09-11', ask: 'brighter kit', changes: [{ section: 'song', why: 'LinnDrum: crisper hats than the 909' }, { section: 'gone', why: 'a section that no longer exists' }] },
+  ] };
+  const v = notesView(src, meta);
+  assert.equal(v.prompt, 'two sparse sections');
+  assert.deepEqual([v.requests, v.changes, v.last], [2, 3, '2026-09-11']);
+  assert.deepEqual(v.sections.map((s) => s.name), ['song', 'a', 'b', 'gone'], 'source order, then sections only the metadata knows');
+  const b = v.sections.find((s) => s.name === 'b').items[0];
+  assert.deepEqual(b, { text: 'raised so b lifts off a', where: 'drums.density', change: '0.5 → 0.8', detail: '2026-09-10: make b busier' });
+  assert.deepEqual(v.sections[0].items.at(-1), { text: 'LinnDrum: crisper hats than the 909', where: '', change: '', detail: '2026-09-11: brighter kit' });
+  assert.deepEqual(v.sections[0].items[0], { text: 'the song' });
+  // every shipped notes file has the shape the card reads
+  for (const f of fs.readdirSync(path.join(ROOT, 'songs')).filter((f) => f.endsWith('.notes.json'))) {
+    const m = JSON.parse(fs.readFileSync(path.join(ROOT, 'songs', f), 'utf8'));
+    const song = fs.readFileSync(path.join(ROOT, 'songs', f.replace(/\.notes\.json$/, '.strudel')), 'utf8');
+    const view = notesView(song, m);
+    assert.ok(view.prompt && view.requests, `${f} has a prompt and at least one request`);
+    for (const r of m.requests) for (const c of r.changes) assert.ok(c.why && c.section, `${f}: every change says where and why`);
+  }
+});
+
+test('scripts/note.mjs parses a change line and appends requests to the notes file', () => {
+  assert.deepEqual(parseChange('drop.melody.brightness .5>.7 raised for a more urgent chorus'), { section: 'drop', layer: 'melody', axis: 'brightness', from: 0.5, to: 0.7, why: 'raised for a more urgent chorus' });
+  assert.deepEqual(parseChange('song LinnDrum for crisper hats'), { section: 'song', why: 'LinnDrum for crisper hats' });
+  assert.deepEqual(parseChange('verse.fx a riser announces the drop'), { section: 'verse', layer: 'fx', why: 'a riser announces the drop' });
+  const file = path.join(ROOT, 'songs', '_t_note.notes.json');
+  try {
+    addNote(file, { prompt: 'a test song', date: '2026-09-11' });
+    addNote(file, { ask: 'busier', changes: ['b.drums.density .5>.8 lifts off a'], date: '2026-09-11' });
+    const m = JSON.parse(fs.readFileSync(file, 'utf8'));
+    assert.equal(m.prompt, 'a test song');
+    assert.deepEqual(m.requests, [{ date: '2026-09-11', ask: 'busier', changes: [{ section: 'b', layer: 'drums', axis: 'density', from: 0.5, to: 0.8, why: 'lifts off a' }] }]);
+  } finally { fs.rmSync(file, { force: true }); }
 });
 
 test('lib/kits.json describes every kit the dropdown can list, labels short enough for one line', () => {

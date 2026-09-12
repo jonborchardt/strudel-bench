@@ -13,6 +13,7 @@
     "mp3": "node scripts/mp3.mjs",
     "resolve": "node scripts/resolve.mjs",
     "dump": "node scripts/dump.mjs",
+    "note": "node scripts/note.mjs",
     "verify": "node scripts/verify.mjs",
     "vocab": "node scripts/vocab.mjs > .claude/skills/strudle/reference/vocab.md"
   },

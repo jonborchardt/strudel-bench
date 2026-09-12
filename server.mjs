@@ -2,7 +2,6 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execFile } from 'node:child_process';
 import { wavToMp3 } from './scripts/mp3.mjs';
 
 const ROOT = import.meta.dirname;
@@ -10,6 +9,7 @@ const SONGS = path.join(ROOT, 'songs');
 const RENDERS = path.join(ROOT, 'renders');
 const USER = path.join(ROOT, 'samples', 'user');
 const SONG_NAME = /^[\w.-]+\.strudel$/;
+const SONG_FILE = /^[\w.-]+\.(strudel|notes\.json)$/; // a song and its provenance metadata (why it sounds this way) live side by side
 const AUDIO = new Set(['.wav', '.mp3', '.ogg', '.flac', '.aif', '.aiff', '.m4a', '.webm']);
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
@@ -60,7 +60,7 @@ export function createServer() {
   const waiters = new Map();
   fs.mkdirSync(SONGS, { recursive: true });
   const watcher = fs.watch(SONGS, (_ev, file) => {
-    if (!file || !SONG_NAME.test(file)) return;
+    if (!file || !SONG_FILE.test(file)) return;
     for (const res of clients) res.write(`data: ${JSON.stringify({ changed: file })}\n\n`);
   });
 
@@ -79,14 +79,14 @@ export function createServer() {
     if (p === '/songs/index.json') return json(res, songList()); // same path the static pages build writes
     if (p.startsWith('/songs/')) {
       const name = decodeURIComponent(p.slice('/songs/'.length));
-      if (!SONG_NAME.test(name)) return send(res, 400, 'bad song name');
+      if (!SONG_FILE.test(name)) return send(res, 400, 'bad song name');
       const file = path.join(SONGS, name);
       if (req.method === 'PUT') {
         fs.writeFileSync(file, await readBody(req));
         return send(res, 204, '');
       }
       if (!fs.existsSync(file)) return send(res, 404, 'no such song');
-      return send(res, 200, fs.readFileSync(file), 'text/plain; charset=utf-8');
+      return send(res, 200, fs.readFileSync(file), name.endsWith('.json') ? 'application/json' : 'text/plain; charset=utf-8');
     }
 
     if (p === '/events') {
@@ -115,22 +115,6 @@ export function createServer() {
       try { await done; return json(res, { path: path.join('renders', `${name}.${body.mp3 ? 'mp3' : 'wav'}`) }); }
       catch (e) { return send(res, e.status || 504, e.message); }
     }
-    // dump runs in a child process: scripts/dump.mjs installs the esm-fix hook and patches strudel globals,
-    // neither of which belongs in the server process.
-    if (p.startsWith('/dump/') && req.method === 'POST') {
-      const song = decodeURIComponent(p.slice('/dump/'.length));
-      if (!SONG_NAME.test(song)) return send(res, 400, 'bad song name');
-      if (!fs.existsSync(path.join(SONGS, song))) return send(res, 404, 'no such song');
-      const out = await new Promise((resolve, reject) =>
-        execFile(process.execPath, [path.join(ROOT, 'scripts', 'dump.mjs'), path.join(SONGS, song)], { maxBuffer: 1 << 24 },
-          (err, stdout, stderr) => (err ? reject(new Error(stderr.trim().split('\n').pop() || err.message)) : resolve(stdout))))
-        .catch((e) => e);
-      if (out instanceof Error) return send(res, 422, out.message);
-      fs.mkdirSync(RENDERS, { recursive: true });
-      const file = path.join(RENDERS, `${song.replace(/\.strudel$/, '')}.dump.txt`); // .txt: it is meant to be pasted into the strudel repl
-      fs.writeFileSync(file, out);
-      return json(res, { path: path.relative(ROOT, file), code: out });
-    }
     if (p === '/render-error' && req.method === 'POST') {
       let body;
       try { body = JSON.parse((await readBody(req)) || '{}'); } catch { return send(res, 400, 'bad json'); }
@@ -141,15 +125,16 @@ export function createServer() {
       }
       return send(res, 204, '');
     }
+    // wav from a render job (?mp3 converts it too); mp3 and .txt (expanded strudel) come ready-made from the page's export buttons
     if (p.startsWith('/renders/') && req.method === 'PUT') {
       const name = decodeURIComponent(p.slice('/renders/'.length));
-      if (!/^[\w.-]+\.wav$/.test(name)) return send(res, 400, 'bad render name');
+      if (!/^[\w.-]+\.(wav|mp3|txt)$/.test(name)) return send(res, 400, 'bad render name');
       fs.mkdirSync(RENDERS, { recursive: true });
       const chunks = [];
       for await (const c of req) chunks.push(c);
       const file = path.join(RENDERS, name);
       fs.writeFileSync(file, Buffer.concat(chunks));
-      const out = searchParams.has('mp3') ? wavToMp3(file) : file;
+      const out = searchParams.has('mp3') && name.endsWith('.wav') ? wavToMp3(file) : file;
       const w = waiters.get(name);
       if (w) { waiters.delete(name); clearTimeout(w.timer); w.resolve(); }
       return send(res, 200, path.relative(ROOT, out));
