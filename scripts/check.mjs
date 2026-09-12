@@ -7,16 +7,13 @@ import { fileURLToPath } from 'node:url';
 import { userPacks } from '../server.mjs';
 import './esm-fix.mjs'; // must run before the strudel imports below are resolved, hence dynamic imports
 import { parseProgression, chordNames } from '../lib/harmony.mjs';
-import { packsOf } from '../lib/packs.mjs';
+import { packsOf, SYNTHS } from '../lib/packs.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
 const { transpiler } = await import('@strudel/transpiler');
 const { miniAllStrings } = await import('@strudel/mini');
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const PACKS = path.join(ROOT, 'samples', 'packs');
-// ponytail: hardcoded synth list; registerSynthSounds needs a browser AudioContext so we can't ask it.
-const SYNTHS = ['sine', 'square', 'triangle', 'sawtooth', 'sin', 'sqr', 'tri', 'saw', 'supersaw', 'pulse',
-  'white', 'pink', 'brown', 'crackle', 'z_sine', 'z_sawtooth', 'z_square', 'z_triangle', 'z_tan', 'z_noise', 'bytebeat'];
 
 let scopeReady;
 export const ensureScope = () => (scopeReady ??= (async () => {

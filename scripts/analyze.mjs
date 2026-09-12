@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyze, readWav } from '../lib/analyze.mjs';
-export { analyze, readWav, tone, ACTIVE_FRAME_DB } from '../lib/analyze.mjs';
 
 // test helper: write 16-bit PCM WAV from an array of Float32Array channels (-1..1)
 export function writeWav(filePath, rate, channelsData) {

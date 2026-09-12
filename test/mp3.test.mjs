@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { writeWav, tone } from '../scripts/analyze.mjs';
+import { writeWav } from '../scripts/analyze.mjs';
+import { tone } from '../lib/analyze.mjs';
 import { wavToMp3 } from '../scripts/mp3.mjs';
 
 test('wavToMp3 writes an mp3 next to the wav', () => {

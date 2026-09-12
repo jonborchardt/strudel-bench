@@ -53,7 +53,7 @@
     <div class="row addrow" id="addrow"></div>
     <datalist id="snds"></datalist>
     <div class="row" style="margin-top:.5rem">
-      <span class="pills" id="pills" title="type a word and pick it from the list: control words, moods, modifiers (much, a little, less), harmony words, or a part name to aim the words after it at that part. Enter on an empty box applies."><input id="phrase" placeholder="darker, much sparser, drums &hellip;" autocomplete="off"><div id="suggest" class="menu suggest" hidden></div></span>
+      <span class="pills" id="pills" title="type a word and pick it from the list: control words, moods, modifiers (much, a little, less), harmony words, or a part name to aim the words after it at that part. Enter on an empty box applies."><input id="phrase" list="terms" placeholder="darker, much sparser, drums &hellip;" autocomplete="off"><datalist id="terms"></datalist></span>
       <button id="apply" title="rewrite this section's axis literals from the words">Apply</button>
       <button id="verify" title="render this section before and after the words, apply them, and compare the audio metrics (stops playback)">Verify</button>
       <span class="xstate" id="vstate" role="status" aria-live="polite" hidden></span>
@@ -79,7 +79,7 @@
   <section class="panes">
     <div class="card" id="feedback">
       <header><h2>Change comments</h2><small>each one is pinned where the playhead is; its dot on this slider can be clicked to edit and dragged to move</small></header>
-      <div class="row fbbar"><button id="fbplay" title="play / pause" disabled>&#9654;</button><button id="fbstop" title="stop" disabled>&#9632;</button><span class="lane small"><input id="fbpos" type="range" min="0" max="1" step="0.05" value="0" list="marks" disabled aria-label="comment position"><span id="dots"></span></span></div>
+      <div class="row fbbar"><span class="lane small"><input id="fbpos" type="range" min="0" max="1" step="0.05" value="0" list="marks" disabled aria-label="comment position"><span id="dots"></span></span></div>
       <textarea id="fbcomment" class="note" placeholder="Make this heavier and less predictable."></textarea>
       <div class="row" style="margin-top:.5rem">
         <button id="fbadd" title="pins the comment at the cycle the playhead is on" disabled>Add comment here</button>
@@ -104,15 +104,15 @@
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks } from './web/boot.mjs';
   import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile, verifyRows } from './web/compose.mjs';
-  import { packsOf, packKind } from './lib/packs.mjs';
+  import { packsOf, packKind, SYNTHS } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
-  import { locate, setAxis, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection } from './lib/resolve.mjs';
+  import { fmt, locate, setAxis, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection } from './lib/resolve.mjs';
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase } from './lib/song.mjs';
   import { ARP_ORDERS } from './lib/layers.mjs';
   import { TEMPLATES } from './lib/grid.mjs';
   import { analyze } from './lib/analyze.mjs';
-  import { DESCRIPTORS, OVERLAYS, HARMONY, MODIFIERS } from './lib/vocab.mjs';
+  import { DESCRIPTORS, OVERLAYS, HARMONY, MODIFIERS, COMPARATIVE } from './lib/vocab.mjs';
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
   $('nav').innerHTML = nav('Compose');
@@ -128,7 +128,6 @@
   const drafts = () => Object.keys(localStorage).filter((k) => k.startsWith(DRAFT)).map((k) => k.slice(DRAFT.length));
   const NAME = /^[\w.-]+\.strudel$/;
   let kits = []; // drum kits the loaded packs actually have (filled once strudel is ready)
-  const SYNTHS = ['sine', 'square', 'triangle', 'sawtooth', 'supersaw', 'pulse', 'white', 'pink', 'brown', 'crackle']; // superdough's built-in sounds a part can name (the rest are samples)
   let kitInfo = {}; // lib/kits.json: { kit: { label, about } } for the kit menu; its icon is web/kits/<kit>.svg
   // the icon key pinned under the kit list: legend files scripts/kiticons.mjs writes, one word each, a bar between the slots
   $('kitkey').innerHTML = [
@@ -149,7 +148,7 @@
   Promise.all([ready, fetch('lib/kits.json').then((r) => r.json())]).then(([, info]) => { // what the packs actually loaded, local or cdn
     kitInfo = info;
     kits = kitsIn(Object.keys(info), Object.keys(strudel.soundMap.get()));
-    $('snds').innerHTML = [...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()].map((n) => `<option value="${n}">`).join(''); // what a sound picker can autocomplete to
+    $('snds').innerHTML = [...new Set([...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()])].map((n) => `<option value="${esc(n)}">`).join(''); // what a sound picker can autocomplete to (the map has most synths already)
     sourceChanged();
   });
 
@@ -287,11 +286,8 @@
       if (done) return; done = true;
       const name = box.value.trim();
       if (!ok || name === s.name) return stripRender();
-      try { commit(renameSection($('code').value, s.name, name)); } catch (err) { $('mixstatus').textContent = err.message; return stripRender(); }
-      if (pinned === s.name) pinned = name;
-      if (mixSection === s.name) mixSection = name;
-      $('mixstatus').textContent = `renamed ${s.name} to ${name}`;
-      edited();
+      const renamed = did(() => { const out = renameSection($('code').value, s.name, name); if (pinned === s.name) pinned = name; if (mixSection === s.name) mixSection = name; return out; }, `renamed ${s.name} to ${name}`);
+      if (!renamed) stripRender(); // the name box goes; the status says why
     };
     box.onkeydown = (e) => { if (e.key === 'Enter') finish(true); else if (e.key === 'Escape') finish(false); };
     box.onblur = () => finish(true);
@@ -302,15 +298,11 @@
     const b = e.target.closest('.blk'); if (!b || e.target.closest('.rn')) return;
     const s = sections[b.dataset.i], op = e.target.closest('[data-op]')?.dataset.op;
     if (!op) return pinned && pinned !== s.name ? pinTo(s) : seek(s.offset); // pinned: a click moves the pin
-    if (op === 'del') { commit(removeSection($('code').value, s.name)); if (pinned === s.name) { pinned = null; loop = null; } $('mixstatus').textContent = `removed ${s.name}`; edited(); return; }
+    if (op === 'del') return did(() => { const out = removeSection($('code').value, s.name); if (pinned === s.name) { pinned = null; loop = null; } return out; }, `removed ${s.name}`);
     if (op === 'ren') return renameAt(b, s);
     if (op === 'pin') return pinned === s.name ? unpin() : pinTo(s);
-    if (op === 'dup') {
-      const { src, name } = duplicateSection($('code').value, s.name);
-      commit(src); mixSection = name; if (pinned) pinned = name;
-      $('mixstatus').textContent = `added ${name} after ${s.name}`;
-      edited();
-    } else { commit(moveSection($('code').value, s.name, op === 'left' ? -1 : 1)); edited(); }
+    if (op === 'dup') did(() => { const { src, name } = duplicateSection($('code').value, s.name); mixSection = name; if (pinned) pinned = name; return src; }, `duplicated ${s.name}`);
+    else did(() => moveSection($('code').value, s.name, op === 'left' ? -1 : 1), `moved ${s.name} ${op === 'left' ? 'earlier' : 'later'}`);
   };
   // undo/redo: one stack for every way the source changes (typing, knobs, words, section ops, kit). Typing and knob
   // drags coalesce within a second; a drag's end resets that so the next drag is its own step.
@@ -372,8 +364,7 @@
   function syncTransport() { // buttons say what the next press does; the position readout follows the clock (setInterval below) or the resume point
     const c = playing ? null : paused ?? 0;
     $('play').innerHTML = playing ? '&#10074;&#10074; Pause' : paused != null ? '&#9654; Resume' : '&#9654; Play';
-    $('stop').disabled = $('fbstop').disabled = !playing && paused == null; // the comments card's icons mirror the transport
-    $('fbplay').innerHTML = playing ? '&#10074;&#10074;' : '&#9654;'; $('fbplay').disabled = $('play').disabled;
+    $('stop').disabled = !playing && paused == null;
     $('update').hidden = !playing || $('code').value === evaluated;
     $('transport').classList.toggle('playing', playing);
     if (c != null) showPosition(c);
@@ -414,9 +405,8 @@
   $('play').onclick = toggle;
   $('update').onclick = play;
   $('stop').onclick = stop;
-  $('pos').oninput = (e) => { e.target.style.setProperty('--v', e.target.value / (Number(e.target.max) || 1)); seek(Number(e.target.value)); };
+  $('pos').oninput = (e) => seek(Number(e.target.value));
   $('fbpos').oninput = (e) => seek(Number(e.target.value));
-  $('fbplay').onclick = () => $('play').click(); $('fbstop').onclick = () => $('stop').click();
   setInterval(async () => { // the song repeats every `total`, so wrap; a pinned section's clock runs in its own bars
     if (!playing) return;
     const n = (await ready).scheduler.now();
@@ -484,8 +474,7 @@
     const kit = e.target.closest('[data-kit]')?.dataset.kit;
     if (!kit) return;
     $('kits').hidePopover();
-    commit(setKit($('code').value, kit));
-    edited();
+    did(() => setKit($('code').value, kit), `kit ${kit}`);
   };
   $('kits').ontoggle = (e) => { // popovers open centred by default: pin this one under its button
     if (e.newState !== 'open') return;
@@ -517,11 +506,17 @@
     clearTimeout(updateTimer);
     if (playing) updateTimer = setTimeout(play, 150);
   }
+  function did(edit, msg, coalesce) { // one control edit: run it, commit, say what it did, follow up; a refused edit says why instead
+    let src; try { src = edit(); } catch (err) { $('mixstatus').textContent = err.message; return false; }
+    commit(src, coalesce); $('mixstatus').textContent = msg; edited();
+    return true;
+  }
   function mixRender() {
     if (document.activeElement?.type === 'range' && $('knobs').contains(document.activeElement)) return; // a knob is being dragged: its value is already right
     let m; try { m = locate($('code').value); } catch (e) { if (!(e instanceof SyntaxError)) $('mix').hidden = true; return; } // plain strudel: nothing to mix; mid-edit syntax error: keep the last card
     const s = m.sections.find((x) => x.name === (pinned ?? mixSection)) ?? m.sections[0];
     mixSection = s.name;
+    parts = Object.keys(s.layers); listTerms(); // the pill box offers this section's part names
     $('mix').hidden = false;
     $('mixsec').textContent = `· ${s.name}${pinned === s.name ? ' (pinned)' : ''}`;
     const head = `<span></span>${AXES.map((a) => `<span class="ax" title="${esc(a.meaning)}">${a.name}</span>`).join('')}`;
@@ -564,84 +559,64 @@
     if (key === 'follow') text = el.checked ? 'true' : null;
     else if (key === 'sounds') { const set = [...el.closest('.matrow').querySelectorAll('[data-voice]')].filter((i) => i.value.trim()).map((i) => `${i.dataset.voice}: ${q(i.value)}`); text = set.length ? `{ ${set.join(', ')} }` : null; }
     else text = el.value.trim() ? q(el.value) : null;
-    try { commit(setMaterial($('code').value, mixSection, layer, key, text)); } catch (err) { return ($('mixstatus').textContent = err.message); }
-    $('mixstatus').textContent = `${layer}.${key} ${text ?? 'removed'}`;
-    edited();
+    did(() => setMaterial($('code').value, mixSection, layer, key, text), `${layer}.${key} ${text ?? 'removed'}`);
   };
   const effective = () => Object.fromEntries(sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([l, x]) => [l, x.attrs]))])); // the evaluated song's resolved attrs per section and layer
   $('addrow').onclick = (e) => {
     const l = e.target.closest('[data-add]')?.dataset.add; if (!l) return;
-    const { src, key } = addLayer($('code').value, mixSection, l);
-    commit(src);
-    $('mixstatus').textContent = `added ${key} to ${mixSection}`;
-    edited();
+    did(() => addLayer($('code').value, mixSection, l).src, `added a ${l} part to ${mixSection}`);
   };
   $('knobs').onclick = (e) => {
     const l = e.target.closest('[data-rm]')?.dataset.rm; if (!l) return;
-    commit(removeLayer($('code').value, mixSection, l));
-    $('mixstatus').textContent = `removed ${l} from ${mixSection}`;
-    edited();
+    did(() => removeLayer($('code').value, mixSection, l), `removed ${l} from ${mixSection}`);
   };
   $('knobs').oninput = (e) => {
     const k = e.target; if (k.type !== 'range') return;
-    try { commit(setAxis($('code').value, mixSection, k.dataset.layer, k.dataset.axis, Number(k.value)), true); }
-    catch (err) { $('mixstatus').textContent = err.message; return; }
+    if (!did(() => setAxis($('code').value, mixSection, k.dataset.layer, k.dataset.axis, Number(k.value)), `${k.dataset.layer} ${k.dataset.axis} ${k.value}`, true)) return;
     k.title = `${k.dataset.layer} ${k.dataset.axis}: ${k.value}`; k.style.setProperty('--v', k.value);
-    $('mixstatus').textContent = '';
-    edited();
   };
   $('knobs').onchange = () => { stamp = 0; mixRender(); }; // the drag ended: its own undo step, and a rebuild so an inserted axis reads as in the source
 
   // the pill box: only a known term becomes a pill, so a typo cannot be applied. Terms are the vocabulary tables plus
-  // the section's part names; a part pill aims every pill after it at that part, until the next part pill.
+  // the section's part names, offered in a native datalist that mixRender rebuilds; a part pill aims every pill after
+  // it at that part, until the next part pill.
   const pills = []; // { w, kind } in the order typed
   const KIND = { control: 'control word', mood: 'mood or genre', mod: 'modifier', harmony: 'harmony', layer: 'part: the words after it apply here only' };
-  function terms() {
-    let layers = []; try { layers = Object.keys(locate($('code').value).sections.find((x) => x.name === mixSection)?.layers ?? {}); } catch {}
-    return [
-      ...layers.map((w) => ({ w, kind: 'layer' })),
+  let terms = [], parts = []; // what the box accepts, as last listed; the shown section's part names (mixRender sets them)
+  function listTerms() {
+    terms = [
+      ...parts.map((w) => ({ w, kind: 'layer' })),
       ...Object.keys(DESCRIPTORS).map((w) => ({ w, kind: 'control' })),
       ...Object.keys(OVERLAYS).map((w) => ({ w, kind: 'mood' })),
       ...[...Object.keys(MODIFIERS), 'less'].map((w) => ({ w, kind: 'mod' })),
       ...[...Object.keys(HARMONY.progressions), ...HARMONY.modes, 'relative'].map((w) => ({ w, kind: 'harmony' })),
     ];
+    $('terms').innerHTML = terms.map((t) => `<option value="${esc(t.w)}">${KIND[t.kind]}</option>`).join('');
   }
-  const fold = (q) => [q, q.replace(/ier$/, 'y'), q.replace(/er$/, ''), q.replace(/r$/, '')]; // darker -> dark, as the parser reads it
-  function matches(q) {
-    q = q.toLowerCase().trim(); if (!q) return [];
-    const forms = fold(q), all = terms();
-    return [...all.filter((t) => forms.includes(t.w)), ...all.filter((t) => t.w.startsWith(q) && !forms.includes(t.w))].slice(0, 8);
-  }
-  let pick = 0; // highlighted suggestion
-  function suggest() {
-    const ms = matches($('phrase').value);
-    pick = Math.min(pick, Math.max(0, ms.length - 1));
-    $('suggest').hidden = !ms.length;
-    $('suggest').innerHTML = ms.map((t, i) => `<button class="${t.kind}${i === pick ? ' on' : ''}" data-i="${i}"><span>${esc(t.w)}</span><small>${KIND[t.kind]}</small></button>`).join('');
-    $('phrase').classList.toggle('bad', !!$('phrase').value.trim() && !ms.length); // not a word it knows
-    return ms;
-  }
+  const fold = (q) => [q, ...COMPARATIVE.map(([re, to]) => q.replace(re, to))]; // darker -> dark, as the parser reads it
+  const match = (q) => { // the term the text is (or the one term it starts), else null
+    q = q.toLowerCase().trim(); if (!q) return null;
+    const forms = fold(q), starts = terms.filter((t) => t.w.startsWith(q));
+    return terms.find((t) => forms.includes(t.w)) ?? (starts.length === 1 ? starts[0] : null);
+  };
   function renderPills() {
     for (const el of $('pills').querySelectorAll('.pill')) el.remove();
     $('pills').prepend(...pills.map((p, i) => { const el = document.createElement('span'); el.className = `pill ${p.kind}`; el.innerHTML = `${esc(p.w)}<button data-x="${i}" title="remove">&times;</button>`; return el; }));
   }
-  function addPill(t) { pills.push(t); $('phrase').value = ''; pick = 0; suggest(); renderPills(); $('phrase').focus(); }
-  $('phrase').oninput = () => { pick = 0; suggest(); };
+  function addPill(t) { pills.push(t); $('phrase').value = ''; $('phrase').classList.remove('bad'); renderPills(); $('phrase').focus(); }
+  $('phrase').onfocus = listTerms; // the vocabulary tables load after the first render
+  $('phrase').oninput = () => $('phrase').classList.remove('bad'); // typing on clears the mark
+  $('phrase').onchange = () => { const t = match($('phrase').value); if (t) addPill(t); }; // a pick from the list, or leaving the box on a term
   $('phrase').onkeydown = (e) => {
-    const ms = matches($('phrase').value);
     if (e.key === 'Backspace' && !$('phrase').value) { pills.pop(); renderPills(); return; }
-    if (e.key === 'ArrowDown') { e.preventDefault(); pick = Math.min(pick + 1, ms.length - 1); suggest(); return; }
-    if (e.key === 'ArrowUp') { e.preventDefault(); pick = Math.max(pick - 1, 0); suggest(); return; }
-    if (e.key === 'Escape') { $('suggest').hidden = true; return; }
     if (e.key !== 'Enter' && e.key !== 'Tab' && e.key !== ',') return;
-    if (ms.length) { e.preventDefault(); addPill(ms[pick]); return; }
+    const t = match($('phrase').value);
+    if (t) { e.preventDefault(); addPill(t); return; }
     if (!$('phrase').value.trim()) { if (e.key === 'Enter' && pills.length) { e.preventDefault(); $('apply').click(); } return; }
-    e.preventDefault(); // nothing it knows: the text stays, marked, and never becomes a pill
+    if (e.key !== 'Tab') e.preventDefault(); // not a term it knows (or several start this way): the text stays, marked, and never becomes a pill
+    $('phrase').classList.add('bad');
   };
-  $('suggest').onmousedown = (e) => { const b = e.target.closest('[data-i]'); if (!b) return; e.preventDefault(); addPill(matches($('phrase').value)[b.dataset.i]); };
-  $('phrase').onblur = () => setTimeout(() => ($('suggest').hidden = true), 150);
   $('pills').onclick = (e) => { const x = e.target.closest('[data-x]'); if (x) { pills.splice(x.dataset.x, 1); renderPills(); } $('phrase').focus(); };
-  const fmt = (x) => (x === 0 || x === 1 ? String(x) : String(+x.toFixed(2)).replace(/^0\./, '.'));
   const clauses = () => { // pills split at part pills: [{ layer: '*' | part, words }]
     const out = [{ layer: '*', words: [] }];
     for (const p of pills) { if (p.kind === 'layer') out.push({ layer: p.w, words: [] }); else out.at(-1).words.push(p.w); }
@@ -662,10 +637,8 @@
   }
   $('apply').onclick = () => {
     let p; try { p = plan($('code').value); } catch (e) { return ($('mixstatus').textContent = e.message); }
-    commit(p.src);
-    $('mixstatus').textContent = p.summary;
     $('vout').hidden = true;
-    edited();
+    did(() => p.src, p.summary);
   };
   // verify: render the section as it is, apply the words, render again, measure both (lib/analyze.mjs) and show the
   // deltas next to a player for each, so the ear can check what the numbers claim. Same chain as scripts/verify.mjs.
@@ -691,10 +664,8 @@
         <span class="row">before <audio controls src="${URL.createObjectURL(toWav(A))}"></audio> after <audio controls src="${URL.createObjectURL(toWav(B))}"></audio><span class="grow"></span><button id="vclose" title="close this comparison (the edit stays; undo reverts it)">&times; close</button></span>`;
       $('vclose').onclick = () => { $('vout').hidden = true; vstate('done'); };
       $('vout').hidden = false;
-      commit(after); // applied, like verify --write; Save keeps it, undo or reloading the song drops it
-      $('mixstatus').textContent = `applied: ${p.summary}`;
+      did(() => after, `applied: ${p.summary}`); // applied, like verify --write; Save keeps it, undo or reloading the song drops it
       vstate('done', `&#10003; ${rows.filter((r) => r.ok).length}/${rows.filter((r) => r.metric).length} moved as asked`);
-      edited();
     } catch (e) { $('mixstatus').textContent = `verify failed: ${e.message}`; $('err').textContent = e.message; vstate('fail', `&#10007; ${esc(e.message)}`, e.message); }
     finally { $('verify').disabled = $('apply').disabled = false; }
   };
