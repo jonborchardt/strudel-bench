@@ -4,8 +4,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { GROUPS } from '../web/examples.mjs';
-import { checkCode } from '../scripts/check.mjs';
+import { GROUPS, PROGRESSIONS } from '../web/examples.mjs';
+import { checkCode, ensureScope } from '../scripts/check.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -25,6 +25,13 @@ test('every example has the fields the card renders', () => {
   }
 });
 
+test('progression-syntax labels show the chord names check prints', async () => {
+  await ensureScope();
+  const { chordNames, parseProgression } = await import('../lib/harmony.mjs');
+  assert.ok(PROGRESSIONS.length);
+  for (const [key, p, names] of PROGRESSIONS) assert.equal(chordNames(key, parseProgression(p)), names, `${key} ${p}`);
+});
+
 test('every variant evaluates with known sounds, and an A/B actually differs', async () => {
   for (const g of GROUPS) for (const ex of g.items) if (!ex.stub) {
     const seen = []; // [label, event stream] per variant: a variant identical to an earlier one would be a silent A/A
@@ -36,7 +43,7 @@ test('every variant evaluates with known sounds, and an A/B actually differs', a
       assert.ok(events.length, `${at}: no events`);
       const stream = events.join('\n');
       const same = seen.filter(([, s]) => s === stream).map(([l]) => l);
-      if (v.alias) assert.deepEqual(same, [seen.at(-1)[0]], `${at}: alias must equal the previous variant`);
+      if (v.alias) assert.ok(same.includes(seen.at(-1)[0]), `${at}: alias must equal the previous variant`); // a chain of aliases matches every earlier link too
       else assert.deepEqual(same, [], `${at}: identical to ${same.join(', ')}`);
       seen.push([v.label, stream]);
     }

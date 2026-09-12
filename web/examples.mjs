@@ -7,16 +7,16 @@
 // Put a space before the slash of a self-closing svg tag: test/pages.test.mjs reads a quote followed by a slash as a root-absolute url.
 // Descriptor and modifier examples compute their numbers with the resolver's own parsePhrase/applyDeltas, so the page shows
 // exactly what `npm run resolve` would write, never a hand-copied approximation.
-import { DESCRIPTORS, MODIFIERS, parsePhrase, applyDeltas, loadVocab } from '../lib/vocab.mjs';
+import { DESCRIPTORS, OVERLAYS, MODIFIERS, parsePhrase, applyDeltas, loadVocab } from '../lib/vocab.mjs';
 if (typeof window !== 'undefined') await loadVocab((f) => fetch(new URL(`../lib/${f}`, import.meta.url)).then((r) => r.json()));
 
 const num = (v) => (v === 1 || v === 0 ? String(v) : String(v).replace(/^0\./, '.'));
-const attrs = (o) => `{ ${Object.entries(o).map(([k, v]) => `${k}: ${typeof v === 'number' ? num(v) : v}`).join(', ')} }`;
+const attrs = (o) => (Object.keys(o).length ? `{ ${Object.entries(o).map(([k, v]) => `${k}: ${typeof v === 'number' ? num(v) : v}`).join(', ')} }` : '{}');
 export const layer = (name, a, cycles = 4, note = '') => `${name}(${typeof a === 'string' ? a : attrs(a)}, { cycles: ${cycles} })${note ? ` // ${note}` : ''}`;
-export const lbh = (name, axis, lo = .1, hi = .9) => [
-  { label: 'Low', hll: layer(name, `{ ${axis}: ${lo} }`) },
-  { label: 'Baseline', hll: layer(name, '{}') },
-  { label: 'High', hll: layer(name, `{ ${axis}: ${hi} }`) },
+export const lbh = (name, axis, lo = .1, hi = .9, base = {}) => [
+  { label: 'Low', hll: layer(name, { ...base, [axis]: lo }) },
+  { label: 'Baseline', hll: layer(name, base) },
+  { label: 'High', hll: layer(name, { ...base, [axis]: hi }) },
 ];
 /** The numbers the resolver writes for `phrase` on top of `base` (missing axes are 0.5). */
 export const said = (phrase, base = {}) => {
@@ -25,8 +25,8 @@ export const said = (phrase, base = {}) => {
   return { ...base, ...Object.fromEntries(Object.entries(applyDeltas(base, deltas)).map(([a, r]) => [a, r.to])) };
 };
 const signed = (d) => `${d < 0 ? '−' : '+'}${num(Math.abs(d))}`;
-/** "weight +.35, aggression +.15, register −.15" for a descriptor word. */
-export const deltasOf = (word) => Object.entries(DESCRIPTORS[word]).map(([a, d]) => `${a} ${signed(d)}`).join(', ');
+/** "weight +.35, aggression +.15, register −.15" for a descriptor or overlay word. */
+export const deltasOf = (word) => Object.entries(DESCRIPTORS[word] ?? OVERLAYS[word]).map(([a, d]) => `${a} ${signed(d)}`).join(', ');
 const SONG = `song({ cps: .5, key: 'C:minor', seed: 3 }, [`;
 const s2 = (a, b) => `${SONG}\n  ${a},\n  ${b},\n])`;
 
@@ -64,7 +64,7 @@ const deltaBars = (phrases, base = {}) => { const axes = [...new Set(phrases.fla
 const chords = (rows) => { const h = Math.min(34, 118 / rows.length); return svg(rows.map(([label, prog], r) => { const y = 12 + r * h, cs = prog.split(' '), w = 150 / cs.length; return txt(8, y + h / 2 + 3, label)
   + cs.map((c, k) => { const home = /^[iI]$/.test(c); return `<rect x="${62 + k * w}" y="${y + 2}" width="${w - 3}" height="${h - 6}" rx="3" fill="${home ? HI : LO}" />` + `<text x="${62 + k * w + (w - 3) / 2}" y="${y + h / 2 + 3}" text-anchor="middle" fill="${home ? '#fff' : '#333'}">${c}</text>`; }).join(''); }).join('')); };
 /** Twelve semitone cells per row: the scale's notes filled, its root in accent. */
-const SCALES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10], lydian: [0, 2, 4, 6, 7, 9, 11], mixolydian: [0, 2, 4, 5, 7, 9, 10] };
+const SCALES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], 'harmonic minor': [0, 2, 3, 5, 7, 8, 11], dorian: [0, 2, 3, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10], lydian: [0, 2, 4, 6, 7, 9, 11], mixolydian: [0, 2, 4, 5, 7, 9, 10] };
 const strip = (rows) => { const h = Math.min(30, 118 / rows.length); return svg(rows.map(([label, mode, root = 0], r) => { const y = 12 + r * h; return txt(8, y + h / 2 + 3, label)
   + Array.from({ length: 12 }, (_, s) => `<rect x="${64 + s * 12}" y="${y + 3}" width="10" height="${h - 8}" rx="2" fill="${s === root ? HI : SCALES[mode].includes((s - root + 12) % 12) ? LO : PALE}" />`).join(''); }).join('')); };
 /** Section blocks sized by cycles and energy; a hot section is the one the words touch; ramp draws a trajectory inside its block. */
@@ -76,11 +76,28 @@ const timeline = (secs, note = '') => { const total = secs.reduce((s, x) => s + 
 const rampSvg = (a, b, label) => svg(`<line x1="8" y1="67" x2="211" y2="67" stroke="#c9c9c9" stroke-dasharray="3 3" />` + `<line x1="8" y1="${122 - a * 110}" x2="211" y2="${122 - b * 110}" stroke="${HI}" stroke-width="2" />`
   + `<circle r="4" fill="${HI}"><animateMotion dur="4s" repeatCount="indefinite" path="M8,${122 - a * 110} L211,${122 - b * 110}" /></circle>` + txt(8, 14, label) + txt(150, 63, 'baseline .5'));
 
-const ab = (name, word, base = {}, cycles = 4) => ({ svg: deltaBars([word], base), variants: [
+/** Baseline against one word, or a list of words (opposites side by side), on one layer. */
+const ab = (name, word, base = {}, cycles = 4) => ({ svg: deltaBars([].concat(word), base), variants: [
   { label: 'Baseline', hll: layer(name, base, cycles) },
-  { label: word, hll: layer(name, said(word, base), cycles, `"${word}"`) },
+  ...[].concat(word).map((w) => ({ label: w, hll: layer(name, said(w, base), cycles, `"${w}"`) })),
 ] });
 const HUMAN = [[1, .9], [-1, 1], [2, .8], [0, 1], [-2, .85], [1, 1], [0, .75], [-1, .95]];
+// an overlay lands on every layer of a section; each layer keeps the axes it has a cell for
+const FOUR = { drums: { density: .7 }, bass: {}, melody: { follow: 'true' }, pad: {} };
+const sec4 = (spec, cycles = 4, note = '') => `${SONG}\n  section('a', ${cycles}, { ${Object.entries(spec).map(([l, a]) => `${l}: ${attrs(a)}`).join(', ')} }),${note ? ` // ${note}` : ''}\n])`;
+const overlay = (word, cycles = 4) => ({ svg: deltaBars([word]), variants: [
+  { label: 'Before', hll: sec4(FOUR, cycles) },
+  { label: word, hll: sec4(Object.fromEntries(Object.entries(FOUR).map(([l, a]) => [l, said(word, a)])), cycles, `"${word}" on every layer`) },
+] });
+const BUILD = (fx) => `section('build', 4, { drums: { density: .5 }, pad: { space: .6 }${fx ? `, fx: ${attrs(fx)}` : ''} })`;
+const DROP = (fx) => `section('drop', 4, { drums: { density: .9, drive: .8 }, bass: { weight: .8 }, pad: {}${fx ? `, fx: ${attrs(fx)}` : ''} })`;
+const keyed = (key, p) => `song({ cps: .5, key: '${key}', seed: 3 }, [section('a', 4, { progression: '${p}', pad: {}, bass: {} })])`;
+/** [key, progression, chord names] behind every progression-syntax variant; test/examples.test.mjs checks the names against chordNames(). */
+export const PROGRESSIONS = [];
+const prog = (key, p, names, extra = {}) => { PROGRESSIONS.push([key, p, names]); return { label: `${p} → ${names}`, hll: keyed(key, p), ...extra }; };
+const MODS = ['slightly more spacious', 'a little more spacious', 'a bit more spacious', 'somewhat more spacious', 'more spacious', 'very spacious', 'much more spacious', 'way more spacious', 'a lot more spacious', 'extremely spacious'];
+const DRY = { space: .1, width: .3 };
+const VERSE = `const verse = { drums: { density: .6 }, bass: {}, melody: { follow: true }, pad: {} };`;
 
 export const GROUPS = [
   { id: 'axes', title: 'Axes', blurb: 'Each axis is one perceptual dimension of one layer, from 0 to 1. 0.5 leaves the layer at its baseline; lower and higher values move it in a fixed direction, and the expanded Strudel shows the controls it became. Compare low, baseline and high. Axes marked "one-sided" cannot go below the baseline (a grid cannot be straighter than straight), so their low side is the baseline itself.', items: [
@@ -117,20 +134,52 @@ export const GROUPS = [
       variants: [{ label: 'Mono', hll: layer('pad', '{ width: .1 }') }, { label: 'Baseline', hll: layer('pad', '{}') }, { label: 'Wide', hll: layer('pad', '{ width: .9 }') }] },
     { title: 'Register', tags: ['register', 'melody', 'structural'], blurb: 'Low to high octave placement of the melody; the line itself is the same.', svg: contour, variants: lbh('melody', 'register', .1, .9) },
   ] },
+  { id: 'cells', title: 'Axes across layers', blurb: 'An axis means the same thing on every layer but is implemented per layer (lib/layers.mjs): weight is level plus low-pass on the bass and level plus drive on the drums, register is an octave on any pitched layer. A layer with no cell for an axis changes nothing, and the expanded Strudel shows that honestly.', items: [
+    { title: 'Weight on the drums', tags: ['weight', 'drums', 'cell'], blurb: 'The same axis the bass card shows, on the kit: gain ×0.6 to ×1.2 and a little drive above the baseline. No octave drop, because drums have no pitch.',
+      svg: grid([spectrum(-.3), spectrum(0), spectrum(.65)], ['low: thin', 'baseline', 'high: louder, driven'], { bottom: true }), variants: lbh('drums', 'weight', .2, .9, { density: .7 }) },
+    { title: 'Register on the bass', tags: ['register', 'bass', 'cell'], blurb: 'Octave 1, 2 or 3 for the bass line, where the melody card moved between 3, 4 and 5. Same line, same chord roots.', svg: contour, variants: lbh('bass', 'register', .1, .9) },
+    { title: 'Space on the drums', tags: ['space', 'drums', 'cell', 'one-sided'], blurb: 'The pad has a dry side below .5; the kit starts dry, so its space cell is one-sided: room and size only grow above the baseline.',
+      svg: bands(['baseline: dry', 'roomy', 'huge'], (r, y) => tail([12, 90, 190][r])(r, y)), variants: [{ label: 'Baseline', hll: layer('drums', { density: .7 }) }, { label: 'Roomy', hll: layer('drums', { density: .7, space: .75 }) }, { label: 'Huge', hll: layer('drums', { density: .7, space: 1 }) }] },
+    { title: 'Density on the melody', tags: ['density', 'melody', 'cell'], blurb: 'Below .5 the line loses notes (up to 80% of them); above it notes double with rising probability. The drums card added voices, the meaning is the same: how much is happening.',
+      svg: grid([[0, 6, 12], [0, 2, 4, 6, 8, 10, 12, 14], [0, 1, 2, 4, 5, 6, 8, 10, 11, 12, 14, 15]], ['low: notes dropped', 'baseline: the line', 'high: notes doubled']), variants: lbh('melody', 'density', .1, .9, { follow: 'true' }) },
+    { title: 'Density on the pad', tags: ['density', 'pad', 'cell'], blurb: 'One chord tone, a power chord, a triad or four tones: density on the pad is how thick the voicing is.',
+      svg: grid([[0], [0, 4], [0, 2, 4, 6]], ['low: root only', 'baseline: triad', 'high: four tones']), variants: lbh('pad', 'density', .2, .9) },
+    { title: 'Register on the drums: no cell', tags: ['register', 'drums', 'cell', 'no-op'], blurb: 'Drums have no register cell, so register .9 is accepted and changes nothing: the two variants are byte-identical. A word carrying a register delta (heavy, bright) is inert on the kit for the same reason.',
+      svg: bars([{ name: 'register', segs: [{ from: .5, to: .9 }] }]), variants: [{ label: 'Baseline', hll: layer('drums', { density: .7 }) }, { label: 'register: .9', alias: true, hll: layer('drums', { density: .7, register: .9 }, 4, 'no register cell on drums: identical') }] },
+  ] },
   { id: 'descriptors', title: 'Descriptors', blurb: 'A descriptor is a named bundle of axis deltas (lib/descriptors.json), not hidden magic. "Dreamy" on a baseline pad is exactly the numbers it expands to, and the numbers below are computed by the same resolver that edits songs. The picture beside each one is those deltas: a bar per axis from where it was to where the word puts it. A layer without a cell for one of the axes simply ignores that delta.', items: [
     { title: 'Dreamy', tags: ['descriptor', 'pad'], blurb: `dreamy = ${deltasOf('dreamy')}. On the pad: more reverb, slower attack and release, no pulse duck, a touch darker.`, ...ab('pad', 'dreamy') },
     { title: 'Punchy', tags: ['descriptor', 'drums'], blurb: `punchy = ${deltasOf('punchy')}. Short hits, more level, on the beat, drier.`, ...ab('drums', 'punchy', { density: .7 }) },
     { title: 'Massive', tags: ['descriptor', 'pad'], blurb: `massive = ${deltasOf('massive')}. Four chord tones, low voicing, wide and roomy.`, ...ab('pad', 'massive') },
     { title: 'Frantic', tags: ['descriptor', 'drums'], blurb: `frantic = ${deltasOf('frantic')}. Every step, on the pulse, fills, short hits. Eight cycles so the fills land.`, ...ab('drums', 'frantic', {}, 8) },
     { title: 'Delicate', tags: ['descriptor', 'bass'], blurb: `delicate = ${deltasOf('delicate')}. Fewer, quieter, softer notes; aggression cannot go below its baseline, so that delta is inert here.`, ...ab('bass', 'delicate', { density: .7 }) },
-    { title: 'Heavy', tags: ['descriptor', 'bass'], blurb: `heavy = ${deltasOf('heavy')}. More body, a little grit, an octave down.`, ...ab('bass', 'heavy') },
-    { title: 'Spacious', tags: ['descriptor', 'pad'], blurb: `spacious = ${deltasOf('spacious')}. Bigger room and a wider sweep.`, ...ab('pad', 'spacious') },
+    { title: 'Light / heavy', tags: ['descriptor', 'light', 'heavy', 'bass'], blurb: `light = ${deltasOf('light')}; heavy = ${deltasOf('heavy')}. Light thins the bass and drops to two notes a bar; heavy adds body, a little grit and an octave down.`, ...ab('bass', ['light', 'heavy']) },
+    { title: 'Dark / bright', tags: ['descriptor', 'dark', 'bright', 'pad'], blurb: `dark = ${deltasOf('dark')}; bright = ${deltasOf('bright')}. The pad's filter closes or opens; the register deltas are too small to change its octave.`, ...ab('pad', ['dark', 'bright']) },
+    { title: 'Dry / spacious', tags: ['descriptor', 'dry', 'spacious', 'pad'], blurb: `dry = ${deltasOf('dry')}; spacious = ${deltasOf('spacious')}. Dry takes the room away (the width delta lands below the centred baseline, so it is inert); spacious adds a bigger room and a wider sweep.`, ...ab('pad', ['dry', 'spacious']) },
+    { title: 'Busy / sparse', tags: ['descriptor', 'busy', 'sparse', 'drums'], blurb: `busy = ${deltasOf('busy')}; sparse = ${deltasOf('sparse')}. From a kick-snare-hat kit: busy adds every voice, 16th hats and fills; sparse leaves the kick alone. Eight cycles so the fills land.`, ...ab('drums', ['busy', 'sparse'], { density: .5 }, 8) },
+    { title: 'Wide / narrow', tags: ['descriptor', 'wide', 'narrow', 'pad'], blurb: `wide = ${deltasOf('wide')}; narrow = ${deltasOf('narrow')}. From a slightly swept pad (width .6): wide crosses .8 and gets the reversed copy on the other side, narrow returns to mono. Headphones.`, ...ab('pad', ['wide', 'narrow'], { width: .6 }) },
+    { title: 'Driving / floating', tags: ['descriptor', 'driving', 'floating', 'drums'], blurb: `driving = ${deltasOf('driving')}; floating = ${deltasOf('floating')}. Driving pulls kick and snare onto the pulse and chokes the hats; floating pushes them off the beat into a little room.`, ...ab('drums', ['driving', 'floating'], { density: .7 }) },
+    { title: 'Swung / straight', tags: ['descriptor', 'swung', 'straight', 'drums'], blurb: `swung = ${deltasOf('swung')}; straight = ${deltasOf('straight')}. Groove is one-sided, so this starts from a swung kit (groove .7): swung pins it at the maximum, straight lands below .5, which is straight.`, ...ab('drums', ['swung', 'straight'], { density: .8, groove: .7 }) },
+    { title: 'Aggressive / smooth', tags: ['descriptor', 'aggressive', 'smooth', 'bass'], blurb: `aggressive = ${deltasOf('aggressive')}; smooth = ${deltasOf('smooth')}. From a gritty, short bass (aggression .7, articulation .6): aggressive squares it off, smooth removes the distortion and lets the notes ring.`, ...ab('bass', ['aggressive', 'smooth'], { aggression: .7, articulation: .6 }) },
     { title: 'Tight', tags: ['descriptor', 'drums'], blurb: `tight = ${deltasOf('tight')}. Shorter hits, less swing, less jitter. The baseline is already straight and mechanical, so this starts from a swung, human kit.`, ...ab('drums', 'tight', { density: .8, groove: .8, organicness: .8 }) },
     { title: 'Loose', tags: ['descriptor', 'drums'], blurb: `loose = ${deltasOf('loose')}. Longer hits, swing, timing and level jitter.`, ...ab('drums', 'loose', { density: .8 }) },
     { title: 'Mechanical', tags: ['descriptor', 'drums'], blurb: `mechanical = ${deltasOf('mechanical')}. Starts from a human, swung kit with fills and takes all three away.`, ...ab('drums', 'mechanical', { density: .7, groove: .8, organicness: .9, variation: .7 }, 8) },
     { title: 'Human', tags: ['descriptor', 'drums'], blurb: `human = ${deltasOf('human')}. Jittered timing and level, a hint of swing.`, ...ab('drums', 'human', { density: .7 }) },
   ] },
-  { id: 'modifiers', title: 'Modifiers', blurb: `Modifiers scale a descriptor's deltas: ${Object.entries(MODIFIERS).map(([w, k]) => `${w} ×${k}`).join(', ')}. "less" flips the sign before scaling. The change is deterministic: the same words on the same numbers always give the same numbers, clamped to 0..1.`, items: [
+  { id: 'overlays', title: 'Overlays', blurb: 'An overlay is a descriptor that spans several layers: an emotion or a genre (lib/overlays.json) rather than one control. It resolves exactly like a descriptor, the same deltas through the same resolver, but it is meant for a whole section, so each card applies it to every layer at once and each layer keeps only the axes it has a cell for.', items: [
+    { title: 'Sad', tags: ['overlay', 'sad', 'all layers'], blurb: `sad = ${deltasOf('sad')}. Darker, off the pulse, a little room, longer notes; the register delta is too small to move an octave.`, ...overlay('sad') },
+    { title: 'Happy', tags: ['overlay', 'happy', 'all layers'], blurb: `happy = ${deltasOf('happy')}. Brighter, onto the pulse, shorter notes.`, ...overlay('happy') },
+    { title: 'Ominous', tags: ['overlay', 'ominous', 'all layers'], blurb: `ominous = ${deltasOf('ominous')}. Dark and low with room and less going on: the bass drops to two notes, the pad to a power chord.`, ...overlay('ominous') },
+    { title: 'Euphoric', tags: ['overlay', 'euphoric', 'all layers'], blurb: `euphoric = ${deltasOf('euphoric')}. Bright, full, wide and roomy: every drum voice with 16th hats, doubled melody notes, the pad swept wide.`, ...overlay('euphoric') },
+    { title: 'Hypnotic', tags: ['overlay', 'hypnotic', 'all layers'], blurb: `hypnotic = ${deltasOf('hypnotic')}. Variation is one-sided, so that delta is inert from the baseline; what changes is a nudge onto the pulse, the open hat dropping out and a bass with two notes a bar instead of four.`, ...overlay('hypnotic') },
+    { title: 'Chaotic', tags: ['overlay', 'chaotic', 'all layers'], blurb: `chaotic = ${deltasOf('chaotic')}. Fills, reversed bars, bass octave jumps, melody bursts, more of everything, a little grit. Eight cycles so the fills land.`, ...overlay('chaotic', 8) },
+    { title: 'Playful', tags: ['overlay', 'playful', 'all layers'], blurb: `playful = ${deltasOf('playful')}. Some fills, some swing, a little brighter; the register delta is too small to move an octave.`, ...overlay('playful', 8) },
+    { title: 'Cinematic', tags: ['overlay', 'cinematic', 'all layers'], blurb: `cinematic = ${deltasOf('cinematic')}. Big room, wide image, more body, slower notes.`, ...overlay('cinematic') },
+  ] },
+  { id: 'modifiers', title: 'Modifiers', blurb: `Modifiers scale a descriptor's deltas: ${Object.entries(MODIFIERS).map(([w, k]) => `${w} ×${k}`).join(', ')}. That is the full set. "less" flips the sign before scaling. The change is deterministic: the same words on the same numbers always give the same numbers, clamped to 0..1.`, items: [
+    { title: 'Every modifier', tags: ['modifier', 'spacious', 'pad'], blurb: `The whole set on one word, from a dry, narrow pad (space .1, width .3). Synonyms give identical numbers: a little and a bit are slightly, way and a lot are much, and more is ×1, the plain form. Stacked modifiers multiply: "slightly more spacious" is ×0.5 × ×1.`,
+      svg: deltaBars(MODS.filter((_, i) => ![1, 2, 7, 8].includes(i)), DRY), explain: 'Per axis, top to bottom: ×0.5, ×0.75, ×1, ×1.5, ×2, ×3. Width only starts to matter once it passes the centred baseline.',
+      variants: [{ label: 'Dry pad', hll: layer('pad', DRY) }, ...MODS.map((p, i) => ({ label: p, alias: [1, 2, 7, 8].includes(i) || undefined, hll: layer('pad', said(p, DRY), 4, `"${p}"`) }))] },
     { title: 'Heavier, four ways', tags: ['modifier', 'heavy', 'bass'], blurb: `heavy = ${deltasOf('heavy')}. Each step scales those three deltas; "much" already pins weight at 1, so "extremely" only has aggression and register left to move.`,
       svg: deltaBars(['slightly heavier', 'heavier', 'much heavier', 'extremely heavier']), explain: 'Per axis, top to bottom: slightly (×0.5), plain (×1), much (×2), extremely (×3). The bars stop at the edge of the track: that is the clamp.',
       variants: [{ label: 'Baseline', hll: layer('bass', '{}') }, ...['slightly heavier', 'heavier', 'much heavier', 'extremely heavier'].map((p) => ({ label: p, hll: layer('bass', said(p), 4, `"${p}"`) }))] },
@@ -155,6 +204,75 @@ export const GROUPS = [
     { title: 'Modes', tags: ['harmony', 'mode'], blurb: 'A mode word swaps the scale on the same root: dorian is minor with a raised sixth, phrygian minor with a flattened second, lydian major with a raised fourth, mixolydian major with a flattened seventh.',
       svg: strip([['dorian', 'dorian'], ['phrygian', 'phrygian'], ['lydian', 'lydian'], ['mixolydian', 'mixolydian']]),
       variants: ['dorian', 'phrygian', 'lydian', 'mixolydian'].map((m) => ({ label: m, hll: `song({ cps: .5, key: 'D:${m}', seed: 3 }, [section('a', 4, { progression: 'i VII', pad: {}, bass: {}, melody: { follow: true } })]) // "${m}"` })) },
+  ] },
+  { id: 'progressions', title: 'Progression syntax', blurb: 'Beyond the words: a progression string takes b or # before a numeral, m, M or dim after it, 7 or M7 for sevenths, and [..] to put several chords in one bar. Degrees are diatonic to the section key, any Strudel scale name. Each variant label shows the chord names npm run check prints for it, straight from lib/harmony.mjs.', items: [
+    { title: 'Accidentals and borrowed chords', tags: ['progression', 'accidental', 'borrowed', 'C major'], blurb: 'b and # move the root a semitone and set the triad from the numeral\'s case; a suffix sets the quality outright. bVI in C major is Ab, #iv is F# minor, IVm the borrowed F minor.',
+      svg: chords([['diatonic', 'I IV V I'], ['bVI', 'I bVI V I'], ['#iv', 'I #iv V I'], ['IVm', 'I IVm V I']]),
+      variants: [prog('C:major', 'I IV V I', 'C F G C'), prog('C:major', 'I bVI V I', 'C Ab G C'), prog('C:major', 'I #iv V I', 'C F#m G C'), prog('C:major', 'I IVm V I', 'C Fm G C')] },
+    { title: 'Case and quality suffixes', tags: ['progression', 'quality', 'C minor'], blurb: 'Case never changes a plain diatonic triad: I IV V I in C minor is still Cm Fm Gm Cm (an alias of i iv v i). To raise the leading tone write VM, to get a diminished chord write dim.',
+      svg: chords([['i iv v i', 'i iv v i'], ['VM', 'i iv VM i'], ['viidim', 'i iv viidim i']]),
+      variants: [prog('C:minor', 'i iv v i', 'Cm Fm Gm Cm'), prog('C:minor', 'I IV V I', 'Cm Fm Gm Cm', { alias: true }), prog('C:minor', 'i iv VM i', 'Cm Fm G Cm'), prog('C:minor', 'i iv viidim i', 'Cm Fm Bbdim Cm')] },
+    { title: 'Sevenths', tags: ['progression', 'seventh', 'C minor'], blurb: 'A 7 makes a four-tone chord and here the case does set the triad: V7 is the dominant seventh in any key, v7 the diatonic minor seventh, VM7 a major seventh. The pad voices all four tones.',
+      svg: chords([['triads', 'i iv v i'], ['V7', 'i iv V7 i'], ['v7', 'i iv v7 i'], ['VM7', 'i iv VM7 i']]),
+      variants: [prog('C:minor', 'i iv v i', 'Cm Fm Gm Cm'), prog('C:minor', 'i iv V7 i', 'Cm Fm G7 Cm'), prog('C:minor', 'i iv v7 i', 'Cm Fm Gm7 Cm'), prog('C:minor', 'i iv VM7 i', 'Cm Fm Gmaj7 Cm')] },
+    { title: 'Several chords in one bar', tags: ['progression', 'bracket', 'C minor'], blurb: 'Brackets put chords inside one cycle: the same four chords take four bars or two, and the bass and pad change twice a bar.',
+      svg: chords([['one per bar', 'i VI III VII'], ['two per bar', '[i VI] [III VII]']]),
+      variants: [prog('C:minor', 'i VI III VII', 'Cm Ab Eb Bb'), prog('C:minor', '[i VI] [III VII]', '[Cm Ab] [Eb Bb]')] },
+    { title: 'Any Strudel scale as the key', tags: ['progression', 'key', 'harmonic minor'], blurb: 'The key is any scale name Strudel knows. Natural minor has a minor v; C:harmonic minor raises the seventh, so the same i iv v i gets a real major V.',
+      svg: strip([['C minor', 'minor'], ['C harmonic minor', 'harmonic minor']]), explain: 'Same root, one cell moves: the seventh goes from Bb to B, and the v chord built on G picks it up as its third.',
+      variants: [prog('C:minor', 'i iv v i', 'Cm Fm Gm Cm'), prog('C:harmonic minor', 'i iv v i', 'Cm Fm G Cm')] },
+    { title: 'The default progression', tags: ['progression', 'default', 'C minor'], blurb: 'A section with no progression gets i VI: the two variants are identical.',
+      svg: chords([['default', 'i VI']]),
+      variants: [{ label: 'no progression', hll: `song({ cps: .5, key: 'C:minor', seed: 3 }, [section('a', 4, { pad: {}, bass: {} })])` }, prog('C:minor', 'i VI', 'Cm Ab', { alias: true })] },
+  ] },
+  { id: 'material', title: 'Material', blurb: 'Material is a literal value on a layer, never an axis: a template, a sound, a line of notes, a gain. It has no baseline to move around, so the resolver never touches it; omit it and the layer\'s default stands. Each card is that default against one literal.', items: [
+    { title: 'Drum template', tags: ['material', 'drums', 'template'], blurb: 'template is the base grid the axes then thin out, place or fill: house (the default), breaks, minimal or halftime. Density and drive are the same in all four.',
+      svg: grid([[0, 3, 6, 10, 12], [0, 8], [0, 10]], ['breaks: kick', 'minimal: kick', 'halftime: kick'], { beats: true }),
+      variants: ['house', 'breaks', 'minimal', 'halftime'].map((t) => ({ label: t, hll: layer('drums', { template: `'${t}'`, density: .7 }) })) },
+    { title: 'Drum sounds', tags: ['material', 'drums', 'sounds'], blurb: 'sounds swaps one voice at a time; the kit still applies, so rim is the 909 rim and hh:2 its third hat sample.',
+      variants: [{ label: 'Kit voices', hll: layer('drums', { density: .7 }) }, { label: "sounds: { sd: 'rim', hh: 'hh:2' }", hll: layer('drums', { density: .7, sounds: "{ sd: 'rim', hh: 'hh:2' }" }) }] },
+    { title: 'Drum fill', tags: ['material', 'drums', 'fill'], blurb: 'fill: true rolls the snare over the last half bar of the section, rising in level. It is on by default before a climax section (see Song and section metadata); this forces it on a lone layer.',
+      svg: grid([EVENS, [...EVENS, ...[8, 9, 10, 11, 12, 13, 14, 15].map((i) => ({ i, on: true, a: .4 + (i - 8) * .08 }))]], ['no fill', 'fill: snare roll over the last half bar, rising']),
+      variants: [{ label: 'No fill', hll: layer('drums', { density: .7 }) }, { label: 'fill: true', hll: layer('drums', { density: .7, fill: 'true' }) }] },
+    { title: 'Notes', tags: ['material', 'bass', 'melody', 'notes'], blurb: 'notes replaces the seeded line with your own scale degrees (mini-notation). The bass line still transposes by the chord root and the melody still follows; density then thins or doubles what you wrote instead of choosing a line.',
+      variants: [{ label: 'Seeded lines', hll: sec4({ bass: {}, melody: { follow: 'true' } }) }, { label: 'bass: notes', hll: sec4({ bass: { notes: "'0 2 4 5'" }, melody: { follow: 'true' } }) }, { label: 'melody: notes', hll: sec4({ bass: {}, melody: { follow: 'true', notes: "'0 2 4 7 ~ 4 2 0'" } }) }] },
+    { title: 'Melody phrase', tags: ['material', 'melody', 'phrase'], blurb: 'phrase is how many bars the seeded line spans before it repeats: 1 by default, so a 2 or 4 gives a longer line from the same seed. The progression still advances every bar. Eight cycles so the long phrases repeat once.',
+      variants: [{ label: 'phrase: 1 (default)', hll: layer('melody', { follow: 'true' }, 8) }, { label: 'phrase: 2', hll: layer('melody', { follow: 'true', phrase: 2 }, 8) }, { label: 'phrase: 4', hll: layer('melody', { follow: 'true', phrase: 4 }, 8) }] },
+    { title: 'Pad chord', tags: ['material', 'pad', 'chord'], blurb: 'chord pins the pad to a scale degree (a number or a mini-notation of degrees) instead of the progression; the bass keeps following the progression. Here the default progression is i VI.',
+      svg: chords([['progression', 'i VI'], ['chord: 0', 'i i'], ['chord: &lt;0 3 4 3&gt;', 'i iv v iv']]),
+      variants: [{ label: 'Follows the progression', hll: layer('pad', {}) }, { label: 'chord: 0', hll: layer('pad', { chord: 0 }) }, { label: "chord: '<0 3 4 3>'", hll: layer('pad', { chord: "'<0 3 4 3>'" }) }] },
+    { title: 'Pad arp', tags: ['material', 'pad', 'arp'], blurb: 'arp plays the chord one tone at a time in 8ths: up, down, updown, or an index pattern into the chord tones ("0 2 1 2" is root, fifth, third, fifth).',
+      svg: grid([[0, 2, 4, 6, 8, 10, 12, 14].map((i, k) => ({ i, a: [.4, .7, 1][k % 3] })), [0, 2, 4, 6, 8, 10, 12, 14].map((i, k) => ({ i, a: [1, .7, .4][k % 3] })), [0, 2, 4, 6, 8, 10, 12, 14].map((i, k) => ({ i, a: [.4, .7, 1, .7][k % 4] }))], ['up', 'down', 'updown'], { bottom: true }),
+      variants: [{ label: 'Block chord', hll: layer('pad', {}) }, ...['up', 'down', 'updown'].map((a) => ({ label: `arp: '${a}'`, hll: layer('pad', { arp: `'${a}'` }) })), { label: 'arp: "0 2 1 2"', hll: layer('pad', { arp: '"0 2 1 2"' }) }] },
+    { title: 'Sound', tags: ['material', 'sound', 'bass', 'melody', 'pad'], blurb: 'sound replaces the default sawtooth on any melodic layer with a synth or a sample name from the loaded packs; the axes still shape it.',
+      variants: [{ label: 'bass: sawtooth (default)', hll: layer('bass', {}) }, { label: "bass: sound: 'square'", hll: layer('bass', { sound: "'square'" }) }, { label: "melody: sound: 'triangle'", hll: layer('melody', { sound: "'triangle'" }) }, { label: "pad: sound: 'piano'", hll: layer('pad', { sound: "'piano'" }) }] },
+    { title: 'Level', tags: ['material', 'level', 'drums'], blurb: 'level is a plain gain multiplier applied after every axis, 1 meaning untouched (that variant is identical to the baseline). Use it to balance layers; weight is the axis that changes how they sound.',
+      variants: [{ label: 'Baseline', hll: layer('drums', { density: .7 }) }, { label: 'level: 1', alias: true, hll: layer('drums', { density: .7, level: 1 }) }, { label: 'level: .5', hll: layer('drums', { density: .7, level: .5 }) }, { label: 'level: 1.5', hll: layer('drums', { density: .7, level: 1.5 }) }] },
+  ] },
+  { id: 'fx', title: 'FX layer', blurb: 'The fx layer is transition material: a noise riser into the next section and an impact on this one\'s downbeat. It carries three axes (brightness, space, weight) and is silent unless you give it a riser or an impact. Every card is a build into a drop.', items: [
+    { title: 'Riser', tags: ['fx', 'riser', 'sections'], blurb: 'riser: true sweeps filtered noise up over the last four bars of its section; a number is the bar count. The build is four bars, so true covers all of it and 2 only its second half.',
+      svg: timeline([['build', 4, .5, true, [.1, 1]], ['drop', 4, .9]], 'fx riser in the build'),
+      variants: [{ label: 'No fx', hll: s2(BUILD(), DROP()) }, { label: 'riser: true', hll: s2(BUILD({ riser: 'true' }), DROP()) }, { label: 'riser: 2', hll: s2(BUILD({ riser: 2 }), DROP()) }] },
+    { title: 'Impact', tags: ['fx', 'impact', 'sections'], blurb: 'impact: true drops one bd on the section\'s first downbeat at half speed in a big room; a sound name uses that instead.',
+      svg: timeline([['build', 4, .5], ['drop', 4, .9, true]], 'fx impact on the drop\'s downbeat'),
+      variants: [{ label: 'No fx', hll: s2(BUILD(), DROP()) }, { label: 'impact: true', hll: s2(BUILD(), DROP({ impact: 'true' })) }, { label: "impact: 'metal'", hll: s2(BUILD(), DROP({ impact: "'metal'" })) }] },
+    { title: 'Brightness on the fx', tags: ['fx', 'brightness'], blurb: 'The riser\'s filter sweep is scaled by ×0.25 to ×2.5: a dark riser stays a rumble, a bright one opens to hiss.', svg: lowpass, variants: lbh('fx', 'brightness', .1, .9, { riser: 'true' }) },
+    { title: 'Space on the fx', tags: ['fx', 'space'], blurb: 'Room and size on the riser, from dry to washed out.', svg: bands(['low: dry', 'baseline', 'high: long tail'], (r, y) => tail([12, 60, 190][r])(r, y)), variants: lbh('fx', 'space', .1, .95, { riser: 'true' }) },
+    { title: 'Weight on the fx', tags: ['fx', 'weight'], blurb: 'Level of the riser, ×0.5 to ×1.5: how much the sweep dominates the mix as it arrives.', svg: grid([spectrum(-.3), spectrum(0), spectrum(.65)], ['low', 'baseline', 'high'], { bottom: true }), variants: lbh('fx', 'weight', .1, .9, { riser: 'true' }) },
+  ] },
+  { id: 'metadata', title: 'Song and section metadata', blurb: 'Keys on song() and section() that are neither axes nor layer material: kit, meter, bpm or cps, and role. Whatever they say, one bar is still one cycle.', items: [
+    { title: 'Kit', tags: ['metadata', 'kit', 'drums'], blurb: 'kit on the song names the drum machine every section uses; a section can override it. Here the song is an 808 and section b switches to the 909.',
+      variants: [{ label: 'Song kit only', hll: `song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR808' }, [\n  section('a', 4, { drums: { density: .7 } }),\n  section('b', 4, { drums: { density: .7 } }),\n])` }, { label: "b: kit: 'RolandTR909'", hll: `song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR808' }, [\n  section('a', 4, { drums: { density: .7 } }),\n  section('b', 4, { kit: 'RolandTR909', drums: { density: .7 } }),\n])` }] },
+    { title: 'Meter', tags: ['metadata', 'meter', 'drums', 'bass'], blurb: 'meter sets the grid: 3/4 is 12 sixteenths a bar, 6/8 twelve with a pulse every two, 7/8 fourteen, 5/4 twenty. A bar is still one cycle, so with cps fixed every bar lasts the same two seconds and the beats get faster or slower; with bpm the beat stays put instead.',
+      variants: ['4/4', '3/4', '6/8', '7/8', '5/4'].map((m) => ({ label: m, hll: `song({ cps: .5, key: 'C:minor', seed: 3, meter: '${m}' }, [section('a', 4, { drums: { density: .7 }, bass: {} })])` })) },
+    { title: 'bpm instead of cps', tags: ['metadata', 'bpm', 'cps'], blurb: 'bpm is beats per minute on the meter\'s denominator: in 4/4, 120 bpm is four beats a bar at two seconds a bar, exactly cps .5 (identical variants). Give one or the other, not both. Tempo is only the clock, so any other bpm plays the same events faster or slower; to hear a tempo change inside a song, see Per-section tempo.',
+      variants: [{ label: 'cps: .5', hll: `song({ cps: .5, key: 'C:minor', seed: 3 }, [section('a', 4, { drums: { density: .7 }, bass: {} })])` }, { label: 'bpm: 120', alias: true, hll: `song({ bpm: 120, key: 'C:minor', seed: 3 }, [section('a', 4, { drums: { density: .7 }, bass: {} })])` }] },
+    { title: 'Per-section tempo', tags: ['metadata', 'bpm', 'cps', 'sections'], blurb: 'A section can carry its own bpm or cps. Its bars are still cycles of its own; the song just spends less or more time on them.',
+      svg: timeline([['a', 4, .5], ['b', 3, .7, true]], 'b at its own tempo: same bars, less time'),
+      variants: [{ label: 'One tempo', hll: s2(`section('a', 4, { drums: { density: .7 }, bass: {} })`, `section('b', 4, { drums: { density: .7 }, bass: {} })`) }, { label: 'b: bpm: 160', hll: s2(`section('a', 4, { drums: { density: .7 }, bass: {} })`, `section('b', 4, { bpm: 160, drums: { density: .7 }, bass: {} })`) }, { label: 'b: cps: .75', hll: s2(`section('a', 4, { drums: { density: .7 }, bass: {} })`, `section('b', 4, { cps: .75, drums: { density: .7 }, bass: {} })`) }] },
+    { title: 'Role', tags: ['metadata', 'role', 'fill', 'drums'], blurb: 'role names what a section is for. Its one automatic effect: the section before a climax gets a drum fill. Nothing else reads it, so a climax with fill: false on the section before is identical to no role at all.',
+      svg: timeline([['a', 4, .5, true], ['climax', 4, .9]], 'role: climax on b, so a fills into it'),
+      variants: [{ label: "b: role: 'climax'", hll: s2(`section('a', 4, { drums: { density: .7 } })`, `section('b', 4, { role: 'climax', drums: { density: .9 } })`) }, { label: 'No role', hll: s2(`section('a', 4, { drums: { density: .7 } })`, `section('b', 4, { drums: { density: .9 } })`) }, { label: 'climax, a: fill: false', alias: true, hll: s2(`section('a', 4, { drums: { density: .7, fill: false } })`, `section('b', 4, { role: 'climax', drums: { density: .9 } })`) }] },
   ] },
   { id: 'sections', title: 'Section-level edits', blurb: 'The editing workflow: a request names a section, and only that section\'s numbers move. Everything else stays byte-identical, so the change is easy to hear and easy to review. Each Before/After pair below differs in exactly one section, the filled block in its picture.', items: [
     { title: 'Make the verse dreamier', tags: ['section', 'dreamy', 'pad', 'melody'], blurb: `"dreamier" (${deltasOf('dreamy')}) applied to the verse's pad and melody. Intro and chorus are untouched.`,
@@ -187,11 +305,21 @@ export const GROUPS = [
         { label: 'Before', hll: `${SONG}\n  section('drop', 8, { drums: { density: .8, drive: .7 }, bass: { weight: .7 }, pad: {} }),\n  section('break', 4, { drums: { density: .3 }, pad: { space: .8 } }),\n  section('drop2', 8, { drums: { density: .8, drive: .7 }, bass: { weight: .7 }, pad: {} }),\n])` },
         { label: 'After', hll: `${SONG}\n  section('drop', 8, { drums: { density: .8, drive: .7 }, bass: { weight: .7 }, pad: {} }),\n  section('break', 4, { drums: { density: .3 }, pad: { space: .8 } }),\n  section('drop2', 8, { drums: { density: .8, drive: .7, variation: .9 }, bass: { weight: .7, variation: .9 }, pad: {} }), // "more variation in the final drop"\n])` },
       ] },
+    { title: 'Reuse a section with spread', tags: ['section', 'reuse', 'spread'], blurb: 'Sections are JavaScript: keep one in a const and spread it, overriding a layer\'s axes with a nested spread. The spread variant is identical to writing the section twice. The resolver refuses to edit a spread layer (it cannot see the baseline it would be editing), so set those axes by hand.',
+      svg: timeline([['verse', 4, .5], ['verse2', 4, .5, true]], 'verse2 = { ...verse, drums: { ...verse.drums, variation: .7 } }'),
+      variants: [
+        { label: 'Written twice', hll: `${SONG}\n  section('verse', 4, { drums: { density: .6 }, bass: {}, melody: { follow: true }, pad: {} }),\n  section('verse2', 4, { drums: { density: .6 }, bass: {}, melody: { follow: true }, pad: {} }),\n])` },
+        { label: 'Spread', alias: true, hll: `${VERSE}\n${SONG}\n  section('verse', 4, verse),\n  section('verse2', 4, verse),\n])` },
+        { label: 'Spread with an override', hll: `${VERSE}\n${SONG}\n  section('verse', 4, verse),\n  section('verse2', 4, { ...verse, drums: { ...verse.drums, variation: .7 } }), // the resolver will not edit this layer\n])` },
+      ] },
   ] },
   { id: 'trajectories', title: 'Trajectories', blurb: 'A continuous axis can take a signal instead of a number. ramp(a, b) is a saw that spans exactly the section it sits in; any Strudel signal (saw, sine, perlin…) works too. Structural axes (density, drive, variation, register) take numbers only. Open the expanded Strudel to see the signal mapped through the same control the constant would use.', items: [
     { title: 'Brightness rising through a section', tags: ['trajectory', 'brightness', 'pad', 'signal'], blurb: 'The pad opens from dark to bright over eight cycles. ramp(.1, .9) and the explicit saw are the same thing; ramp just knows the section length.',
       svg: rampSvg(.1, .9, 'brightness: ramp(.1, .9), one section'), explain: 'A constant sits on one horizontal line for the whole section. A ramp draws the diagonal instead: the value the control sees keeps moving.',
       variants: [{ label: 'Constant', hll: layer('pad', '{ brightness: .5 }', 8) }, { label: 'ramp(.1, .9)', hll: layer('pad', '{ brightness: ramp(.1, .9) }', 8) }, { label: 'saw.range(.1, .9).slow(8)', alias: true, hll: layer('pad', '{ brightness: saw.range(.1, .9).slow(8) }', 8) }] },
+    { title: 'Sine and perlin', tags: ['trajectory', 'brightness', 'pad', 'signal', 'sine', 'perlin'], blurb: 'Any Strudel signal works where a number would: a sine breathes the pad\'s filter open and closed every four bars, perlin wanders it. Each chord samples the signal where it starts, so a slow signal reads as a value per bar.',
+      svg: svg(`<line x1="8" y1="67" x2="211" y2="67" stroke="#c9c9c9" stroke-dasharray="3 3" />` + `<path d="M8,67 ${Array.from({ length: 34 }, (_, i) => `L${8 + i * 6},${(67 - 45 * Math.sin(i / 33 * Math.PI * 4)).toFixed(1)}`).join(' ')}" fill="none" stroke="${HI}" stroke-width="2" />` + txt(8, 14, 'brightness: sine.range(.2, .9).slow(4)') + txt(150, 63, 'baseline .5')),
+      variants: [{ label: 'Constant', hll: layer('pad', '{ brightness: .5 }', 8) }, { label: 'sine.range(.2, .9).slow(4)', hll: layer('pad', '{ brightness: sine.range(.2, .9).slow(4) }', 8) }, { label: 'perlin.range(.2, .9)', hll: layer('pad', '{ brightness: perlin.range(.2, .9) }', 8) }] },
     { title: 'Width opening gradually', tags: ['trajectory', 'width', 'pad', 'signal'], blurb: 'The pan sweep grows from nothing to full over the section. Headphones.',
       svg: rampSvg(.5, 1, 'width: ramp(.5, 1), centred to full sweep'),
       variants: [{ label: 'Fixed width', hll: layer('pad', '{ width: .5 }', 8) }, { label: 'ramp(.5, 1)', hll: layer('pad', '{ width: ramp(.5, 1) }', 8) }] },
