@@ -47,8 +47,8 @@
     <summary><h2>Mix</h2><small id="mixsec"></small><small>&middot; one slider per axis the layer adapts</small><span class="grow"></span><button class="undo" title="undo (ctrl+z)" disabled>&#8630;</button><button class="redo" title="redo (ctrl+shift+z)" disabled>&#8631;</button></summary>
     <!-- strip: a block per section, flex-grown by its span, one row per layer shaded by density. Click scrubs there (and re-pins when pinned); the pin loops it, starts Play there and keeps the card on it; arrows reorder; the copy duplicates it under a numbered name; × removes it -->
     <div class="strip" id="strip"></div>
-    <!-- source: the shown section's own section(...) call; it follows every edit, and typing in it edits the song at that span -->
-    <details class="panel" id="secsrc"><summary>source</summary><textarea id="sectext" spellcheck="false" title="this section's code: edits land in the song and the knobs follow"></textarea></details>
+    <!-- source: the shown section's own section(...) call in a CodeMirror editor (web/cm-editor.mjs); it follows every edit, typing in it edits the song at that span, and "controls" puts a slider or select after each literal the schema knows (web/hll-schema.mjs) -->
+    <details class="panel" id="secsrc"><summary>source<label class="tweak" title="a slider or select after each value with known semantics; alt-drag a number works either way"><input type="checkbox" id="tweak"> controls</label></summary><div id="sectext" title="this section's code: edits land in the song and the knobs follow"></div></details>
     <details class="panel" id="axes" open><summary>axes</summary><div class="knobs" id="knobs"></div></details>
     <!-- materials: the strings behind each part (drum template and per-voice samples, the synth or sample a part plays, arp order, follow); sound names autocomplete from the loaded packs -->
     <details class="panel" id="mats"><summary>materials</summary><div id="matlist"></div><label class="pvlvl" title="how loud the previews play (every &#9654; in this panel and its menu); not written to the song">preview level <input class="pvin" type="range" min="-1" max="1.7" step=".01" value="0"><output>x1.0</output></label></details>
@@ -103,13 +103,31 @@
   </section>
 </main>
 <footer class="site" id="foot"></footer>
-<script type="importmap">{ "imports": { "acorn": "./node_modules/acorn/dist/acorn.mjs" } }</script>
+<script type="importmap">{ "imports": {
+  "acorn": "./node_modules/acorn/dist/acorn.mjs",
+  "@codemirror/state": "./node_modules/@codemirror/state/dist/index.js",
+  "@codemirror/view": "./node_modules/@codemirror/view/dist/index.js",
+  "@codemirror/language": "./node_modules/@codemirror/language/dist/index.js",
+  "@codemirror/commands": "./node_modules/@codemirror/commands/dist/index.js",
+  "@codemirror/autocomplete": "./node_modules/@codemirror/autocomplete/dist/index.js",
+  "@codemirror/lang-javascript": "./node_modules/@codemirror/lang-javascript/dist/index.js",
+  "@lezer/common": "./node_modules/@lezer/common/dist/index.js",
+  "@lezer/highlight": "./node_modules/@lezer/highlight/dist/index.js",
+  "@lezer/lr": "./node_modules/@lezer/lr/dist/index.js",
+  "@lezer/javascript": "./node_modules/@lezer/javascript/dist/index.js",
+  "style-mod": "./node_modules/style-mod/src/style-mod.js",
+  "w3c-keyname": "./node_modules/w3c-keyname/index.js",
+  "crelt": "./node_modules/crelt/index.js",
+  "@marijn/find-cluster-break": "./node_modules/@marijn/find-cluster-break/src/index.js"
+} }</script>
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks } from './web/boot.mjs';
   import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile, verifyRows } from './web/compose.mjs';
   import { packsOf, packKind, SYNTHS } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
+  import { createEditor } from './web/cm-editor.mjs';
+  import { SCHEMA } from './web/hll-schema.mjs';
   import { fmt, locate, setAxis, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection } from './lib/resolve.mjs';
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase } from './lib/song.mjs';
@@ -323,7 +341,7 @@
     if (!from.length) return;
     to.push(current); current = from.pop(); stamp = 0;
     $('code').value = current;
-    if (document.activeElement === $('sectext')) $('sectext').blur(); // so the section pane re-reads the restored source instead of being taken as mid-edit
+    if (secTyping()) document.activeElement.blur(); // so the section pane re-reads the restored source instead of being taken as mid-edit
     $('mixstatus').textContent = from === past ? 'undone' : 'redone'; // the previous status described an edit that is no longer there
     $('vout').hidden = true;
     syncUndo();
@@ -509,12 +527,17 @@
   let mixSection = null; // name of the section the card shows
   let secAt = { start: 0, end: 0 }; // where that section's call sits in the source; the source pane's text replaces exactly this span
   let knobDrag = false; // set for the life of a knob drag (a focused knob is not enough: it keeps focus after the drag ends, and the rebuild on change must happen)
-  $('sectext').addEventListener('input', () => {
-    const src = $('code').value, text = $('sectext').value;
+  // the section pane: a CodeMirror editor over just that call; an edit in it (typing, a control, an alt-drag) replaces the span in the song source
+  const secEd = createEditor({ parent: $('sectext'), schema: SCHEMA, onChange: (text) => {
+    const src = $('code').value;
     const next = src.slice(0, secAt.start) + text + src.slice(secAt.end);
     secAt.end = secAt.start + text.length;
     commit(next, true); edited();
-  });
+  } });
+  const secTyping = () => $('sectext').contains(document.activeElement); // the editor or one of its inline controls has focus
+  $('tweak').onclick = (e) => e.stopPropagation(); // a click on the label must not fold the panel
+  $('tweak').onchange = () => { secEd.setControls($('tweak').checked); try { localStorage.setItem('strudel:tweak', $('tweak').checked ? '1' : ''); } catch {} };
+  try { if (localStorage.getItem('strudel:tweak')) { $('tweak').checked = true; secEd.setControls(true); } } catch {}
   let updateTimer;
   function edited() { // the source changed under a control: derived views follow, and the player picks it up shortly
     sourceChanged(); expandSoon();
@@ -528,11 +551,11 @@
   }
   function mixRender() {
     let m; try { m = locate($('code').value); } catch (e) { if (!(e instanceof SyntaxError)) $('mix').hidden = true; return; } // plain strudel: nothing to mix; mid-edit syntax error: keep the last card
-    const typing = document.activeElement === $('sectext'); // the section pane is being edited: keep its section by position (its name may be mid-edit) and leave its text alone
+    const typing = secTyping(); // the section pane is being edited: keep its section by position (its name may be mid-edit) and leave its text alone
     const s = typing ? m.sections.find((x) => x.node.start === secAt.start) : m.sections.find((x) => x.name === (pinned ?? mixSection)) ?? m.sections[0];
     if (!s) return;
     mixSection = s.name;
-    if (!typing) { secAt = { start: s.node.start, end: s.node.end }; $('sectext').value = $('code').value.slice(secAt.start, secAt.end); }
+    if (!typing) { secAt = { start: s.node.start, end: s.node.end }; secEd.setText($('code').value.slice(secAt.start, secAt.end)); }
     if (knobDrag) return; // a knob is being dragged: its value is already right, and rebuilding the knobs would drop the drag; the pane above still followed
     parts = Object.keys(s.layers); listTerms(); // the pill box offers this section's part names
     $('mix').hidden = false;
