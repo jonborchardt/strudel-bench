@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { encodeMp3 } from '../web/mp3.mjs';
-import { readWav } from './analyze.mjs';
+import { readWav } from '../lib/analyze.mjs';
 
 export function wavToMp3(wavPath, { kbps = 192 } = {}) {
   const { rate, frames } = readWav(fs.readFileSync(wavPath));

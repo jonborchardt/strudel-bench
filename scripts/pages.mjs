@@ -43,6 +43,7 @@ for (const s of hidden) for (const f of [s, s.replace(/\.strudel$/, '.notes.json
 for (const p of Object.values(shipped)) for (const f of Object.values(p.sounds).flat()) copy(`samples/user/${f}`);
 copy('node_modules/@strudel/web/dist');
 copy('node_modules/@breezystack/lamejs/dist'); // web/mp3.mjs: the mp3 export encodes in the browser
+copy('node_modules/acorn/dist'); // lib/resolve.mjs: the mix card parses the song in the browser (index.html's import map)
 copy('node_modules/@strudel/web/dist/assets', 'assets'); // strudel resolves its clock SharedWorker against the page url
 const write = (rel, obj) => { fs.mkdirSync(path.dirname(path.join(OUT, rel)), { recursive: true }); fs.writeFileSync(path.join(OUT, rel), JSON.stringify(obj)); };
 write('songs/index.json', songs.filter((s) => !hidden.includes(s)));

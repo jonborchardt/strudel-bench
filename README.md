@@ -46,10 +46,10 @@ The page has two views: **Compose** (index.html) and **Examples** (examples.html
     scripts/samples.mjs  pack downloader
     scripts/check.mjs    headless checker
     scripts/dump.mjs     song() -> plain Strudel
-    scripts/resolve.mjs  words -> axis edits
+    lib/resolve.mjs      words -> axis edits (scripts/resolve.mjs is the cli; the Compose page Mix card uses it too)
     scripts/render.mjs   drive the page's offline renderer
     scripts/mp3.mjs      wav -> mp3 (lamejs)
-    scripts/analyze.mjs  wav metrics and deltas, no dependencies
+    lib/analyze.mjs      wav metrics and deltas, no dependencies (scripts/analyze.mjs: cli and wav writing)
     scripts/verify.mjs   render -> resolve -> check -> render -> analyze -> report
     scripts/vocab.mjs    generate the skill's vocabulary reference from code
     scripts/note.mjs     record why a change was made into songs/<song>.notes.json

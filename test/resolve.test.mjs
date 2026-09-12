@@ -83,3 +83,95 @@ test('harmony refuses a non-literal key', async () => {
   const plan = planEdits(src, 'a', '*', 'major');
   assert.ok(plan.refused.some((r) => r.section === 'a' && /key/.test(r.reason)));
 });
+
+test('setAxis rewrites a literal, inserts a missing axis, refuses expressions and spread', async () => {
+  await ready;
+  const { setAxis } = await import('../lib/resolve.mjs');
+  assert.match(setAxis(SRC, 'verse', 'drums', 'density', .8), /drums: \{ density: \.8, groove: \.6 \}/);
+  assert.match(setAxis(SRC, 'verse', 'drums', 'weight', 1.2), /drums: \{ density: \.6, groove: \.6, weight: 1 \}/, 'inserted at the end, clamped');
+  assert.throws(() => setAxis(SRC, 'verse', 'melody', 'brightness', .2), /expression/);
+  assert.throws(() => setAxis(SRC, 'drop', 'pad', 'space', .2), /no pad layer/);
+  assert.equal(setAxis(`song({}, [section('a', 4, { drums: { ...x } })])`, 'a', 'drums', 'density', .2), `song({}, [section('a', 4, { drums: { ...x, density: .2 } })])`, 'after the spread: an override');
+});
+
+test('planEdits edits a spread layer when given the evaluated attrs, refusing signals the spread brought in', async () => {
+  await ready;
+  const { planEdits, applyEdits } = await import('../lib/resolve.mjs');
+  const src = `const base = { density: .8, brightness: saw.range(0, 1) };
+song({ cps: .5 }, [
+  section('verse', 8, { drums: { ...base, weight: .3 } }),
+])`;
+  const effective = { verse: { drums: { density: .8, brightness: { queryArc() {} }, weight: .3 } } };
+  const plan = planEdits(src, 'verse', 'drums', 'a little sparser, darker, heavier', effective);
+  // sparser a little: density .8 -> .63 (override appended); heavier: weight .3 -> .65 (literal rewritten), aggression .5 -> .65 (appended)
+  assert.match(applyEdits(src, plan.edits), /drums: \{ \.\.\.base, weight: \.65, density: \.63, aggression: \.65 \}/, 'literal rewritten, overrides appended after the spread');
+  assert.ok(plan.refused.some((r) => r.axis === 'brightness' && /signal/.test(r.reason)), JSON.stringify(plan.refused));
+});
+
+test('moveSection swaps neighbours and stays put at the edges; duplicateSection copies under a free name; addLayer inserts an empty layer', async () => {
+  await ready;
+  const { moveSection, duplicateSection, addLayer, locate } = await import('../lib/resolve.mjs');
+  const moved = moveSection(SRC, 'drop', -1);
+  assert.deepEqual(locate(moved).sections.map((s) => s.name), ['drop', 'verse']);
+  assert.match(moved, /\[\n  section\('drop', 8, \{\n    drums:  \{ density: \.9 \},\n  \}\),\n  section\('verse'/, 'separators and indentation kept');
+  assert.equal(moveSection(SRC, 'verse', -1), SRC, 'first cannot move earlier');
+  assert.equal(moveSection(SRC, 'drop', 1), SRC, 'last cannot move later');
+  const dup = duplicateSection(SRC, 'verse');
+  assert.equal(dup.name, 'verse2');
+  assert.deepEqual(locate(dup.src).sections.map((s) => s.name), ['verse', 'verse2', 'drop']);
+  assert.equal(duplicateSection(dup.src, 'verse').name, 'verse3');
+  assert.match(dup.src, /\}\),\n  section\('verse2', 8, \{ role: 'develop',\n    drums: \{ density: \.6/, 'inserted after the original, same indentation');
+  const a = addLayer(SRC, 'drop', 'bass');
+  assert.equal(a.key, 'bass');
+  assert.match(a.src, /drums:  \{ density: \.9 \},\n    bass: \{\}/, 'multi-line spec: new line, same indentation');
+  const b = addLayer(a.src, 'drop', 'drums');
+  assert.equal(b.key, 'drums2', 'a second drums layer');
+  const c = addLayer(`song({}, [section('a', 4, { drums: { density: .4 } })])`, 'a', 'pad');
+  assert.equal(c.src, `song({}, [section('a', 4, { drums: { density: .4 }, pad: {} })])`, 'single-line spec stays on one line');
+  const d = addLayer(`song({}, [section('a', 4, {})])`, 'a', 'pad');
+  assert.equal(d.src, `song({}, [section('a', 4, { pad: {} })])`);
+});
+
+test('removeSection and removeLayer cut the call or property with its line and separator', async () => {
+  await ready;
+  const { removeSection, removeLayer, locate } = await import('../lib/resolve.mjs');
+  const a = removeSection(SRC, 'verse');
+  assert.equal(a, `song({ cps: .5 }, [\n  section('drop', 8, {\n    drums:  { density: .9 },\n  }),\n])`);
+  const b = removeSection(SRC, 'drop');
+  assert.deepEqual(locate(b).sections.map((s) => s.name), ['verse']);
+  assert.ok(b.endsWith("  }),\n])"), b);
+  assert.equal(removeSection(`song({}, [section('a', 1, {}), section('b', 1, {})])`, 'a'), `song({}, [section('b', 1, {})])`, 'single line');
+  const c = removeLayer(SRC, 'verse', 'drums');
+  assert.equal(c.split('\n')[1] + '\n' + c.split('\n')[2], "  section('verse', 8, { role: 'develop',\n    melody: { density: .5, brightness: saw.range(.3, .7).slow(8) },");
+  assert.equal(removeLayer(`song({}, [section('a', 1, { drums: { density: .4 }, pad: {} })])`, 'a', 'pad'), `song({}, [section('a', 1, { drums: { density: .4 }, })])`);
+  assert.throws(() => removeLayer(SRC, 'verse', 'pad'), /no pad/);
+});
+
+test('locate reads materials; setMaterial sets, replaces and drops them', async () => {
+  await ready;
+  const { locate, setMaterial } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { drums: { template: 'breaks', sounds: { sd: 'cp' }, density: .4 }, melody: { sound: 'triangle', follow: true, notes: N } })])`;
+  const L = locate(src).sections[0].layers;
+  assert.deepEqual(L.drums.mats.template.value, 'breaks');
+  assert.deepEqual(L.drums.mats.sounds.value, { sd: 'cp' });
+  assert.equal(L.melody.mats.follow.value, true);
+  assert.equal(L.melody.mats.notes.value, 'expr');
+  assert.equal(L.drums.axes.density.value, .4, 'axes still read');
+  assert.match(setMaterial(src, 'a', 'drums', 'template', "'minimal'"), /drums: \{ template: 'minimal', sounds/);
+  assert.match(setMaterial(src, 'a', 'drums', 'sounds', "{ sd: 'cp', hh: 'oh' }"), /sounds: \{ sd: 'cp', hh: 'oh' \}, density/);
+  assert.match(setMaterial(src, 'a', 'drums', 'fill', 'true'), /density: \.4, fill: true \}/, 'appended');
+  assert.match(setMaterial(src, 'a', 'melody', 'follow', null), /melody: \{ sound: 'triangle', notes: N \}/, 'dropped with its separator');
+  assert.equal(setMaterial(src, 'a', 'melody', 'arp', null), src, 'dropping an absent key is a no-op');
+});
+
+test('renameSection rewrites the name literal and refuses empty, quoted or taken names', async () => {
+  await ready;
+  const { renameSection, locate } = await import('../lib/resolve.mjs');
+  const out = renameSection(SRC, 'verse', 'chorus');
+  assert.deepEqual(locate(out).sections.map((s) => s.name), ['chorus', 'drop']);
+  assert.ok(out.startsWith("song({ cps: .5 }, [\n  section('chorus', 8, { role: 'develop',"), out);
+  assert.throws(() => renameSection(SRC, 'verse', 'drop'), /already/);
+  assert.throws(() => renameSection(SRC, 'verse', ''), /empty/);
+  assert.throws(() => renameSection(SRC, 'verse', "it's"), /quotes/);
+  assert.throws(() => renameSection(SRC, 'nope', 'x'), /no section/);
+});

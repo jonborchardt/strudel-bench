@@ -1,5 +1,6 @@
 // Pure helpers behind the Compose page's kit selector and "Ask Claude" card. No DOM, no strudel: index.html feeds
 // them text and gets text back, and test/compose.test.mjs runs them in Node.
+import { axis } from '../lib/axes.mjs';
 
 const VOICES = ['bd', 'sd', 'hh']; // the drums layer's baseline voices: a kit missing one would log "sound not found"
 
@@ -85,4 +86,18 @@ export function notesView(src, meta = {}) {
   }
   const changes = requests.reduce((n, r) => n + (r.changes?.length ?? 0), 0);
   return { prompt: meta.prompt ?? '', requests: requests.length, changes, last: requests.at(-1)?.date ?? '', sections: [...groups].filter(([, items]) => items.length).map(([name, items]) => ({ name, items })) };
+}
+
+/**
+ * The Verify card's rows: for each axis the phrase asked to move, the analyzer metric that stands for it (lib/axes.mjs
+ * `verify`), its value before and after, and whether it moved the way the axis's sign says. Axes verified by code
+ * (drive, register) have no metric and say so.
+ */
+export function verifyRows(deltas, before, after) {
+  return Object.entries(deltas).map(([name, requested]) => {
+    const v = axis(name)?.verify;
+    if (!v?.metric) return { axis: name, requested, metric: null };
+    const a = before[v.metric], b = after[v.metric];
+    return { axis: name, requested, metric: v.metric, before: a, after: b, ok: Math.sign(b - a) === Math.sign(requested) * v.sign };
+  });
 }

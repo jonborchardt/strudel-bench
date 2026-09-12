@@ -3,9 +3,9 @@
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { AXES } from '../lib/axes.mjs';
-import { planEdits, applyEdits } from './resolve.mjs';
+import { planEdits, applyEdits } from '../lib/resolve.mjs';
 import { checkFile, ensureScope } from './check.mjs';
-import { analyze, readWav } from './analyze.mjs';
+import { analyze, readWav } from '../lib/analyze.mjs';
 
 const [file, sectionSel, layerSel, phrase] = process.argv.slice(2);
 if (!phrase) { console.error('usage: node scripts/verify.mjs songs/x.strudel <section> <layer> "phrase"'); process.exit(2); }

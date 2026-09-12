@@ -31,7 +31,7 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
   const clean = fixtures();
   try {
     build(out);
-    for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', '404.html', 'sitemap.xml', 'robots.txt', 'web/icon.svg', 'web/og.png', 'web/strudel.css', 'web/boot.mjs', 'web/mp3.mjs', '.nojekyll', 'lib/index.mjs', 'lib/packs.json', 'lib/packs.mjs', 'songs/demo.strudel', 'songs/demo.notes.json', 'node_modules/@strudel/web/dist/index.js', 'node_modules/@breezystack/lamejs/dist/lamejs.js', 'assets'])
+    for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', '404.html', 'sitemap.xml', 'robots.txt', 'web/icon.svg', 'web/og.png', 'web/strudel.css', 'web/boot.mjs', 'web/mp3.mjs', '.nojekyll', 'lib/index.mjs', 'lib/packs.json', 'lib/packs.mjs', 'songs/demo.strudel', 'songs/demo.notes.json', 'node_modules/@strudel/web/dist/index.js', 'node_modules/@breezystack/lamejs/dist/lamejs.js', 'node_modules/acorn/dist/acorn.mjs', 'lib/resolve.mjs', 'lib/analyze.mjs', 'assets'])
       assert.ok(fs.existsSync(path.join(out, f)), f);
     const list = JSON.parse(fs.readFileSync(path.join(out, 'songs/index.json'), 'utf8'));
     assert.ok(list.includes('demo.strudel'));

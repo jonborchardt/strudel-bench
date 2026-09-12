@@ -96,3 +96,12 @@ test('a section with its own tempo plays its bars faster inside a shorter span',
   assert.throws(() => g.song({ cps: 0 }, [g.section('a', 1, { tick: {} })]), /tempo must be positive/);
   assert.throws(() => g.song({}, [g.section('a', 1, { cps: -1, tick: {} })]), /section "a".*tempo must be positive/);
 });
+
+test('drums2 is a second drums layer', async () => {
+  await ready;
+  const pat = song({ cps: .5 }, [section('a', 1, { drums: { density: .3 }, drums2: { density: .9, level: .5 } })]);
+  const layers = pat.strudel.sections[0].layers;
+  assert.deepEqual(Object.keys(layers), ['drums', 'drums2']);
+  assert.ok(layers.drums2.pattern.queryArc(0, 1).length > layers.drums.pattern.queryArc(0, 1).length, 'each built with its own axes');
+  assert.throws(() => song({}, [section('a', 1, { drumz: {} })]), /unknown layer "drumz"/);
+});
