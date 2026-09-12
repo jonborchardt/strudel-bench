@@ -49,11 +49,11 @@
     <div class="strip" id="strip"></div>
     <details class="panel" id="axes" open><summary>axes</summary><div class="knobs" id="knobs"></div></details>
     <!-- materials: the strings behind each part (drum template and per-voice samples, the synth or sample a part plays, arp order, follow); sound names autocomplete from the loaded packs -->
-    <details class="panel" id="mats"><summary>materials</summary><div id="matlist"></div></details>
+    <details class="panel" id="mats"><summary>materials</summary><label class="pvlvl" title="how loud the previews play (every &#9654; in this panel and its menu); not written to the song">preview level <input id="pvlvl" type="range" min="0" max="4" step=".1" value="1"><output>x1.0</output></label><div id="matlist"></div></details>
     <div class="row addrow" id="addrow"></div>
     <datalist id="snds"></datalist>
     <!-- the materials menu: one popover for every pick button, rows carry a play button that auditions without selecting -->
-    <div id="pick" popover class="menu"><input id="pickq" type="search" placeholder="filter" autocomplete="off"><label class="pvlvl" title="how loud the previews play (every &#9654; on this page); not written to the song">preview level <input id="pvlvl" type="range" min="0" max="4" step=".1" value="1"><output>x1.0</output></label><div id="picklist" role="listbox"></div></div>
+    <div id="pick" popover class="menu"><input id="pickq" type="search" placeholder="filter" autocomplete="off"><div id="picklist" role="listbox"></div></div>
     <div class="row" style="margin-top:.5rem">
       <span class="pills" id="pills" title="type a word and pick it from the list: control words, moods, modifiers (much, a little, less), harmony words, or a part name to aim the words after it at that part. Enter on an empty box applies."><input id="phrase" list="terms" placeholder="darker, much sparser, drums &hellip;" autocomplete="off"><datalist id="terms"></datalist></span>
       <button id="apply" title="rewrite this section's axis literals from the words">Apply</button>
@@ -112,7 +112,7 @@
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase } from './lib/song.mjs';
   import { ARP_ORDERS } from './lib/layers.mjs';
-  import { TEMPLATES } from './lib/grid.mjs';
+  import { TEMPLATES, fit, gridToMini } from './lib/grid.mjs';
   import { analyze } from './lib/analyze.mjs';
   import { DESCRIPTORS, OVERLAYS, HARMONY, MODIFIERS, COMPARATIVE } from './lib/vocab.mjs';
   const $ = (id) => document.getElementById(id);
@@ -585,13 +585,13 @@
   };
   // audition: pause the song, then play only this section's `layer` with material `key` set to `text`, for two bars
   let pvTimer, pvBtn, pvLast, pvGain = Number(localStorage.getItem('strudel:pvlvl')) || 1; // pvGain: preview volume, a page setting rather than part of the song
-  async function audition(btn, layer, key, text) {
+  async function audition(btn, layer, key, text, voice) {
     clearTimeout(pvTimer); pvBtn?.classList.remove('on');
     if (pvBtn === btn) { pvBtn = null; strudel.hush(); return; } // the same button again stops it
-    pvBtn = btn; pvLast = [layer, key, text];
-    await hear(btn, layer, key, text);
+    pvBtn = btn; pvLast = [layer, key, text, voice];
+    await hear(btn, layer, key, text, voice);
   }
-  async function hear(btn, layer, key, text) {
+  async function hear(btn, layer, key, text, voice) {
     if (playing) await pause();
     strudel.hush();
     const r = await ready;
@@ -599,8 +599,14 @@
     let pat; try { pat = await evalCode(ready, setMaterial($('code').value, mixSection, layer, key, text)); } catch (err) { $('mixstatus').textContent = err.message; pvBtn = null; return; }
     const s = pat.strudel.sections.find((x) => x.name === mixSection);
     btn.classList.add('on');
-    $('mixstatus').textContent = `hearing ${mixSection} ${layer} with ${key} ${text ?? 'removed'}${pvGain === 1 ? '' : ` at x${pvGain}`}`;
-    r.setCps(s.cps); r.setPattern(s.layers[layer].pattern.mul(strudel.gain(pvGain)), true); // the repl's own setCps: the `setcps` global only exists once the song has been evaluated
+    let part = s.layers[layer].pattern, what = `${key} ${text ?? 'removed'}`;
+    if (voice) { // one drum voice alone on its template grid: the whole part would drown it, or not even include it (voices join as density rises)
+      const name = s.layers[layer].attrs.sounds?.[voice] ?? voice;
+      part = strudel.s(name).struct(gridToMini(fit(TEMPLATES[s.layers[layer].attrs.template ?? 'house'][voice], s.grid.steps))).bank(s.kit);
+      what = `${voice} ${name}`;
+    }
+    $('mixstatus').textContent = `hearing ${mixSection} ${layer} ${what}${pvGain === 1 ? '' : ` at x${pvGain}`}`;
+    r.setCps(s.cps); r.setPattern(part.mul(strudel.gain(pvGain)), true); // the repl's own setCps: the `setcps` global only exists once the song has been evaluated
     pvTimer = setTimeout(() => { strudel.hush(); btn.classList.remove('on'); pvBtn = null; }, 2000 / s.cps + 200);
   }
   $('pvlvl').value = pvGain; $('pvlvl').nextElementSibling.value = `x${pvGain.toFixed(1)}`;
@@ -634,7 +640,7 @@
   $('pick').onclick = (e) => {
     const row = e.target.closest('.row'); if (!row) return; // the filter box and the level slider are not rows
     const { layer, key, voice } = pickFor, text = matText(layer, key, row.dataset.v, voice);
-    if (e.target.closest('.pv')) return audition(e.target.closest('.pv'), layer, key, text); // hear it, keep the menu open, pick nothing
+    if (e.target.closest('.pv')) return audition(e.target.closest('.pv'), layer, key, text, voice); // hear it, keep the menu open, pick nothing
     $('pick').hidePopover();
     setMat(layer, key, text);
   };
