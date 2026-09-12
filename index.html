@@ -47,6 +47,8 @@
     <summary><h2>Mix</h2><small id="mixsec"></small><small>&middot; one slider per axis the layer adapts</small><span class="grow"></span><button class="undo" title="undo (ctrl+z)" disabled>&#8630;</button><button class="redo" title="redo (ctrl+shift+z)" disabled>&#8631;</button></summary>
     <!-- strip: a block per section, flex-grown by its span, one row per layer shaded by density. Click scrubs there (and re-pins when pinned); the pin loops it, starts Play there and keeps the card on it; arrows reorder; the copy duplicates it under a numbered name; × removes it -->
     <div class="strip" id="strip"></div>
+    <!-- source: the shown section's own section(...) call; it follows every edit, and typing in it edits the song at that span -->
+    <details class="panel" id="secsrc"><summary>source</summary><textarea id="sectext" spellcheck="false" title="this section's code: edits land in the song and the knobs follow"></textarea></details>
     <details class="panel" id="axes" open><summary>axes</summary><div class="knobs" id="knobs"></div></details>
     <!-- materials: the strings behind each part (drum template and per-voice samples, the synth or sample a part plays, arp order, follow); sound names autocomplete from the loaded packs -->
     <details class="panel" id="mats"><summary>materials</summary><div id="matlist"></div><label class="pvlvl" title="how loud the previews play (every &#9654; in this panel and its menu); not written to the song">preview level <input class="pvin" type="range" min="-1" max="1.7" step=".01" value="0"><output>x1.0</output></label></details>
@@ -321,6 +323,7 @@
     if (!from.length) return;
     to.push(current); current = from.pop(); stamp = 0;
     $('code').value = current;
+    if (document.activeElement === $('sectext')) $('sectext').blur(); // so the section pane re-reads the restored source instead of being taken as mid-edit
     $('mixstatus').textContent = from === past ? 'undone' : 'redone'; // the previous status described an edit that is no longer there
     $('vout').hidden = true;
     syncUndo();
@@ -504,6 +507,13 @@
   // the pill box runs the same resolver the cli does, one clause per layer pill. Either is an edit like typing:
   // unsaved until Save, re-evaluated in place while playing, undoable.
   let mixSection = null; // name of the section the card shows
+  let secAt = { start: 0, end: 0 }; // where that section's call sits in the source; the source pane's text replaces exactly this span
+  $('sectext').addEventListener('input', () => {
+    const src = $('code').value, text = $('sectext').value;
+    const next = src.slice(0, secAt.start) + text + src.slice(secAt.end);
+    secAt.end = secAt.start + text.length;
+    commit(next, true); edited();
+  });
   let updateTimer;
   function edited() { // the source changed under a control: derived views follow, and the player picks it up shortly
     sourceChanged(); expandSoon();
@@ -518,8 +528,11 @@
   function mixRender() {
     if (document.activeElement?.type === 'range' && $('knobs').contains(document.activeElement)) return; // a knob is being dragged: its value is already right
     let m; try { m = locate($('code').value); } catch (e) { if (!(e instanceof SyntaxError)) $('mix').hidden = true; return; } // plain strudel: nothing to mix; mid-edit syntax error: keep the last card
-    const s = m.sections.find((x) => x.name === (pinned ?? mixSection)) ?? m.sections[0];
+    const typing = document.activeElement === $('sectext'); // the section pane is being edited: keep its section by position (its name may be mid-edit) and leave its text alone
+    const s = typing ? m.sections.find((x) => x.node.start === secAt.start) : m.sections.find((x) => x.name === (pinned ?? mixSection)) ?? m.sections[0];
+    if (!s) return;
     mixSection = s.name;
+    if (!typing) { secAt = { start: s.node.start, end: s.node.end }; $('sectext').value = $('code').value.slice(secAt.start, secAt.end); }
     parts = Object.keys(s.layers); listTerms(); // the pill box offers this section's part names
     $('mix').hidden = false;
     $('mixsec').textContent = `· ${s.name}${pinned === s.name ? ' (pinned)' : ''}`;

@@ -171,6 +171,7 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .panel[open] summary { border-bottom: 1px solid #111; box-shadow: 0 1px 0 #3a3a40; }
 #matlist { padding: .4rem .8rem .6rem; }
 .panel .knobs { border: 0; border-radius: 0; background: none; box-shadow: none; }
+.panel textarea { display: block; width: 100%; min-height: 4rem; max-height: 24rem; field-sizing: content; font: var(--mono); padding: .5rem .8rem; border: 0; background: none; color: inherit; resize: vertical; }
 .matrow { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin: .3rem 0; }
 .matrow b { min-width: 4.5rem; font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: #eee; }
 .matrow label { display: inline-flex; align-items: center; gap: .3rem; color: #9a9aa2; }
