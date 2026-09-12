@@ -7,10 +7,12 @@
 <main>
   <section class="card intro">
     <h1>How the vocabulary becomes Strudel</h1>
-    <p>Strudle songs are written with a small musical vocabulary: five layers, twelve axes from 0 to 1 where 0.5 is each layer's baseline,
-      descriptors that move several axes at once, modifiers that scale them, and harmony words that pick keys and progressions.
-      Every entry below is playable. Press a variant, listen, then open the expanded Strudel to see exactly what the words turned into.
-      Only one example plays at a time.</p>
+    <p>Strudle songs are written with a small musical vocabulary: five layers (drums, bass, melody, pad, fx), twelve axes from 0 to 1 where
+      0.5 is each layer's baseline, descriptors that move several axes at once, modifiers that scale them, and harmony words that pick keys
+      and progressions. A song is a list of sections, each with its own layer settings, and an edit request names the section it is about.
+      An axis can also be a signal that moves through its section instead of a constant.</p>
+    <p>Every entry below is playable and editable. Press a variant, listen, then open the expanded Strudel: the top pane is the high-level
+      language you write, the bottom pane is the plain Strudel it becomes, regenerated as you type. Only one example plays at a time.</p>
     <nav class="subnav" id="subnav"></nav>
   </section>
   <div id="groups"></div>
@@ -46,28 +48,34 @@
       }
       if (hll.value === code) gen.textContent = expanded.get(code);
     };
-    const load = async (v) => { hll.value = v.hll ?? (v.code ??= await (await fetch(v.src)).text()); return expand(); };
+    // Play is only needed when the pane no longer matches a variant: single-variant cards have nothing else to click, so it stays
+    let base = '', baseBtn = null;
+    const edited = () => hll.value !== base;
+    const sync = () => { playBtn.hidden = ex.variants.length > 1 && !edited(); };
+    const load = async (v, b = null) => { hll.value = base = v.hll ?? (v.code ??= await (await fetch(v.src)).text()); baseBtn = b; sync(); return expand(); };
     const play = async (button, label) => {
       current?.card.classList.remove('playing'); current?.button.classList.remove('on');
       current = { card: el, button }; el.classList.add('playing'); button.classList.add('on');
       try { await playCode(ready, hll.value); status(`playing ${ex.title}${label ? `: ${label}` : ''}`); } catch (e) { status(e.message); }
     };
+    let firstBtn = null;
+    const playBtn = document.createElement('button'); playBtn.innerHTML = '&#9654; Play'; playBtn.title = 'play the source as edited'; playBtn.onclick = () => play(playBtn);
     if (ex.variants.length > 1) for (const v of ex.variants) { // A/B: each variant loads its code (dropping edits) and plays it
       const b = document.createElement('button');
       b.innerHTML = `&#9654; ${v.label}`;
-      b.onclick = async () => { await load(v); play(b, v.label); };
+      b.onclick = async () => { await load(v, b); play(b, v.label); };
+      if (v === ex.variants[0]) firstBtn = b;
       vs.append(b);
     }
-    const playBtn = document.createElement('button'); playBtn.innerHTML = '&#9654; Play'; playBtn.title = 'play the source as edited'; playBtn.onclick = () => play(playBtn);
     const stop = document.createElement('button'); stop.innerHTML = '&#9632; Stop'; stop.onclick = stopAll;
     vs.append(playBtn, stop);
     let timer;
-    hll.oninput = () => { clearTimeout(timer); timer = setTimeout(async () => { await expand(); if (current?.card === el) play(playBtn); }, 300); };
+    hll.oninput = () => { sync(); clearTimeout(timer); timer = setTimeout(async () => { await expand(); if (current?.card === el) play(edited() ? playBtn : baseBtn ?? playBtn); }, 300); };
     const details = document.createElement('details');
     details.innerHTML = '<summary>Expanded Strudel</summary>';
     details.append(gen);
     el.append(vs, hll, details);
-    load(ex.variants[0]);
+    load(ex.variants[0], firstBtn);
     return el;
   }
   function stopAll() {

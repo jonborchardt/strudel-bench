@@ -25,11 +25,20 @@ test('every example has the fields the card renders', () => {
   }
 });
 
-test('every variant evaluates with known sounds', async () => {
-  for (const g of GROUPS) for (const ex of g.items) if (!ex.stub) for (const v of ex.variants) {
-    const code = v.hll ?? fs.readFileSync(path.join(ROOT, v.src), 'utf8');
-    const { events, problems } = await checkCode(code, `${g.id}/${ex.title}/${v.label}`);
-    assert.deepEqual(problems, []);
-    assert.ok(events.length, `${ex.title}/${v.label}: no events`);
+test('every variant evaluates with known sounds, and an A/B actually differs', async () => {
+  for (const g of GROUPS) for (const ex of g.items) if (!ex.stub) {
+    const seen = []; // [label, event stream] per variant: a variant identical to an earlier one would be a silent A/A
+    for (const v of ex.variants) {
+      const code = v.hll ?? fs.readFileSync(path.join(ROOT, v.src), 'utf8');
+      const at = `${g.id}/${ex.title}/${v.label}`;
+      const { events, problems } = await checkCode(code, at);
+      assert.deepEqual(problems, []);
+      assert.ok(events.length, `${at}: no events`);
+      const stream = events.join('\n');
+      const same = seen.filter(([, s]) => s === stream).map(([l]) => l);
+      if (v.alias) assert.deepEqual(same, [seen.at(-1)[0]], `${at}: alias must equal the previous variant`);
+      else assert.deepEqual(same, [], `${at}: identical to ${same.join(', ')}`);
+      seen.push([v.label, stream]);
+    }
   }
 });

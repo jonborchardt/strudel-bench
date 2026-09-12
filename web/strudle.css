@@ -116,7 +116,10 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .subnav { display: flex; gap: .25rem; flex-wrap: wrap; position: sticky; top: 2.6rem; z-index: 1; background: var(--bg); padding: .5rem 0; }
 .subnav a { text-decoration: none; padding: .2rem .6rem; border-radius: 99px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: .9rem; }
 .intro p { max-width: 60rem; }
-.exgroup { display: grid; gap: .75rem; }
+#groups { display: grid; gap: 3rem; margin-top: 1rem; }
+.exgroup { display: grid; gap: .75rem; scroll-margin-top: 5.5rem; } /* anchors land below the sticky subnav */
+.exgroup + .exgroup { border-top: 1px solid var(--line); padding-top: 2.5rem; }
+.exgroup > h2 { font-size: 1.4rem; }
 .exgroup > p { max-width: 60rem; margin: 0; color: var(--muted); }
 .ex .variants { display: flex; gap: .4rem; flex-wrap: wrap; margin: .5rem 0; }
 .ex pre { border: 1px solid var(--line); border-radius: 6px; padding: .5rem; overflow: auto; max-height: 20rem; }
