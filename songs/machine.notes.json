@@ -1,0 +1,16 @@
+{
+  "requests": [
+    {
+      "date": "2026-09-12",
+      "ask": "the music sounds flat and simplistic",
+      "changes": [
+        {
+          "section": "build/chorus/chorus2/chorus3",
+          "layer": "melody",
+          "why": "fixed riff 0 ~ 0 3@2 ~ 2 0 so every chorus hammers the same figure"
+        }
+      ]
+    }
+  ],
+  "prompt": "Filthy mechanical industrial rock at 120 BPM on one E minor chord, corroding textures stacked outside the axes"
+}

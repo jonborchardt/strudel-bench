@@ -5,16 +5,52 @@
       "date": "2026-09-10",
       "ask": "give each section a harmonic identity",
       "changes": [
-        { "section": "drop", "why": "the drop gets its own progression (i VI III VII) so the climax moves harmonically, not just in density" }
+        {
+          "section": "drop",
+          "why": "the drop gets its own progression (i VI III VII) so the climax moves harmonically, not just in density"
+        }
       ]
     },
     {
       "date": "2026-09-11",
       "ask": "use the new material keys",
       "changes": [
-        { "section": "verse", "layer": "melody", "why": "the melody rides a slow saw from dark to bright over the 8 bars so the verse builds toward the drop" },
-        { "section": "verse", "layer": "fx", "why": "a 2-bar riser announces the drop" },
-        { "section": "drop", "layer": "pad", "why": "the pad arpeggiates upward to add motion under the busier drums" }
+        {
+          "section": "verse",
+          "layer": "melody",
+          "why": "the melody rides a slow saw from dark to bright over the 8 bars so the verse builds toward the drop"
+        },
+        {
+          "section": "verse",
+          "layer": "fx",
+          "why": "a 2-bar riser announces the drop"
+        },
+        {
+          "section": "drop",
+          "layer": "pad",
+          "why": "the pad arpeggiates upward to add motion under the busier drums"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-12",
+      "ask": "the music sounds flat and simplistic",
+      "changes": [
+        {
+          "section": "verse",
+          "layer": "melody",
+          "why": "piano, follow, phrase 2, hand-written two-bar line: a contour with held notes instead of a seeded dice roll"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "why": "piano hook rising to the octave; drop.melody2 glockenspiel answers on the off-beats an octave up"
+        },
+        {
+          "section": "drop",
+          "layer": "bass",
+          "why": "notes 0 7 0 4: octave pop under the hook"
+        }
       ]
     }
   ]
