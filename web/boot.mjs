@@ -43,6 +43,11 @@ export async function playCode(ready, code) {
 
 // build the pattern the way strudel's repl does minus starting it: the transpiler makes the last expression the return value
 const evalOnly = (code) => ({ pattern: new Function(`"use strict";return (async () => {${strudel.transpiler(code).output}})()`)() });
+/** The pattern `code` evaluates to, without touching the scheduler: sections and total for the transport before play. */
+export async function evalCode(ready, code) {
+  await ready;
+  return evalOnly(code).pattern;
+}
 /** The plain Strudel `code` reduces to, expanded in the browser (lib/dump.mjs). */
 export async function expandCode(ready, code) {
   await ready;

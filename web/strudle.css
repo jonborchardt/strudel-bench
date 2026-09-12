@@ -55,10 +55,27 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .menu button[aria-selected="true"] { background: #e6eefc; }
 .menu small { font-size: .8rem; color: var(--muted); }
 
-/* transport */
+/* transport: play/pause toggle, stop, position slider with a section tick each, readout; the readout pulses while playing */
 .transport { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-.transport input[type=range] { flex: 1; min-width: 12rem; }
-.transport .where { font: var(--mono); min-width: 9rem; color: var(--muted); }
+.transport #play { min-width: 6.5rem; border-radius: 99px; }
+.transport #stop { border-radius: 99px; }
+.transport #update { border-color: var(--accent); color: var(--accent); border-radius: 99px; }
+.transport input[type=range] { flex: 1; min-width: 12rem; accent-color: var(--accent); }
+.transport .where { font: var(--mono); min-width: 13rem; color: var(--muted); }
+.transport .where::before { content: ''; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; margin-right: .4rem; background: #c9c9c9; vertical-align: 0; }
+.transport.playing .where::before { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+.transport kbd { margin-left: auto; font-size: .8rem; }
+
+/* export badge: rendering (spinner), done (green), failed (red) */
+.xstate { display: inline-flex; align-items: center; gap: .3rem; margin-left: .35rem; padding: .15rem .55rem; border-radius: 99px; font-size: .85rem; white-space: nowrap; max-width: 22rem; overflow: hidden; text-overflow: ellipsis; }
+.xstate.busy { background: #eef3fd; color: var(--accent); }
+.xstate.busy::before { content: ''; width: .7rem; height: .7rem; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.xstate.done { background: #e6f5ea; color: #1b6b32; }
+.xstate.done a { color: inherit; }
+.xstate.done small { color: inherit; opacity: .7; }
+.xstate.fail { background: #fbe9ec; color: var(--err); }
 
 /* the comments card's copy of the transport: icon buttons, a lane with one dot per comment */
 .mini { display: flex; align-items: center; gap: .3rem; margin-bottom: .5rem; }

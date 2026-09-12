@@ -13,23 +13,24 @@
     <div id="kits" popover class="menu"><input id="kitq" type="search" placeholder="filter by name or description" autocomplete="off"><div id="kitlist" role="listbox"></div><div class="key" id="kitkey" title="what the icons mean: line texture, height = weight, colour = brightness, extras = character"></div></div>
     <span class="grow"></span>
     <button id="save" title="write the source back to songs/">Save</button>
-    <span class="group" aria-label="export">
+    <span class="group" id="exports" aria-label="export">
       <span class="lbl">Export</span>
-      <button id="export" title="render the source offline in this browser and download <song>.mp3 (page must be stopped)">MP3</button>
+      <button id="export" title="render the source offline in this browser and download <song>.mp3 (stops playback)">MP3</button>
       <button id="dump" title="download the expanded Strudel as <song>.strudel.txt, ready to paste into the strudel.cc REPL">Strudel</button>
-      <button id="open" title="open the expanded Strudel in the strudel.cc REPL">Open in strudel.cc</button>
+      <button id="open" title="open the expanded Strudel in the strudel.cc REPL">Open &#8599;</button>
+      <span class="xstate" id="xstate" role="status" aria-live="polite" hidden></span>
     </span>
   </header>
 
-  <!-- transport -->
-  <section class="card transport" aria-label="transport">
-    <button id="play" class="primary">&#9654; Play</button>
-    <button id="pause">&#10074;&#10074; Pause</button>
-    <button id="stop">&#9632; Stop</button>
+  <!-- transport: one play/pause toggle, stop, the position slider with a tick per section, and where the playhead is -->
+  <section class="card transport" id="transport" aria-label="transport">
+    <button id="play" class="primary" title="ctrl+enter">&#9654; Play</button>
+    <button id="stop" title="ctrl+." disabled>&#9632; Stop</button>
+    <button id="update" title="the source changed since it was last evaluated: play the new version from here (ctrl+enter)" hidden>&#8635; Update</button>
     <input id="pos" type="range" min="0" max="1" step="0.05" value="0" list="marks" disabled aria-label="position">
     <datalist id="marks"></datalist>
     <span class="where" id="where">&mdash;</span>
-    <kbd>ctrl+enter play &middot; ctrl+. stop</kbd>
+    <kbd>ctrl+enter play &middot; ctrl+. stop &middot; space pause</kbd>
   </section>
 
   <!-- source workspace: editable strudle source next to the generated strudel -->
@@ -51,8 +52,7 @@
       <header><h2>Change comments</h2></header>
       <div class="mini" aria-label="timeline">
         <button id="mplay" title="play">&#9654;</button>
-        <button id="mpause" title="pause">&#10074;&#10074;</button>
-        <button id="mstop" title="stop">&#9632;</button>
+        <button id="mstop" title="stop" disabled>&#9632;</button>
         <span class="lane"><input id="mpos" type="range" min="0" max="1" step="0.05" value="0" disabled aria-label="position"><span id="dots"></span></span>
         <span class="where" id="fbwhere">&mdash;</span>
       </div>
@@ -76,7 +76,7 @@
 </main>
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
-  import { boot, playCode, expandCode, nav, drumMachines } from './web/boot.mjs';
+  import { boot, playCode, expandCode, evalCode, nav, drumMachines } from './web/boot.mjs';
   import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile } from './web/compose.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   const $ = (id) => document.getElementById(id);
@@ -84,8 +84,9 @@
   const status = (text) => ($('status').textContent = text);
   let loaded = '';      // text as last loaded from disk (or saved)
   let playing = false;
-  let sections = []; // of the song last evaluated, for the scrubber
-  let paused = null; // cycle to resume from; the worker clock resets to 0 on stop, so pause must remember it
+  let sections = []; // of the song on the transport (the last evaluation while stopped, the playing one otherwise), for the scrubber
+  let paused = null; // cycle to resume from; the worker clock resets to 0 on stop, so pause (and scrubbing while paused) must remember it
+  let evaluated = null; // source text the scheduler is playing, so an edit while playing offers Update instead of silently drifting
   let server = true; // false on a static host (github pages): no export/dump, songs save to this browser
   const DRAFT = 'strudle:'; // github pages cannot write songs/, so songs made there live in localStorage under this prefix
   const drafts = () => Object.keys(localStorage).filter((k) => k.startsWith(DRAFT)).map((k) => k.slice(DRAFT.length));
@@ -158,6 +159,7 @@
     $('notes').innerHTML = view.sections.map((s) => `<li><b>${esc(s.name)}</b><ul>${s.items.map(item).join('')}</ul></li>`).join('') || '<li class="muted">no comments in this song yet</li>';
     $('stale').textContent = src !== loaded ? 'unsaved' : '';
     fbRender(); // the request quotes the source, so it follows edits
+    syncTransport(); // an edit while playing offers Update
   }
   // expand the textarea in the browser (lib/dump.mjs); lines that differ from the last expansion flash briefly
   let shown = []; // lines currently displayed
@@ -170,38 +172,75 @@
     catch (e) { $('xerr').textContent = e.message; return; } // keep the last good expansion under the error
     if (src !== $('code').value) return; // typed on: a newer expansion is queued
     $('xerr').textContent = '';
+    if (!playing) setSections(await evalCode(ready, src).catch(() => null)); // the transport knows the song before the first play; while playing it follows the scheduler's version
+    syncTransport();
     const lines = code.split('\n'), old = new Set(shown), now = Date.now(); // ponytail: set membership, not a diff; a moved line does not flash
     for (const l of lines) if (shown.length && !old.has(l) && !flashed.has(l)) flashed.set(l, now);
+    let first; // the first line this edit changed, scrolled into view below
     $('expanded').replaceChildren(...lines.map((l) => {
       const s = document.createElement('span');
       s.textContent = l + '\n';
       const t = flashed.get(l); // a line flashed by an earlier edit keeps fading on its own clock
       if (t != null && now - t < FLASH) { s.className = 'hl'; s.style.animationDelay = `${t - now}ms`; }
+      if (t === now) first ??= s;
       return s;
     }));
+    first?.scrollIntoView({ block: 'nearest' });
     flashed = new Map([...flashed].filter(([, t]) => now - t < FLASH));
     shown = lines;
   }
   let expandTimer;
   const expandSoon = () => { clearTimeout(expandTimer); expandTimer = setTimeout(expand, 300); };
 
-  async function play() {
-    $('err').textContent = '';
-    const pat = await playCode(ready, $('code').value);
-    playing = true;
+  // transport. play() evaluates and starts (or re-evaluates in place while playing: the clock keeps running, so an
+  // edit lands at the current cycle); pause remembers the cycle and stops the clock; stop resets to 0. Scrubbing
+  // jumps the clock while playing and moves the resume point otherwise, so Play always starts where the knob is.
+  function setSections(pat) {
     sections = pat?.strudle?.sections ?? []; // only song() files have sections to scrub through
     for (const p of [$('pos'), $('mpos')]) { p.disabled = !sections.length; p.max = pat?.strudle?.total ?? 1; }
     $('fbadd').disabled = !sections.length;
     $('marks').innerHTML = sections.map((s) => `<option value="${s.offset}" label="${s.name}">`).join(''); // tick marks at section starts
+  }
+  async function play() {
+    $('err').textContent = '';
+    const src = $('code').value;
+    const pat = await playCode(ready, src);
+    evaluated = src; playing = true;
+    setSections(pat);
     if (paused != null) { (await ready).scheduler.setCycle(paused); paused = null; }
     console.log('[strudle] evaluated', $('song').value);
+    syncTransport();
     expand();
   }
-  function stop() { strudel.hush(); playing = false; paused = null; }
+  async function stop() {
+    if (playing) strudel.hush();
+    playing = false; paused = null; evaluated = null;
+    setSections(await evalCode(ready, $('code').value).catch(() => null)); // the transport shows the source again, from the top
+    syncTransport();
+  }
   async function pause() {
     if (!playing) return play(); // resumes from `paused` if set
-    paused = (await ready).scheduler.now();
+    paused = (await ready).scheduler.now() % Number($('pos').max || 1);
     strudel.hush(); playing = false;
+    syncTransport();
+  }
+  const toggle = () => (playing ? pause() : play());
+  function syncTransport() { // buttons say what the next press does; the position readout follows the clock (setInterval below) or the resume point
+    const c = playing ? null : paused ?? 0;
+    $('play').innerHTML = playing ? '&#10074;&#10074; Pause' : paused != null ? '&#9654; Resume' : '&#9654; Play';
+    $('mplay').innerHTML = playing ? '&#10074;&#10074;' : '&#9654;';
+    $('mplay').title = $('play').textContent.slice(2);
+    $('stop').disabled = $('mstop').disabled = !playing && paused == null;
+    $('update').hidden = !playing || $('code').value === evaluated;
+    $('transport').classList.toggle('playing', playing);
+    if (c != null) showPosition(c);
+  }
+  function showPosition(c) { // slider + "section · bar n/m · cycle/total"
+    if (!sections.length) return ($('where').textContent = $('fbwhere').textContent = '—');
+    for (const p of [$('pos'), $('mpos')]) if (document.activeElement !== p) p.value = c; // don't yank the knob mid-drag
+    const s = sections.findLast((x) => x.offset <= c) ?? sections[0];
+    const bar = Math.min(s.cycles, Math.floor((c - s.offset) / (s.span / s.cycles)) + 1); // a section with its own tempo has span != cycles
+    $('where').textContent = $('fbwhere').textContent = `${s.name} · bar ${bar}/${s.cycles} · ${c.toFixed(1)}/${$('pos').max}`;
   }
   // songs/ on the local server; this browser's localStorage on a static host
   async function store(name, text) {
@@ -226,21 +265,20 @@
     status(`created ${name}${server ? '' : ' in this browser'}`);
   }
 
-  $('play').onclick = $('mplay').onclick = play;
-  $('pause').onclick = $('mpause').onclick = pause;
+  $('play').onclick = $('mplay').onclick = toggle;
+  $('update').onclick = play;
   $('stop').onclick = $('mstop').onclick = stop;
   $('pos').oninput = $('mpos').oninput = async (e) => { // the two sliders are one position: the comments card has a copy of the transport
-    paused = null;
-    if (!playing) await play();
-    (await ready).scheduler.setCycle(Number(e.target.value)); // clock worker jumps; already-sounding notes keep ringing
+    const c = Number(e.target.value);
+    if (playing) (await ready).scheduler.setCycle(c); // clock worker jumps; already-sounding notes keep ringing
+    else paused = c; // paused or stopped: Play/Resume starts here
+    showPosition(c);
+    syncTransport();
   };
-  setInterval(async () => { // follow the clock: slider position + "section · cycle/total"
-    if (!sections.length) return;
-    const c = (playing ? (await ready).scheduler.now() : paused ?? 0) % Number($('pos').max); // now() drifts after stop; the song repeats every `total`, so wrap
-    for (const p of [$('pos'), $('mpos')]) if (document.activeElement !== p) p.value = c; // don't yank the knob mid-drag
-    const s = sections.findLast((x) => x.offset <= c);
-    $('where').textContent = $('fbwhere').textContent = `${s?.name ?? '…'} · ${c.toFixed(1)}/${$('pos').max}`;
-  }, 250);
+  setInterval(async () => { if (playing) showPosition((await ready).scheduler.now() % Number($('pos').max)); }, 250); // the song repeats every `total`, so wrap
+  document.addEventListener('keydown', (e) => { // space toggles unless typing somewhere
+    if (e.key === ' ' && !/^(TEXTAREA|INPUT|SELECT|BUTTON)$/.test(e.target.tagName)) { e.preventDefault(); toggle(); }
+  });
   $('save').onclick = save;
   $('new').onclick = newSong;
   // exports work the same everywhere: render/expand in this browser, download the file; with the server it also lands in renders/
@@ -253,42 +291,49 @@
   async function keep(blob, name) { // renders/<name> on the local server, nothing on github pages
     if (!server) return '';
     const r = await fetch(`renders/${name}`, { method: 'PUT', body: blob });
-    return r.ok ? ` · wrote ${await r.text()}` : '';
+    return r.ok ? `also wrote ${await r.text()}` : '';
   }
-  $('export').onclick = async () => {
+  // one badge tells the export group's state (rendering n/m, ✓ file, ✗ why); the buttons lock while a job runs so two
+  // renders cannot fight over the audio context. Local vs GitHub Pages only differs in the ✓ tooltip (renders/ copy).
+  const xstate = (state, html = '', title = '') => { const b = $('xstate'); b.hidden = !html; b.className = `xstate ${state}`; b.innerHTML = html; b.title = title; };
+  const esc = (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;');
+  async function exporting(job) {
+    const buttons = $('exports').querySelectorAll('button');
+    for (const b of buttons) b.disabled = true;
+    try { await job(); }
+    catch (e) { xstate('fail', `&#10007; ${esc(e.message)}`, e.message); $('err').textContent = e.message; }
+    finally { for (const b of buttons) b.disabled = false; }
+  }
+  $('export').onclick = () => exporting(async () => {
     const name = `${base()}.mp3`;
-    if (playing) return status('page is playing; stop first (render replaces the audio context)');
+    if (playing) await stop(); // the render replaces the audio context, so it cannot run under live playback
     await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
-    status(`rendering ${name}…`);
-    try {
-      const buf = await renderSong({ code: $('code').value });
-      status(`encoding ${name}…`);
-      const blob = new Blob([encodeMp3(Array.from({ length: buf.numberOfChannels }, (_, c) => buf.getChannelData(c)), buf.sampleRate)], { type: 'audio/mpeg' });
-      download(blob, name);
-      status(`exported ${name} (${buf.duration.toFixed(1)} s)${await keep(blob, name)}`);
-    } catch (e) { status(`export failed: ${e.message}. Reload the page before playing.`); $('err').textContent = e.message; }
-  };
+    xstate('busy', `rendering ${esc(name)}…`);
+    let buf;
+    try { buf = await renderSong({ code: $('code').value, progress: (i, n) => xstate('busy', `rendering ${esc(name)} ${Math.round((i / n) * 100)}%`) }); }
+    catch (e) { throw new Error(`${e.message} (if playback misbehaves afterwards, reload the page)`); } // a render that dies half-way may leave superdough state behind
+    xstate('busy', `encoding ${esc(name)}…`);
+    await new Promise((r) => setTimeout(r)); // let the badge paint before the encoder blocks the thread
+    const blob = new Blob([encodeMp3(Array.from({ length: buf.numberOfChannels }, (_, c) => buf.getChannelData(c)), buf.sampleRate)], { type: 'audio/mpeg' });
+    download(blob, name);
+    xstate('done', `&#10003; ${esc(name)} <small>${buf.duration.toFixed(1)} s</small>`, await keep(blob, name));
+  });
   const expanded = async () => { // the expanded pane's text, re-expanded now so a fresh edit is not missed
     const code = await expandCode(ready, $('code').value);
     if (!code.trim()) throw new Error('nothing to export');
     return code;
   };
-  $('dump').onclick = async () => {
+  $('dump').onclick = () => exporting(async () => {
     const name = `${base()}.strudel.txt`; // .txt: it is meant to be pasted into the strudel repl
-    try {
-      const code = await expanded();
-      const blob = new Blob([code], { type: 'text/plain' });
-      download(blob, name);
-      status(`exported ${name}${await keep(blob, name)}`);
-    } catch (e) { status(`export failed: ${e.message}`); }
-  };
-  $('open').onclick = async () => {
-    try {
-      const url = `https://strudel.cc/#${strudel.code2hash(await expanded())}`;
-      $('status').innerHTML = `<a href="${url}" target="_blank">open in strudel.cc</a>`; // popup blockers may eat the window: the link is the fallback
-      window.open(url, '_blank');
-    } catch (e) { status(`open failed: ${e.message}`); }
-  };
+    const blob = new Blob([await expanded()], { type: 'text/plain' });
+    download(blob, name);
+    xstate('done', `&#10003; ${esc(name)}`, await keep(blob, name));
+  });
+  $('open').onclick = () => exporting(async () => {
+    const url = `https://strudel.cc/#${strudel.code2hash(await expanded())}`;
+    xstate('done', `<a href="${url}" target="_blank" rel="noopener">&#10003; opened in strudel.cc &#8599;</a>`, 'popup blocked? this link opens it'); // popup blockers may eat the window: the link is the fallback
+    window.open(url, '_blank');
+  });
   $('song').onchange = () => {
     if ($('code').value !== loaded && !confirm('Discard unsaved edits?')) { $('song').value = decodeURIComponent(location.hash.slice(1)); return; }
     loadSong();
@@ -416,10 +461,10 @@
   async function renderToServer({ song, cycles, section, layer, name, mp3 }) {
     const fail = (message) => { status(message); return fetch('render-error', { method: 'POST', body: JSON.stringify({ name, message }) }); };
     status(`rendering ${name}…`);
-    if (playing) return fail('page is playing; stop first (render replaces the audio context)');
+    if (playing) await stop(); // the render replaces the audio context
     try {
       const code = await (await fetch(`songs/${song}`)).text();
-      const buf = await renderSong({ code, cycles, section, layer });
+      const buf = await renderSong({ code, cycles, section, layer, progress: (i, n) => status(`rendering ${name} ${Math.round((i / n) * 100)}%`) });
       const out = await (await fetch(`renders/${name}.wav${mp3 ? '?mp3' : ''}`, { method: 'PUT', body: toWav(buf) })).text();
       status(`rendered ${out} (${buf.duration.toFixed(1)} s)`);
     } catch (e) {
@@ -430,7 +475,7 @@
     }
   }
   /** Evaluate `code` and render it (or `cycles` of one `section` or `layer`) offline; resolves to an AudioBuffer. */
-  async function renderSong({ code, cycles, section, layer }) {
+  async function renderSong({ code, cycles, section, layer, progress }) {
     await ready;
     let pat = await strudel.evaluate(code, false);
     if (!pat) throw new Error('source does not evaluate (see the error under it)'); // evaluate logs syntax errors instead of throwing
@@ -448,17 +493,27 @@
         pat = src.pattern; cps = s.cps; begin = 0; end = cycles ?? s.cycles; // layer patterns run in section-local bar time
       } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles) * s.span / s.cycles; }
     }
-    return renderOffline(pat, cps, begin, end);
+    return renderOffline(pat, cps, begin, end, progress);
   }
 
   // Offline render, one cycle at a time. strudel.renderPatternAudio builds every event's node chain up front and
   // Chrome runs the whole graph every quantum, so a long dense song renders ~40x slower than realtime. Suspending
   // the context at each cycle boundary and scheduling only that cycle keeps the live graph to what is sounding.
-  async function renderOffline(pat, cps, begin, end) {
+  // superdough pools effect nodes by type across audio contexts (nodePools.mjs keeps WeakRefs), so a render would
+  // reuse live-context nodes and the next play offline ones: "cannot connect to an AudioNode belonging to a different
+  // audio context", one dropped event each. A ref to a node from another context derefs to nothing, which the pool
+  // treats as collected. ponytail: global WeakRef patch; drop it when superdough keys its pools by context.
+  globalThis.WeakRef = class extends WeakRef { deref() { const n = super.deref(); return n instanceof AudioNode && n.context !== strudel.getAudioContext() ? undefined : n; } };
+  // the other straddler: a sound that ends after the context switch (a tail still ringing when the render starts, an
+  // offline voice ending as the live context returns) runs superdough's onended cleanup, which builds a timeout node
+  // on the sound's context and a gain on the current one. That throws, the chain stays connected in a graph that is
+  // already discarded (reset orbits, finished offline context), and nothing else is affected: keep it out of the console.
+  window.addEventListener('error', (e) => { if (/belonging to a different audio context/.test(e.message)) e.preventDefault(); });
+  async function renderOffline(pat, cps, begin, end, progress = () => {}) {
+    // the live context stays open: the scheduler's clock is bound to it for the life of the page (webaudioRepl
+    // captures it), so closing it would freeze playback until a reload. It is silent (stopped) while we render.
     const live = strudel.getAudioContext();
-    // a pending worklet load on the live context is aborted by close() and strudel caches the failure forever
-    if (live.state === 'running') await strudel.initAudio();
-    await live.close();
+    if (live.state === 'running') await strudel.initAudio(); // finish its worklet load before superdough switches contexts
     const rate = 44100;
     const ctx = new OfflineAudioContext(2, Math.ceil((end - begin) / cps * rate), rate);
     strudel.setAudioContext(ctx);
@@ -481,6 +536,7 @@
       const done = ctx.startRendering();
       for (let i = 0; i < starts.length; i++) {
         await suspends[i];
+        progress(i + 1, starts.length + 1);
         await schedule(starts[i], Math.min(starts[i] + 1, end));
         await ctx.resume();
       }
@@ -488,7 +544,7 @@
     } finally {
       strudel.resetGlobalEffects();
       strudel.setSuperdoughAudioController(null);
-      strudel.setAudioContext(null); // strudel makes a fresh live context on next use
+      strudel.setAudioContext(live); // back to the clock's context; effects and the controller rebuild lazily on it
     }
   }
   function toWav(buf) { // 16-bit PCM, interleaved
