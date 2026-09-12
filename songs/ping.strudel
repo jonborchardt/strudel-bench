@@ -1,0 +1,14 @@
+// ping: the local sample pack demo. The melody plays samples/user/demo-pack/ping.wav (a generated sine blip, CC0).
+// `packs:` declares the dependency, so the checker refuses an undeclared pack sound, the page badge shows whether the
+// pack is deployed / local / missing, and the Pages build ships the pack (its pack.json says deploy) with the song.
+song({ cps: .5, key: 'C:minor', seed: 7, kit: 'RolandTR909', packs: ['demo-pack'] }, [
+  section('call', 4, { role: 'establish',
+    drums:  { density: .4, space: .6 },
+    melody: { density: .6, sound: 'ping', space: .7 },
+  }),
+  section('answer', 4, { role: 'develop', progression: 'i VI III VII',
+    drums:  { density: .6 },
+    bass:   { weight: .6, register: .3 },
+    melody: { density: .8, sound: 'ping', brightness: .7, width: .7 },
+  }),
+])

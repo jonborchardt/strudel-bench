@@ -52,7 +52,7 @@ test('v2 grammar: accidentals, suffixes, sevenths, groups', async () => {
 
 const onsets = (p, cycles) => p.queryArc(0, cycles).filter((h) => h.hasOnset()).sort((a, b) => a.whole.begin.valueOf() - b.whole.begin.valueOf());
 const notesInCycle = (p, c) => onsets(p, c + 1).filter((h) => h.whole.begin.valueOf() >= c).map((h) => h.value.note);
-const layerPat = (g, meta, spec, layer) => g.song(meta, [g.section('_', 2, spec)]).strudle.sections[0].layers[layer].pattern;
+const layerPat = (g, meta, spec, layer) => g.song(meta, [g.section('_', 2, spec)]).strudel.sections[0].layers[layer].pattern;
 
 test('bass and pad follow the progression, melody stays in key', async () => {
   const g = await ready;
@@ -67,8 +67,8 @@ test('bass and pad follow the progression, melody stays in key', async () => {
 test('section key override changes pitched layers, not drums', async () => {
   const g = await ready;
   const base = { drums: { density: .6 }, pad: {} };
-  const a = g.song({ key: 'C:minor' }, [g.section('_', 1, base)]).strudle.sections[0].layers;
-  const b = g.song({ key: 'C:minor' }, [g.section('_', 1, { key: 'Eb:major', ...base })]).strudle.sections[0].layers;
+  const a = g.song({ key: 'C:minor' }, [g.section('_', 1, base)]).strudel.sections[0].layers;
+  const b = g.song({ key: 'C:minor' }, [g.section('_', 1, { key: 'Eb:major', ...base })]).strudel.sections[0].layers;
   assert.equal(Math.min(...notesInCycle(a.pad.pattern, 0)), 60, 'C4 in C minor');
   assert.equal(Math.min(...notesInCycle(b.pad.pattern, 0)), 63, 'Eb4 in Eb major');
   const sig = (p) => JSON.stringify(onsets(p, 1).map((h) => [h.whole.begin.valueOf(), h.value.s]));

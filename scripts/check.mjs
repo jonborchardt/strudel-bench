@@ -4,9 +4,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { userMap } from '../server.mjs';
+import { userPacks } from '../server.mjs';
 import './esm-fix.mjs'; // must run before the strudel imports below are resolved, hence dynamic imports
 import { parseProgression, chordNames } from '../lib/harmony.mjs';
+import { packsOf } from '../lib/packs.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
 const { transpiler } = await import('@strudel/transpiler');
 const { miniAllStrings } = await import('@strudel/mini');
@@ -25,20 +26,24 @@ export const ensureScope = () => (scopeReady ??= (async () => {
   await import('../lib/index.mjs');
 })());
 
-function knownSounds() {
+/** Built-in sounds: the synths plus every downloaded/CDN pack map in samples/packs. */
+function builtinSounds() {
   const known = new Set(SYNTHS);
   if (fs.existsSync(PACKS)) {
     for (const f of fs.readdirSync(PACKS).filter((f) => f.endsWith('.json') && f !== 'packs.json' && !f.includes('alias'))) {
       for (const k of Object.keys(JSON.parse(fs.readFileSync(path.join(PACKS, f), 'utf8')))) if (k !== '_base') known.add(k);
     }
   }
-  for (const k of Object.keys(userMap())) if (k !== '_base') known.add(k);
   return known;
 }
+/** sound -> pack for the local packs, so a sound can be traced to the pack a song must declare. */
+const localSounds = (packs) => new Map(Object.entries(packs).flatMap(([p, { sounds }]) => Object.keys(sounds).map((s) => [s, p])));
 
-export async function checkFile(file, cycles = 4) {
+/** `packs` (default: every pack in samples/user) is the local pack index to check against; the Pages build passes the deployed subset. */
+export const checkFile = (file, cycles = 4, packs) => checkCode(fs.readFileSync(file, 'utf8'), file, cycles, packs);
+/** Same as checkFile for a code string; `file` only names it in problem messages. */
+export async function checkCode(code, file = 'code', cycles = 4, packs = userPacks()) {
   await ensureScope();
-  const code = fs.readFileSync(file, 'utf8');
   const problems = [];
   const events = [];
   let pattern;
@@ -49,9 +54,12 @@ export async function checkFile(file, cycles = 4) {
   } catch (e) {
     return { ok: false, events, problems: [`${path.basename(file)}: ${e.message}`], cycles };
   }
-  cycles = pattern.strudle?.total ?? cycles;
-  const known = knownSounds();
-  const unknown = new Set();
+  cycles = pattern.strudel?.total ?? cycles;
+  const known = builtinSounds();
+  const local = localSounds(packs);
+  const declared = packsOf(code);
+  for (const p of declared) if (!packs[p]) problems.push(`${path.basename(file)}: missing pack "${p}" (declared, not in samples/user/)`);
+  const unknown = new Set(), undeclared = new Map();
   const haps = pattern.queryArc(0, cycles).filter((h) => h.hasOnset())
     .sort((a, b) => a.whole.begin.valueOf() - b.whole.begin.valueOf());
   for (const hap of haps) {
@@ -63,13 +71,17 @@ export async function checkFile(file, cycles = 4) {
     if (s === undefined) continue;
     for (const name of String(s).split(':')[0].split(',')) {
       const bare = name.trim();
-      if (!known.has(bare) && !(v.bank && known.has(`${v.bank}_${bare}`))) unknown.add(bare);
+      if (known.has(bare) || (v.bank && known.has(`${v.bank}_${bare}`))) continue;
+      const pack = local.get(bare);
+      if (!pack) unknown.add(bare);
+      else if (!declared.includes(pack)) undeclared.set(bare, pack);
     }
   }
   for (const u of unknown) problems.push(`${path.basename(file)}: unknown sound "${u}"`);
+  for (const [s, p] of undeclared) problems.push(`${path.basename(file)}: sound "${s}" is in local pack "${p}" which the song does not declare: add packs: ['${p}']`);
   let sections;
-  if (pattern.strudle) {
-    sections = pattern.strudle.sections.map((s) => {
+  if (pattern.strudel) {
+    sections = pattern.strudel.sections.map((s) => {
       return {
         name: s.name, cycles: s.cycles, offset: s.offset, span: s.span, role: s.role, grid: s.grid, cps: s.cps,
         harmony: `${s.key}  ${s.progression} → ${chordNames(s.key, parseProgression(s.progression))}`,
@@ -82,7 +94,7 @@ export async function checkFile(file, cycles = 4) {
       };
     });
   }
-  return { ok: problems.length === 0, events, problems, sections, cycles, cps: pattern.strudle?.meta.cps };
+  return { ok: problems.length === 0, events, problems, sections, cycles, cps: pattern.strudel?.meta.cps };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -1,4 +1,4 @@
-// demo: intro → verse → drop, written in the strudle axis vocabulary.
+// demo: intro → verse → drop, written in the strudel-bench axis vocabulary.
 // Axis values are 0..1 with 0.5 = the layer's baseline. See docs/superpowers/specs/2026-09-11-musical-axes-design.md
 song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909' }, [
   section('intro', 4, { role: 'establish',

@@ -17,7 +17,7 @@ test('adapter at exactly 0.5 equals no adapter, for every cell', async () => {
   const g = await ready;
   for (const L of LAYERS) {
     const base = sig(onsets(g[L]({}, ctx)));
-    for (const a of Object.keys(g.strudleLib.cells[L] ?? {})) {
+    for (const a of Object.keys(g.strudelLib.cells[L] ?? {})) {
       assert.equal(sig(onsets(g[L]({ [a]: .5 }, ctx))), base, `${L}.${a} at .5 must be a no-op`);
     }
   }
@@ -25,7 +25,7 @@ test('adapter at exactly 0.5 equals no adapter, for every cell', async () => {
 
 test('every cell moves something at 0 or at 1', async () => {
   const g = await ready;
-  for (const L of LAYERS) for (const a of Object.keys(g.strudleLib.cells[L] ?? {})) {
+  for (const L of LAYERS) for (const a of Object.keys(g.strudelLib.cells[L] ?? {})) {
     const mid = sig(onsets(g[L]({ [a]: .5 }, ctx)));
     const lo = sig(onsets(g[L]({ [a]: 0 }, ctx))), hi = sig(onsets(g[L]({ [a]: 1 }, ctx)));
     assert.ok(lo !== mid || hi !== mid, `${L}.${a} changes nothing at either end`);
@@ -44,7 +44,7 @@ test('density is monotone non-decreasing in onset count', async () => {
 test('drive never changes onset count', async () => {
   const g = await ready;
   for (const L of LAYERS) {
-    if (!g.strudleLib.cells[L]?.drive) continue;
+    if (!g.strudelLib.cells[L]?.drive) continue;
     const n = [0, .25, .5, .75, 1].map((v) => onsets(g[L]({ drive: v }, ctx)).length);
     assert.ok(n.every((x) => x === n[0]), `${L} drive counts ${n}`);
   }
@@ -53,7 +53,7 @@ test('drive never changes onset count', async () => {
 test('groove never changes onset count', async () => {
   const g = await ready;
   for (const L of LAYERS) {
-    if (!g.strudleLib.cells[L]?.groove) continue;
+    if (!g.strudelLib.cells[L]?.groove) continue;
     const n = [0, .25, .5, .75, 1].map((v) => onsets(g[L]({ groove: v }, ctx)).length);
     assert.ok(n.every((x) => x === n[0]), `${L} groove counts ${n}`);
   }
@@ -65,7 +65,7 @@ test('groove 1 displaces onsets relative to groove .5', async () => {
   const g = await ready;
   const at = (L, v) => onsets(g[L]({ density: 1, groove: v }, ctx)).map((h) => h.whole.begin.valueOf()).sort((a, b) => a - b);
   for (const L of LAYERS) {
-    if (!g.strudleLib.cells[L]?.groove) continue;
+    if (!g.strudelLib.cells[L]?.groove) continue;
     assert.notDeepEqual(at(L, 1), at(L, .5), `${L} groove 1 must move at least one onset`);
   }
 });
@@ -74,7 +74,7 @@ test('higher articulation gives shorter sounding events', async () => {
   const g = await ready;
   const len = (p) => onsets(p).reduce((s, h) => s + h.duration.valueOf() * (h.value.clip ?? 1), 0);
   for (const L of LAYERS) {
-    if (!g.strudleLib.cells[L]?.articulation) continue;
+    if (!g.strudelLib.cells[L]?.articulation) continue;
     const [lo, mid, hi] = [.1, .5, .9].map((v) => len(g[L]({ articulation: v }, ctx)));
     assert.ok(lo >= mid && mid > hi, `${L} articulation lengths ${[lo, mid, hi]}`);
   }
@@ -162,7 +162,7 @@ test('fill adds a snare roll only in the last cycle, by request or before a clim
   const base = onsets(g.drums({}, ctx)), filled = onsets(g.drums({ fill: true }, ctx));
   for (const c of [0, 1, 2]) assert.equal(inCycle(filled, c), inCycle(base, c), `cycle ${c}`);
   assert.equal(inCycle(filled, 3), inCycle(base, 3) + 8);
-  const m = g.song({}, [g.section('a', 2, { drums: {} }), g.section('b', 2, { role: 'climax', drums: {} }), g.section('c', 2, { drums: { fill: false } })]).strudle;
+  const m = g.song({}, [g.section('a', 2, { drums: {} }), g.section('b', 2, { role: 'climax', drums: {} }), g.section('c', 2, { drums: { fill: false } })]).strudel;
   const n = (i) => onsets(m.sections[i].layers.drums.pattern, 2).length;
   const plain = onsets(g.drums({}, { ...ctx, cycles: 2 }), 2).length;
   assert.equal(n(0), plain + 8, 'a fills into the climax');
@@ -186,22 +186,22 @@ test('pad arp spreads the chord into 8 notes per cycle; omitted equals baseline'
   // a seventh chord's real voice count (4) can exceed plan.tones (3, the default); the named order must
   // still reach every voice, not just the first plan.tones of them.
   const cyc1 = (pat) => onsets(pat, 2).filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);
-  const up7 = cyc1(g.song(meta, [g.section('_', 2, { progression: 'i V7', pad: { arp: 'up' } })]).strudle.sections[0].layers.pad.pattern);
+  const up7 = cyc1(g.song(meta, [g.section('_', 2, { progression: 'i V7', pad: { arp: 'up' } })]).strudel.sections[0].layers.pad.pattern);
   assert.equal(new Set(up7).size, 4, `V7 arp up should sound 4 distinct voices, got ${up7.join(',')}`);
-  const down7 = cyc1(g.song(meta, [g.section('_', 2, { progression: 'i V7', pad: { arp: 'down' } })]).strudle.sections[0].layers.pad.pattern);
+  const down7 = cyc1(g.song(meta, [g.section('_', 2, { progression: 'i V7', pad: { arp: 'down' } })]).strudel.sections[0].layers.pad.pattern);
   assert.equal(down7[0], Math.max(...up7), 'down starts on the highest note');
 });
 
 test('bass and pad follow altered roots, sevenths and sub-cycle chords', async () => {
   const g = await ready;
-  const build = (progression, layer, attrs = {}) => onsets(g.song(meta, [g.section('_', 2, { progression, [layer]: attrs })]).strudle.sections[0].layers[layer].pattern, 2);
+  const build = (progression, layer, attrs = {}) => onsets(g.song(meta, [g.section('_', 2, { progression, [layer]: attrs })]).strudel.sections[0].layers[layer].pattern, 2);
   const bassPlain = build('i VI', 'bass'), bassFlat = build('i bVI', 'bass');
   const c1 = (hs) => hs.filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);
   assert.deepEqual(c1(bassFlat), c1(bassPlain).map((n) => n - 1));
   const roots = build('i [VI VII]', 'bass').filter((h) => h.whole.begin.valueOf() >= 1).map((h) => h.value.note);
   assert.ok(new Set(roots).size >= 2, 'two chords in cycle 1');
   assert.equal(c1(build('i V7', 'pad')).length, 4, 'V7 voices four tones at the default density');
-  assert.equal(sig(build('i VI', 'pad')), sig(onsets(g.song(meta, [g.section('_', 2, { pad: {} })]).strudle.sections[0].layers.pad.pattern, 2)), 'explicit default equals default');
+  assert.equal(sig(build('i VI', 'pad')), sig(onsets(g.song(meta, [g.section('_', 2, { pad: {} })]).strudel.sections[0].layers.pad.pattern, 2)), 'explicit default equals default');
 });
 
 test('fx layer: silent by default; riser fills the last k cycles; impact hits the first downbeat', async () => {
@@ -221,14 +221,14 @@ test('fx layer: silent by default; riser fills the last k cycles; impact hits th
   assert.equal(onsets(g.fx({ riser: true }, { ...ctx, cycles: 2 }), 2).length, 16, 'riser capped at the section length');
   const bright = onsets(g.fx({ riser: 2, brightness: 1 }, c), 8).map((h) => h.value.cutoff);
   assert.ok(bright[15] > lp[15]);
-  for (const a of ['density', 'drive', 'variation', 'register']) assert.equal(g.strudleLib.cells.fx[a], undefined, `${a} has no fx cell`);
+  for (const a of ['density', 'drive', 'variation', 'register']) assert.equal(g.strudelLib.cells.fx[a], undefined, `${a} has no fx cell`);
 });
 
 test('fx cells: 0.5 is a no-op and the ends move something, over a riser', async () => {
   const g = await ready;
   const c = { ...ctx, cycles: 8 };
   const base = sig(onsets(g.fx({ riser: 2 }, c), 8));
-  for (const a of Object.keys(g.strudleLib.cells.fx)) {
+  for (const a of Object.keys(g.strudelLib.cells.fx)) {
     assert.equal(sig(onsets(g.fx({ riser: 2, [a]: .5 }, c), 8)), base, `fx.${a} at .5`);
     assert.ok(sig(onsets(g.fx({ riser: 2, [a]: 1 }, c), 8)) !== base || sig(onsets(g.fx({ riser: 2, [a]: 0 }, c), 8)) !== base, `fx.${a} moves`);
   }
@@ -249,7 +249,7 @@ test('melody follow transposes by the chord root; phrase lengthens the line', as
 
 test('follow + phrase: the chord root still advances once per cycle', async () => {
   const g = await ready;
-  const build = (melody) => g.song(meta, [g.section('_', 4, { progression: 'i VI III VII', melody })]).strudle.sections[0].layers.melody.pattern;
+  const build = (melody) => g.song(meta, [g.section('_', 4, { progression: 'i VI III VII', melody })]).strudel.sections[0].layers.melody.pattern;
   const inCycle = (p, c) => onsets(p, 4).filter((h) => h.whole.begin.valueOf() >= c && h.whole.begin.valueOf() < c + 1).map((h) => h.value.note);
   const plain = build({ phrase: 2 }), follow = build({ follow: true, phrase: 2 });
   for (const [c, want] of [[1, [8, 9]], [2, [3, 4]]]) {

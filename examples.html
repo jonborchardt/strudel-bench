@@ -1,0 +1,117 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>strudel-bench · examples</title>
+<meta name="description" content="Playable examples of every strudel-bench axis, descriptor, modifier and harmony word, each shown next to the plain Strudel it expands to.">
+<link rel="canonical" href="https://jonborchardt.github.io/strudel-bench/examples.html">
+<meta property="og:title" content="strudel-bench · examples">
+<meta property="og:description" content="Playable examples of every axis, descriptor, modifier and harmony word, next to the Strudel they expand to.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jonborchardt.github.io/strudel-bench/examples.html">
+<meta property="og:image" content="https://jonborchardt.github.io/strudel-bench/web/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="web/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="web/strudel.css">
+<nav class="top" id="nav"></nav>
+<main>
+  <section class="card intro">
+    <h1>How the vocabulary becomes Strudel</h1>
+    <p>strudel-bench songs are written with a small musical vocabulary: five layers (drums, bass, melody, pad, fx), twelve axes from 0 to 1 where
+      0.5 is each layer's baseline, descriptors that move several axes at once, modifiers that scale them, and harmony words that pick keys
+      and progressions. A song is a list of sections, each with its own layer settings, and an edit request names the section it is about.
+      An axis can also be a signal that moves through its section instead of a constant.</p>
+    <p>Why write at this level? Plain Strudel says what to play: a sample name, a note list, a filter cutoff in hertz. The vocabulary says
+      what it should sound like, and the layers turn that into the right pattern calls for their instrument. "Darker" is one word instead
+      of a cutoff, a gain change and a sample swap across three layers, so an edit request stays small and a change touches only the section
+      it names. Because every axis has the same range and baseline, "a bit brighter" means the same thing for a pad as for a bass line, and
+      a request can be checked by rendering before and after rather than by ear alone.</p>
+    <p>Every entry below is playable and editable. Press a variant, listen, then open the expanded Strudel: the top pane is the high-level
+      language you write, the bottom pane is the plain Strudel it becomes, regenerated as you type. Only one example plays at a time.</p>
+    <nav class="subnav" id="subnav"></nav>
+  </section>
+  <div id="groups"></div>
+  <section class="card intro">
+    <h2>Now go try it yourself</h2>
+    <p>Every example above was a sentence before it was a pattern. Head over to <a href="./">Compose</a>, open a song, and ask for it to be
+      darker, punchier, sparser, or more dreamy. The vocabulary does the arithmetic; you do the listening. And if it sounds wrong, that is
+      not a bug, that is a request for the next word.</p>
+  </section>
+</main>
+<footer class="site" id="foot"></footer>
+<script src="node_modules/@strudel/web/dist/index.js"></script>
+<script type="module">
+  import { boot, playCode, expandCode, nav, footer } from './web/boot.mjs';
+  import { GROUPS } from './web/examples.mjs';
+  const $ = (id) => document.getElementById(id);
+  $('nav').innerHTML = nav('Examples');
+  $('foot').innerHTML = footer();
+  const status = (text) => ($('status').textContent = text);
+  const ready = boot({ onError: status, onStatus: status });
+
+  // ---- reusable example card: header, blurb, optional explanation + svg, variant buttons (A/B), play/stop, an editable
+  // HLL pane whose edits re-expand (and re-evaluate while this card is playing), and the expanded Strudel. Data: web/examples.mjs.
+  let current = null; // { card, button }
+  const expanded = new Map(); // code -> expanded Strudel, so switching variants back and forth does not re-expand
+  function card(ex) {
+    const el = document.createElement('article');
+    el.className = `card ex${ex.stub ? ' stub' : ''}`;
+    const tags = ex.tags.map((t) => `<span class="tag">${t}</span>`).join('');
+    // body row: title, blurb, explanation and tags stacked on the left; the svg on the right, level with the title
+    el.innerHTML = `<div class="body"><div><h3>${ex.title}</h3><p>${ex.blurb}</p>${ex.explain ? `<p>${ex.explain}</p>` : ''}<div class="tags">${tags}</div></div>${ex.svg ? `<figure class="viz">${ex.svg}</figure>` : ''}</div>`;
+    if (ex.stub) { el.insertAdjacentHTML('beforeend', `<div class="variants"><button disabled>&#9654; Play</button></div><div class="placeholder">example coming: not yet written</div>`); return el; }
+    const vs = document.createElement('div'); vs.className = 'variants';
+    const hll = document.createElement('textarea'); hll.className = 'hll'; hll.spellcheck = false; hll.title = 'edit me: the expanded Strudel follows, and so does the sound while this example plays';
+    const gen = document.createElement('pre'); gen.className = 'gen';
+    const expand = async () => {
+      const code = hll.value;
+      if (!expanded.has(code)) {
+        gen.textContent = 'expanding…';
+        try { expanded.set(code, await expandCode(ready, code)); } catch (e) { return (gen.textContent = `expand failed: ${e.message}`); }
+      }
+      if (hll.value === code) gen.textContent = expanded.get(code);
+    };
+    // Play is only needed when the pane no longer matches a variant: single-variant cards have nothing else to click, so it stays
+    let base = '', baseBtn = null;
+    const edited = () => hll.value !== base;
+    const sync = () => { playBtn.hidden = ex.variants.length > 1 && !edited(); };
+    const load = async (v, b = null) => { hll.value = base = v.hll ?? (v.code ??= await (await fetch(v.src)).text()); baseBtn = b; sync(); return expand(); };
+    const play = async (button, label) => {
+      current?.card.classList.remove('playing'); current?.button.classList.remove('on');
+      current = { card: el, button }; el.classList.add('playing'); button.classList.add('on');
+      try { await playCode(ready, hll.value); status(`playing ${ex.title}${label ? `: ${label}` : ''}`); } catch (e) { status(e.message); }
+    };
+    let firstBtn = null;
+    const playBtn = document.createElement('button'); playBtn.innerHTML = '&#9654;'; playBtn.title = 'play the source as edited'; playBtn.onclick = () => play(playBtn);
+    if (ex.variants.length > 1) for (const v of ex.variants) { // A/B: each variant loads its code (dropping edits) and plays it
+      const b = document.createElement('button');
+      b.innerHTML = `&#9654; ${v.label}`;
+      b.onclick = async () => { await load(v, b); play(b, v.label); };
+      if (v === ex.variants[0]) firstBtn = b;
+      vs.append(b);
+    }
+    const stop = document.createElement('button'); stop.className = 'stop'; stop.innerHTML = '&#9632;'; stop.title = 'stop (ctrl+.)'; stop.onclick = stopAll;
+    vs.append(playBtn, stop);
+    let timer;
+    hll.oninput = () => { sync(); clearTimeout(timer); timer = setTimeout(async () => { await expand(); if (current?.card === el) play(edited() ? playBtn : baseBtn ?? playBtn); }, 300); };
+    const details = document.createElement('details');
+    details.innerHTML = '<summary>Expanded Strudel</summary>';
+    details.append(gen);
+    el.append(vs, hll, details);
+    load(ex.variants[0], firstBtn);
+    return el;
+  }
+  function stopAll() {
+    strudel.hush();
+    current?.card.classList.remove('playing'); current?.button.classList.remove('on'); current = null;
+    status('');
+  }
+
+  $('subnav').innerHTML = GROUPS.map((g) => `<a href="#${g.id}">${g.title}</a>`).join('');
+  for (const g of GROUPS) {
+    const sec = document.createElement('section'); sec.className = 'exgroup'; sec.id = g.id;
+    sec.innerHTML = `<h2>${g.title}</h2><p>${g.blurb}</p>`;
+    for (const ex of g.items) sec.append(card(ex));
+    $('groups').append(sec);
+  }
+  document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === '.') { e.preventDefault(); stopAll(); } });
+</script>

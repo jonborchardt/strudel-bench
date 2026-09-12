@@ -2,21 +2,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Mp3Encoder } from '@breezystack/lamejs';
+import { encodeMp3 } from '../web/mp3.mjs';
 import { readWav } from './analyze.mjs';
 
 export function wavToMp3(wavPath, { kbps = 192 } = {}) {
-  const { rate, channels, frames } = readWav(fs.readFileSync(wavPath));
-  const pcm = frames.slice(0, 2).map((f) => Int16Array.from(f, (s) => Math.round(Math.max(-1, Math.min(1, s)) * 32767)));
-  const enc = new Mp3Encoder(pcm.length, rate, kbps);
-  const out = [];
-  for (let i = 0; i < pcm[0].length; i += 1152 * 32) { // ponytail: whole file in memory; fine for song-length renders
-    const chunk = enc.encodeBuffer(...pcm.map((c) => c.subarray(i, i + 1152 * 32)));
-    if (chunk.length) out.push(Buffer.from(chunk));
-  }
-  out.push(Buffer.from(enc.flush()));
+  const { rate, frames } = readWav(fs.readFileSync(wavPath));
   const mp3Path = wavPath.replace(/\.wav$/i, '.mp3');
-  fs.writeFileSync(mp3Path, Buffer.concat(out));
+  fs.writeFileSync(mp3Path, encodeMp3(frames, rate, { kbps }));
   return mp3Path;
 }
 

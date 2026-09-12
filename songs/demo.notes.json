@@ -1,0 +1,21 @@
+{
+  "prompt": "A three-part demo in the axis vocabulary: a sparse intro, a verse that develops, and a drop that hits harder, in C minor with a TR-909 kit.",
+  "requests": [
+    {
+      "date": "2026-09-10",
+      "ask": "give each section a harmonic identity",
+      "changes": [
+        { "section": "drop", "why": "the drop gets its own progression (i VI III VII) so the climax moves harmonically, not just in density" }
+      ]
+    },
+    {
+      "date": "2026-09-11",
+      "ask": "use the new material keys",
+      "changes": [
+        { "section": "verse", "layer": "melody", "why": "the melody rides a slow saw from dark to bright over the 8 bars so the verse builds toward the drop" },
+        { "section": "verse", "layer": "fx", "why": "a 2-bar riser announces the drop" },
+        { "section": "drop", "layer": "pad", "why": "the pad arpeggiates upward to add motion under the busier drums" }
+      ]
+    }
+  ]
+}

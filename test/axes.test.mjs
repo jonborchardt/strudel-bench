@@ -4,7 +4,7 @@ import { ready } from './_scope.mjs';
 
 test('phases run in declared order and skip missing cells', async () => {
   const g = await ready;
-  const { defineCell, applyPatternPhases } = g.strudleLib;
+  const { defineCell, applyPatternPhases } = g.strudelLib;
   const log = [];
   defineCell('t', 'space', { spatial: (p) => (log.push('spatial'), p) });
   defineCell('t', 'weight', { level: (p) => (log.push('level'), p), pitch: (p) => (log.push('pitch'), p) });
@@ -15,7 +15,7 @@ test('phases run in declared order and skip missing cells', async () => {
 
 test('ctl: exact 0.5 is identity, numbers map, signals fmap, noopBelow respected', async () => {
   const g = await ready;
-  const { ctl, piece } = g.strudleLib;
+  const { ctl, piece } = g.strudelLib;
   const base = g.s('hh*4');
   const f = piece(200, 2000, 8000, { log: true });
   assert.equal(ctl(base, 'lpf', .5, f), base, 'same object at 0.5');
@@ -30,7 +30,7 @@ test('ctl: exact 0.5 is identity, numbers map, signals fmap, noopBelow respected
 
 test('num() rejects signals on structural axes', async () => {
   const g = await ready;
-  assert.throws(() => g.strudleLib.num(g.saw, 'density'), /density is structural/);
+  assert.throws(() => g.strudelLib.num(g.saw, 'density'), /density is structural/);
 });
 
 test('every proxy axis with a metric names a key analyze() returns', async () => {

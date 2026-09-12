@@ -45,18 +45,18 @@ test('overlay words are tagged overlay:true, control-vocabulary words overlay:fa
 // Last on purpose: this test drives loadVocab(), which reassigns the module-level DESCRIPTORS/OVERLAYS
 // bindings in lib/vocab.mjs. It restores the real on-disk tables before returning so it leaves no residue
 // for tests earlier in this file (node:test runs a file's top-level tests in declaration order).
-test('strudleLib.DESCRIPTORS/OVERLAYS are live getters that reflect loadVocab', async () => {
+test('strudelLib.DESCRIPTORS/OVERLAYS are live getters that reflect loadVocab', async () => {
   const scope = await ready;
-  const { strudleLib } = scope;
-  assert.equal(strudleLib.DESCRIPTORS.punchy.articulation, 0.4);
+  const { strudelLib } = scope;
+  assert.equal(strudelLib.DESCRIPTORS.punchy.articulation, 0.4);
 
-  await strudleLib.loadVocab(async (f) => (f === 'descriptors.json' ? { zzz: { weight: 0.1 } } : {}));
-  assert.equal(strudleLib.DESCRIPTORS.zzz.weight, 0.1);
+  await strudelLib.loadVocab(async (f) => (f === 'descriptors.json' ? { zzz: { weight: 0.1 } } : {}));
+  assert.equal(strudelLib.DESCRIPTORS.zzz.weight, 0.1);
 
   const libDir = fileURLToPath(new URL('../lib/', import.meta.url));
-  await strudleLib.loadVocab(async (f) => JSON.parse(readFileSync(path.join(libDir, f), 'utf8')));
-  assert.equal(strudleLib.DESCRIPTORS.zzz, undefined);
-  assert.equal(strudleLib.DESCRIPTORS.punchy.articulation, 0.4);
+  await strudelLib.loadVocab(async (f) => JSON.parse(readFileSync(path.join(libDir, f), 'utf8')));
+  assert.equal(strudelLib.DESCRIPTORS.zzz, undefined);
+  assert.equal(strudelLib.DESCRIPTORS.punchy.articulation, 0.4);
 });
 
 test('harmony words are consumed as states, not deltas or unknowns', () => {

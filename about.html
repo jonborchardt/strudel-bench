@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>strudel-bench · about</title>
+<meta name="description" content="strudel-bench is a workbench for songs: a vocabulary of layers and axes that compiles to Strudel live-coding patterns, built so a coding agent can change how a song sounds and verify it.">
+<link rel="canonical" href="https://jonborchardt.github.io/strudel-bench/about.html">
+<meta property="og:title" content="About strudel-bench">
+<meta property="og:description" content="A workbench for songs: a vocabulary of layers and axes that compiles to Strudel patterns, built so a coding agent can change how a song sounds and verify it.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jonborchardt.github.io/strudel-bench/about.html">
+<meta property="og:image" content="https://jonborchardt.github.io/strudel-bench/web/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="web/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="web/strudel.css">
+<nav class="top" id="nav"></nav>
+<main>
+  <article class="card prose">
+    <h1>About strudel-bench</h1>
+    <ul>
+      <li><strong><a href="https://strudel.cc">Strudel</a></strong> is the browser live-coding environment for patterns. Its code says
+        what to play: a sample name, a note list, a filter cutoff in hertz.</li>
+      <li><strong>strudel-bench</strong> is a small language on top of Strudel, and this site and repository for writing songs in it.
+        Its code says what a song should sound like: five layers (drums, bass, melody, pad, fx), twelve axes from 0 to 1 where 0.5 is
+        each layer's baseline, and a vocabulary of words ("darker", "punchier", "a bit more dreamy") that move several axes at once.
+        A song is a list of sections, each with its own layer settings and its own key and progression, and every song reduces to
+        plain Strudel. The bench plays songs, shows the source next to the Strudel it expands to (regenerated as you type), exports
+        MP3 and Strudel, and holds the command-line tools that check, edit, render and measure a song without a human listening.</li>
+    </ul>
+
+    <h2>Why the bench exists</h2>
+    <p>It is an experiment in letting a coding agent make music it cannot hear. An agent editing plain Strudel has to guess what a
+      cutoff change does. In strudel-bench, "make the drop brighter" is a numeric edit in one place, and the bench can render the song before
+      and after and compare the spectral centroid. That is the feedback loop the whole project is built around: change a word, check
+      the event stream, render, measure, report what moved. The repository holds a script for each step
+      (<code>check</code>, <code>resolve</code>, <code>render</code>, <code>analyze</code>, <code>verify</code>) and a test suite that pins the
+      exact event stream of every song, so an edit that changes something it should not is caught before anyone listens.</p>
+    <p>Most of the code and the songs were written by coding agents working from a written spec, in the spirit of the author's blog:
+      <a href="https://jonborchardt.github.io/blog/">always shippable, always improving</a>.</p>
+
+    <h2>What is on this site</h2>
+    <ul>
+      <li><a href="./">Compose</a>: pick a song, play it, edit the source, export an MP3 or the expanded Strudel. On this hosted copy
+        songs you create or save live in your own browser; nothing is uploaded.</li>
+      <li><a href="examples.html">Examples</a>: a playable card for every axis, descriptor, modifier, harmony word and section edit,
+        with the high-level source and the Strudel it expands to.</li>
+    </ul>
+
+    <h2>How it is built</h2>
+    <p>Node standard library and a plain textarea. No bundler, no framework, no build step beyond copying files. Strudel's own
+      packages run in the browser; the same library files run under Node for the checker and the tests. Sample packs come from the
+      Strudel CDN (the same ones strudel.cc uses); local packs can be added as folders and ship only when their license says so.
+      Source and issues: <a href="https://github.com/jonborchardt/strudel-bench">github.com/jonborchardt/strudel-bench</a>.</p>
+
+    <h2>Credits</h2>
+    <p><a href="https://strudel.cc">Strudel</a> by Felix Roos and contributors, a JavaScript port of
+      <a href="https://tidalcycles.org">TidalCycles</a>. Drum samples via the Strudel sample packs and tidal-drum-machines; MP3
+      encoding in the browser via lamejs. Each sample pack keeps its own license; see the pack sources for attribution.</p>
+  </article>
+</main>
+<footer class="site" id="foot"></footer>
+<script type="module">
+  import { nav, footer } from './web/boot.mjs';
+  document.getElementById('nav').innerHTML = nav('About');
+  document.getElementById('foot').innerHTML = footer();
+</script>
