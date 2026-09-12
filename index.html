@@ -184,7 +184,7 @@
     const kit = kitOf(src);
     const icon = (k) => (kitInfo[k] ? `<img src="web/kits/${k}.svg" alt="">` : '');
     $('kit').innerHTML = `${icon(kit)}${kit}`;
-    $('kitlist').innerHTML = [...new Set([kit, ...kits])].map((k) => `<button role="option" aria-selected="${k === kit}" data-kit="${k}" title="${kitInfo[k]?.about ?? ''}">${icon(k)}<span>${k}</span><small>${kitInfo[k]?.label ?? ''}</small></button>`).join('');
+    $('kitlist').innerHTML = [...new Set([kit, ...kits])].map((k) => `<button role="option" aria-selected="${k === kit}" data-kit="${k}" title="${kitInfo[k]?.about ?? ''}">${icon(k)}<span>${k}</span><span class="pv" role="button" title="hear this kit: the same two bars through every kit (pauses the song)">&#9654;</span><small>${kitInfo[k]?.label ?? ''}</small></button>`).join('');
     filterKits();
     $('kit').disabled = !kits.length || !/song\(\s*\{/.test(src); // plain strudel files have no kit to set
     // the song's declared sample packs and what they are here; a missing pack plays silence for its sounds, never a substitute
@@ -475,11 +475,12 @@
   $('kits').onclick = (e) => { // an edit to the source like any other: shows as unsaved, Save persists it
     const kit = e.target.closest('[data-kit]')?.dataset.kit;
     if (!kit) return;
+    if (e.target.closest('.pv')) return auditionKit(e.target.closest('.pv'), kit); // hear the kit, keep the menu open, pick nothing
     $('kits').hidePopover();
     did(() => setKit($('code').value, kit), `kit ${kit}`);
   };
   $('kits').ontoggle = (e) => { // popovers open centred by default: pin this one under its button
-    if (e.newState !== 'open') return;
+    if (e.newState !== 'open') { if (pvBtn && $('kits').contains(pvBtn)) preview(pvBtn); return; } // closing the menu ends its preview
     const r = $('kit').getBoundingClientRect();
     Object.assign($('kits').style, { top: `${r.bottom + 4}px`, left: `${r.left}px` });
     $('kitq').value = ''; filterKits();
@@ -585,30 +586,43 @@
   };
   // audition: pause the song, then play only this section's `layer` with material `key` set to `text`, for two bars
   let pvTimer, pvBtn, pvLast, pvGain = Number(localStorage.getItem('strudel:pvlvl')) || 1; // pvGain: preview volume, a page setting rather than part of the song
-  async function audition(btn, layer, key, text, voice) {
+  // preview(btn, build): build() -> { pattern, cps, what }; the same button again stops it, another button replaces it
+  async function preview(btn, build) {
     clearTimeout(pvTimer); pvBtn?.classList.remove('on');
-    if (pvBtn === btn) { pvBtn = null; strudel.hush(); return; } // the same button again stops it
-    pvBtn = btn; pvLast = [layer, key, text, voice];
-    await hear(btn, layer, key, text, voice);
+    if (pvBtn === btn) { pvBtn = null; strudel.hush(); return; }
+    pvBtn = btn; pvLast = [btn, build];
+    await run(btn, build);
   }
-  async function hear(btn, layer, key, text, voice) {
+  async function run(btn, build) {
     if (playing) await pause();
     strudel.hush();
     const r = await ready;
     await strudel.getAudioContext().resume(); // this ▶ may be the page's first click: the context starts suspended until a gesture resumes it
-    let pat; try { pat = await evalCode(ready, setMaterial($('code').value, mixSection, layer, key, text)); } catch (err) { $('mixstatus').textContent = err.message; pvBtn = null; return; }
-    const s = pat.strudel.sections.find((x) => x.name === mixSection);
+    let p; try { p = await build(); } catch (err) { $('mixstatus').textContent = err.message; pvBtn = null; return; }
     btn.classList.add('on');
-    let part = s.layers[layer].pattern, what = `${key} ${text ?? 'removed'}`;
-    if (voice) { // one drum voice alone on its template grid: the whole part would drown it, or not even include it (voices join as density rises)
+    $('mixstatus').textContent = `hearing ${p.what}${pvGain === 1 ? '' : ` at x${pvGain}`}`;
+    r.setCps(p.cps); r.setPattern(p.pattern.mul(strudel.gain(pvGain)), true); // the repl's own setCps: the `setcps` global only exists once the song has been evaluated
+    pvTimer = setTimeout(() => { strudel.hush(); btn.classList.remove('on'); pvBtn = null; }, 2000 / p.cps + 200);
+  }
+  // a material: this section's `layer` with `key` set to `text` (a drum voice alone on its template grid: the whole part would drown it, or not even include it, since voices join as density rises)
+  const audition = (btn, layer, key, text, voice) => preview(btn, async () => {
+    const pat = await evalCode(ready, setMaterial($('code').value, mixSection, layer, key, text));
+    const s = pat.strudel.sections.find((x) => x.name === mixSection);
+    let pattern = s.layers[layer].pattern, what = `${key} ${text ?? 'removed'}`;
+    if (voice) {
       const name = s.layers[layer].attrs.sounds?.[voice];
-      part = voiceSound(name, voice, s.kit, gridToMini(fit(TEMPLATES[s.layers[layer].attrs.template ?? 'house'][voice], s.grid.steps))); // the same rule as the drums part: kit voice or bare sample
+      pattern = voiceSound(name, voice, s.kit, gridToMini(fit(TEMPLATES[s.layers[layer].attrs.template ?? 'house'][voice], s.grid.steps))); // the same rule as the drums part: kit voice or bare sample
       what = `${voice} ${name ?? `${s.kit} ${voice}`}`;
     }
-    $('mixstatus').textContent = `hearing ${mixSection} ${layer} ${what}${pvGain === 1 ? '' : ` at x${pvGain}`}`;
-    r.setCps(s.cps); r.setPattern(part.mul(strudel.gain(pvGain)), true); // the repl's own setCps: the `setcps` global only exists once the song has been evaluated
-    pvTimer = setTimeout(() => { strudel.hush(); btn.classList.remove('on'); pvBtn = null; }, 2000 / s.cps + 200);
-  }
+    return { pattern, cps: s.cps, what: `${mixSection} ${layer} ${what}` };
+  });
+  // a kit: the same two bars of kick, snare, hats, open hat and clap (the house template) through every kit, at the song's tempo
+  const KIT_VOICES = ['bd', 'sd', 'hh', 'oh', 'cp'];
+  const auditionKit = (btn, kit) => preview(btn, async () => ({
+    pattern: strudel.stack(...KIT_VOICES.map((v) => strudel.s(v).struct(gridToMini(TEMPLATES.house[v])).bank(kit))),
+    cps: sections.find((x) => x.name === mixSection)?.cps ?? sections[0]?.cps ?? 0.5,
+    what: `kit ${kit}`,
+  }));
   // two copies of the same control, one under the part rows and one in the menu: both show pvGain
   // the sliders run -1..1.7 and the gain is 10^x (x0.1 .. x50), so the first half of the travel is the fine x0.1..x1 range and the far end still reaches a whisper-quiet sample
   const pvIns = [...document.querySelectorAll('input.pvin')];
@@ -616,7 +630,7 @@
   showPvGain();
   for (const i of pvIns) {
     i.oninput = (e) => { pvGain = +(10 ** Number(e.target.value)).toFixed(2); localStorage.setItem('strudel:pvlvl', pvGain); showPvGain(); };
-    i.onchange = () => { if (pvBtn) { clearTimeout(pvTimer); hear(pvBtn, ...pvLast); } }; // a running preview restarts at the new level
+    i.onchange = () => { if (pvBtn) { clearTimeout(pvTimer); run(...pvLast); } }; // a running preview restarts at the new level
   }
   $('mats').oninput = (e) => { if (e.target.dataset.mat === 'level') e.target.nextElementSibling.value = `x${e.target.value}`; }; // the readout follows the drag; the source changes on release (change)
   $('mats').onmousedown = (e) => { if (e.target.closest('[data-pv]')) e.preventDefault(); }; // keep the text box focused, so its play button stays
