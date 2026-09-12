@@ -53,7 +53,7 @@
     <div class="row addrow" id="addrow"></div>
     <datalist id="snds"></datalist>
     <!-- the materials menu: one popover for every pick button, rows carry a play button that auditions without selecting -->
-    <div id="pick" popover class="menu"><input id="pickq" type="search" placeholder="filter" autocomplete="off"><div id="picklist" role="listbox"></div></div>
+    <div id="pick" popover class="menu"><input id="pickq" type="search" placeholder="filter" autocomplete="off"><label class="pvlvl" title="how loud the previews play (every &#9654; on this page); not written to the song">preview level <input id="pvlvl" type="range" min="0" max="4" step=".1" value="1"><output>x1.0</output></label><div id="picklist" role="listbox"></div></div>
     <div class="row" style="margin-top:.5rem">
       <span class="pills" id="pills" title="type a word and pick it from the list: control words, moods, modifiers (much, a little, less), harmony words, or a part name to aim the words after it at that part. Enter on an empty box applies."><input id="phrase" list="terms" placeholder="darker, much sparser, drums &hellip;" autocomplete="off"><datalist id="terms"></datalist></span>
       <button id="apply" title="rewrite this section's axis literals from the words">Apply</button>
@@ -584,21 +584,28 @@
     setMat(el.closest('[data-layer]').dataset.layer, key, matText(null, key, el.type === 'checkbox' ? el.checked : el.value));
   };
   // audition: pause the song, then play only this section's `layer` with material `key` set to `text`, for two bars
-  let pvTimer, pvBtn;
+  let pvTimer, pvBtn, pvLast, pvGain = Number(localStorage.getItem('strudel:pvlvl')) || 1; // pvGain: preview volume, a page setting rather than part of the song
   async function audition(btn, layer, key, text) {
     clearTimeout(pvTimer); pvBtn?.classList.remove('on');
     if (pvBtn === btn) { pvBtn = null; strudel.hush(); return; } // the same button again stops it
+    pvBtn = btn; pvLast = [layer, key, text];
+    await hear(btn, layer, key, text);
+  }
+  async function hear(btn, layer, key, text) {
     if (playing) await pause();
     strudel.hush();
     const r = await ready;
     await strudel.getAudioContext().resume(); // this ▶ may be the page's first click: the context starts suspended until a gesture resumes it
-    let pat; try { pat = await evalCode(ready, setMaterial($('code').value, mixSection, layer, key, text)); } catch (err) { $('mixstatus').textContent = err.message; return; }
+    let pat; try { pat = await evalCode(ready, setMaterial($('code').value, mixSection, layer, key, text)); } catch (err) { $('mixstatus').textContent = err.message; pvBtn = null; return; }
     const s = pat.strudel.sections.find((x) => x.name === mixSection);
-    pvBtn = btn; btn.classList.add('on');
-    $('mixstatus').textContent = `hearing ${mixSection} ${layer} with ${key} ${text ?? 'removed'}`;
-    r.setCps(s.cps); r.setPattern(s.layers[layer].pattern, true); // the repl's own setCps: the `setcps` global only exists once the song has been evaluated
+    btn.classList.add('on');
+    $('mixstatus').textContent = `hearing ${mixSection} ${layer} with ${key} ${text ?? 'removed'}${pvGain === 1 ? '' : ` at x${pvGain}`}`;
+    r.setCps(s.cps); r.setPattern(s.layers[layer].pattern.mul(strudel.gain(pvGain)), true); // the repl's own setCps: the `setcps` global only exists once the song has been evaluated
     pvTimer = setTimeout(() => { strudel.hush(); btn.classList.remove('on'); pvBtn = null; }, 2000 / s.cps + 200);
   }
+  $('pvlvl').value = pvGain; $('pvlvl').nextElementSibling.value = `x${pvGain.toFixed(1)}`;
+  $('pvlvl').oninput = (e) => { pvGain = Number(e.target.value); e.target.nextElementSibling.value = `x${pvGain.toFixed(1)}`; localStorage.setItem('strudel:pvlvl', pvGain); };
+  $('pvlvl').onchange = () => { if (pvBtn) { clearTimeout(pvTimer); hear(pvBtn, ...pvLast); } }; // a running preview restarts at the new level
   $('mats').oninput = (e) => { if (e.target.dataset.mat === 'level') e.target.nextElementSibling.value = `x${e.target.value}`; }; // the readout follows the drag; the source changes on release (change)
   $('mats').onmousedown = (e) => { if (e.target.closest('[data-pv]')) e.preventDefault(); }; // keep the text box focused, so its play button stays
   $('mats').onclick = (e) => {
@@ -625,7 +632,7 @@
   $('pickq').oninput = filterPick;
   $('pickq').onkeydown = (e) => { if (e.key !== 'Enter') return; e.preventDefault(); $('picklist').querySelector('.row:not([hidden])')?.click(); };
   $('pick').onclick = (e) => {
-    const row = e.target.closest('.row'); if (!row) return;
+    const row = e.target.closest('.row'); if (!row) return; // the filter box and the level slider are not rows
     const { layer, key, voice } = pickFor, text = matText(layer, key, row.dataset.v, voice);
     if (e.target.closest('.pv')) return audition(e.target.closest('.pv'), layer, key, text); // hear it, keep the menu open, pick nothing
     $('pick').hidePopover();
