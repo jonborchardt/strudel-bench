@@ -37,13 +37,41 @@ button:hover:not(:disabled) { border-color: #888; }
 button:disabled { cursor: not-allowed; opacity: .5; }
 button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 button.on { background: #e6eefc; border-color: var(--accent); }
-label.field { display: inline-flex; align-items: center; gap: .35rem; color: var(--muted); }
-label.field select { color: var(--ink); }
+.field { display: inline-flex; align-items: center; gap: .35rem; color: var(--muted); }
+.field select, .field button { color: var(--ink); }
+
+/* kit menu: a native popover pinned under its button; each entry is the kit name over its one-line description */
+.menu { margin: 0; padding: .25rem; border: 1px solid #bbb; border-radius: 6px; background: #fff; box-shadow: 0 6px 20px rgba(0, 0, 0, .15); max-height: 60vh; overflow-y: auto; width: 24rem; max-width: calc(100vw - 2rem); }
+.menu button { display: grid; grid-template-columns: auto 1fr; column-gap: .6rem; align-items: center; width: 100%; border: 0; border-radius: 4px; padding: .3rem .6rem; text-align: left; line-height: 1.3; }
+.menu button[hidden] { display: none; } /* the grid rule above would otherwise beat the hidden attribute */
+.menu button img { grid-row: span 2; width: 30px; height: 30px; }
+.menu .key { position: sticky; bottom: -.25rem; margin: .25rem -.25rem -.25rem; padding: .3rem .5rem; background: #fff; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: .1rem .55rem; font-size: .72rem; color: var(--muted); }
+.menu .key span { display: inline-flex; align-items: center; gap: .15rem; white-space: nowrap; }
+.menu .key i { font-style: normal; color: var(--line); }
+.menu .key img { width: 18px; height: 18px; }
+.menu input { position: sticky; top: 0; box-sizing: border-box; width: 100%; margin-bottom: .25rem; padding: .35rem .6rem; font: inherit; border: 1px solid #bbb; border-radius: 4px; background: #fff; }
+#kit img { width: 20px; height: 20px; vertical-align: -5px; margin-right: .4rem; }
+.menu button:hover, .menu button:focus-visible { background: #eef3fd; outline: 0; }
+.menu button[aria-selected="true"] { background: #e6eefc; }
+.menu small { font-size: .8rem; color: var(--muted); }
 
 /* transport */
 .transport { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .transport input[type=range] { flex: 1; min-width: 12rem; }
 .transport .where { font: var(--mono); min-width: 9rem; color: var(--muted); }
+
+/* the comments card's copy of the transport: icon buttons, a lane with one dot per comment */
+.mini { display: flex; align-items: center; gap: .3rem; margin-bottom: .5rem; }
+.mini button { padding: .15rem .45rem; font-size: .8rem; line-height: 1.4; }
+.mini .where { font: var(--mono); font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.lane { position: relative; flex: 1; min-width: 8rem; display: flex; align-items: center; padding-top: .6rem; }
+.lane input[type=range] { width: 100%; margin: 0; }
+.lane .dot { position: absolute; top: 0; width: .7rem; height: .7rem; padding: 0; border-radius: 50%; background: var(--c, var(--accent)); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--c, var(--accent)); transform: translateX(-50%); cursor: grab; touch-action: none; }
+.lane .dot.on { transform: translateX(-50%) scale(1.4); }
+#fbnotes { list-style: none; padding-left: .25rem; }
+#fbnotes .sw { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; margin-right: .35rem; vertical-align: baseline; }
+.notes li.on { background: #fff6dc; border-radius: 4px; }
+.notes li a { text-decoration: none; }
 
 /* side-by-side panes, stacked when narrow */
 .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }

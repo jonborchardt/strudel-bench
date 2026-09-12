@@ -9,7 +9,8 @@
   <header class="card row" id="head">
     <label class="field">Song <select id="song"></select></label>
     <button id="new" title="create a song from the minimal template">+ New song</button>
-    <label class="field" title="kit switching is a follow-up: shows the song's kit for now">Kit <select id="kit" disabled></select></label>
+    <span class="field" title="drum kit for the whole song (a section's own kit: still wins); kits listed are the loaded ones with kick, snare and hats">Kit <button id="kit" popovertarget="kits" disabled>&mdash;</button></span>
+    <div id="kits" popover class="menu"><input id="kitq" type="search" placeholder="filter by name or description" autocomplete="off"><div id="kitlist" role="listbox"></div><div class="key" id="kitkey" title="what the icons mean: line texture, height = weight, colour = brightness, extras = character"></div></div>
     <span class="grow"></span>
     <button id="save" title="write the source back to songs/">Save</button>
     <span class="group" aria-label="export">
@@ -46,17 +47,23 @@
   <!-- feedback: pick a section, say what should change, get a request to paste to Claude -->
   <section class="panes">
     <div class="card" id="feedback">
-      <header><h2>Ask Claude about a section</h2><small>listen, pick the section, say what should change</small></header>
-      <div class="row">
-        <label class="field">Section <select id="fbsection"></select></label>
-        <span class="muted" id="fbwhere"></span>
+      <header><h2>Change comments</h2></header>
+      <div class="mini" aria-label="timeline">
+        <button id="mplay" title="play">&#9654;</button>
+        <button id="mpause" title="pause">&#10074;&#10074;</button>
+        <button id="mstop" title="stop">&#9632;</button>
+        <span class="lane"><input id="mpos" type="range" min="0" max="1" step="0.05" value="0" disabled aria-label="position"><span id="dots"></span></span>
+        <span class="where" id="fbwhere">&mdash;</span>
       </div>
       <textarea id="fbcomment" class="note" placeholder="Make this heavier and less predictable."></textarea>
       <div class="row" style="margin-top:.5rem">
-        <button id="fbbuild" class="primary">Build request</button>
-        <button id="fbcopy" disabled>Copy</button>
+        <button id="fbadd" title="pins the comment at the cycle the playhead is on" disabled>Add comment here</button>
+        <button id="fbcancel" hidden>Cancel</button>
+        <span class="grow"></span>
+        <button id="fbcopy" class="primary" disabled>Copy request</button>
         <small id="fbstatus"></small>
       </div>
+      <ol class="notes" id="fbnotes"></ol>
       <pre id="fbout" class="gen" hidden style="margin-top:.5rem;padding:.5rem"></pre>
     </div>
     <div class="card">
@@ -68,7 +75,8 @@
 </main>
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
-  import { boot, playCode, expandCode, nav } from './web/boot.mjs';
+  import { boot, playCode, expandCode, nav, drumMachines } from './web/boot.mjs';
+  import { kitsIn, kitOf, setKit, buildRequest } from './web/compose.mjs';
   const $ = (id) => document.getElementById(id);
   $('nav').innerHTML = nav('Compose');
   const status = (text) => ($('status').textContent = text);
@@ -80,7 +88,16 @@
   const DRAFT = 'strudle:'; // github pages cannot write songs/, so songs made there live in localStorage under this prefix
   const drafts = () => Object.keys(localStorage).filter((k) => k.startsWith(DRAFT)).map((k) => k.slice(DRAFT.length));
   const NAME = /^[\w.-]+\.strudel$/;
-  const KITS = ['RolandTR909', 'RolandTR808', 'RolandTR707', 'RolandTR606', 'LinnDrum', 'AkaiMPC60', 'OberheimDMX'];
+  let kits = []; // drum kits the loaded packs actually have (filled once strudel is ready)
+  let kitInfo = {}; // lib/kits.json: { kit: { label, about, icon } } for the kit menu
+  // the icon key pinned under the kit list: legend files scripts/kiticons.mjs writes, one word each, a bar between the slots
+  $('kitkey').innerHTML = [
+    [['texture-jagged', 'crunchy'], ['texture-smooth', 'analog'], ['texture-clean', 'clean']],
+    [['weight-heavy', 'punchy'], ['weight-light', 'thin']],
+    [['brightness-bright', 'bright'], ['brightness-dark', 'warm']],
+    [['accent-sub', 'sub'], ['accent-noise', 'hissy'], ['accent-ticks', 'preset box'], ['accent-sweep', 'synth'], ['accent-layers', 'many variants'], ['accent-pixels', 'toy']],
+  ].map((group) => group.map(([f, word]) => `<span><img src="web/kits/legend/${f}.svg" alt="">${word}</span>`).join('')).join('<i>|</i>');
+  let notes = []; // feedback notes for the request: { section, cycle?, text }
   const TEMPLATE = `song({ cps: .5, key: 'C:minor', seed: 1, kit: 'RolandTR909' }, [ // axis values are 0..1, 0.5 = the layer's baseline
   section('intro', 4, { role: 'establish', drums: { density: .4 }, pad: { space: .7 } }),
   section('main', 8, { role: 'develop', drums: { density: .7 }, bass: { weight: .7 }, pad: {} }),
@@ -88,6 +105,11 @@
 `;
 
   const ready = boot({ onError: (m) => ($('err').textContent = m), onStatus: status });
+  Promise.all([ready, fetch('lib/kits.json').then((r) => r.json())]).then(([, info]) => { // what the packs actually loaded, local or cdn
+    kitInfo = info;
+    kits = kitsIn(Object.keys(strudel.soundMap.get()), drumMachines);
+    sourceChanged();
+  });
 
   async function loadList(want = decodeURIComponent(location.hash.slice(1))) {
     const names = [...new Set([...(await (await fetch('songs/index.json')).json()), ...drafts()])].sort();
@@ -102,6 +124,7 @@
     loaded = (r.ok ? await r.text() : localStorage.getItem(DRAFT + name) ?? '').replace(/\r\n/g, '\n'); // the textarea normalises line breaks, so compare like for like
     $('code').value = loaded;
     $('err').textContent = '';
+    notes = []; // notes are about the song they were written on
     sourceChanged();
     shown = []; // a different song: nothing to flash
     expand();
@@ -109,13 +132,12 @@
   // everything derived from the source text: section list, kit, header notes, stale flag
   function sourceChanged() {
     const src = $('code').value;
-    const names = [...src.matchAll(/section\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]);
-    const cur = $('fbsection').value;
-    $('fbsection').innerHTML = ['(whole song)', ...names].map((n) => `<option>${n}</option>`).join('');
-    if (names.includes(cur)) $('fbsection').value = cur;
-    const kit = src.match(/kit:\s*['"]([^'"]+)['"]/)?.[1] ?? 'RolandTR909';
-    $('kit').innerHTML = [...new Set([kit, ...KITS])].map((k) => `<option>${k}</option>`).join('');
-    $('kit').value = kit;
+    const kit = kitOf(src);
+    const icon = (k) => (kitInfo[k]?.icon ? `<img src="${kitInfo[k].icon}" alt="">` : '');
+    $('kit').innerHTML = `${icon(kit)}${kit}`;
+    $('kitlist').innerHTML = [...new Set([kit, ...kits])].map((k) => `<button role="option" aria-selected="${k === kit}" data-kit="${k}" title="${kitInfo[k]?.about ?? ''}">${icon(k)}<span>${k}</span><small>${kitInfo[k]?.label ?? ''}</small></button>`).join('');
+    filterKits();
+    $('kit').disabled = !kits.length || !/song\(\s*\{/.test(src); // plain strudel files have no kit to set
     // every line comment, attributed to the section it sits in (before the first section = the song)
     const notes = {}; let at = 'song';
     for (const line of src.split('\n')) {
@@ -126,6 +148,7 @@
     const esc = (s) => s.replace(/</g, '&lt;');
     $('notes').innerHTML = Object.entries(notes).map(([sec, ls]) => `<li><b>${esc(sec)}</b><ul>${ls.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></li>`).join('') || '<li class="muted">no comments in this song yet</li>';
     $('stale').textContent = src !== loaded ? 'unsaved' : '';
+    fbRender(); // the request quotes the source, so it follows edits
   }
   // expand the textarea in the browser (lib/dump.mjs); lines that differ from the last expansion flash briefly
   let shown = []; // lines currently displayed
@@ -158,8 +181,8 @@
     const pat = await playCode(ready, $('code').value);
     playing = true;
     sections = pat?.strudle?.sections ?? []; // only song() files have sections to scrub through
-    $('pos').disabled = !sections.length;
-    $('pos').max = pat?.strudle?.total ?? 1;
+    for (const p of [$('pos'), $('mpos')]) { p.disabled = !sections.length; p.max = pat?.strudle?.total ?? 1; }
+    $('fbadd').disabled = !sections.length;
     $('marks').innerHTML = sections.map((s) => `<option value="${s.offset}" label="${s.name}">`).join(''); // tick marks at section starts
     if (paused != null) { (await ready).scheduler.setCycle(paused); paused = null; }
     console.log('[strudle] evaluated', $('song').value);
@@ -194,21 +217,20 @@
     status(`created ${name}${server ? '' : ' in this browser'}`);
   }
 
-  $('play').onclick = play;
-  $('pause').onclick = pause;
-  $('stop').onclick = stop;
-  $('pos').oninput = async (e) => {
+  $('play').onclick = $('mplay').onclick = play;
+  $('pause').onclick = $('mpause').onclick = pause;
+  $('stop').onclick = $('mstop').onclick = stop;
+  $('pos').oninput = $('mpos').oninput = async (e) => { // the two sliders are one position: the comments card has a copy of the transport
     paused = null;
     if (!playing) await play();
     (await ready).scheduler.setCycle(Number(e.target.value)); // clock worker jumps; already-sounding notes keep ringing
   };
   setInterval(async () => { // follow the clock: slider position + "section · cycle/total"
     if (!sections.length) return;
-    const c = playing ? (await ready).scheduler.now() : paused ?? 0; // now() drifts after stop
-    if (document.activeElement !== $('pos')) $('pos').value = c; // don't yank the knob mid-drag
+    const c = (playing ? (await ready).scheduler.now() : paused ?? 0) % Number($('pos').max); // now() drifts after stop; the song repeats every `total`, so wrap
+    for (const p of [$('pos'), $('mpos')]) if (document.activeElement !== p) p.value = c; // don't yank the knob mid-drag
     const s = sections.findLast((x) => x.offset <= c);
-    $('where').textContent = `${s?.name ?? '…'} · ${c.toFixed(1)}/${$('pos').max}`;
-    $('fbwhere').textContent = playing && s ? `playing: ${s.name}` : '';
+    $('where').textContent = $('fbwhere').textContent = `${s?.name ?? '…'} · ${c.toFixed(1)}/${$('pos').max}`;
   }, 250);
   $('save').onclick = save;
   $('new').onclick = newSong;
@@ -229,21 +251,94 @@
     if ($('code').value !== loaded && !confirm('Discard unsaved edits?')) { $('song').value = decodeURIComponent(location.hash.slice(1)); return; }
     loadSong();
   };
+  $('kits').onclick = (e) => { // an edit to the source like any other: shows as unsaved, Save persists it
+    const kit = e.target.closest('[data-kit]')?.dataset.kit;
+    if (!kit) return;
+    $('kits').hidePopover();
+    $('code').value = setKit($('code').value, kit);
+    sourceChanged(); expandSoon();
+    if (playing) play();
+  };
+  $('kits').ontoggle = (e) => { // popovers open centred by default: pin this one under its button
+    if (e.newState !== 'open') return;
+    const r = $('kit').getBoundingClientRect();
+    Object.assign($('kits').style, { top: `${r.bottom + 4}px`, left: `${r.left}px` });
+    $('kitq').value = ''; filterKits();
+    $('kitq').focus();
+    $('kits').querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'center' });
+  };
+  function filterKits() { // by name or label, case-insensitive, any word order
+    const words = $('kitq').value.toLowerCase().split(/\s+/).filter(Boolean);
+    for (const b of $('kitlist').children) b.hidden = !words.every((w) => b.textContent.toLowerCase().includes(w));
+  }
+  $('kitq').oninput = filterKits;
+  $('kitq').onkeydown = (e) => { // enter picks the first match; preventDefault so the same key does not re-press the kit button once focus returns to it
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    $('kitlist').querySelector('button:not([hidden])')?.click();
+  };
   $('code').addEventListener('input', () => { sourceChanged(); expandSoon(); });
   $('code').addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); play(); }
     if ((e.ctrlKey || e.metaKey) && e.key === '.') { e.preventDefault(); stop(); }
   });
 
-  // feedback → Claude request: song name, section, the section's source, and the comment
-  $('fbbuild').onclick = () => {
-    const song = $('song').value, sec = $('fbsection').value, comment = $('fbcomment').value.trim();
-    const src = $('code').value;
-    const block = sec === '(whole song)' ? src : src.match(new RegExp(`section\\(\\s*['"]${sec}['"][\\s\\S]*?\\n\\s*\\}\\),?`))?.[0] ?? '';
-    $('fbout').textContent = [`Song: ${song}`, `Section: ${sec}`, '', `Request: ${comment || '(describe the change)'}`, '', 'Current source:', '```', block.trim(), '```'].join('\n');
-    $('fbout').hidden = false;
-    $('fbcopy').disabled = false;
+  // feedback: comments pinned at the playhead's cycle become one paste-ready Claude request. Each shows as a dot on
+  // the card's timeline: click a dot to edit its text, drag it to move it.
+  let editing = null; // index of the comment being edited
+  function fbRender() {
+    const esc = (s) => s.replace(/</g, '&lt;');
+    const max = Number($('pos').max) || 1;
+    const hue = (i) => `hsl(${(i * 67) % 360} 70% 45%)`; // one colour per comment, the same on its dot and in the list
+    $('dots').innerHTML = notes.map((n, i) => `<button class="dot${i === editing ? ' on' : ''}" data-i="${i}" style="left:${(n.cycle / max) * 100}%;--c:${hue(i)}" title="${esc(n.section)} · ${n.cycle.toFixed(1)}: ${esc(n.text)}"></button>`).join('');
+    $('fbnotes').innerHTML = notes.map((n, i) => `<li${i === editing ? ' class="on"' : ''}><span class="sw" style="background:${hue(i)}"></span>${i + 1}. <a href="#" data-i="${i}" title="edit"><b>${esc(n.section)}</b> <small>cycle ${n.cycle.toFixed(1)}</small></a> ${esc(n.text)} <a href="#" data-i="${i}" data-x title="remove">&times;</a></li>`).join('');
+    $('fbout').textContent = notes.length ? buildRequest({ song: $('song').value, src: $('code').value, notes, sections }) : '';
+    $('fbout').hidden = $('fbcopy').disabled = !notes.length;
+    $('fbadd').textContent = editing == null ? 'Add comment here' : 'Save comment here';
+    $('fbcancel').hidden = editing == null;
     $('fbstatus').textContent = '';
+  }
+  function fbEdit(i) {
+    editing = i;
+    $('fbcomment').value = notes[i].text;
+    fbRender();
+    $('fbcomment').focus();
+  }
+  const sectionAt = (cycle) => sections.findLast((x) => x.offset <= cycle)?.name ?? sections[0].name;
+  $('fbadd').onclick = () => {
+    const text = $('fbcomment').value.trim();
+    if (!text) return ($('fbstatus').textContent = 'write the change first');
+    const cycle = Number($('pos').value); // the slider follows the clock, so this is where the ear is
+    if (editing == null) notes.push({ section: sectionAt(cycle), cycle, text }); else notes[editing].text = text; // editing changes the words, dragging the place
+    editing = null;
+    $('fbcomment').value = '';
+    fbRender();
+  };
+  $('fbcancel').onclick = () => { editing = null; $('fbcomment').value = ''; fbRender(); };
+  $('dots').onpointerdown = (e) => { // a still press edits, a drag re-pins (0.1 cycle steps)
+    const dot = e.target.closest('.dot'); if (!dot) return;
+    const i = Number(dot.dataset.i), lane = $('mpos').getBoundingClientRect(), max = Number($('pos').max) || 1, x0 = e.clientX;
+    let moved = false;
+    dot.setPointerCapture(e.pointerId);
+    dot.onpointermove = (m) => {
+      if (!moved && Math.abs(m.clientX - x0) < 3) return;
+      moved = true;
+      notes[i].cycle = Math.round(Math.max(0, Math.min(max, ((m.clientX - lane.left) / lane.width) * max)) * 10) / 10;
+      notes[i].section = sectionAt(notes[i].cycle);
+      dot.style.left = `${(notes[i].cycle / max) * 100}%`;
+      const li = $('fbnotes').children[i]; // the list follows the drag; a full re-render would replace the dot mid-drag
+      li.querySelector('b').textContent = notes[i].section;
+      li.querySelector('small').textContent = `cycle ${notes[i].cycle.toFixed(1)}`;
+    };
+    dot.onpointerup = () => { dot.onpointermove = dot.onpointerup = null; if (moved) fbRender(); else fbEdit(i); };
+  };
+  $('fbnotes').onclick = (e) => {
+    const a = e.target.closest('a[data-i]'); if (!a) return;
+    e.preventDefault();
+    if (!('x' in a.dataset)) return fbEdit(Number(a.dataset.i));
+    notes.splice(a.dataset.i, 1);
+    if (editing != null) { editing = null; $('fbcomment').value = ''; }
+    fbRender();
   };
   $('fbcopy').onclick = async () => { await navigator.clipboard.writeText($('fbout').textContent); $('fbstatus').textContent = 'copied'; };
 

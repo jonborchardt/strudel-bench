@@ -2,6 +2,9 @@
 // the scope, and strudel's own error log routed to the caller. Both index.html and examples.html start here.
 import { dump } from '../lib/dump.mjs';
 
+/** The drum-machine pack once loaded: its sound `names` (canonical spelling) and alias bank (`{ RolandTR909: 'tr909', ... }`), for the kit selector. */
+export const drumMachines = { names: [], aliases: {} };
+
 export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
   const ready = initStrudel({
     sync: true, // worker clock: the only scheduler with setCycle (section jump)
@@ -15,7 +18,12 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
         ...packs.map((p) => (local ? strudel.samples(`samples/packs/${p}.json`) : strudel.samples(cdn.packs[p].json, cdn.packs[p].base))),
         strudel.samples('samples/user/strudel.json'),
       ]);
-      if (packs.includes('tidal-drum-machines')) strudel.aliasBank(local ? 'samples/packs/tidal-drum-machines-alias.json' : cdn.alias);
+      if (packs.includes('tidal-drum-machines')) {
+        const alias = local ? 'samples/packs/tidal-drum-machines-alias.json' : cdn.alias;
+        strudel.aliasBank(alias);
+        const json = (u) => fetch(u).then((r) => r.json());
+        [drumMachines.aliases, drumMachines.names] = await Promise.all([json(alias), json(local ? 'samples/packs/tidal-drum-machines.json' : cdn.packs['tidal-drum-machines'].json).then(Object.keys)]);
+      }
       await import('../lib/index.mjs');
       onStatus(`packs: ${packs.join(', ')}${local ? '' : ' (cdn)'}`);
     },
