@@ -15,7 +15,7 @@ test('pages build assembles a static site that works under /<repo>/', () => {
     assert.ok(JSON.parse(fs.readFileSync(path.join(out, 'songs/index.json'), 'utf8')).includes('demo.strudel'));
     assert.equal(JSON.parse(fs.readFileSync(path.join(out, 'samples/user/strudel.json'), 'utf8'))._base, 'samples/user/');
     assert.ok(!fs.existsSync(path.join(out, 'samples/packs')), 'packs stream from the cdn');
-    for (const f of ['index.html', 'examples.html', 'web/boot.mjs', 'web/mp3.mjs', 'web/compose.mjs'])
+    for (const f of ['index.html', 'examples.html', 'web/boot.mjs', 'web/mp3.mjs', 'web/compose.mjs', 'web/examples.mjs'])
       assert.ok(!/['`"]\//.test(fs.readFileSync(path.join(out, f), 'utf8')), `root-absolute url in ${f}`);
     // the page does not need the server for export: no fetch of a render/dump route without a server guard
     assert.ok(!/fetch\(`dump\//.test(fs.readFileSync(path.join(out, 'index.html'), 'utf8')), 'no server dump route');

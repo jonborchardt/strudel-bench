@@ -1,0 +1,35 @@
+// The examples page is data (web/examples.mjs): every entry has the fields the card renders, and every playable variant
+// evaluates to a pattern with known sounds, so a broken example fails here instead of in the browser.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { GROUPS } from '../web/examples.mjs';
+import { checkCode } from '../scripts/check.mjs';
+
+const ROOT = path.resolve(import.meta.dirname, '..');
+
+test('every example has the fields the card renders', () => {
+  const ids = new Set();
+  for (const g of GROUPS) {
+    assert.ok(g.id && g.title && g.blurb && g.items.length, g.id);
+    assert.ok(!ids.has(g.id), `duplicate group ${g.id}`); ids.add(g.id);
+    for (const ex of g.items) {
+      const at = `${g.id}/${ex.title}`;
+      assert.ok(ex.title && ex.blurb && Array.isArray(ex.tags) && ex.tags.length, at);
+      if (ex.svg) assert.match(ex.svg, /^<svg[\s\S]*<\/svg>\s*$/, `${at}: svg is an inline <svg>`);
+      if (ex.stub) continue;
+      assert.ok(ex.variants?.length, `${at}: variants`);
+      for (const v of ex.variants) assert.ok(v.label && (typeof v.hll === 'string') !== (typeof v.src === 'string'), `${at}/${v.label}: hll or src`);
+    }
+  }
+});
+
+test('every variant evaluates with known sounds', async () => {
+  for (const g of GROUPS) for (const ex of g.items) if (!ex.stub) for (const v of ex.variants) {
+    const code = v.hll ?? fs.readFileSync(path.join(ROOT, v.src), 'utf8');
+    const { events, problems } = await checkCode(code, `${g.id}/${ex.title}/${v.label}`);
+    assert.deepEqual(problems, []);
+    assert.ok(events.length, `${ex.title}/${v.label}: no events`);
+  }
+});

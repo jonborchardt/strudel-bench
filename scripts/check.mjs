@@ -36,9 +36,10 @@ function knownSounds() {
   return known;
 }
 
-export async function checkFile(file, cycles = 4) {
+export const checkFile = (file, cycles = 4) => checkCode(fs.readFileSync(file, 'utf8'), file, cycles);
+/** Same as checkFile for a code string; `file` only names it in problem messages. */
+export async function checkCode(code, file = 'code', cycles = 4) {
   await ensureScope();
-  const code = fs.readFileSync(file, 'utf8');
   const problems = [];
   const events = [];
   let pattern;

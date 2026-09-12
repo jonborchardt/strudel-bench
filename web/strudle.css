@@ -29,8 +29,14 @@ main { max-width: 84rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; display: gr
 .card > header { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
 .row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .grow { flex: 1; }
-.group { display: inline-flex; align-items: center; gap: .25rem; padding: .2rem .35rem .2rem .6rem; border: 1px solid var(--line); border-radius: 6px; }
-.group .lbl { color: var(--muted); font-size: .85rem; margin-right: .25rem; }
+/* a segmented control: one outline, the label as its first cell, dividers between the buttons */
+.group { display: inline-flex; align-items: stretch; border: 1px solid #bbb; border-radius: 6px; }
+.group > * { border: 0; border-radius: 0; }
+.group > * + * { border-left: 1px solid var(--line); }
+.group > button:last-of-type { border-radius: 0 5px 5px 0; }
+.group .lbl { display: inline-flex; align-items: center; padding: 0 .6rem; color: var(--muted); font-size: .85rem; background: var(--bg); border-radius: 5px 0 0 5px; }
+.group button:hover:not(:disabled) { background: #f0f0f0; border-color: var(--line); }
+.group .xstate { margin: .2rem .35rem; border-left: 0; }
 
 button, select, input[type=text] { font: inherit; padding: .35rem .7rem; border: 1px solid #bbb; border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
 button:hover:not(:disabled) { border-color: #888; }
@@ -81,7 +87,7 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .mini { display: flex; align-items: center; gap: .3rem; margin-bottom: .5rem; }
 .mini button { padding: .15rem .45rem; font-size: .8rem; line-height: 1.4; }
 .mini .where { font: var(--mono); font-size: .8rem; color: var(--muted); white-space: nowrap; }
-.lane { position: relative; flex: 1; min-width: 8rem; display: flex; align-items: center; padding-top: .6rem; }
+.lane { position: relative; flex: 1; min-width: 8rem; display: flex; align-items: center; padding-top: .6rem; margin-top: -.6rem; } /* the padding holds the dots; the negative margin keeps the slider on the buttons' centre line */
 .lane input[type=range] { width: 100%; margin: 0; }
 .lane .dot { position: absolute; top: 0; width: .7rem; height: .7rem; padding: 0; border-radius: 50%; background: var(--c, var(--accent)); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--c, var(--accent)); transform: translateX(-50%); cursor: grab; touch-action: none; }
 .lane .dot.on { transform: translateX(-50%) scale(1.4); }
@@ -115,6 +121,13 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .ex header h3 { margin-right: .25rem; }
 .ex .variants { display: flex; gap: .4rem; flex-wrap: wrap; margin: .5rem 0; }
 .ex pre { border: 1px solid var(--line); border-radius: 6px; padding: .5rem; overflow: auto; max-height: 20rem; }
+.ex textarea.hll { display: block; width: 100%; min-height: 3.2rem; font: var(--mono); padding: .5rem; border: 1px solid var(--line); border-radius: 6px; resize: vertical; field-sizing: content; max-height: 20rem; }
+.ex .body { display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; } /* blurb, explanation and tags stacked on the left, the 219x135 animated svg on the right */
+.ex .body > div { flex: 1 1 20rem; }
+.ex .body p { margin: 0 0 .5rem; }
+.ex .tags { margin-bottom: .5rem; }
+.ex .viz { flex: none; margin: 0; }
+.ex .viz svg { display: block; width: 219px; height: 135px; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
 .ex details { margin-top: .5rem; }
 .ex details summary { cursor: pointer; color: var(--muted); }
 .ex.playing { border-color: var(--accent); box-shadow: 0 0 0 2px #e6eefc; }
