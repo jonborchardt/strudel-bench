@@ -16,6 +16,15 @@ test('dump prints the plain strudel behind demo.strudel', async () => {
   assert.doesNotMatch(out, /_opIn|\/\*pattern\*\//);
 });
 
+test('dump leaves strudel untouched afterwards: wrappers off the globals and the Pattern prototype', async () => {
+  const { Pattern, stack } = await import('@strudel/core');
+  const before = Object.getOwnPropertyDescriptor(Pattern.prototype, 'fast');
+  await dumpFile(path.resolve(import.meta.dirname, '..', 'songs', 'demo.strudel'));
+  assert.equal(globalThis.stack, stack);
+  assert.equal(Object.getOwnPropertyDescriptor(Pattern.prototype, 'fast').value, before.value);
+  assert.equal(typeof globalThis.hush, 'function'); // the scope's stub is back, not the dump's
+});
+
 test('an arped pad dumps self-contained: no plan.*, arpIndices defined', async () => {
   const fs = await import('node:fs');
   const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_arp.strudel');

@@ -17,14 +17,14 @@
 </main>
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
-  import { boot, playCode, nav } from './web/boot.mjs';
+  import { boot, playCode, expandCode, nav } from './web/boot.mjs';
   const $ = (id) => document.getElementById(id);
   $('nav').innerHTML = nav('Examples');
   const status = (text) => ($('status').textContent = text);
   const ready = boot({ onError: status, onStatus: status });
 
-  // ---- content: adding an example is a data change. Fields: title, blurb, tags, variants: [{ label, hll | src, strudel? }].
-  // `src` fetches a file from songs/ instead of inlining the code; `strudel` is the expanded output (npm run dump) when known.
+  // ---- content: adding an example is a data change. Fields: title, blurb, tags, variants: [{ label, hll | src }].
+  // `src` fetches a file from songs/ instead of inlining the code; the expanded Strudel is generated in the browser on first show.
   // Entries with `stub: true` render a placeholder in the intended spot until a follow-up fills them in.
   const layer = (name, attrs, cycles = 4) => `${name}(${attrs}, { cycles: ${cycles} })`;
   const lbh = (name, axis, lo = .1, hi = .9) => [
@@ -37,10 +37,7 @@
     { id: 'axes', title: 'Axes', blurb: 'Each axis is one perceptual dimension of one layer. 0.5 leaves the layer untouched; lower and higher values move it in a fixed direction. Compare low, baseline and high.', items: [
       { title: 'Density', tags: ['density', 'drums', 'structural'], blurb: 'Amount of musical activity: how many steps of the grid the drums fill.', variants: lbh('drums', 'density', .2, .9) },
       { title: 'Brightness', tags: ['brightness', 'pad', 'spectral'], blurb: 'Spectral character of the pad, dark to bright: the filter cutoff moves geometrically around its baseline.',
-        variants: [{ label: 'Dark', hll: layer('pad', '{ brightness: .1 }') }, { label: 'Baseline', hll: layer('pad', '{}'),
-          strudel: 'n("<0 5>")\n  .scale("C4:minor")\n  .add(note(0))\n  .add(note("<0 0>"))\n  .add(note("<[0,3,7] [0,4,7]>"))\n  .s("sawtooth")\n  .lpf(1200)\n  .attack(0.15)\n  .release(0.6)\n  .room(0.3)\n  .size(0.6)\n  .gain(0.45)\n  .pan(sine.slow(8).range(0.4, 0.6))' },
-          { label: 'Bright', hll: layer('pad', '{ brightness: .9 }'),
-          strudel: 'n("<0 5>")\n  .scale("C4:minor")\n  .add(note(0))\n  .add(note("<0 0>"))\n  .add(note("<[0,3,7] [0,4,7]>"))\n  .s("sawtooth")\n  .lpf(1200)\n  .attack(0.15)\n  .release(0.6)\n  .room(0.3)\n  .size(0.6)\n  .gain(0.45)\n  .pan(sine.slow(8).range(0.4, 0.6))\n  .lpf(4348.68)' }] },
+        variants: [{ label: 'Dark', hll: layer('pad', '{ brightness: .1 }') }, { label: 'Baseline', hll: layer('pad', '{}') }, { label: 'Bright', hll: layer('pad', '{ brightness: .9 }') }] },
       { title: 'Weight', tags: ['weight', 'bass', 'spectral'], blurb: 'Perceived low end and body of the bass.', variants: lbh('bass', 'weight', .2, .9) },
       { title: 'Space', tags: ['space', 'pad', 'spatial'], blurb: 'Dry and close to spacious: reverb amount and size on the pad.', variants: lbh('pad', 'space', .1, .95) },
       stub('Drive', ['drive', 'drums', 'structural'], 'Rhythmic insistence toward the pulse: where onsets fall and which are accented, not how many.'),
@@ -109,8 +106,9 @@
     const hll = document.createElement('pre'); hll.className = 'hll';
     const gen = document.createElement('pre'); gen.className = 'gen';
     const show = async (v) => {
-      hll.textContent = v.hll ?? (v.code ??= await (await fetch(v.src)).text());
-      gen.textContent = v.strudel ?? 'expanded Strudel for this variant is not generated in-browser yet (npm run dump prints it locally)';
+      const code = (hll.textContent = v.hll ?? (v.code ??= await (await fetch(v.src)).text()));
+      gen.textContent = 'expanding…';
+      try { gen.textContent = v.strudel ??= await expandCode(ready, code); } catch (e) { gen.textContent = `expand failed: ${e.message}`; }
     };
     for (const v of ex.variants) {
       const b = document.createElement('button');

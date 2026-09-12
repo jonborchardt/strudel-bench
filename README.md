@@ -8,14 +8,14 @@ Local [Strudel](https://strudel.cc) harness: edit `songs/*.strudel`, press play 
     npm run samples          # one-time, downloads Strudel's default packs (~300 MB, resumable, re-run if any fail)
     npm start                # http://localhost:3000
 
-The same page is deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to main (`npm run pages` builds it into `dist/`). There it has no server: save, new song and export are disabled, the expanded Strudel pane says why, sample packs stream from the Strudel CDN instead of `samples/packs/`, and `samples/user/` ships with the site.
+The same page is deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to main (`npm run pages` builds it into `dist/`). There it has no server: export is disabled, save and new song keep songs in the browser's localStorage instead of `songs/`, sample packs stream from the Strudel CDN instead of `samples/packs/`, and `samples/user/` ships with the site.
 
 ## Use
 
 The page has two views: **Compose** (index.html) and **Examples** (examples.html, a scrollable showcase of playable snippets for every axis, descriptor, modifier, harmony word and section edit; entries marked "example coming" are placeholders).
 
 - Pick a song, press ▶ (or ctrl+enter). ■ or ctrl+. stops; pause remembers the cycle and resumes from it. Save writes the textarea back to the file. **+ New song** writes a minimal `song()` template to `songs/<name>.strudel`.
-- The editable source and the expanded Strudel it reduces to sit side by side (stacked on narrow screens). The expanded pane is generated from the saved file by the dump route and flags itself stale while the textarea has unsaved edits.
+- The editable source and the expanded Strudel it reduces to sit side by side (stacked on narrow screens). The expanded pane follows the textarea as you type (expanded in the browser by `lib/dump.mjs`, also on GitHub Pages); lines the last edit changed flash briefly, and the source pane says "unsaved" until you save. Switching or creating a song asks before discarding unsaved edits.
 - **Ask Claude about a section** builds a paste-ready request from the song name, the chosen section's source and your comment. **Why it sounds this way** lists the `//` comments in the source grouped by section; a metadata file for Claude-made decisions is the follow-up. On GitHub Pages the request card is hidden. The kit selector shows the song's kit and is not yet switchable.
 - Editing a song file on disk reloads it in the page. If it was playing, it re-evaluates so you hear the change. If you have unsaved edits in the textarea, you get a reload link instead.
 - **export mp3** renders the whole song offline (page must be stopped) to `renders/<song>.mp3`. **export strudel** writes the plain Strudel a `song()` file reduces to, to `renders/<song>.dump.txt`, ready to paste into the strudel.cc REPL.

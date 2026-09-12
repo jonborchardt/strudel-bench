@@ -33,13 +33,13 @@
   <!-- source workspace: editable strudle source next to the generated strudel -->
   <section class="panes">
     <div class="card pane">
-      <header><h2>Strudle source</h2><small>editable &middot; axes 0..1, 0.5 is baseline</small></header>
+      <header><h2>Strudle source</h2><small>editable &middot; axes 0..1, 0.5 is baseline</small><span class="grow"></span><span class="stale" id="stale"></span></header>
       <textarea id="code" spellcheck="false"></textarea>
       <pre id="err" class="err"></pre>
     </div>
     <div class="card pane">
-      <header><h2>Expanded Strudel</h2><small>generated &middot; read-only</small><span class="grow"></span><span class="stale" id="stale"></span><button id="expand" title="regenerate from the saved file">&#8635; regenerate</button></header>
-      <pre id="expanded" class="gen"></pre>
+      <header><h2>Expanded Strudel</h2><small>generated &middot; read-only &middot; follows the source as you type</small><span class="grow"></span><small id="xerr" class="err"></small></header>
+      <pre id="expanded" class="gen" aria-live="polite"></pre>
     </div>
   </section>
 
@@ -68,7 +68,7 @@
 </main>
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
-  import { boot, playCode, nav } from './web/boot.mjs';
+  import { boot, playCode, expandCode, nav } from './web/boot.mjs';
   const $ = (id) => document.getElementById(id);
   $('nav').innerHTML = nav('Compose');
   const status = (text) => ($('status').textContent = text);
@@ -76,7 +76,9 @@
   let playing = false;
   let sections = []; // of the song last evaluated, for the scrubber
   let paused = null; // cycle to resume from; the worker clock resets to 0 on stop, so pause must remember it
-  let server = true; // false on a static host (github pages): no save, export, dump, new
+  let server = true; // false on a static host (github pages): no export/dump, songs save to this browser
+  const DRAFT = 'strudle:'; // github pages cannot write songs/, so songs made there live in localStorage under this prefix
+  const drafts = () => Object.keys(localStorage).filter((k) => k.startsWith(DRAFT)).map((k) => k.slice(DRAFT.length));
   const NAME = /^[\w.-]+\.strudel$/;
   const KITS = ['RolandTR909', 'RolandTR808', 'RolandTR707', 'RolandTR606', 'LinnDrum', 'AkaiMPC60', 'OberheimDMX'];
   const TEMPLATE = `song({ cps: .5, key: 'C:minor', seed: 1, kit: 'RolandTR909' }, [ // axis values are 0..1, 0.5 = the layer's baseline
@@ -88,7 +90,7 @@
   const ready = boot({ onError: (m) => ($('err').textContent = m), onStatus: status });
 
   async function loadList(want = decodeURIComponent(location.hash.slice(1))) {
-    const names = await (await fetch('songs/index.json')).json();
+    const names = [...new Set([...(await (await fetch('songs/index.json')).json()), ...drafts()])].sort();
     $('song').innerHTML = names.map((n) => `<option>${n}</option>`).join('');
     if (names.includes(want)) $('song').value = want;
     await loadSong();
@@ -96,10 +98,12 @@
   async function loadSong() {
     const name = $('song').value;
     location.hash = name;
-    loaded = (await (await fetch(`songs/${name}`)).text()).replace(/\r\n/g, '\n'); // the textarea normalises line breaks, so compare like for like
+    const r = await fetch(`songs/${name}`); // not on disk: a song made in this browser (github pages)
+    loaded = (r.ok ? await r.text() : localStorage.getItem(DRAFT + name) ?? '').replace(/\r\n/g, '\n'); // the textarea normalises line breaks, so compare like for like
     $('code').value = loaded;
     $('err').textContent = '';
     sourceChanged();
+    shown = []; // a different song: nothing to flash
     expand();
   }
   // everything derived from the source text: section list, kit, header notes, stale flag
@@ -121,19 +125,33 @@
     }
     const esc = (s) => s.replace(/</g, '&lt;');
     $('notes').innerHTML = Object.entries(notes).map(([sec, ls]) => `<li><b>${esc(sec)}</b><ul>${ls.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></li>`).join('') || '<li class="muted">no comments in this song yet</li>';
-    $('stale').textContent = src !== loaded ? 'edited since generated · save to refresh' : '';
+    $('stale').textContent = src !== loaded ? 'unsaved' : '';
   }
-  // the dump route expands the saved file (scripts/dump.mjs runs in a child process), so the pane reflects disk, not the textarea
+  // expand the textarea in the browser (lib/dump.mjs); lines that differ from the last expansion flash briefly
+  let shown = []; // lines currently displayed
+  const FLASH = 20000; // ms, the css flash animation's length
+  let flashed = new Map(); // line -> when an edit first produced it; later edits re-render the pane but must not reset it
   async function expand() {
-    if (!server) { $('expanded').textContent = 'Generated Strudel needs the local server for now (npm start). In-browser expansion is a follow-up.'; return null; }
-    const song = $('song').value;
-    $('expanded').textContent = `expanding ${song}…`;
-    const r = await fetch(`dump/${song}`, { method: 'POST' });
-    if (!r.ok) { $('expanded').textContent = `expand failed: ${await r.text()}`; return null; }
-    const out = await r.json();
-    if ($('song').value === song) $('expanded').textContent = out.code;
-    return out;
+    const src = $('code').value;
+    let code;
+    try { code = await expandCode(ready, src); }
+    catch (e) { $('xerr').textContent = e.message; return; } // keep the last good expansion under the error
+    if (src !== $('code').value) return; // typed on: a newer expansion is queued
+    $('xerr').textContent = '';
+    const lines = code.split('\n'), old = new Set(shown), now = Date.now(); // ponytail: set membership, not a diff; a moved line does not flash
+    for (const l of lines) if (shown.length && !old.has(l) && !flashed.has(l)) flashed.set(l, now);
+    $('expanded').replaceChildren(...lines.map((l) => {
+      const s = document.createElement('span');
+      s.textContent = l + '\n';
+      const t = flashed.get(l); // a line flashed by an earlier edit keeps fading on its own clock
+      if (t != null && now - t < FLASH) { s.className = 'hl'; s.style.animationDelay = `${t - now}ms`; }
+      return s;
+    }));
+    flashed = new Map([...flashed].filter(([, t]) => now - t < FLASH));
+    shown = lines;
   }
+  let expandTimer;
+  const expandSoon = () => { clearTimeout(expandTimer); expandTimer = setTimeout(expand, 300); };
 
   async function play() {
     $('err').textContent = '';
@@ -145,6 +163,7 @@
     $('marks').innerHTML = sections.map((s) => `<option value="${s.offset}" label="${s.name}">`).join(''); // tick marks at section starts
     if (paused != null) { (await ready).scheduler.setCycle(paused); paused = null; }
     console.log('[strudle] evaluated', $('song').value);
+    expand();
   }
   function stop() { strudel.hush(); playing = false; paused = null; }
   async function pause() {
@@ -152,12 +171,16 @@
     paused = (await ready).scheduler.now();
     strudel.hush(); playing = false;
   }
+  // songs/ on the local server; this browser's localStorage on a static host
+  async function store(name, text) {
+    if (server) await fetch(`songs/${name}`, { method: 'PUT', body: text });
+    else localStorage.setItem(DRAFT + name, text);
+  }
   async function save() {
-    await fetch(`songs/${$('song').value}`, { method: 'PUT', body: $('code').value });
+    await store($('song').value, $('code').value);
     loaded = $('code').value;
-    status('saved');
+    status(server ? 'saved' : 'saved in this browser');
     sourceChanged();
-    expand();
   }
   async function newSong() {
     if ($('code').value !== loaded && !confirm('Discard unsaved edits?')) return;
@@ -166,9 +189,9 @@
     const name = raw.endsWith('.strudel') ? raw : `${raw}.strudel`;
     if (!NAME.test(name)) return status(`bad name: ${name} (letters, digits, . _ -)`);
     if ([...$('song').options].some((o) => o.value === name) && !confirm(`${name} exists. Overwrite it?`)) return;
-    await fetch(`songs/${name}`, { method: 'PUT', body: TEMPLATE });
+    await store(name, TEMPLATE);
     await loadList(name);
-    status(`created ${name}`);
+    status(`created ${name}${server ? '' : ' in this browser'}`);
   }
 
   $('play').onclick = play;
@@ -189,21 +212,24 @@
   }, 250);
   $('save').onclick = save;
   $('new').onclick = newSong;
-  $('expand').onclick = expand;
   $('export').onclick = async () => {
     const song = $('song').value;
     await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
     renderToServer({ song, name: song.replace(/\.strudel$/, ''), mp3: true });
   };
-  $('dump').onclick = async () => {
-    const out = await expand();
-    if (!out) return;
+  $('dump').onclick = async () => { // the saved file, expanded by scripts/dump.mjs on the server
+    const r = await fetch(`dump/${$('song').value}`, { method: 'POST' });
+    if (!r.ok) return status(`dump failed: ${await r.text()}`);
+    const out = await r.json();
     const url = `https://strudel.cc/#${strudel.code2hash(out.code)}`;
     $('status').innerHTML = `wrote ${out.path} · <a href="${url}" target="_blank">open in strudel.cc</a>`;
     window.open(url, '_blank'); // popup blockers may eat this; the status link is the fallback
   };
-  $('song').onchange = () => loadSong();
-  $('code').addEventListener('input', sourceChanged);
+  $('song').onchange = () => {
+    if ($('code').value !== loaded && !confirm('Discard unsaved edits?')) { $('song').value = decodeURIComponent(location.hash.slice(1)); return; }
+    loadSong();
+  };
+  $('code').addEventListener('input', () => { sourceChanged(); expandSoon(); });
   $('code').addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); play(); }
     if ((e.ctrlKey || e.metaKey) && e.key === '.') { e.preventDefault(); stop(); }
@@ -228,9 +254,10 @@
   events.onerror = () => {
     if (events.readyState !== EventSource.CLOSED) return;
     server = false;
-    for (const id of ['save', 'export', 'dump', 'new']) { $(id).disabled = true; $(id).title = 'needs the local server (npm start); GitHub Pages support is a follow-up'; }
+    for (const id of ['export', 'dump']) { $(id).disabled = true; $(id).title = 'needs the local server (npm start); GitHub Pages support is a follow-up'; }
+    $('save').title = 'GitHub Pages cannot write songs/: saves to this browser (localStorage)';
+    $('new').title = 'create a song in this browser (localStorage)';
     $('feedback').hidden = true; // the request workflow is local-dev only
-    expand();
   };
   events.onmessage = (e) => {
     const msg = JSON.parse(e.data);

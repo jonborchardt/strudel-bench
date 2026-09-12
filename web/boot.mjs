@@ -1,5 +1,7 @@
 // Shared page bootstrap: initStrudel with the local packs (or the Strudel CDN on GitHub Pages), lib/ loaded into
 // the scope, and strudel's own error log routed to the caller. Both index.html and examples.html start here.
+import { dump } from '../lib/dump.mjs';
+
 export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
   const ready = initStrudel({
     sync: true, // worker clock: the only scheduler with setCycle (section jump)
@@ -29,6 +31,14 @@ export async function playCode(ready, code) {
   const pat = await strudel.evaluate(code);
   setcps(pat?.strudle?.meta.cps ?? 0.5);
   return pat;
+}
+
+// build the pattern the way strudel's repl does minus starting it: the transpiler makes the last expression the return value
+const evalOnly = (code) => ({ pattern: new Function(`"use strict";return (async () => {${strudel.transpiler(code).output}})()`)() });
+/** The plain Strudel `code` reduces to, expanded in the browser (lib/dump.mjs). */
+export async function expandCode(ready, code) {
+  await ready;
+  return dump(code, { modules: [strudel], Pattern: strudel.Pattern, evaluate: evalOnly });
 }
 
 /** Nav bar shared by both pages; `page` marks the current one. */

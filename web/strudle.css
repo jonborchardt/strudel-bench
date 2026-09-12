@@ -51,6 +51,8 @@ label.field select { color: var(--ink); }
 .pane textarea, .pane pre.gen { width: 100%; height: 26rem; border: 1px solid var(--line); border-radius: 6px; padding: .5rem; overflow: auto; }
 .pane textarea { font: var(--mono); resize: vertical; }
 pre.gen { background: var(--gen); color: #333; }
+pre.gen .hl { display: inline-block; width: 100%; animation: flash 20s ease-out; } /* lines the last edit changed */
+@keyframes flash { from { background: #ffe58a; } to { background: transparent; } }
 .err { color: var(--err); white-space: pre-wrap; }
 .stale { color: #a05a00; font-size: .85rem; }
 textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; border: 1px solid var(--line); border-radius: 6px; resize: vertical; }
