@@ -75,9 +75,7 @@ export function createServer() {
     if (p === '/') return send(res, 200, fs.readFileSync(path.join(ROOT, 'index.html')), 'text/html');
     if (p === '/favicon.ico') return send(res, 204, '');
 
-    if (p === '/songs' || p === '/songs/index.json') {
-      return json(res, songList());
-    }
+    if (p === '/songs/index.json') return json(res, songList()); // same path the static pages build writes
     if (p.startsWith('/songs/')) {
       const name = decodeURIComponent(p.slice('/songs/'.length));
       if (!SONG_NAME.test(name)) return send(res, 400, 'bad song name');

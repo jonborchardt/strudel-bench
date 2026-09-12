@@ -36,6 +36,19 @@ test('planEdits rewrites numbers, inserts missing axes, refuses expressions, pre
   assert.ok(report.some((r) => r.saturated), 'reports saturation');
 });
 
+test('a layer built with spread is refused, not silently baselined', async () => {
+  await ready;
+  const { planEdits } = await import('../scripts/resolve.mjs');
+  const src = `const base = { density: .8, weight: .7 };
+song({ cps: .5 }, [
+  section('verse', 8, { drums: { ...base, brightness: .25 } }),
+])`;
+  const plan = planEdits(src, 'verse', 'drums', 'punchier');
+  assert.ok(plan.refused.some((r) => r.layer === 'drums' && /uses spread \(\.\.\.base\)/.test(r.reason) && /by hand/.test(r.reason)), JSON.stringify(plan.refused));
+  assert.deepEqual(plan.edits, []);
+  assert.deepEqual(plan.report, []);
+});
+
 test('non-song file exits with code 2', async () => {
   await ready;
   const { locate } = await import('../scripts/resolve.mjs');

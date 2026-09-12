@@ -161,16 +161,17 @@
       let pat = await strudel.evaluate(code, false);
       let begin = 0, end = cycles ?? (pat.strudle ? pat.strudle.total : 8);
       // read cps off the song pattern before a layer selector replaces it with a sub-pattern that has no .strudle
-      const cps = pat.strudle?.meta.cps ?? 0.5;
+      let cps = pat.strudle?.meta.cps ?? 0.5;
       if (section || layer) {
         if (layer && !section) return fail('layer requires --section');
         const s = pat.strudle?.sections.find((x) => x.name === section);
         if (section && !s) return fail(`no section "${section}"`);
+        // --cycles counts bars of the section in both branches; a section with its own tempo has span != cycles
         if (layer) {
           const src = s.layers[layer];
           if (!src) return fail(`no layer "${layer}" in section "${section}"`);
-          pat = src.pattern; begin = 0; end = cycles ?? s.cycles;
-        } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles); }
+          pat = src.pattern; cps = s.cps; begin = 0; end = cycles ?? s.cycles; // layer patterns run in section-local bar time
+        } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles) * s.span / s.cycles; }
       }
       const blob = await renderWav(pat, cps, begin, end);
       const out = await (await fetch(`renders/${name}.wav${mp3 ? '?mp3' : ''}`, { method: 'PUT', body: blob })).text();

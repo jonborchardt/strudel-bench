@@ -5,8 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as acorn from 'acorn';
-import '../scripts/esm-fix.mjs';
-import { AXIS_NAMES, cells, describeCell } from '../lib/axes.mjs';
+import { AXIS_NAMES, cells } from '../lib/axes.mjs';
 import '../lib/layers.mjs';
 import { parsePhrase, applyDeltas } from '../lib/vocab.mjs';
 import { parseProgression, applyHarmonyWords, chordNames, DEFAULT_PROGRESSION } from '../lib/harmony.mjs';
@@ -38,13 +37,15 @@ export function locate(src) {
         if (layer === 'progression') { s.progressionNode = prop.value; continue; }
         if (prop.value.type !== 'ObjectExpression') continue;
         const axes = {};
+        let spread = null; // a spread hides values we cannot see; planEdits refuses the whole layer
         for (const ap of prop.value.properties) {
+          if (ap.type === 'SpreadElement') { spread ??= src.slice(ap.start, ap.end); continue; }
           if (ap.type !== 'Property') continue;
           const a = keyName(ap);
           if (!AXIS_NAMES.includes(a)) continue;
           axes[a] = { node: ap.value, value: isNumLit(ap.value) ? numOf(ap.value) : 'expr' };
         }
-        s.layers[layer] = { node: prop.value, axes };
+        s.layers[layer] = { node: prop.value, axes, spread };
       }
       sections.push(s);
     }
@@ -91,6 +92,10 @@ export function planEdits(src, sectionSel, layerSel, phrase) {
     }
     for (const [layer, L] of Object.entries(s.layers)) {
       if (layerSel !== '*' && layer !== layerSel) continue;
+      if (L.spread) {
+        refused.push({ section: s.name, layer, axis: '-', reason: `uses spread (${L.spread}); resolve edits literal values only — set the axis by hand` });
+        continue;
+      }
       const current = Object.fromEntries(Object.entries(L.axes).filter(([, a]) => a.value !== 'expr').map(([k, a]) => [k, a.value]));
       const applied = applyDeltas(current, parsed.deltas);
       const inserts = [];
@@ -98,7 +103,7 @@ export function planEdits(src, sectionSel, layerSel, phrase) {
         if (!cells[layer]?.[axis]) { report.push({ section: s.name, layer, axis, skipped: 'no adapter on this layer' }); continue; }
         const existing = L.axes[axis];
         if (existing?.value === 'expr') { refused.push({ section: s.name, layer, axis, reason: `${axis} is a signal here; change its range by hand` }); continue; }
-        const line = { section: s.name, layer, axis, ...r, contributions: parsed.contributions[axis], describe: describeCell(layer, axis, r.from, r.to) };
+        const line = { section: s.name, layer, axis, ...r, contributions: parsed.contributions[axis], describe: cells[layer][axis].describe?.(r.from, r.to) ?? null };
         report.push(line);
         if (r.appliedDelta === 0) continue;
         if (existing) edits.push({ start: existing.node.start, end: existing.node.end, text: fmt(r.to) });
@@ -143,7 +148,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const write = args.includes('--write');
   const [file, sectionSel = '*', layerSel = '*', phrase] = args.filter((a) => a !== '--write');
   if (!file || !phrase) { console.error('usage: node scripts/resolve.mjs songs/x.strudel <section|*> <layer|*> "phrase" [--write]'); process.exit(2); }
-  await ensureScope(); // describeHarmony's chordName() needs Strudel's scale() live, same as check.mjs.
+  await ensureScope(); // chordName() needs Strudel's scale() live, same as check.mjs.
   const src = fs.readFileSync(file, 'utf8');
   let plan;
   try { plan = planEdits(src, sectionSel, layerSel, phrase); } catch (e) { console.error(e.message); process.exit(2); }

@@ -11,8 +11,8 @@ const core = await import('@strudel/core');
 const mini = await import('@strudel/mini');
 const tonal = await import('@strudel/tonal');
 const { transpiler } = await import('@strudel/transpiler');
+const { isPattern } = await import('../lib/strudel.mjs');
 
-const isPattern = (x) => !!x && typeof x.queryArc === 'function';
 const src = new WeakMap(); // pattern -> source string, or a thunk producing it (resolved and memoised on first read)
 const srcOf = (p) => { let s = src.get(p); if (typeof s === 'function') { s = s(); src.set(p, s); } return s; };
 const names = new Map(); // wrapped core function -> name
@@ -96,7 +96,7 @@ export async function dumpFile(file) {
   const id = (s, l) => `${s.replace(/\W/g, '_')}_${l}`;
   const lines = [`setcps(${m.meta.cps})`, ''];
   for (const s of m.sections) {
-    lines.push(`// ${s.name} [${s.offset}-${s.offset + s.cycles})${s.role ? ' ' + s.role : ''}`);
+    lines.push(`// ${s.name} [${s.offset}-${s.offset + s.span})${s.role ? ' ' + s.role : ''}`);
     for (const [layer, l] of Object.entries(s.layers)) {
       lines.push(`// ${layer} ${JSON.stringify(l.attrs, (k, v) => (isPattern(v) ? srcOf(v) ?? 'signal' : v))}`);
       lines.push(`const ${id(s.name, layer)} = ${fmt(srcOf(l.pattern) ?? '/*pattern*/')}`, '');
@@ -104,14 +104,24 @@ export async function dumpFile(file) {
   }
   // a file may wrap the song, e.g. stack(song, textures) with the metadata copied over: name the song and print the wrapper
   const wrapped = pattern !== m.pattern;
-  lines.push(`${wrapped ? 'const layers = ' : ''}arrange(`);
-  for (const s of m.sections) lines.push(`  [${s.cycles}, stack(${Object.keys(s.layers).map((l) => id(s.name, l)).join(', ')})],`);
-  lines.push(')');
+  const timed = m.sections.some((s) => s.span !== s.cycles);
+  lines.push(`${wrapped ? 'const layers = ' : ''}${timed ? 'stepcat' : 'arrange'}(`);
+  for (const s of m.sections) {
+    const stack = `stack(${Object.keys(s.layers).map((l) => id(s.name, l)).join(', ')})`;
+    lines.push(timed ? `  [${s.span}, ${stack}.fast(${s.cycles})],` : `  [${s.cycles}, ${stack}],`);
+  }
+  lines.push(timed ? `).slow(${m.total})` : ')');
   if (wrapped) { src.set(m.pattern, 'layers'); lines.push('', fmt(srcOf(pattern) ?? '/*pattern*/')); }
   const out = lines.join('\n');
-  // signal-driven axes keep an fmap(piece(...)); define it so the dump pastes into the strudel repl as-is
-  const helper = out.includes('piece(') ? `const piece = ${globalThis.strudleLib.piece.toString().replace(/^.*f\.toString.*\r?\n/m, '').replace(/\r\n/g, '\n')}\n\n` : '';
-  return helper + out;
+  // lib closures the dump prints reference library helpers by name (piece from a signal axis, arpIndices from
+  // an arped pad); define the ones used so the dump pastes into the strudel repl as-is.
+  const L = globalThis.strudleLib;
+  const helpers = [];
+  if (out.includes('piece(')) helpers.push(`const piece = ${L.piece.toString().replace(/^.*f\.toString.*\r?\n/m, '').replace(/\r\n/g, '\n')}`);
+  if (out.includes('arpIndices(')) helpers.push(
+    `const ARP_ORDERS = { ${Object.entries(L.ARP_ORDERS).map(([k, f]) => `${k}: ${f}`).join(', ')} }`,
+    `const arpIndices = ${L.arpIndices}`);
+  return helpers.length ? `${helpers.join('\n\n')}\n\n${out}` : out;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
