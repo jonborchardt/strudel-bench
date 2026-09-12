@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyze } from '../scripts/analyze.mjs';
+import { analyze } from '../lib/analyze.mjs';
 
 const rate = 44100;
 const tone = (hz, secs, amp = .5) => Float32Array.from({ length: rate * secs }, (_, i) => amp * Math.sin(2 * Math.PI * hz * i / rate));

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { kitsIn, kitOf, setKit, sectionSource, buildRequest, sourceComments, notesView, notesFile } from '../web/compose.mjs';
+import { kitsIn, kitOf, setKit, sectionSource, buildRequest, sourceComments, notesView, notesFile, verifyRows } from '../web/compose.mjs';
 import { parseChange, addNote } from '../scripts/note.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -97,4 +97,11 @@ test('lib/kits.json describes every kit the dropdown can list, labels short enou
     assert.ok(info[k].label.length <= 50, `${k} label fits one line`);
     assert.ok(fs.existsSync(path.join(ROOT, 'web', 'kits', `${k}.svg`)), `${k} icon exists (node scripts/kiticons.mjs)`);
   }
+});
+
+test('verifyRows pairs each requested axis with its metric and judges the direction', () => {
+  const rows = verifyRows({ brightness: .3, weight: -.2, drive: .1 }, { centroidHz: 1000, lowRatio: .4 }, { centroidHz: 1400, lowRatio: .45 });
+  assert.deepEqual(rows[0], { axis: 'brightness', requested: .3, metric: 'centroidHz', before: 1000, after: 1400, ok: true });
+  assert.equal(rows[1].ok, false, 'weight asked down, lowRatio went up');
+  assert.deepEqual(rows[2], { axis: 'drive', requested: .1, metric: null });
 });
