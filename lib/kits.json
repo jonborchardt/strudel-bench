@@ -2,697 +2,291 @@
   "AkaiLinn": {
     "label": "Crunchy 12-bit Linn punch, dry and tight",
     "kind": "Akai-era Linn samples (12-bit, late 80s)",
-    "about": "Punchy, dry, slightly crunchy 12-bit Linn drums. Mid-forward snare, tight kick. You want LinnDrum punch with a bit more grit and less polish.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/AkaiLinn.svg"
+    "about": "Punchy, dry, slightly crunchy 12-bit Linn drums. Mid-forward snare, tight kick. You want LinnDrum punch with a bit more grit and less polish."
   },
   "AkaiMPC60": {
     "label": "Warm 12-bit boom-bap crunch, the hip-hop MPC",
     "kind": "Akai MPC60 (1988, 12-bit sampler, Roger Linn design)",
-    "about": "The hip-hop sound: warm, thick 12-bit crunch, rounded lows, snares with body. Boom-bap, lo-fi hip-hop, anything that should feel sampled off vinyl.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "heavy",
-      "brightness": "dark",
-      "accent": "sub"
-    },
-    "icon": "web/kits/AkaiMPC60.svg"
+    "about": "The hip-hop sound: warm, thick 12-bit crunch, rounded lows, snares with body. Boom-bap, lo-fi hip-hop, anything that should feel sampled off vinyl."
   },
   "AkaiXR10": {
     "label": "Clean bright early-90s digital, big variant set",
     "kind": "Akai XR10 (1990, 16-bit)",
-    "about": "Clean, bright, early-90s digital. Lots of kick/snare variants, big perc set. You want a polished house/pop kit with plenty of choice per voice.",
-    "tags": {
-      "texture": "clean",
-      "weight": "heavy",
-      "brightness": "bright",
-      "accent": "layers"
-    },
-    "icon": "web/kits/AkaiXR10.svg"
+    "about": "Clean, bright, early-90s digital. Lots of kick/snare variants, big perc set. You want a polished house/pop kit with plenty of choice per voice."
   },
   "AlesisHR16": {
     "label": "Crisp glassy late-80s digital, snappy and thin",
     "kind": "Alesis HR-16 (1987, 16-bit)",
-    "about": "Crisp, glassy, slightly brittle late-80s digital. Snappy snare, thin hats. Synth-pop, freestyle, new-jack-swing era sheen.",
-    "tags": {
-      "texture": "clean",
-      "weight": "light",
-      "brightness": "bright",
-      "accent": "none"
-    },
-    "icon": "web/kits/AlesisHR16.svg"
+    "about": "Crisp, glassy, slightly brittle late-80s digital. Snappy snare, thin hats. Synth-pop, freestyle, new-jack-swing era sheen."
   },
   "AlesisSR16": {
     "label": "Neutral realistic rock/pop drums, many variants",
     "kind": "Alesis SR-16 (1990, 16-bit workhorse)",
-    "about": "Realistic, neutral, rock/pop \"real drums in a box\". Many kick and snare choices. You want acoustic-sounding drums that sit in a mix without a personality.",
-    "tags": {
-      "texture": "clean",
-      "weight": "medium",
-      "brightness": "neutral",
-      "accent": "layers"
-    },
-    "icon": "web/kits/AlesisSR16.svg"
+    "about": "Realistic, neutral, rock/pop \"real drums in a box\". Many kick and snare choices. You want acoustic-sounding drums that sit in a mix without a personality."
   },
   "BossDR110": {
     "label": "Small clicky analog, thin and ticky, 606 cousin",
     "kind": "Boss DR-110 Dr. Rhythm (1983, analog)",
-    "about": "Small, clicky, boxy analog. Thin kick, clappy snare, ticky hats. Cousin of the TR-606. Minimal, lo-fi electro, bedroom-synth-pop.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "light",
-      "brightness": "bright",
-      "accent": "none"
-    },
-    "icon": "web/kits/BossDR110.svg"
+    "about": "Small, clicky, boxy analog. Thin kick, clappy snare, ticky hats. Cousin of the TR-606. Minimal, lo-fi electro, bedroom-synth-pop."
   },
   "BossDR220": {
     "label": "Grainy cardboardy 80s sample-box, cute and short",
     "kind": "Boss DR-220 (1985, 12-bit PCM)",
-    "about": "Cheap 80s sample-box: slightly grainy, short, cardboardy, cute. Lo-fi 80s pop, indie electronic, \"toy drum machine\" vibe.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "light",
-      "brightness": "neutral",
-      "accent": "pixels"
-    },
-    "icon": "web/kits/BossDR220.svg"
+    "about": "Cheap 80s sample-box: slightly grainy, short, cardboardy, cute. Lo-fi 80s pop, indie electronic, \"toy drum machine\" vibe."
   },
   "BossDR55": {
     "label": "Tiny papery 1979 analog, primitive minimal wave",
     "kind": "Boss DR-55 (1979, analog)",
-    "about": "Tiny, thin, first-ever Dr. Rhythm. Papery kick, white-noise snare, faint hats. Post-punk, minimal wave, deliberately primitive beats.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "light",
-      "brightness": "neutral",
-      "accent": "noise"
-    },
-    "icon": "web/kits/BossDR55.svg"
+    "about": "Tiny, thin, first-ever Dr. Rhythm. Papery kick, white-noise snare, faint hats. Post-punk, minimal wave, deliberately primitive beats."
   },
   "BossDR550": {
     "label": "Polite clean early-90s ROM drums, safe default",
     "kind": "Boss DR-550 Dr. Rhythm (1990, PCM)",
-    "about": "Clean, generic, early-90s ROM drums with a decent perc set. Polite and safe. Pop or R&B sketch that just needs competent drums.",
-    "tags": {
-      "texture": "clean",
-      "weight": "medium",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/BossDR550.svg"
+    "about": "Clean, generic, early-90s ROM drums with a decent perc set. Polite and safe. Pop or R&B sketch that just needs competent drums."
   },
   "CasioRZ1": {
     "label": "Bright aliased 12-bit crunch, snappy electro bite",
     "kind": "Casio RZ-1 (1986, 12-bit sampler)",
-    "about": "Bright, crunchy, aliased 12-bit. Thin snappy snare, harsh cymbals. Electro, freestyle, lo-fi house; when you want digital bite.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "light",
-      "brightness": "bright",
-      "accent": "none"
-    },
-    "icon": "web/kits/CasioRZ1.svg"
+    "about": "Bright, crunchy, aliased 12-bit. Thin snappy snare, harsh cymbals. Electro, freestyle, lo-fi house; when you want digital bite."
   },
   "CasioSK1": {
     "label": "Hissy 8-bit toy drums, deliberately cheap",
     "kind": "Casio SK-1 (1985, 8-bit sampling keyboard)",
-    "about": "Very lo-fi 8-bit toy drums, hissy and fuzzy, tiny transients. Chiptune-adjacent, bedroom lo-fi, deliberately cheap.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "light",
-      "brightness": "neutral",
-      "accent": "pixels+noise"
-    },
-    "icon": "web/kits/CasioSK1.svg"
+    "about": "Very lo-fi 8-bit toy drums, hissy and fuzzy, tiny transients. Chiptune-adjacent, bedroom lo-fi, deliberately cheap."
   },
   "CasioVL1": {
     "label": "Beepy calculator-toy clicks, Da Da Da minimal",
     "kind": "Casio VL-Tone (1981, calculator keyboard)",
-    "about": "Three beepy, clicky toy hits. Barely drums. The \"Da Da Da\" machine. Novelty, micro-beats, kraftwerk-style minimalism.",
-    "tags": {
-      "texture": "clean",
-      "weight": "light",
-      "brightness": "bright",
-      "accent": "pixels"
-    },
-    "icon": "web/kits/CasioVL1.svg"
+    "about": "Three beepy, clicky toy hits. Barely drums. The \"Da Da Da\" machine. Novelty, micro-beats, kraftwerk-style minimalism."
   },
   "DoepferMS404": {
     "label": "Fat synth-patched analog: sub kick, noisy snare",
     "kind": "Doepfer MS-404 (analog monosynth, drums patched)",
-    "about": "Fat synthesized analog hits: round sub kick, noisy snare. Not a drum machine. Techno/acid where drums should sound like a synth.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "heavy",
-      "brightness": "dark",
-      "accent": "sweep+sub+noise"
-    },
-    "icon": "web/kits/DoepferMS404.svg"
+    "about": "Fat synthesized analog hits: round sub kick, noisy snare. Not a drum machine. Techno/acid where drums should sound like a synth."
   },
   "EmuDrumulator": {
     "label": "Chunky gritty 8-bit new-wave thud and crack",
     "kind": "E-mu Drumulator (1983, 8-bit)",
-    "about": "Chunky, gritty 8-bit; thuddy kick, cracking snare, grainy hats. New-wave staple. Early-80s new wave, synth-pop, coldwave with grit.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/EmuDrumulator.svg"
+    "about": "Chunky, gritty 8-bit; thuddy kick, cracking snare, grainy hats. New-wave staple. Early-80s new wave, synth-pop, coldwave with grit."
   },
   "EmuSP12": {
     "label": "Dusty punchy 12-bit hip-hop, deep kick/snare set",
     "kind": "E-mu SP-12 (1985, 12-bit)",
-    "about": "The other hip-hop sampler: dusty, punchy, mid-heavy 12-bit. Huge kick/snare variety. Golden-era hip-hop, dusty breaks, sample-flavoured beats.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "heavy",
-      "brightness": "dark",
-      "accent": "layers"
-    },
-    "icon": "web/kits/EmuSP12.svg"
+    "about": "The other hip-hop sampler: dusty, punchy, mid-heavy 12-bit. Huge kick/snare variety. Golden-era hip-hop, dusty breaks, sample-flavoured beats."
   },
   "KorgDDM110": {
     "label": "Harsh cheap 80s PCM, clicky and sizzly",
     "kind": "Korg DDM-110 Super Drums (1985, digital)",
-    "about": "Cheap, harsh, lo-fi PCM; sharp clicky kick, sizzly hats. Lo-fi electro, minimal techno wanting a nasty edge.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "light",
-      "brightness": "bright",
-      "accent": "noise"
-    },
-    "icon": "web/kits/KorgDDM110.svg"
+    "about": "Cheap, harsh, lo-fi PCM; sharp clicky kick, sizzly hats. Lo-fi electro, minimal techno wanting a nasty edge."
   },
   "KorgKPR77": {
     "label": "Soft round analog, gentle 606-like box",
     "kind": "Korg KPR-77 (1983, analog)",
-    "about": "Soft, boxy analog, TR-606 territory but rounder. Minimal synth, dub-ish patterns, gentle analog beats.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "medium",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/KorgKPR77.svg"
+    "about": "Soft, boxy analog, TR-606 territory but rounder. Minimal synth, dub-ish patterns, gentle analog beats."
   },
   "KorgKR55": {
     "label": "Warm woody 70s analog preset thump",
     "kind": "Korg KR-55 Rhythm 55 (1979, analog preset box)",
-    "about": "Warm, thumpy, slightly woody analog; snare like a brushed tick. Organ-lounge, krautrock, retro-lounge beats.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "medium",
-      "brightness": "dark",
-      "accent": "ticks"
-    },
-    "icon": "web/kits/KorgKR55.svg"
+    "about": "Warm, thumpy, slightly woody analog; snare like a brushed tick. Organ-lounge, krautrock, retro-lounge beats."
   },
   "KorgKRZ": {
     "label": "Plain digital hits with a couple of fx sounds",
     "kind": "Korg KRZ (sample set of uncertain origin; includes fx)",
-    "about": "Digital 90s-style hits plus two fx sounds. Cleanish, unremarkable. You want a plain digital kit with a couple of built-in fx hits.",
-    "tags": {
-      "texture": "clean",
-      "weight": "medium",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/KorgKRZ.svg"
+    "about": "Digital 90s-style hits plus two fx sounds. Cleanish, unremarkable. You want a plain digital kit with a couple of built-in fx hits."
   },
   "KorgM1": {
     "label": "Clean bright 1990 house kit, iconic M1 hits",
     "kind": "Korg M1 (1988, workstation ROM)",
-    "about": "The 1990 house/pop sound: clean, bright, slightly hollow. Big misc set (the famous M1 hits). Classic house, early-90s pop, anything \"piano house\".",
-    "tags": {
-      "texture": "clean",
-      "weight": "heavy",
-      "brightness": "bright",
-      "accent": "none"
-    },
-    "icon": "web/kits/KorgM1.svg"
+    "about": "The 1990 house/pop sound: clean, bright, slightly hollow. Big misc set (the famous M1 hits). Classic house, early-90s pop, anything \"piano house\"."
   },
   "KorgMinipops": {
     "label": "Bouncy 60s organ-box tick-tock, Oxygène rhythm",
     "kind": "Korg Mini Pops (late 60s/70s preset box)",
-    "about": "Tiny, bouncy, organ-box tick-tock. The Jean-Michel Jarre \"Oxygène\" rhythm. Kosmische, exotica, lounge, retro-futurist minimal.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "light",
-      "brightness": "neutral",
-      "accent": "ticks"
-    },
-    "icon": "web/kits/KorgMinipops.svg"
+    "about": "Tiny, bouncy, organ-box tick-tock. The Jean-Michel Jarre \"Oxygène\" rhythm. Kosmische, exotica, lounge, retro-futurist minimal."
   },
   "KorgT3": {
     "label": "M1-style clean bright ROM, alternate snares",
     "kind": "Korg T3 (1989, workstation)",
-    "about": "M1 successor: same clean bright ROM character, a few more variants. Like the M1 but you want slightly different snares.",
-    "tags": {
-      "texture": "clean",
-      "weight": "medium",
-      "brightness": "bright",
-      "accent": "layers"
-    },
-    "icon": "web/kits/KorgT3.svg"
+    "about": "M1 successor: same clean bright ROM character, a few more variants. Like the M1 but you want slightly different snares."
   },
   "Linn9000": {
     "label": "Big polished mid-80s Linn punch, fuller",
     "kind": "Linn 9000 (1984, 12-bit)",
-    "about": "Big, punchy, polished mid-80s Linn; fuller than LinnDrum. Big-80s pop, power ballads, gated-drum era.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/Linn9000.svg"
+    "about": "Big, punchy, polished mid-80s Linn; fuller than LinnDrum. Big-80s pop, power ballads, gated-drum era."
   },
   "LinnDrum": {
     "label": "Tight cracking 80s pop drums, Prince-era Linn",
     "kind": "LinnDrum LM-2 (1982, 8-bit)",
-    "about": "THE 80s pop kit: tight kick, cracking snare, crisp hats. Prince, Hall & Oates. Anything 80s pop/funk/synth-pop.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "heavy",
-      "brightness": "bright",
-      "accent": "none"
-    },
-    "icon": "web/kits/LinnDrum.svg"
+    "about": "THE 80s pop kit: tight kick, cracking snare, crisp hats. Prince, Hall & Oates. Anything 80s pop/funk/synth-pop."
   },
   "LinnLM1": {
     "label": "Dry raw early-80s Linn, slappy new-wave snare",
     "kind": "Linn LM-1 (1980, 8-bit, first sampled drum machine)",
-    "about": "Drier, thinner, rawer than LinnDrum; rounded kick, slappy snare. Early-80s new wave, Human League / Gary Numan textures.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "light",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/LinnLM1.svg"
+    "about": "Drier, thinner, rawer than LinnDrum; rounded kick, slappy snare. Early-80s new wave, Human League / Gary Numan textures."
   },
   "LinnLM2": {
     "label": "LinnDrum family with extra kick/snare picks",
     "kind": "Linn LM-2 alternate set",
-    "about": "Same LinnDrum family, more kick/snare variants, slightly different tuning. You like LinnDrum but want to pick among snares.",
-    "tags": {
-      "texture": "clean",
-      "weight": "medium",
-      "brightness": "neutral",
-      "accent": "layers"
-    },
-    "icon": "web/kits/LinnLM2.svg"
+    "about": "Same LinnDrum family, more kick/snare variants, slightly different tuning. You like LinnDrum but want to pick among snares."
   },
   "MFB512": {
     "label": "Boxy fizzy German analog, cold minimal wave",
     "kind": "MFB-512 (1980, German analog)",
-    "about": "Boxy, midrange-y analog; tight kick, fizzy snare, almost lo-fi. Minimal wave, cold German electro, DIY synth.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "medium",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/MFB512.svg"
+    "about": "Boxy, midrange-y analog; tight kick, fizzy snare, almost lo-fi. Minimal wave, cold German electro, DIY synth."
   },
   "MPC1000": {
     "label": "Modern clean punchy MPC hip-hop, no grit",
     "kind": "Akai MPC1000 (2003, factory sounds)",
-    "about": "Modern, clean, punchy sampler defaults; contemporary hip-hop kit. Modern trap/hip-hop sketches without vintage grit.",
-    "tags": {
-      "texture": "clean",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/MPC1000.svg"
+    "about": "Modern, clean, punchy sampler defaults; contemporary hip-hop kit. Modern trap/hip-hop sketches without vintage grit."
   },
   "OberheimDMX": {
     "label": "Hard crunchy 8-bit thump, Run-DMC / New Order",
     "kind": "Oberheim DMX (1981, 8-bit)",
-    "about": "Hard, crunchy 8-bit thump; the Run-DMC / New Order kit. Big kick, dry crack snare. Old-school hip-hop, electro, new wave with punch.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/OberheimDMX.svg"
+    "about": "Hard, crunchy 8-bit thump; the Run-DMC / New Order kit. Big kick, dry crack snare. Old-school hip-hop, electro, new wave with punch."
   },
   "RhythmAce": {
     "label": "Soft 60s organ-box bossa ticks, lounge exotica",
     "kind": "Ace Tone Rhythm Ace (late 60s/70s preset box)",
-    "about": "Soft organ-box bossa-nova ticks, congas and cowbell-ish perc. Lounge exotica. Exotica, bossa, retro lounge, hauntology.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "medium",
-      "brightness": "neutral",
-      "accent": "ticks"
-    },
-    "icon": "web/kits/RhythmAce.svg"
+    "about": "Soft organ-box bossa-nova ticks, congas and cowbell-ish perc. Lounge exotica. Exotica, bossa, retro lounge, hauntology."
   },
   "RolandCompurhythm1000": {
     "label": "Tighter cleaner late CompuRhythm, mid-80s pop",
     "kind": "Roland CR-1000 (1984, analog/PCM hybrid)",
-    "about": "Late CompuRhythm: tighter, cleaner than CR-78, a bit generic. Mid-80s pop demos, clean analog-ish without 808 clichés.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "medium",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/RolandCompurhythm1000.svg"
+    "about": "Late CompuRhythm: tighter, cleaner than CR-78, a bit generic. Mid-80s pop demos, clean analog-ish without 808 clichés."
   },
   "RolandCompurhythm78": {
     "label": "Soft woody vintage analog, In the Air Tonight",
     "kind": "Roland CR-78 (1978, analog)",
-    "about": "Soft, woody, vintage analog; bossa/rhumba perc. Phil Collins \"In the Air Tonight\". Vintage pop, lounge, soft-focus retro, Blondie-era.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "medium",
-      "brightness": "dark",
-      "accent": "ticks"
-    },
-    "icon": "web/kits/RolandCompurhythm78.svg"
+    "about": "Soft, woody, vintage analog; bossa/rhumba perc. Phil Collins \"In the Air Tonight\". Vintage pop, lounge, soft-focus retro, Blondie-era."
   },
   "RolandCompurhythm8000": {
     "label": "Warm analog between CR-78 and 808, disco-ready",
     "kind": "Roland CR-8000 (1981, analog)",
-    "about": "Between CR-78 and 808: warm analog, bigger kick, clap. Warm analog pop/disco that isn't a straight 808.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "heavy",
-      "brightness": "dark",
-      "accent": "none"
-    },
-    "icon": "web/kits/RolandCompurhythm8000.svg"
+    "about": "Between CR-78 and 808: warm analog, bigger kick, clap. Warm analog pop/disco that isn't a straight 808."
   },
   "RolandD110": {
     "label": "Grainy thin LA-synth digital, late-80s sheen",
     "kind": "Roland D-110 (1988, LA synth module)",
-    "about": "Slightly grainy LA-synthesis PCM; thin, bright, 80s-digital. Late-80s sophisti-pop, sample-and-hold digital sheen.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "light",
-      "brightness": "bright",
-      "accent": "none"
-    },
-    "icon": "web/kits/RolandD110.svg"
+    "about": "Slightly grainy LA-synthesis PCM; thin, bright, 80s-digital. Late-80s sophisti-pop, sample-and-hold digital sheen."
   },
   "RolandD70": {
     "label": "Clean fuller early-90s ROM, ballad-ready",
     "kind": "Roland D-70 (1990, synth)",
-    "about": "Clean early-90s ROM drums, slightly fuller than D-110. Early-90s pop/R&B ballad drums.",
-    "tags": {
-      "texture": "clean",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/RolandD70.svg"
+    "about": "Clean early-90s ROM drums, slightly fuller than D-110. Early-90s pop/R&B ballad drums."
   },
   "RolandJD990": {
     "label": "Lush processed 90s hi-fi, layered kicks/snares",
     "kind": "Roland JD-990 (1993, synth module)",
-    "about": "Hi-fi, lush, very-90s: processed kicks, layered snares, lots of variants. 90s trance/downtempo/jungle-era polish.",
-    "tags": {
-      "texture": "clean",
-      "weight": "medium",
-      "brightness": "bright",
-      "accent": "layers"
-    },
-    "icon": "web/kits/RolandJD990.svg"
+    "about": "Hi-fi, lush, very-90s: processed kicks, layered snares, lots of variants. 90s trance/downtempo/jungle-era polish."
   },
   "RolandMC303": {
     "label": "Everything 90s dance: 808/909 clones, huge perc",
     "kind": "Roland MC-303 Groovebox (1996)",
-    "about": "808/909/CR emulations plus 90s dance perc. Biggest general-purpose set here. Dance/techno/jungle sketching with one kit that has everything.",
-    "tags": {
-      "texture": "clean",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "layers"
-    },
-    "icon": "web/kits/RolandMC303.svg"
+    "about": "808/909/CR emulations plus 90s dance perc. Biggest general-purpose set here. Dance/techno/jungle sketching with one kit that has everything."
   },
   "RolandMT32": {
     "label": "Thin crunchy DOS-game drums, cute LA-synth",
     "kind": "Roland MT-32 (1987, LA module)",
-    "about": "The DOS-game soundtrack drums: thin, crunchy, slightly cute LA-synth. Retro-game, vaporwave, cheap-charming late-80s.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "light",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/RolandMT32.svg"
+    "about": "The DOS-game soundtrack drums: thin, crunchy, slightly cute LA-synth. Retro-game, vaporwave, cheap-charming late-80s."
   },
   "RolandR8": {
     "label": "Clean articulate 16-bit acoustic, rich toms",
     "kind": "Roland R-8 Human Rhythm Composer (1989, 16-bit)",
-    "about": "Clean, realistic, articulate 16-bit; lots of tom/snare variants. Acoustic-flavoured pop/rock/fusion with detail.",
-    "tags": {
-      "texture": "clean",
-      "weight": "medium",
-      "brightness": "neutral",
-      "accent": "layers"
-    },
-    "icon": "web/kits/RolandR8.svg"
+    "about": "Clean, realistic, articulate 16-bit; lots of tom/snare variants. Acoustic-flavoured pop/rock/fusion with detail."
   },
   "RolandSystem100": {
     "label": "Raw modular analog: subs, noise, bleeps, weird",
     "kind": "Roland System-100 (1975 modular, drums patched)",
-    "about": "Raw modular analog: sub kicks, noise bursts, bleeps. Huge, weird set. Techno, industrial, experimental; synth-drum design.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "heavy",
-      "brightness": "dark",
-      "accent": "sweep+layers+sub+noise"
-    },
-    "icon": "web/kits/RolandSystem100.svg"
+    "about": "Raw modular analog: sub kicks, noise bursts, bleeps. Huge, weird set. Techno, industrial, experimental; synth-drum design."
   },
   "RolandTR505": {
     "label": "Thin cheap 80s PCM 909-lite with latin perc",
     "kind": "Roland TR-505 (1986, PCM)",
-    "about": "Thin, bright, cheap 80s PCM 909-lite; latin perc. Lo-fi house, freestyle, budget-80s.",
-    "tags": {
-      "texture": "clean",
-      "weight": "light",
-      "brightness": "bright",
-      "accent": "none"
-    },
-    "icon": "web/kits/RolandTR505.svg"
+    "about": "Thin, bright, cheap 80s PCM 909-lite; latin perc. Lo-fi house, freestyle, budget-80s."
   },
   "RolandTR606": {
     "label": "Small tight sizzly analog, acid/minimal",
     "kind": "Roland TR-606 Drumatix (1981, analog)",
-    "about": "Small, tight, sizzly analog: clicky kick, snappy snare, tinny hats. Acid, minimal techno, sparse electro.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "light",
-      "brightness": "bright",
-      "accent": "noise"
-    },
-    "icon": "web/kits/RolandTR606.svg"
+    "about": "Small, tight, sizzly analog: clicky kick, snappy snare, tinny hats. Acid, minimal techno, sparse electro."
   },
   "RolandTR626": {
     "label": "Cleaner punchier 505 with more latin perc",
     "kind": "Roland TR-626 (1987, PCM)",
-    "about": "505's bigger sibling: cleaner, more perc, slightly more punch. Latin-flavoured house, late-80s pop.",
-    "tags": {
-      "texture": "clean",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/RolandTR626.svg"
+    "about": "505's bigger sibling: cleaner, more perc, slightly more punch. Latin-flavoured house, late-80s pop."
   },
   "RolandTR707": {
     "label": "Crisp dry 80s PCM, Chicago house workhorse",
     "kind": "Roland TR-707 (1985, PCM)",
-    "about": "Crisp, dry, midrange PCM; the house-music workhorse before the 909 was cheap. Chicago house, early acid house, boxy dry beats.",
-    "tags": {
-      "texture": "clean",
-      "weight": "light",
-      "brightness": "bright",
-      "accent": "none"
-    },
-    "icon": "web/kits/RolandTR707.svg"
+    "about": "Crisp, dry, midrange PCM; the house-music workhorse before the 909 was cheap. Chicago house, early acid house, boxy dry beats."
   },
   "RolandTR808": {
     "label": "Booming sub kick, snappy snare, cowbell classic",
     "kind": "Roland TR-808 (1980, analog)",
-    "about": "Deep booming kick, snappy snare, ticky hats, cowbell. Many tunings per voice. Hip-hop, trap, electro, Miami bass, anything sub-heavy.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "heavy",
-      "brightness": "dark",
-      "accent": "sub"
-    },
-    "icon": "web/kits/RolandTR808.svg"
+    "about": "Deep booming kick, snappy snare, ticky hats, cowbell. Many tunings per voice. Hip-hop, trap, electro, Miami bass, anything sub-heavy."
   },
   "RolandTR909": {
     "label": "Punchy pumping kick, techno/house standard",
     "kind": "Roland TR-909 (1983, analog+PCM)",
-    "about": "Punchy pumping kick, cracking snare, sampled hats. The techno/house standard. (default kit) Techno, house, anything four-on-the-floor.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/RolandTR909.svg"
+    "about": "Punchy pumping kick, cracking snare, sampled hats. The techno/house standard. (default kit) Techno, house, anything four-on-the-floor."
   },
   "SakataDPM48": {
     "label": "Obscure grainy 8-bit punch, harsh edges",
     "kind": "Sakata DPM-48 (1985, 8-bit)",
-    "about": "Obscure Japanese 8-bit: grainy, punchy, a little harsh. Lo-fi electro that isn't the usual DMX/Linn.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/SakataDPM48.svg"
+    "about": "Obscure Japanese 8-bit: grainy, punchy, a little harsh. Lo-fi electro that isn't the usual DMX/Linn."
   },
   "SequentialCircuitsDrumtracks": {
     "label": "Bright metallic 8-bit synth-pop punch",
     "kind": "SCI DrumTraks (1984, 8-bit)",
-    "about": "Bright, punchy, slightly metallic 8-bit; synth-pop sheen. Mid-80s synth-pop, Depeche-ish drums.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "heavy",
-      "brightness": "bright",
-      "accent": "none"
-    },
-    "icon": "web/kits/SequentialCircuitsDrumtracks.svg"
+    "about": "Bright, punchy, slightly metallic 8-bit; synth-pop sheen. Mid-80s synth-pop, Depeche-ish drums."
   },
   "SequentialCircuitsTom": {
     "label": "Bright 8-bit synth-pop, smaller palette",
     "kind": "SCI Tom (1985, 8-bit)",
-    "about": "DrumTraks' cheaper sibling: similar bright 8-bit, fewer voices. Same as DrumTraks with a smaller palette.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "light",
-      "brightness": "bright",
-      "accent": "none"
-    },
-    "icon": "web/kits/SequentialCircuitsTom.svg"
+    "about": "DrumTraks' cheaper sibling: similar bright 8-bit, fewer voices. Same as DrumTraks with a smaller palette."
   },
   "SimmonsSDS5": {
     "label": "Synthetic 80s pew toms and thwack snare",
     "kind": "Simmons SDS-V (1981, analog pads)",
-    "about": "The hexagonal-pad 80s sound: \"pew\" toms, electronic thwack snare, synthetic kick. Big-80s drama, synthwave, Duran Duran fills.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "sweep"
-    },
-    "icon": "web/kits/SimmonsSDS5.svg"
+    "about": "The hexagonal-pad 80s sound: \"pew\" toms, electronic thwack snare, synthetic kick. Big-80s drama, synthwave, Duran Duran fills."
   },
   "SoundmastersR88": {
     "label": "Thin cheap 80s analog, papery minimal",
     "kind": "Soundmaster SR-88 Memory Rhythm (1982, analog)",
-    "about": "Thin, cheap DR-55-alike analog; papery and minimal. Minimal wave, DIY post-punk.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "light",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/SoundmastersR88.svg"
+    "about": "Thin, cheap DR-55-alike analog; papery and minimal. Minimal wave, DIY post-punk."
   },
   "UnivoxMicroRhythmer12": {
     "label": "Four tiny 70s organ-box hits, soft and hissy",
     "kind": "Univox Micro Rhythmer 12 (70s preset box)",
-    "about": "Four tiny organ-box hits: soft thump, tick, hiss. Ultra-minimal retro, lounge, kraut.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "light",
-      "brightness": "neutral",
-      "accent": "ticks+noise"
-    },
-    "icon": "web/kits/UnivoxMicroRhythmer12.svg"
+    "about": "Four tiny organ-box hits: soft thump, tick, hiss. Ultra-minimal retro, lounge, kraut."
   },
   "ViscoSpaceDrum": {
     "label": "Zappy swept synth drums, space disco lasers",
     "kind": "Visco Space Drum (80s analog percussion synth)",
-    "about": "Simmons-like synthetic drums: swept toms, zappy kicks, laser hits. Space disco, italo, sci-fi synth drums.",
-    "tags": {
-      "texture": "smooth",
-      "weight": "medium",
-      "brightness": "neutral",
-      "accent": "sweep"
-    },
-    "icon": "web/kits/ViscoSpaceDrum.svg"
+    "about": "Simmons-like synthetic drums: swept toms, zappy kicks, laser hits. Space disco, italo, sci-fi synth drums."
   },
   "XdrumLM8953": {
     "label": "Generic mid-80s PCM, neutral and unassuming",
     "kind": "X-Drum LM-8953 (80s digital, RX-style)",
-    "about": "Generic mid-80s PCM: clean-ish, slightly crunchy, unremarkable. A neutral 80s digital kit that isn't a famous name.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "medium",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/XdrumLM8953.svg"
+    "about": "Generic mid-80s PCM: clean-ish, slightly crunchy, unremarkable. A neutral 80s digital kit that isn't a famous name."
   },
   "YamahaRM50": {
     "label": "Huge 16-bit library, hundreds of every voice",
     "kind": "Yamaha RM50 (1992, rhythm module)",
-    "about": "Enormous 16-bit library: acoustic, electronic, processed. Anything, many times. You want to dig for a specific kick/snare among hundreds.",
-    "tags": {
-      "texture": "clean",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "layers"
-    },
-    "icon": "web/kits/YamahaRM50.svg"
+    "about": "Enormous 16-bit library: acoustic, electronic, processed. Anything, many times. You want to dig for a specific kick/snare among hundreds."
   },
   "YamahaRX21": {
     "label": "Cheap crunchy boxy 80s PCM, thin and short",
     "kind": "Yamaha RX21 (1985, PCM)",
-    "about": "Cheap, crunchy, boxy 80s PCM; thin snare, short hats. Budget-80s pop, lo-fi synth-pop.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "light",
-      "brightness": "neutral",
-      "accent": "none"
-    },
-    "icon": "web/kits/YamahaRX21.svg"
+    "about": "Cheap, crunchy, boxy 80s PCM; thin snare, short hats. Budget-80s pop, lo-fi synth-pop."
   },
   "YamahaRX5": {
     "label": "Punchy bright tunable 12-bit, late-80s hits",
     "kind": "Yamaha RX5 (1986, 12-bit)",
-    "about": "Punchy, bright, tunable 12-bit; the \"house of RX\" hits. Late-80s hip-hop/house, Cameo-style pop.",
-    "tags": {
-      "texture": "jagged",
-      "weight": "heavy",
-      "brightness": "bright",
-      "accent": "none"
-    },
-    "icon": "web/kits/YamahaRX5.svg"
+    "about": "Punchy, bright, tunable 12-bit; the \"house of RX\" hits. Late-80s hip-hop/house, Cameo-style pop."
   },
   "YamahaRY30": {
     "label": "Clean big early-90s digital, broad variants",
     "kind": "Yamaha RY30 (1991, 16-bit)",
-    "about": "Clean, big, tweakable early-90s digital; broad variant set. Early-90s R&B/pop/dance with a polished kit.",
-    "tags": {
-      "texture": "clean",
-      "weight": "heavy",
-      "brightness": "neutral",
-      "accent": "layers"
-    },
-    "icon": "web/kits/YamahaRY30.svg"
+    "about": "Clean, big, tweakable early-90s digital; broad variant set. Early-90s R&B/pop/dance with a polished kit."
   }
 }

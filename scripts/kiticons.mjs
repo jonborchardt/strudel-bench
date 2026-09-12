@@ -87,12 +87,7 @@ export function draw({ texture, weight, brightness, accent }) {
 if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
   fs.mkdirSync(path.join(OUT, 'legend'), { recursive: true });
   const kits = JSON.parse(fs.readFileSync(KITS, 'utf8'));
-  for (const [name, kit] of Object.entries(kits)) {
-    kit.tags = tagsOf(`${kit.label} ${kit.kind} ${kit.about}`);
-    kit.icon = `web/kits/${name}.svg`;
-    fs.writeFileSync(path.join(OUT, `${name}.svg`), draw(kit.tags));
-  }
-  fs.writeFileSync(KITS, JSON.stringify(kits, null, 2) + '\n');
+  for (const [name, kit] of Object.entries(kits)) fs.writeFileSync(path.join(OUT, `${name}.svg`), draw(tagsOf(`${kit.label} ${kit.kind} ${kit.about}`)));
   // legend: only what the slot changes. texture keeps the line shape; weight is a bar of that thickness; brightness a
   // colour dot; an accent is its mark alone on the neutral colour
   const base = tagsOf(''), n = COLOUR.neutral;
@@ -104,7 +99,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
     accent: (v) => (v === 'layers' ? draw({ ...base, accent: v }) : wrap(ACCENT[v](n, '', AMP.medium).replace('opacity=".5"', '').replace('stroke-width="1.5"', 'stroke-width="2.4"'))), // layers only reads as a ghost of a line; the rest at full strength so they read at key size
   };
   for (const [slot, values] of Object.entries(SLOTS)) for (const [v] of values) fs.writeFileSync(path.join(OUT, 'legend', `${slot}-${v.replace('*', '')}.svg`), LEGEND[slot](v.replace('*', '')));
-  const count = {};
-  for (const { tags } of Object.values(kits)) for (const [s, v] of Object.entries(tags)) count[`${s}:${v}`] = (count[`${s}:${v}`] ?? 0) + 1;
-  console.log(`wrote ${Object.keys(kits).length} icons to web/kits/`, count);
+  console.log(`wrote ${Object.keys(kits).length} icons to web/kits/`);
 }

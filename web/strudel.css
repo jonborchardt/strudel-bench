@@ -28,13 +28,6 @@ main { max-width: 84rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; display: gr
 footer.site { max-width: 84rem; margin: 0 auto; padding: 1.5rem 1.25rem 2.5rem; border-top: 1px solid var(--line); font-size: .85rem; display: grid; gap: .4rem; }
 footer.site p { margin: 0; }
 footer.site nav { display: flex; gap: 1rem; flex-wrap: wrap; }
-/* back-to-top: fixed bottom-right, fades in once the page is scrolled (scroll-driven animation; always visible where unsupported) */
-html { scroll-behavior: smooth; }
-.totop { position: fixed; right: 1.25rem; bottom: 1.25rem; width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: 50%; background: #1c1c1c; color: #fff; text-decoration: none; font-size: 1.2rem; box-shadow: 0 2px 8px rgba(0,0,0,.3); z-index: 2; }
-@supports (animation-timeline: scroll()) {
-  .totop { animation: totop linear both; animation-timeline: scroll(); animation-range: 0 200px; }
-  @keyframes totop { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
-}
 /* long-form pages (about, legal) */
 .prose { max-width: 46rem; }
 .prose h1 { margin-bottom: .5rem; }
@@ -99,11 +92,8 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .xstate.done small { color: inherit; opacity: .7; }
 .xstate.fail { background: #fbe9ec; color: var(--err); }
 
-/* the comments card's copy of the transport: icon buttons, a lane with one dot per comment */
-.mini { display: flex; align-items: center; gap: .3rem; margin-bottom: .5rem; }
-.mini button { padding: .15rem .45rem; font-size: .8rem; line-height: 1.4; }
-.mini .where { font: var(--mono); font-size: .8rem; color: var(--muted); white-space: nowrap; }
-.lane { position: relative; flex: 1; min-width: 8rem; display: flex; align-items: center; padding-top: .6rem; margin-top: -.6rem; } /* the padding holds the dots; the negative margin keeps the slider on the buttons' centre line */
+/* the transport slider's lane: one dot per change comment sits above the knob */
+.lane { position: relative; flex: 1; min-width: 12rem; display: flex; align-items: center; padding-top: .6rem; margin-top: -.6rem; } /* the padding holds the dots; the negative margin keeps the slider on the buttons' centre line */
 .lane input[type=range] { width: 100%; margin: 0; }
 .lane .dot { position: absolute; top: 0; width: .7rem; height: .7rem; padding: 0; border-radius: 50%; background: var(--c, var(--accent)); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--c, var(--accent)); transform: translateX(-50%); cursor: grab; touch-action: none; }
 .lane .dot.on { transform: translateX(-50%) scale(1.4); }

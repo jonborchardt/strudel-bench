@@ -170,5 +170,5 @@ export function createServer() {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT) || 3000;
-  createServer().listen(port, () => console.log(`strudel-bench -> http://localhost:${port}`));
+  createServer().listen(port, '127.0.0.1', () => console.log(`strudel-bench -> http://localhost:${port}`));
 }

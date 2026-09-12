@@ -3,8 +3,6 @@
 import { dump } from '../lib/dump.mjs';
 import { packKind } from '../lib/packs.mjs';
 
-/** The drum-machine pack once loaded: its sound `names` (canonical spelling) and alias bank (`{ RolandTR909: 'tr909', ... }`), for the kit selector. */
-export const drumMachines = { names: [], aliases: {} };
 /** The local packs this environment has (samples/user/packs.json): `{ name: { sounds, deploy, license } }`; on GitHub Pages only the deployed ones. */
 export const localPacks = {};
 
@@ -22,12 +20,7 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
         strudel.samples('samples/user/strudel.json'),
         fetch('samples/user/packs.json').then((r) => (r.ok ? r.json() : {})).then((idx) => Object.assign(localPacks, idx)),
       ]);
-      if (packs.includes('tidal-drum-machines')) {
-        const alias = local ? 'samples/packs/tidal-drum-machines-alias.json' : cdn.alias;
-        strudel.aliasBank(alias);
-        const json = (u) => fetch(u).then((r) => r.json());
-        [drumMachines.aliases, drumMachines.names] = await Promise.all([json(alias), json(local ? 'samples/packs/tidal-drum-machines.json' : cdn.packs['tidal-drum-machines'].json).then(Object.keys)]);
-      }
+      if (packs.includes('tidal-drum-machines')) strudel.aliasBank(local ? 'samples/packs/tidal-drum-machines-alias.json' : cdn.alias);
       await import('../lib/index.mjs');
       const user = Object.entries(localPacks).map(([n, p]) => `${n} (${packKind(p)})`);
       onStatus(`packs: ${packs.join(', ')}${local ? '' : ' (cdn)'}${user.length ? ` · local packs: ${user.join(', ')}` : ''}`);
@@ -70,6 +63,5 @@ export function footer() {
   const links = [['GitHub', 'https://github.com/jonborchardt'], ['LinkedIn', 'https://www.linkedin.com/in/borchardt/'], ['YouTube', 'https://www.youtube.com/@JonathanBorchardt'], ['Blog', 'https://jonborchardt.github.io/blog/'], ['RSS', 'https://jonborchardt.github.io/blog/rss.xml']];
   return `<p><strong>Jonathan Borchardt</strong> · Always shippable, always improving</p>
 <nav aria-label="links">${links.map(([n, h]) => `<a href="${h}" rel="me noopener">${n}</a>`).join('')}</nav>
-<p class="muted">© ${new Date().getFullYear()} Jonathan Borchardt · Always Shippable · Views are my own and do not represent my employer. · <a href="legal.html">Legal &amp; Privacy</a></p>
-<a href="#" class="totop" aria-label="Back to top" title="Back to top">&uarr;</a>`;
+<p class="muted">© ${new Date().getFullYear()} Jonathan Borchardt · Always Shippable · Views are my own and do not represent my employer. · <a href="legal.html">Legal &amp; Privacy</a></p>`;
 }

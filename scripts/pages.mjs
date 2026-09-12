@@ -25,8 +25,9 @@ for (const [name, p] of Object.entries(userPacks())) {
   shipped[name] = { ...p, sounds: Object.fromEntries(keep.map((s) => [s, p.sounds[s]])) };
 }
 const songs = songList();
-const hidden = songs.filter((s) => packsOf(fs.readFileSync(path.join(ROOT, 'songs', s), 'utf8')).some((p) => !shipped[p]));
-for (const s of songs.filter((s) => !hidden.includes(s) && packsOf(fs.readFileSync(path.join(ROOT, 'songs', s), 'utf8')).length)) {
+const declared = Object.fromEntries(songs.map((s) => [s, packsOf(fs.readFileSync(path.join(ROOT, 'songs', s), 'utf8'))]));
+const hidden = songs.filter((s) => declared[s].some((p) => !shipped[p]));
+for (const s of songs.filter((s) => !hidden.includes(s) && declared[s].length)) {
   const { problems } = await checkFile(path.join(ROOT, 'songs', s), 4, shipped);
   if (problems.length) throw new Error(`not deployable as shipped:\n  ${problems.join('\n  ')}`);
 }

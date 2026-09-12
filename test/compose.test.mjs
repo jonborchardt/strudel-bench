@@ -8,19 +8,9 @@ import { parseChange, addNote } from '../scripts/note.mjs';
 const ROOT = path.resolve(import.meta.dirname, '..');
 const demo = fs.readFileSync(path.join(ROOT, 'songs', 'demo.strudel'), 'utf8');
 
-test('kitsIn lists only prefixes that have kick, snare and hats, in canonical case, aliases collapsed', () => {
-  const toy = ['RolandTR909_bd', 'RolandTR909_sd', 'RolandTR909_hh', 'RolandTR909_cp', 'AJKPercusyn_bd', 'AJKPercusyn_sd', 'gm_piano', 'bd', 'casio', 'LinnDrum_hh', 'LinnDrum_sd', 'LinnDrum_bd'];
-  assert.deepEqual(kitsIn(toy), ['LinnDrum', 'RolandTR909']);
-  // the page sees strudel's sound map: lower-case keys, each alias registered as a key of its own, user kits verbatim
-  const page = ['rolandtr909_bd', 'rolandtr909_sd', 'rolandtr909_hh', 'tr909_bd', 'tr909_sd', 'tr909_hh', 'mykit_bd', 'mykit_sd', 'mykit_hh'];
-  assert.deepEqual(kitsIn(page, { names: ['RolandTR909_bd'], aliases: { RolandTR909: 'tr909', LinnDrum: 'linn' } }), ['RolandTR909', 'mykit']);
-  const pack = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'samples', 'packs', f), 'utf8'));
-  const names = Object.keys(pack('tidal-drum-machines.json')), aliases = pack('tidal-drum-machines-alias.json');
-  const lower = [...names, ...names.flatMap((n) => (aliases[n.split('_')[0]] ? [n.replace(/^[^_]+/, aliases[n.split('_')[0]])] : []))].map((k) => k.toLowerCase()); // what strudel registers
-  const kits = kitsIn(lower, { names, aliases });
-  for (const k of ['RolandTR909', 'RolandTR808', 'LinnDrum', 'AkaiMPC60']) assert.ok(kits.includes(k), k);
-  assert.ok(!kits.includes('AJKPercusyn'), 'no hats');
-  assert.ok(kits.every((k) => names.includes(`${k}_bd`)), 'every kit spelled as the pack spells it, no alias copies');
+test('kitsIn lists the described kits whose kick, snare and hats are loaded (strudel lower-cases sound names)', () => {
+  const page = ['rolandtr909_bd', 'rolandtr909_sd', 'rolandtr909_hh', 'ajkpercusyn_bd', 'ajkpercusyn_sd', 'linndrum_hh', 'linndrum_sd', 'linndrum_bd'];
+  assert.deepEqual(kitsIn(['RolandTR909', 'AJKPercusyn', 'LinnDrum', 'KorgM1'], page), ['LinnDrum', 'RolandTR909']);
 });
 
 test('setKit rewrites or inserts the song-level kit and leaves section kits alone', () => {
@@ -98,12 +88,13 @@ test('scripts/note.mjs parses a change line and appends requests to the notes fi
 });
 
 test('lib/kits.json describes every kit the dropdown can list, labels short enough for one line', () => {
-  const pack = (f) => JSON.parse(fs.readFileSync(path.join(ROOT, 'samples', 'packs', f), 'utf8'));
-  const names = Object.keys(pack('tidal-drum-machines.json')), aliases = pack('tidal-drum-machines-alias.json');
+  const names = Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT, 'samples', 'packs', 'tidal-drum-machines.json'), 'utf8'))).map((n) => n.toLowerCase());
   const info = JSON.parse(fs.readFileSync(path.join(ROOT, 'lib', 'kits.json'), 'utf8'));
-  for (const k of kitsIn(names.map((n) => n.toLowerCase()), { names, aliases })) {
-    assert.ok(info[k]?.label && info[k].about, `${k} described`);
+  const kits = kitsIn(Object.keys(info), names);
+  for (const k of ['RolandTR909', 'RolandTR808', 'LinnDrum', 'AkaiMPC60']) assert.ok(kits.includes(k), k);
+  for (const k of kits) {
+    assert.ok(info[k].label && info[k].about, `${k} described`);
     assert.ok(info[k].label.length <= 50, `${k} label fits one line`);
-    assert.ok(fs.existsSync(path.join(ROOT, info[k].icon)), `${k} icon exists (node scripts/kiticons.mjs)`);
+    assert.ok(fs.existsSync(path.join(ROOT, 'web', 'kits', `${k}.svg`)), `${k} icon exists (node scripts/kiticons.mjs)`);
   }
 });

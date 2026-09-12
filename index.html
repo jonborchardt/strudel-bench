@@ -37,7 +37,7 @@
     <button id="play" class="primary">&#9654; Play</button>
     <button id="stop" disabled>&#9632; Stop</button>
     <button id="update" title="the source changed since it was last evaluated: play the new version from here" hidden>&#8635; Update</button>
-    <input id="pos" type="range" min="0" max="1" step="0.05" value="0" list="marks" disabled aria-label="position">
+    <span class="lane"><input id="pos" type="range" min="0" max="1" step="0.05" value="0" list="marks" disabled aria-label="position"><span id="dots"></span></span>
     <datalist id="marks"></datalist>
     <span class="where" id="where">&mdash;</span>
   </section>
@@ -58,13 +58,7 @@
   <!-- feedback: pick a section, say what should change, get a request to paste to Claude -->
   <section class="panes">
     <div class="card" id="feedback">
-      <header><h2>Change comments</h2></header>
-      <div class="mini" aria-label="timeline">
-        <button id="mplay" title="play">&#9654;</button>
-        <button id="mstop" title="stop" disabled>&#9632;</button>
-        <span class="lane"><input id="mpos" type="range" min="0" max="1" step="0.05" value="0" disabled aria-label="position"><span id="dots"></span></span>
-        <span class="where" id="fbwhere">&mdash;</span>
-      </div>
+      <header><h2>Change comments</h2><small>each one is pinned where the transport's playhead is; its dot on the slider can be clicked to edit and dragged to move</small></header>
       <textarea id="fbcomment" class="note" placeholder="Make this heavier and less predictable."></textarea>
       <div class="row" style="margin-top:.5rem">
         <button id="fbadd" title="pins the comment at the cycle the playhead is on" disabled>Add comment here</button>
@@ -86,11 +80,12 @@
 <footer class="site" id="foot"></footer>
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
-  import { boot, playCode, expandCode, evalCode, nav, footer, drumMachines, localPacks } from './web/boot.mjs';
+  import { boot, playCode, expandCode, evalCode, nav, footer, localPacks } from './web/boot.mjs';
   import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile } from './web/compose.mjs';
   import { packsOf, packKind } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
   $('nav').innerHTML = nav('Compose');
   $('foot').innerHTML = footer();
   const status = (text) => ($('status').textContent = text);
@@ -104,7 +99,7 @@
   const drafts = () => Object.keys(localStorage).filter((k) => k.startsWith(DRAFT)).map((k) => k.slice(DRAFT.length));
   const NAME = /^[\w.-]+\.strudel$/;
   let kits = []; // drum kits the loaded packs actually have (filled once strudel is ready)
-  let kitInfo = {}; // lib/kits.json: { kit: { label, about, icon } } for the kit menu
+  let kitInfo = {}; // lib/kits.json: { kit: { label, about } } for the kit menu; its icon is web/kits/<kit>.svg
   // the icon key pinned under the kit list: legend files scripts/kiticons.mjs writes, one word each, a bar between the slots
   $('kitkey').innerHTML = [
     [['texture-jagged', 'crunchy'], ['texture-smooth', 'analog'], ['texture-clean', 'clean']],
@@ -123,7 +118,7 @@
   const ready = boot({ onError: (m) => ($('err').textContent = m), onStatus: status });
   Promise.all([ready, fetch('lib/kits.json').then((r) => r.json())]).then(([, info]) => { // what the packs actually loaded, local or cdn
     kitInfo = info;
-    kits = kitsIn(Object.keys(strudel.soundMap.get()), drumMachines);
+    kits = kitsIn(Object.keys(info), Object.keys(strudel.soundMap.get()));
     sourceChanged();
   });
 
@@ -154,7 +149,7 @@
   function sourceChanged() {
     const src = $('code').value;
     const kit = kitOf(src);
-    const icon = (k) => (kitInfo[k]?.icon ? `<img src="${kitInfo[k].icon}" alt="">` : '');
+    const icon = (k) => (kitInfo[k] ? `<img src="web/kits/${k}.svg" alt="">` : '');
     $('kit').innerHTML = `${icon(kit)}${kit}`;
     $('kitlist').innerHTML = [...new Set([kit, ...kits])].map((k) => `<button role="option" aria-selected="${k === kit}" data-kit="${k}" title="${kitInfo[k]?.about ?? ''}">${icon(k)}<span>${k}</span><small>${kitInfo[k]?.label ?? ''}</small></button>`).join('');
     filterKits();
@@ -165,7 +160,6 @@
     $('packs').innerHTML = 'Packs ' + want.map((p) => { const k = packKind(localPacks[p]); return `<span class="pack ${k}">${p} · ${k}</span>`; }).join('');
     // why it sounds this way: source comments + the metadata file's changes, per section; a change shows where it
     // landed (layer.axis, from → to) and keeps its request's date and ask in the tooltip
-    const esc = (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
     const view = notesView(src, meta);
     $('notesum').textContent = view.requests ? `${view.requests} request${view.requests === 1 ? '' : 's'}, ${view.changes} change${view.changes === 1 ? '' : 's'}, last ${view.last}` : '';
     $('prompt').hidden = !view.prompt;
@@ -179,8 +173,6 @@
   }
   // expand the textarea in the browser (lib/dump.mjs); lines that differ from the last expansion flash briefly
   let shown = []; // lines currently displayed
-  const FLASH = 20000; // ms, the css flash animation's length
-  let flashed = new Map(); // line -> when an edit first produced it; later edits re-render the pane but must not reset it
   async function expand() {
     const src = $('code').value;
     let code;
@@ -190,19 +182,15 @@
     $('xerr').textContent = '';
     if (!playing) setSections(await evalCode(ready, src).catch(() => null)); // the transport knows the song before the first play; while playing it follows the scheduler's version
     syncTransport();
-    const lines = code.split('\n'), old = new Set(shown), now = Date.now(); // ponytail: set membership, not a diff; a moved line does not flash
-    for (const l of lines) if (shown.length && !old.has(l) && !flashed.has(l)) flashed.set(l, now);
+    const lines = code.split('\n'), old = new Set(shown); // ponytail: set membership, not a diff; a moved line does not flash, and the next edit's re-render ends the flash
     let first; // the first line this edit changed, scrolled into view below
     $('expanded').replaceChildren(...lines.map((l) => {
       const s = document.createElement('span');
       s.textContent = l + '\n';
-      const t = flashed.get(l); // a line flashed by an earlier edit keeps fading on its own clock
-      if (t != null && now - t < FLASH) { s.className = 'hl'; s.style.animationDelay = `${t - now}ms`; }
-      if (t === now) first ??= s;
+      if (shown.length && !old.has(l)) { s.className = 'hl'; first ??= s; }
       return s;
     }));
     first?.scrollIntoView({ block: 'nearest' });
-    flashed = new Map([...flashed].filter(([, t]) => now - t < FLASH));
     shown = lines;
   }
   let expandTimer;
@@ -213,7 +201,7 @@
   // jumps the clock while playing and moves the resume point otherwise, so Play always starts where the knob is.
   function setSections(pat) {
     sections = pat?.strudel?.sections ?? []; // only song() files have sections to scrub through
-    for (const p of [$('pos'), $('mpos')]) { p.disabled = !sections.length; p.max = pat?.strudel?.total ?? 1; }
+    $('pos').disabled = !sections.length; $('pos').max = pat?.strudel?.total ?? 1;
     $('fbadd').disabled = !sections.length;
     $('marks').innerHTML = sections.map((s) => `<option value="${s.offset}" label="${s.name}">`).join(''); // tick marks at section starts
   }
@@ -244,19 +232,17 @@
   function syncTransport() { // buttons say what the next press does; the position readout follows the clock (setInterval below) or the resume point
     const c = playing ? null : paused ?? 0;
     $('play').innerHTML = playing ? '&#10074;&#10074; Pause' : paused != null ? '&#9654; Resume' : '&#9654; Play';
-    $('mplay').innerHTML = playing ? '&#10074;&#10074;' : '&#9654;';
-    $('mplay').title = $('play').textContent.slice(2);
-    $('stop').disabled = $('mstop').disabled = !playing && paused == null;
+    $('stop').disabled = !playing && paused == null;
     $('update').hidden = !playing || $('code').value === evaluated;
     $('transport').classList.toggle('playing', playing);
     if (c != null) showPosition(c);
   }
   function showPosition(c) { // slider + "section · bar n/m · cycle/total"
-    if (!sections.length) return ($('where').textContent = $('fbwhere').textContent = '—');
-    for (const p of [$('pos'), $('mpos')]) if (document.activeElement !== p) p.value = c; // don't yank the knob mid-drag
+    if (!sections.length) return ($('where').textContent = '—');
+    if (document.activeElement !== $('pos')) $('pos').value = c; // don't yank the knob mid-drag
     const s = sections.findLast((x) => x.offset <= c) ?? sections[0];
     const bar = Math.min(s.cycles, Math.floor((c - s.offset) / (s.span / s.cycles)) + 1); // a section with its own tempo has span != cycles
-    $('where').textContent = $('fbwhere').textContent = `${s.name} · bar ${bar}/${s.cycles} · ${c.toFixed(1)}/${$('pos').max}`;
+    $('where').textContent = `${s.name} · bar ${bar}/${s.cycles} · ${c.toFixed(1)}/${$('pos').max}`;
   }
   // songs/ on the local server; this browser's localStorage on a static host
   async function store(name, text) {
@@ -281,10 +267,10 @@
     status(`created ${name}${server ? '' : ' in this browser'}`);
   }
 
-  $('play').onclick = $('mplay').onclick = toggle;
+  $('play').onclick = toggle;
   $('update').onclick = play;
-  $('stop').onclick = $('mstop').onclick = stop;
-  $('pos').oninput = $('mpos').oninput = async (e) => { // the two sliders are one position: the comments card has a copy of the transport
+  $('stop').onclick = stop;
+  $('pos').oninput = async (e) => {
     const c = Number(e.target.value);
     if (playing) (await ready).scheduler.setCycle(c); // clock worker jumps; already-sounding notes keep ringing
     else paused = c; // paused or stopped: Play/Resume starts here
@@ -309,7 +295,6 @@
   // one badge tells the export group's state (rendering n/m, ✓ file, ✗ why); the buttons lock while a job runs so two
   // renders cannot fight over the audio context. Local vs GitHub Pages only differs in the ✓ tooltip (renders/ copy).
   const xstate = (state, html = '', title = '') => { const b = $('xstate'); b.hidden = !html; b.className = `xstate ${state}`; b.innerHTML = html; b.title = title; };
-  const esc = (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;');
   async function exporting(job) {
     const buttons = $('exports').querySelectorAll('button');
     for (const b of buttons) b.disabled = true;
@@ -380,10 +365,9 @@
   $('code').addEventListener('input', () => { sourceChanged(); expandSoon(); });
 
   // feedback: comments pinned at the playhead's cycle become one paste-ready Claude request. Each shows as a dot on
-  // the card's timeline: click a dot to edit its text, drag it to move it.
+  // the transport slider: click a dot to edit its text, drag it to move it.
   let editing = null; // index of the comment being edited
   function fbRender() {
-    const esc = (s) => s.replace(/</g, '&lt;');
     const max = Number($('pos').max) || 1;
     const hue = (i) => `hsl(${(i * 67) % 360} 70% 45%)`; // one colour per comment, the same on its dot and in the list
     $('dots').innerHTML = notes.map((n, i) => `<button class="dot${i === editing ? ' on' : ''}" data-i="${i}" style="left:${(n.cycle / max) * 100}%;--c:${hue(i)}" title="${esc(n.section)} · ${n.cycle.toFixed(1)}: ${esc(n.text)}"></button>`).join('');
@@ -413,7 +397,7 @@
   $('fbcancel').onclick = () => { editing = null; $('fbcomment').value = ''; fbRender(); };
   $('dots').onpointerdown = (e) => { // a still press edits, a drag re-pins (0.1 cycle steps)
     const dot = e.target.closest('.dot'); if (!dot) return;
-    const i = Number(dot.dataset.i), lane = $('mpos').getBoundingClientRect(), max = Number($('pos').max) || 1, x0 = e.clientX;
+    const i = Number(dot.dataset.i), lane = $('pos').getBoundingClientRect(), max = Number($('pos').max) || 1, x0 = e.clientX;
     let moved = false;
     dot.setPointerCapture(e.pointerId);
     dot.onpointermove = (m) => {
@@ -468,7 +452,7 @@
 
   // a render job from scripts/render.mjs (over SSE): the saved file, as wav into renders/, errors reported back
   async function renderToServer({ song, cycles, section, layer, name, mp3 }) {
-    const fail = (message) => { status(message); return fetch('render-error', { method: 'POST', body: JSON.stringify({ name, message }) }); };
+    const fail = (message) => fetch('render-error', { method: 'POST', body: JSON.stringify({ name, message }) });
     status(`rendering ${name}…`);
     if (playing) await stop(); // the render replaces the audio context
     try {

@@ -3,23 +3,8 @@
 
 const VOICES = ['bd', 'sd', 'hh']; // the drums layer's baseline voices: a kit missing one would log "sound not found"
 
-/**
- * Drum kits among the loaded sound names: every `<kit>_<voice>` prefix that has the baseline voices, sorted.
- * strudel keys its sound map in lower case and registers each bank alias as its own key, so the drum-machine
- * pack's own `names` (`RolandTR909_bd`, ...) restore the canonical spelling and its `aliases`
- * (`{ RolandTR909: 'tr909', ... }`) say which prefixes are copies to drop.
- */
-export function kitsIn(soundNames, { names = [], aliases = {} } = {}) {
-  const have = new Set(soundNames);
-  const canon = new Map([...names, ...Object.keys(aliases)].map((k) => k.split('_')[0]).map((k) => [k.toLowerCase(), k]));
-  const alias = new Set(Object.values(aliases).map((a) => a.toLowerCase()));
-  const kits = new Set();
-  for (const n of soundNames) {
-    const i = n.indexOf('_'), p = n.slice(0, i);
-    if (i > 0 && !alias.has(p) && VOICES.every((v) => have.has(`${p}_${v}`))) kits.add(canon.get(p) ?? p);
-  }
-  return [...kits].sort();
-}
+/** The kits of `kitNames` (lib/kits.json keys) whose baseline voices are among the loaded `soundNames` (strudel keys its sound map in lower case), sorted. */
+export const kitsIn = (kitNames, soundNames) => { const have = new Set(soundNames); return kitNames.filter((k) => VOICES.every((v) => have.has(`${k.toLowerCase()}_${v}`))).sort(); };
 
 const KIT = /kit:\s*(['"])[^'"]+\1/;
 /** The song-level kit in `src` (the song({ ... }) header), or `fallback` when it names none. */
