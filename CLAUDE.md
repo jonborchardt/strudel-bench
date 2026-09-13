@@ -9,6 +9,7 @@ Local [Strudel](https://strudel.cc) live-coding harness. Node stdlib only (plus 
     npm install
     npm run samples                    # one-time ~300 MB pack download (resumable, re-run on failures); `-- <pack>` for one pack
     npm start                          # http://localhost:3000 (PORT env overrides)
+    npm run stop [-- <port>]           # kills whatever is listening on that port (default PORT, else 3000)
     npm run pages                      # static copy in dist/ for GitHub Pages (deployed by .github/workflows/pages.yml on push to main)
     npm test                           # node:test suite in test/
     node --test test/check.test.mjs    # one test file
