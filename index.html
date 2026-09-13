@@ -52,21 +52,24 @@
     <div class="strip" id="strip"></div>
     <!-- section: the shown section's own section(...) call, the second of the two source panes (the song one sits above the strip) -->
     <details class="panel" id="secsrc"><summary>section<small id="mixsec"></small><label class="tweak" title="a widget after each value with known semantics; alt-drag a number works either way"><input type="checkbox" id="tweak"> controls</label></summary><div id="sectext" title="this section's code: edits land in the song and the knobs follow"></div></details>
-    <details class="panel" id="axes" open><summary>axes</summary><div class="knobs" id="knobs"></div></details>
+    <!-- both part lists end with an "add part" dropdown (mixRender fills it: one option per kind, numbered when the section has one already) -->
+    <details class="panel" id="axes" open><summary>axes</summary><div class="knobs" id="knobs"></div><div class="addpart" id="addaxes"></div></details>
     <!-- materials: the strings behind each part (drum template and per-voice samples, the synth or sample a part plays, arp order, follow); sound names autocomplete from the loaded packs -->
-    <details class="panel" id="mats"><summary>materials</summary><div id="matlist"></div><label class="pvlvl" title="how loud the previews play (every &#9654; in this panel and its menu); not written to the song">preview level <input class="pvin" type="range" min="-1" max="1.7" step=".01" value="0"><output>x1.0</output></label></details>
-    <div class="row addrow" id="addrow"></div>
+    <details class="panel" id="mats"><summary>materials</summary><div id="matlist"></div><div class="addpart" id="addmats"></div><label class="pvlvl" title="how loud the previews play (every &#9654; in this panel and its menu); not written to the song">preview level <input class="pvin" type="range" min="-1" max="1.7" step=".01" value="0"><output>x1.0</output></label></details>
     <datalist id="snds"></datalist>
     <!-- the materials menu: one popover for every pick button, rows carry a play button that auditions without selecting -->
     <div id="pick" popover class="menu"><input id="pickq" type="search" placeholder="filter" autocomplete="off"><label class="pvlvl" title="how loud the previews play; the same control as in the materials panel">preview level <input class="pvin" type="range" min="-1" max="1.7" step=".01" value="0"><output>x1.0</output></label><div id="picklist" role="listbox"></div></div>
-    <div class="row" style="margin-top:.5rem">
-      <span class="pills" id="pills" title="type a word and pick it from the list: control words, moods, modifiers (much, a little, less), harmony words, or a part name to aim the words after it at that part. Enter on an empty box applies."><input id="phrase" list="terms" placeholder="darker, much sparser, drums &hellip;" autocomplete="off"><datalist id="terms"></datalist></span>
-      <button id="apply" title="rewrite this section's axis literals from the words">Apply</button>
-      <button id="verify" title="render this section before and after the words, apply them, and compare the audio metrics (stops playback)">Verify</button>
-      <span class="xstate" id="vstate" role="status" aria-live="polite" hidden></span>
-    </div>
+    <!-- words: the phrase box (words become pills), Apply rewrites the literals, Verify renders before/after and shows the comparison below -->
+    <details class="panel" id="words" open><summary>words</summary><div id="wordbox">
+      <div class="row">
+        <span class="pills" id="pills" title="type a word and pick it from the list: control words, moods, modifiers (much, a little, less), harmony words, or a part name to aim the words after it at that part. Enter on an empty box applies."><input id="phrase" list="terms" placeholder="darker, much sparser, drums &hellip;" autocomplete="off"><datalist id="terms"></datalist></span>
+        <button id="apply" title="rewrite this section's axis literals from the words">Apply</button>
+        <button id="verify" title="render this section before and after the words, apply them, and compare the audio metrics (stops playback)">Verify</button>
+        <span class="xstate" id="vstate" role="status" aria-live="polite" hidden></span>
+      </div>
+      <div id="vout" hidden></div>
+    </div></details>
     <small id="mixstatus"></small>
-    <div id="vout" hidden></div>
   </details>
 
   <!-- source workspace: the editable song source, full width, over the generated strudel (closed until wanted) -->
@@ -603,7 +606,8 @@
     }).join('')).join('');
     // a part the section lacks can be added at its baseline; a second of the same kind gets a number (drums2)
     matsRender(s, eff);
-    $('addrow').innerHTML = '<small>add part</small>' + layerNames().map((l) => { let k = l, n = 2; while (s.layers[k]) k = `${l}${n++}`; return `<button data-add="${l}" title="add an empty ${k} layer (every axis at its baseline)">+ ${k}</button>`; }).join('');
+    const adds = layerNames().map((l) => { let k = l, n = 2; while (s.layers[k]) k = `${l}${n++}`; return `<option value="${l}">${k}</option>`; }).join('');
+    for (const id of ['addaxes', 'addmats']) $(id).innerHTML = `<select class="add" title="add a part to ${esc(s.name)} (every axis at its baseline)"><option value="" selected disabled>add part&hellip;</option>${adds}</select>`;
   }
   // materials: a value comes from the literal in the source, else from the evaluated song (a spread), else it is unset
   const VOICES = ['bd', 'sd', 'hh', 'oh', 'cp'];
@@ -759,8 +763,8 @@
   };
   $('pick').ontoggle = (e) => { if (e.newState === 'closed' && pvBtn && $('pick').contains(pvBtn)) preview(pvBtn); }; // closing the menu ends its preview (the same button again stops it)
   const effective = () => Object.fromEntries(sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([l, x]) => [l, x.attrs]))])); // the evaluated song's resolved attrs per section and layer
-  $('addrow').onclick = (e) => {
-    const l = e.target.closest('[data-add]')?.dataset.add; if (!l) return;
+  for (const id of ['addaxes', 'addmats']) $(id).onchange = (e) => { // the pick adds the part; the re-render puts the dropdown back on its placeholder
+    const l = e.target.value; if (!l) return;
     did(() => addLayer(code.text, mixSection, l).src, `added a ${l} part to ${mixSection}`);
   };
   $('knobs').onclick = (e) => {
