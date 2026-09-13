@@ -56,6 +56,43 @@
           "why": "timpani hits and the snare removed, since the drums voices now play them; the timpani roll, deep bass drum, gongs, swells and beds stay"
         }
       ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "listening notes: whistle too loud in void and signal; piano not real in approach and after; too much reverb in will; end too long",
+      "changes": [
+        {
+          "section": "void,",
+          "why": "signal textures wind .25>.1 and the wineglass .18>.1: the whistle was the wind bed and the bowed glass"
+        },
+        {
+          "section": "melody",
+          "why": "vibrato removed for sampled sounds in lib/layers.mjs: the layer put a 4 Hz wobble on every melody, which is what made the steinway sound fake; only raw synths get it now"
+        },
+        {
+          "section": "theme",
+          "layer": "articulation",
+          "from": 0.3,
+          "to": 0.15,
+          "why": "and brightness .6: the piano rings out instead of being cut at the slot end, and the 2 kHz lowpass opens to about 2.9 kHz"
+        },
+        {
+          "section": "approach",
+          "layer": "melody",
+          "axis": "brightness",
+          "why": "ramp .3>.55 becomes .45>.7 so the piano is never muffled"
+        },
+        {
+          "section": "will",
+          "why": "space: drums 1>.6, melody .9>.5, chimes .95>.6, bells 1>.7, organ .9>.6, strings .8>.5, bass .6>.4, glass texture quieter: the standoff is close and dry now"
+        },
+        {
+          "section": "after",
+          "from": 8,
+          "to": 6,
+          "why": "bars, its brightness ramps over 6, textures matched: the ending was a bit too long"
+        }
+      ]
     }
   ]
 }

@@ -3,9 +3,9 @@
 // signal (handchimes, tubular bells) never moves with the chords and never changes its intervals. Fear lives
 // in the low half (organ pedal, bowed strings, timpani, a heartbeat drum); hope in the high half (bells, harp,
 // a rising line). The climaxes play both at once, on the same chords, instead of letting one win.
-// void → signal → approach → contact → will → plea → threshold → after. 64 cycles, one cycle = one bar.
+// void → signal → approach → contact → will → plea → threshold → after. 62 cycles, one cycle = one bar.
 // Axis values are 0..1 with 0.5 = the layer's baseline.
-const theme    = { sound: 'steinway', follow: true, phrase: 2, notes: '0 ~ 2 4@2 ~ 5 4@2 0 ~ 2 4@2 ~ 7 6@2', register: .55, articulation: .3, space: .75, width: .5, organicness: .6 };
+const theme    = { sound: 'steinway', follow: true, phrase: 2, notes: '0 ~ 2 4@2 ~ 5 4@2 0 ~ 2 4@2 ~ 7 6@2', register: .55, articulation: .15, brightness: .6, space: .75, width: .5, organicness: .6 };
 const answer   = { ...theme, notes: '0 ~ 2 4@2 ~ 5 4@2 7 6 5 4@2 ~ 2 0@2' };
 const signal   = { sound: 'handchimes', follow: false, notes: '0 ~ ~ 6 ~ ~ 3 ~ ~ 0 ~ ~ 6 3 ~ ~', register: .85, articulation: .35, space: .95, width: .8, level: .6, organicness: 0 };
 const bells    = { sound: 'tubularbells', follow: false, notes: '0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 6 ~ ~ ~', register: .3, articulation: .1, space: 1, width: .9, level: .5, organicness: 0 };
@@ -31,7 +31,7 @@ const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808' }, [
   section('approach', 8, { role: 'develop', progression: 'i VI VII',
     drums:   { ...pulse, density: .25 },
     bass:    { ...pedal, density: .4, notes: '0 0' },
-    melody:  { ...theme, density: .4, brightness: saw.range(.3, .55).slow(8) },
+    melody:  { ...theme, density: .4, brightness: saw.range(.45, .7).slow(8) },
     melody2: { ...signal, density: .3 },
     melody3: { ...winds, density: .4 },
     pad:     { ...strings, density: .55, brightness: saw.range(.25, .45).slow(8), register: .4 },
@@ -53,13 +53,13 @@ const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808' }, [
     fx:      { impact: true },
   }),
   section('will', 8, { role: 'develop', key: 'D:phrygian', progression: 'i II i II',
-    drums:   { ...pulse, template: 'minimal', density: .25, space: 1 },
-    bass:    { ...pedal, sound: 'didgeridoo', density: .4, notes: '0 ~', register: .15, brightness: .15, weight: 1, aggression: .55 },
-    melody:  { ...theme, notes: '0 ~ ~ ~ 1 ~ 0@2 ~ ~ ~ ~ 1 ~ 0@2', density: .3, register: .35, brightness: .25, space: .9 },
-    melody2: { ...signal, density: .4, level: .75, brightness: .6 },
-    melody3: { ...bells, density: .5, level: .6, register: .2 },
-    pad:     { ...organ, density: .5, brightness: .15, weight: .95 },
-    pad2:    { ...strings, density: .3, brightness: .2, register: .2, level: .6 },
+    drums:   { ...pulse, template: 'minimal', density: .25, space: .6 },
+    bass:    { ...pedal, sound: 'didgeridoo', density: .4, notes: '0 ~', register: .15, brightness: .15, weight: 1, aggression: .55, space: .4 },
+    melody:  { ...theme, notes: '0 ~ ~ ~ 1 ~ 0@2 ~ ~ ~ ~ 1 ~ 0@2', density: .3, register: .35, brightness: .25, space: .5 },
+    melody2: { ...signal, density: .4, level: .75, brightness: .6, space: .6 },
+    melody3: { ...bells, density: .5, level: .6, register: .2, space: .7 },
+    pad:     { ...organ, density: .5, brightness: .15, weight: .95, space: .6 },
+    pad2:    { ...strings, density: .3, brightness: .2, register: .2, level: .6, space: .5 },
   }),
   section('plea', 8, { role: 'develop', key: 'F:major', progression: 'I V vi IV',
     drums:   { ...pulse, density: .3, space: .95 },
@@ -88,12 +88,12 @@ const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808' }, [
     pad4:    { ...strings, sound: 'vibraphone_bowed', density: .4, register: .85, brightness: .8, level: .35, arp: 'up' },
     fx:      { impact: true },
   }),
-  section('after', 8, { role: 'release', progression: 'i VI',
-    melody:  { ...theme, notes: '0 ~ 2 4@2 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~', density: .3, brightness: saw.range(.6, .3).slow(8), space: .95 },
+  section('after', 6, { role: 'release', progression: 'i VI',
+    melody:  { ...theme, notes: '0 ~ 2 4@2 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~', density: .3, brightness: saw.range(.6, .3).slow(6), space: .95 },
     melody2: { ...signal, density: .3, level: .5 },
     melody3: { ...bells, density: .4, level: .4 },
-    pad:     { ...strings, density: .4, brightness: saw.range(.5, .2).slow(8), width: .8 },
-    pad2:    { ...organ, density: .3, brightness: saw.range(.3, .1).slow(8), space: 1 },
+    pad:     { ...strings, density: .4, brightness: saw.range(.5, .2).slow(6), width: .8 },
+    pad2:    { ...organ, density: .3, brightness: saw.range(.3, .1).slow(6), space: 1 },
     pad3:    { ...choir, density: .3, brightness: .3, level: .3 },
   }),
 ]);
@@ -113,14 +113,14 @@ const glass   = note("<a5 d6 f5 a5>").s("wineglass_slow").clip(1).slow(2).room(.
 const shimmer = s("<belltree marktrees>").struct("<x ~ ~ ~>").room(.8).size(.9).gain(.3).pan(.7);
 
 const textures = arrange(
-  [4,  stack(wind, drone.gain(.25), deep.gain(.1))],
-  [8,  stack(wind, deep, drone, glass)],
+  [4,  stack(wind.gain(.1), drone.gain(.25), deep.gain(.1))],
+  [8,  stack(wind.gain(.1), deep, drone, glass.gain(.1))],
   [8,  stack(wind.gain(.15), deep, drone, glass, roll, swell)],
   [8,  stack(boom, gong, gong2, swell, shimmer, deep.gain(.1))],
-  [8,  stack(heart, drone, deep, wind.gain(.15), glass, gong2.gain(.3))],
+  [8,  stack(heart, drone, deep, wind.gain(.15), glass.gain(.1), gong2.gain(.3))],
   [8,  stack(wind.gain(.15), glass, roll, swell, shimmer.gain(.2))],
   [12, stack(boom, gong, gong2, swell, shimmer, drone.gain(.2), glass)],
-  [8,  stack(wind, deep, glass, gong.gain(.3), drone.gain(.2))],
+  [6,  stack(wind, deep, glass, gong.gain(.3), drone.gain(.2))],
 );
 
 // stack() drops the song metadata the checker, resolver and page use for section tables; put it back.
