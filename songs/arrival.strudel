@@ -55,7 +55,7 @@ const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808' }, [
   }),
   section('will', 8, { role: 'develop', key: 'D:phrygian', progression: 'i II i II',
     drums:   { ...pulse, template: 'minimal', density: .25, space: .6 },
-    bass:    { ...pedal, sound: 'didgeridoo', density: .4, notes: '0 ~', register: .15, brightness: .15, weight: 1, aggression: .55, space: .4 },
+    bass:    { ...pedal, sound: 'didgeridoo:8', density: .4, notes: '0 ~', register: .15, brightness: .15, weight: 1, aggression: .55, space: .4 },
     melody:  { ...theme, notes: '0@4 1@2 0@4 ~@2 1@2 0@2', density: .5 },
     melody2: { ...signal, density: .4, level: .75, brightness: .6, space: .6 },
     melody3: { ...bells, density: .5, level: .6, register: .2, space: .7 },

@@ -172,6 +172,25 @@
           "why": "deep space:0/3/5 > brown noise under 220 Hz: the Dirt space samples are sci-fi blips under a second, not a bed"
         }
       ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "the bark was the issue; undo the other whistle attempts; keep it from happening again",
+      "changes": [
+        {
+          "section": "song",
+          "why": "strings back to psaltery_bow, void and signal pad2 back to their single low note: those were not the whistle"
+        },
+        {
+          "section": "will",
+          "layer": "bass",
+          "why": "didgeridoo>didgeridoo:8: the same bark, pitched, was the will bass"
+        },
+        {
+          "section": "check:",
+          "why": "the single-song check now prints a sounds block naming the file behind every sound:index heard, so a bark, a bowed cymbal or a blip is visible before it is called a drone"
+        }
+      ]
     }
   ]
 }
