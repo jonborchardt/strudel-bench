@@ -45,20 +45,10 @@ export const check = {
   dom(c, { set }) { const i = el('input', { type: 'checkbox', title: c.path, checked: c.value }); i.onchange = () => set(i.checked); return i; },
   update(i, c) { i.checked = c.value; return true; },
 };
-/** enum without a host menu: a native select, or a text box over a datalist when the list is long */
-const LONG = 64;
+/** enum without a host menu: a native select */
 export const select = {
-  dom(c, { set, root }) {
+  dom(c, { set }) {
     const values = valuesOf(c.spec), labels = labelsOf(c.spec);
-    if (values.length > LONG) {
-      const id = `cm-hll-${c.spec.list ?? c.path.split('.').pop()}`;
-      if (!root.querySelector(`#${id}`)) { const dl = el('datalist', { id }); for (const v of values) dl.append(new Option(labels[v] ?? v, v)); root.append(dl); }
-      const i = el('input', { title: c.path, value: c.value, autocomplete: 'off', size: Math.max(6, Math.min(24, c.value.length + 2)) });
-      i.setAttribute('list', id);
-      i.onchange = () => { if (i.value !== c.value) set(i.value); };
-      i.onkeydown = (e) => { if (e.key === 'Enter') i.blur(); };
-      return i;
-    }
     const s = el('select', { title: c.path });
     for (const v of values.includes(c.value) ? values : [c.value, ...values]) s.append(new Option(labels[v] ?? v, v, false, v === c.value));
     s.onchange = () => set(s.value);
@@ -104,4 +94,3 @@ export function widgetFor(c, ui = {}) {
   if (c.kind === 'tokens') return ui.pick ? tokens : null;
   return ui.pick ? pick : select; // enum, ident
 }
-export const WIDGETS = { slider, spinner, check, select, pick, tokens };

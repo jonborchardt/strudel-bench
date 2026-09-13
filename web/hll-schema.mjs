@@ -33,12 +33,12 @@ const unit = { type: 'number', min: 0, max: 1, step: 0.01 };
 const int = (min, title) => ({ type: 'number', min, step: 1, title });
 const sound = (title) => ({ type: 'enum', values: () => host.sounds(), list: 'sounds', title });
 const ROOTS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-export const METERS = ['2/4', '3/4', '4/4', '5/4', '6/8', '7/8', '9/8', '12/8']; // the common ones; parseMeter takes any n/4, n/8, n/16
-export const ROLES = ['establish', 'develop', 'climax', 'release']; // the vocabulary the songs use; only climax has a rule (the fill before it)
+const METERS = ['2/4', '3/4', '4/4', '5/4', '6/8', '7/8', '9/8', '12/8']; // the common ones; parseMeter takes any n/4, n/8, n/16
+const ROLES = ['establish', 'develop', 'climax', 'release']; // the vocabulary the songs use; only climax has a rule (the fill before it)
 // the chord tokens parseProgression reads: diatonic numerals in both cases, their sevenths, the common altered roots, diminished
 const NUM = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
-export const CHORDS = [...NUM.map((n) => n.toLowerCase()), ...NUM, ...NUM.map((n) => `${n}7`), ...NUM.map((n) => `${n.toLowerCase()}7`), 'bII', 'bIII', 'bVI', 'bVII', 'bIII7', 'bVII7', '#iv', 'iidim', 'viidim', 'iidim7', 'viidim7'];
-export const SIGNALS = ['sine', 'cosine', 'saw', 'isaw', 'tri', 'square', 'rand', 'perlin'];
+const CHORDS = [...NUM.map((n) => n.toLowerCase()), ...NUM, ...NUM.map((n) => `${n}7`), ...NUM.map((n) => `${n.toLowerCase()}7`), 'bII', 'bIII', 'bVI', 'bVII', 'bIII7', 'bVII7', '#iv', 'iidim', 'viidim', 'iidim7', 'viidim7'];
+const SIGNALS = ['sine', 'cosine', 'saw', 'isaw', 'tri', 'square', 'rand', 'perlin'];
 
 export const SCHEMA = {
   hll: ['song', 'section'],
@@ -68,10 +68,10 @@ export const SCHEMA = {
   },
   calls: {
     section: { args: [null, int(1, 'bars in this section'), null] },
-    ramp: { args: ['inherit', 'inherit'], title: 'from, to across the section' },
+    ramp: { args: ['inherit', 'inherit'] }, // from, to across the section, in the bounds of the number it stands in for
   },
   methods: {
-    range: { args: ['inherit', 'inherit'], title: 'the signal swings between low and high' },
+    range: { args: ['inherit', 'inherit'] }, // the signal swings between low and high, in the bounds of the number it stands in for
     slow: { args: [{ type: 'number', min: 0.125, step: 1, title: 'cycles per repeat' }] },
     fast: { args: [{ type: 'number', min: 0.125, step: 1, title: 'repeats per cycle' }] },
     segment: { args: [int(1, 'steps per cycle the signal is sampled at')] },

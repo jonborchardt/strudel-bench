@@ -56,10 +56,6 @@ function enclosingNumber(node, text, schema) {
 }
 
 const KIND = { number: 'number', enum: 'string', tokens: 'string', bool: 'bool', ident: 'ident' }; // spec type -> the literal kind it takes
-/** A spec's legal values, resolving a host-supplied function. */
-export const valuesOf = (spec) => (typeof spec.values === 'function' ? spec.values() : spec.values) ?? [];
-export const labelsOf = (spec) => (typeof spec.labels === 'function' ? spec.labels() : spec.labels) ?? {};
-
 /** Every literal the schema knows, in document order: { from, to, kind, spec, value, path, quote? }. Pure. */
 export function findControls(tree, text, schema, calls = schema.hll ?? ['song', 'section']) {
   const out = [], hll = { ...schema, hll: calls };
@@ -117,8 +113,7 @@ export function editFor(c, value) {
 
 export const toggleControls = StateEffect.define();
 export const controlsShown = StateField.define({ create: () => false, update: (v, tr) => tr.effects.reduce((a, e) => (e.is(toggleControls) ? e.value : a), v) });
-const schemaFacet = Facet.define({ combine: (v) => v[0] });
-const uiFacet = Facet.define({ combine: (v) => v[0] ?? {} }); // host hooks the widgets may use: pick(btn, opts), audition(path, value, btn), canAudition(path), render(control)
+const config = Facet.define({ combine: (v) => v[0] }); // { schema, ui }: ui = host hooks the widgets may use (web/cm-widgets.mjs says which)
 
 // a widget dispatches against the control found at its current position, never a remembered one
 function setFrom(view, dom, path, value) {
@@ -134,7 +129,7 @@ class CtlWidget extends WidgetType {
   toDOM(view) {
     const wrap = document.createElement('span'), { c } = this;
     wrap.className = 'cm-hll-ctl'; wrap.dataset.path = c.path;
-    wrap.append(this.make.dom(c, { ui: view.state.facet(uiFacet), root: view.dom, set: (v) => setFrom(view, wrap, c.path, v) }));
+    wrap.append(this.make.dom(c, { ui: view.state.facet(config).ui, root: view.dom, set: (v) => setFrom(view, wrap, c.path, v) }));
     return wrap;
   }
   updateDOM(dom) { return dom.dataset.path === this.c.path && !!this.make.update && this.make.update(dom.firstChild, this.c) === true; } // keep the element through a drag or a typed value
@@ -142,7 +137,7 @@ class CtlWidget extends WidgetType {
 }
 
 function build(state) {
-  const schema = state.facet(schemaFacet), ui = state.facet(uiFacet), text = state.doc.toString();
+  const { schema, ui } = state.facet(config), text = state.doc.toString();
   const tree = ensureSyntaxTree(state, state.doc.length, 200) ?? syntaxTree(state);
   const controls = findControls(tree, text, schema);
   const shown = state.field(controlsShown), ranges = [];
@@ -196,4 +191,4 @@ const theme = EditorView.baseTheme({
 });
 
 /** The extension: the schema (web/hll-schema.mjs shape) and optional host hooks for the widgets. Toggle the widgets with `toggleControls.of(bool)`. */
-export const hllControls = (schema, { ui = {} } = {}) => [schemaFacet.of(schema), uiFacet.of(ui), controlsShown, field, drag, theme];
+export const hllControls = (schema, { ui = {} } = {}) => [config.of({ schema, ui }), controlsShown, field, drag, theme];

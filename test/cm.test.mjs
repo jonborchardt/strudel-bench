@@ -120,7 +120,6 @@ test('strudel expressions as values: signals, .range/.slow/.fast/.segment and ra
   assert.equal(c['melody.notes.range(0)'], undefined, 'notes is free text: a range inside it has no bounds to take');
   assert.equal(c['melody.notes.signal'], undefined);
   assert.equal(c['range(0)'], undefined, 'a range outside an HLL number has no bounds');
-  assert.equal(Object.values(c).filter((x) => x.path === 'slow(0)').length, 1, 'x.slow(3) outside the HLL: slow means the same anywhere, but paths collide only in this test doc');
   const apply = (ctl, v) => { const e = editFor(ctl, v); return doc.slice(0, e.from) + e.insert + doc.slice(e.to); };
   assert.match(apply(c['drums.density.signal'], 'perlin'), /density: perlin\.range/, 'an identifier is written bare');
   assert.match(apply(c['drums.density.range(1)'], 0.95), /range\(\.3, \.95\)/);

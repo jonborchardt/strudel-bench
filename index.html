@@ -714,6 +714,7 @@
   // text, `icon` for html before it), a play button per row when `preview` is given, and an empty row meaning "unset" when `ph` is
   function openPickList(btn, { names, cur = '', ph, labels = {}, icon, onPick, preview }) {
     pickFor = { onPick, preview };
+    $('pick').querySelector('.pvlvl').hidden = !preview; // the preview level only matters where rows can be heard
     $('picklist').innerHTML = [...(ph != null ? [''] : []), ...names].map((n) => `<div class="row" role="option" aria-selected="${n === cur}" data-v="${esc(n)}">${icon?.(n) ?? ''}<span>${n ? esc(labels[n] ?? n) : `<i>${esc(ph)}</i>`}</span>${preview ? '<button class="pv" title="hear it (pauses the song)">&#9654;</button>' : ''}</div>`).join('');
     const r = btn.getBoundingClientRect();
     Object.assign($('pick').style, { top: `${r.bottom + 4}px`, left: `${Math.min(r.left, innerWidth - 400)}px` });
