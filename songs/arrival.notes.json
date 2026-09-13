@@ -93,6 +93,37 @@
           "why": "bars, its brightness ramps over 6, textures matched: the ending was a bit too long"
         }
       ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "listening notes: whistle still too loud in void, intro too long, piano pops behind presses in approach, contact and threshold, piano lost sustain in will, piano should be consistent through the song",
+      "changes": [
+        {
+          "section": "void",
+          "from": 4,
+          "to": 2,
+          "why": "bars and its wind and space beds removed: only the didgeridoo drone opens the piece"
+        },
+        {
+          "section": "theme",
+          "layer": "space",
+          "why": ".75>.5: the melody layer sends anything above .5 to a delay line, and that quarter-second repeat was the pop behind each piano note"
+        },
+        {
+          "section": "theme",
+          "layer": "articulation",
+          "why": ".15>.05: clip 1.1 and a .3 s release so every piano note rings out"
+        },
+        {
+          "section": "approach,",
+          "why": "contact, will, plea, threshold, after melody: the per-section brightness, register, width and space overrides on the piano are gone, so it is one instrument through the song; only density and level differ"
+        },
+        {
+          "section": "threshold",
+          "layer": "melody6",
+          "why": "glockenspiel space .95 dropped: it doubles the theme and its delayed repeats sat behind the piano"
+        }
+      ]
     }
   ]
 }
