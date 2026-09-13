@@ -76,6 +76,9 @@ detune drift); do not re-add those per song.
 ## Rules
 
 - Never invent sound names; the checker fails on unknown sounds.
+- A song edit needs `npm run check` only. The moment the fix reaches `lib/`, `scripts/` or `web/`, run `npm test`
+  and fix what it turns red before reporting — including the golden fixtures, which are read (did only the
+  fixtures you expected move?) and never blind-regenerated.
 - "Verified directionally" is the strongest claim. Never say it sounds better.
 - Harmony is per section, not an axis. Translate harmonic requests into progression words (`resolved`, `tense`,
   `pop`, `epic`, `circular`), mode words (`major`, `dorian`, ...) and `relative`; resolve writes `key`/`progression`

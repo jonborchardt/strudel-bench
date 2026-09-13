@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test",
+    "test": "node --test --test-concurrency=1",
     "check": "node scripts/check.mjs",
     "samples": "node scripts/samples.mjs",
     "pages": "node scripts/pages.mjs",
