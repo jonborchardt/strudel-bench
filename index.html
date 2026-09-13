@@ -44,7 +44,7 @@
 
   <!-- mix: the arrangement strip over one section (the playhead's, or the pinned one) as layers x axes; knobs and word pills edit the source -->
   <details class="card rack" id="mix" open hidden>
-    <summary><h2>Mix</h2><small>&middot; the song, the shown section, one slider per axis the layer adapts</small><span class="grow"></span><button class="undo" title="undo (ctrl+z)" disabled>&#8630;</button><button class="redo" title="redo (ctrl+shift+z)" disabled>&#8631;</button></summary>
+    <summary><h2>Mix</h2><small>&middot; the song, the shown section, one slider per axis the layer adapts</small><span class="grow"></span><button class="undo" title="undo (ctrl+z)" disabled>&#8630;</button><button class="redo" title="redo (ctrl+shift+z)" disabled>&#8631;</button><button id="ab" title="hear the song as it was before the last change, at the same place; press again for the current one. Any edit returns to the current one." disabled>A/B</button></summary>
     <!-- two panes over spans of the song source, each a CodeMirror editor (web/cm-editor.mjs) that follows every edit and whose own edits land in the song at that span; "controls" puts a widget after each literal the schema knows (web/hll-schema.mjs) -->
     <!-- song: the header object of song(...), parsed as one expression whose keys read as song's; above the strip, since it is not about one section -->
     <details class="panel song" id="songsrc"><summary>song<label class="tweak" title="a widget after each value with known semantics; alt-drag a number works either way"><input type="checkbox" id="tweak0"> controls</label></summary><div id="songtext" title="the song header: tempo, key, seed, kit, packs"></div></details>
@@ -65,6 +65,7 @@
         <span class="pills" id="pills" title="type a word and pick it from the list: control words, moods, modifiers (much, a little, less), harmony words, or a part name to aim the words after it at that part. Enter on an empty box applies."><input id="phrase" list="terms" placeholder="darker, much sparser, drums &hellip;" autocomplete="off"><datalist id="terms"></datalist></span>
         <button id="apply" title="rewrite this section's axis literals from the words">Apply</button>
         <button id="verify" title="render this section before and after the words, apply them, and compare the audio metrics (stops playback)">Verify</button>
+        <label class="field" title="words and knobs act on every section that has the part, not only the shown one"><input type="checkbox" id="allsec"> all sections</label>
         <span class="xstate" id="vstate" role="status" aria-live="polite" hidden></span>
       </div>
       <div id="vout" hidden></div>
@@ -285,11 +286,35 @@
   let songPat = null; // the evaluated song the scheduler was given; a pin swaps in one section's pattern
   const toSong = (local) => loop.offset + (local % loop.cycles) * loop.span / loop.cycles;
   const toLocal = (c) => Math.max(0, Math.min(loop.cycles, (c - loop.offset) * loop.cycles / loop.span));
+  // solo and mute are what you hear, not what is written: sets of part names, applied whenever the scheduler is handed a
+  // pattern. A/B swaps in the source before the last undo step, evaluated without the scheduler, on the same clock.
+  const solo = new Set(), muted = new Set();
+  let ab = false, abPat = null;
+  const passes = (l) => (solo.size ? solo.has(l) : !muted.has(l));
+  function audible(pat) { // the pinned section alone, or the song, with only the parts that pass solo/mute
+    const filt = (s) => { const ps = Object.entries(s.layers).filter(([l]) => passes(l)).map(([, x]) => x.pattern); return ps.length ? strudel.stack(...ps) : strudel.silence; };
+    const secs = pat.strudel.sections;
+    if (pinned) return filt(secs.find((x) => x.name === pinned) ?? secs[0]);
+    if (!solo.size && !muted.size) return pat;
+    return strudel.stepcat(...secs.map((s) => [s.span, filt(s).fast(s.cycles)])).slow(pat.strudel.total); // the same arrangement song() builds
+  }
+  async function setLive() { if (playing && songPat) (await ready).scheduler.setPattern(audible(ab && abPat ? abPat : songPat)); }
+  globalThis.strudelBench = { live: async () => (await ready).scheduler.pattern }; // for headless checks: what the scheduler holds right now
   async function applyPin(at) { // point the running scheduler at the pinned section (or back at the song) at song cycle `at`
     const r = await ready;
-    if (loop) { r.scheduler.setPattern(loop.pattern); setcps(loop.cps); r.scheduler.setCycle(toLocal(at)); }
-    else { r.scheduler.setPattern(songPat); setcps(songPat.strudel.meta.cps); r.scheduler.setCycle(at); }
+    setcps(loop ? loop.cps : songPat.strudel.meta.cps);
+    await setLive();
+    r.scheduler.setCycle(loop ? toLocal(at) : at);
   }
+  const syncAb = () => { $('ab').disabled = !past.length; $('ab').classList.toggle('on', ab); $('ab').textContent = ab ? 'hearing: before' : 'A/B'; };
+  $('ab').onclick = async (e) => {
+    e.preventDefault(); // a button in the card's summary: the card must not fold
+    ab = !ab;
+    if (ab) { abPat = await evalCode(ready, past.at(-1)).catch(() => null); if (!abPat) { ab = false; $('mixstatus').textContent = 'the previous version does not evaluate'; } }
+    syncAb(); await setLive();
+    $('mixstatus').textContent = ab ? 'hearing the song before the last change' : 'hearing the current song';
+    if (ab && !playing) play();
+  };
   function seek(c) { // scrub: the clock jumps while playing; paused or stopped, Play/Resume starts here
     if (playing) ready.then((r) => r.scheduler.setCycle(loop ? toLocal(c) : c)); else paused = c;
     showPosition(c);
@@ -341,6 +366,7 @@
     if (!coalesce || Date.now() - stamp > 1000) { past.push(current); if (past.length > 200) past.shift(); future.length = 0; }
     stamp = Date.now(); current = src;
     code.setText(src); // a no-op when the editor already has it (its own edit)
+    if (ab) { ab = false; abPat = null; } // an edit: back to hearing the current one
     syncUndo();
   }
   function travel(from, to) {
@@ -354,12 +380,16 @@
     edited();
   }
   function resetHistory(src) { current = src; past.length = future.length = 0; stamp = 0; syncUndo(); }
-  function syncUndo() { for (const b of document.querySelectorAll('.undo')) b.disabled = !past.length; for (const b of document.querySelectorAll('.redo')) b.disabled = !future.length; }
+  function syncUndo() { for (const b of document.querySelectorAll('.undo')) b.disabled = !past.length; for (const b of document.querySelectorAll('.redo')) b.disabled = !future.length; syncAb(); }
   for (const b of document.querySelectorAll('.undo')) b.onclick = () => travel(past, future);
   for (const b of document.querySelectorAll('.redo')) b.onclick = () => travel(future, past);
   document.addEventListener('keydown', (e) => {
+    const typing = e.target.closest?.('input, textarea, select, button, [contenteditable], .cm-editor');
+    if (e.code === 'Space' && !typing) { e.preventDefault(); return toggle(); }
     if (!(e.ctrlKey || e.metaKey)) return;
     const k = e.key.toLowerCase();
+    if (k === 's') { e.preventDefault(); if (!$('save').disabled) save(); return; }
+    if (e.key === 'Enter') { e.preventDefault(); if (playing) play(); return; }
     if (k === 'z' && !e.shiftKey) { e.preventDefault(); travel(past, future); }
     else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); travel(future, past); }
   });
@@ -371,7 +401,8 @@
     songPat = pat; evaluated = src; playing = true;
     setSections(pat);
     if (!wasPlaying && paused == null && loop) paused = loop.offset; // Play from stopped starts at the pin
-    if (loop) { const r = await ready; r.scheduler.setPattern(loop.pattern); setcps(loop.cps); } // the pinned section loops on its own
+    if (loop) setcps(loop.cps); // the pinned section loops on its own, at its own tempo
+    await setLive(); // the pinned section, solo/mute, A/B
     if (paused != null) { (await ready).scheduler.setCycle(loop ? toLocal(paused) : paused); paused = null; }
     console.log('[strudel] evaluated', $('song').value);
     syncTransport();
@@ -397,6 +428,7 @@
     $('stop').disabled = !playing && paused == null;
     $('update').hidden = !playing || code.text === evaluated;
     $('transport').classList.toggle('playing', playing);
+    $('export').title = pinned ? `render the pinned section (${pinned}) offline in this browser and download <song>.${pinned}.mp3 (stops playback)` : 'render the source offline in this browser and download <song>.mp3 (stops playback)';
     if (c != null) showPosition(c);
   }
   function showPosition(c) { // slider + "section · bar n/m · cycle/total"
@@ -467,12 +499,12 @@
     finally { for (const b of buttons) b.disabled = false; }
   }
   $('export').onclick = () => exporting(async () => {
-    const name = `${base()}.mp3`;
+    const name = `${base()}${pinned ? '.' + pinned : ''}.mp3`; // pinned: that section alone
     if (playing) await stop(); // the render replaces the audio context, so it cannot run under live playback
     await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
     xstate('busy', `rendering ${esc(name)}…`);
     let buf;
-    try { buf = await renderSong({ code: code.text, progress: (i, n) => xstate('busy', `rendering ${esc(name)} ${Math.round((i / n) * 100)}%`) }); }
+    try { buf = await renderSong({ code: code.text, section: pinned || undefined, progress: (i, n) => xstate('busy', `rendering ${esc(name)} ${Math.round((i / n) * 100)}%`) }); }
     catch (e) { throw new Error(`${e.message} (if playback misbehaves afterwards, reload the page)`); } // a render that dies half-way may leave superdough state behind
     xstate('busy', `encoding ${esc(name)}…`);
     await new Promise((r) => setTimeout(r)); // let the badge paint before the encoder blocks the thread
@@ -582,6 +614,12 @@
     commit(src, coalesce); $('mixstatus').textContent = msg; edited();
     return true;
   }
+  // the knob row's buttons: 12 px glyphs, coloured by the button's currentColor (mute amber, solo blue when on)
+  const ICON = {
+    mute: '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor" /><path d="M11 6l3 4M14 6l-3 4" stroke="currentColor" stroke-width="1.6" fill="none" /></svg>',
+    solo: '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3 10V8a5 5 0 0 1 10 0v2" stroke="currentColor" stroke-width="1.6" fill="none" /><rect x="2" y="9" width="3" height="5" rx="1" fill="currentColor" /><rect x="11" y="9" width="3" height="5" rx="1" fill="currentColor" /></svg>',
+    rm: '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3 4h10M6 4V2.5h4V4M4.5 4l.7 9h5.6l.7-9" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linejoin="round" /></svg>',
+  };
   function mixRender() {
     let m; try { m = locate(code.text); } catch (e) { if (!(e instanceof SyntaxError)) $('mix').hidden = true; return; } // plain strudel: nothing to mix; mid-edit syntax error: keep the last card
     const typing = secPane.typing(); // the section pane is being edited: keep its section by position (its name may be mid-edit) and leave its text alone
@@ -597,7 +635,7 @@
     for (const el of document.querySelectorAll('.mixsec')) el.textContent = `· ${s.name}${pinned === s.name ? ' (pinned)' : ''}`;
     const head = `<span></span>${AXES.map((a) => `<span class="ax" title="${esc(a.meaning)}">${a.name}</span>`).join('')}`;
     const eff = effective()[s.name] ?? {}; // what a spread brought in: the source shows `...base`, the evaluated song shows the numbers
-    $('knobs').innerHTML = head + Object.entries(s.layers).map(([layer, L]) => `<b>${esc(layer)}<button data-rm="${esc(layer)}" title="remove ${esc(layer)} from ${esc(s.name)} (undo brings it back)">&times;</button></b>` + AXES.map((a) => {
+    $('knobs').innerHTML = head + Object.entries(s.layers).map(([layer, L]) => `<b><span class="nm">${esc(layer)}</span><span class="ops"><button class="ms${muted.has(layer) ? ' on' : ''}" data-mute="${esc(layer)}" title="mute ${esc(layer)} (what you hear, not the song)">${ICON.mute}</button><button class="ms${solo.has(layer) ? ' on' : ''}" data-solo="${esc(layer)}" title="solo ${esc(layer)} (what you hear, not the song)">${ICON.solo}</button><button class="rm" data-rm="${esc(layer)}" title="remove ${esc(layer)} from ${esc(s.name)} (undo brings it back)">${ICON.rm}</button></span></b>` + AXES.map((a) => {
       if (!cells[layerBase(layer)]?.[a.name]) return '<span></span>';
       const v = L.axes[a.name], e = eff[layer]?.[a.name];
       if (v?.value === 'expr' || (!v && e && typeof e === 'object')) return `<span class="expr" title="a signal or expression: edit it in the source">expr</span>`;
@@ -768,13 +806,24 @@
     did(() => addLayer(code.text, mixSection, l).src, `added a ${l} part to ${mixSection}`);
   };
   $('knobs').onclick = (e) => {
-    const l = e.target.closest('[data-rm]')?.dataset.rm; if (!l) return;
-    did(() => removeLayer(code.text, mixSection, l), `removed ${l} from ${mixSection}`);
+    const t = e.target.closest('[data-rm], [data-mute], [data-solo]'); if (!t) return;
+    if (t.dataset.rm) return did(() => removeLayer(code.text, mixSection, t.dataset.rm), `removed ${t.dataset.rm} from ${mixSection}`);
+    const set = t.dataset.mute ? muted : solo, l = t.dataset.mute ?? t.dataset.solo;
+    set.has(l) ? set.delete(l) : set.add(l);
+    t.classList.toggle('on', set.has(l));
+    $('mixstatus').textContent = solo.size ? `solo: ${[...solo].join(', ')}` : muted.size ? `muted: ${[...muted].join(', ')}` : 'every part sounds';
+    setLive();
+  };
+  const scope = () => ($('allsec').checked ? '*' : mixSection); // where words and knobs land: the shown section or every section
+  const setAxisScoped = (src, layer, axis, v) => { // one section, or every section that has the part (a signal there is left alone)
+    if (scope() !== '*') return setAxis(src, mixSection, layer, axis, v);
+    for (const sec of locate(src).sections) if (sec.layers[layer]) try { src = setAxis(src, sec.name, layer, axis, v); } catch {}
+    return src;
   };
   $('knobs').oninput = (e) => {
     const k = e.target; if (k.type !== 'range') return;
     knobDrag = true;
-    if (!did(() => setAxis(code.text, mixSection, k.dataset.layer, k.dataset.axis, Number(k.value)), `${k.dataset.layer} ${k.dataset.axis} ${k.value}`, true)) return;
+    if (!did(() => setAxisScoped(code.text, k.dataset.layer, k.dataset.axis, Number(k.value)), `${k.dataset.layer} ${k.dataset.axis} ${k.value}${scope() === '*' ? ' (all sections)' : ''}`, true)) return;
     k.title = `${k.dataset.layer} ${k.dataset.axis}: ${k.value}`; k.style.setProperty('--v', k.value);
   };
   $('knobs').onchange = () => { knobDrag = false; stamp = 0; mixRender(); }; // the drag ended: its own undo step, and a rebuild so an inserted axis reads as in the source
@@ -830,12 +879,12 @@
     if (!cs.length) throw new Error('a part pill needs words after it');
     const lines = [], deltas = {}; let out = src, changed = false;
     for (const c of cs) {
-      const p = planEdits(out, mixSection, c.layer, c.words.join(' '), effective());
+      const p = planEdits(out, scope(), c.layer, c.words.join(' '), effective());
       out = applyEdits(out, p.edits); changed ||= p.edits.length > 0;
       for (const [a, d] of Object.entries(p.parsed.deltas)) deltas[a] = (deltas[a] ?? 0) + d;
       lines.push(...p.report.filter((r) => r.appliedDelta).map((r) => `${r.layer}.${r.axis} ${fmt(r.from)}→${fmt(r.to)}`), ...p.harmonyReport.map((h) => `${h.field} ${h.from}→${h.to}`), ...p.refused.map((r) => `${r.layer}.${r.axis} refused (${r.reason})`));
     }
-    return { src: out, deltas, changed, summary: lines.join(', ') || 'those words change nothing here' };
+    return { src: out, deltas, changed, summary: (scope() === '*' ? 'all sections: ' : '') + (lines.join(', ') || 'those words change nothing here') };
   }
   $('apply').onclick = () => {
     let p; try { p = plan(code.text); } catch (e) { return ($('mixstatus').textContent = e.message); }
@@ -1009,6 +1058,7 @@
   // offline voice ending as the live context returns) runs superdough's onended cleanup, which builds a timeout node
   // on the sound's context and a gain on the current one. That throws, the chain stays connected in a graph that is
   // already discarded (reset orbits, finished offline context), and nothing else is affected: keep it out of the console.
+  window.addEventListener('beforeunload', (e) => { if (code.text !== loaded) { e.preventDefault(); e.returnValue = ''; } }); // unsaved edits: the browser asks before leaving
   window.addEventListener('error', (e) => { if (/belonging to a different audio context/.test(e.message)) e.preventDefault(); });
   async function renderOffline(pat, cps, begin, end, progress = () => {}) {
     // the live context stays open: the scheduler's clock is bound to it for the life of the page (webaudioRepl

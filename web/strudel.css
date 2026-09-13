@@ -136,7 +136,7 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .rack .strip .blk:hover { border-color: #55555c; }
 /* mix card: layers down, axes across, a fader per cell the layer adapts; styled like a plugin panel:
    dark inset groove, a detent tick at the .5 baseline, a fill from the detent to a machined cap (--v is the value, set by the page) */
-.knobs { display: grid; grid-template-columns: 4.5rem repeat(12, minmax(4rem, 1fr)); gap: .3rem .5rem; align-items: center; overflow-x: auto; font-size: .8rem;
+.knobs { display: grid; grid-template-columns: 8.5rem repeat(12, minmax(4rem, 1fr)); gap: .3rem .5rem; align-items: center; overflow-x: auto; font-size: .8rem;
   padding: .6rem .8rem; border-radius: 6px; color: #ddd; background: linear-gradient(#2c2c30, #222225); border: 1px solid #111; box-shadow: inset 0 1px 0 #48484e; }
 .knobs b { font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: #eee; }
 .knobs .ax { color: #9a9aa2; font-size: .65rem; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -342,3 +342,15 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 
 /* renaming a section: the box takes the name's place inside the block */
 .strip .rn { width: 100%; font: inherit; font-size: .75rem; padding: 0 .2rem; border: 1px solid var(--accent); border-radius: 3px; background: #fff; color: var(--ink); }
+
+/* mute / solo on a knob row, and the A/B button: what you hear, never the source */
+.knobs b { justify-content: space-between; min-width: 0; }
+.knobs b .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.knobs b .ops { display: inline-flex; gap: .15rem; flex: none; }
+.knobs b .ops button { display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; padding: 0; border: 1px solid transparent; border-radius: 4px; opacity: .55; }
+.knobs b .ops button:hover { opacity: 1; background: rgba(255, 255, 255, .08); }
+.knobs b .ops button.on { opacity: 1; color: #fff; }
+.knobs b [data-mute].on { background: #a05a00; }
+.knobs b [data-solo].on { background: var(--accent); }
+#ab { padding: .1rem .45rem; line-height: 1.2; }
+#ab.on { background: #fff3d6; border-color: #a05a00; color: #7a4b00; }
