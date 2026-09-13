@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { EditorState } from '@codemirror/state';
 import { javascript } from '@codemirror/lang-javascript';
 import { ensureSyntaxTree } from '@codemirror/language';
-import { findControls, editFor, quantize, hllControls, toggleControls, controlsOf, controlsShown, decorationsOf, valuesOf } from '../web/cm-controls.mjs';
+import { findControls, editFor, quantize, hllControls, toggleControls, controlsOf, controlsShown, decorationsOf } from '../web/cm-controls.mjs';
+import { valuesOf, widgetFor, slider, spinner, check, select, pick, tokens } from '../web/cm-widgets.mjs';
 import { SCHEMA, host } from '../web/hll-schema.mjs';
 import { TEMPLATES } from '../lib/grid.mjs';
 
@@ -32,7 +33,7 @@ test('the schema picks out the known literals with their kind, range and path', 
 test('literals without metadata, and known keys outside the HLL calls, get no control', () => {
   assert.equal(controls(`gain(0.72)\nfilter(2400)\nfoo(3, 'bar')\nconst x = { density: .5, template: 'house' }`).length, 0);
   assert.deepEqual(controls(`section('a', 4, { drums: { sound: 'bd', notes: 'c e g', level: 'loud', density: '.5' } })`).map((c) => c.path), ['section(1)', 'drums.sound'], 'a string where a number is expected is not a control, and notes is free text');
-  assert.equal(controls(`section('a', 4, { drums: { density: sine, level: ramp(0, 1), template: \`house\` } })`).length, 1, 'signals, calls and template strings are not literals');
+  assert.deepEqual(controls(`section('a', 4, { drums: { density: sine, level: ramp(0, 1), template: \`house\` } })`).map((c) => c.path), ['section(1)', 'drums.density.signal', 'drums.level.ramp(0)', 'drums.level.ramp(1)'], 'a signal and ramp arguments are controls of the number they stand in for; a template string is not a literal');
   assert.equal(controls(`section('a', 4, { drums: { ...base, density: .5 } })`).length, 2, 'a spread does not hide the literals beside it');
   assert.equal(byPath(`other('a', 4, { drums: { density: .5 } })`)['drums.density'], undefined, 'an unknown command is ordinary code');
 });
@@ -93,9 +94,9 @@ test('booleans, the drum voice map, and host-supplied lists', () => {
   assert.equal(c['drums.sounds.density'], undefined, 'an axis name inside a map is not an axis');
   assert.equal(c['drums.sounds'], undefined, 'the map itself is not a control');
   assert.equal(c['melody.phrase'].spec.step, 1); assert.equal(c['fx.riser'].value, 4); assert.equal(c['fx.impact'].kind, 'enum');
-  assert.equal(c['kit'].kind, 'enum'); assert.equal(c['key'].kind, 'enum'); assert.equal(c['meter'].kind, 'enum'); assert.equal(c['seed'].kind, 'number'); assert.equal(c['progression'].kind, 'enum');
+  assert.equal(c['kit'].kind, 'enum'); assert.equal(c['key'].kind, 'enum'); assert.equal(c['meter'].kind, 'enum'); assert.equal(c['seed'].kind, 'number'); assert.equal(c['progression'].kind, 'tokens');
   assert.ok(valuesOf(c['key'].spec).includes('Eb:dorian'), 'roots x the vocabulary modes');
-  assert.ok(valuesOf(c['progression'].spec).includes('I V vi IV'));
+  assert.ok(valuesOf(c['progression'].spec).includes('V7'), 'chord tokens');
   assert.ok(valuesOf(c['melody.sound'].spec).includes('sawtooth'), 'the synths in Node');
   const was = host.sounds;
   try {
@@ -104,6 +105,39 @@ test('booleans, the drum voice map, and host-supplied lists', () => {
     assert.deepEqual(valuesOf(c['fx.impact'].spec), ['bd', 'jazz', 'custom']);
   } finally { host.sounds = was; }
   assert.deepEqual(valuesOf(c['kit'].spec), [], 'no kits in Node: the page fills host.kits');
+});
+
+test('strudel expressions as values: signals, .range/.slow/.fast/.segment and ramp() take the bounds of the number they stand in for', () => {
+  const doc = `section('a', 4, { drums: { density: saw.range(.3, .7).slow(8), level: ramp(0, 1.5), weight: sine.segment(4).fast(2) }, melody: { notes: sine.range(1, 5) } })\nfoo.range(1, 2)\nx.slow(3)`;
+  const c = byPath(doc);
+  assert.equal(c['drums.density.signal'].kind, 'ident'); assert.equal(c['drums.density.signal'].value, 'saw'); assert.ok(valuesOf(c['drums.density.signal'].spec).includes('perlin'));
+  assert.equal(c['drums.density.range(0)'].value, 0.3); assert.equal(c['drums.density.range(0)'].spec.max, 1, 'range takes the axis bounds');
+  assert.equal(c['drums.density.range(1)'].value, 0.7);
+  assert.equal(c['drums.level.ramp(1)'].spec.max, 2, 'ramp takes the level bounds'); assert.equal(c['drums.level.ramp(0)'].value, 0);
+  assert.deepEqual(controls(doc).filter((x) => x.path === 'slow(0)').map((x) => x.value), [8, 3], 'slow means the same inside the HLL and out'); assert.equal(c['slow(0)'].spec.max, undefined, 'slow has a floor, no ceiling');
+  assert.equal(c['segment(0)'].value, 4); assert.equal(c['fast(0)'].value, 2);
+  assert.equal(c['weight.signal'], undefined); assert.equal(c['drums.weight.signal'].value, 'sine');
+  assert.equal(c['melody.notes.range(0)'], undefined, 'notes is free text: a range inside it has no bounds to take');
+  assert.equal(c['melody.notes.signal'], undefined);
+  assert.equal(c['range(0)'], undefined, 'a range outside an HLL number has no bounds');
+  assert.equal(Object.values(c).filter((x) => x.path === 'slow(0)').length, 1, 'x.slow(3) outside the HLL: slow means the same anywhere, but paths collide only in this test doc');
+  const apply = (ctl, v) => { const e = editFor(ctl, v); return doc.slice(0, e.from) + e.insert + doc.slice(e.to); };
+  assert.match(apply(c['drums.density.signal'], 'perlin'), /density: perlin\.range/, 'an identifier is written bare');
+  assert.match(apply(c['drums.density.range(1)'], 0.95), /range\(\.3, \.95\)/);
+  assert.match(apply(c['slow(0)'], 12), /slow\(12\)/);
+  assert.match(apply(c['slow(0)'], 0), /slow\(\.125\)/, 'clamped to the floor');
+});
+
+test('progression is a row of chord tokens, and the widget chooser follows the spec and the host', () => {
+  const c = byPath(`song({ seed: 3 }, [section('a', 4, { progression: 'i [VI VII] bIII7', drums: { fill: true, template: 'house' }, melody: { phrase: 2 } })])`);
+  assert.equal(c['progression'].kind, 'tokens'); assert.ok(valuesOf(c['progression'].spec).includes('bVII'));
+  assert.equal(editFor(c['progression'], 'i VI').insert, "'i VI'");
+  const ui = { pick() {} };
+  assert.equal(widgetFor(c['drums.density'] ?? { kind: 'number', spec: SCHEMA.props.density }), slider, 'a bounded number is a slider');
+  assert.equal(widgetFor(c['seed']), spinner, 'an open integer is a spinner'); assert.equal(widgetFor(c['melody.phrase']), spinner); assert.equal(widgetFor(c['section(1)']), spinner);
+  assert.equal(widgetFor(c['drums.fill']), check);
+  assert.equal(widgetFor(c['drums.template'], ui), pick, 'with a host menu: the pick button'); assert.equal(widgetFor(c['drums.template']), select, 'without: a native select');
+  assert.equal(widgetFor(c['progression'], ui), tokens); assert.equal(widgetFor(c['progression']), null, 'the chord row needs the host menu');
 });
 
 test('every key the HLL accepts has a control spec or is listed as free, with the reason', async () => {
@@ -115,8 +149,9 @@ test('every key the HLL accepts has a control spec or is listed as free, with th
   assert.deepEqual(missing, [], 'keys without a spec or a reason');
   for (const [k, why] of Object.entries(SCHEMA.free)) { assert.ok(all.has(k), `free key ${k} is not an HLL key`); assert.ok(why.length > 8, `free ${k}: say why`); }
   for (const [k, s] of Object.entries(SCHEMA.props)) {
-    assert.ok(['number', 'enum', 'bool', 'map'].includes(s.type), `${k}: type`);
-    if (s.type === 'number') assert.ok(s.min < s.max && s.step > 0, `${k}: bounds`);
+    assert.ok(['number', 'enum', 'bool', 'map', 'tokens'].includes(s.type), `${k}: type`);
+    if (s.type === 'number') assert.ok(s.step > 0 && s.min != null && (s.max == null || s.min < s.max), `${k}: bounds`);
+    if (s.type === 'tokens') assert.ok(Array.isArray(valuesOf(s)) && s.sep, `${k}: tokens`);
     if (s.type === 'enum' || s.type === 'map') assert.ok(Array.isArray(valuesOf(s)), `${k}: values`);
   }
 });

@@ -529,7 +529,18 @@
   let secAt = { start: 0, end: 0 }; // where that section's call sits in the source; the source pane's text replaces exactly this span
   let knobDrag = false; // set for the life of a knob drag (a focused knob is not enough: it keeps focus after the drag ends, and the rebuild on change must happen)
   // the section pane: a CodeMirror editor over just that call; an edit in it (typing, a control, an alt-drag) replaces the span in the song source
-  const secEd = createEditor({ parent: $('sectext'), schema: SCHEMA, onChange: (text) => {
+  // what the pane's widgets may reach on the page (web/cm-widgets.mjs): the shared pick menu with its play buttons, the audition path of the materials panel, the kit icons
+  const secUi = {
+    pick: (btn, o) => openPickList(btn, o),
+    canAudition: (path) => path === 'kit' || /^[a-z]+\d*\.(sound|template|arp|impact|sounds\.\w+)$/.test(path),
+    audition: (path, value, btn) => {
+      if (path === 'kit') return auditionKit(btn, value);
+      const [layer, key, voice] = path.split('.');
+      return audition(btn, layer, key, key === 'sounds' ? matText(layer, 'sounds', value, voice) : q(value), voice);
+    },
+    icon: (path, value) => (path === 'kit' && kitInfo[value] ? `<img src="web/kits/${esc(value)}.svg" alt="">` : ''),
+  };
+  const secEd = createEditor({ parent: $('sectext'), schema: SCHEMA, ui: secUi, onChange: (text) => {
     const src = $('code').value;
     const next = src.slice(0, secAt.start) + text + src.slice(secAt.end);
     secAt.end = secAt.start + text.length;
@@ -698,30 +709,34 @@
     const b = e.target.closest('button.pick');
     if (b) openPick(b, layer);
   };
-  let pickFor = null; // the menu button that opened #pick: { layer, key, voice }
-  function openPick(btn, layer) {
-    const { mat: key, voice, ph } = btn.dataset;
-    const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS) : [...$('snds').options].map((o) => o.value);
-    const cur = btn.querySelector('i') ? '' : btn.textContent;
-    pickFor = { layer, key, voice };
-    $('picklist').innerHTML = ['', ...names].map((n) => `<div class="row" role="option" aria-selected="${n === cur}" data-v="${esc(n)}"><span>${n ? esc(n) : `<i>${esc(ph)}</i>`}</span><button class="pv" title="hear it (pauses the song)">&#9654;</button></div>`).join('');
+  let pickFor = null; // what the open #pick menu does: { onPick(value), preview?(value, btn) }
+  // the one menu behind every pick button, the materials panel's and the section pane's: `names` as rows (`labels` for their
+  // text, `icon` for html before it), a play button per row when `preview` is given, and an empty row meaning "unset" when `ph` is
+  function openPickList(btn, { names, cur = '', ph, labels = {}, icon, onPick, preview }) {
+    pickFor = { onPick, preview };
+    $('picklist').innerHTML = [...(ph != null ? [''] : []), ...names].map((n) => `<div class="row" role="option" aria-selected="${n === cur}" data-v="${esc(n)}">${icon?.(n) ?? ''}<span>${n ? esc(labels[n] ?? n) : `<i>${esc(ph)}</i>`}</span>${preview ? '<button class="pv" title="hear it (pauses the song)">&#9654;</button>' : ''}</div>`).join('');
     const r = btn.getBoundingClientRect();
     Object.assign($('pick').style, { top: `${r.bottom + 4}px`, left: `${Math.min(r.left, innerWidth - 400)}px` });
     $('pick').showPopover();
     $('pickq').value = ''; filterPick(); $('pickq').focus();
     $('picklist').querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'center' });
   }
+  function openPick(btn, layer) { // a materials-panel button: names by key, the change through setMaterial, previews through audition
+    const { mat: key, voice, ph } = btn.dataset;
+    const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS) : [...$('snds').options].map((o) => o.value);
+    const text = (v) => matText(layer, key, v, voice);
+    openPickList(btn, { names, cur: btn.querySelector('i') ? '' : btn.textContent, ph, onPick: (v) => setMat(layer, key, text(v)), preview: (v, pv) => audition(pv, layer, key, text(v), voice) });
+  }
   function filterPick() { const words = $('pickq').value.toLowerCase().split(/\s+/).filter(Boolean); for (const b of $('picklist').children) b.hidden = !words.every((w) => b.textContent.toLowerCase().includes(w)); }
   $('pickq').oninput = filterPick;
   $('pickq').onkeydown = (e) => { if (e.key !== 'Enter') return; e.preventDefault(); $('picklist').querySelector('.row:not([hidden])')?.click(); };
   $('pick').onclick = (e) => {
     const row = e.target.closest('.row'); if (!row) return; // the filter box and the level slider are not rows
-    const { layer, key, voice } = pickFor, text = matText(layer, key, row.dataset.v, voice);
-    if (e.target.closest('.pv')) return audition(e.target.closest('.pv'), layer, key, text, voice); // hear it, keep the menu open, pick nothing
+    if (e.target.closest('.pv')) return pickFor.preview(row.dataset.v, e.target.closest('.pv')); // hear it, keep the menu open, pick nothing
     $('pick').hidePopover();
-    setMat(layer, key, text);
+    pickFor.onPick(row.dataset.v);
   };
-  $('pick').ontoggle = (e) => { if (e.newState === 'closed' && pvBtn && $('pick').contains(pvBtn)) audition(pvBtn); }; // closing the menu ends its preview
+  $('pick').ontoggle = (e) => { if (e.newState === 'closed' && pvBtn && $('pick').contains(pvBtn)) preview(pvBtn); }; // closing the menu ends its preview (the same button again stops it)
   const effective = () => Object.fromEntries(sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([l, x]) => [l, x.attrs]))])); // the evaluated song's resolved attrs per section and layer
   $('addrow').onclick = (e) => {
     const l = e.target.closest('[data-add]')?.dataset.add; if (!l) return;

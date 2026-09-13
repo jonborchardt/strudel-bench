@@ -29,17 +29,18 @@ const theme = EditorView.theme({
 }, { dark: true });
 
 /**
- * createEditor({ parent, doc, schema, onChange }) -> { view, text, setText(text), setControls(on) }.
+ * createEditor({ parent, doc, schema, ui, onChange }) -> { view, text, setText(text), setControls(on) }.
  * onChange(text) fires for edits made in the editor (typing, a control, an alt-drag), not for setText.
+ * ui: the host hooks the widgets may use (web/cm-widgets.mjs says which); none = native controls only.
  */
-export function createEditor({ parent, doc = '', schema, onChange }) {
+export function createEditor({ parent, doc = '', schema, ui, onChange }) {
   const view = new EditorView({
     parent,
     state: EditorState.create({
       doc,
       extensions: [
         javascript(), syntaxHighlighting(dark), bracketMatching(), keymap.of([...defaultKeymap, indentWithTab]), EditorView.lineWrapping, theme,
-        hllControls(schema),
+        hllControls(schema, { ui }),
         EditorView.updateListener.of((u) => { if (u.docChanged && !u.transactions.some((t) => t.annotation(external))) onChange?.(u.state.doc.toString()); }),
       ],
     }),
