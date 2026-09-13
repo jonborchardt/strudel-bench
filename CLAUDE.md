@@ -30,7 +30,9 @@ Axis workflow (page must be open for anything that renders; a render stops playb
     npm run verify -- <song> <section> <layer> "phrase"                  # render -> resolve --write -> check -> render -> analyze -> report
     npm run vocab                                                        # regenerates .claude/skills/strudel/reference/vocab.md from code
 
-Tests write temp files prefixed `_t_` into `test/`, `songs/`, and `samples/user/` and delete them after. `test/_scope.mjs` builds the Node strudel scope once and loads `lib/` into it; import its `ready` promise in tests that need patterns.
+Tests write temp files prefixed `_t_` into `test/`, `songs/`, and `samples/user/` and delete them after, so `npm test` runs serially (`--test-concurrency=1`): in parallel, one file's `_t_` fixtures show up in another's scan of those shared directories. `test/_scope.mjs` builds the Node strudel scope once and loads `lib/` into it; import its `ready` promise in tests that need patterns.
+
+**Any change under `lib/`, `scripts/`, `web/`, `gen/` or `server.mjs` ends with `npm test`, and a failure is fixed in the same turn** — not reported back as a question. Read the failing assertion first and decide which side is wrong: a test pinning behaviour that deliberately changed gets updated (say so in the report), a test catching a real break gets the code fixed. `test/golden.test.mjs` is the exception: never regenerate it to make it pass; a moved fixture means lib changed how songs build, so confirm only the expected fixtures moved before `UPDATE_GOLDEN=1`.
 
 ## Claude's feedback loop
 
