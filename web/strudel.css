@@ -22,6 +22,9 @@ code { font: var(--mono); }
 .top a.on { color: #fff; background: #333; }
 .top .status { margin-left: auto; color: #aaa; font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .top .status a { color: #9cf; padding: 0; }
+/* desktop-only warning: a full-width row under the links on narrow windows */
+.top .narrow { display: none; flex-basis: 100%; padding: .2rem .5rem; border-radius: 4px; background: #7a3b00; color: #fff; font-size: .85rem; }
+@media (max-width: 60rem) { .top { flex-wrap: wrap; } .top .narrow { display: block; } }
 
 main { max-width: 84rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; display: grid; gap: 1rem; }
 /* site footer: author line, links, copyright; same width as main */

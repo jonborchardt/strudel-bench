@@ -55,7 +55,7 @@ export async function expandCode(ready, code) {
 /** Nav bar shared by every page; `page` marks the current one. */
 export function nav(page) {
   const link = (href, name) => `<a href="${href}" class="${page === name ? 'on' : ''}">${name}</a>`;
-  return `<a class="brand" href="./">strudel-bench</a>${link('./', 'Compose')}${link('examples.html', 'Examples')}${link('about.html', 'About')}<span class="status" id="status"></span>`;
+  return `<a class="brand" href="./">strudel-bench</a>${link('./', 'Compose')}${link('examples.html', 'Examples')}${link('about.html', 'About')}<span class="status" id="status"></span><span class="narrow" role="alert">Made for a desktop browser: this window is too narrow for the mix card and panes.</span>`;
 }
 
 /** Site footer shared by every page: author line, links, copyright. */
