@@ -103,11 +103,11 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 #transport.rack { padding: .6rem 1rem; }
 #transport:has(+ #mix:not([hidden])) { border-radius: 8px 8px 0 0; border-bottom: 0; }
 #mix:not([hidden]) { margin-top: -1rem; border-radius: 0 0 8px 8px; }
-#mix > summary { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; margin-bottom: .5rem; cursor: pointer; list-style: none; }
-#mix > summary::-webkit-details-marker { display: none; }
-#mix > summary::before { content: '\25BE'; color: #9a9aa2; font-size: .8rem; }
-#mix:not([open]) > summary::before { content: '\25B8'; }
-#mix:not([open]) > summary { margin-bottom: 0; }
+#mix > summary, details.pane > summary { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; margin-bottom: .5rem; cursor: pointer; list-style: none; }
+#mix > summary::-webkit-details-marker, details.pane > summary::-webkit-details-marker { display: none; }
+#mix > summary::before, details.pane > summary::before { content: '\25BE'; color: #9a9aa2; font-size: .8rem; }
+#mix:not([open]) > summary::before, details.pane:not([open]) > summary::before { content: '\25B8'; }
+#mix:not([open]) > summary, details.pane:not([open]) > summary { margin-bottom: 0; }
 .rack #play { min-width: 7.5rem; font-weight: 600; letter-spacing: .04em; }
 .rack button.primary { background: linear-gradient(#4a86ff, var(--accent)); border-color: #1a3f8f; color: #fff; box-shadow: inset 0 1px 0 #8ab0ff, 0 1px 0 #111; }
 .rack button.primary:hover:not(:disabled) { background: linear-gradient(#5a92ff, #3a7aff); border-color: #1a3f8f; }
