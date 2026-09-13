@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import path from 'node:path';
 import { dumpFile } from '../scripts/dump.mjs';
+import { ready } from './_scope.mjs';
 
 test('dump prints the plain strudel behind demo.strudel', async () => {
   const out = await dumpFile(path.resolve(import.meta.dirname, '..', 'songs', 'demo.strudel'));
@@ -37,13 +39,37 @@ test('an arped pad dumps self-contained: no plan.*, arpIndices defined', async (
     assert.doesNotMatch(out, /plan\./);
     assert.match(out, /^const arpIndices = /m);
     assert.match(out, /^const ARP_ORDERS = \{ up: /m);
-    assert.match(out, /arpWith\(\(haps\) => seq\(\.\.\.arpIndices\("up", haps\.length, 8\)\)/);
+    // single-quoted: double quotes would reach the repl's transpiler as mini-notation, not as the order's name
+    assert.match(out, /arpWith\(\(haps\) => seq\(\.\.\.arpIndices\('up', haps\.length, 8\)\)/);
   } finally { fs.unlinkSync(file); }
 });
 
 test('a song declaring a local pack gets the deployed samples/user map in the header', async () => {
   const out = await dumpFile(path.resolve(import.meta.dirname, '..', 'songs', 'ping.strudel'));
   assert.match(out, /^await samples\('https:\/\/\S+\/samples\/user\/strudel\.json', 'https:\/\/\S+\/samples\/user\/'\)$/m);
+});
+
+// The repl re-evaluates the dumped text, so anything the dump prints has to mean the same thing there as it did
+// in lib: a closure printed with toString() that captured a variable, or a double-quoted string the transpiler
+// turns into a mini pattern. Both fail silently — strudel logs "[query] error" and drops the cycle's events.
+test('every fixture song plays the same dumped as it does built', async () => {
+  const { evaluate } = await import('@strudel/core');
+  const { transpiler } = await import('@strudel/transpiler');
+  await ready;
+  globalThis.aliasBank ??= async () => {}; // the header's bank alias; samples() is already stubbed by ensureScope
+  const pat = async (code) => await (await evaluate(code, transpiler)).pattern;
+  const stream = (p, n) => {
+    const out = [];
+    for (let c = 0; c < n; c++) for (const h of p.queryArc(c, c + 1)) out.push(`${h.whole?.begin} ${h.value.s ?? ''} ${h.value.note ?? ''}`);
+    return out;
+  };
+  const dir = path.resolve(import.meta.dirname, 'fixtures');
+  for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.strudel'))) {
+    const song = await pat(fs.readFileSync(path.join(dir, f), 'utf8'));
+    const dumped = await pat(await dumpFile(path.join(dir, f)));
+    const n = song.strudel?.total ?? 4;
+    assert.deepEqual(stream(dumped, n), stream(song, n), `${f}: the dump does not play like the song`);
+  }
 });
 
 test('dump keeps patterns stacked around a song(), not just the song sections', async () => {
