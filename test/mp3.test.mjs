@@ -20,3 +20,17 @@ test('wavToMp3 writes an mp3 next to the wav', () => {
     fs.unlinkSync(mp3);
   } finally { fs.unlinkSync(wav); }
 });
+
+test('snippet settings: mono at a low bitrate is much smaller, and still an mp3', () => {
+  const wav = path.join(import.meta.dirname, '_t_snip.wav');
+  const t = tone(44100, 440, 2);
+  writeWav(wav, 44100, [t, t]);
+  try {
+    const big = fs.readFileSync(wavToMp3(wav, { out: wav.replace(/\.wav$/, '.big.mp3') }));
+    const small = fs.readFileSync(wavToMp3(wav, { kbps: 64, mono: true, out: wav.replace(/\.wav$/, '.small.mp3') }));
+    assert.equal(small[0], 0xff, 'starts with an MPEG frame sync');
+    assert.ok(small.length * 2 < big.length, `mono 64k (${small.length}) should be well under half of stereo 192k (${big.length})`);
+    fs.unlinkSync(wav.replace(/\.wav$/, '.big.mp3'));
+    fs.unlinkSync(wav.replace(/\.wav$/, '.small.mp3'));
+  } finally { fs.unlinkSync(wav); }
+});

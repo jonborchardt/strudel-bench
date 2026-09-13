@@ -1,3 +1,4 @@
+// @hidden
 // @blog
 // demo: intro → verse → drop, written in the strudel-bench axis vocabulary.
 // Axis values are 0..1 with 0.5 = the layer's baseline. See docs/superpowers/specs/2026-09-11-musical-axes-design.md
@@ -14,7 +15,7 @@ song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909' }, [
     fx:     { riser: 2 },
   }),
   section('drop', 8, { role: 'climax', progression: 'i VI III VII',
-    drums:  { density: .9, drive: .8, articulation: .7 },
+    drums:  { density: .84, drive: .8, articulation: .7 },
     bass:   { weight: .9, aggression: .6, density: .75, notes: '0 7 0 4' },
     melody: { density: .7, width: .8, brightness: .7, sound: 'piano', follow: true, phrase: 2, notes: '0 2 4 7@2 6 4 2 0 2 4 7@2 5 4@2' },
     melody2: { notes: '~ 7 ~ ~ 5 ~ 4 ~', sound: 'glockenspiel', register: .8, level: .5, follow: true, space: .7, width: .7 },

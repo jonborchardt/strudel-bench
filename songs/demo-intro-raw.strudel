@@ -1,0 +1,49 @@
+// @hidden
+// @blog
+// The intro of demo.strudel, as plain Strudel. Every line below was produced by
+// `npm run dump -- songs/demo.strudel`: it is what the four-line declarative section
+// reduces to. Kept as a file so the two can be rendered and compared as audio.
+//
+// The declarative original is:
+//   section('intro', 4, { role: 'establish',
+//     drums: { density: .3, space: .6 },
+//     pad:   { space: .8, articulation: .2, brightness: .35 },
+//   }),
+setcps(0.5)
+
+const intro_drums = stack(
+  s("bd")
+    .struct("x ~ ~ ~ x ~ ~ ~ x ~ ~ ~ x ~ ~ ~")
+    .bank("RolandTR909")
+    .pan(0.5),
+  s("sd")
+    .struct("~ ~ ~ ~ x ~ ~ ~ ~ ~ ~ ~ x ~ ~ ~")
+    .bank("RolandTR909")
+    .pan(0.5)
+)
+  .room(0.08)
+  .size(0.4)
+
+const intro_pad = n("<0 5>")
+  .scale("C4:minor")
+  .add(note(0))
+  .add(note("<0 0>"))
+  .add(note("<[0,3,7] [0,4,7]>"))
+  .s("sawtooth")
+  .lpf(1200)
+  .attack(0.15)
+  .release(0.6)
+  .room(0.3)
+  .size(0.6)
+  .gain(0.45)
+  .pan(sine.slow(8).range(0.4, 0.6))
+  .vib(0.4)
+  .vibmod(0.15)
+  .clip(1.12)
+  .attack(0.42)
+  .release(1.44)
+  .lpf(701.029)
+  .room(0.66)
+  .size(0.81)
+
+stack(intro_drums, intro_pad)

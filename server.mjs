@@ -18,6 +18,9 @@ const MIME = {
 };
 
 export const songList = () => fs.readdirSync(SONGS).filter((f) => SONG_NAME.test(f)).sort();
+// a song with a `// @hidden` comment line stays off the song dropdown (songs/index.json) but still loads by url, checks and ships
+export const isUnlisted = (src) => /^\s*\/\/\s*@hidden\b/m.test(src);
+export const listedSongs = () => songList().filter((f) => !isUnlisted(fs.readFileSync(path.join(SONGS, f), 'utf8')));
 const isAudio = (f) => AUDIO.has(path.extname(f).toLowerCase());
 
 /**
@@ -90,7 +93,7 @@ export function createServer() {
     if (/^[\w-]+\.html$/.test(page) && fs.existsSync(path.join(ROOT, page))) return send(res, 200, fs.readFileSync(path.join(ROOT, page)), 'text/html');
     if (p === '/favicon.ico') return send(res, 204, '');
 
-    if (p === '/songs/index.json') return json(res, songList()); // same path the static pages build writes
+    if (p === '/songs/index.json') return json(res, listedSongs()); // same path the static pages build writes
     if (p.startsWith('/songs/')) {
       const name = decodeURIComponent(p.slice('/songs/'.length));
       if (!SONG_FILE.test(name)) return send(res, 400, 'bad song name');
