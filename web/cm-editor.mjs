@@ -5,7 +5,7 @@ import { EditorState, Annotation } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
-import { syntaxHighlighting, HighlightStyle, bracketMatching } from '@codemirror/language';
+import { syntaxHighlighting, HighlightStyle, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { hllControls, toggleControls } from './cm-controls.mjs';
 
@@ -19,27 +19,25 @@ const dark = HighlightStyle.define([
   { tag: [tags.comment, tags.lineComment], color: '#8a8a92', fontStyle: 'italic' },
   { tag: tags.bool, color: '#f0c674' },
 ]);
-const theme = EditorView.theme({
-  '&': { color: '#e8e8ea', backgroundColor: 'transparent' },
-  '.cm-content': { font: 'var(--mono, 13px/1.45 ui-monospace, Consolas, Menlo, monospace)', caretColor: '#fff', padding: '.4rem 0' },
-  '.cm-line': { padding: '0 .8rem' },
-  '&.cm-focused': { outline: 'none' },
-  '.cm-cursor, .cm-dropCursor': { borderLeftColor: '#fff' },
-  '.cm-matchingBracket': { backgroundColor: '#48484e', outline: 'none' },
-}, { dark: true });
+const font = { '.cm-content': { font: 'var(--mono, 13px/1.45 ui-monospace, Consolas, Menlo, monospace)', padding: '.4rem 0' }, '.cm-line': { padding: '0 .8rem' }, '&.cm-focused': { outline: 'none' }, '&': { backgroundColor: 'transparent' } };
+const THEMES = {
+  dark: [syntaxHighlighting(dark), EditorView.theme({ ...font, '&': { ...font['&'], color: '#e8e8ea' }, '.cm-content': { ...font['.cm-content'], caretColor: '#fff' }, '.cm-cursor, .cm-dropCursor': { borderLeftColor: '#fff' }, '.cm-matchingBracket': { backgroundColor: '#48484e', outline: 'none' } }, { dark: true })],
+  light: [syntaxHighlighting(defaultHighlightStyle), EditorView.theme(font)],
+};
 
 /**
- * createEditor({ parent, doc, schema, ui, onChange }) -> { view, text, setText(text), setControls(on) }.
+ * createEditor({ parent, doc, schema, ui, light, onChange }) -> { view, text, setText(text), setControls(on) }.
  * onChange(text) fires for edits made in the editor (typing, a control, an alt-drag), not for setText.
  * ui: the host hooks the widgets may use (web/cm-widgets.mjs says which); none = native controls only.
+ * light: the page's light look (the default is the rack's dark one).
  */
-export function createEditor({ parent, doc = '', schema, ui, onChange }) {
+export function createEditor({ parent, doc = '', schema, ui, light = false, onChange }) {
   const view = new EditorView({
     parent,
     state: EditorState.create({
       doc,
       extensions: [
-        javascript(), syntaxHighlighting(dark), bracketMatching(), keymap.of([...defaultKeymap, indentWithTab]), EditorView.lineWrapping, theme,
+        javascript(), bracketMatching(), keymap.of([...defaultKeymap, indentWithTab]), EditorView.lineWrapping, THEMES[light ? 'light' : 'dark'],
         hllControls(schema, { ui }),
         EditorView.updateListener.of((u) => { if (u.docChanged && !u.transactions.some((t) => t.annotation(external))) onChange?.(u.state.doc.toString()); }),
       ],
