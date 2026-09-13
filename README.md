@@ -17,6 +17,7 @@ The page has two views: **Compose** (index.html) and **Examples** (examples.html
 - Pick a song, press ▶. ■ stops; pause remembers the cycle and resumes from it. Save writes the textarea back to the file. **+ New song** writes a minimal `song()` template to `songs/<name>.strudel`.
 - The editable source and the expanded Strudel it reduces to sit side by side (stacked on narrow screens). The expanded pane follows the textarea as you type (expanded in the browser by `lib/dump.mjs`, also on GitHub Pages); lines the last edit changed flash briefly, and the source pane says "unsaved" until you save. Switching or creating a song asks before discarding unsaved edits.
 - **Change comments** collects notes pinned at the cycle the playhead is on (pause where it bothers you, write what should change, Add note here) and builds one paste-ready request: song name, section map, the numbered notes with their bar, a line saying each note may be about that exact spot, its section, or what led into it, and the source of the sections around those spots (a first-bar note also quotes the section before). **Why it sounds this way** lists, per section, the `//` comments in the source and the decisions recorded in `songs/<name>.notes.json` (the prompt the song came from, then one entry per request with the changes it made: section, layer, axis, from → to, why; the card shows the why with the request's date and ask as a tooltip). `npm run note -- songs/x.strudel --ask "..." --change "drop.melody.brightness .5>.7 raised because ..."` appends one; `--prompt "..."` sets the summary. On GitHub Pages the request card is hidden. The **Kit** selector lists the drum kits the loaded packs actually have (a `<kit>_bd/sd/hh` prefix, local or CDN), each with a one-line label, hover description and icon from `lib/kits.json` (icons are drawn from the description words by `node scripts/kiticons.mjs`; the menu has a filter box); picking one rewrites the song-level `kit:` in the source, re-evaluates if playing, and saves like any other edit.
+- The **Mix** card is the song as an instrument, and every control in it is a source edit (unsaved until Save, undoable with ctrl+z or the ↶ ↷ buttons, re-evaluated in place while playing). Top to bottom: a **song** pane (the header's tempo, key, seed, kit as inline controls), the **arrangement strip** (a block per section, one row per part shaded by density; click to scrub, 📌 to pin, ◀ ▶ to reorder, ⧉ to duplicate, ✎ or double-click to rename, × to remove, and on each block the transition into the next: riser bars and a hit sample), a **section** pane (that section's source with controls), the **harmony strip** (the key and one chord per bar, each a pick), the **axes** grid (a slider per axis the part adapts, with mute, solo and remove on each row and the part's events across the section's bars under it), **materials** (drum template and per-voice samples, each part's sound with a play button, notes, the melody's seed stepper showing the line it makes, arp, follow, level) and the **phrase** row (words become pills, only vocabulary words and part names are accepted, a part pill scopes the words after it; Apply rewrites the values, Verify renders before and after, measures both and shows the deltas next to two players; "all sections" widens either to the whole song). Pinning a section loops it on its own pattern, starts Play there and keeps the card on it; **A/B** in the card's header plays the song as it was before the last change; solo, mute and A/B change what you hear, never the source. Save also records the mixer's edits in `songs/<name>.notes.json`. **Link** in the export group copies a URL carrying the song itself, which opens in this page anywhere, unsaved.
 - Editing a song file on disk reloads it in the page. If it was playing, it re-evaluates so you hear the change. If you have unsaved edits in the textarea, you get a reload link instead.
 - **Export MP3** stops playback, renders the source offline in the browser, encodes it there and downloads `<song>.mp3`. **Export Strudel** downloads the expanded pane as `<song>.strudel.txt`, ready to paste into the strudel.cc REPL, and **Open** opens it there. The badge next to the buttons shows the state (rendering with a percentage, ✓ file, ✗ why) and the buttons lock while a render runs. All work identically on localhost and GitHub Pages; with the local server the file is also written to `renders/` (the ✓ tooltip says so).
 - Your own samples live in **local packs**: one folder per pack, `samples/user/<pack>/`. Inside it `<sound>/*.wav` is a sound with variants (`s("<sound>:2")` picks the third file) and a loose audio file is a single sound named after the file. A song declares the packs it uses, `song({ ..., packs: ['<pack>'] })` (a comment line `packs: ['<pack>']` does the same in a plain Strudel file), and `npm run check` refuses a pack sound the song does not declare, a declared pack that is not in `samples/user/`, and any sound in no pack at all. Nothing is ever substituted: a missing pack plays silence for its sounds, and the page says so. The header shows the song's packs as **deployed**, **local** or **missing**; the status line lists every local pack this environment has. Adding a pack touches no code: a folder, and a `pack.json` only if it should ship. `samples/user/demo-pack` (a generated sine blip, CC0) and `songs/ping.strudel` are the worked example.
@@ -24,10 +25,12 @@ The page has two views: **Compose** (index.html) and **Examples** (examples.html
 
 ## Scripts
 
-- `npm run check -- songs/x.strudel` evaluates a song headlessly, prints the first 4 cycles of events (plus the per-section axis table, key and chord names for `song()` files), and fails on syntax errors or sound names that are not in the local packs, the user folder, or the built-in synths. No args checks every song.
+- `npm run check -- songs/x.strudel` evaluates a song headlessly, prints the first 4 cycles of events (plus the per-section axis table with each layer's values read back as vocabulary words, key and chord names, and an `arc:` line of each section's energy for `song()` files), and fails on syntax errors or sound names that are not in the local packs, the user folder, or the built-in synths. No args checks every song.
+- `npm run lint -- songs/x.strudel` applies the musical rules to that table: a climax exists and is the most energetic section, no two consecutive sections are identical, no section has two raw saws, every melody and bass writes its notes, axes stay in 0..1 and level in 0..2. Warnings for taste, errors for the impossible (exit 1). No args lints every song.
 - `npm run dump -- songs/x.strudel` prints the plain Strudel a `song()`/`section()` file reduces to. Read-only.
-- `node gen/euclid.mjs --seed=3 > songs/euclid.strudel` generates a song. Generators are plain scripts that print Strudel code to stdout.
-- `npm test` runs the node:test suite.
+- `npm run form -- --mood=ominous --bars=64 --seed=5 > songs/new.strudel` generates a song skeleton: six sections with roles and bar counts, key, tempo and progressions chosen by the mood, axis values pushed by the mood's overlay vector. Then material first (see the skill). `node gen/euclid.mjs --seed=3` is the older, plain-Strudel generator. Generators are plain scripts that print code to stdout.
+- `npm run headless -- songs/x.strudel` opens the page in a headless Chromium so `render` and `verify` run with no window (starts the server if none answers; needs `playwright-core`, installed as a dev dependency, plus a browser: `npx playwright-core install chromium`, or `CHROME=<path to a chrome binary>`).
+- `npm test` runs the node:test suite. `test/golden.test.mjs` pins the events of the fixture songs in `test/fixtures/` (copies kept still, so a change there is a change in `lib/`); the songs in `songs/` only have to check clean.
 
 ## Layout
 
@@ -44,7 +47,9 @@ The page has two views: **Compose** (index.html) and **Examples** (examples.html
     samples/user/        your sample packs, one folder each; pack.json = deploy policy (see Use)
     renders/             wav/mp3 renders and dumps (gitignored)
     scripts/samples.mjs  pack downloader
-    scripts/check.mjs    headless checker
+    scripts/check.mjs    headless checker (events, axis table with words, harmony, energy arc)
+    scripts/lint.mjs     musical lint over the check table
+    scripts/headless.mjs the page in a headless Chromium, for render/verify with no window
     scripts/dump.mjs     song() -> plain Strudel
     lib/resolve.mjs      words -> axis edits (scripts/resolve.mjs is the cli; the Compose page Mix card uses it too)
     scripts/render.mjs   drive the page's offline renderer
@@ -55,8 +60,9 @@ The page has two views: **Compose** (index.html) and **Examples** (examples.html
     scripts/note.mjs     record why a change was made into songs/<song>.notes.json
     scripts/kiticons.mjs redraw web/kits/*.svg from each kit's description in lib/kits.json
     scripts/esm-fix.mjs  node resolve hook (a strudel dependency ships without an exports map)
-    gen/                 generators
-    test/                node:test suite
+    gen/                 generators: form.mjs (a song skeleton from a mood), euclid.mjs (plain Strudel)
+    test/                node:test suite; test/fixtures/ are the songs the golden test pins
+    .claude/skills/strudel/  the song-editing skill (the one versioned path under .claude/)
     blog-ideas/          notes on making songs with an agent
 
 ## Not local
@@ -85,7 +91,7 @@ Five layers — drums, bass, melody, pad, fx — each take axis values in 0..1 w
 Vocabulary is data: `lib/descriptors.json` (control words → axis deltas), `lib/overlays.json` (emotions and genres),
 `lib/harmony.json` (progression and mode words). Modifiers like `slightly`, `much`, `extremely` scale a delta.
 
-The `strudel` skill (`.claude/skills/strudel/SKILL.md`, not versioned — `.claude/` is gitignored in this repo)
+The `strudel` skill (`.claude/skills/strudel/SKILL.md`, versioned: the rest of `.claude/` is gitignored)
 encodes the baseline → resolve → check → render/verify → report workflow for an agent editing songs by ear.
 `blog-ideas/making-machine-with-claude.md` is a worked example of that loop from the user's side.
 
@@ -164,8 +170,7 @@ Sections are JavaScript, so reuse them with spread: `const verse = { drums: {...
 
 Progressions accept `b`/`#` before a numeral, `m`/`M`/`dim` and `7`/`M7` after it, and `[..]` to put chords in one bar: `'i bVI [III VII] V7'`. Case never changes a plain diatonic triad's quality (write `IVm` for a borrowed iv), but it does set the triad under a seventh: `V7` is the dominant seventh in any key (G7 in C minor), `v7` the diatonic one (Gm7), `VM7` a major seventh (Gmaj7), and a lowercase diatonic seventh keeps its quality (`vii7` in C major is Bm7b5). `npm run check` prints the chord names you actually got.
 
-The full design spec and plan live in `docs/superpowers/`, which is not versioned in this repo; the skill in
-`.claude/skills/strudel/` likewise.
+The full design spec and plan live in `docs/superpowers/`, which is not versioned in this repo.
 
 ## License
 

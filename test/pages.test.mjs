@@ -53,7 +53,7 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
     assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(path.join(out, 'samples/user/packs.json'), 'utf8'))).sort(), ['_t_subset', 'demo-pack']);
     assert.ok(!fs.existsSync(path.join(out, 'samples/packs')), 'packs stream from the cdn');
     for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', 'web/boot.mjs', 'web/mp3.mjs', 'web/compose.mjs', 'web/examples.mjs', 'lib/packs.mjs'])
-      assert.ok(!/['`"]\//.test(fs.readFileSync(path.join(out, f), 'utf8')), `root-absolute url in ${f}`);
+      assert.ok(!/['`"]\/[\w.]/.test(fs.readFileSync(path.join(out, f), 'utf8')), `root-absolute url in ${f}`); // a quote, a slash, then a path character; a bare '/' is a separator
     // the page does not need the server for export: no fetch of a render/dump route without a server guard
     assert.ok(!/fetch\(`dump\//.test(fs.readFileSync(path.join(out, 'index.html'), 'utf8')), 'no server dump route');
 

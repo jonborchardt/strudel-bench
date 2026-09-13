@@ -1,7 +1,7 @@
 // The inline widgets of web/cm-controls.mjs, one factory per kind: { dom(control, ctx) -> element, update?(element, control)
 // -> true to keep the element when the value changed (a slider mid-drag, a spinner being typed in) }.
 // ctx: set(value) writes the literal; ui = the host's hooks, all optional: pick(btn, { names, labels, cur, ph, icon,
-// onPick, preview }) opens its menu, audition(path, value, btn) plays a value, canAudition(path) says which can be heard,
+// onPick, preview }) opens its menu, audition(path, value, btn) plays a value, canAudition(path, control) says which can be heard,
 // icon(path, value) returns html for an image before a value; root = the editor's element (for shared datalists).
 // widgetFor chooses by control kind and what the host offers; delete an entry here and its line there to drop a kind.
 
@@ -59,7 +59,7 @@ export const select = {
 export const pick = {
   dom(c, { set, ui, at }) {
     const wrap = el('span', { className: 'pickw' }), btn = el('button', { className: 'pick', title: c.path });
-    const hear = ui.audition && ui.canAudition?.(c.path);
+    const hear = ui.audition && ui.canAudition?.(c.path, c);
     const here = () => ({ ...c, from: at?.() ?? c.from }); // the control at its current position, so the host can tell which section it sits in now
     btn.innerHTML = `${ui.icon?.(c.path, c.value) ?? ''}${c.value ? esc(labelsOf(c.spec)[c.value] ?? c.value) : '<i>none</i>'}`;
     btn.onclick = () => ui.pick(btn, { names: valuesOf(c.spec), labels: labelsOf(c.spec), cur: c.value, icon: ui.icon && ((v) => ui.icon(c.path, v)), onPick: set, preview: hear ? (v, b) => ui.audition(c.path, v, b, here()) : undefined });

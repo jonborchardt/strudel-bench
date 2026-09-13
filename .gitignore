@@ -3,7 +3,10 @@ samples/packs/*
 !samples/packs/.gitkeep
 !samples/packs/*.json
 .playwright-mcp/
-.claude
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/strudel/
 /docs
 dist/
 renders/

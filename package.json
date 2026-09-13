@@ -16,7 +16,10 @@
     "dump": "node scripts/dump.mjs",
     "note": "node scripts/note.mjs",
     "verify": "node scripts/verify.mjs",
-    "vocab": "node scripts/vocab.mjs > .claude/skills/strudel/reference/vocab.md"
+    "vocab": "node scripts/vocab.mjs > .claude/skills/strudel/reference/vocab.md",
+    "lint": "node scripts/lint.mjs",
+    "headless": "node scripts/headless.mjs",
+    "form": "node gen/form.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "^1.2.7",
@@ -31,5 +34,8 @@
     "@strudel/transpiler": "^1.2.6",
     "@strudel/web": "^1.3.0",
     "acorn": "^8.18.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.55.0"
   }
 }

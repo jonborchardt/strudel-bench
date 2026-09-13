@@ -67,3 +67,10 @@ test('harmony words are consumed as states, not deltas or unknowns', () => {
   assert.deepEqual(parsePhrase('relative').harmony, [{ word: 'relative', kind: 'relative' }]);
   assert.deepEqual(parsePhrase('much dorian').harmony, [{ word: 'dorian', kind: 'mode', value: 'dorian', relative: false }], 'modifiers ignored on harmony words');
 });
+
+test('describeAxes reads axis values back as the words that would have set them', async () => {
+  const { describeAxes } = await import('../lib/vocab.mjs');
+  assert.deepEqual(describeAxes({ brightness: .2, density: .9, space: .5, sound: 'piano' }), ['dark', 'very busy']);
+  assert.deepEqual(describeAxes({ brightness: .55 }), [], 'near the baseline says nothing');
+  for (const w of describeAxes({ weight: .9, groove: .8, width: .1 })) assert.ok(/heavy|massive|swung|narrow/.test(w), w);
+});

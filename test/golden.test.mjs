@@ -1,4 +1,5 @@
-// Pins the events of every song in songs/. Fingerprints (begin, dur, s, bank, note, gain) so value-shape
+// Pins the events of the fixture songs in test/fixtures/ (copies of real songs, kept still): a change here is a change in lib/.
+// The songs in songs/ are content: test/check.test.mjs only asks that they check clean. Fingerprints (begin, dur, s, bank, note, gain) so value-shape
 // changes (extra fields) don't trip it but any moved, added, removed or retuned event does.
 // Regenerate on purpose only: UPDATE_GOLDEN=1 node --test test/golden.test.mjs
 import { test } from 'node:test';
@@ -11,7 +12,8 @@ import { checkFile } from '../scripts/check.mjs';
 
 const ROOT = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
 const GOLDEN = path.join(ROOT, 'test', 'golden.json');
-const songs = fs.readdirSync(path.join(ROOT, 'songs')).filter((f) => f.endsWith('.strudel') && !f.startsWith('_t_')).sort();
+const FIX = path.join(ROOT, 'test', 'fixtures');
+const songs = fs.readdirSync(FIX).filter((f) => f.endsWith('.strudel')).sort();
 const r3 = (x) => (typeof x === 'number' ? x.toFixed(3) : String(x ?? ''));
 
 async function fingerprint(file) {
@@ -26,10 +28,10 @@ async function fingerprint(file) {
   return createHash('sha256').update(lines.join('\n')).digest('hex');
 }
 
-test('every song produces the golden events', async () => {
+test('every fixture song produces the golden events', async () => {
   const want = fs.existsSync(GOLDEN) ? JSON.parse(fs.readFileSync(GOLDEN, 'utf8')) : {};
   const got = {};
-  for (const f of songs) got[f] = await fingerprint(path.join(ROOT, 'songs', f));
+  for (const f of songs) got[f] = await fingerprint(path.join(FIX, f));
   if (process.env.UPDATE_GOLDEN) { fs.writeFileSync(GOLDEN, JSON.stringify(got, null, 2) + '\n'); return; }
   for (const f of songs) assert.equal(got[f], want[f], `${f}: events changed (UPDATE_GOLDEN=1 if intended)`);
 });
