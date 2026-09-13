@@ -39,7 +39,7 @@ function hllKeys(prop, text, { hll: calls, root, spread }) {
     const p = obj.parent;
     if (!p || p.name === 'SingleExpression') return root && calls.includes(root) ? keys : null;
     if (p.name === 'ArgList') return calls.includes(calleeOf(p.parent, text)) ? keys : null;
-    if (p.name === 'VariableDeclaration') { const v = p.getChild('VariableDefinition'), name = v && text.slice(v.from, v.to); return spread?.has(name) ? [name, ...keys] : null; }
+    if (p.name === 'VariableDeclaration') { const v = obj.prevSibling?.prevSibling, name = v?.name === 'VariableDefinition' && text.slice(v.from, v.to); return spread?.has(name) ? [name, ...keys] : null; } // `name = {…}`: this declarator's own name, not the statement's first
     if (p.name !== 'Property') return null;
     keys.unshift(keyOf(p, text));
     obj = p.parent;

@@ -19,8 +19,8 @@ export function lint({ sections, problems = [] }) {
   const warn = (section, text) => out.push({ level: 'warn', section, text });
   const climax = sections.filter((s) => s.role === 'climax');
   if (!climax.length) warn(null, 'no section has role climax: the arc has no peak');
-  const peak = sections.reduce((m, s) => (s.energy > m.energy ? s : m), sections[0]);
-  if (climax.length && !climax.includes(peak)) warn(peak.name, `the most energetic section is ${peak.name} (${peak.energy}), not the climax (${climax.map((s) => `${s.name} ${s.energy}`).join(', ')})`);
+  const top = Math.max(...sections.map((s) => s.energy)), peak = sections.find((s) => s.energy === top);
+  if (climax.length && !climax.some((s) => s.energy === top)) warn(peak.name, `the most energetic section is ${peak.name} (${peak.energy}), not the climax (${climax.map((s) => `${s.name} ${s.energy}`).join(', ')})`); // a climax that ties the peak is the peak
   sections.forEach((s, i) => {
     const prev = sections[i - 1];
     if (prev && same(prev.layers, s.layers)) warn(s.name, `identical to ${prev.name}: same parts, same values; change something or merge them`);

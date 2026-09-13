@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Local [Strudel](https://strudel.cc) live-coding harness. Node stdlib only (plus `acorn` for the resolver and `@breezystack/lamejs` for mp3), no build step, no bundler. Songs are `songs/*.strudel`; everything (code and samples) is served from this folder.
+Local [Strudel](https://strudel.cc) live-coding harness. Node stdlib only (plus `acorn` for the resolver, `@breezystack/lamejs` for mp3, and `playwright-core` as a dev dependency for headless renders), no build step, no bundler. Songs are `songs/*.strudel`; everything (code and samples) is served from this folder.
 
 ## Commands
 
@@ -36,7 +36,7 @@ Tests write temp files prefixed `_t_` into `test/`, `songs/`, and `samples/user/
 
 Claude can't hear audio. `npm run check` is the primary verification: it prints the event stream (time, duration, value) and flags any `s("...")` name not in the local packs, `samples/user/`, or the hardcoded synth list `SYNTHS` in `lib/packs.mjs` (the page's sound datalist reads the same list). For measurable axes (brightness, weight, width, density, space, articulation) `npm run verify` renders before/after and reports metric deltas; "verified directionally" is the strongest claim to make. For browser verification use the Playwright MCP: navigate to `http://localhost:3000/#song.strudel`, click play, and read the console for `[strudel] evaluated` or error text in `#err`. Navigating to a URL that differs only by hash does not reload the page.
 
-The `strudel` skill (`.claude/skills/strudel/SKILL.md`, the one path under `.claude/` that is versioned) is the song-editing workflow: baseline → resolve → check → render/verify → report → commit with the musical change as the message. The check table now carries form and words: each section's `energy` (onsets per cycle summed over its parts, scaled by level) printed as an `arc:` line, and each layer's axis values read back as vocabulary words (`describeAxes` in `lib/vocab.mjs`, the reverse of `parsePhrase`), so "what does it sound like" and "does the climax peak" are answered from the table. `test/golden.test.mjs` pins `test/fixtures/*.strudel` (copies of songs, kept still: a change there is a change in lib), while the songs in `songs/` only have to check clean (`test/check.test.mjs`).
+The `strudel` skill (`.claude/skills/strudel/`, the one folder under `.claude/` that is versioned: `SKILL.md` and the generated `reference/vocab.md`) is the song-editing workflow: baseline → resolve → check → render/verify → report → commit with the musical change as the message. The check table now carries form and words: each section's `energy` (onsets per cycle summed over its parts, scaled by level) printed as an `arc:` line, and each layer's axis values read back as vocabulary words (`describeAxes` in `lib/vocab.mjs`, the reverse of `parsePhrase`), so "what does it sound like" and "does the climax peak" are answered from the table. `test/golden.test.mjs` pins `test/fixtures/*.strudel` (copies of songs, kept still: a change there is a change in lib), while the songs in `songs/` only have to check clean (`test/check.test.mjs`).
 
 ## Architecture
 
@@ -67,7 +67,7 @@ A song can be written declaratively: `song({ cps, key, seed, kit }, [section(nam
 - `lib/index.mjs` loads all of it into the current scope and defines `song`, `section`, `strudelLib` and one global per layer (`drums({ density: .8 })` returns just that layer's pattern) on `globalThis`.
 - Vocabulary is data, not code: `lib/descriptors.json` (control words), `lib/overlays.json` (emotions/genres), `lib/harmony.json` (progression and mode words). Node reads them eagerly, the page fetches them via `/lib/`. Add words there, then `npm run vocab`.
 
-README.md carries the rules, the axis table, the phase order and the harmony contract, because `docs/` and `.claude/` are gitignored here.
+README.md carries the rules, the axis table, the phase order and the harmony contract, because `docs/` and `.claude/` (except the strudel skill) are gitignored here.
 
 ## Deliberate deferrals
 

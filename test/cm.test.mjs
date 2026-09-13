@@ -36,6 +36,7 @@ test('literals without metadata, and known keys outside the HLL calls, get no co
   assert.deepEqual(controls(`section('a', 4, { drums: { density: sine, level: ramp(0, 1), template: \`house\` } })`).map((c) => c.path), ['section(1)', 'drums.density.signal', 'drums.level.ramp(0)', 'drums.level.ramp(1)'], 'a signal and ramp arguments are controls of the number they stand in for; a template string is not a literal');
   assert.equal(controls(`section('a', 4, { drums: { ...base, density: .5 } })`).length, 2, 'a spread does not hide the literals beside it');
   assert.deepEqual(controls(`const M = { organicness: 0, sounds: { bd: 'bd' }, gain: 3 };\nconst B = { ...M, level: .4 };\nconst x = { density: .5 };\nsection('a', 4, { drums: { ...B } })`).map((c) => c.path), ['M.organicness', 'M.sounds.bd', 'B.level', 'section(1)'], 'a const object the file spreads (directly or through another) is a layer object; one it never spreads is not');
+  assert.deepEqual(controls(`const A = { density: .5 }, B = { space: .2 };\nsection('a', 4, { drums: { ...B } })`).map((c) => c.path), ['B.space', 'section(1)'], 'a multi-declarator const: each object goes by its own name');
   assert.equal(byPath(`other('a', 4, { drums: { density: .5 } })`)['drums.density'], undefined, 'an unknown command is ordinary code');
 });
 

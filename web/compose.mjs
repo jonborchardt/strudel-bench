@@ -106,9 +106,8 @@ export function verifyRows(deltas, before, after) {
  * A song as a link: `name\nsource` deflated (deflate-raw) and base64url'd, for the url hash `#s=...`; `shareDecode`
  * reads it back as { name, src }. Nothing is fetched or stored: the link is the song, which is what a static host needs.
  */
-const SLASH = String.fromCharCode(47); // the slash, not written as a quoted literal: test/pages.test.mjs reads a quote followed by a slash as a root-absolute url
-const b64u = (bytes) => { let bin = ''; for (const b of bytes) bin += String.fromCharCode(b); return btoa(bin).replace(/\+/g, '-').replaceAll(SLASH, '_').replace(/=+$/, ''); };
-const unb64u = (text) => Uint8Array.from(atob(text.replace(/-/g, '+').replaceAll('_', SLASH)), (c) => c.charCodeAt(0));
+const b64u = (bytes) => { let bin = ''; for (const b of bytes) bin += String.fromCharCode(b); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const unb64u = (text) => Uint8Array.from(atob(text.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
 const pipe = async (bytes, stream) => { const w = stream.writable.getWriter(); w.write(bytes); w.close(); return new Uint8Array(await new Response(stream.readable).arrayBuffer()); };
 export async function shareEncode(name, src) { return b64u(await pipe(new TextEncoder().encode(`${name}\n${src}`), new CompressionStream('deflate-raw'))); }
 export async function shareDecode(text) {

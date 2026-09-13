@@ -22,5 +22,4 @@ await page.goto(`http://localhost:${port}/#${song}`);
 await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('packs'), null, { timeout: 120000 });
 console.log(`page open on ${song}: npm run render / verify jobs run here. ctrl+c to close.`);
 const stop = async () => { await browser.close().catch(() => {}); process.exit(0); };
-process.on('SIGINT', stop); process.on('SIGTERM', stop);
-setInterval(() => {}, 1 << 30); // stay alive
+process.on('SIGINT', stop); process.on('SIGTERM', stop); // the browser's pipe keeps the process alive

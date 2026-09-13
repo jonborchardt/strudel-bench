@@ -139,7 +139,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     }
     if (r.sections?.length) { // the arc: each section's energy against the loudest, so the shape reads at a glance
       const max = Math.max(...r.sections.map((s) => s.energy), 1e-9), bar = '▁▂▃▄▅▆▇█';
-      console.log(`  arc: ${r.sections.map((s) => `${s.name} ${s.energy} ${bar[Math.min(7, Math.floor((s.energy / max) * 7.99))]}`).join(' · ')}`);
+      console.log(`  arc: ${r.sections.map((s) => `${s.name} ${s.energy} ${bar[Math.round((s.energy / max) * 7)]}`).join(' · ')}`);
     }
     for (const p of r.problems) console.error('  ' + p);
     if (!r.ok) bad++;

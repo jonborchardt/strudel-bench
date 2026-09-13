@@ -188,9 +188,10 @@
   async function loadList(want = decodeURIComponent(location.hash.slice(1))) {
     let shared = null; // #s=...: a song carried by the link itself
     if (location.hash.startsWith('#s=')) { try { shared = await shareDecode(location.hash.slice(3)); } catch { status('that link does not decode'); } }
-    const names = [...new Set([...(await (await fetch('songs/index.json')).json()), ...drafts(), ...(shared && NAME.test(shared.name) ? [shared.name] : [])])].sort();
+    if (shared && !NAME.test(shared.name)) shared.name = 'shared.strudel'; // never land a link's text under another song's name (Save would write it there)
+    const names = [...new Set([...(await (await fetch('songs/index.json')).json()), ...drafts(), ...(shared ? [shared.name] : [])])].sort();
     $('song').innerHTML = names.map((n) => `<option>${n}</option>`).join('');
-    if (shared && NAME.test(shared.name)) want = shared.name;
+    if (shared) want = shared.name;
     if (names.includes(want)) $('song').value = want;
     await loadSong();
     if (shared) { // over whatever the name loaded (nothing, on a fresh browser): the link's text, unsaved
@@ -304,12 +305,12 @@
     if (kind === 'riser') {
       const cur = s.layers.fx?.attrs.riser; const curText = cur === true ? '4' : cur ? String(cur) : '';
       openPickList(btn, { names: ['1', '2', '4', '8'], cur: curText, ph: 'no riser', labels: { 1: '1 bar', 2: '2 bars', 4: '4 bars', 8: '8 bars' },
-        onPick: (v) => did(() => setMaterial(withFx(code.text, s.name), s.name, 'fx', 'riser', v || null), `${s.name}: ${v ? `${v}-bar riser` : 'no riser'} into ${next.name}`) });
+        onPick: (v) => did(() => setMaterial(withFx(code.text, s.name), s.name, 'fx', 'riser', v || null), `${s.name}: ${v ? `${v}-bar riser` : 'no riser'} into ${next.name}`, false, s.name) });
     } else {
       const cur = next.layers.fx?.attrs.impact; const curText = cur === true ? 'bd' : cur || '';
       openPickList(btn, { names: [...$('snds').options].map((o) => o.value), cur: curText, ph: 'no hit',
-        onPick: (v) => did(() => setMaterial(withFx(code.text, next.name), next.name, 'fx', 'impact', v ? q(v) : null), `${next.name}: ${v ? `${v} hit` : 'no hit'} on its downbeat`),
-        preview: (v, pv) => v && audition(pv, 'fx', 'impact', q(v), undefined, next.name) });
+        onPick: (v) => did(() => setMaterial(withFx(code.text, next.name), next.name, 'fx', 'impact', v ? q(v) : null), `${next.name}: ${v ? `${v} hit` : 'no hit'} on its downbeat`, false, next.name),
+        preview: (v, pv) => v && audition(pv, 'fx', 'impact', q(v), undefined, next.name, withFx(code.text, next.name)) }); // the preview needs the fx part too
     }
   }
   // a pinned section plays its own pattern (bar time, its own tempo), so it loops by itself: no clock jumps, nothing
@@ -653,11 +654,11 @@
     if (playing) updateTimer = setTimeout(play, 150);
   }
   const pending = []; // mixer edits since the last save, for the notes file: { section, text }; a drag coalesces to its last value
-  function did(edit, msg, coalesce) { // one control edit: run it, commit, say what it did, follow up; a refused edit says why instead
+  function did(edit, msg, coalesce, section = mixSection) { // one control edit: run it, commit, say what it did, follow up; a refused edit says why instead. section: where the edit lands, for the notes (the shown section unless the control says otherwise)
     let src; try { src = edit(); } catch (err) { $('mixstatus').textContent = err.message; return false; }
     commit(src, coalesce); $('mixstatus').textContent = msg; edited();
     const key = msg.replace(/[\d.]+( \(all sections\))?$/, ''); // "drums density 0.21" -> "drums density "
-    if (coalesce && pending.at(-1)?.key === key) pending.at(-1).text = msg; else pending.push({ section: mixSection, text: msg, key });
+    if (coalesce && pending.at(-1)?.key === key) pending.at(-1).text = msg; else pending.push({ section, text: msg, key });
     return true;
   }
   async function saveNotes() { // Save: the mixer's edits become one dated request in songs/<name>.notes.json, so the notes card tells the truth about hand edits too
@@ -819,8 +820,8 @@
     pvTimer = setTimeout(() => { strudel.hush(); btn.classList.remove('on'); pvBtn = null; }, 2000 / p.cps + 200);
   }
   // a material: this section's `layer` with `key` set to `text` (a drum voice alone on its template grid: the whole part would drown it, or not even include it, since voices join as density rises)
-  const audition = (btn, layer, key, text, voice, section = mixSection) => preview(btn, async () => {
-    const pat = await evalCode(ready, setMaterial(code.text, section, layer, key, text));
+  const audition = (btn, layer, key, text, voice, section = mixSection, src = code.text) => preview(btn, async () => {
+    const pat = await evalCode(ready, setMaterial(src, section, layer, key, text));
     const s = pat.strudel.sections.find((x) => x.name === section);
     let pattern = s.layers[layer].pattern, what = `${key} ${text ?? 'removed'}`;
     if (voice) {

@@ -117,5 +117,6 @@ test('every song in songs/ checks clean', async () => {
   for (const f of fs.readdirSync(dir).filter((f) => f.endsWith('.strudel') && !f.startsWith('_t_'))) {
     const r = await checkFile(path.join(dir, f));
     assert.deepEqual(r.problems, [], f);
+    assert.ok(r.events.length > 0, `${f}: silent`);
   }
 });
