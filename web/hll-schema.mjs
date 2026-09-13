@@ -25,6 +25,7 @@ import { TEMPLATES } from '../lib/grid.mjs';
 import { ARP_ORDERS, DRUM_ORDER } from '../lib/layers.mjs';
 import { SYNTHS } from '../lib/packs.mjs';
 import { HARMONY } from '../lib/vocab.mjs';
+import { FLATS, NUMERALS } from '../lib/harmony.mjs';
 
 /** Lists only the host knows: the page fills these once the packs are loaded; Node keeps the synths and no kits. */
 export const host = { sounds: () => SYNTHS, kits: () => [] };
@@ -32,12 +33,12 @@ export const host = { sounds: () => SYNTHS, kits: () => [] };
 const unit = { type: 'number', min: 0, max: 1, step: 0.01 };
 const int = (min, title) => ({ type: 'number', min, step: 1, title });
 const sound = (title) => ({ type: 'enum', values: () => host.sounds(), list: 'sounds', title });
-const ROOTS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+export const ROOTS = FLATS; // the roots as lib/harmony spells them
 const METERS = ['2/4', '3/4', '4/4', '5/4', '6/8', '7/8', '9/8', '12/8']; // the common ones; parseMeter takes any n/4, n/8, n/16
 const ROLES = ['establish', 'develop', 'climax', 'release']; // the vocabulary the songs use; only climax has a rule (the fill before it)
 // the chord tokens parseProgression reads: diatonic numerals in both cases, their sevenths, the common altered roots, diminished
-const NUM = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
-const CHORDS = [...NUM.map((n) => n.toLowerCase()), ...NUM, ...NUM.map((n) => `${n}7`), ...NUM.map((n) => `${n.toLowerCase()}7`), 'bII', 'bIII', 'bVI', 'bVII', 'bIII7', 'bVII7', '#iv', 'iidim', 'viidim', 'iidim7', 'viidim7'];
+const NUM = NUMERALS.map((n) => n.toUpperCase());
+export const CHORDS = [...NUM.map((n) => n.toLowerCase()), ...NUM, ...NUM.map((n) => `${n}7`), ...NUM.map((n) => `${n.toLowerCase()}7`), 'bII', 'bIII', 'bVI', 'bVII', 'bIII7', 'bVII7', '#iv', 'iidim', 'viidim', 'iidim7', 'viidim7'];
 const SIGNALS = ['sine', 'cosine', 'saw', 'isaw', 'tri', 'square', 'rand', 'perlin'];
 
 export const SCHEMA = {

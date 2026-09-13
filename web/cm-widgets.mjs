@@ -57,13 +57,14 @@ export const select = {
 };
 /** enum through the host's menu (the mixer's, a play button per row), behind a button showing the value, with its own play button when the value can be heard */
 export const pick = {
-  dom(c, { set, ui }) {
+  dom(c, { set, ui, at }) {
     const wrap = el('span', { className: 'pickw' }), btn = el('button', { className: 'pick', title: c.path });
     const hear = ui.audition && ui.canAudition?.(c.path);
+    const here = () => ({ ...c, from: at?.() ?? c.from }); // the control at its current position, so the host can tell which section it sits in now
     btn.innerHTML = `${ui.icon?.(c.path, c.value) ?? ''}${c.value ? esc(labelsOf(c.spec)[c.value] ?? c.value) : '<i>none</i>'}`;
-    btn.onclick = () => ui.pick(btn, { names: valuesOf(c.spec), labels: labelsOf(c.spec), cur: c.value, icon: ui.icon && ((v) => ui.icon(c.path, v)), onPick: set, preview: hear ? (v, b) => ui.audition(c.path, v, b, c) : undefined });
+    btn.onclick = () => ui.pick(btn, { names: valuesOf(c.spec), labels: labelsOf(c.spec), cur: c.value, icon: ui.icon && ((v) => ui.icon(c.path, v)), onPick: set, preview: hear ? (v, b) => ui.audition(c.path, v, b, here()) : undefined });
     wrap.append(btn);
-    if (hear) { const pv = el('button', { className: 'pv', title: 'hear it (pauses the song)', innerHTML: '&#9654;' }); pv.onclick = () => ui.audition(c.path, c.value, pv, c); wrap.append(pv); } // the control goes along so the host can tell which section it sits in
+    if (hear) { const pv = el('button', { className: 'pv', title: 'hear it (pauses the song)', innerHTML: '&#9654;' }); pv.onclick = () => ui.audition(c.path, c.value, pv, here()); wrap.append(pv); }
     return wrap;
   },
 };

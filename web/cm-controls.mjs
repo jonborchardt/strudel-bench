@@ -63,8 +63,8 @@ function enclosingNumber(node, text, schema) {
 
 const KIND = { number: 'number', enum: 'string', tokens: 'string', bool: 'bool', ident: 'ident' }; // spec type -> the literal kind it takes
 /** Every literal the schema knows, in document order: { from, to, kind, spec, value, path, quote? }. Pure. */
-export function findControls(tree, text, schema, calls = schema.hll ?? ['song', 'section'], root = null) {
-  const out = [], hll = { ...schema, hll: calls, root };
+export function findControls(tree, text, schema, root = null) {
+  const out = [], calls = schema.hll, hll = { ...schema, root };
   const add = (node, spec, path) => {
     const lit = literal(node, text);
     if (lit && KIND[spec.type] === lit.kind) out.push({ from: node.from, to: node.to, kind: spec.type, spec, value: lit.value, path, quote: lit.quote });
@@ -123,9 +123,9 @@ const config = Facet.define({ combine: (v) => v[0] }); // { schema, ui }: ui = h
 
 // a widget dispatches against the control found at its current position, never a remembered one
 function setFrom(view, dom, path, value) {
+  if (!dom.isConnected) return; // the document was swapped under an open menu (a pane re-shown on another section): no guessing which literal was meant
   const pos = view.posAtDOM(dom);
-  const list = controlsOf(view.state);
-  const c = list.find((x) => x.to === pos && x.path === path) ?? list.find((x) => x.path === path);
+  const c = controlsOf(view.state).find((x) => x.to === pos && x.path === path);
   if (c) view.dispatch({ changes: editFor(c, value), userEvent: 'hll.control' });
 }
 // one WidgetType for every kind: the factory from cm-widgets builds and updates the element
@@ -135,7 +135,8 @@ class CtlWidget extends WidgetType {
   toDOM(view) {
     const wrap = document.createElement('span'), { c } = this;
     wrap.className = 'cm-hll-ctl'; wrap.dataset.path = c.path;
-    wrap.append(this.make.dom(c, { ui: view.state.facet(config).ui, root: view.dom, set: (v) => setFrom(view, wrap, c.path, v) }));
+    const at = () => (wrap.isConnected ? view.posAtDOM(wrap) : null); // where the widget sits now (lines above it may have moved since toDOM)
+    wrap.append(this.make.dom(c, { ui: view.state.facet(config).ui, root: view.dom, set: (v) => setFrom(view, wrap, c.path, v), at }));
     return wrap;
   }
   updateDOM(dom) { return dom.dataset.path === this.c.path && !!this.make.update && this.make.update(dom.firstChild, this.c) === true; } // keep the element through a drag or a typed value
@@ -145,7 +146,7 @@ class CtlWidget extends WidgetType {
 function build(state) {
   const { schema, ui, root } = state.facet(config), text = state.doc.toString();
   const tree = ensureSyntaxTree(state, state.doc.length, 200) ?? syntaxTree(state);
-  const controls = findControls(tree, text, schema, schema.hll, root);
+  const controls = findControls(tree, text, schema, root);
   const shown = state.field(controlsShown), ranges = [];
   for (const c of controls) {
     ranges.push(Decoration.mark({ class: 'cm-hll-lit', attributes: { title: `${c.path}${c.spec.title ? `: ${c.spec.title}` : ''}${c.kind === 'number' ? ' (alt-drag to change)' : ''}` } }).range(c.from, c.to));

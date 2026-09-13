@@ -215,9 +215,9 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .pane .cm-hll-ctl .tokens button.pick { padding: .1rem .35rem; }
 .pane .cm-hll-ctl .pv { color: #bbb; font-size: .65rem; }
 .pane .cm-hll-ctl .pv:hover, .pane .cm-hll-ctl .pv.on { color: var(--accent-ink); background: var(--accent); }
-.pane .cm-hll-ctl input[type=checkbox] { width: 1.5rem; height: .85rem; border-color: #ddd; background: #eee; }
+.pane .cm-hll-ctl input[type=checkbox] { width: 1.5rem; height: .85rem; border-color: #bbb; background: #e4e6ec; box-shadow: none; }
 .pane .cm-hll-ctl input[type=checkbox]::before { width: .62rem; height: .62rem; background: #fff; box-shadow: 0 1px 2px #0003; }
-.pane .cm-hll-ctl input[type=checkbox]:checked { background: #b7c7ea; border-color: #b7c7ea; }
+.pane .cm-hll-ctl input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
 .pane .cm-hll-ctl input[type=checkbox]:checked::before { left: calc(100% - .7rem); }
 .pane .cm-hll-ctl input[type=checkbox]:hover { border-color: var(--accent); }
 .pane .cm-hll-ctl input[type=checkbox]:checked:hover { background: var(--accent); }
@@ -230,9 +230,6 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .pane .cm-hll-ctl input[type=range]:hover::-webkit-slider-thumb, .pane .cm-hll-ctl input[type=range]:focus-visible::-webkit-slider-thumb { background: var(--accent); }
 .pane .cm-hll-ctl input[type=range]:hover::-moz-range-thumb, .pane .cm-hll-ctl input[type=range]:focus-visible::-moz-range-thumb { background: var(--accent); }
 .pane .cm-hll-ctl input[type=range]:focus-visible { outline: none; }
-.pane .cm-hll-ctl input[type=checkbox] { border-color: #bbb; background: #e4e6ec; box-shadow: none; }
-.pane .cm-hll-ctl input[type=checkbox]::before { background: #fff; box-shadow: 0 1px 2px #0003; }
-.pane .cm-hll-ctl input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
 #picklist .row img { width: 22px; height: 22px; }
 /* the song source pane: the same editor, light, sized and resizable like the textarea it replaced; its controls checkbox in the header */
 .pane .cm-editor { height: 26rem; border: 1px solid var(--line); border-radius: 6px; resize: vertical; overflow: hidden; }
@@ -354,3 +351,28 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .knobs b [data-solo].on { background: var(--accent); }
 #ab { padding: .1rem .45rem; line-height: 1.2; }
 #ab.on { background: #fff3d6; border-color: #a05a00; color: #7a4b00; }
+
+/* seeing: a part's onsets across the section's bars under its knob row; bar lines from --bars, the playhead from --ph on .knobs */
+.knobs .ev { grid-column: 1 / -1; position: relative; height: 6px; margin: -.15rem 0 .15rem; border-radius: 2px; background: #141417 repeating-linear-gradient(to right, #2c2c32 0 1px, transparent 1px calc(100% / var(--bars, 1))); background-size: 100% 100%; overflow: hidden; }
+.knobs .ev i { position: absolute; top: 1px; bottom: 1px; min-width: 2px; border-radius: 1px; background: var(--accent); opacity: .8; }
+.knobs .ev::after { content: ''; position: absolute; top: 0; bottom: 0; left: calc(var(--ph, -1) * 100%); width: 2px; background: #fff; opacity: .9; }
+/* harmony: the key at the left, then one cell per bar of the section (the progression repeating, repeats dimmer), + at the right */
+.harm { display: flex; align-items: stretch; gap: .4rem; margin: 0 0 .6rem; }
+.harm .key { flex: none; align-items: center; justify-content: center; gap: .4rem; min-width: 6rem; line-height: 1.15; }
+.harm .key small { color: #77777f; font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; }
+.harm .bars { flex: 1; display: flex; border: 1px solid #111; border-radius: 4px; background: #1e1e22; box-shadow: inset 0 1px 0 #3c3c42, 0 1px 0 #48484e; overflow: hidden; }
+.harm .bar { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: .2rem 0; border: 0; border-left: 1px solid #111; border-radius: 0; background: transparent; color: #eee; line-height: 1.15; }
+.harm .bar:first-child { border-left: 0; }
+.harm .bar:hover { background: #2a2a30; }
+.harm .bar b { font-size: .95rem; font-weight: 600; }
+.harm .bar small { color: #9a9aa2; font-size: .65rem; }
+.harm .bar.rep { opacity: .45; }
+.harm .add { flex: none; min-width: 2rem; justify-content: center; color: #9a9aa2; }
+/* the melody's line: seed stepper, the line it makes, a play button */
+.matrow label.seed { gap: .35rem; }
+.matrow label.seed .step { min-width: 0; padding: .1rem .35rem; }
+.matrow label.seed .seedno { color: #eee; white-space: nowrap; }
+.matrow label.seed .seedno small { margin-left: .25rem; color: #77777f; font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; }
+.matrow label.seed code { max-width: 22rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c8e6a0; font-size: .8rem; }
+.matrow label.seed .pv { color: #ccc; background: none; border: 0; padding: 0 .2rem; }
+.matrow button.next { min-width: 0; margin-left: .2rem; }

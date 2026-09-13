@@ -105,3 +105,10 @@ test('drums2 is a second drums layer', async () => {
   assert.ok(layers.drums2.pattern.queryArc(0, 1).length > layers.drums.pattern.queryArc(0, 1).length, 'each built with its own axes');
   assert.throws(() => song({}, [section('a', 1, { drumz: {} })]), /unknown layer "drumz"/);
 });
+
+test('a part can carry its own seed', async () => {
+  await ready;
+  const line = (spec) => JSON.stringify(song({ cps: .5, seed: 1 }, [section('a', 8, { melody: spec })]).strudel.sections[0].layers.melody.pattern.queryArc(0, 8).map((h) => [h.whole.begin.valueOf(), h.value.note ?? h.value.n]));
+  assert.equal(line({ density: .8 }), line({ density: .8, seed: 1 }), 'the song seed is the default');
+  assert.notEqual(line({ density: .8 }), line({ density: .8, seed: 7 }), 'another seed, another line');
+});
