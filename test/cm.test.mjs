@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { EditorState } from '@codemirror/state';
 import { javascript } from '@codemirror/lang-javascript';
 import { ensureSyntaxTree } from '@codemirror/language';
-import { findControls, editFor, quantize, hllControls, toggleControls, controlsOf, controlsShown, decorationsOf } from '../web/cm-controls.mjs';
+import { findControls, editFor, quantize, hllControls, toggleControls, controlsOf, controlsShown, decorationsOf, languageFor } from '../web/cm-controls.mjs';
 import { valuesOf, widgetFor, slider, spinner, check, select, pick, tokens } from '../web/cm-widgets.mjs';
 import { SCHEMA, host } from '../web/hll-schema.mjs';
 import { TEMPLATES } from '../lib/grid.mjs';
@@ -137,6 +137,17 @@ test('progression is a row of chord tokens, and the widget chooser follows the s
   assert.equal(widgetFor(c['drums.fill']), check);
   assert.equal(widgetFor(c['drums.template'], ui), pick, 'with a host menu: the pick button'); assert.equal(widgetFor(c['drums.template']), select, 'without: a native select');
   assert.equal(widgetFor(c['progression'], ui), tokens); assert.equal(widgetFor(c['progression']), null, 'the chord row needs the host menu');
+});
+
+test('a pane over the song header: the document is the object itself, read as the argument of song(...)', () => {
+  const doc = `{ cps: .5, kit: 'RolandTR909', key: 'C:minor', seed: 3, packs: ['mine'] }`;
+  const st = (root) => EditorState.create({ doc, extensions: [languageFor(root), hllControls(SCHEMA, { root })] });
+  assert.deepEqual(controlsOf(st('song')).map((c) => c.path), ['cps', 'kit', 'key', 'seed'], 'every header key with a spec; packs is free');
+  assert.equal(controlsOf(st('song')).find((c) => c.path === 'cps').spec.scale, 'log');
+  assert.deepEqual(controlsOf(st()).map((c) => c.path), [], 'as a script the same text is a block, not an object: nothing is read as song');
+  assert.deepEqual(controlsOf(st('other')).map((c) => c.path), [], 'a root that is not an HLL call gives nothing');
+  const s = st('song').update({ changes: { from: doc.indexOf('.5'), to: doc.indexOf('.5') + 2, insert: 'sine.range(.25, 1)' } }).state; // a signal in the header takes the header key's bounds
+  assert.deepEqual(controlsOf(s).map((c) => c.path), ['cps.signal', 'cps.range(0)', 'cps.range(1)', 'kit', 'key', 'seed']);
 });
 
 test('every key the HLL accepts has a control spec or is listed as free, with the reason', async () => {

@@ -4,10 +4,9 @@
 import { EditorState, Annotation } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
-import { javascript } from '@codemirror/lang-javascript';
 import { syntaxHighlighting, HighlightStyle, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
-import { hllControls, toggleControls } from './cm-controls.mjs';
+import { hllControls, toggleControls, languageFor } from './cm-controls.mjs';
 
 const external = Annotation.define(); // a setText from outside: not an edit to report back
 
@@ -26,19 +25,20 @@ const THEMES = {
 };
 
 /**
- * createEditor({ parent, doc, schema, ui, light, onChange }) -> { view, text, setText(text), setControls(on) }.
+ * createEditor({ parent, doc, schema, ui, root, light, onChange }) -> { view, text, setText(text), setControls(on) }.
  * onChange(text) fires for edits made in the editor (typing, a control, an alt-drag), not for setText.
  * ui: the host hooks the widgets may use (web/cm-widgets.mjs says which); none = native controls only.
+ * root: the document is one expression, the object argument of this HLL call (the song header pane); default: a whole file.
  * light: the page's light look (the default is the rack's dark one).
  */
-export function createEditor({ parent, doc = '', schema, ui, light = false, onChange }) {
+export function createEditor({ parent, doc = '', schema, ui, root = null, light = false, onChange }) {
   const view = new EditorView({
     parent,
     state: EditorState.create({
       doc,
       extensions: [
-        javascript(), bracketMatching(), keymap.of([...defaultKeymap, indentWithTab]), EditorView.lineWrapping, THEMES[light ? 'light' : 'dark'],
-        hllControls(schema, { ui }),
+        languageFor(root), bracketMatching(), keymap.of([...defaultKeymap, indentWithTab]), EditorView.lineWrapping, THEMES[light ? 'light' : 'dark'],
+        hllControls(schema, { ui, root }),
         EditorView.updateListener.of((u) => { if (u.docChanged && !u.transactions.some((t) => t.annotation(external))) onChange?.(u.state.doc.toString()); }),
       ],
     }),

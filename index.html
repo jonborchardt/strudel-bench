@@ -45,10 +45,13 @@
   <!-- mix: the arrangement strip over one section (the playhead's, or the pinned one) as layers x axes; knobs and word pills edit the source -->
   <details class="card rack" id="mix" open hidden>
     <summary><h2>Mix</h2><small id="mixsec"></small><small>&middot; one slider per axis the layer adapts</small><span class="grow"></span><button class="undo" title="undo (ctrl+z)" disabled>&#8630;</button><button class="redo" title="redo (ctrl+shift+z)" disabled>&#8631;</button></summary>
+    <!-- two panes over spans of the song source, each a CodeMirror editor (web/cm-editor.mjs) that follows every edit and whose own edits land in the song at that span; "controls" puts a widget after each literal the schema knows (web/hll-schema.mjs) -->
+    <!-- song: the header object of song(...), parsed as one expression whose keys read as song's; above the strip, since it is not about one section -->
+    <details class="panel song" id="songsrc"><summary>song<label class="tweak" title="a widget after each value with known semantics; alt-drag a number works either way"><input type="checkbox" id="tweak0"> controls</label></summary><div id="songtext" title="the song header: tempo, key, seed, kit, packs"></div></details>
     <!-- strip: a block per section, flex-grown by its span, one row per layer shaded by density. Click scrubs there (and re-pins when pinned); the pin loops it, starts Play there and keeps the card on it; arrows reorder; the copy duplicates it under a numbered name; × removes it -->
     <div class="strip" id="strip"></div>
-    <!-- source: the shown section's own section(...) call in a CodeMirror editor (web/cm-editor.mjs); it follows every edit, typing in it edits the song at that span, and "controls" puts a slider or select after each literal the schema knows (web/hll-schema.mjs) -->
-    <details class="panel" id="secsrc"><summary>source<label class="tweak" title="a slider or select after each value with known semantics; alt-drag a number works either way"><input type="checkbox" id="tweak"> controls</label></summary><div id="sectext" title="this section's code: edits land in the song and the knobs follow"></div></details>
+    <!-- section: the shown section's own section(...) call, the second of the two source panes (the song one sits above the strip) -->
+    <details class="panel" id="secsrc"><summary>section<label class="tweak" title="a widget after each value with known semantics; alt-drag a number works either way"><input type="checkbox" id="tweak"> controls</label></summary><div id="sectext" title="this section's code: edits land in the song and the knobs follow"></div></details>
     <details class="panel" id="axes" open><summary>axes</summary><div class="knobs" id="knobs"></div></details>
     <!-- materials: the strings behind each part (drum template and per-voice samples, the synth or sample a part plays, arp order, follow); sound names autocomplete from the loaded packs -->
     <details class="panel" id="mats"><summary>materials</summary><div id="matlist"></div><label class="pvlvl" title="how loud the previews play (every &#9654; in this panel and its menu); not written to the song">preview level <input class="pvin" type="range" min="-1" max="1.7" step=".01" value="0"><output>x1.0</output></label></details>
@@ -341,7 +344,7 @@
     if (!from.length) return;
     to.push(current); current = from.pop(); stamp = 0;
     code.setText(current);
-    if (secTyping()) document.activeElement.blur(); // so the section pane re-reads the restored source instead of being taken as mid-edit
+    if (panes.some((p) => p.typing())) document.activeElement.blur(); // so the pane re-reads the restored source instead of being taken as mid-edit
     $('mixstatus').textContent = from === past ? 'undone' : 'redone'; // the previous status described an edit that is no longer there
     $('vout').hidden = true;
     syncUndo();
@@ -524,9 +527,7 @@
   // the pill box runs the same resolver the cli does, one clause per layer pill. Either is an edit like typing:
   // unsaved until Save, re-evaluated in place while playing, undoable.
   let mixSection = null; // name of the section the card shows
-  let secAt = { start: 0, end: 0 }; // where that section's call sits in the source; the source pane's text replaces exactly this span
   let knobDrag = false; // set for the life of a knob drag (a focused knob is not enough: it keeps focus after the drag ends, and the rebuild on change must happen)
-  // the section pane: a CodeMirror editor over just that call; an edit in it (typing, a control, an alt-drag) replaces the span in the song source
   // what an editor's widgets may reach on the page (web/cm-widgets.mjs): the shared pick menu with its play buttons, the materials panel's audition path (in the section the control sits in), the kit icons
   const editorUi = (sectionAt) => ({
     pick: (btn, o) => openPickList(btn, o),
@@ -542,18 +543,30 @@
   // the song source: the whole file in the page's light look; a control's section is the call around it. An edit is what typing in the old textarea was.
   const sectionAround = (c) => { try { return locate(code.text).sections.find((s) => s.node.start <= c.from && c.from < s.node.end)?.name; } catch { return null; } };
   const code = createEditor({ parent: $('code'), schema: SCHEMA, ui: editorUi(sectionAround), light: true, onChange: (text) => { commit(text, true); sourceChanged(); expandSoon(); } });
-  // the section pane: the shown section's call alone; an edit in it replaces that span of the song
-  const secEd = createEditor({ parent: $('sectext'), schema: SCHEMA, ui: editorUi(() => mixSection), onChange: (text) => {
-    const src = code.text;
-    const next = src.slice(0, secAt.start) + text + src.slice(secAt.end);
-    secAt.end = secAt.start + text.length;
-    commit(next, true); edited();
-  } });
-  const secTyping = () => $('sectext').contains(document.activeElement); // the editor or one of its inline controls has focus
-  // one "controls" setting for both editors, a checkbox on each
-  const tweaks = [$('tweak'), $('tweak2')];
-  const setTweak = (on) => { for (const t of tweaks) t.checked = on; code.setControls(on); secEd.setControls(on); try { localStorage.setItem('strudel:tweak', on ? '1' : ''); } catch {} };
-  for (const t of tweaks) { t.onclick = (e) => e.stopPropagation(); t.onchange = () => setTweak(t.checked); } // the click must not fold the section panel
+  // a pane over one span of the song source: an editor that re-reads its span after every change (show) and whose own edits
+  // (typing, a control, an alt-drag) replace exactly that span through commit, like typing in the main editor. `root` names
+  // the HLL call the span is the object argument of (the song header); a section pane shows a whole section(...) call.
+  function spanPane(parent, { root = null, sectionAt }) {
+    let at = { start: 0, end: 0 };
+    const ed = createEditor({ parent, schema: SCHEMA, root, ui: editorUi(sectionAt), onChange: (text) => {
+      const src = code.text, next = src.slice(0, at.start) + text + src.slice(at.end);
+      at.end = at.start + text.length;
+      commit(next, true); edited();
+    } });
+    return {
+      ed,
+      typing: () => parent.contains(document.activeElement), // the editor or one of its inline controls has focus: its text is left alone
+      get start() { return at.start; }, // stable while typing inside the span: how mixRender re-finds it
+      show(node) { at = { start: node.start, end: node.end }; ed.setText(code.text.slice(at.start, at.end)); },
+    };
+  }
+  const songPane = spanPane($('songtext'), { root: 'song', sectionAt: () => mixSection });
+  const secPane = spanPane($('sectext'), { sectionAt: () => mixSection });
+  const panes = [songPane, secPane];
+  // one "controls" setting for every editor, a checkbox on each
+  const tweaks = [...document.querySelectorAll('input[id^=tweak]')];
+  const setTweak = (on) => { for (const t of tweaks) t.checked = on; for (const e of [code, ...panes.map((p) => p.ed)]) e.setControls(on); try { localStorage.setItem('strudel:tweak', on ? '1' : ''); } catch {} };
+  for (const t of tweaks) { t.onclick = (e) => e.stopPropagation(); t.onchange = () => setTweak(t.checked); } // the click must not fold the panel
   try { if (localStorage.getItem('strudel:tweak')) setTweak(true); } catch {}
   let updateTimer;
   function edited() { // the source changed under a control: derived views follow, and the player picks it up shortly
@@ -568,11 +581,13 @@
   }
   function mixRender() {
     let m; try { m = locate(code.text); } catch (e) { if (!(e instanceof SyntaxError)) $('mix').hidden = true; return; } // plain strudel: nothing to mix; mid-edit syntax error: keep the last card
-    const typing = secTyping(); // the section pane is being edited: keep its section by position (its name may be mid-edit) and leave its text alone
-    const s = typing ? m.sections.find((x) => x.node.start === secAt.start) : m.sections.find((x) => x.name === (pinned ?? mixSection)) ?? m.sections[0];
+    const typing = secPane.typing(); // the section pane is being edited: keep its section by position (its name may be mid-edit) and leave its text alone
+    const s = typing ? m.sections.find((x) => x.node.start === secPane.start) : m.sections.find((x) => x.name === (pinned ?? mixSection)) ?? m.sections[0];
     if (!s) return;
     mixSection = s.name;
-    if (!typing) { secAt = { start: s.node.start, end: s.node.end }; secEd.setText(code.text.slice(secAt.start, secAt.end)); }
+    if (!typing) secPane.show(s.node);
+    $('songsrc').hidden = !m.song; // a song() header to show (its keys sit before every section, so its span holds still while a section is typed in)
+    if (m.song && !songPane.typing()) songPane.show(m.song);
     if (knobDrag) return; // a knob is being dragged: its value is already right, and rebuilding the knobs would drop the drag; the pane above still followed
     parts = Object.keys(s.layers); listTerms(); // the pill box offers this section's part names
     $('mix').hidden = false;

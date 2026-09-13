@@ -5,8 +5,12 @@
 // The widgets themselves live in web/cm-widgets.mjs: this file finds, edits and decorates.
 import { StateField, StateEffect, Facet } from '@codemirror/state';
 import { EditorView, Decoration, WidgetType } from '@codemirror/view';
-import { syntaxTree, ensureSyntaxTree } from '@codemirror/language';
+import { syntaxTree, ensureSyntaxTree, LanguageSupport } from '@codemirror/language';
+import { javascript, javascriptLanguage } from '@codemirror/lang-javascript';
 import { widgetFor } from './cm-widgets.mjs';
+
+/** The language for an editor: a whole file, or (with `root`) one expression, the object argument of that HLL call (a pane over the song header). */
+export const languageFor = (root) => (root ? new LanguageSupport(javascriptLanguage.configure({ top: 'SingleExpression' })) : javascript());
 
 const PUNCT = /^[(),]$/;
 const calleeOf = (call, text) => (call?.name === 'CallExpression' && call.firstChild?.name === 'VariableName' ? text.slice(call.firstChild.from, call.firstChild.to) : null);
@@ -25,14 +29,16 @@ function literal(node, text) {
 const keyOf = (prop, text) => { const k = prop.getChild('PropertyDefinition'); return k ? text.slice(k.from, k.to) : null; };
 
 // the keys from the HLL call's object down to this property, or null when it is not inside one: [key] on the spec itself,
-// [layer, key] in a layer object, [layer, map, key] inside a map such as drums.sounds
-function hllKeys(prop, text, calls) {
+// [layer, key] in a layer object, [layer, map, key] inside a map such as drums.sounds. With `root`, the document is itself
+// the object argument of that call (a pane over the song header, parsed as one expression).
+function hllKeys(prop, text, calls, root) {
   const keys = [keyOf(prop, text)];
   let obj = prop.parent;
   for (let depth = 0; obj?.name === 'ObjectExpression' && depth < 3; depth++) {
     const p = obj.parent;
-    if (p?.name === 'ArgList') return calls.includes(calleeOf(p.parent, text)) ? keys : null;
-    if (p?.name !== 'Property') return null;
+    if (!p || p.name === 'SingleExpression') return root && calls.includes(root) ? keys : null;
+    if (p.name === 'ArgList') return calls.includes(calleeOf(p.parent, text)) ? keys : null;
+    if (p.name !== 'Property') return null;
     keys.unshift(keyOf(p, text));
     obj = p.parent;
   }
@@ -49,7 +55,7 @@ function specFor(keys, props) {
 // the HLL number property an expression is (part of) the value of: what 'inherit' arguments and signals take their bounds from
 function enclosingNumber(node, text, schema) {
   for (let p = node.parent; p; p = p.parent) {
-    if (p.name === 'Property') { const keys = hllKeys(p, text, schema.hll); const spec = keys && specFor(keys, schema.props ?? {}); return spec?.type === 'number' ? { spec, path: keys.join('.') } : null; }
+    if (p.name === 'Property') { const keys = hllKeys(p, text, schema.hll, schema.root); const spec = keys && specFor(keys, schema.props ?? {}); return spec?.type === 'number' ? { spec, path: keys.join('.') } : null; }
     if (p.name === 'ArgList' && schema.hll.includes(calleeOf(p.parent, text))) return null; // the HLL call's own arguments: not a value
   }
   return null;
@@ -57,8 +63,8 @@ function enclosingNumber(node, text, schema) {
 
 const KIND = { number: 'number', enum: 'string', tokens: 'string', bool: 'bool', ident: 'ident' }; // spec type -> the literal kind it takes
 /** Every literal the schema knows, in document order: { from, to, kind, spec, value, path, quote? }. Pure. */
-export function findControls(tree, text, schema, calls = schema.hll ?? ['song', 'section']) {
-  const out = [], hll = { ...schema, hll: calls };
+export function findControls(tree, text, schema, calls = schema.hll ?? ['song', 'section'], root = null) {
+  const out = [], hll = { ...schema, hll: calls, root };
   const add = (node, spec, path) => {
     const lit = literal(node, text);
     if (lit && KIND[spec.type] === lit.kind) out.push({ from: node.from, to: node.to, kind: spec.type, spec, value: lit.value, path, quote: lit.quote });
@@ -77,7 +83,7 @@ export function findControls(tree, text, schema, calls = schema.hll ?? ['song', 
   tree.iterate({
     enter(n) {
       if (n.name === 'Property') {
-        const keys = hllKeys(n.node, text, calls);
+        const keys = hllKeys(n.node, text, calls, root);
         const spec = keys && specFor(keys, schema.props ?? {});
         if (spec) add(n.node.lastChild, spec, keys.join('.'));
       } else if (n.name === 'CallExpression') {
@@ -137,9 +143,9 @@ class CtlWidget extends WidgetType {
 }
 
 function build(state) {
-  const { schema, ui } = state.facet(config), text = state.doc.toString();
+  const { schema, ui, root } = state.facet(config), text = state.doc.toString();
   const tree = ensureSyntaxTree(state, state.doc.length, 200) ?? syntaxTree(state);
-  const controls = findControls(tree, text, schema);
+  const controls = findControls(tree, text, schema, schema.hll, root);
   const shown = state.field(controlsShown), ranges = [];
   for (const c of controls) {
     ranges.push(Decoration.mark({ class: 'cm-hll-lit', attributes: { title: `${c.path}${c.spec.title ? `: ${c.spec.title}` : ''}${c.kind === 'number' ? ' (alt-drag to change)' : ''}` } }).range(c.from, c.to));
@@ -191,4 +197,4 @@ const theme = EditorView.baseTheme({
 });
 
 /** The extension: the schema (web/hll-schema.mjs shape) and optional host hooks for the widgets. Toggle the widgets with `toggleControls.of(bool)`. */
-export const hllControls = (schema, { ui = {} } = {}) => [config.of({ schema, ui }), controlsShown, field, drag, theme];
+export const hllControls = (schema, { ui = {}, root = null } = {}) => [config.of({ schema, ui, root }), controlsShown, field, drag, theme];
