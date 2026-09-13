@@ -28,6 +28,7 @@
       <button id="export" title="render the source offline in this browser and download <song>.mp3 (stops playback)">MP3</button>
       <button id="dump" title="download the expanded Strudel as <song>.strudel.txt, ready to paste into the strudel.cc REPL">Strudel</button>
       <button id="open" title="open the expanded Strudel in the strudel.cc REPL">REPL &#8599;</button>
+      <button id="share" title="copy a link that carries this song (name and source, as edited here): anyone with it opens it in this page, unsaved">Link</button>
       <span class="xstate" id="xstate" role="status" aria-live="polite" hidden></span>
     </span>
   </header>
@@ -130,7 +131,7 @@
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks } from './web/boot.mjs';
-  import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile, verifyRows } from './web/compose.mjs';
+  import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile, verifyRows, shareEncode, shareDecode } from './web/compose.mjs';
   import { packsOf, packKind, SYNTHS } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
@@ -185,10 +186,17 @@
   });
 
   async function loadList(want = decodeURIComponent(location.hash.slice(1))) {
-    const names = [...new Set([...(await (await fetch('songs/index.json')).json()), ...drafts()])].sort();
+    let shared = null; // #s=...: a song carried by the link itself
+    if (location.hash.startsWith('#s=')) { try { shared = await shareDecode(location.hash.slice(3)); } catch { status('that link does not decode'); } }
+    const names = [...new Set([...(await (await fetch('songs/index.json')).json()), ...drafts(), ...(shared && NAME.test(shared.name) ? [shared.name] : [])])].sort();
     $('song').innerHTML = names.map((n) => `<option>${n}</option>`).join('');
+    if (shared && NAME.test(shared.name)) want = shared.name;
     if (names.includes(want)) $('song').value = want;
     await loadSong();
+    if (shared) { // over whatever the name loaded (nothing, on a fresh browser): the link's text, unsaved
+      code.setText(shared.src); resetHistory(shared.src); sourceChanged(); expand();
+      ready.then(() => status(`opened from a link: ${shared.name} (unsaved until you Save)`)); // after boot's own packs line
+    }
   }
   async function loadSong() {
     const name = $('song').value;
@@ -281,7 +289,28 @@
     $('strip').innerHTML = sections.map((s, i) => `<div class="blk${s.name === pinned ? ' pin' : ''}${s === at ? ' on' : ''}" data-i="${i}" style="flex-grow:${s.span}" title="${esc(s.name)}: ${s.cycles} bars${s.role ? ', ' + s.role : ''}. Click to scrub here."><span class="nm">${esc(s.name)}</span><span class="ops"><button data-op="pin" title="${s.name === pinned ? 'unpin: follow the playhead again' : 'pin: loop this section, start Play here, keep the mix on it'}">&#128204;</button><button data-op="left" title="move earlier"${i ? '' : ' disabled'}>&#9664;</button><button data-op="right" title="move later"${i < sections.length - 1 ? '' : ' disabled'}>&#9654;</button><button data-op="dup" title="duplicate it after this one">&#10697;</button><button data-op="ren" title="rename (or double-click the name)">&#9998;</button><button data-op="del" title="remove this section (undo brings it back)">&times;</button></span>${layerNames().map((l) => {
       const a = s.layers[l]?.attrs, d = typeof a?.density === 'number' ? a.density : .5;
       return `<i style="opacity:${a ? ((.3 + .7 * d) * Math.min(1, a.level ?? 1)).toFixed(2) : 0}" title="${l}${a ? `: density ${d}` : ' (silent)'}"></i>`;
-    }).join('')}</div>`).join('');
+    }).join('')}${transition(s, sections[i + 1])}</div>`).join('');
+  }
+  // the transition out of section `s`: its fx riser (bars into the next) and the next section's fx impact (a hit on its downbeat); both picks
+  function transition(s, next) {
+    if (!next) return '';
+    const riser = s.layers.fx?.attrs.riser, impact = next.layers.fx?.attrs.impact;
+    const r = riser === true ? 4 : riser || 0, im = impact === true ? 'bd' : impact || '';
+    return `<span class="tr" title="into ${esc(next.name)}"><button data-tr="riser" title="riser: bars of sweep at the end of ${esc(s.name)}">${r ? `riser ${r}` : '<i>riser</i>'}</button><button data-tr="impact" title="impact: a hit on the first beat of ${esc(next.name)}">${im ? `hit ${esc(im)}` : '<i>hit</i>'}</button></span>`;
+  }
+  const withFx = (src, section) => (locate(src).sections.find((x) => x.name === section)?.layers.fx ? src : addLayer(src, section, 'fx').src); // the fx part carries transitions; make one if the section has none
+  function transitionPick(btn, s, next) {
+    const kind = btn.dataset.tr;
+    if (kind === 'riser') {
+      const cur = s.layers.fx?.attrs.riser; const curText = cur === true ? '4' : cur ? String(cur) : '';
+      openPickList(btn, { names: ['1', '2', '4', '8'], cur: curText, ph: 'no riser', labels: { 1: '1 bar', 2: '2 bars', 4: '4 bars', 8: '8 bars' },
+        onPick: (v) => did(() => setMaterial(withFx(code.text, s.name), s.name, 'fx', 'riser', v || null), `${s.name}: ${v ? `${v}-bar riser` : 'no riser'} into ${next.name}`) });
+    } else {
+      const cur = next.layers.fx?.attrs.impact; const curText = cur === true ? 'bd' : cur || '';
+      openPickList(btn, { names: [...$('snds').options].map((o) => o.value), cur: curText, ph: 'no hit',
+        onPick: (v) => did(() => setMaterial(withFx(code.text, next.name), next.name, 'fx', 'impact', v ? q(v) : null), `${next.name}: ${v ? `${v} hit` : 'no hit'} on its downbeat`),
+        preview: (v, pv) => v && audition(pv, 'fx', 'impact', q(v), undefined, next.name) });
+    }
   }
   // a pinned section plays its own pattern (bar time, its own tempo), so it loops by itself: no clock jumps, nothing
   // scheduled past its edges. Positions shown are song cycles; toLocal/toSong convert at the section's tempo.
@@ -353,6 +382,7 @@
   $('strip').onclick = (e) => {
     const b = e.target.closest('.blk'); if (!b || e.target.closest('.rn')) return;
     const s = sections[b.dataset.i], op = e.target.closest('[data-op]')?.dataset.op;
+    const tr = e.target.closest('[data-tr]'); if (tr) return transitionPick(tr, s, sections[Number(b.dataset.i) + 1]);
     if (!op) return pinned && pinned !== s.name ? pinTo(s) : seek(s.offset); // pinned: a click moves the pin
     if (op === 'del') return did(() => { const out = removeSection(code.text, s.name); if (pinned === s.name) { pinned = null; loop = null; } return out; }, `removed ${s.name}`);
     if (op === 'ren') return renameAt(b, s);
@@ -531,6 +561,11 @@
     download(blob, name);
     xstate('done', `&#10003; ${esc(name)}`, await keep(blob, name));
   });
+  $('share').onclick = () => exporting(async () => {
+    const url = `${location.href.split('#')[0]}#s=${await shareEncode($('song').value, code.text)}`;
+    await navigator.clipboard.writeText(url);
+    xstate('done', `&#10003; link copied <small>${url.length} chars</small>`, url);
+  });
   $('open').onclick = () => exporting(async () => {
     const url = `https://strudel.cc/#${strudel.code2hash(await expanded())}`;
     xstate('done', `<a href="${url}" target="_blank" rel="noopener">&#10003; opened in strudel.cc &#8599;</a>`, 'popup blocked? this link opens it'); // popup blockers may eat the window: the link is the fallback
@@ -574,7 +609,7 @@
   // what an editor's widgets may reach on the page (web/cm-widgets.mjs): the shared pick menu with its play buttons, the materials panel's audition path (in the section the control sits in), the kit icons
   const editorUi = (sectionAt) => ({
     pick: (btn, o) => openPickList(btn, o),
-    canAudition: (path) => path === 'kit' || /^[a-z]+\d*\.(sound|template|arp|impact|sounds\.\w+)$/.test(path),
+    canAudition: (path, c) => path === 'kit' || (/^[a-z]+\d*\.(sound|template|arp|impact|sounds\.\w+)$/.test(path) && !!sectionAt(c)), // a const outside the sections has no part to hear
     audition: (path, value, btn, c) => {
       if (path === 'kit') return auditionKit(btn, value);
       const section = sectionAt(c); if (!section) return;

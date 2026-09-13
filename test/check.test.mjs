@@ -104,3 +104,18 @@ test('bad numeral is a problem, not a crash', async () => {
   try { const r = await checkFile(f); assert.equal(r.ok, false); assert.match(r.problems[0], /section "drop".*numeral "ix"/); }
   finally { fs.rmSync(f); }
 });
+
+test('song() files report each section energy (form) and each layer as words', async () => {
+  const r = await checkFile(path.resolve(import.meta.dirname, '..', 'songs', 'demo.strudel'));
+  const by = Object.fromEntries(r.sections.map((s) => [s.name, s]));
+  assert.ok(by.drop.energy > by.intro.energy, `drop ${by.drop.energy} > intro ${by.intro.energy}`);
+  assert.ok(by.drop.layers.drums.words.includes('very busy'), JSON.stringify(by.drop.layers.drums.words));
+});
+
+test('every song in songs/ checks clean', async () => {
+  const dir = path.resolve(import.meta.dirname, '..', 'songs');
+  for (const f of fs.readdirSync(dir).filter((f) => f.endsWith('.strudel') && !f.startsWith('_t_'))) {
+    const r = await checkFile(path.join(dir, f));
+    assert.deepEqual(r.problems, [], f);
+  }
+});

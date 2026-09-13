@@ -8,6 +8,7 @@ import { userPacks } from '../server.mjs';
 import './esm-fix.mjs'; // must run before the strudel imports below are resolved, hence dynamic imports
 import { parseProgression, chordNames } from '../lib/harmony.mjs';
 import { packsOf, SYNTHS } from '../lib/packs.mjs';
+import { describeAxes } from '../lib/vocab.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
 const { transpiler } = await import('@strudel/transpiler');
 const { miniAllStrings } = await import('@strudel/mini');
@@ -105,9 +106,12 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
             typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean' ? v
             : v && typeof v === 'object' && typeof v.queryArc !== 'function' ? JSON.stringify(v) : 'signal'])),
           onsetsPerCycle: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).length / s.cycles).toFixed(2),
+          words: describeAxes(l.attrs), // the axis values read back as vocabulary words
         }])),
       };
     });
+    // form: a section's energy is its onsets per cycle summed over its parts, each scaled by its level; the arc line prints them
+    for (const sct of sections) sct.energy = +Object.values(sct.layers).reduce((n, l) => n + l.onsetsPerCycle * (typeof l.attrs.level === 'number' ? l.attrs.level : 1), 0).toFixed(1);
   }
   return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps };
 }
@@ -130,8 +134,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       console.log(`    harmony ${sct.harmony}`);
       for (const [layer, l] of Object.entries(sct.layers)) {
         const attrs = Object.entries(l.attrs).map(([a, v]) => `${a}=${v}`).join(' ');
-        console.log(`    ${layer.padEnd(7)} ${String(l.onsetsPerCycle).padStart(5)}/cyc  ${attrs}`);
+        console.log(`    ${layer.padEnd(7)} ${String(l.onsetsPerCycle).padStart(5)}/cyc  ${attrs}${l.words.length ? `  — ${l.words.join(', ')}` : ''}`);
       }
+    }
+    if (r.sections?.length) { // the arc: each section's energy against the loudest, so the shape reads at a glance
+      const max = Math.max(...r.sections.map((s) => s.energy), 1e-9), bar = '▁▂▃▄▅▆▇█';
+      console.log(`  arc: ${r.sections.map((s) => `${s.name} ${s.energy} ${bar[Math.min(7, Math.floor((s.energy / max) * 7.99))]}`).join(' · ')}`);
     }
     for (const p of r.problems) console.error('  ' + p);
     if (!r.ok) bad++;

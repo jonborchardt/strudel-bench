@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { kitsIn, kitOf, setKit, sectionSource, buildRequest, sourceComments, notesView, notesFile, verifyRows } from '../web/compose.mjs';
+import { kitsIn, kitOf, setKit, sectionSource, buildRequest, sourceComments, notesView, notesFile, verifyRows, shareEncode, shareDecode } from '../web/compose.mjs';
 import { parseChange, addNote } from '../scripts/note.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -64,7 +64,7 @@ test('notesView merges source comments with the metadata file, per section in so
   assert.deepEqual(v.sections[0].items.at(-1), { text: 'LinnDrum: crisper hats than the 909', where: '', change: '', detail: '2026-09-11: brighter kit' });
   assert.deepEqual(v.sections[0].items[0], { text: 'the song' });
   // every shipped notes file has the shape the card reads
-  for (const f of fs.readdirSync(path.join(ROOT, 'songs')).filter((f) => f.endsWith('.notes.json'))) {
+  for (const f of fs.readdirSync(path.join(ROOT, 'songs')).filter((f) => f.endsWith('.notes.json') && !f.startsWith('_t_'))) { // _t_: another test file's fixture, written and removed while this one runs
     const m = JSON.parse(fs.readFileSync(path.join(ROOT, 'songs', f), 'utf8'));
     const song = fs.readFileSync(path.join(ROOT, 'songs', f.replace(/\.notes\.json$/, '.strudel')), 'utf8');
     const view = notesView(song, m);
@@ -104,4 +104,12 @@ test('verifyRows pairs each requested axis with its metric and judges the direct
   assert.deepEqual(rows[0], { axis: 'brightness', requested: .3, metric: 'centroidHz', before: 1000, after: 1400, ok: true });
   assert.equal(rows[1].ok, false, 'weight asked down, lowRatio went up');
   assert.deepEqual(rows[2], { axis: 'drive', requested: .1, metric: null });
+});
+
+test('a share link round-trips the name and source, url-safe and smaller than the source', async () => {
+  const src = fs.readFileSync(path.join(ROOT, 'songs', 'demo.strudel'), 'utf8');
+  const link = await shareEncode('demo.strudel', src);
+  assert.match(link, /^[\w-]+$/, 'base64url: no + / = to escape in a hash');
+  assert.ok(link.length < src.length, `${link.length} < ${src.length}`);
+  assert.deepEqual(await shareDecode(link), { name: 'demo.strudel', src });
 });

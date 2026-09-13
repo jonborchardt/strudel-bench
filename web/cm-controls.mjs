@@ -30,14 +30,16 @@ const keyOf = (prop, text) => { const k = prop.getChild('PropertyDefinition'); r
 
 // the keys from the HLL call's object down to this property, or null when it is not inside one: [key] on the spec itself,
 // [layer, key] in a layer object, [layer, map, key] inside a map such as drums.sounds. With `root`, the document is itself
-// the object argument of that call (a pane over the song header, parsed as one expression).
-function hllKeys(prop, text, calls, root) {
+// the object argument of that call (a pane over the song header, parsed as one expression). A `const name = {...}` outside
+// the calls counts as a layer object ([name, key]) when the file spreads it (`...name`) somewhere: `hll.spread` lists those names.
+function hllKeys(prop, text, { hll: calls, root, spread }) {
   const keys = [keyOf(prop, text)];
   let obj = prop.parent;
   for (let depth = 0; obj?.name === 'ObjectExpression' && depth < 3; depth++) {
     const p = obj.parent;
     if (!p || p.name === 'SingleExpression') return root && calls.includes(root) ? keys : null;
     if (p.name === 'ArgList') return calls.includes(calleeOf(p.parent, text)) ? keys : null;
+    if (p.name === 'VariableDeclaration') { const v = p.getChild('VariableDefinition'), name = v && text.slice(v.from, v.to); return spread?.has(name) ? [name, ...keys] : null; }
     if (p.name !== 'Property') return null;
     keys.unshift(keyOf(p, text));
     obj = p.parent;
@@ -55,7 +57,7 @@ function specFor(keys, props) {
 // the HLL number property an expression is (part of) the value of: what 'inherit' arguments and signals take their bounds from
 function enclosingNumber(node, text, schema) {
   for (let p = node.parent; p; p = p.parent) {
-    if (p.name === 'Property') { const keys = hllKeys(p, text, schema.hll, schema.root); const spec = keys && specFor(keys, schema.props ?? {}); return spec?.type === 'number' ? { spec, path: keys.join('.') } : null; }
+    if (p.name === 'Property') { const keys = hllKeys(p, text, schema); const spec = keys && specFor(keys, schema.props ?? {}); return spec?.type === 'number' ? { spec, path: keys.join('.') } : null; }
     if (p.name === 'ArgList' && schema.hll.includes(calleeOf(p.parent, text))) return null; // the HLL call's own arguments: not a value
   }
   return null;
@@ -64,7 +66,9 @@ function enclosingNumber(node, text, schema) {
 const KIND = { number: 'number', enum: 'string', tokens: 'string', bool: 'bool', ident: 'ident' }; // spec type -> the literal kind it takes
 /** Every literal the schema knows, in document order: { from, to, kind, spec, value, path, quote? }. Pure. */
 export function findControls(tree, text, schema, root = null) {
-  const out = [], calls = schema.hll, hll = { ...schema, root };
+  const spread = new Set(); // every `...name` in the file: the consts whose objects are layer material
+  tree.iterate({ enter(n) { if (n.name === 'Spread') { const v = n.node.nextSibling; if (v?.name === 'VariableName') spread.add(text.slice(v.from, v.to)); } } });
+  const out = [], hll = { ...schema, root, spread };
   const add = (node, spec, path) => {
     const lit = literal(node, text);
     if (lit && KIND[spec.type] === lit.kind) out.push({ from: node.from, to: node.to, kind: spec.type, spec, value: lit.value, path, quote: lit.quote });
@@ -83,7 +87,7 @@ export function findControls(tree, text, schema, root = null) {
   tree.iterate({
     enter(n) {
       if (n.name === 'Property') {
-        const keys = hllKeys(n.node, text, calls, root);
+        const keys = hllKeys(n.node, text, hll);
         const spec = keys && specFor(keys, schema.props ?? {});
         if (spec) add(n.node.lastChild, spec, keys.join('.'));
       } else if (n.name === 'CallExpression') {

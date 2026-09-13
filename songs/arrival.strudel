@@ -3,7 +3,7 @@
 // signal (handchimes, tubular bells) never moves with the chords and never changes its intervals. Fear lives
 // in the low half (organ pedal, bowed strings, timpani, a heartbeat drum); hope in the high half (bells, harp,
 // a rising line). The climaxes play both at once, on the same chords, instead of letting one win.
-// void → signal → approach → contact → will → plea → threshold → after. 60 cycles, one cycle = one bar.
+// void → signal → approach → contact → will → plea → threshold → after. 59 cycles, one cycle = one bar.
 // Axis values are 0..1 with 0.5 = the layer's baseline. The piano keeps one setting for the whole song: space .5 (room only;
 // anything above sends it to a delay line, which reads as a pop behind each note) and articulation .05 so every note rings out.
 const theme    = { sound: 'piano', follow: true, phrase: 2, notes: '0 ~ 2 4@2 ~ 5 4@2 0 ~ 2 4@2 ~ 7 6@2', register: .55, articulation: .05, brightness: .6, space: .5, width: .5, organicness: .6 };
