@@ -158,6 +158,20 @@
           "why": "and signal.pad2 density .2>.5, brightness .15>.3, register .2>.3, no octave drop: a tremolo triad an octave above the organ pedal spreads the energy across partials instead of stacking one"
         }
       ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "still whistles at the start; gone when a section is pinned or a pad is muted; different pad sounds still whistle",
+      "changes": [
+        {
+          "section": "textures",
+          "why": "drone didgeridoo:0 with note d1 > didgeridoo:8 at its own pitch: index 0 is a 0.7 s bark, and pitched down it is a descending whoop once a bar; pin and mute rebuild the song from the sections' layer patterns and drop the textures, which is why either hid it"
+        },
+        {
+          "section": "textures",
+          "why": "deep space:0/3/5 > brown noise under 220 Hz: the Dirt space samples are sci-fi blips under a second, not a bed"
+        }
+      ]
     }
   ]
 }
