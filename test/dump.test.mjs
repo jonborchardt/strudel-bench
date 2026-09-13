@@ -12,7 +12,7 @@ test('dump prints the plain strudel behind demo.strudel', async () => {
   assert.match(out, /\.add\(note\(0\)\)/); // non-configurable operator getter, recovered by probing
   assert.match(out, /\.lpf\(saw\.range\(0\.3, 0\.7\)\.slow\(8\)\.fmap\(piece\(300, 2000, 8000, \{ log: true \}\)\)\)/); // signal axis
   assert.match(out, /\.jux\(rev\)/);
-  assert.match(out, /arrange\(\n  \[4, stack\(intro_drums, intro_pad\)\],\n  \[8, stack\(verse_drums, verse_bass, verse_melody, verse_pad, verse_fx\)\],\n  \[8, stack\(drop_drums, drop_bass, drop_melody, drop_pad\)\],\n\)$/);
+  assert.match(out, /arrange\(\n  \[4, stack\(intro_drums, intro_pad\)\],\n  \[8, stack\(verse_drums, verse_bass, verse_melody, verse_pad, verse_fx\)\],\n  \[8, stack\(drop_drums, drop_bass, drop_melody, drop_melody2, drop_pad\)\],\n\)$/);
   assert.doesNotMatch(out, /_opIn|\/\*pattern\*\//);
 });
 

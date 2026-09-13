@@ -142,7 +142,7 @@ Material is a literal value on a layer or a section, never an axis (rule 4). Omi
 | bass, melody, pad, fx | `sound` | any local synth or sample name | replaces the default (sawtooth; white noise for fx). Drums take `sounds` instead |
 | any layer | `level` | number, 1 = untouched | gain multiplier, applied after every axis |
 | drums | `template` | `'house'` (default), `'breaks'`, `'minimal'`, `'halftime'` | the base grid the axes thin out, place or fill |
-| drums | `sounds` | `{ sd: 'rim', hh: 'hh:2' }` | per-voice sound; the kit still applies |
+| drums | `sounds` | `{ sd: 'rim', hh: 'hh:2' }` | per-voice sound; a name the kit has keeps the kit (the 909 rim), any other sample plays as named (`cajon`) |
 | bass, melody | `notes` | mini-notation of scale degrees | replaces the seeded line; density thins or doubles it instead of choosing one |
 | pad | `chord` | a scale degree or mini-notation of degrees | pins the pad to that degree instead of the progression; the bass still follows it |
 | drums | `fill` | `true`/`false` | snare roll in the last half bar of the section; on by default before a `climax` section |

@@ -1,0 +1,24 @@
+{
+  "requests": [
+    {
+      "date": "2026-09-12",
+      "ask": "the music sounds flat and simplistic",
+      "changes": [
+        {
+          "section": "bass",
+          "why": "density .6>.8 with a syncopated funk line 0 ~ 0 7 ~ 4 3 ~: the bass is the hook, so it gets written notes"
+        },
+        {
+          "section": "melody",
+          "why": "clavisynth (funk keys) with a two-bar call-and-answer line instead of the seeded line"
+        },
+        {
+          "section": "chorus",
+          "layer": "melody2,",
+          "why": "chorus2.melody2, final.melody2 vibraphone answer on the 7th and 5th"
+        }
+      ]
+    }
+  ],
+  "prompt": "Dark, sleek pop-funk at 117 BPM in E minor: drums alone, then a syncopated square bass hook, clavisynth call-and-answer, vibraphone answers in the choruses"
+}

@@ -1,0 +1,31 @@
+{
+  "requests": [
+    {
+      "date": "2026-09-12",
+      "ask": "the music sounds flat and simplistic",
+      "changes": [
+        {
+          "section": "verse",
+          "layer": "melody",
+          "why": "vibraphone, falling two-bar line that lands on the root (sad)"
+        },
+        {
+          "section": "lift",
+          "layer": "melody",
+          "why": "vibraphone, rising two-bar line ending on the seventh (turning)"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "why": "piano hook to the octave; drop.melody2 glockenspiel counter-line; drop.bass 0 7 0 4"
+        },
+        {
+          "section": "outro",
+          "layer": "melody",
+          "why": "piano, descending line home"
+        }
+      ]
+    }
+  ],
+  "prompt": "A longer take on demo that travels from sad C minor to happy Eb major: intro, verse, lift, drop, outro"
+}

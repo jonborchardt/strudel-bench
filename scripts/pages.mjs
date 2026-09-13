@@ -44,6 +44,9 @@ for (const p of Object.values(shipped)) for (const f of Object.values(p.sounds).
 copy('node_modules/@strudel/web/dist');
 copy('node_modules/@breezystack/lamejs/dist'); // web/mp3.mjs: the mp3 export encodes in the browser
 copy('node_modules/acorn/dist'); // lib/resolve.mjs: the mix card parses the song in the browser (index.html's import map)
+// web/cm-editor.mjs: CodeMirror 6 for the mix card's section pane, every package of index.html's import map
+for (const p of ['@codemirror/state', '@codemirror/view', '@codemirror/language', '@codemirror/commands', '@codemirror/autocomplete', '@codemirror/lang-javascript', '@lezer/common', '@lezer/highlight', '@lezer/lr', '@lezer/javascript']) copy(`node_modules/${p}/dist`);
+for (const f of ['style-mod/src/style-mod.js', 'w3c-keyname/index.js', 'crelt/index.js', '@marijn/find-cluster-break/src/index.js']) copy(`node_modules/${f}`);
 copy('node_modules/@strudel/web/dist/assets', 'assets'); // strudel resolves its clock SharedWorker against the page url
 const write = (rel, obj) => { fs.mkdirSync(path.dirname(path.join(OUT, rel)), { recursive: true }); fs.writeFileSync(path.join(OUT, rel), JSON.stringify(obj)); };
 write('songs/index.json', songs.filter((s) => !hidden.includes(s)));
