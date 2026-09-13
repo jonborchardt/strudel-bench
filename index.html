@@ -157,8 +157,8 @@
   let evaluated = null; // source text the scheduler is playing, so an edit while playing offers Update instead of silently drifting
   let server = true; // false on a static host (github pages): no export/dump, songs save to this browser
   const DRAFT = 'strudel:'; // github pages cannot write songs/, so songs made there live in localStorage under this prefix
-  const drafts = () => Object.keys(localStorage).filter((k) => k.startsWith(DRAFT)).map((k) => k.slice(DRAFT.length));
   const NAME = /^[\w.-]+\.strudel$/;
+  const drafts = () => Object.keys(localStorage).filter((k) => k.startsWith(DRAFT)).map((k) => k.slice(DRAFT.length)).filter((n) => NAME.test(n));
   let kits = []; // drum kits the loaded packs actually have (filled once strudel is ready)
   let kitInfo = {}; // lib/kits.json: { kit: { label, about } } for the kit menu; its icon is web/kits/<kit>.svg
   // the icon key pinned under the kit list: legend files scripts/kiticons.mjs writes, one word each, a bar between the slots
