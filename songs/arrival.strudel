@@ -15,7 +15,7 @@ const strings  = { sound: 'psaltery_bow', articulation: .1, space: .8, width: .8
 const organ    = { sound: 'pipeorgan_quiet', articulation: .05, space: .9, width: .5, weight: .8, register: .2, brightness: .2, level: .7 };
 const choir    = { sound: 'super64_vib', articulation: .1, space: .9, width: .9, register: .6, brightness: .4, level: .4 };
 const pedal    = { sound: 'pipeorgan_loud_pedal', register: .1, weight: .9, articulation: .1, space: .6, brightness: .2, drive: .8 };
-const pulse    = { template: 'halftime', space: .9, brightness: .2, articulation: .3, variation: 0, organicness: .3 };
+const pulse    = { template: 'halftime', sounds: { bd: 'timpani', sd: 'snare_low', hh: 'triangles', oh: 'sus_cymbal', cp: 'bassdrum2' }, space: .9, brightness: .2, articulation: .3, variation: 0, organicness: .3 };
 
 const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808' }, [
   section('void', 4, { role: 'establish', progression: 'i',
@@ -98,10 +98,8 @@ const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808' }, [
   }),
 ]);
 
-// Orchestral material the layers do not model: timpani, bass drum, gong, cymbal swells, a heartbeat frame drum,
+// Orchestral material the layers do not model: a timpani roll, a deep bass drum every four bars, gong, cymbal swells, a heartbeat frame drum,
 // a low didgeridoo drone, wind and space beds, a glass drone and shimmer on the arrivals.
-const timp    = s("timpani").struct("x ~ ~ ~ ~ ~ ~ ~").room(.5).size(.8).gain(.7);
-const timp2   = s("timpani").struct("x ~ ~ ~ ~ ~ x x").room(.5).size(.8).gain(.75);
 const roll    = s("timpani_roll").struct("<~ ~ ~ x>").clip(1).gain(saw.range(.2, .7).slow(4)).room(.4);
 const boom    = s("bassdrum2").struct("<x ~ ~ ~>").room(.6).size(.9).gain(.8);
 const gong    = s("gong").struct("<x ~ ~ ~ ~ ~ ~ ~>").room(.7).size(.9).gain(.6);
@@ -113,16 +111,15 @@ const wind    = s("wind").n("<0 1 2>").clip(1).lpf(1500).gain(.25).pan(sine.slow
 const deep    = s("space").n("<0 3 5>").clip(1).lpf(900).gain(.2).pan(sine.slow(7).range(.3, .7));
 const glass   = note("<a5 d6 f5 a5>").s("wineglass_slow").clip(1).slow(2).room(.8).size(.9).gain(.18).pan(sine.slow(5));
 const shimmer = s("<belltree marktrees>").struct("<x ~ ~ ~>").room(.8).size(.9).gain(.3).pan(.7);
-const snare   = s("snare_low").struct("~ ~ ~ ~ x ~ ~ ~").room(.4).gain(.4);
 
 const textures = arrange(
   [4,  stack(wind, drone.gain(.25), deep.gain(.1))],
   [8,  stack(wind, deep, drone, glass)],
-  [8,  stack(wind.gain(.15), deep, drone, glass, timp, roll, swell)],
-  [8,  stack(timp2, boom, gong, gong2, swell, shimmer, deep.gain(.1), snare)],
+  [8,  stack(wind.gain(.15), deep, drone, glass, roll, swell)],
+  [8,  stack(boom, gong, gong2, swell, shimmer, deep.gain(.1))],
   [8,  stack(heart, drone, deep, wind.gain(.15), glass, gong2.gain(.3))],
-  [8,  stack(wind.gain(.15), glass, roll, swell, timp.gain(.4), shimmer.gain(.2))],
-  [12, stack(timp2, boom, gong, gong2, swell, shimmer, snare, drone.gain(.2), glass)],
+  [8,  stack(wind.gain(.15), glass, roll, swell, shimmer.gain(.2))],
+  [12, stack(boom, gong, gong2, swell, shimmer, drone.gain(.2), glass)],
   [8,  stack(wind, deep, glass, gong.gain(.3), drone.gain(.2))],
 );
 

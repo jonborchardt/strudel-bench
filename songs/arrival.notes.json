@@ -41,6 +41,21 @@
           "why": "timpani, bass drum, gong, cymbal swells, heartbeat frame drum, wind and space beds outside the layers, per section"
         }
       ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "do what is right: put the orchestral percussion under the axes",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "drums",
+          "why": "sounds timpani, snare_low, triangles, sus_cymbal, bassdrum2 in place of the 808 kit: the only non-orchestral sound is gone, density, drive, articulation and weight now shape the percussion per section, and the fill before each climax becomes a low snare roll"
+        },
+        {
+          "section": "textures",
+          "why": "timpani hits and the snare removed, since the drums voices now play them; the timpani roll, deep bass drum, gongs, swells and beds stay"
+        }
+      ]
     }
   ]
 }
