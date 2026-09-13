@@ -2,9 +2,15 @@
 // runnable in both: the page loads it through /node_modules/ and the Pages build copies lamejs/dist next to strudel.
 import { Mp3Encoder } from '../node_modules/@breezystack/lamejs/dist/lamejs.js';
 
-/** `channels` are Float32Array(-1..1), at most two are used. Returns the MP3 as a Uint8Array. */
-export function encodeMp3(channels, rate, { kbps = 192 } = {}) {
-  const pcm = channels.slice(0, 2).map((f) => Int16Array.from(f, (s) => Math.round(Math.max(-1, Math.min(1, s)) * 32767)));
+/**
+ * `channels` are Float32Array(-1..1), at most two are used. `mono` downmixes to their average, which
+ * halves the bytes and is what short web snippets want. Returns the MP3 as a Uint8Array.
+ */
+export function encodeMp3(channels, rate, { kbps = 192, mono = false } = {}) {
+  const src = mono && channels.length > 1
+    ? [Float32Array.from(channels[0], (s, i) => (s + channels[1][i]) / 2)]
+    : channels.slice(0, 2);
+  const pcm = src.map((f) => Int16Array.from(f, (s) => Math.round(Math.max(-1, Math.min(1, s)) * 32767)));
   const enc = new Mp3Encoder(pcm.length, rate, kbps);
   const out = [];
   for (let i = 0; i < pcm[0].length; i += 1152 * 32) { // ponytail: whole file in memory; fine for song-length renders

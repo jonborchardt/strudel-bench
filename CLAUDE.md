@@ -4,11 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Local [Strudel](https://strudel.cc) live-coding harness. Node stdlib only (plus `acorn` for the resolver, `@breezystack/lamejs` for mp3, and `playwright-core` as a dev dependency for headless renders), no build step, no bundler. Songs are `songs/*.strudel`; everything (code and samples) is served from this folder.
 
+Song flags are comment lines: `// @hidden` keeps a song off the song dropdown (`listedSongs` in server.mjs filters `songs/index.json`, local and Pages) while it still loads by `#name.strudel`, checks and ships; `// @blog` means the blog links to that song, so never delete or rename it (nothing in this repo reads it, the blog adds it).
+
 ## Commands
 
     npm install
     npm run samples                    # one-time ~300 MB pack download (resumable, re-run on failures); `-- <pack>` for one pack
     npm start                          # http://localhost:3000 (PORT env overrides)
+    npm run stop [-- <port>]           # kills whatever is listening on that port (default PORT, else 3000)
     npm run pages                      # static copy in dist/ for GitHub Pages (deployed by .github/workflows/pages.yml on push to main)
     npm test                           # node:test suite in test/
     node --test test/check.test.mjs    # one test file

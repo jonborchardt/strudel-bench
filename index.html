@@ -189,7 +189,9 @@
     let shared = null; // #s=...: a song carried by the link itself
     if (location.hash.startsWith('#s=')) { try { shared = await shareDecode(location.hash.slice(3)); } catch { status('that link does not decode'); } }
     if (shared && !NAME.test(shared.name)) shared.name = 'shared.strudel'; // never land a link's text under another song's name (Save would write it there)
-    const names = [...new Set([...(await (await fetch('songs/index.json')).json()), ...drafts(), ...(shared ? [shared.name] : [])])].sort();
+    const listed = await (await fetch('songs/index.json')).json();
+    const unlisted = !shared && NAME.test(want) && !listed.includes(want) && (await fetch(`songs/${want}`)).ok ? [want] : []; // a `// @hidden` song opened by its url
+    const names = [...new Set([...listed, ...drafts(), ...unlisted, ...(shared ? [shared.name] : [])])].sort();
     $('song').innerHTML = names.map((n) => `<option>${n}</option>`).join('');
     if (shared) want = shared.name;
     if (names.includes(want)) $('song').value = want;
@@ -1217,5 +1219,26 @@
     return new Blob([v], { type: 'audio/wav' });
   }
 
-  loadList();
+  // `?play=1` and `?section=<name>` are for embedding this page in another one: a post links to a song
+  // and the iframe starts on it, already playing, at the section the surrounding text is about. They are
+  // query parameters, not hash ones, because loadSong() rewrites the hash to the song's name.
+  async function openParams() {
+    const p = new URLSearchParams(location.search);
+    const want = p.get('section');
+    if (want) {
+      if (!sections.length) setSections(await evalCode(ready, code.text).catch(() => null)); // loadSong's own evaluation may not have landed yet
+      const s = sections.find((x) => x.name === want);
+      if (s) await pinTo(s); else status(`no section called "${want}" in this song`);
+    }
+    if (!p.has('play')) return;
+    // The context needs user activation; an iframe the reader opened by clicking usually has it. A blocked
+    // resume() never settles in Chrome (it does not reject), so race it rather than awaiting it forever.
+    const ctx = strudel.getAudioContext();
+    await Promise.race([ctx.resume().catch(() => {}), new Promise((r) => setTimeout(r, 1000))]);
+    // Refused. Leave the transport alone (it already says Play, which is the truth) and explain on the
+    // button, because playing from here would wait on a clock that never starts.
+    if (ctx.state !== 'running') { $('play').title = 'autoplay was blocked by this browser: press play to start'; return; }
+    await play();
+  }
+  loadList().then(openParams);
 </script>

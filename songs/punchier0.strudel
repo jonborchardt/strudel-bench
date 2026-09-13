@@ -1,3 +1,4 @@
+// @hidden
 // @blog
 // demo: intro → verse → drop, written in the strudel-bench axis vocabulary.
 // Axis values are 0..1 with 0.5 = the layer's baseline. See docs/superpowers/specs/2026-09-11-musical-axes-design.md

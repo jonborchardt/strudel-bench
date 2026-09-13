@@ -127,6 +127,17 @@ test('PUT /renders/x.wav?mp3 converts and returns the mp3 path; /render with mp3
   });
 });
 
+test('a // @hidden song is left out of songs/index.json but still served', async () => {
+  const file = path.join(ROOT, 'songs', '_t_hidden.strudel');
+  fs.writeFileSync(file, '// @hidden\ns("bd")\n');
+  try {
+    await withServer(async (base) => {
+      assert.ok(!(await (await fetch(`${base}/songs/index.json`)).json()).includes('_t_hidden.strudel'));
+      assert.equal((await fetch(`${base}/songs/_t_hidden.strudel`)).status, 200);
+    });
+  } finally { fs.rmSync(file); }
+});
+
 test('notes file lives next to its song: GET/PUT songs/<name>.notes.json, absent is 404, not listed as a song', async () => {
   await withServer(async (base) => {
     assert.equal((await fetch(`${base}/songs/_t_x.notes.json`)).status, 404);
