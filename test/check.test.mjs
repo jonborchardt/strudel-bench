@@ -17,6 +17,16 @@ test('demo song checks clean', async () => {
   assert.ok(r.events.some((l) => l.includes('"s":"bd"')));
 });
 
+test('the check names the file behind each sound:index, so a bark is not mistaken for a drone', async () => {
+  const f = tmp('_t_variants.strudel', 'stack(s("didgeridoo:8"), s("didgeridoo"), note("c3").s("steinway"))');
+  const { sounds } = await checkFile(f);
+  fs.unlinkSync(f);
+  const by = Object.fromEntries(sounds.map((u) => [`${u.name}:${u.n}`, u.file]));
+  assert.match(by['didgeridoo:8'], /Sus2.*12 variants/);
+  assert.match(by['didgeridoo:0'], /Bark1/);
+  assert.match(by['steinway:0'], /^pitched, 42 samples/);
+});
+
 test('syntax error is reported', async () => {
   const f = tmp('_t_bad.strudel', 'note("c3"');
   try { const r = await checkFile(f); assert.equal(r.ok, false); assert.ok(r.problems.length); }

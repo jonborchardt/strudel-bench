@@ -37,7 +37,7 @@ export function createEditor({ parent, doc = '', schema, ui, root = null, light 
     state: EditorState.create({
       doc,
       extensions: [
-        languageFor(root), bracketMatching(), keymap.of([...defaultKeymap, indentWithTab]), EditorView.lineWrapping, THEMES[light ? 'light' : 'dark'],
+        languageFor(root), bracketMatching(), keymap.of([...defaultKeymap.filter((b) => b.key !== 'Mod-Enter'), indentWithTab]), EditorView.lineWrapping, THEMES[light ? 'light' : 'dark'], // ctrl+enter is the page's Update, not a blank line
         hllControls(schema, { ui, root }),
         EditorView.updateListener.of((u) => { if (u.docChanged && !u.transactions.some((t) => t.annotation(external))) onChange?.(u.state.doc.toString()); }),
       ],
@@ -46,7 +46,13 @@ export function createEditor({ parent, doc = '', schema, ui, root = null, light 
   return {
     view,
     get text() { return view.state.doc.toString(); },
-    setText(text) { if (text !== view.state.doc.toString()) view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text }, annotations: external.of(true) }); },
+    setText(text) { // only the changed span, so a knob drag reparses one literal rather than the whole file
+      const old = view.state.doc.toString();
+      if (text === old) return;
+      let a = 0; while (a < old.length && a < text.length && old[a] === text[a]) a++;
+      let b = 0; while (b < old.length - a && b < text.length - a && old[old.length - 1 - b] === text[text.length - 1 - b]) b++;
+      view.dispatch({ changes: { from: a, to: old.length - b, insert: text.slice(a, text.length - b) }, annotations: external.of(true) });
+    },
     setControls(on) { view.dispatch({ effects: toggleControls.of(!!on) }); },
   };
 }

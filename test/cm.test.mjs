@@ -10,7 +10,7 @@ import { SCHEMA, host } from '../web/hll-schema.mjs';
 import { TEMPLATES } from '../lib/grid.mjs';
 
 const state = (doc) => EditorState.create({ doc, extensions: [javascript(), hllControls(SCHEMA)] });
-const controls = (doc) => { const s = state(doc); return findControls(ensureSyntaxTree(s, s.doc.length, 1000), doc, SCHEMA, SCHEMA.hll); };
+const controls = (doc) => { const s = state(doc); return findControls(ensureSyntaxTree(s, s.doc.length, 1000), doc, SCHEMA); };
 const byPath = (doc) => Object.fromEntries(controls(doc).map((c) => [c.path, c]));
 const lit = (doc, c) => doc.slice(c.from, c.to);
 

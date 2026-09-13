@@ -1,0 +1,196 @@
+{
+  "prompt": "Epic orchestral score at 64 BPM in D minor: aliens arriving, a battle of wills rather than arms; fear in the low half, hope in the high half, both at once in the climaxes",
+  "requests": [
+    {
+      "date": "2026-09-13",
+      "ask": "add a new song: an epic motion picture score, very large and orchestral, aliens coming to earth, not a battle but an emotional battle of will, lots of instruments, designed not chaotic, fear and hope at once",
+      "changes": [
+        {
+          "section": "song",
+          "why": "bpm 64, D minor, seed 41: slow enough for one bar per cycle to read as a film cue"
+        },
+        {
+          "section": "signal",
+          "layer": "melody",
+          "why": "handchimes with follow off and a fixed 0 6 3 line: the alien signal never moves with the harmony"
+        },
+        {
+          "section": "approach",
+          "layer": "melody",
+          "why": "steinway theme rising by step to the seventh (a question), brightness ramping .3>.55 over the section"
+        },
+        {
+          "section": "contact",
+          "why": "climax on i VI III VII: pedal organ bass, strings, quiet organ, accordion choir, chimes, tubular bells, harp arpeggio, recorder held tones, impact on the downbeat"
+        },
+        {
+          "section": "will",
+          "why": "D phrygian i II: didgeridoo bass, theme shrunk to a half-step sigh, chimes and bells louder: the alien will against the human one"
+        },
+        {
+          "section": "plea",
+          "why": "F major I V vi IV: harp and recorders join, brightness ramps .45>.8, riser into the threshold"
+        },
+        {
+          "section": "threshold",
+          "layer": "melody",
+          "why": "the answered theme ending on the root at level 1.2 over a low loud organ and a full bass: hope over fear on the same chords"
+        },
+        {
+          "section": "textures",
+          "why": "timpani, bass drum, gong, cymbal swells, heartbeat frame drum, wind and space beds outside the layers, per section"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "do what is right: put the orchestral percussion under the axes",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "drums",
+          "why": "sounds timpani, snare_low, triangles, sus_cymbal, bassdrum2 in place of the 808 kit: the only non-orchestral sound is gone, density, drive, articulation and weight now shape the percussion per section, and the fill before each climax becomes a low snare roll"
+        },
+        {
+          "section": "textures",
+          "why": "timpani hits and the snare removed, since the drums voices now play them; the timpani roll, deep bass drum, gongs, swells and beds stay"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "listening notes: whistle too loud in void and signal; piano not real in approach and after; too much reverb in will; end too long",
+      "changes": [
+        {
+          "section": "void,",
+          "why": "signal textures wind .25>.1 and the wineglass .18>.1: the whistle was the wind bed and the bowed glass"
+        },
+        {
+          "section": "melody",
+          "why": "vibrato removed for sampled sounds in lib/layers.mjs: the layer put a 4 Hz wobble on every melody, which is what made the steinway sound fake; only raw synths get it now"
+        },
+        {
+          "section": "theme",
+          "layer": "articulation",
+          "from": 0.3,
+          "to": 0.15,
+          "why": "and brightness .6: the piano rings out instead of being cut at the slot end, and the 2 kHz lowpass opens to about 2.9 kHz"
+        },
+        {
+          "section": "approach",
+          "layer": "melody",
+          "axis": "brightness",
+          "why": "ramp .3>.55 becomes .45>.7 so the piano is never muffled"
+        },
+        {
+          "section": "will",
+          "why": "space: drums 1>.6, melody .9>.5, chimes .95>.6, bells 1>.7, organ .9>.6, strings .8>.5, bass .6>.4, glass texture quieter: the standoff is close and dry now"
+        },
+        {
+          "section": "after",
+          "from": 8,
+          "to": 6,
+          "why": "bars, its brightness ramps over 6, textures matched: the ending was a bit too long"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "listening notes: whistle still too loud in void, intro too long, piano pops behind presses in approach, contact and threshold, piano lost sustain in will, piano should be consistent through the song",
+      "changes": [
+        {
+          "section": "void",
+          "from": 4,
+          "to": 2,
+          "why": "bars and its wind and space beds removed: only the didgeridoo drone opens the piece"
+        },
+        {
+          "section": "theme",
+          "layer": "space",
+          "why": ".75>.5: the melody layer sends anything above .5 to a delay line, and that quarter-second repeat was the pop behind each piano note"
+        },
+        {
+          "section": "theme",
+          "layer": "articulation",
+          "why": ".15>.05: clip 1.1 and a .3 s release so every piano note rings out"
+        },
+        {
+          "section": "approach,",
+          "why": "contact, will, plea, threshold, after melody: the per-section brightness, register, width and space overrides on the piano are gone, so it is one instrument through the song; only density and level differ"
+        },
+        {
+          "section": "threshold",
+          "layer": "melody6",
+          "why": "glockenspiel space .95 dropped: it doubles the theme and its delayed repeats sat behind the piano"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "the whistle you removed was wrong; trace what makes a sound at the void to signal edge that no single part has; piano still pops on key strike; will piano still has no sustain",
+      "changes": [
+        {
+          "section": "void",
+          "why": "textures: wind and space beds restored, they were not the sound"
+        },
+        {
+          "section": "song",
+          "why": "reverb size .9 on every event: superdough keeps one reverb per orbit and rebuilds its impulse response whenever an event arrives with a different size, and the pads and beds carried four sizes; the rebuild swapped the reverb buffer under every piano strike and at the section edge, which no soloed part reproduces because alone each part has one size"
+        },
+        {
+          "section": "will",
+          "layer": "melody",
+          "why": "notes 0@4 1@2 0@4 ~@2 1@2 0@2 and density .3>.5: each note now holds until the next instead of dying at a short slot, and no notes are dropped"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "right when the song starts it whistles; only with pad and pad2 both on; is this an odd effect",
+      "changes": [
+        {
+          "section": "song",
+          "why": "strings sound psaltery_bow>dantranh_tremolo: rendered and measured, the void pair produced one naked 440 Hz line that each pad alone left faint and both doubled in phase. It is the sixth harmonic of the shared D2, the one partial surviving the 300 Hz lowpass. The psaltery sample map is an octave off and its strong third harmonic lands exactly there; the saxophone was worse; a tremolo zither triad has no line at all"
+        },
+        {
+          "section": "void",
+          "layer": "pad2",
+          "why": "and signal.pad2 density .2>.5, brightness .15>.3, register .2>.3, no octave drop: a tremolo triad an octave above the organ pedal spreads the energy across partials instead of stacking one"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "still whistles at the start; gone when a section is pinned or a pad is muted; different pad sounds still whistle",
+      "changes": [
+        {
+          "section": "textures",
+          "why": "drone didgeridoo:0 with note d1 > didgeridoo:8 at its own pitch: index 0 is a 0.7 s bark, and pitched down it is a descending whoop once a bar; pin and mute rebuild the song from the sections' layer patterns and drop the textures, which is why either hid it"
+        },
+        {
+          "section": "textures",
+          "why": "deep space:0/3/5 > brown noise under 220 Hz: the Dirt space samples are sci-fi blips under a second, not a bed"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "the bark was the issue; undo the other whistle attempts; keep it from happening again",
+      "changes": [
+        {
+          "section": "song",
+          "why": "strings back to psaltery_bow, void and signal pad2 back to their single low note: those were not the whistle"
+        },
+        {
+          "section": "will",
+          "layer": "bass",
+          "why": "didgeridoo>didgeridoo:8: the same bark, pitched, was the will bass"
+        },
+        {
+          "section": "check:",
+          "why": "the single-song check now prints a sounds block naming the file behind every sound:index heard, so a bark, a bowed cymbal or a blip is visible before it is called a drone"
+        }
+      ]
+    }
+  ]
+}

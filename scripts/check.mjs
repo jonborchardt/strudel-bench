@@ -28,10 +28,24 @@ function builtinSounds() {
   const known = new Set(SYNTHS);
   if (fs.existsSync(PACKS)) {
     for (const f of fs.readdirSync(PACKS).filter((f) => f.endsWith('.json') && f !== 'packs.json' && !f.includes('alias'))) {
-      for (const k of Object.keys(JSON.parse(fs.readFileSync(path.join(PACKS, f), 'utf8')))) if (k !== '_base') known.add(k);
+      for (const [k, v] of Object.entries(JSON.parse(fs.readFileSync(path.join(PACKS, f), 'utf8')))) if (k !== '_base') { known.add(k); packFiles.set(k, v); }
     }
   }
   return known;
+}
+const packFiles = new Map(); // sound -> its map entry (a list of variant files, or {note: file} for a pitched instrument)
+
+/**
+ * What a sound name actually plays: the variant file for `name:n` (index 0 when no n), or the sampled range of a pitched
+ * instrument. A name says nothing about its variants (didgeridoo:0 is a bark, :8 a sustained note), so the check prints this.
+ */
+export function soundFile(name, n = 0, packs = {}) {
+  const entry = packFiles.get(name) ?? Object.values(packs).map((p) => p.sounds?.[name]).find(Boolean);
+  if (!entry) return undefined;
+  const base = (f) => decodeURIComponent(String(f).split('/').pop());
+  if (Array.isArray(entry)) return `${base(entry[n % entry.length])} (${entry.length} variant${entry.length === 1 ? '' : 's'})`;
+  const notes = Object.keys(entry);
+  return `pitched, ${notes.length} samples ${notes[0]}..${notes.at(-1)}`;
 }
 /** sound -> pack for the local packs, so a sound can be traced to the pack a song must declare. */
 const localSounds = (packs) => new Map(Object.entries(packs).flatMap(([p, { sounds }]) => Object.keys(sounds).map((s) => [s, p])));
@@ -56,7 +70,7 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   const local = localSounds(packs);
   const declared = packsOf(code);
   for (const p of declared) if (!packs[p]) problems.push(`${path.basename(file)}: missing pack "${p}" (declared, not in samples/user/)`);
-  const unknown = new Set(), undeclared = new Map();
+  const unknown = new Set(), undeclared = new Map(), used = new Map();
   const haps = pattern.queryArc(0, cycles).filter((h) => h.hasOnset())
     .sort((a, b) => a.whole.begin.valueOf() - b.whole.begin.valueOf());
   for (const hap of haps) {
@@ -68,12 +82,16 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
     if (s === undefined) continue;
     for (const name of String(s).split(':')[0].split(',')) {
       const bare = name.trim();
-      if (known.has(bare) || (v.bank && known.has(`${v.bank}_${bare}`))) continue;
+      const full = v.bank && known.has(`${v.bank}_${bare}`) ? `${v.bank}_${bare}` : bare;
+      const idx = v.n ?? +(String(s).split(':')[1] ?? 0);
+      used.set(`${full}:${idx}`, { name: full, n: idx });
+      if (known.has(full)) continue;
       const pack = local.get(bare);
       if (!pack) unknown.add(bare);
       else if (!declared.includes(pack)) undeclared.set(bare, pack);
     }
   }
+  const sounds = [...used.values()].map((u) => ({ ...u, file: soundFile(u.name, u.n, packs) })).filter((u) => u.file);
   for (const u of unknown) problems.push(`${path.basename(file)}: unknown sound "${u}"`);
   for (const [s, p] of undeclared) problems.push(`${path.basename(file)}: sound "${s}" is in local pack "${p}" which the song does not declare: add packs: ['${p}']`);
   let sections;
@@ -91,7 +109,7 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
       };
     });
   }
-  return { ok: problems.length === 0, events, problems, sections, cycles, cps: pattern.strudel?.meta.cps };
+  return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -103,6 +121,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const r = await checkFile(f);
     console.log(`== ${path.relative(ROOT, f)} (${r.events.length} events in ${r.cycles} cycles)`);
     if (files.length === 1) console.log(r.events.join('\n'));
+    if (files.length === 1 && r.sounds?.length) { // which file each sample name plays: a name says nothing about its variants
+      console.log('  sounds');
+      for (const u of r.sounds) console.log(`    ${`${u.name}:${u.n}`.padEnd(24)} ${u.file}`);
+    }
     for (const sct of r.sections ?? []) {
       console.log(`  [${sct.offset}-${sct.offset + sct.span}) ${sct.name}${sct.role ? ' (' + sct.role + ')' : ''}`);
       console.log(`    harmony ${sct.harmony}`);

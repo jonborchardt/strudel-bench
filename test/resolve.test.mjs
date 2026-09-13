@@ -153,7 +153,7 @@ test('removeSection and removeLayer cut the call or property with its line and s
   assert.equal(removeSection(`song({}, [section('a', 1, {}), section('b', 1, {})])`, 'a'), `song({}, [section('b', 1, {})])`, 'single line');
   const c = removeLayer(SRC, 'verse', 'drums');
   assert.equal(c.split('\n')[1] + '\n' + c.split('\n')[2], "  section('verse', 8, { role: 'develop',\n    melody: { density: .5, brightness: saw.range(.3, .7).slow(8) },");
-  assert.equal(removeLayer(`song({}, [section('a', 1, { drums: { density: .4 }, pad: {} })])`, 'a', 'pad'), `song({}, [section('a', 1, { drums: { density: .4 }, })])`);
+  assert.equal(removeLayer(`song({}, [section('a', 1, { drums: { density: .4 }, pad: {} })])`, 'a', 'pad'), `song({}, [section('a', 1, { drums: { density: .4 } })])`, 'last on the line: the separator before it goes');
   assert.throws(() => removeLayer(SRC, 'verse', 'pad'), /no pad/);
 });
 
@@ -184,4 +184,15 @@ test('renameSection rewrites the name literal and refuses empty, quoted or taken
   assert.throws(() => renameSection(SRC, 'verse', ''), /empty/);
   assert.throws(() => renameSection(SRC, 'verse', "it's"), /quotes/);
   assert.throws(() => renameSection(SRC, 'nope', 'x'), /no section/);
+});
+
+test('setSectionField sets, replaces and drops a section key or progression', async () => {
+  await ready;
+  const { setSectionField } = await import('../lib/resolve.mjs');
+  const a = setSectionField(SRC, 'verse', 'progression', "'i VI III VII'");
+  assert.match(a, /section\('verse', 8, \{ role: 'develop', progression: 'i VI III VII',\n/, 'after role');
+  assert.match(setSectionField(a, 'verse', 'progression', "'i'"), /role: 'develop', progression: 'i',\n/, 'replaced');
+  assert.equal(setSectionField(a, 'verse', 'progression', null), SRC, 'dropped with its separator');
+  assert.match(setSectionField(SRC, 'drop', 'key', "'E:minor'"), /section\('drop', 8, \{ key: 'E:minor',\n/, 'no role: first in the spec');
+  assert.throws(() => setSectionField(`song({}, [section('a', 1, { key: K })])`, 'a', 'key', "'C:minor'"), /expression/);
 });
