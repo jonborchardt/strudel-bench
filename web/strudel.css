@@ -200,10 +200,21 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .cm-hll-ctl input[type=checkbox]::before, .matrow input[type=checkbox]::before { content: ''; position: absolute; top: 1px; left: 1px; width: .72rem; height: .72rem; border-radius: 50%; background: #9a9aa2; transition: left .12s; }
 .cm-hll-ctl input[type=checkbox]:checked, .matrow input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
 .cm-hll-ctl input[type=checkbox]:checked::before, .matrow input[type=checkbox]:checked::before { left: calc(100% - .8rem); background: #fff; }
-.pane .cm-hll-ctl button.pick, .pane .cm-hll-ctl input[type=number] { font: inherit; font-size: .85rem; padding: .15rem .4rem; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); min-width: 4rem; text-align: left; }
-.pane .cm-hll-ctl button.pick i { color: var(--muted); }
-.pane .cm-hll-ctl input[type=number] { min-width: 0; padding-right: .1rem; }
-.pane .cm-hll-ctl .tokens button.pick { min-width: 0; padding: .1rem .35rem; }
+/* quiet until pointed at: a faint outline and muted text, the full button on hover or focus */
+.pane .cm-hll-ctl button.pick, .pane .cm-hll-ctl input[type=number] { font: inherit; font-size: .85rem; padding: .1rem .4rem; border: 1px solid #e6e6e6; border-radius: 4px; background: transparent; color: var(--muted); min-width: 0; text-align: left; transition: border-color .12s, color .12s, background .12s; }
+.pane .cm-hll-ctl button.pick:hover, .pane .cm-hll-ctl button.pick:focus-visible, .pane .cm-hll-ctl input[type=number]:hover, .pane .cm-hll-ctl input[type=number]:focus { border-color: #bbb; background: #fff; color: var(--ink); outline: none; }
+.pane .cm-hll-ctl button.pick i { color: #aaa; }
+.pane .cm-hll-ctl button.pick img { opacity: .7; }
+.pane .cm-hll-ctl input[type=number] { padding-right: .1rem; width: 3.2rem; }
+.pane .cm-hll-ctl .tokens button.pick { padding: .1rem .35rem; }
+.pane .cm-hll-ctl .pv { color: #bbb; font-size: .65rem; }
+.pane .cm-hll-ctl .pv:hover, .pane .cm-hll-ctl .pv.on { color: var(--accent-ink); background: var(--accent); }
+.pane .cm-hll-ctl input[type=checkbox] { width: 1.5rem; height: .85rem; border-color: #ddd; background: #eee; }
+.pane .cm-hll-ctl input[type=checkbox]::before { width: .62rem; height: .62rem; background: #fff; box-shadow: 0 1px 2px #0003; }
+.pane .cm-hll-ctl input[type=checkbox]:checked { background: #b7c7ea; border-color: #b7c7ea; }
+.pane .cm-hll-ctl input[type=checkbox]:checked::before { left: calc(100% - .7rem); }
+.pane .cm-hll-ctl input[type=checkbox]:hover { border-color: var(--accent); }
+.pane .cm-hll-ctl input[type=checkbox]:checked:hover { background: var(--accent); }
 /* the song source pane's sliders: a hairline track and a small thumb, quiet next to the code; the accent only on hover */
 .pane .cm-hll-ctl input[type=range] { appearance: none; -webkit-appearance: none; width: 5em; height: 10px; margin: 0; background: none; cursor: ew-resize; }
 .pane .cm-hll-ctl input[type=range]::-webkit-slider-runnable-track { height: 2px; border-radius: 1px; background: #ccc; }
@@ -235,6 +246,7 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .pvlvl { display: flex; align-items: center; gap: .4rem; margin: .4rem 0 .1rem; font-size: .8rem; color: #9a9aa2; }
 .pvlvl input { position: static; width: 7rem; margin: 0; padding: 0; border: 0; accent-color: var(--accent); }
 .pvlvl output { min-width: 2.2rem; font-variant-numeric: tabular-nums; color: #ccc; }
+#mats .pvlvl { display: inline-flex; width: auto; white-space: nowrap; margin: .1rem .8rem .6rem; padding: .3rem .7rem; border: 1px solid #111; border-radius: 5px; background: #1e1e22; box-shadow: inset 0 1px 0 #3c3c42, 0 1px 0 #48484e; } /* under the part rows: its own small box, like the other dark controls */
 .menu .pvlvl { padding: 0 .6rem .3rem; color: var(--muted); }
 .pvlvl[hidden] { display: none; } /* the flex rule above would otherwise beat the hidden attribute (a menu without play buttons) */
 .menu .pvlvl output { color: var(--ink); }
