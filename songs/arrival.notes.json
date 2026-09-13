@@ -143,6 +143,21 @@
           "why": "notes 0@4 1@2 0@4 ~@2 1@2 0@2 and density .3>.5: each note now holds until the next instead of dying at a short slot, and no notes are dropped"
         }
       ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "right when the song starts it whistles; only with pad and pad2 both on; is this an odd effect",
+      "changes": [
+        {
+          "section": "song",
+          "why": "strings sound psaltery_bow>dantranh_tremolo: rendered and measured, the void pair produced one naked 440 Hz line that each pad alone left faint and both doubled in phase. It is the sixth harmonic of the shared D2, the one partial surviving the 300 Hz lowpass. The psaltery sample map is an octave off and its strong third harmonic lands exactly there; the saxophone was worse; a tremolo zither triad has no line at all"
+        },
+        {
+          "section": "void",
+          "layer": "pad2",
+          "why": "and signal.pad2 density .2>.5, brightness .15>.3, register .2>.3, no octave drop: a tremolo triad an octave above the organ pedal spreads the energy across partials instead of stacking one"
+        }
+      ]
     }
   ]
 }

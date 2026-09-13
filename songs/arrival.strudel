@@ -1,7 +1,7 @@
 // arrival: a large orchestral score at 64 BPM in D minor. Something is coming, and nobody fires a shot.
 // Two wills, side by side: the human theme (steinway, harp, recorders) rises and follows the harmony; the alien
 // signal (handchimes, tubular bells) never moves with the chords and never changes its intervals. Fear lives
-// in the low half (organ pedal, bowed strings, timpani, a heartbeat drum); hope in the high half (bells, harp,
+// in the low half (organ pedal, tremolo strings, timpani, a heartbeat drum); hope in the high half (bells, harp,
 // a rising line). The climaxes play both at once, on the same chords, instead of letting one win.
 // void → signal → approach → contact → will → plea → threshold → after. 60 cycles, one cycle = one bar.
 // Axis values are 0..1 with 0.5 = the layer's baseline. The piano keeps one setting for the whole song: space .5 (room only;
@@ -12,7 +12,7 @@ const signal   = { sound: 'handchimes', follow: false, notes: '0 ~ ~ 6 ~ ~ 3 ~ ~
 const bells    = { sound: 'tubularbells', follow: false, notes: '0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 6 ~ ~ ~', register: .3, articulation: .1, space: 1, width: .9, level: .5, organicness: 0 };
 const harp     = { sound: 'harp', follow: true, notes: '0 2 4 7 2 4 7 2 4 7 2 4 7 4 2 0', register: .75, articulation: .6, space: .8, width: .7, level: .55, density: .5 };
 const winds    = { sound: 'recorder_alto_sus', follow: true, notes: '~ ~ ~ ~ 4@4 ~ ~ ~ ~ 2@4', register: .65, articulation: .15, space: .85, width: .6, level: .45 };
-const strings  = { sound: 'psaltery_bow', articulation: .1, space: .8, width: .85, weight: .6, brightness: .35 };
+const strings  = { sound: 'dantranh_tremolo', articulation: .1, space: .8, width: .85, weight: .6, brightness: .35 };
 const organ    = { sound: 'pipeorgan_quiet', articulation: .05, space: .9, width: .5, weight: .8, register: .2, brightness: .2, level: .7 };
 const choir    = { sound: 'super64_vib', articulation: .1, space: .9, width: .9, register: .6, brightness: .4, level: .4 };
 const pedal    = { sound: 'pipeorgan_loud_pedal', register: .1, weight: .9, articulation: .1, space: .6, brightness: .2, drive: .8 };
@@ -21,12 +21,12 @@ const pulse    = { template: 'halftime', sounds: { bd: 'timpani', sd: 'snare_low
 const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808' }, [
   section('void', 2, { role: 'establish', progression: 'i',
     pad:  { ...organ, density: .2, brightness: .1, space: 1 },
-    pad2: { ...strings, density: .2, brightness: .15, weight: .8, register: .2, level: .5 },
+    pad2: { ...strings, density: .5, brightness: .3, weight: .6, register: .3, level: .5 },
   }),
   section('signal', 8, { role: 'establish', progression: 'i VI',
     melody: { ...signal, density: .3 },
     pad:    { ...organ, density: .2, brightness: .15 },
-    pad2:   { ...strings, density: .4, brightness: .25, register: .3, level: .6 },
+    pad2:   { ...strings, density: .5, brightness: .3, register: .3, level: .6 },
     pad3:   { ...choir, density: .2, brightness: .25, level: .25 },
   }),
   section('approach', 8, { role: 'develop', progression: 'i VI VII',
