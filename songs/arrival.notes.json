@@ -124,6 +124,25 @@
           "why": "glockenspiel space .95 dropped: it doubles the theme and its delayed repeats sat behind the piano"
         }
       ]
+    },
+    {
+      "date": "2026-09-13",
+      "ask": "the whistle you removed was wrong; trace what makes a sound at the void to signal edge that no single part has; piano still pops on key strike; will piano still has no sustain",
+      "changes": [
+        {
+          "section": "void",
+          "why": "textures: wind and space beds restored, they were not the sound"
+        },
+        {
+          "section": "song",
+          "why": "reverb size .9 on every event: superdough keeps one reverb per orbit and rebuilds its impulse response whenever an event arrives with a different size, and the pads and beds carried four sizes; the rebuild swapped the reverb buffer under every piano strike and at the section edge, which no soloed part reproduces because alone each part has one size"
+        },
+        {
+          "section": "will",
+          "layer": "melody",
+          "why": "notes 0@4 1@2 0@4 ~@2 1@2 0@2 and density .3>.5: each note now holds until the next instead of dying at a short slot, and no notes are dropped"
+        }
+      ]
     }
   ]
 }

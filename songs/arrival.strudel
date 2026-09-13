@@ -56,7 +56,7 @@ const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808' }, [
   section('will', 8, { role: 'develop', key: 'D:phrygian', progression: 'i II i II',
     drums:   { ...pulse, template: 'minimal', density: .25, space: .6 },
     bass:    { ...pedal, sound: 'didgeridoo', density: .4, notes: '0 ~', register: .15, brightness: .15, weight: 1, aggression: .55, space: .4 },
-    melody:  { ...theme, notes: '0 ~ ~ ~ 1 ~ 0@2 ~ ~ ~ ~ 1 ~ 0@2', density: .3 },
+    melody:  { ...theme, notes: '0@4 1@2 0@4 ~@2 1@2 0@2', density: .5 },
     melody2: { ...signal, density: .4, level: .75, brightness: .6, space: .6 },
     melody3: { ...bells, density: .5, level: .6, register: .2, space: .7 },
     pad:     { ...organ, density: .5, brightness: .15, weight: .95, space: .6 },
@@ -114,7 +114,7 @@ const glass   = note("<a5 d6 f5 a5>").s("wineglass_slow").clip(1).slow(2).room(.
 const shimmer = s("<belltree marktrees>").struct("<x ~ ~ ~>").room(.8).size(.9).gain(.3).pan(.7);
 
 const textures = arrange(
-  [2,  stack(drone.gain(.25))],
+  [2,  stack(wind.gain(.1), drone.gain(.25), deep.gain(.1))],
   [8,  stack(wind.gain(.1), deep, drone, glass.gain(.1))],
   [8,  stack(wind.gain(.15), deep, drone, glass, roll, swell)],
   [8,  stack(boom, gong, gong2, swell, shimmer, deep.gain(.1))],
@@ -124,7 +124,10 @@ const textures = arrange(
   [6,  stack(wind, deep, glass, gong.gain(.3), drone.gain(.2))],
 );
 
+// One reverb size for everything: superdough keeps one reverb per orbit and rebuilds its impulse response whenever an
+// event arrives with a different size, swapping the buffer under whatever is sounding. The pads and beds here carried
+// four sizes, so the rebuild ran many times a bar and popped under every piano strike and at the void → signal edge.
 // stack() drops the song metadata the checker, resolver and page use for section tables; put it back.
-const out = stack(score, textures);
+const out = stack(score, textures).size(.9);
 out.strudel = score.strudel;
 out
