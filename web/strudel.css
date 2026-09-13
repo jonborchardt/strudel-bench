@@ -203,7 +203,16 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .pane .cm-hll-ctl button.pick, .pane .cm-hll-ctl input[type=number] { font: inherit; font-size: .85rem; padding: .15rem .4rem; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); min-width: 4rem; text-align: left; }
 .pane .cm-hll-ctl button.pick i { color: var(--muted); }
 .pane .cm-hll-ctl input[type=number] { min-width: 0; padding-right: .1rem; }
-.pane .cm-hll-ctl input[type=range] { accent-color: var(--accent); }
+.pane .cm-hll-ctl .tokens button.pick { min-width: 0; padding: .1rem .35rem; }
+/* the song source pane's sliders: a hairline track and a small thumb, quiet next to the code; the accent only on hover */
+.pane .cm-hll-ctl input[type=range] { appearance: none; -webkit-appearance: none; width: 5em; height: 10px; margin: 0; background: none; cursor: ew-resize; }
+.pane .cm-hll-ctl input[type=range]::-webkit-slider-runnable-track { height: 2px; border-radius: 1px; background: #ccc; }
+.pane .cm-hll-ctl input[type=range]::-moz-range-track { height: 2px; border-radius: 1px; background: #ccc; }
+.pane .cm-hll-ctl input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; margin-top: -3px; width: 8px; height: 8px; border-radius: 50%; border: 0; background: #888; }
+.pane .cm-hll-ctl input[type=range]::-moz-range-thumb { width: 8px; height: 8px; border-radius: 50%; border: 0; background: #888; }
+.pane .cm-hll-ctl input[type=range]:hover::-webkit-slider-thumb, .pane .cm-hll-ctl input[type=range]:focus-visible::-webkit-slider-thumb { background: var(--accent); }
+.pane .cm-hll-ctl input[type=range]:hover::-moz-range-thumb, .pane .cm-hll-ctl input[type=range]:focus-visible::-moz-range-thumb { background: var(--accent); }
+.pane .cm-hll-ctl input[type=range]:focus-visible { outline: none; }
 .pane .cm-hll-ctl input[type=checkbox] { border-color: #bbb; background: #e4e6ec; box-shadow: none; }
 .pane .cm-hll-ctl input[type=checkbox]::before { background: #fff; box-shadow: 0 1px 2px #0003; }
 .pane .cm-hll-ctl input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
