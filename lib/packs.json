@@ -1,5 +1,6 @@
 {
   "alias": "https://strudel.b-cdn.net/tidal-drum-machines-alias.json",
+  "userBase": "https://jonborchardt.github.io/strudel-bench/samples/user/",
   "packs": {
     "uzu-drumkit": { "json": "https://strudel.b-cdn.net/uzu-drumkit.json", "base": "https://strudel.b-cdn.net/uzu-drumkit/" },
     "tidal-drum-machines": { "json": "https://strudel.b-cdn.net/tidal-drum-machines.json", "base": "https://strudel.b-cdn.net/tidal-drum-machines/machines/" },
