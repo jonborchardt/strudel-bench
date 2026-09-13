@@ -5,7 +5,10 @@ import { dumpFile } from '../scripts/dump.mjs';
 
 test('dump prints the plain strudel behind demo.strudel', async () => {
   const out = await dumpFile(path.resolve(import.meta.dirname, '..', 'songs', 'demo.strudel'));
-  assert.match(out, /^const piece = \(lo, base, hi/); // helper inlined because a signal axis uses it
+  assert.match(out, /^await samples\('https:\/\/[^']+uzu-drumkit\.json'/m); // prebake header: the dump pastes into strudel.cc as-is
+  assert.match(out, /^await aliasBank\('https:\/\/[^']+alias\.json'\)/m);
+  assert.doesNotMatch(out, /samples\/user\//); // demo.strudel declares no local pack
+  assert.match(out, /^const piece = \(lo, base, hi/m); // helper inlined because a signal axis uses it
   assert.doesNotMatch(out, /f\.toString/);
   assert.match(out, /^setcps\(0\.5\)/m);
   assert.match(out, /const intro_drums = stack\(\n  s\("bd"\)\n    \.struct\("x ~ ~ ~ /);
@@ -36,6 +39,11 @@ test('an arped pad dumps self-contained: no plan.*, arpIndices defined', async (
     assert.match(out, /^const ARP_ORDERS = \{ up: /m);
     assert.match(out, /arpWith\(\(haps\) => seq\(\.\.\.arpIndices\("up", haps\.length, 8\)\)/);
   } finally { fs.unlinkSync(file); }
+});
+
+test('a song declaring a local pack gets the deployed samples/user map in the header', async () => {
+  const out = await dumpFile(path.resolve(import.meta.dirname, '..', 'songs', 'ping.strudel'));
+  assert.match(out, /^await samples\('https:\/\/\S+\/samples\/user\/strudel\.json', 'https:\/\/\S+\/samples\/user\/'\)$/m);
 });
 
 test('dump keeps patterns stacked around a song(), not just the song sections', async () => {
