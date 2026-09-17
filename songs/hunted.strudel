@@ -29,7 +29,7 @@ song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }
   // it has our scent. three voices on co-prime periods, so the turns come in an order that never settles; they land
   // together on bar 14 and the riser takes the last four bars, then 'get out of there' on the way out
   section('chase', 16, { role: 'develop', progression: 'i i VI VII',
-    drums:  { density: .7, drive: .65, articulation: .6, brightness: .55, variation: .5 },
+    drums:  { density: .7, drive: .65, articulation: .55, brightness: .55, variation: .5 },
     bass:   { weight: .7, density: .65, brightness: .45, notes: '0 ~ 0 0 ~ 3 ~ 0' },
     melody: { sound: 'vibraphone_bowed', density: .4, brightness: .3, width: .55, register: .4, notes: '~ 2 ~ 1 ~ 2 ~ 0', phrase: 2 },
     pad:    { sound: 'psaltery_bow', space: .7, brightness: .3, width: .6 },
@@ -51,9 +51,10 @@ song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }
 
   // found. the chops arrive at bars 0, 2, 4, 6, then 9, 11, 12, 13, 14, 15, 15.5: the gaps close until there is no
   // time left to listen. no riser here: a reverbed noise sweep over the last four bars washed the kit out and made
-  // the drop announce itself. the acceleration is the build, and the hats are closed (brightness under baseline)
+  // the drop announce itself. the acceleration is the build. the kit drives rather than twitches: density under .85
+  // drops the clap so four voices carry it, and articulation under .6 lets the hats ring instead of choking
   section('run', 16, { role: 'climax', progression: 'i VI III VII',
-    drums:  { density: .95, drive: .9, articulation: .75, brightness: .42, variation: .45, weight: .8 },
+    drums:  { density: .82, drive: .9, articulation: .45, brightness: .42, variation: .45, weight: .8 },
     bass:   { weight: .9, density: .8, brightness: .55, notes: '0 0 7 0 3 0 ~ 10' },
     melody: { sound: 'vibraphone_bowed', density: .6, brightness: .35, width: .6, register: .35, notes: '7 ~ 6 5 ~ 4 ~ 2' },
     pad:    { sound: 'psaltery_bow', space: .5, brightness: .6, width: .85 },
@@ -65,7 +66,7 @@ song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }
   // defeated: "he's here", one last useless instruction, and then the radio stops. the progression sinks instead of
   // resolving (i VII VI v, ending on the minor dominant) and a single low note holds under it
   section('found', 8, { role: 'release', progression: 'i VII VI v',
-    drums:  { density: .08, space: .9, brightness: .15, articulation: .15, level: .35 },
+    drums:  { density: .12, space: .9, brightness: .15, articulation: .15, level: .35 }, // .12: over bd's .1 threshold, under sd's .3, so a bare kick is left
     bass:   { weight: .85, density: .12, brightness: .15, notes: '0 ~ ~ ~ ~ ~ ~ ~', level: .7 },
     pad:    { sound: 'psaltery_bow', space: .95, brightness: .1, width: .9, articulation: .1, level: .8 },
     sample: { sound: 'here', pattern: '<0 ~!15>',    space: .9, brightness: .35, weight: .6 },

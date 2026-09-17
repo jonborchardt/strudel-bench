@@ -44,6 +44,36 @@
           "why": "progression i i VI i > i VII VI v so it sinks instead of resolving, drums level .5>.35, a low bass drone added; section rms 0.029 against runs 0.33"
         }
       ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "no.. less spastic (the run drums, not spacious)",
+      "changes": [
+        {
+          "section": "run",
+          "layer": "drums",
+          "axis": "articulation",
+          "from": 0.75,
+          "to": 0.45,
+          "why": "-- past .6 the hats choke and release falls to 0.02-0.05 s, so every hit clicked and cut the one before it; rendered decay tail 0.041>0.115"
+        },
+        {
+          "section": "run",
+          "layer": "drums",
+          "axis": "density",
+          "from": 0.95,
+          "to": 0.82,
+          "why": "-- under .85 drops the clap, so four voices carry it instead of five; 36>26 onsets per cycle. chase.drums.articulation .6>.55 to get it off the same choke threshold"
+        },
+        {
+          "section": "found",
+          "layer": "drums",
+          "axis": "density",
+          "from": 0.08,
+          "to": 0.12,
+          "why": "-- .08 was under bd's own .1 threshold so the section had no drums at all; .12 leaves a bare kick"
+        }
+      ]
     }
   ]
 }
