@@ -820,7 +820,7 @@
   const setMat = (layer, key, text) => did(() => setMaterial(code.text, mixSection, layer, key, text), `${layer}.${key} ${text ?? 'removed'}`);
   $('mats').onchange = (e) => {
     if (e.target.type === 'file') { const f = e.target.files[0]; if (f) importSample(f, e.target.closest('[data-layer]').dataset.layer); return; }
-    if (e.target.dataset.trim) return setMat(e.target.closest('[data-layer]').dataset.layer, e.target.dataset.trim, matText(null, e.target.dataset.trim, e.target.value));
+    if (e.target.dataset.trim) { clampTrim(e.target); return setMat(e.target.closest('[data-layer]').dataset.layer, e.target.dataset.trim, matText(null, e.target.dataset.trim, e.target.value)); }
     const el = e.target, key = el.dataset.mat; if (!key) return;
     setMat(el.closest('[data-layer]').dataset.layer, key, matText(null, key, el.type === 'checkbox' ? el.checked : el.value));
   };
@@ -905,7 +905,13 @@
     g.strokeStyle = '#4a86ff'; g.beginPath(); for (const p of slicePoints(begin, end, n)) { g.moveTo(Math.round(p * cv.width) + .5, 0); g.lineTo(Math.round(p * cv.width) + .5, cv.height); } g.stroke();
     bi.nextElementSibling.value = fmtTime(begin * buf.duration); ei.nextElementSibling.value = fmtTime(end * buf.duration);
     const bars = a.bars ?? 1;
-    box.querySelector('.info').textContent = `${fmtTime(buf.duration)} · ${buf.numberOfChannels === 2 ? 'stereo' : buf.numberOfChannels === 1 ? 'mono' : `${buf.numberOfChannels} ch`} · ${(buf.sampleRate / 1000).toFixed(1)} kHz · region ${fmtTime((end - begin) * buf.duration)} as ${bars} bar${bars === 1 ? '' : 's'}`;
+    // no sample rate: decodeAudioData resamples to the context's rate, so it would name the browser's rate, not the file's
+    box.querySelector('.info').textContent = `${fmtTime(buf.duration)} · ${buf.numberOfChannels === 2 ? 'stereo' : buf.numberOfChannels === 1 ? 'mono' : `${buf.numberOfChannels} ch`} · region ${fmtTime((end - begin) * buf.duration)} as ${bars} bar${bars === 1 ? '' : 's'}`;
+  }
+  // begin and end cannot cross: the moving slider stops .001 short of the other, so the committed region is always a region
+  function clampTrim(el) {
+    const [bi, ei] = el.closest('.wave').querySelectorAll('[data-trim]');
+    el.value = String(el === bi ? Math.min(Number(el.value), Number(ei.value) - .001) : Math.max(Number(el.value), Number(bi.value) + .001));
   }
   // one slice alone, at the fitted speed, for as long as it lasts (natural playback of that piece)
   const auditionSlice = (btn, layer, i) => preview(btn, () => {
@@ -944,7 +950,7 @@
   }
   $('mats').oninput = (e) => {
     if (e.target.dataset.mat === 'level') e.target.nextElementSibling.value = `x${e.target.value}`; // the readout follows the drag; the source changes on release (change)
-    if (e.target.dataset.trim) waveRender(e.target.closest('.wave')); // the region follows the drag; the source changes on release
+    if (e.target.dataset.trim) { clampTrim(e.target); waveRender(e.target.closest('.wave')); } // the region follows the drag (stopping at the other end); the source changes on release
   };
   $('mats').onmousedown = (e) => { if (e.target.closest('[data-pv]')) e.preventDefault(); }; // keep the text box focused, so its play button stays
   $('mats').onclick = (e) => {
