@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { userPacks } from '../server.mjs';
 import './esm-fix.mjs'; // must run before the strudel imports below are resolved, hence dynamic imports
 import { parseProgression, chordNames } from '../lib/harmony.mjs';
-import { packsOf, SYNTHS } from '../lib/packs.mjs';
+import { packsOf, registerSamples, SYNTHS } from '../lib/packs.mjs';
 import { describeAxes } from '../lib/vocab.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
 const { transpiler } = await import('@strudel/transpiler');
@@ -56,6 +56,7 @@ export const checkFile = (file, cycles = 4, packs) => checkCode(fs.readFileSync(
 /** Same as checkFile for a code string; `file` only names it in problem messages. */
 export async function checkCode(code, file = 'code', cycles = 4, packs = userPacks()) {
   await ensureScope();
+  registerSamples(packs); // a song's sample part may name a definition from a pack; samplePlan resolves it through the registry
   const problems = [];
   const events = [];
   let pattern;
@@ -70,7 +71,10 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   const known = builtinSounds();
   const local = localSounds(packs);
   const declared = packsOf(code);
-  for (const p of declared) if (!packs[p]) problems.push(`${path.basename(file)}: missing pack "${p}" (declared, not in samples/user/)`);
+  for (const p of declared) {
+    if (!packs[p]) problems.push(`${path.basename(file)}: missing pack "${p}" (declared, not in samples/user/)`);
+    else for (const bad of packs[p].problems ?? []) problems.push(`${path.basename(file)}: ${bad}`); // a bad sample definition in a pack the song declares
+  }
   const unknown = new Set(), undeclared = new Map(), used = new Map();
   const haps = pattern.queryArc(0, cycles).filter((h) => h.hasOnset())
     .sort((a, b) => a.whole.begin.valueOf() - b.whole.begin.valueOf());

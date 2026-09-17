@@ -6,7 +6,9 @@
 // third section shows.
 song({ cps: .5, key: 'C:minor', seed: 7, kit: 'RolandTR909', packs: ['demo-pack'] }, [
   section('loop', 4, { role: 'establish',
-    sample: { sound: 'loop', bars: 2, slices: 8, pattern: '0 1 2 3 4 5 6 7' },
+    // the pack's definition of 'loop' (samples/user/demo-pack/pack.json) supplies bars 2 and slices 8, and an
+    // unwritten pattern is every slice in order, so naming the sample alone plays the loop as recorded
+    sample: { sound: 'loop' },
   }),
   section('chop', 4, { role: 'climax', progression: 'i VI III VII',
     sample: { sound: 'loop', bars: 2, slices: 8, pattern: '0 1 0 3 4 [6 7] 7 6', stretch: true, space: .6 },

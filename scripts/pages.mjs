@@ -22,7 +22,11 @@ for (const [name, p] of Object.entries(userPacks())) {
   const keep = p.deploy === true ? Object.keys(p.sounds) : p.deploy;
   const absent = keep.filter((s) => !p.sounds[s]);
   if (absent.length) throw new Error(`samples/user/${name}/pack.json: deploy lists sounds the pack does not have: ${absent.join(', ')}`);
-  shipped[name] = { ...p, sounds: Object.fromEntries(keep.map((s) => [s, p.sounds[s]])) };
+  if (p.problems.length) throw new Error(`samples/user/${name}/pack.json: ${p.problems.join('; ')}`);
+  // a sample definition ships with its pack, unless it plays a sound the deploy subset leaves out
+  const samples = {};
+  for (const [def, d] of Object.entries(p.samples)) if (keep.includes(d.sound ?? def)) samples[def] = d;
+  shipped[name] = { ...p, samples, sounds: Object.fromEntries(keep.map((s) => [s, p.sounds[s]])) };
 }
 const songs = songList();
 const declared = Object.fromEntries(songs.map((s) => [s, packsOf(fs.readFileSync(path.join(ROOT, 'songs', s), 'utf8'))]));

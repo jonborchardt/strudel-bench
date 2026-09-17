@@ -120,3 +120,15 @@ test('every song in songs/ checks clean', async () => {
     assert.ok(r.events.length > 0, `${f}: silent`);
   }
 });
+
+test('a song can name a pack definition: the events carry the pack sound, and the pack rule still applies', async () => {
+  const packs = { mine: { sounds: { thud: ['mine/thud.wav'] }, samples: { 'thud-half': { sound: 'thud', end: .5, bars: 1 } } } };
+  const f = tmp('_t_defs.strudel', `song({ packs: ['mine'] }, [ section('a', 1, { sample: { sound: 'thud-half' } }) ])`);
+  try {
+    const r = await checkFile(f, 4, packs);
+    assert.deepEqual(r.problems, []);
+    assert.ok(r.events.some((l) => l.includes('"s":"thud"') && l.includes('"end":0.5')));
+    fs.writeFileSync(f, `song({}, [ section('a', 1, { sample: { sound: 'thud-half' } }) ])`);
+    assert.match((await checkFile(f, 4, packs)).problems[0], /sound "thud" is in local pack "mine"/);
+  } finally { fs.rmSync(f); }
+});

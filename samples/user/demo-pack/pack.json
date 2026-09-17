@@ -1,5 +1,10 @@
 {
   "deploy": true,
   "license": "CC0-1.0",
-  "source": "generated: ping.wav an 880 Hz sine blip with a 150 ms decay; loop.wav a two-bar 120 bpm drum loop of sine kicks, noise snares and hats; both 16-bit mono 44.1 kHz"
+  "source": "generated: ping.wav an 880 Hz sine blip with a 150 ms decay; loop.wav a two-bar 120 bpm drum loop of sine kicks, noise snares and hats; both 16-bit mono 44.1 kHz",
+  "samples": {
+    "loop":       { "bars": 2, "slices": 8 },
+    "loop-kick":  { "sound": "loop", "end": 0.0625, "bars": 0.125 },
+    "loop-snare": { "sound": "loop", "begin": 0.125, "end": 0.1875, "bars": 0.125 }
+  }
 }

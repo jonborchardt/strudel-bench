@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { wavToMp3 } from './scripts/mp3.mjs';
+import { DEF_KEYS } from './lib/packs.mjs';
 
 const ROOT = import.meta.dirname;
 const SONGS = path.join(ROOT, 'songs');
@@ -47,7 +48,17 @@ export function userPacks() {
     }
     const metaFile = path.join(dir, 'pack.json');
     const meta = fs.existsSync(metaFile) ? JSON.parse(fs.readFileSync(metaFile, 'utf8')) : {};
-    packs[p] = { sounds, deploy: meta.deploy ?? false, license: meta.license, source: meta.source };
+    // named sample definitions (a region of a pack sound, read as bars/slices): bad ones are reported, never thrown, so one typo does not break the index
+    const samples = {}, problems = [];
+    for (const [name, def] of Object.entries(meta.samples ?? {})) {
+      if (!def || typeof def !== 'object' || Array.isArray(def)) { problems.push(`${p}/pack.json samples.${name}: not an object`); continue; }
+      const bad = Object.keys(def).find((k) => !DEF_KEYS.includes(k));
+      if (bad) { problems.push(`${p}/pack.json samples.${name}: unknown key "${bad}" (known: ${DEF_KEYS.join(', ')})`); continue; }
+      const sound = def.sound ?? name;
+      if (!sounds[sound]) { problems.push(`${p}/pack.json samples.${name}: sound "${sound}" is not in the pack`); continue; }
+      samples[name] = def;
+    }
+    packs[p] = { sounds, samples, problems, deploy: meta.deploy ?? false, license: meta.license, source: meta.source };
   }
   return packs;
 }

@@ -26,7 +26,7 @@ test('userPacks: a folder per pack, inside it folders are sounds with variants a
   fs.writeFileSync(path.join(USER, '_t_bare', 'x.wav'), '');
   try {
     const packs = userPacks();
-    assert.deepEqual(packs._t_pack, { sounds: { kick: ['_t_pack/kick/a.wav', '_t_pack/kick/b.wav'], loose: ['_t_pack/loose.mp3'] }, deploy: ['kick'], license: 'CC0-1.0', source: undefined });
+    assert.deepEqual(packs._t_pack, { sounds: { kick: ['_t_pack/kick/a.wav', '_t_pack/kick/b.wav'], loose: ['_t_pack/loose.mp3'] }, samples: {}, problems: [], deploy: ['kick'], license: 'CC0-1.0', source: undefined });
     assert.equal(packs._t_bare.deploy, false, 'no pack.json: local-only');
     const m = userMap();
     assert.equal(m._base, '/samples/user/');
@@ -219,3 +219,18 @@ test('PUT /samples/user/<pack>/<file> stores a sample and its pack.json; the map
   } finally { fs.rmSync(pack, { recursive: true, force: true }); }
 });
 
+
+test('userPacks reads sample definitions from pack.json and reports bad ones instead of throwing', () => {
+  const pack = path.join(USER, '_t_defs');
+  fs.mkdirSync(pack, { recursive: true });
+  fs.writeFileSync(path.join(pack, 'amen.wav'), '');
+  fs.writeFileSync(path.join(pack, 'pack.json'), JSON.stringify({ samples: { amen: { bars: 2, slices: 8 }, 'amen-kick': { sound: 'amen', end: .0625, bars: .125 }, ghost: { sound: 'nope' }, odd: { bars: 1, level: 2 }, bad: 3 } }));
+  try {
+    const p = userPacks()._t_defs;
+    assert.deepEqual(p.samples, { amen: { bars: 2, slices: 8 }, 'amen-kick': { sound: 'amen', end: .0625, bars: .125 } }, 'only the good definitions');
+    assert.equal(p.problems.length, 3);
+    assert.match(p.problems.join('\n'), /ghost.*sound "nope" is not in the pack/);
+    assert.match(p.problems.join('\n'), /odd.*unknown key "level"/);
+    assert.match(p.problems.join('\n'), /bad.*not an object/);
+  } finally { fs.rmSync(pack, { recursive: true }); }
+});

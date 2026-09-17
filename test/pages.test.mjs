@@ -18,7 +18,7 @@ function fixtures() {
   fs.mkdirSync(path.join(USER, '_t_subset'), { recursive: true });
   fs.writeFileSync(path.join(USER, '_t_subset', 'pub.wav'), '');
   fs.writeFileSync(path.join(USER, '_t_subset', 'big.wav'), '');
-  fs.writeFileSync(path.join(USER, '_t_subset', 'pack.json'), JSON.stringify({ deploy: ['pub'], license: 'CC0-1.0' }));
+  fs.writeFileSync(path.join(USER, '_t_subset', 'pack.json'), JSON.stringify({ deploy: ['pub'], license: 'CC0-1.0', samples: { 'pub-hit': { sound: 'pub', end: .5 }, 'big-hit': { sound: 'big' } } }));
   fs.writeFileSync(path.join(SONGS, '_t_subset.strudel'), `// packs: ['_t_subset']\ns("pub")`);
   return () => {
     for (const d of ['_t_private', '_t_subset']) fs.rmSync(path.join(USER, d), { recursive: true, force: true });
@@ -53,6 +53,9 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
     assert.ok(!fs.existsSync(path.join(out, 'samples/user/_t_private')), 'local-only: not copied');
     assert.ok(!fs.existsSync(path.join(out, 'samples/user/demo-pack/pack.json')), 'pack metadata is served from packs.json, not copied');
     assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(path.join(out, 'samples/user/packs.json'), 'utf8'))).sort(), ['_t_subset', 'demo-pack']);
+    const idx = JSON.parse(fs.readFileSync(path.join(out, 'samples/user/packs.json'), 'utf8'));
+    assert.deepEqual(idx._t_subset.samples, { 'pub-hit': { sound: 'pub', end: .5 } }, 'a definition on a sound outside the deploy subset is dropped');
+    assert.deepEqual(Object.keys(idx['demo-pack'].samples).sort(), ['loop', 'loop-kick', 'loop-snare'], 'the demo definitions ship');
     assert.ok(!fs.existsSync(path.join(out, 'samples/packs')), 'packs stream from the cdn');
     for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', 'web/boot.mjs', 'web/mp3.mjs', 'web/compose.mjs', 'web/examples.mjs', 'lib/packs.mjs'])
       assert.ok(!/['`"]\/[\w.]/.test(fs.readFileSync(path.join(out, f), 'utf8')), `root-absolute url in ${f}`); // a quote, a slash, then a path character; a bare '/' is a separator

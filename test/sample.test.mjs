@@ -124,3 +124,21 @@ test('slices as break points: fractions of the file inside the region, in order;
   assert.throws(() => g.sample({ sound: 'ping', slices: [.2, 'x'] }, c), /fractions of the file/);
   assert.throws(() => g.sample({ sound: 'ping', slices: [.2, .2] }, c), /increasing/);
 });
+
+test('a definition from the pack sits under the part: name resolves to the pack sound, keys override, the default pattern plays every slice', async () => {
+  const g = await ready;
+  const { registerSamples, resolveSample, SAMPLES } = await import('../lib/packs.mjs');
+  registerSamples({ mine: { sounds: { ping: ['mine/ping.wav'] }, samples: { ping: { bars: 2, slices: 4 }, 'ping-tail': { sound: 'ping', begin: .5, bars: 1 } } } });
+  try {
+    assert.deepEqual(resolveSample({ sound: 'ping-tail', bars: 3 }), { sound: 'ping', begin: .5, bars: 3 }, 'the part overrides, the sound resolves');
+    assert.deepEqual(resolveSample({ sound: 'nope', bars: 3 }), { sound: 'nope', bars: 3 }, 'no definition: unchanged');
+    const c = { ...meta, cycles: 2 };
+    const hs = onsets(g.sample({ sound: 'ping' }, c));
+    assert.equal(hs.length, 4, 'bars 2, slices 4, the default pattern plays every slice once over the two bars');
+    assert.deepEqual(hs.map((h) => h.value.s), ['ping', 'ping', 'ping', 'ping']);
+    near(hs[1].value.begin, .25, 'slice 1 of four');
+    const t = onsets(g.sample({ sound: 'ping-tail' }, c), 1);
+    assert.equal(t.length, 1); near(t[0].value.begin, .5, 'the definition region'); near(t[0].value.speed, .5 * .5 / 1, 'cps .5, half the file, one bar');
+    assert.equal(onsets(g.sample({ sound: 'ping', pattern: '0' }, c)).length, 1, 'a written pattern wins over the default: one slice spanning the definition\'s two bars, not four');
+  } finally { SAMPLES.clear(); }
+});
