@@ -1,0 +1,41 @@
+{
+  "prompt": "a breakbeat piece built on the sliced demo loop, showing every way the sample part can cut it",
+  "requests": [
+    {
+      "date": "2026-09-17",
+      "ask": "make a much more interesting example song",
+      "changes": [
+        {
+          "section": "shoreline",
+          "layer": "sample",
+          "why": "the loop as recorded, eight equal slices, filtered and far off so the break is the whole arrangement"
+        },
+        {
+          "section": "swell",
+          "layer": "sample",
+          "why": "halves: bar two swaps for a repeat of bar one every other pass, and the square bass enters on the octave leap"
+        },
+        {
+          "section": "undertow",
+          "layer": "sample",
+          "why": "the trimmed second bar only (begin .5) quartered, at its own bpm 99 so the break drops in pitch and gets heavy"
+        },
+        {
+          "section": "surge",
+          "layer": "sample",
+          "why": "quarters with one step doubled and the last alternating; fx riser into the climax and the marimba answers undertow's question"
+        },
+        {
+          "section": "breakwater",
+          "layer": "sample",
+          "why": "break points isolating the first kick and the first snare, played syncopated with stretch so the long slice is squeezed; piano hook, glockenspiel counter-line, impact on the downbeat"
+        },
+        {
+          "section": "backwash",
+          "layer": "sample",
+          "why": "the same eight slices with all but two deleted, space .9: the tide out"
+        }
+      ]
+    }
+  ]
+}
