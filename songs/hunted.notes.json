@@ -74,6 +74,26 @@
           "why": "-- .08 was under bd's own .1 threshold so the section had no drums at all; .12 leaves a bare kick"
         }
       ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "'go right' is hard, louder and harder than left, so it should be used differently. change pad sound on run and maybe elsewhere to harp",
+      "changes": [
+        {
+          "section": "voice",
+          "why": "takes are not interchangeable: 18 dB between softest and loudest in the pack. right:1 is +7.9 dB over left:0 and was on the most frequent period (6 calls a section); it is now a single call at chase bar 14, shouted over left and forward as they converge. alley uses right:0 (-2.1 dB) instead, nothing being urgent yet"
+        },
+        {
+          "section": "found",
+          "layer": "sample",
+          "why": "here:0>here:1 -- here:0 is the quietest take in the pack (-6.2 dB) and it was carrying the reveal. take 2 delivers the line, level .5 keeps it in a defeated mix. the take picks the performance, level places it"
+        },
+        {
+          "section": "run",
+          "layer": "pad",
+          "why": "psaltery_bow>harp with arp down; plucked it renders 2.8 dB under the bowed pad, so level 1.4 puts it back at parity (rms .0191 vs .0190)"
+        }
+      ]
     }
   ]
 }

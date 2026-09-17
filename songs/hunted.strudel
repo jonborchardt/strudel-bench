@@ -8,8 +8,13 @@
 //
 // bars is also the pattern's span, so one step of a voice pattern below is half a bar, not a whole one, and `~!6` is
 // six rests: `<0 ~!6>` is a shout every seven half-bars. A part can only hold one sound, so a line of different
-// directions is several parts laid over each other. In chase their periods are co-prime (7, 5, 11 half-bars) so the
-// order never repeats -- and they converge on bar 14, which is where the chase should stop feeling survivable.
+// directions is several parts laid over each other. In chase left and forward run on co-prime periods (7 and 5
+// half-bars) so the order never repeats, and they converge on bar 14.
+//
+// The takes are not interchangeable: there is 18 dB between the softest and the loudest in this pack. 'go right'
+// take 2 is the hardest direction in it (+7.9 dB over 'go left' take 1), so it is not a routine call -- it is kept
+// for bar 14, shouted over the other two, and 'get out of there' (+12.3 dB, the loudest thing here) only ever lands
+// where the section breaks. The take picks how the line is delivered; `level` places it in the mix.
 //
 // `back-chop` and `out-chop` are the same takes with break points between the words -- slices as a list of fractions
 // of the file, not a count -- so 'go / back' and 'get / out of there' can be re-ordered and stuttered once the runner
@@ -22,31 +27,32 @@ song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }
     pad:    { sound: 'psaltery_bow', space: .85, brightness: .2, width: .7, articulation: .15 },
     sample: { sound: 'forward',   pattern: '<0 ~!15>',     space: .7, brightness: .45 },
     sample2:{ sound: 'left',      pattern: '<~!5 0 ~!10>', space: .7, brightness: .45 },
-    sample3:{ sound: 'right:1',   pattern: '<~!11 0 ~!4>', space: .7, brightness: .45, level: .9 },
+    sample3:{ sound: 'right',     pattern: '<~!11 0 ~!4>', space: .7, brightness: .45 }, // take 1: the quiet 'right', nothing is urgent yet
     sample4:{ sound: 'forward:1', pattern: '<~!14 0 ~>',   space: .7, brightness: .45 },
   }),
 
-  // it has our scent. three voices on co-prime periods, so the turns come in an order that never settles; they land
-  // together on bar 14 and the riser takes the last four bars, then 'get out of there' on the way out
+  // it has our scent. left and forward on co-prime periods, so the turns come in an order that never settles; at bar
+  // 14 they land together and 'go right' -- the hardest take in the pack -- arrives over the top, its only appearance.
+  // the riser takes the last four bars, then 'get out of there' on the way out
   section('chase', 16, { role: 'develop', progression: 'i i VI VII',
     drums:  { density: .7, drive: .65, articulation: .55, brightness: .55, variation: .5 },
     bass:   { weight: .7, density: .65, brightness: .45, notes: '0 ~ 0 0 ~ 3 ~ 0' },
     melody: { sound: 'vibraphone_bowed', density: .4, brightness: .3, width: .55, register: .4, notes: '~ 2 ~ 1 ~ 2 ~ 0', phrase: 2 },
     pad:    { sound: 'psaltery_bow', space: .7, brightness: .3, width: .6 },
     fx:     { riser: 4 },
-    sample: { sound: 'left',    pattern: '<0 ~!6>',      space: .6, brightness: .5 },
-    sample2:{ sound: 'right:1', pattern: '<~!3 0 ~>',    space: .6, brightness: .5, level: .9 },
-    sample3:{ sound: 'forward', pattern: '<~!6 0 ~!4>',  space: .6, brightness: .5 },
-    sample4:{ sound: 'out',     pattern: '<~!31 0>',     space: .55, brightness: .55, level: .95 },
+    sample: { sound: 'left',      pattern: '<0 ~!6>',       space: .6, brightness: .5 },                 // period 7
+    sample2:{ sound: 'forward:1', pattern: '<~!3 0 ~>',     space: .6, brightness: .5, level: .75 },  // period 5
+    sample3:{ sound: 'right:1',   pattern: '<~!28 0 ~!3>',  space: .6, brightness: .5, level: .8 },   // bar 14 only
+    sample4:{ sound: 'out',       pattern: '<~!31 0>',      space: .55, brightness: .55, level: .7 },
   }),
 
   // pressed into a doorway, not breathing. three different warnings, one each: nothing is said twice
   section('hide', 8, { role: 'release', progression: 'i i i i',
     drums:  { density: .12, space: .9, brightness: .2, articulation: .2, level: .5 },
     pad:    { sound: 'psaltery_bow', space: .95, brightness: .15, width: .85, articulation: .1 },
-    sample: { sound: 'down',   pattern: '<0 ~!15>',    space: .85, brightness: .3,  weight: .35 },
-    sample2:{ sound: 'coming', pattern: '<~!6 0 ~!9>', space: .9,  brightness: .25, weight: .4, level: .8 },
-    sample3:{ sound: 'out',    pattern: '<~!14 0 ~>',  space: .7,  brightness: .45, weight: .6, level: .95 },
+    sample: { sound: 'down',   pattern: '<0 ~!15>',    space: .85, brightness: .3,  weight: .35, level: .6 },
+    sample2:{ sound: 'coming', pattern: '<~!6 0 ~!9>', space: .9,  brightness: .25, weight: .4, level: .9 },
+    sample3:{ sound: 'out',    pattern: '<~!14 0 ~>',  space: .7,  brightness: .45, weight: .6, level: .8 },
   }),
 
   // found. the chops arrive at bars 0, 2, 4, 6, then 9, 11, 12, 13, 14, 15, 15.5: the gaps close until there is no
@@ -57,10 +63,10 @@ song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }
     drums:  { density: .82, drive: .9, articulation: .45, brightness: .42, variation: .45, weight: .8 },
     bass:   { weight: .9, density: .8, brightness: .55, notes: '0 0 7 0 3 0 ~ 10' },
     melody: { sound: 'vibraphone_bowed', density: .6, brightness: .35, width: .6, register: .35, notes: '7 ~ 6 5 ~ 4 ~ 2' },
-    pad:    { sound: 'psaltery_bow', space: .5, brightness: .6, width: .85 },
+    pad:    { sound: 'harp', arp: 'down', space: .5, brightness: .6, width: .85, level: 1.4 }, // plucked: 2.8 dB under the bowed pad it replaced, so level puts it back
     fx:     { impact: true },
-    sample: { sound: 'out-chop',  pattern: '<[0 0 ~ 1] ~!7 [0 0 ~ 1] ~!9 [0 0 ~ 1] ~!5 [0 0 ~ 1] ~!3 [0 0 ~ 1] ~ [0 0 ~ 1] ~>', space: .5, brightness: .65 },
-    sample2:{ sound: 'back-chop', pattern: '<~!4 [0 1 2 ~] ~!7 [0 1 2 ~] ~!9 [0 1 2 ~] ~!3 [0 1 2 ~] ~!4 [0 1 2 ~]>', space: .42, brightness: .6, level: .85 },
+    sample: { sound: 'out-chop',  pattern: '<[0 0 ~ 1] ~!7 [0 0 ~ 1] ~!9 [0 0 ~ 1] ~!5 [0 0 ~ 1] ~!3 [0 0 ~ 1] ~ [0 0 ~ 1] ~>', space: .5, brightness: .65, level: .6 },
+    sample2:{ sound: 'back-chop', pattern: '<~!4 [0 1 2 ~] ~!7 [0 1 2 ~] ~!9 [0 1 2 ~] ~!3 [0 1 2 ~] ~!4 [0 1 2 ~]>', space: .42, brightness: .6, level: 1.5 }, // back take 1 is -5.4 dB, the quietest chop source; the break points do not fit take 2
   }),
 
   // defeated: "he's here", one last useless instruction, and then the radio stops. the progression sinks instead of
@@ -69,7 +75,7 @@ song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }
     drums:  { density: .12, space: .9, brightness: .15, articulation: .15, level: .35 }, // .12: over bd's .1 threshold, under sd's .3, so a bare kick is left
     bass:   { weight: .85, density: .12, brightness: .15, notes: '0 ~ ~ ~ ~ ~ ~ ~', level: .7 },
     pad:    { sound: 'psaltery_bow', space: .95, brightness: .1, width: .9, articulation: .1, level: .8 },
-    sample: { sound: 'here', pattern: '<0 ~!15>',    space: .9, brightness: .35, weight: .6 },
-    sample2:{ sound: 'back', pattern: '<~!6 0 ~!9>', space: .95, brightness: .2, weight: .35, level: .7 },
+    sample: { sound: 'here:1', pattern: '<0 ~!15>',  space: .9, brightness: .35, weight: .6, level: .5 }, // take 2 delivers it; level puts it in a defeated mix
+    sample2:{ sound: 'back', pattern: '<~!6 0 ~!9>', space: .95, brightness: .2, weight: .35 }, // take 1 is the feeble one: right performance, audible level
   }),
 ])
