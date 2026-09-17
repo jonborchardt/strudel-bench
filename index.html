@@ -132,7 +132,7 @@
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks } from './web/boot.mjs';
   import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile, verifyRows, shareEncode, shareDecode } from './web/compose.mjs';
-  import { packsOf, packKind, registerSamples, SYNTHS } from './lib/packs.mjs';
+  import { packsOf, packKind, registerSamples, resolveSample, SYNTHS } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
   import { SCHEMA, host, CHORDS } from './web/hll-schema.mjs';
@@ -140,7 +140,8 @@
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase, arrange } from './lib/song.mjs';
   import { ARP_ORDERS, DRUM_ORDER, voiceSound, melodyLine, slicePoints } from './lib/layers.mjs';
-  import { peaks, fmtTime, soundUrl, sliceSpec, frac, breaksIn, breakPoints, toggleBreak } from './web/sampler.mjs';
+  import { peaks, fmtTime, soundUrl, sliceSpec, frac, breaksIn, breakPoints, SNAPS, snapDivisions } from './web/sampler.mjs';
+  import { createWaveform } from './web/waveform.mjs';
   import { hasSound } from './lib/strudel.mjs';
   import { parseProgression, chordName } from './lib/harmony.mjs';
   import { TEMPLATES, fit, gridToMini } from './lib/grid.mjs';
@@ -776,9 +777,10 @@
         bits.push(`<label>breaks <span class="tb"><input class="snd wide" data-breaks placeholder="even" spellcheck="false" title="${esc(BREAKS_TITLE)}"><button class="pv" data-pv title="hear ${esc(name)} with these breaks (pauses the song)">&#9654;</button></span></label>`);
         bits.push(`<label>play ${text(L, e, 'pattern', '0')}</label>`);
         const st = val(L, e, 'stretch'); bits.push(`<label><input type="checkbox" data-mat="stretch"${st === true ? ' checked' : ''}${st === 'expr' ? ' disabled' : ''}> fit each slice to its step</label>`);
-        bits.push(`<div class="wave" data-wave="${esc(name)}"><canvas width="720" height="72" title="the file: the used region lit, a line per slice"></canvas>` +
+        bits.push(`<div class="wave" data-wave="${esc(name)}"><canvas width="720" height="72" title="the file: the used region lit, a line per slice; click to add a break, click a line to remove it, drag a line or a region edge to move it"></canvas>` +
           `<label>start <input type="range" min="0" max="1" step=".001" data-trim="begin" value="${typeof b === 'number' ? b : 0}"><output></output></label>` +
           `<label>end <input type="range" min="0" max="1" step=".001" data-trim="end" value="${typeof en === 'number' ? en : 1}"><output></output></label>` +
+          `<label class="snap" title="where a dragged or clicked break lands: the region cut into beats of its bars (this browser's setting, never written to the song)">snap <select data-snap>${Object.keys(SNAPS).map((k) => `<option${k === snapSetting() ? ' selected' : ''}>${k}</option>`).join('')}</select></label>` +
           `<span class="slices">${Array.from({ length: n }, (_, i) => `<button class="sl" data-slice="${i}" title="hear slice ${i} alone at its natural length (pauses the song)">${i}</button>`).join('')}</span><small class="info"></small></div>`);
       } else bits.push(`<label>sound ${pick(L, e, 'sound', 'default')}</label>`);
       // notes: the written line in mini-notation (scale degrees, ~ rests, @2 holds); the seeded line plays when it is empty
@@ -827,15 +829,11 @@
   const setMat = (layer, key, text) => did(() => setMaterial(code.text, mixSection, layer, key, text), `${layer}.${key} ${text ?? 'removed'}`);
   $('mats').onchange = (e) => {
     if (e.target.type === 'file') { const f = e.target.files[0]; if (f) importSample(f, e.target.closest('[data-layer]').dataset.layer); e.target.value = ''; return; } // cleared so re-picking the same file fires change again
-    if (e.target.dataset.trim) { // the region moved: break points it now leaves outside go in the same edit, since the song would not build with them
-      clampTrim(e.target);
-      const layer = e.target.closest('[data-layer]').dataset.layer, key = e.target.dataset.trim, text = matText(null, key, e.target.value);
-      const [bi, ei] = e.target.closest('.wave').querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value);
-      const sv = slicesOf(layer), kept = Array.isArray(sv) ? breaksIn(sv, begin, end) : null, drop = kept ? sv.length - kept.length : 0;
-      return did(() => {
-        const src = setMaterial(code.text, mixSection, layer, key, text);
-        return drop ? setMaterial(src, mixSection, layer, 'slices', matText(null, 'slices', kept)) : src;
-      }, `${layer}.${key} ${text ?? 'removed'}${drop ? ` (${drop} break${drop === 1 ? '' : 's'} outside the region dropped)` : ''}`);
+    if (e.target.dataset.trim) { clampTrim(e.target); return trimCommit(e.target.closest('.wave'), [e.target.dataset.trim]); }
+    if (e.target.dataset.snap !== undefined) { // a page setting, not the song's: every waveform snaps the same way
+      localStorage.setItem('strudel:snap', e.target.value);
+      for (const box of $('matlist').querySelectorAll('.wave')) { box.querySelector('[data-snap]').value = e.target.value; waveRender(box); }
+      return;
     }
     if (e.target.dataset.breaks !== undefined) { // no data-mat: it is read in seconds, so it commits through breaksText rather than the generic path
       const layer = e.target.closest('[data-layer]').dataset.layer;
@@ -903,7 +901,8 @@
     };
   });
   // the sampler row: the file behind the part's sound, decoded once per name on the live context, drawn as peaks with the region and its slice grid
-  const BREAKS_TITLE = 'break points in seconds into the file, space-separated; empty = equal slices; click the waveform to add one, click a line to remove it; converting a count to breaks pins them to the file, so a later trim drops the ones it leaves outside';
+  const BREAKS_TITLE = 'break points in seconds into the file, space-separated; empty = equal slices; click the waveform to add one, click a line to remove it, drag one to move it; converting a count to breaks pins them to the file, so a later trim drops the ones it leaves outside';
+  const snapSetting = () => { const s = localStorage.getItem('strudel:snap'); return s in SNAPS ? s : '1/16'; }; // where a dragged or clicked break lands: this browser's setting, never the song's
   const maxIndex = (pattern) => Math.max(0, ...String(pattern ?? '').match(/(?<![*!\/@%:.\w])\d+/g)?.map(Number) ?? []); // the highest slice a play pattern names (modifiers like *2 and @3 are not indices)
   const bufs = new Map(); // sound name -> promise of its AudioBuffer
   function bufferOf(name) {
@@ -931,22 +930,57 @@
     bx.value = !Array.isArray(spec) ? '' : duration ? spec.map((f) => (f * duration).toFixed(3).replace(/\.?0+$/, '')).join(' ') : spec.map(frac).join(' ');
     bx.title = Array.isArray(spec) && !duration ? 'fractions of the file (no audio decoded)' : BREAKS_TITLE;
   }
+  // the waveform component (web/waveform.mjs) draws and handles the gestures; the row feeds it state and turns its commits into source edits
+  const waves = new WeakMap(); // canvas -> its component; the row's markup is rebuilt on every render, so a new canvas gets a new one
+  function waveOf(box) {
+    const cv = box.querySelector('canvas');
+    if (!waves.has(cv)) waves.set(cv, createWaveform(cv, { onCommit: (c) => waveCommit(box, c), onStatus: (t) => ($('mixstatus').textContent = t) }));
+    return waves.get(cv);
+  }
   async function waveRender(box) {
-    const layer = box.dataset.wave, a = partAttrs(layer), cv = box.querySelector('canvas'), g = cv.getContext('2d');
+    const layer = box.dataset.wave, a = partAttrs(layer), wf = waveOf(box);
     const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value), spec = sliceSpec(slicesOf(layer));
-    g.clearRect(0, 0, cv.width, cv.height);
-    if (!a.sound) { box.querySelector('.info').textContent = 'pick a sample, or import one'; fillBreaks(box, spec); return; }
-    let buf; try { buf = await bufferOf(a.sound); } catch (e) { box.querySelector('.info').textContent = e.message; fillBreaks(box, spec); return; }
+    // the snap grid counts the region in beats of the bars it stands for; a part that only names a definition inherits its bars
+    const bars = resolveSample(a).bars ?? 1, beats = sections.find((x) => x.name === mixSection)?.grid.beats ?? 4;
+    const shape = { begin, end, breaks: Array.isArray(spec) ? spec : null, count: Array.isArray(spec) ? spec.length + 1 : spec, divisions: snapDivisions(bars, beats, SNAPS[snapSetting()]) };
+    if (!a.sound) { box.querySelector('.info').textContent = 'pick a sample, or import one'; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
+    let buf; try { buf = await bufferOf(a.sound); } catch (e) { box.querySelector('.info').textContent = e.message; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
     if (!box.isConnected) return; // re-rendered while decoding
-    const pk = peaks(buf.getChannelData(0), cv.width), mid = cv.height / 2;
-    g.fillStyle = '#2a2f3a'; g.fillRect(begin * cv.width, 0, (end - begin) * cv.width, cv.height);
-    g.fillStyle = '#9a9aa2'; for (let x = 0; x < cv.width; x++) { const h = Math.max(1, pk[x] * mid); g.fillRect(x, mid - h, 1, 2 * h); }
-    g.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2f6fed'; g.beginPath(); for (const p of slicePoints(begin, end, spec)) { g.moveTo(Math.round(p * cv.width) + .5, 0); g.lineTo(Math.round(p * cv.width) + .5, cv.height); } g.stroke();
+    wf.set({ peaks: peaks(buf.getChannelData(0), box.querySelector('canvas').width), duration: buf.duration, ...shape });
     bi.nextElementSibling.value = fmtTime(begin * buf.duration); ei.nextElementSibling.value = fmtTime(end * buf.duration);
     fillBreaks(box, spec, buf.duration); // the breaks box reads in seconds, which needs the duration
-    const bars = a.bars ?? 1;
     // no sample rate: decodeAudioData resamples to the context's rate, so it would name the browser's rate, not the file's
     box.querySelector('.info').textContent = `${fmtTime(buf.duration)} · ${buf.numberOfChannels === 2 ? 'stereo' : buf.numberOfChannels === 1 ? 'mono' : `${buf.numberOfChannels} ch`} · region ${fmtTime((end - begin) * buf.duration)} as ${bars} bar${bars === 1 ? '' : 's'}`;
+  }
+  // a gesture on the waveform: break points straight to `slices`, a dragged region edge through the sliders' own commit path
+  function waveCommit(box, { breaks, begin, end }) {
+    const layer = box.dataset.wave;
+    if (breaks) {
+      const sv = slicesOf(layer);
+      if (sv === 'expr') { $('mixstatus').textContent = `${layer}.slices is an expression: edit it in the source`; return; }
+      // a removal that leaves fewer slices than the pattern plays would not build: refuse it rather than write a broken song
+      const need = maxIndex(matOf(layer, 'pattern'));
+      if (breaks.length + 1 <= need) { $('mixstatus').textContent = `slices: the pattern plays slice ${need}; remove it from the pattern first`; return; }
+      return setMat(layer, 'slices', matText(null, 'slices', breaks));
+    }
+    const keys = [];
+    for (const [k, v] of [['begin', begin], ['end', end]]) {
+      const el = box.querySelector(`[data-trim="${k}"]`); // the slider follows the drag, then commits as if it had been the one moved
+      if (Number(el.value) !== v) { el.value = String(v); keys.push(k); }
+    }
+    if (keys.length) trimCommit(box, keys);
+  }
+  // the region as the sliders now stand -> the source; break points it now leaves outside go in the same edit, since the song would not build with them
+  function trimCommit(box, keys) {
+    const layer = box.dataset.wave;
+    const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value);
+    const sv = slicesOf(layer), kept = Array.isArray(sv) ? breaksIn(sv, begin, end) : null, drop = kept ? sv.length - kept.length : 0;
+    const texts = keys.map((k) => [k, matText(null, k, k === 'begin' ? begin : end)]);
+    return did(() => {
+      let src = code.text;
+      for (const [k, t] of texts) src = setMaterial(src, mixSection, layer, k, t);
+      return drop ? setMaterial(src, mixSection, layer, 'slices', matText(null, 'slices', kept)) : src;
+    }, `${layer}.${texts.map(([k, t]) => `${k} ${t ?? 'removed'}`).join(', ')}${drop ? ` (${drop} break${drop === 1 ? '' : 's'} outside the region dropped)` : ''}`);
   }
   // begin and end cannot cross: the moving slider stops .001 short of the other, so the committed region is always a region
   function clampTrim(el) {
@@ -970,19 +1004,6 @@
     const fr = breakPoints(secs, buf.duration, begin, end); // rounded to what would be written, so what is checked
     if (typeof fr === 'string') { $('mixstatus').textContent = fr; return; }
     return matText(null, 'slices', fr);
-  }
-  // a click on the waveform: on a break line (within 4 px) removes it, anywhere else inside the region adds one; a count becomes its own break points first
-  function waveClick(cv, ev) {
-    const box = cv.closest('.wave'), layer = box.dataset.wave, sv = slicesOf(layer);
-    if (sv === 'expr') { $('mixstatus').textContent = `${layer}.slices is an expression: edit it in the source`; return; }
-    const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value);
-    const rect = cv.getBoundingClientRect(), x = (ev.clientX - rect.left) / rect.width;
-    const breaks = slicePoints(begin, end, sliceSpec(sv)).slice(1, -1), next = toggleBreak(breaks, x, begin, end, 4 / rect.width);
-    if (next === breaks) return; // a click outside the region
-    // a removal that leaves fewer slices than the pattern plays would not build: refuse it rather than write a broken song
-    const need = maxIndex(matOf(layer, 'pattern'));
-    if (next.length + 1 <= need) { $('mixstatus').textContent = `slices: the pattern plays slice ${need}; remove it from the pattern first`; return; }
-    setMat(layer, 'slices', matText(null, 'slices', breaksIn(next, begin, end)));
   }
   // import: the file lands in this song's pack on the server, the map is reloaded so the sound exists, the song declares the pack and the part plays it
   const packName = () => $('song').value.replace(/\.strudel$/, '').replace(/[^\w-]/g, '_');
@@ -1027,8 +1048,6 @@
   $('mats').onmousedown = (e) => { if (e.target.closest('[data-pv]')) e.preventDefault(); }; // keep the text box focused, so its play button stays
   $('mats').onclick = (e) => {
     const layer = e.target.closest('[data-layer]')?.dataset.layer;
-    const cv = e.target.closest('.wave canvas');
-    if (cv) return waveClick(cv, e);
     const pv = e.target.closest('[data-pv]');
     if (pv) {
       const el = pv.parentElement.querySelector('input');
