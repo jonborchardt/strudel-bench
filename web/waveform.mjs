@@ -56,6 +56,7 @@ export function createWaveform(cv, { onCommit, onStatus = () => {}, tolerance = 
     if (moved(ev)) drag.moved = true;
     if (drag.kind === 'break') {
       const b = state.breaks, lo = (b[drag.i - 1] ?? state.begin) + .001, hi = (b[drag.i + 1] ?? state.end) - .001;
+      if (hi < lo) return; // neighbours closer than .002: there is nowhere to go, so the break stays where it is
       b[drag.i] = Math.min(hi, Math.max(lo, snapTo(x, state.begin, state.end, state.divisions)));
       where(`break ${drag.i}`, b[drag.i]);
     } else if (drag.kind === 'begin') { state.begin = Math.min(state.end - .001, x); onStatus(`start ${state.duration ? fmtTime(state.begin * state.duration) : frac(state.begin)}`); }
@@ -83,5 +84,7 @@ export function createWaveform(cv, { onCommit, onStatus = () => {}, tolerance = 
 
   cv.onpointercancel = () => { drag = null; draw(); };
 
-  return { state, set(s) { Object.assign(state, s); if (!drag) draw(); } };
+  // a gesture owns the state until it ends: a late update (peaks arriving from a decode) would pull the region or the
+  // list out from under it, so it is dropped whole; the host re-renders after the commit anyway.
+  return { state, get dragging() { return !!drag; }, set(s) { if (drag) return; Object.assign(state, s); draw(); } };
 }

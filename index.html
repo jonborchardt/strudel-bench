@@ -730,7 +730,7 @@
     if (!typing) secPane.show(s.node);
     $('songsrc').hidden = !m.song; // a song() header to show (its keys sit before every section, so its span holds still while a section is typed in)
     if (m.song && !songPane.typing()) songPane.show(m.song);
-    if (knobDrag) return; // a knob is being dragged: its value is already right, and rebuilding the knobs would drop the drag; the pane above still followed
+    if (knobDrag || waveDragging()) return; // a knob or a waveform line is being dragged: the value is already right, and rebuilding would drop the drag; the pane above still followed
     parts = Object.keys(s.layers); listTerms(); // the pill box offers this section's part names
     $('mix').hidden = false;
     for (const el of document.querySelectorAll('.mixsec')) el.textContent = `· ${s.name}${pinned === s.name ? ' (pinned)' : ''}`;
@@ -902,7 +902,7 @@
   });
   // the sampler row: the file behind the part's sound, decoded once per name on the live context, drawn as peaks with the region and its slice grid
   const BREAKS_TITLE = 'break points in seconds into the file, space-separated; empty = equal slices; click the waveform to add one, click a line to remove it, drag one to move it; converting a count to breaks pins them to the file, so a later trim drops the ones it leaves outside';
-  const snapSetting = () => { const s = localStorage.getItem('strudel:snap'); return s in SNAPS ? s : '1/16'; }; // where a dragged or clicked break lands: this browser's setting, never the song's
+  const snapSetting = () => { const s = localStorage.getItem('strudel:snap'); return Object.hasOwn(SNAPS, s) ? s : '1/16'; }; // where a dragged or clicked break lands: this browser's setting, never the song's
   const maxIndex = (pattern) => Math.max(0, ...String(pattern ?? '').match(/(?<![*!\/@%:.\w])\d+/g)?.map(Number) ?? []); // the highest slice a play pattern names (modifiers like *2 and @3 are not indices)
   const bufs = new Map(); // sound name -> promise of its AudioBuffer
   function bufferOf(name) {
@@ -937,14 +937,18 @@
     if (!waves.has(cv)) waves.set(cv, createWaveform(cv, { onCommit: (c) => waveCommit(box, c), onStatus: (t) => ($('mixstatus').textContent = t) }));
     return waves.get(cv);
   }
+  // a gesture on a waveform holds the row still, as a knob drag does: a rebuilt matlist would detach the canvas mid-drag
+  const waveDragging = () => [...$('matlist').querySelectorAll('.wave canvas')].some((cv) => waves.get(cv)?.dragging);
   async function waveRender(box) {
-    const layer = box.dataset.wave, a = partAttrs(layer), wf = waveOf(box);
+    const layer = box.dataset.wave, wf = waveOf(box);
+    // the part with its pack definition underneath: the file to decode is the definition's sound (which may differ from
+    // its name), and the snap grid counts the region in beats of the bars it stands for, inherited or written
+    const ra = resolveSample(partAttrs(layer)), bars = ra.bars ?? 1;
     const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value), spec = sliceSpec(slicesOf(layer));
-    // the snap grid counts the region in beats of the bars it stands for; a part that only names a definition inherits its bars
-    const bars = resolveSample(a).bars ?? 1, beats = sections.find((x) => x.name === mixSection)?.grid.beats ?? 4;
+    const beats = sections.find((x) => x.name === mixSection)?.grid.beats ?? 4;
     const shape = { begin, end, breaks: Array.isArray(spec) ? spec : null, count: Array.isArray(spec) ? spec.length + 1 : spec, divisions: snapDivisions(bars, beats, SNAPS[snapSetting()]) };
-    if (!a.sound) { box.querySelector('.info').textContent = 'pick a sample, or import one'; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
-    let buf; try { buf = await bufferOf(a.sound); } catch (e) { box.querySelector('.info').textContent = e.message; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
+    if (!ra.sound) { box.querySelector('.info').textContent = 'pick a sample, or import one'; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
+    let buf; try { buf = await bufferOf(ra.sound); } catch (e) { box.querySelector('.info').textContent = e.message; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
     if (!box.isConnected) return; // re-rendered while decoding
     wf.set({ peaks: peaks(buf.getChannelData(0), box.querySelector('canvas').width), duration: buf.duration, ...shape });
     bi.nextElementSibling.value = fmtTime(begin * buf.duration); ei.nextElementSibling.value = fmtTime(end * buf.duration);
@@ -970,11 +974,19 @@
     }
     if (keys.length) trimCommit(box, keys);
   }
-  // the region as the sliders now stand -> the source; break points it now leaves outside go in the same edit, since the song would not build with them
+  // the region as the sliders now stand -> the source; break points it now leaves outside go in the same edit (the song
+  // would not build with them), unless dropping one would leave fewer slices than the play pattern names: then it is refused
   function trimCommit(box, keys) {
     const layer = box.dataset.wave;
     const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value);
     const sv = slicesOf(layer), kept = Array.isArray(sv) ? breaksIn(sv, begin, end) : null, drop = kept ? sv.length - kept.length : 0;
+    // the region would strand a break the play pattern needs: refuse the trim rather than write a song that cannot build
+    const need = maxIndex(matOf(layer, 'pattern'));
+    if (drop && kept.length + 1 <= need) {
+      $('mixstatus').textContent = `slices: the pattern plays slice ${need}; the region would drop it`;
+      mixRender(); // the sliders and the drawn region spring back to what the source says
+      return false;
+    }
     const texts = keys.map((k) => [k, matText(null, k, k === 'begin' ? begin : end)]);
     return did(() => {
       let src = code.text;
