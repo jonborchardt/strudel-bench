@@ -17,6 +17,9 @@ test('packJsonWith sets or removes one definition and keeps the pack metadata', 
     { deploy: true, license: 'CC0-1.0', source: 'generated', samples: { loop: { bars: 2 }, hit: { end: .5 } } });
   assert.deepEqual(packJsonWith(meta, 'loop', null), { deploy: true, license: 'CC0-1.0', source: 'generated', samples: {} });
   assert.deepEqual(packJsonWith({ license: 'CC0-1.0' }, 'a', { bars: 2 }), { license: 'CC0-1.0', samples: { a: { bars: 2 } } }, 'a pack with no samples yet');
+  const bare = { license: 'CC0-1.0' };
+  assert.equal(packJsonWith(bare, 'a', null), bare, 'removing a name the pack never had changes nothing, not even to add an empty samples key');
+  assert.deepEqual(Object.keys(packJsonWith({}, 'a', null)), [], 'a pack with no pack.json at all stays empty: no samples key invented');
   assert.deepEqual(meta.samples, { loop: { bars: 2 } }, 'the pack read from disk is not mutated');
 });
 

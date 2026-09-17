@@ -13,8 +13,9 @@ export function defText(name, def) {
   return out;
 }
 
-/** pack.json with definition `name` set to `def`, or removed when def is null; the pack's other fields kept. */
+/** pack.json with definition `name` set to `def`, or removed when def is null; the pack's other fields kept. A removal of a name the pack does not have changes nothing (so it cannot invent a `samples` key). */
 export function packJsonWith(meta, name, def) {
+  if (!def && !Object.hasOwn(meta.samples ?? {}, name)) return meta;
   const samples = { ...(meta.samples ?? {}) };
   if (def) samples[name] = def; else delete samples[name];
   return { ...meta, samples };

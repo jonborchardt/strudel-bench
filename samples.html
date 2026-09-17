@@ -103,9 +103,11 @@
   function listPacks() {
     const entries = Object.entries(localPacks);
     $('packlist').innerHTML = entries.length ? entries.map(([p, x]) => {
-      const row = (n, kind) => `<li class="${kind}${cur?.pack === p && cur?.name === n ? ' sel' : ''}"><button data-pack="${esc(p)}" data-${kind}="${esc(n)}">${esc(n)}</button></li>`;
+      const row = (n, kind) => `<li class="${kind}${cur?.pack === p && cur?.kind === kind && cur?.name === n ? ' sel' : ''}"><button data-pack="${esc(p)}" data-${kind}="${esc(n)}">${esc(n)}</button></li>`;
+      // a sound with a definition of its own name is listed once, as that definition: the definition *is* the sound's
+      // default interpretation, and a blank row next to it invites saving {} over it
       const rows = [...Object.keys(x.samples ?? {}).sort().map((n) => row(n, 'def')),
-        ...Object.keys(x.sounds ?? {}).sort().map((n) => row(n, 'snd')),
+        ...Object.keys(x.sounds ?? {}).filter((n) => !Object.hasOwn(x.samples ?? {}, n)).sort().map((n) => row(n, 'snd')),
         ...(x.problems ?? []).map((t) => `<li class="bad">${esc(t)}</li>`)];
       return `<section class="wpack${cur?.pack === p ? ' on' : ''}"><h3><button data-pack="${esc(p)}">${esc(p)}</button><small>${x.deploy ? 'deployed' : 'local'}</small></h3><ul>${rows.join('')}</ul>`
         + (cur?.pack === p ? '<div class="drop">drop audio here<input type="file" id="file" accept="audio/*"></div>' : '') + '</section>';
@@ -117,9 +119,11 @@
     Object.assign(localPacks, idx);
     registerSamples(localPacks);
   }
-  const selectPack = (p) => { cur = { pack: p, name: '', def: blank(Object.keys(localPacks[p]?.sounds ?? {})[0] ?? '') }; render(); }; // an unnamed definition on the pack's first sound: the select and the waveform agree from the start
-  const selectSound = (p, n) => { cur = { pack: p, name: n, def: blank(n) }; render(); }; // a plain sound is the whole file as one bar
-  const selectDef = (p, n) => { cur = { pack: p, name: n, def: { ...blank(n), ...localPacks[p].samples[n] } }; render(); };
+  // `kind` is which row is selected ('def' | 'snd' | ''), `from` the definition the editor was loaded from: a save
+  // under any other name is a new definition, and must ask before it lands on one that already exists
+  const selectPack = (p) => { cur = { pack: p, name: '', kind: '', from: null, def: blank(Object.keys(localPacks[p]?.sounds ?? {})[0] ?? '') }; render(); }; // an unnamed definition on the pack's first sound: the select and the waveform agree from the start
+  const selectSound = (p, n) => { cur = { pack: p, name: n, kind: 'snd', from: null, def: blank(n) }; render(); }; // a plain sound is the whole file as one bar
+  const selectDef = (p, n) => { cur = { pack: p, name: n, kind: 'def', from: n, def: { ...blank(n), ...localPacks[p].samples[n] } }; render(); };
 
   // ---- the editor: every control reads into cur.def, then render() writes the whole form, the waveform and the buttons back
   const wave = createWaveform($('wave'), {
@@ -142,8 +146,8 @@
     const d = cur.def, mine = ++token;
     const count = Array.isArray(d.slices) ? d.slices.length + 1 : d.slices;
     set($('name'), cur.name);
-    $('sound').innerHTML = Object.keys(localPacks[cur.pack]?.sounds ?? {}).sort().map((n) => `<option${n === d.sound ? ' selected' : ''}>${esc(n)}</option>`).join('')
-      || '<option value="">(no sounds: drop audio into this pack)</option>';
+    if ($('sound') !== document.activeElement) $('sound').innerHTML = Object.keys(localPacks[cur.pack]?.sounds ?? {}).sort().map((n) => `<option${n === d.sound ? ' selected' : ''}>${esc(n)}</option>`).join('')
+      || '<option value="">(no sounds: drop audio into this pack)</option>'; // a rebuild while it has focus would drop the keyboard pick
     set($('bars'), d.bars); set($('slices'), count); set($('pattern'), pattern); set($('bpm'), bpm);
     $('stretch').checked = !!d.stretch;
     $('slicebtns').innerHTML = Array.from({ length: count }, (_, i) => `<button class="sl" data-slice="${i}" title="play slice ${i} alone">${i}</button>`).join('');
@@ -218,7 +222,7 @@
   // the definition as a song would hear it: the sample part itself, over the bars it claims, at the page's tempo
   const playPattern = (btn) => preview(btn, () => {
     if (!cur.def.sound) throw new Error('pick a sound first');
-    const cycles = Math.max(1, Math.ceil(cur.def.bars));
+    const cycles = cur.def.bars; // the section is exactly the sample's bars, fractional ones included, so a sub-bar definition plays once
     const attrs = { ...cur.def, ...(pattern ? { pattern } : {}) };
     return { pattern: window.sample(attrs, { cps: cps(), cycles, key: 'C:minor', seed: 1, kit: 'RolandTR909' }), cps: cps(), cycles, what: `${cur.name || cur.def.sound} at ${bpm} bpm` };
   });
@@ -228,11 +232,16 @@
   async function write(name, def) {
     const problem = def && nameProblem(name, cur.pack, localPacks);
     if (problem) return status(problem);
+    const had = localPacks[cur.pack]?.samples?.[name];
+    // overwriting someone else's definition (a rename, a fresh edit) or removing one is worth a question: there is no undo here
+    if (def && had && name !== cur.from && !confirm(`replace the existing definition "${name}" in ${cur.pack}?`)) return status('not saved');
+    if (!def && !had) return status(`no definition "${name}" in ${cur.pack}`);
+    if (!def && !confirm(`delete the definition "${name}" from ${cur.pack}?`)) return status('not deleted');
     const next = packJsonWith(await packMeta(cur.pack), name, def);
     const r = await fetch(`samples/user/${cur.pack}/pack.json`, { method: 'PUT', body: JSON.stringify(next, null, 2) });
     if (!r.ok) return status(await r.text());
     await refreshPacks();
-    if (def) { cur.name = name; render(); status(`saved ${cur.pack}/${name}`); }
+    if (def) { Object.assign(cur, { name, kind: 'def', from: name }); render(); status(`saved ${cur.pack}/${name}`); }
     else { selectSound(cur.pack, cur.def.sound); status(`deleted ${cur.pack}/${name}`); }
   }
   const save = () => write(cur.name, defText(cur.name, cur.def));
@@ -256,6 +265,7 @@
       await strudel.samples(await (await fetch('samples/user/strudel.json', { cache: 'no-store' })).json()); // the map carries its own _base
       await refreshPacks();
       bufs.delete(name);
+      for (const k of tempos.keys()) if (k.startsWith(`${name}|`)) tempos.delete(k); // the file behind the name changed: so does what it was detected as
       selectSound(cur.pack, name);
       status(`imported ${file.name} → samples/user/${cur.pack}/${name}${ext}${replaced ? ' (replaced: reload to hear the new file)' : ''}`);
     } catch (e) { status(e.message); }
