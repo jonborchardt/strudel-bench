@@ -484,7 +484,9 @@
     const ph = s.name === mixSection ? ((c - s.offset) / s.span).toFixed(4) : '-1'; // the event strips' playhead, when the shown section is the one sounding
     if (ph !== lastPh) $('knobs').style.setProperty('--ph', (lastPh = ph)); // an unchanged custom property still costs a style pass over every strip
     for (const b of $('strip').children) b.classList.toggle('on', sections[b.dataset.i] === s);
-    if (!pinned && mixSection !== s.name) { mixSection = s.name; mixRender(); } // the mix card follows the playhead unless pinned
+    // the mix card follows the playhead unless pinned, but never mid-gesture: a knob or waveform drag that spans a
+    // section change must commit into the section it started in, so the card catches up on the tick after the release
+    if (!pinned && mixSection !== s.name && !knobDrag && !waveDragging()) { mixSection = s.name; mixRender(); }
   }
   const chordAt = (s, bar) => { try { const prog = parseProgression(s.progression); return ' · ' + prog[bar % prog.length].map((ch) => chordName(s.key, ch)).join(' '); } catch { return ''; } }; // the chord under bar `bar` (0-based) of section `s`
   // songs/ on the local server; this browser's localStorage on a static host
