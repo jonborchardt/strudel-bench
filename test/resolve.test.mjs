@@ -196,3 +196,16 @@ test('setSectionField sets, replaces and drops a section key or progression', as
   assert.match(setSectionField(SRC, 'drop', 'key', "'E:minor'"), /section\('drop', 8, \{ key: 'E:minor',\n/, 'no role: first in the spec');
   assert.throws(() => setSectionField(`song({}, [section('a', 1, { key: K })])`, 'a', 'key', "'C:minor'"), /expression/);
 });
+
+test('addPack declares a pack in the song header: inserts, appends, or leaves an existing one alone', async () => {
+  await ready;
+  const { addPack } = await import('../lib/resolve.mjs');
+  const bare = `song({ cps: .5, key: 'C:minor' }, [section('a', 4, { drums: {} })])`;
+  assert.match(addPack(bare, 'mine'), /song\(\{ cps: \.5, key: 'C:minor', packs: \['mine'\] \}/);
+  const one = `song({ cps: .5, packs: ['demo-pack'] }, [section('a', 4, {})])`;
+  assert.match(addPack(one, 'mine'), /packs: \['demo-pack', 'mine'\]/);
+  assert.equal(addPack(one, 'demo-pack'), one, 'already declared: unchanged');
+  assert.match(addPack(`song({ packs: [] }, [section('a', 4, {})])`, 'x'), /packs: \['x'\]/, 'an empty list');
+  assert.throws(() => addPack(`song({ packs: P }, [section('a', 4, {})])`, 'x'), /expression/);
+  assert.throws(() => addPack(`s("bd")`, 'x'), /not a song/);
+});
