@@ -36,6 +36,32 @@
           "why": "the same eight slices with all but two deleted, space .9: the tide out"
         }
       ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "review: the climax chop isolates two kicks and no snare, and stretch transposes the slices wildly",
+      "changes": [
+        {
+          "section": "breakwater",
+          "layer": "sample",
+          "why": "break points .0625 .125 .1875 .25 .5 so slice 0 is the first kick and slice 2 the first snare (the decoded loop puts a snare at .125, not at .5); the pattern now plays kick on one, snare on two, snare and kick on the backbeat"
+        },
+        {
+          "section": "breakwater",
+          "layer": "sample",
+          "why": "every hit sits on an eighth-of-a-bar step and the half-bar slice on a half-bar step, so stretch locks the fit instead of transposing: every event is at the natural speed 0.275"
+        },
+        {
+          "section": "undertow",
+          "layer": "melody",
+          "why": "the phrase now ends on the fifth (5@2) rather than degree 2, so the question the surge answers is a real half-cadence"
+        },
+        {
+          "section": "backwash",
+          "layer": "progression",
+          "why": "VI VII i instead of repeating swell's i VI, so the release has its own harmonic move home"
+        }
+      ]
     }
   ]
 }

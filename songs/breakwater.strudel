@@ -3,7 +3,8 @@
 // own tempo, quarters, a break-point chop on the isolated kick and snare, then one hit a bar - so the arrangement is
 // the editing, and the written bass, marimba hook and pad only answer what the break is doing. The tide goes out at
 // the end: the same loop, almost all of it deleted.
-// shoreline -> swell -> undertow -> surge -> breakwater -> backwash. 52 cycles, one cycle = one bar.
+// shoreline -> swell -> undertow -> surge -> breakwater -> backwash. 52 bars (54.7 cycles: undertow's eight bars
+// run at its own slower tempo, so they take longer than eight cycles of the song).
 // Axis values are 0..1 with 0.5 = the layer's baseline.
 
 // the break itself: the whole file, two bars, eight equal slices. Sections override slices/pattern/region.
@@ -36,7 +37,7 @@ song({ bpm: 132, key: 'F:minor', seed: 19, kit: 'RolandTR909', packs: ['demo-pac
     sample: { ...brk, begin: .5, end: 1, bars: 1, slices: 4, pattern: '0 1 [2 2] 3', level: .9, brightness: .35, weight: .85, space: .6, width: .6 },
     drums:  { template: 'halftime', density: .4, weight: .7, brightness: .2, articulation: .3, space: .65, level: .7 },
     bass:   { ...low, density: .8, notes: '0 ~ ~ ~ 3 ~ 0 ~', weight: .9, register: .15, brightness: .25 },
-    melody: { ...lead, density: .45, notes: '0 ~ 3 ~ 2 ~ 0@2 ~ 5 ~ 4 ~ 3 2@2', brightness: .4, space: .7, level: .7 },
+    melody: { ...lead, density: .45, notes: '0 ~ 3 ~ 2 ~ 0@2 ~ 3 ~ 4 ~ 7 5@2', brightness: .4, space: .7, level: .7 },
     pad:    { ...wash, density: .35, brightness: .2, space: .85 },
   }),
 
@@ -51,11 +52,15 @@ song({ bpm: 132, key: 'F:minor', seed: 19, kit: 'RolandTR909', packs: ['demo-pac
     fx:     { riser: 4 },
   }),
 
-  // the climax, and the reason for the break points: the slice list isolates the first kick (the first 1/16 of the
-  // file) and the first snare (.5 .. .5625), so the pattern can play kick, kick, snare, kick against the grid.
-  // stretch fits each slice to its step, so the long third slice is squeezed and the kick is smeared - the chop.
+  // the climax, and the reason for the break points: the file is two bars, so 1/16 of it is one eighth note. The
+  // list cuts at .0625 .125 .1875 .25 .5, giving slice 0 = the first kick, 1 = the gap after it, 2 = the first snare,
+  // 3 = the gap after that, 4 = the second half of bar one (its kick and snare together), 5 = all of bar two.
+  // So the pattern can play a real groove out of order: kick on one, snare on two, snare and kick on the backbeat.
+  // Every hit sits on an eighth-of-a-bar step and slice 4 on a half-bar step - each step is exactly as long as the
+  // slice is, so stretch only locks the fit and every hit still plays at its own pitch (speed .275, as everywhere
+  // else in the song). stretch is the timing, not a transposition.
   section('breakwater', 12, { role: 'climax', progression: 'i VI III VII',
-    sample:  { ...brk, slices: [.0625, .125, .5, .5625], pattern: '0 ~ 0 3 [0 3] 4 3 <0 2>', stretch: true,
+    sample:  { ...brk, slices: [.0625, .125, .1875, .25, .5], pattern: '[0 ~] [2 0] [~ 0] [2 <0 2>] [0 ~] [2 0] 4@2', stretch: true,
                level: 1.1, brightness: .8, weight: .8, space: .45, width: .75 },
     drums:   { template: 'breaks', density: .9, drive: .85, articulation: .8, brightness: .7, weight: .7, variation: .35 },
     bass:    { ...low, density: .8, notes: '0 0 7 ~ 5 ~ 3 0', weight: .9, drive: .7, aggression: .55, brightness: .6 },
@@ -67,7 +72,7 @@ song({ bpm: 132, key: 'F:minor', seed: 19, kit: 'RolandTR909', packs: ['demo-pac
 
   // the tide out: the same eight slices, all but two of them deleted, wide open room. Nothing answers but the pad
   // and one falling marimba phrase that ends on the root.
-  section('backwash', 8, { role: 'release', progression: 'i VI',
+  section('backwash', 8, { role: 'release', progression: 'VI VII i',
     sample: { ...brk, pattern: '0 ~ ~ ~ 4 ~ ~ ~', level: .7, brightness: .35, weight: .5, space: .9, width: .8 },
     melody: { ...lead, density: .4, phrase: 1, notes: '0 ~ ~ 3 2 ~ 0@2', brightness: .35, space: .85, level: .6 },
     pad:    { ...wash, density: .35, space: .95, brightness: .2, level: .6 },

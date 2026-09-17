@@ -13,7 +13,9 @@ song({ cps: .5, key: 'C:minor', seed: 7, kit: 'RolandTR909', packs: ['demo-pack'
     bass:   { weight: .6, density: .8, notes: '0 ~ 0 7 ~ 4 3 ~' },
   }),
   section('breaks', 4, { role: 'release',
-    // break points instead of a count: fractions of the file, so the kick (the first 1/16 of the loop) and the snare get their own slices
-    sample: { sound: 'loop', bars: 2, slices: [.0625, .125, .5, .5625], pattern: '0 ~ 0 1 [2 3] ~ 4 0', level: .8 },
+    // break points instead of a count: fractions of the file, so the first kick (0 .. 1/16 of the loop) is slice 0
+    // and the first snare (1/8 .. 3/16, the file is two bars, so a hit is 1/16 of it) is slice 2; 1 is the gap
+    // between them, 3 the rest of bar one and 4 the whole of bar two
+    sample: { sound: 'loop', bars: 2, slices: [.0625, .125, .1875, .5], pattern: '0 ~ 2 ~ 0 0 2 [3 4]', level: .8 },
   }),
 ])
