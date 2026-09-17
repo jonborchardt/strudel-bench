@@ -754,7 +754,7 @@
     const val = (L, e, key) => (L.mats[key] ? L.mats[key].value : e?.[key]);
     const expr = '<i title="an expression: edit it in the source">expr</i>';
     // a text box with a play button that shows while the box has focus: hear this part with what is typed, before or after committing it
-    const text = (L, e, key, ph, extra = '') => { const v = val(L, e, key); return v === 'expr' || (v && typeof v === 'object') ? expr : `<span class="tb"><input class="snd${extra ? ' num' : ' wide'}" ${extra} data-mat="${key}" value="${v == null ? '' : esc(clean(v))}" placeholder="${ph}" spellcheck="false"><button class="pv" data-pv title="hear ${esc(layer(L))} with this (pauses the song)">&#9654;</button></span>`; };
+    const text = (L, e, key, ph, extra = '', over) => { const v = over === undefined ? val(L, e, key) : over; return v === 'expr' || (v && typeof v === 'object') ? expr : `<span class="tb"><input class="snd${extra ? ' num' : ' wide'}" ${extra} data-mat="${key}" value="${v == null ? '' : esc(clean(v))}" placeholder="${ph}" spellcheck="false"><button class="pv" data-pv title="hear ${esc(layer(L))} with this (pauses the song)">&#9654;</button></span>`; };
     // a menu button: the popover lists `names` with a play button per row, so a choice can be heard before it is picked
     const pick = (L, e, key, ph, voice) => { const v = val(L, e, key); const cur = voice ? v?.[voice] : v; return v === 'expr' ? expr : `<button class="pick" data-mat="${key}"${voice ? ` data-voice="${voice}"` : ''} data-ph="${esc(ph)}">${cur ? esc(clean(cur)) : `<i>${esc(ph)}</i>`}</button>`; };
     const layer = (L) => L.layerName;
@@ -769,10 +769,13 @@
         bits.push(`<label>sound ${pick(L, e, 'sound', 'pick a sample')}</label>`);
         if (server) bits.push(`<label class="imp" title="add an audio file to this song's pack, samples/user/${esc(packName())}/, declare the pack, and play it here"><button class="pick" data-import>import&hellip;</button><input type="file" accept="audio/*,.wav,.mp3,.ogg,.flac,.aif,.aiff,.m4a,.webm" hidden></label>`);
         bits.push(`<label>bars ${text(L, e, 'bars', '1', 'type="number" min=".25" step=".25"')}</label>`);
-        bits.push(`<label>slices ${text(L, e, 'slices', '1', 'type="number" min="1" step="1"')}</label>`);
+        // slices: a count, or break points (fractions of the file) written as seconds in the breaks box and clicked on the waveform
+        const sv = val(L, e, 'slices'), spec = sliceSpec(sv), b = val(L, e, 'begin'), en = val(L, e, 'end');
+        const n = slicePoints(typeof b === 'number' ? b : 0, typeof en === 'number' ? en : 1, spec).length - 1;
+        bits.push(`<label>slices ${text(L, e, 'slices', '1', 'type="number" min="1" step="1"', Array.isArray(sv) ? n : undefined)}</label>`);
+        bits.push(`<label>breaks <span class="tb"><input class="snd wide" data-breaks placeholder="even" spellcheck="false" title="break points in seconds into the file, space-separated; empty = equal slices; click the waveform to add one, click a line to remove it"><button class="pv" data-pv title="hear ${esc(name)} with these breaks (pauses the song)">&#9654;</button></span></label>`);
         bits.push(`<label>play ${text(L, e, 'pattern', '0')}</label>`);
         const st = val(L, e, 'stretch'); bits.push(`<label><input type="checkbox" data-mat="stretch"${st === true ? ' checked' : ''}${st === 'expr' ? ' disabled' : ''}> fit each slice to its step</label>`);
-        const n = Math.max(1, Math.round(Number(val(L, e, 'slices')) || 1)), b = val(L, e, 'begin'), en = val(L, e, 'end');
         bits.push(`<div class="wave" data-wave="${esc(name)}"><canvas width="720" height="72" title="the file: the used region lit, a line per slice"></canvas>` +
           `<label>start <input type="range" min="0" max="1" step=".001" data-trim="begin" value="${typeof b === 'number' ? b : 0}"><output></output></label>` +
           `<label>end <input type="range" min="0" max="1" step=".001" data-trim="end" value="${typeof en === 'number' ? en : 1}"><output></output></label>` +
@@ -801,12 +804,14 @@
     for (const box of $('matlist').querySelectorAll('.wave')) waveRender(box);
   }
   const q = (v) => `'${String(v).replace(/['"\\]/g, '').trim()}'`;
+  const frac = (f) => String(+f.toFixed(4)).replace(/^0\./, '.'); // a fraction of the file as the songs write it: .0625
   // the source text for material `key` at `value` ('' removes it); `sounds` is the whole voice map with one voice replaced
   function matText(layer, key, value, voice, section = mixSection) {
     if (key === 'follow') return value ? 'true' : null;
     if (key === 'phrase') return value > 1 ? String(Math.round(value)) : null; // 1 is the default, so it is dropped
     if (key === 'level') return Number(value) === 1 ? null : String(Number(value)); // 1 = untouched, so it is dropped
     if (key === 'seed') return String(value).trim() ? String(Math.max(1, Math.round(Number(value)))) : null;
+    if (key === 'slices' && Array.isArray(value)) return value.length ? `[${value.map(frac).join(', ')}]` : null; // break points, in the file's fractions; none = one slice
     if (['begin', 'end', 'bars', 'slices'].includes(key)) { // the layer's own defaults are dropped, as phrase/level are
       const n = Number(value), def = { begin: 0, end: 1, bars: 1, slices: 1 }[key];
       return String(value).trim() && Number.isFinite(n) && n !== def ? String(+n.toFixed(3)).replace(/^0\./, '.') : null;
@@ -824,6 +829,11 @@
   $('mats').onchange = (e) => {
     if (e.target.type === 'file') { const f = e.target.files[0]; if (f) importSample(f, e.target.closest('[data-layer]').dataset.layer); e.target.value = ''; return; } // cleared so re-picking the same file fires change again
     if (e.target.dataset.trim) { clampTrim(e.target); return setMat(e.target.closest('[data-layer]').dataset.layer, e.target.dataset.trim, matText(null, e.target.dataset.trim, e.target.value)); }
+    if (e.target.dataset.breaks !== undefined) { // no data-mat: it is read in seconds, so it commits through breaksText rather than the generic path
+      const layer = e.target.closest('[data-layer]').dataset.layer;
+      breaksText(layer, e.target.value).then((t) => t !== undefined && setMat(layer, 'slices', t), (err) => status(err.message));
+      return;
+    }
     const el = e.target, key = el.dataset.mat; if (!key) return;
     setMat(el.closest('[data-layer]').dataset.layer, key, matText(null, key, el.type === 'checkbox' ? el.checked : el.value));
   };
@@ -895,9 +905,10 @@
     return bufs.get(name);
   }
   const partAttrs = (layer) => sections.find((x) => x.name === mixSection)?.layers[layer]?.attrs ?? {}; // the evaluated part (a spread resolved)
+  const sliceSpec = (v) => (Array.isArray(v) ? v : Math.max(1, Math.round(Number(v) || 1))); // slices as written: break points, or a count
   async function waveRender(box) {
     const layer = box.dataset.wave, a = partAttrs(layer), cv = box.querySelector('canvas'), g = cv.getContext('2d');
-    const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value), n = Math.max(1, Math.round(Number(a.slices) || 1));
+    const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value), spec = sliceSpec(a.slices);
     g.clearRect(0, 0, cv.width, cv.height);
     if (!a.sound) { box.querySelector('.info').textContent = 'pick a sample, or import one'; return; }
     let buf; try { buf = await bufferOf(a.sound); } catch (e) { box.querySelector('.info').textContent = e.message; return; }
@@ -905,8 +916,11 @@
     const pk = peaks(buf.getChannelData(0), cv.width), mid = cv.height / 2;
     g.fillStyle = '#2a2f3a'; g.fillRect(begin * cv.width, 0, (end - begin) * cv.width, cv.height);
     g.fillStyle = '#9a9aa2'; for (let x = 0; x < cv.width; x++) { const h = Math.max(1, pk[x] * mid); g.fillRect(x, mid - h, 1, 2 * h); }
-    g.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2f6fed'; g.beginPath(); for (const p of slicePoints(begin, end, n)) { g.moveTo(Math.round(p * cv.width) + .5, 0); g.lineTo(Math.round(p * cv.width) + .5, cv.height); } g.stroke();
+    g.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2f6fed'; g.beginPath(); for (const p of slicePoints(begin, end, spec)) { g.moveTo(Math.round(p * cv.width) + .5, 0); g.lineTo(Math.round(p * cv.width) + .5, cv.height); } g.stroke();
     bi.nextElementSibling.value = fmtTime(begin * buf.duration); ei.nextElementSibling.value = fmtTime(end * buf.duration);
+    // the breaks box reads in seconds, which needs the duration; a box being typed in is left alone
+    const bx = box.closest('.matrow').querySelector('[data-breaks]');
+    if (bx && document.activeElement !== bx) bx.value = Array.isArray(spec) ? spec.map((f) => (f * buf.duration).toFixed(3).replace(/\.?0+$/, '')).join(' ') : '';
     const bars = a.bars ?? 1;
     // no sample rate: decodeAudioData resamples to the context's rate, so it would name the browser's rate, not the file's
     box.querySelector('.info').textContent = `${fmtTime(buf.duration)} · ${buf.numberOfChannels === 2 ? 'stereo' : buf.numberOfChannels === 1 ? 'mono' : `${buf.numberOfChannels} ch`} · region ${fmtTime((end - begin) * buf.duration)} as ${bars} bar${bars === 1 ? '' : 's'}`;
@@ -920,10 +934,31 @@
   const auditionSlice = (btn, layer, i) => preview(btn, () => {
     const s = sections.find((x) => x.name === mixSection), a = s.layers[layer].attrs;
     if (!a.sound) throw new Error('pick a sample first');
-    const pts = slicePoints(a.begin ?? 0, a.end ?? 1, Math.max(1, Math.round(a.slices || 1)));
+    const pts = slicePoints(a.begin ?? 0, a.end ?? 1, sliceSpec(a.slices));
     if (i >= pts.length - 1) throw new Error(`no slice ${i}`);
     return { pattern: strudel.s(a.sound).begin(pts[i]).end(pts[i + 1]).speed((s.cps * (pts.at(-1) - pts[0])) / (a.bars || 1)).unit('c').slow(2), cps: s.cps, what: `slice ${i} of ${a.sound}` };
   });
+  // the breaks box: seconds into the file -> the `slices` literal ([] = even slices, so the key goes away); undefined = it does not parse, and the status line says why
+  async function breaksText(layer, value) {
+    const secs = String(value).trim().split(/[\s,]+/).filter(Boolean).map(Number);
+    if (secs.some((n) => !Number.isFinite(n))) { status('breaks: seconds into the file, space-separated'); return; }
+    const a = partAttrs(layer), buf = await bufferOf(a.sound), begin = a.begin ?? 0, end = a.end ?? 1;
+    const fr = secs.map((s) => s / buf.duration);
+    if (fr.some((f, i) => (i > 0 && f <= fr[i - 1]) || f <= begin || f >= end)) { status(`breaks must rise and lie inside the region (${fmtTime(begin * buf.duration)} .. ${fmtTime(end * buf.duration)})`); return; }
+    return matText(null, 'slices', fr);
+  }
+  // a click on the waveform: on a break line (within 4 px) removes it, anywhere else inside the region adds one; a count becomes its own break points first
+  function waveClick(cv, ev) {
+    const box = cv.closest('.wave'), layer = box.dataset.wave, a = partAttrs(layer);
+    const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value);
+    const rect = cv.getBoundingClientRect(), x = (ev.clientX - rect.left) / rect.width;
+    let breaks = slicePoints(begin, end, sliceSpec(a.slices)).slice(1, -1);
+    const hit = breaks.findIndex((p) => Math.abs(p - x) < 4 / rect.width);
+    if (hit >= 0) breaks = breaks.filter((_, i) => i !== hit);
+    else if (x > begin && x < end) breaks = [...breaks, x].sort((p, r) => p - r);
+    else return;
+    setMat(layer, 'slices', matText(null, 'slices', breaks));
+  }
   // import: the file lands in this song's pack on the server, the map is reloaded so the sound exists, the song declares the pack and the part plays it
   const packName = () => $('song').value.replace(/\.strudel$/, '').replace(/[^\w-]/g, '_');
   async function importSample(file, layer) {
@@ -967,8 +1002,14 @@
   $('mats').onmousedown = (e) => { if (e.target.closest('[data-pv]')) e.preventDefault(); }; // keep the text box focused, so its play button stays
   $('mats').onclick = (e) => {
     const layer = e.target.closest('[data-layer]')?.dataset.layer;
+    const cv = e.target.closest('.wave canvas');
+    if (cv) return waveClick(cv, e);
     const pv = e.target.closest('[data-pv]');
-    if (pv) { const el = pv.parentElement.querySelector('input'); return audition(pv, layer, el.dataset.mat, matText(layer, el.dataset.mat, el.value)); }
+    if (pv) {
+      const el = pv.parentElement.querySelector('input');
+      if (el.dataset.breaks !== undefined) return breaksText(layer, el.value).then((t) => t !== undefined && audition(pv, layer, 'slices', t), (err) => status(err.message));
+      return audition(pv, layer, el.dataset.mat, matText(layer, el.dataset.mat, el.value));
+    }
     const st = e.target.closest('[data-seed]');
     if (st) return setMat(layer, 'seed', String(Math.max(1, Number(st.dataset.cur) + Number(st.dataset.seed))));
     const ps = e.target.closest('[data-pvseed]');
