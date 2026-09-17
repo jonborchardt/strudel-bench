@@ -140,7 +140,8 @@
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase, arrange } from './lib/song.mjs';
   import { ARP_ORDERS, DRUM_ORDER, voiceSound, melodyLine, slicePoints } from './lib/layers.mjs';
-  import { peaks, fmtTime, soundUrl, sliceSpec, frac, breaksIn, breakPoints, SNAPS, snapDivisions, detectTempo, barsGuess } from './web/sampler.mjs';
+  import { fmtTime, sliceSpec, frac, breaksIn, breakPoints, SNAPS, snapDivisions, barsGuess } from './web/sampler.mjs';
+  import { createSampleCache, createPreviewer } from './web/preview.mjs';
   import { createWaveform } from './web/waveform.mjs';
   import { hasSound } from './lib/strudel.mjs';
   import { parseProgression, chordName } from './lib/harmony.mjs';
@@ -596,7 +597,7 @@
     did(() => setKit(code.text, kit), `kit ${kit}`);
   };
   $('kits').ontoggle = (e) => { // popovers open centred by default: pin this one under its button
-    if (e.newState !== 'open') { if (pvBtn && $('kits').contains(pvBtn)) preview(pvBtn); return; } // closing the menu ends its preview
+    if (e.newState !== 'open') { if (pv.button && $('kits').contains(pv.button)) pv.stop(); return; } // closing the menu ends its preview
     const r = $('kit').getBoundingClientRect();
     Object.assign($('kits').style, { top: `${r.bottom + 4}px`, left: `${r.left}px` });
     $('kitq').value = ''; filterKits();
@@ -856,27 +857,16 @@
     setMat(mlayer, key, matText(mlayer, key, el.type === 'checkbox' ? el.checked : el.value));
   };
   // audition: pause the song, then play only this section's `layer` with material `key` set to `text`, for two bars
-  let pvTimer, pvBtn, pvLast, pvGain = Number(localStorage.getItem('strudel:pvlvl')) || 1; // pvGain: preview volume, a page setting rather than part of the song
-  // preview(btn, build): build() -> { pattern, cps, what }; the same button again stops it, another button replaces it
-  async function preview(btn, build) {
-    clearTimeout(pvTimer); pvBtn?.classList.remove('on');
-    if (pvBtn === btn) { pvBtn = null; strudel.hush(); return; }
-    pvBtn = btn; pvLast = [btn, build];
-    await run(btn, build);
-  }
-  async function run(btn, build) {
-    if (playing) await pause();
-    strudel.hush();
-    const r = await ready;
-    await strudel.getAudioContext().resume(); // this ▶ may be the page's first click: the context starts suspended until a gesture resumes it
-    let p; try { p = await build(); } catch (err) { $('mixstatus').textContent = err.message; pvBtn = null; return; }
-    btn.classList.add('on');
-    $('mixstatus').textContent = `hearing ${p.what}${pvGain === 1 ? '' : ` at x${pvGain}`}`;
-    r.setCps(p.cps); r.setPattern(p.pattern.mul(strudel.gain(pvGain)), true); // the repl's own setCps: the `setcps` global only exists once the song has been evaluated
-    pvTimer = setTimeout(() => { strudel.hush(); btn.classList.remove('on'); pvBtn = null; }, 2000 / p.cps + 200);
-  }
+  const pv = createPreviewer({ // web/preview.mjs: the same one-button preview the sample workshop uses
+    ready,
+    status: (t) => ($('mixstatus').textContent = t),
+    before: async () => { if (playing) await pause(); },
+    hush: () => strudel.hush(),
+    resume: () => strudel.getAudioContext().resume(),
+    gain: (p, g) => p.mul(strudel.gain(g)),
+  });
   // a material: this section's `layer` with `key` set to `text` (a drum voice alone on its template grid: the whole part would drown it, or not even include it, since voices join as density rises)
-  const audition = (btn, layer, key, text, voice, section = mixSection, src = code.text) => preview(btn, async () => { // no key: the part as it is written
+  const audition = (btn, layer, key, text, voice, section = mixSection, src = code.text) => pv.preview(btn, async () => { // no key: the part as it is written
     const pat = await evalCode(ready, key ? setMaterial(src, section, layer, key, text) : src);
     const s = pat.strudel.sections.find((x) => x.name === section);
     let pattern = s.layers[layer].pattern, what = key ? `${key} ${text ?? 'removed'}` : 'as written';
@@ -904,7 +894,7 @@
     mt:  '.............................x..',
     lt:  '..............................xx',
   };
-  const auditionKit = (btn, kit) => preview(btn, async () => {
+  const auditionKit = (btn, kit) => pv.preview(btn, async () => {
     const has = Object.keys(KIT_GRIDS).filter((v) => hasSound(`${kit}_${v}`) !== false), missing = Object.keys(KIT_GRIDS).filter((v) => !has.includes(v));
     return {
       pattern: strudel.stack(...has.map((v) => strudel.s(v).struct(gridToMini(KIT_GRIDS[v])).bank(kit))).slow(2),
@@ -916,18 +906,9 @@
   const BREAKS_TITLE = 'break points in seconds into the file, space-separated; empty = equal slices; click the waveform to add one, click a line to remove it, drag one to move it; converting a count to breaks pins them to the file, so a later trim drops the ones it leaves outside';
   const snapSetting = () => { const s = localStorage.getItem('strudel:snap'); return Object.hasOwn(SNAPS, s) ? s : '1/16'; }; // where a dragged or clicked break lands: this browser's setting, never the song's
   const maxIndex = (pattern) => Math.max(0, ...String(pattern ?? '').match(/(?<![*!\/@%:.\w])\d+/g)?.map(Number) ?? []); // the highest slice a play pattern names (modifiers like *2 and @3 are not indices)
-  const bufs = new Map(); // sound name -> promise of its AudioBuffer
-  function bufferOf(sound) {
-    // a name may be a pack's sample definition, whose underlying sound (and variant) is what there is a file for
-    const [base, variant] = String(sound).split(':'), def = sampleDef(base);
-    const name = def ? (variant ? `${def.sound}:${variant}` : def.sound) : sound;
-    if (!bufs.has(name)) bufs.set(name, (async () => {
-      const url = soundUrl(strudel.soundMap.get(), name);
-      if (!url) throw new Error(`no file behind "${name}" (a synth, a pitched instrument, or not loaded)`);
-      return strudel.getAudioContext().decodeAudioData(await (await fetch(url)).arrayBuffer());
-    })().catch((e) => { bufs.delete(name); throw e; }));
-    return bufs.get(name);
-  }
+  // the decoded audio, its drawn peaks and its detected tempo, each computed once (web/preview.mjs; a name may be a pack's
+  // sample definition, whose underlying sound is what there is a file for)
+  const cache = createSampleCache({ soundMap: () => strudel.soundMap.get(), decode: (ab) => strudel.getAudioContext().decodeAudioData(ab) });
   const partAttrs = (layer) => sections.find((x) => x.name === mixSection)?.layers[layer]?.attrs ?? {}; // the evaluated part (a spread resolved)
   // a material the way the knobs read every material: the section's own literal first, the evaluated part (a spread) only
   // when it has none. The evaluated song lags a commit by a render, so two quick clicks would otherwise lose the first.
@@ -963,15 +944,15 @@
     const beats = sections.find((x) => x.name === mixSection)?.grid.beats ?? 4;
     const shape = { begin, end, breaks: Array.isArray(spec) ? spec : null, count: Array.isArray(spec) ? spec.length + 1 : spec, divisions: snapDivisions(bars, beats, SNAPS[snapSetting()]) };
     if (!ra.sound) { box.querySelector('.info').textContent = 'pick a sample, or import one'; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
-    let buf; try { buf = await bufferOf(ra.sound); } catch (e) { box.querySelector('.info').textContent = e.message; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
+    let buf; try { buf = await cache.bufferOf(ra.sound); } catch (e) { box.querySelector('.info').textContent = e.message; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
     if (!box.isConnected) return; // re-rendered while decoding
-    wf.set({ peaks: peaksOf(buf, ra.sound, box.querySelector('canvas').width), duration: buf.duration, ...shape });
+    wf.set({ peaks: cache.peaksOf(buf, ra.sound, box.querySelector('canvas').width), duration: buf.duration, ...shape });
     bi.nextElementSibling.value = fmtTime(begin * buf.duration); ei.nextElementSibling.value = fmtTime(end * buf.duration);
     fillBreaks(box, spec, buf.duration); // the breaks box reads in seconds, which needs the duration
     // no sample rate: decodeAudioData resamples to the context's rate, so it would name the browser's rate, not the file's
     const info = `${fmtTime(buf.duration)} · ${buf.numberOfChannels === 2 ? 'stereo' : buf.numberOfChannels === 1 ? 'mono' : `${buf.numberOfChannels} ch`} · region ${fmtTime((end - begin) * buf.duration)} as ${bars} bar${bars === 1 ? '' : 's'}`;
     // what the region sounds like it is: the detected tempo, the bar count that implies, and a button for each of the two ways to use it
-    const { bpm: exact, confidence } = tempoOf(buf, ra.sound, begin, end);
+    const { bpm: exact, confidence } = cache.tempoOf(buf, ra.sound, begin, end);
     const guess = exact && barsGuess((end - begin) * buf.duration, exact, beats);
     const bpm = Math.round(exact); // the bar count is guessed from the measurement; a tempo to write into the song is a whole number
     box.querySelector('.info').innerHTML = esc(info) + (bpm
@@ -979,18 +960,6 @@
         + ` <button class="pick" data-usebars="${guess}" title="this part's bars: ${guess}">use</button>`
         + ` <button class="pick" data-songbpm="${bpm}" title="set the song's tempo to ${bpm} bpm (its cps goes away)">song bpm ${bpm}</button>`
       : '');
-  }
-  const peakCache = new Map(); // `sound|width` -> the drawn columns: a full scan of a long file must not run on every mixRender
-  function peaksOf(buf, sound, width) {
-    const k = `${sound}|${width}`;
-    if (!peakCache.has(k)) peakCache.set(k, peaks(buf.getChannelData(0), width));
-    return peakCache.get(k);
-  }
-  const tempos = new Map(); // `sound|begin|end` -> its detection: autocorrelation over a long file costs, and a redraw must not pay it again
-  function tempoOf(buf, sound, begin, end) {
-    const k = `${sound}|${begin}|${end}`;
-    if (!tempos.has(k)) tempos.set(k, detectTempo(buf.getChannelData(0), buf.sampleRate, begin, end));
-    return tempos.get(k);
   }
   // a gesture on the waveform: break points straight to `slices`, a dragged region edge through the sliders' own commit path
   function waveCommit(box, { breaks, begin, end }) {
@@ -1039,7 +1008,7 @@
     el.value = String(el === bi ? Math.min(Number(el.value), Number(ei.value) - .001) : Math.max(Number(el.value), Number(bi.value) + .001));
   }
   // one slice alone, at the fitted speed, for as long as it lasts (natural playback of that piece)
-  const auditionSlice = (btn, layer, i) => preview(btn, () => {
+  const auditionSlice = (btn, layer, i) => pv.preview(btn, () => {
     const s = sections.find((x) => x.name === mixSection), a = resolveSample(s.layers[layer].attrs); // the part over its pack definition: region, bars and slices it inherits
     if (!a.sound) throw new Error('pick a sample first');
     const [begin, end] = trimOf(layer, a); // the source's region and break points: the buttons are drawn from those, and the evaluated song lags a commit
@@ -1051,7 +1020,7 @@
   async function breaksText(layer, value) {
     const secs = String(value).trim().split(/[\s,]+/).filter(Boolean).map(Number);
     if (secs.some((n) => !Number.isFinite(n))) { $('mixstatus').textContent = 'breaks: seconds into the file, space-separated'; return; }
-    const a = partAttrs(layer), buf = await bufferOf(a.sound), [begin, end] = trimOf(layer, a); // the region the sliders show, which a drag moves before the source does
+    const a = partAttrs(layer), buf = await cache.bufferOf(a.sound), [begin, end] = trimOf(layer, a); // the region the sliders show, which a drag moves before the source does
     const fr = breakPoints(secs, buf.duration, begin, end); // rounded to what would be written, so what is checked
     if (typeof fr === 'string') { $('mixstatus').textContent = fr; return; }
     return matText(layer, 'slices', fr);
@@ -1078,21 +1047,13 @@
       }
       await strudel.samples(await (await fetch('samples/user/strudel.json', { cache: 'no-store' })).json()); // re-register with the new sound (the map carries its own _base)
       Object.assign(localPacks, await (await fetch('samples/user/packs.json', { cache: 'no-store' })).json()); registerSamples(localPacks); // the pack's definitions may have changed with it
-      refreshSounds(); bufs.delete(name);
-      for (const m of [tempos, peakCache]) for (const k of m.keys()) if (k.startsWith(`${name}|`)) m.delete(k); // the file behind the name changed: so do its peaks and its detection
+      refreshSounds(); cache.forget(name); // the file behind the name changed: so do its peaks and its detection
       did(() => setMaterial(addPack(code.text, pack), mixSection, layer, 'sound', q(name)), `${layer}: imported ${file.name} as ${name}`);
       status(`imported ${file.name} → samples/user/${pack}/${name}${ext}${replaced ? ' (replaced: reload the page to hear the new file)' : ''}`);
     } catch (e) { status(e.message); }
   }
-  // two copies of the same control, one under the part rows and one in the menu: both show pvGain
-  // the sliders run -1..1.7 and the gain is 10^x (x0.1 .. x50), so the first half of the travel is the fine x0.1..x1 range and the far end still reaches a whisper-quiet sample
-  const pvIns = [...document.querySelectorAll('input.pvin')];
-  const showPvGain = () => { for (const i of pvIns) { i.value = Math.log10(pvGain); i.nextElementSibling.value = `x${pvGain < 10 ? pvGain.toFixed(1) : Math.round(pvGain)}`; } };
-  showPvGain();
-  for (const i of pvIns) {
-    i.oninput = (e) => { pvGain = +(10 ** Number(e.target.value)).toFixed(2); localStorage.setItem('strudel:pvlvl', pvGain); showPvGain(); };
-    i.onchange = () => { if (pvBtn) { clearTimeout(pvTimer); run(...pvLast); } }; // a running preview restarts at the new level
-  }
+  // two copies of the same control, one under the part rows and one in the menu: both show the one preview level
+  for (const i of document.querySelectorAll('input.pvin')) pv.bindLevel(i);
   $('mats').oninput = (e) => {
     if (e.target.dataset.mat === 'level') e.target.nextElementSibling.value = `x${e.target.value}`; // the readout follows the drag; the source changes on release (change)
     if (e.target.dataset.trim) { clampTrim(e.target); waveRender(e.target.closest('.wave')); } // the region follows the drag (stopping at the other end); the source changes on release
@@ -1154,7 +1115,7 @@
     $('pick').hidePopover();
     pickFor.onPick(row.dataset.v);
   };
-  $('pick').ontoggle = (e) => { if (e.newState === 'closed' && pvBtn && $('pick').contains(pvBtn)) preview(pvBtn); }; // closing the menu ends its preview (the same button again stops it)
+  $('pick').ontoggle = (e) => { if (e.newState === 'closed' && pv.button && $('pick').contains(pv.button)) pv.stop(); }; // closing the menu ends its preview
   const effective = () => Object.fromEntries(sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([l, x]) => [l, x.attrs]))])); // the evaluated song's resolved attrs per section and layer
   for (const id of ['addaxes', 'addmats']) $(id).onchange = (e) => { // the pick adds the part; the re-render puts the dropdown back on its placeholder
     const l = e.target.value; if (!l) return;
