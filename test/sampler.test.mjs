@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { peaks, fmtTime, soundUrl } from '../web/sampler.mjs';
+import { peaks, fmtTime, soundUrl, sliceSpec, frac, breaksIn, breakPoints, toggleBreak } from '../web/sampler.mjs';
 
 test('peaks: the largest magnitude per column, columns wider than the data still fill', () => {
   const data = Float32Array.from([0, .5, -1, 0, .2, .1, 0, 0]);
@@ -25,4 +25,40 @@ test('soundUrl: the file behind a sound and its variant index from the sound map
   assert.equal(soundUrl(map, 'piano'), null, 'a pitched map has no one file');
   assert.equal(soundUrl(map, 'nope'), null);
   assert.equal(soundUrl(map, 'hh:abc'), null, 'a non-numeric index is no file');
+});
+
+test('sliceSpec: an array as is, a count at least 1', () => {
+  assert.deepEqual(sliceSpec([.1]), [.1]);
+  assert.equal(sliceSpec(8), 8);
+  assert.equal(sliceSpec('expr'), 1);
+  assert.equal(sliceSpec(undefined), 1);
+  assert.equal(sliceSpec(0), 1);
+  assert.equal(sliceSpec(-4), 1);
+});
+
+test('frac: a fraction of the file as the songs write it', () => {
+  assert.equal(frac(.0625), '.0625');
+  assert.equal(frac(1 / 3), '.3333');
+  assert.equal(frac(1), '1');
+});
+
+test('break points: seconds to rounded fractions, refused when outside the region or not rising', () => {
+  assert.deepEqual(breakPoints([1, 2, 3], 4, 0, 1), [.25, .5, .75]);
+  assert.deepEqual(breakPoints([], 4, 0, 1), []);
+  assert.match(breakPoints([0.0001, 2], 4, 0, 1), /must rise and lie inside/, 'rounds onto begin: refused');
+  assert.match(breakPoints([2, 2.0001], 4, 0, 1), /must rise/, 'a duplicate after rounding');
+  assert.match(breakPoints([3, 2], 4, 0, 1), /must rise/, 'out of order');
+  assert.match(breakPoints([1], 4, .3, 1), /inside the region/, 'before begin');
+});
+
+test('breaksIn keeps the breaks a trim leaves inside the region, rounded and rising', () => {
+  assert.deepEqual(breaksIn([.0625, .125, .5, .5625], .3, 1), [.5, .5625]);
+  assert.deepEqual(breaksIn([.1, .10001, .2], 0, 1), [.1, .2], 'a duplicate after rounding is dropped');
+});
+
+test('toggleBreak removes the break within tolerance, else inserts in order inside the region', () => {
+  assert.deepEqual(toggleBreak([.25, .5], .5004, 0, 1, .005), [.25]);
+  assert.deepEqual(toggleBreak([.25, .5], .4, 0, 1, .005), [.25, .4, .5]);
+  const same = [.25];
+  assert.equal(toggleBreak(same, .05, .1, 1, .005), same, 'outside the region: the list itself, so the page can skip the commit');
 });
