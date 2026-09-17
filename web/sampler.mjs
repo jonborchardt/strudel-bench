@@ -66,8 +66,9 @@ export function barsGuess(seconds, bpm, beatsPerBar = 4) {
   return [.25, .5, 1, 2, 4, 8, 16, 32].reduce((best, b) => (Math.abs(Math.log2(b / bars)) < Math.abs(Math.log2(best / bars)) ? b : best));
 }
 /**
- * Tempo of the region begin..end of a channel: onset strength (rectified rise of RMS in 5 ms hops), autocorrelated over
- * the lags of 60..200 bpm, with a mild preference for 80..160 so half and double tempos resolve the usual way, and the
+ * Tempo of the region begin..end of a channel: onset strength (rectified rise of log energy in 5 ms hops, so a loud kick
+ * and a quiet hat count comparably), autocorrelated over the lags of 60..200 bpm,
+ * with a mild preference for 80..160 so half and double tempos resolve the usual way, and the
  * peak refined between hops. bpm 0 when the region is shorter than about 2 s or nothing periodic stands out.
  */
 export function detectTempo(data, rate, begin = 0, end = 1) {

@@ -851,7 +851,8 @@
       breaksText(layer, e.target.value).then((t) => t !== undefined && setMat(layer, 'slices', t), (err) => ($('mixstatus').textContent = err.message));
       return;
     }
-    const el = e.target, key = el.dataset.mat, mlayer = el.closest('[data-layer]').dataset.layer; if (!key) return;
+    const el = e.target, key = el.dataset.mat; if (!key) return; // the preview level slider and the add-part select are in here too, and belong to no part
+    const mlayer = el.closest('[data-layer]').dataset.layer;
     setMat(mlayer, key, matText(mlayer, key, el.type === 'checkbox' ? el.checked : el.value));
   };
   // audition: pause the song, then play only this section's `layer` with material `key` set to `text`, for two bars
@@ -1069,6 +1070,7 @@
       await strudel.samples(await (await fetch('samples/user/strudel.json', { cache: 'no-store' })).json()); // re-register with the new sound (the map carries its own _base)
       Object.assign(localPacks, await (await fetch('samples/user/packs.json', { cache: 'no-store' })).json()); registerSamples(localPacks); // the pack's definitions may have changed with it
       refreshSounds(); bufs.delete(name);
+      for (const k of tempos.keys()) if (k.startsWith(`${name}|`)) tempos.delete(k); // the file behind the name changed: so does what it was detected as
       did(() => setMaterial(addPack(code.text, pack), mixSection, layer, 'sound', q(name)), `${layer}: imported ${file.name} as ${name}`);
       status(`imported ${file.name} → samples/user/${pack}/${name}${ext}${replaced ? ' (replaced: reload the page to hear the new file)' : ''}`);
     } catch (e) { status(e.message); }
@@ -1103,7 +1105,10 @@
     if (sl) return auditionSlice(sl, layer, Number(sl.dataset.slice));
     // the detection readout: the bar count it guessed for this part, or its tempo for the whole song
     const ub = e.target.closest('[data-usebars]');
-    if (ub) return setMat(layer, 'bars', matText(layer, 'bars', ub.dataset.usebars));
+    if (ub) { // the guess is already what the definition says: dropping the override leaves the part on it, so say that rather than "removed"
+      const t = matText(layer, 'bars', ub.dataset.usebars);
+      return did(() => setMaterial(code.text, mixSection, layer, 'bars', t), `${layer}.bars ${ub.dataset.usebars}${t === null ? " (the definition's)" : ''}`);
+    }
     const sb = e.target.closest('[data-songbpm]');
     if (sb) return did(() => setSongField(code.text, 'bpm', sb.dataset.songbpm), `song bpm ${sb.dataset.songbpm} (from ${matOf(layer, 'sound') ?? 'the sample'})`);
     if (e.target.closest('[data-import]')) return e.target.closest('label').querySelector('input[type=file]').click();
@@ -1129,7 +1134,7 @@
     const { mat: key, voice, ph } = btn.dataset;
     const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS) : [...$('snds').options].map((o) => o.value);
     const text = (v) => matText(layer, key, v, voice);
-    openPickList(btn, { names, cur: btn.querySelector('i') ? '' : btn.textContent, ph, labels: defLabels(), onPick: (v) => setMat(layer, key, text(v)), preview: (v, pv) => audition(pv, layer, key, text(v), voice) });
+    openPickList(btn, { names, cur: btn.querySelector('i') ? '' : btn.textContent, ph, labels: key === 'sound' ? defLabels() : {}, onPick: (v) => setMat(layer, key, text(v)), preview: (v, pv) => audition(pv, layer, key, text(v), voice) });
   }
   function filterPick() { const words = $('pickq').value.toLowerCase().split(/\s+/).filter(Boolean); for (const b of $('picklist').children) b.hidden = !words.every((w) => b.textContent.toLowerCase().includes(w)); }
   $('pickq').oninput = filterPick;
