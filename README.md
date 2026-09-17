@@ -12,7 +12,7 @@ The same page is deployed to GitHub Pages by `.github/workflows/pages.yml` on ev
 
 ## Use
 
-The page has two views: **Compose** (index.html) and **Examples** (examples.html, a scrollable showcase of playable snippets for every axis, descriptor, modifier, harmony word and section edit; entries marked "example coming" are placeholders).
+The page has two views: **Compose** (index.html) and **Examples** (examples.html, a scrollable showcase of playable snippets for every axis, descriptor, modifier, harmony word and section edit; entries marked "example coming" are placeholders). A third, local-only page, **Samples** (samples.html, linked from the nav once a local server answers), is where sample packs and their named definitions are made; see below.
 
 - Pick a song, press ▶. ■ stops; pause remembers the cycle and resumes from it. Save writes the textarea back to the file. **+ New song** writes a minimal `song()` template to `songs/<name>.strudel`.
 - The editable source and the expanded Strudel it reduces to sit side by side (stacked on narrow screens). The expanded pane follows the textarea as you type (expanded in the browser by `lib/dump.mjs`, also on GitHub Pages); lines the last edit changed flash briefly, and the source pane says "unsaved" until you save. Switching or creating a song asks before discarding unsaved edits.
@@ -23,6 +23,7 @@ The page has two views: **Compose** (index.html) and **Examples** (examples.html
 - **Export MP3** stops playback, renders the source offline in the browser, encodes it there and downloads `<song>.mp3`. **Export Strudel** downloads the expanded pane as `<song>.strudel.txt`, ready to paste into the strudel.cc REPL, and **Open** opens it there. The badge next to the buttons shows the state (rendering with a percentage, ✓ file, ✗ why) and the buttons lock while a render runs. All work identically on localhost and GitHub Pages; with the local server the file is also written to `renders/` (the ✓ tooltip says so).
 - Your own samples live in **local packs**: one folder per pack, `samples/user/<pack>/`. Inside it `<sound>/*.wav` is a sound with variants (`s("<sound>:2")` picks the third file) and a loose audio file is a single sound named after the file. A song declares the packs it uses, `song({ ..., packs: ['<pack>'] })` (a comment line `packs: ['<pack>']` does the same in a plain Strudel file), and `npm run check` refuses a pack sound the song does not declare, a declared pack that is not in `samples/user/`, and any sound in no pack at all. Nothing is ever substituted: a missing pack plays silence for its sounds, and the page says so. The header shows the song's packs as **deployed**, **local** or **missing**; the status line lists every local pack this environment has. Adding a pack touches no code: a folder, and a `pack.json` only if it should ship. `samples/user/demo-pack` (a generated sine blip, CC0) and `songs/ping.strudel` are the worked example. The Compose page imports a file for a sample part (materials → import…, or drop it on the row): it lands in `samples/user/<song>/`, the song declares the pack, and a license at the prompt writes the `pack.json` that ships it; `songs/chop.strudel` is the worked example, on the demo pack's generated loop.
 - **Deploying local packs** (GitHub Pages) is opt-in per pack through `samples/user/<pack>/pack.json`: `{ "deploy": true, "license": "CC0-1.0", "source": "..." }` ships the whole pack, `"deploy": ["kick", "snare"]` ships only those sounds, no file (or `"deploy": false`) keeps it local-only. `npm run pages` copies only what ships, refuses to deploy a pack with no `license`, leaves songs that declare a non-shipping pack out of the deployed song list (their files do not ship either), and re-checks every deployed song against exactly the shipped sounds, so a subset that drops a sound a song uses fails the build instead of playing silence online. Built-in packs are unaffected: they come from `samples/packs/` locally and stream from the Strudel CDN on Pages.
+- **Named samples** are a pack's own `pack.json` gaining a `samples` object: `{ "loop": { "bars": 2, "slices": 8 }, "loop-kick": { "sound": "loop", "end": .0625, "bars": .125 } }` (`sound` defaults to the definition's own name; one file can back several named regions this way). A song plays one by name, `sample: { sound: 'loop-kick' }`, and can override any of its keys on the part same as always; the song still has to declare the pack. Since the definition lives in the pack, any song that declares it can use it without repeating the region. Defining them is a dev-only page, **`samples.html`** (not deployed, not on the song dropdown): a waveform per definition, with a tempo guess from the region's onsets (click to set that definition's `bars`; on the Compose row instead, the same guess offers to set the part's `bars` or the song's `bpm`), drag to move a break or the region's edges, and a snap select (`off, 1/4, 1/8, 1/16`, remembered per browser) so a drag lands on the beat grid; the same waveform component gives Compose's own row this drag and snap too.
 
 ## Scripts
 
@@ -40,9 +41,11 @@ The page has two views: **Compose** (index.html) and **Examples** (examples.html
     index.html           Compose: song header, transport, source + expanded strudel, section feedback, offline renderer
     examples.html        Examples: data-driven playable cards (GROUPS at the top of its script), stubs where content is pending
     about.html           About: what strudel-bench is and why; legal.html: privacy and disclaimers (static, no strudel loaded)
+    samples.html         Samples: local-only workshop for pack management and named sample definitions; not deployed, not on the song dropdown
     404.html             not-found page, served by the local server and by GitHub Pages for any unknown path
     web/                 boot.mjs (shared initStrudel/prebake, playCode, nav, footer), compose.mjs (kit + notes + request helpers),
-                         examples.mjs (the GROUPS data), mp3.mjs (lamejs wrapper), sampler.mjs (waveform peaks, time labels, the file behind a sound),
+                         examples.mjs (the GROUPS data), mp3.mjs (lamejs wrapper), sampler.mjs (waveform peaks, time labels, tempo detection, snapping),
+                         waveform.mjs (the waveform component: draw, drag, snap; shared by Compose and Samples), workshop.mjs (Samples page's pack.json helpers),
                          kits/ (one icon per kit), strudel.css, icon.svg, og.png
     songs/               one .strudel file per song
     lib/                 the axis system (see below), loaded by both the page and the Node scripts
@@ -161,11 +164,11 @@ Material is a literal value on a layer or a section, never an axis (rule 4). Omi
 | melody | `phrase` | integer bars | the seeded line spans that many bars |
 | fx | `riser` | `true` (4 bars) or bars | noise sweep into the next section |
 | fx | `impact` | `true` (`bd`) or a sound | one hit on the downbeat, half speed, big room |
-| sample | `sound` | any loaded sample | the file the part slices (`npm run check` prints the file behind it) |
+| sample | `sound` | any loaded sample, or a pack's named sample definition | the file the part slices (`npm run check` prints the file it resolves to); a definition's other keys sit under the part's own, which win |
 | sample | `begin`, `end` | fractions of the file, 0..1 | the region used (default the whole file); the trim is folded into the slice grid |
 | sample | `bars` | number | what the region stands for at the section tempo (default 1): playback speed follows |
 | sample | `slices` | integer, or a list of break points (fractions of the file inside the region) | equal slices of the region, or slices at exactly those points: `[.06, .125, .5]` |
-| sample | `pattern` | mini-notation of slice indices | the order, spanning the sample's bars: `'0 1 2 3 4 5 6 7'` is the loop as recorded, `'0 1 [2 3] 0'` a chop |
+| sample | `pattern` | mini-notation of slice indices | the order, spanning the sample's bars: unwritten default is every slice in order (`'0 1 2 3 4 5 6 7'`, the loop as recorded), `'0 1 [2 3] 0'` a chop |
 | sample | `stretch` | `true` | each slice fitted to its step, what Strudel's `fit()` does, from the section tempo; off, a slice keeps its own length at the fitted speed |
 | song, section | `kit` | drum machine name | section overrides song |
 | song, section | `meter` | `'4/4'`, `'3/4'`, `'6/8'`, `'7/8'`, `'5/4'` | one bar is still one cycle; 16th grid |

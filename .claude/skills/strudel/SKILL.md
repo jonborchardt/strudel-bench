@@ -43,7 +43,8 @@ Descriptors never touch material. To change a sound, level, fill, arp or meter, 
 sample: `sound`, the region (`begin`/`end` as fractions), `bars` it stands for, `slices` (a count, or a list of break
 points, fractions of the file inside the region), `pattern` (slice indices in
 mini-notation over those bars) and `stretch` (fit each slice to its step); the check prints the file behind the sound
-and every event's `begin`/`end`/`speed`.
+and every event's `begin`/`end`/`speed`. A sample part may name a pack definition (`pack.json` → `samples`) and
+override any key; the check prints the pack sound the events carry.
 
 ## Flat, thin, simplistic, boring, aimless: material first, not axes
 
