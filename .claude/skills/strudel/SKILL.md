@@ -5,7 +5,7 @@ description: Use when the user asks to change how a song in songs/ sounds (make 
 
 # strudel: editing songs by musical axes
 
-Songs are `songs/*.strudel`. A song written with `song()`/`section()` has layers (drums, bass, melody, pad)
+Songs are `songs/*.strudel`. A song written with `song()`/`section()` has layers (drums, bass, melody, pad, fx, sample)
 with axis values in 0..1 where 0.5 is that layer's baseline. See `reference/vocab.md` (generated) for the
 axes, what each does per layer, and the descriptor words.
 

@@ -81,7 +81,7 @@ Songs can be written as sections × layers × axis values (see `songs/demo.strud
       section('drop', 8, { role: 'climax', drums: { density: .7, drive: .8 }, bass: { weight: .8 }, melody: {}, pad: { space: .7 } }),
     ])
 
-Five layers — drums, bass, melody, pad, fx — each take axis values in 0..1 where 0.5 is that layer's baseline. Then:
+Six layers — drums, bass, melody, pad, fx, sample — each take axis values in 0..1 where 0.5 is that layer's baseline. Then:
 
     npm run resolve -- songs/demo.strudel drop drums "punchier"          # what would change
     npm run resolve -- songs/demo.strudel drop drums "punchier" --write  # do it
@@ -166,7 +166,7 @@ Material is a literal value on a layer or a section, never an axis (rule 4). Omi
 | sample | `bars` | number | what the region stands for at the section tempo (default 1): playback speed follows |
 | sample | `slices` | integer | equal slices of the region (default 1) |
 | sample | `pattern` | mini-notation of slice indices | the order, spanning the sample's bars: `'0 1 2 3 4 5 6 7'` is the loop as recorded, `'0 1 [2 3] 0'` a chop |
-| sample | `stretch` | `true` | fit each slice to its step (Strudel's `fit()`); off, a slice keeps its own length at the fitted speed |
+| sample | `stretch` | `true` | each slice fitted to its step, what Strudel's `fit()` does, from the section tempo; off, a slice keeps its own length at the fitted speed |
 | song, section | `kit` | drum machine name | section overrides song |
 | song, section | `meter` | `'4/4'`, `'3/4'`, `'6/8'`, `'7/8'`, `'5/4'` | one bar is still one cycle; 16th grid |
 | song | `bpm` | number | instead of `cps`: beats per minute on the meter's denominator |
