@@ -38,8 +38,11 @@ axes, what each does per layer, and the descriptor words.
 ## Material
 
 Descriptors never touch material. To change a sound, level, fill, arp or meter, edit the literal by hand
-(`sound`, `notes`, `level`, `sounds`, `fill`, `arp`, `follow`, `phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`) and
-re-run `npm run check`.
+(`sound`, `notes`, `level`, `sounds`, `fill`, `arp`, `follow`, `phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`,
+`begin`, `end`, `bars`, `slices`, `pattern`, `stretch`) and re-run `npm run check`. A `sample` part slices any loaded
+sample: `sound`, the region (`begin`/`end` as fractions), `bars` it stands for, `slices`, `pattern` (slice indices in
+mini-notation over those bars) and `stretch` (fit each slice to its step); the check prints the file behind the sound
+and every event's `begin`/`end`/`speed`.
 
 ## Flat, thin, simplistic, boring, aimless: material first, not axes
 
