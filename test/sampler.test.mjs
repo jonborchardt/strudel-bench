@@ -1,5 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { readWav } from '../lib/analyze.mjs';
 import { peaks, fmtTime, soundUrl, sliceSpec, frac, breaksIn, breakPoints, toggleBreak, detectTempo, barsGuess, snapTo, snapDivisions, SNAPS } from '../web/sampler.mjs';
 
 const near = (a, b, m) => assert.ok(Math.abs(a - b) < 1e-9, m);
@@ -76,6 +78,14 @@ test('detectTempo finds a click track within a bpm, on the whole file and on a r
   const c = detectTempo(clicks(120, 8, 22050, .1), 22050, .25, .75); assert.ok(Math.abs(c.bpm - 120) <= 1, `region: ${c.bpm}`);
   const s = detectTempo(new Float32Array(22050 * 4), 22050); assert.equal(s.bpm, 0, 'silence: nothing');
   assert.equal(detectTempo(clicks(120, 1), 22050).bpm, 0, 'too short to say');
+});
+test('detectTempo reads the demo loop as the 120 bpm it was generated at', () => {
+  // a real loop, not a click track: its kicks and snares are far louder than its hats, and before the envelope was
+  // measured in log energy a few loud off-beat hits outweighed the grid and it read 80
+  const { rate, frames } = readWav(fs.readFileSync(new URL('../samples/user/demo-pack/loop.wav', import.meta.url)));
+  const d = detectTempo(frames[0], rate);
+  assert.ok(Math.abs(d.bpm - 120) <= 1, `loop.wav: ${d.bpm}`);
+  assert.equal(barsGuess(frames[0].length / rate, d.bpm, 4), 2, 'four seconds at 120 is two bars');
 });
 test('barsGuess rounds a region to a musical bar count', () => {
   assert.equal(barsGuess(4, 120, 4), 2); assert.equal(barsGuess(5.1, 94, 4), 2); assert.equal(barsGuess(1.1, 120, 4), .5); assert.equal(barsGuess(30, 120, 4), 16); assert.equal(barsGuess(2, 120, 3), 1);

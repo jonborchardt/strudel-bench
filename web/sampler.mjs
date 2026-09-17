@@ -76,7 +76,10 @@ export function detectTempo(data, rate, begin = 0, end = 1) {
   if (n < 400) return { bpm: 0, confidence: 0 };
   const env = new Float32Array(n);
   let prev = 0, total = 0;
-  for (let i = 0; i < n; i++) { let e = 0; const o = s0 + i * hop; for (let j = 0; j < hop; j++) e += data[o + j] * data[o + j]; e = Math.sqrt(e / hop); env[i] = Math.max(0, e - prev); total += env[i]; prev = e; }
+  // the rise is measured in log energy: a loud kick and a quiet hat then count comparably, so a few big hits off the
+  // beat cannot outweigh the grid the rest of the loop keeps
+  const lg = (e) => Math.log1p(100 * e);
+  for (let i = 0; i < n; i++) { let e = 0; const o = s0 + i * hop; for (let j = 0; j < hop; j++) e += data[o + j] * data[o + j]; e = Math.sqrt(e / hop); env[i] = Math.max(0, lg(e) - lg(prev)); total += env[i]; prev = e; }
   if (!total) return { bpm: 0, confidence: 0 };
   const mean = total / n; for (let i = 0; i < n; i++) env[i] -= mean;
   const hps = rate / hop, lagMin = Math.floor((60 / 200) * hps), lagMax = Math.min(n - 1, Math.ceil((60 / 60) * hps));
