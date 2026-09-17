@@ -20,6 +20,30 @@
           "why": "pack bars 1>0.5 -- the takes are stereo and about 1.0 s of speech, which is half a bar at this tempo, not a whole one; the first pass sized every region against a file duration read as mono, so every line played at exactly half speed. Voice patterns doubled their rest counts to keep their placement, and the climax chops dropped stretch so the words stay words."
         }
       ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "9 pinned notes: alley/chase directions too repetitive, more immediacy at chase bar 14, nothing said twice in hide, run melody too happy and too common, run drums too spatish, make bar 14 of run feel like they should run, found should not repeat and should feel defeated",
+      "changes": [
+        {
+          "section": "voices:",
+          "why": "one sound per part means variety is extra parts. alley 4 turns on 3 words, chase on co-prime periods 7/5/11 half-bars so the order never repeats and all three land on bar 14, hide 3 warnings one each, found says hes here then go back then stops"
+        },
+        {
+          "section": "run",
+          "layer": "melody",
+          "why": "glockenspiel>vibraphone_bowed, notes rising 7-10-12 > falling 7-6-5-4-2, register .35: the old line was the bright motif used in other songs here"
+        },
+        {
+          "section": "run",
+          "layer": "fx",
+          "why": "riser removed - the reverbed noise sweep over bars 12-16 was the spacious wash, and a riser inside the drop is the cliche. urgency now comes from the chops closing up (bars 0,2,4,6,9,11,12,13,14,15,15.5). run.drums.brightness .6>.42 closes the hats 20000>11950 Hz"
+        },
+        {
+          "section": "found:",
+          "why": "progression i i VI i > i VII VI v so it sinks instead of resolving, drums level .5>.35, a low bass drone added; section rms 0.029 against runs 0.33"
+        }
+      ]
     }
   ]
 }
