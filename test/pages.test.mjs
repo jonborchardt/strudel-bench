@@ -53,8 +53,9 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
     assert.ok(!fs.existsSync(path.join(out, 'samples/user/_t_subset/big.wav')), 'outside the subset: not copied');
     assert.ok(!fs.existsSync(path.join(out, 'samples/user/_t_private')), 'local-only: not copied');
     assert.ok(!fs.existsSync(path.join(out, 'samples/user/demo-pack/pack.json')), 'pack metadata is served from packs.json, not copied');
-    assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(path.join(out, 'samples/user/packs.json'), 'utf8'))).sort(), ['_t_subset', 'demo-pack']);
     const idx = JSON.parse(fs.readFileSync(path.join(out, 'samples/user/packs.json'), 'utf8'));
+    for (const p of ['_t_subset', 'demo-pack']) assert.ok(idx[p], `${p} ships`); // other deploy packs may exist; the policy is what is pinned
+    assert.ok(!idx._t_private, 'local-only: not in the index');
     assert.deepEqual(idx._t_subset.samples, { 'pub-hit': { sound: 'pub', end: .5 } }, 'a definition on a sound outside the deploy subset is dropped');
     assert.deepEqual(Object.keys(idx['demo-pack'].samples).sort(), ['loop', 'loop-kick', 'loop-snare'], 'the demo definitions ship');
     assert.ok(!fs.existsSync(path.join(out, 'samples/packs')), 'packs stream from the cdn');

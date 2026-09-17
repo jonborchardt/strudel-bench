@@ -1,0 +1,18 @@
+{
+  "deploy": true,
+  "license": "Licensed to the repo owner for redistribution with this site",
+  "source": "voice-over session (rwp_tough_*): one actor shouting directions and warnings, 16-bit mono 44.1 kHz, 3-4 s per take with silence either side",
+  "samples": {
+    "back":    { "begin": 0.24, "end": 0.753 },
+    "coming":  { "begin": 0.30, "end": 0.936 },
+    "down":    { "begin": 0.29, "end": 0.892 },
+    "forward": { "begin": 0.25, "end": 0.829 },
+    "here":    { "begin": 0.30, "end": 0.951 },
+    "left":    { "begin": 0.28, "end": 0.874 },
+    "out":     { "begin": 0.25, "end": 0.760 },
+    "right":   { "begin": 0.25, "end": 0.826 },
+
+    "back-chop": { "sound": "back", "begin": 0.24, "end": 0.753, "slices": [0.428, 0.630] },
+    "out-chop":  { "sound": "out",  "begin": 0.25, "end": 0.760, "slices": [0.338] }
+  }
+}

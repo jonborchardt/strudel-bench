@@ -1,0 +1,15 @@
+{
+  "prompt": "Someone running from a monster while a voice tells them where to go; they hide, then have to run again. Built to exercise sample definitions and a shared sample pack with break points.",
+  "requests": [
+    {
+      "date": "2026-09-17",
+      "ask": "make sharable samples from the voice recordings and a scary chase song that uses them",
+      "changes": [
+        {
+          "section": "pack",
+          "why": "voice: 8 phrase sounds, each trimmed in pack.json to the shouted words so bars 1 at cps .5 drops the line on the downbeat at its recorded speed; back-chop and out-chop add break points between the words for the climax"
+        }
+      ]
+    }
+  ]
+}
