@@ -10,6 +10,16 @@
           "why": "voice: 8 phrase sounds, each trimmed in pack.json to the shouted words so bars 1 at cps .5 drops the line on the downbeat at its recorded speed; back-chop and out-chop add break points between the words for the climax"
         }
       ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "the sounds are slowed way down... is that an issue with how we do things",
+      "changes": [
+        {
+          "section": "voice",
+          "why": "pack bars 1>0.5 -- the takes are stereo and about 1.0 s of speech, which is half a bar at this tempo, not a whole one; the first pass sized every region against a file duration read as mono, so every line played at exactly half speed. Voice patterns doubled their rest counts to keep their placement, and the climax chops dropped stretch so the words stay words."
+        }
+      ]
     }
   ]
 }

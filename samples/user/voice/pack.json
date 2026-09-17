@@ -1,18 +1,18 @@
 {
   "deploy": true,
   "license": "Licensed to the repo owner for redistribution with this site",
-  "source": "voice-over session (rwp_tough_*): one actor shouting directions and warnings, 16-bit mono 44.1 kHz, 3-4 s per take with silence either side",
+  "source": "voice-over session (rwp_tough_*): one actor shouting directions and warnings, 16-bit stereo 44.1 kHz, 1.5-2.2 s per take with a little silence either side",
   "samples": {
-    "back":    { "begin": 0.24, "end": 0.753 },
-    "coming":  { "begin": 0.30, "end": 0.936 },
-    "down":    { "begin": 0.29, "end": 0.892 },
-    "forward": { "begin": 0.25, "end": 0.829 },
-    "here":    { "begin": 0.30, "end": 0.951 },
-    "left":    { "begin": 0.28, "end": 0.874 },
-    "out":     { "begin": 0.25, "end": 0.760 },
-    "right":   { "begin": 0.25, "end": 0.826 },
+    "back":    { "begin": 0.24, "end": 0.753, "bars": 0.5 },
+    "coming":  { "begin": 0.30, "end": 0.936, "bars": 0.5 },
+    "down":    { "begin": 0.29, "end": 0.892, "bars": 0.5 },
+    "forward": { "begin": 0.25, "end": 0.829, "bars": 0.5 },
+    "here":    { "begin": 0.30, "end": 0.951, "bars": 0.5 },
+    "left":    { "begin": 0.28, "end": 0.874, "bars": 0.5 },
+    "out":     { "begin": 0.25, "end": 0.760, "bars": 0.5 },
+    "right":   { "begin": 0.25, "end": 0.826, "bars": 0.5 },
 
-    "back-chop": { "sound": "back", "begin": 0.24, "end": 0.753, "slices": [0.428, 0.630] },
-    "out-chop":  { "sound": "out",  "begin": 0.25, "end": 0.760, "slices": [0.338] }
+    "back-chop": { "sound": "back", "begin": 0.24, "end": 0.753, "bars": 0.5, "slices": [0.428, 0.630] },
+    "out-chop":  { "sound": "out",  "begin": 0.25, "end": 0.760, "bars": 0.5, "slices": [0.338] }
   }
 }

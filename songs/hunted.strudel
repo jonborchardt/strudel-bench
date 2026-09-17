@@ -2,20 +2,23 @@
 //
 // The voice comes from samples/user/voice, a shared pack: one folder per phrase, two or three takes inside each, so
 // `forward` is a sound with variants and `forward:1` is the second take. The pack's pack.json trims every take to the
-// shouted words (begin/end are fractions of the file) and leaves bars at its default 1, so at this song's cps of .5
-// each line lands on a downbeat, plays at close to its recorded speed, and its own tail of silence covers the rest of
-// the bar. Naming the sound is then the whole part: `sample: { sound: 'forward' }`.
+// shouted words (begin/end are fractions of the file) and calls that region half a bar -- each shout is about a
+// second, and a bar here is two -- so `bars: 0.5` is what makes it play at its recorded speed. Naming the sound is
+// then the whole part: `sample: { sound: 'forward' }`.
+//
+// bars is also the pattern's span, so one step of a voice pattern below is half a bar, not a whole one: an eight-step
+// <0 ~ ~ ~ ~ ~ ~ ~> is one shout every four bars.
 //
 // `back-chop` and `out-chop` are the same takes with break points between the words -- slices as a list of fractions
 // of the file, not a count -- so 'go / back' and 'get / out of there' can be re-ordered and stuttered once the runner
-// stops being given time to listen.
+// stops being given time to listen. They are left unstretched: a slice keeps its own length, so the words stay words.
 song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }, [
 
   // out in the open, moving but not yet chased: a pulse, a low room, one instruction every four bars
   section('alley', 8, { role: 'establish', progression: 'i i VI v',
     drums:  { density: .3, space: .7, brightness: .3, articulation: .35, level: .8 },
     pad:    { sound: 'psaltery_bow', space: .85, brightness: .2, width: .7, articulation: .15 },
-    sample: { sound: 'forward', pattern: '<0 ~ ~ ~>', space: .7, brightness: .45 },
+    sample: { sound: 'forward', pattern: '<0 ~ ~ ~ ~ ~ ~ ~>', space: .7, brightness: .45 },
   }),
 
   // it has our scent. the kick doubles, the bass arrives, and the directions come twice as often
@@ -24,8 +27,8 @@ song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }
     bass:   { weight: .7, density: .65, brightness: .45, notes: '0 ~ 0 0 ~ 3 ~ 0' },
     melody: { sound: 'glockenspiel', density: .4, brightness: .4, width: .55, notes: '~ 7 ~ 6 ~ 7 ~ 10', phrase: 2 },
     pad:    { sound: 'psaltery_bow', space: .7, brightness: .3, width: .6 },
-    sample: { sound: 'left', pattern: '<0 ~ ~ ~>', space: .6, brightness: .5 },
-    sample2:{ sound: 'right:1', pattern: '<~ ~ 0 ~>', space: .6, brightness: .5, level: .9 },
+    sample: { sound: 'left', pattern: '<0 ~ ~ ~ ~ ~ ~ ~>', space: .6, brightness: .5 },
+    sample2:{ sound: 'right:1', pattern: '<~ ~ ~ ~ 0 ~ ~ ~>', space: .6, brightness: .5, level: .9 },
   }),
 
   // pressed into a doorway, not breathing. almost nothing plays; the voice drops to a warning
@@ -43,8 +46,8 @@ song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }
     melody: { sound: 'glockenspiel', density: .7, brightness: .65, width: .75, notes: '7 ~ 10 7 ~ 12 10 7' },
     pad:    { sound: 'psaltery_bow', space: .5, brightness: .6, width: .85 },
     fx:     { impact: true, riser: 4 },
-    sample: { sound: 'out-chop', pattern: '0 ~ 1 ~ 0 0 1 ~', space: .5, brightness: .65, stretch: true },
-    sample2:{ sound: 'back-chop', pattern: '<[~ 0 1 2] [~ ~ ~ ~] [0 0 1 2] [~ ~ ~ ~]>', space: .55, brightness: .6, level: .85 },
+    sample: { sound: 'out-chop', pattern: '<[0 0 ~ 1] [~ ~ ~ ~] [~ ~ ~ ~] [~ ~ ~ ~]>', space: .5, brightness: .65 },
+    sample2:{ sound: 'back-chop', pattern: '<[~ ~ ~ ~] [~ ~ ~ ~] [0 1 2 ~] [~ ~ ~ ~]>', space: .55, brightness: .6, level: .85 },
   }),
 
   // whatever the answer was, it was the wrong doorway
