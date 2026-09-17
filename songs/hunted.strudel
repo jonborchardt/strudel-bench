@@ -19,10 +19,10 @@
 // `back-chop` and `out-chop` are the same takes with break points between the words -- slices as a list of fractions
 // of the file, not a count -- so 'go / back' and 'get / out of there' can be re-ordered and stuttered once the runner
 // stops being given time to listen. They are left unstretched: a slice keeps its own length, so the words stay words.
-song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }, [
+song({ cps: .5, key: 'E:phrygian', seed: 13, kit: 'RolandTR909', packs: ['voice'] }, [
 
   // out in the open, moving but not yet chased: a pulse, a low room, and four turns called, never the same twice
-  section('alley', 8, { role: 'establish', progression: 'i i VI v',
+  section('alley', 8, { role: 'establish', progression: 'i i II i',
     drums:  { density: .3, space: .7, brightness: .3, articulation: .35, level: .8 },
     pad:    { sound: 'psaltery_bow', space: .85, brightness: .2, width: .7, articulation: .15 },
     sample: { sound: 'forward',   pattern: '<0 ~!15>',     space: .7, brightness: .45 },
@@ -34,7 +34,7 @@ song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }
   // it has our scent. left and forward on co-prime periods, so the turns come in an order that never settles; at bar
   // 14 they land together and 'go right' -- the hardest take in the pack -- arrives over the top, its only appearance.
   // the riser takes the last four bars, then 'get out of there' on the way out
-  section('chase', 16, { role: 'develop', progression: 'i i VI VII',
+  section('chase', 16, { role: 'develop', progression: 'i II i v',
     drums:  { density: .7, drive: .65, articulation: .55, brightness: .55, variation: .5 },
     bass:   { weight: .7, density: .65, brightness: .45, notes: '0 ~ 0 0 ~ 3 ~ 0' },
     melody: { sound: 'vibraphone_bowed', density: .4, brightness: .3, width: .55, register: .4, notes: '~ 2 ~ 1 ~ 2 ~ 0', phrase: 2 },
@@ -59,7 +59,7 @@ song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }
   // time left to listen. no riser here: a reverbed noise sweep over the last four bars washed the kit out and made
   // the drop announce itself. the acceleration is the build. the kit drives rather than twitches: density under .85
   // drops the clap so four voices carry it, and articulation under .6 lets the hats ring instead of choking
-  section('run', 16, { role: 'climax', progression: 'i VI III VII',
+  section('run', 16, { role: 'climax', progression: 'i II iv v',
     drums:  { density: .82, drive: .9, articulation: .45, brightness: .42, variation: .45, weight: .8 },
     bass:   { weight: .9, density: .8, brightness: .55, notes: '0 0 7 0 3 0 ~ 10' },
     melody: { sound: 'vibraphone_bowed', density: .6, brightness: .35, width: .6, register: .35, notes: '7 ~ 6 5 ~ 4 ~ 2' },
@@ -71,7 +71,7 @@ song({ cps: .5, key: 'C:minor', seed: 13, kit: 'RolandTR909', packs: ['voice'] }
 
   // defeated: "he's here", one last useless instruction, and then the radio stops. the progression sinks instead of
   // resolving (i VII VI v, ending on the minor dominant) and a single low note holds under it
-  section('found', 8, { role: 'release', progression: 'i VII VI v',
+  section('found', 8, { role: 'release', progression: 'i i vii v',
     drums:  { density: .12, space: .9, brightness: .15, articulation: .15, level: .35 }, // .12: over bd's .1 threshold, under sd's .3, so a bare kick is left
     bass:   { weight: .85, density: .12, brightness: .15, notes: '0 ~ ~ ~ ~ ~ ~ ~', level: .7 },
     pad:    { sound: 'psaltery_bow', space: .95, brightness: .1, width: .9, articulation: .1, level: .8 },
