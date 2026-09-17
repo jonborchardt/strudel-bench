@@ -37,7 +37,7 @@ song({ bpm: 132, key: 'F:minor', seed: 19, kit: 'RolandTR909', packs: ['demo-pac
     sample: { ...brk, begin: .5, end: 1, bars: 1, slices: 4, pattern: '0 1 [2 2] 3', level: .9, brightness: .35, weight: .85, space: .6, width: .6 },
     drums:  { template: 'halftime', density: .4, weight: .7, brightness: .2, articulation: .3, space: .65, level: .7 },
     bass:   { ...low, density: .8, notes: '0 ~ ~ ~ 3 ~ 0 ~', weight: .9, register: .15, brightness: .25 },
-    melody: { ...lead, density: .45, notes: '0 ~ 3 ~ 2 ~ 0@2 ~ 3 ~ 4 ~ 7 5@2', brightness: .4, space: .7, level: .7 },
+    melody: { ...lead, density: .45, notes: '0 ~ 3 ~ 2 ~ 0@2 ~ 3 ~ 4 ~ 7 4@2', brightness: .4, space: .7, level: .7 },
     pad:    { ...wash, density: .35, brightness: .2, space: .85 },
   }),
 
@@ -54,7 +54,8 @@ song({ bpm: 132, key: 'F:minor', seed: 19, kit: 'RolandTR909', packs: ['demo-pac
 
   // the climax, and the reason for the break points: the file is two bars, so 1/16 of it is one eighth note. The
   // list cuts at .0625 .125 .1875 .25 .5, giving slice 0 = the first kick, 1 = the gap after it, 2 = the first snare,
-  // 3 = the gap after that, 4 = the second half of bar one (its kick and snare together), 5 = all of bar two.
+  // 3 = the gap after that and 4 = the second half of bar one, its kick and snare together. (The last break at .5
+  // leaves bar two as slice 5; this chop never reaches for it - bar two is what the other sections play.)
   // So the pattern can play a real groove out of order: kick on one, snare on two, snare and kick on the backbeat.
   // Every hit sits on an eighth-of-a-bar step and slice 4 on a half-bar step - each step is exactly as long as the
   // slice is, so stretch only locks the fit and every hit still plays at its own pitch (speed .275, as everywhere

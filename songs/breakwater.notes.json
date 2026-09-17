@@ -62,6 +62,17 @@
           "why": "VI VII i instead of repeating swell's i VI, so the release has its own harmonic move home"
         }
       ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "review: undertow's line ends on degree 5, which is the sixth, not the fifth",
+      "changes": [
+        {
+          "section": "undertow",
+          "layer": "melody",
+          "why": "the phrase ends on degree 4 (the fifth) instead of 5 (the sixth): '0 ~ 3 ~ 2 ~ 0@2 ~ 3 ~ 4 ~ 7 4@2', an open half cadence that surge's line answers on the root"
+        }
+      ]
     }
   ]
 }
