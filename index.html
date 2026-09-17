@@ -776,7 +776,7 @@
         bits.push(`<div class="wave" data-wave="${esc(name)}"><canvas width="720" height="72" title="the file: the used region lit, a line per slice"></canvas>` +
           `<label>start <input type="range" min="0" max="1" step=".001" data-trim="begin" value="${typeof b === 'number' ? b : 0}"><output></output></label>` +
           `<label>end <input type="range" min="0" max="1" step=".001" data-trim="end" value="${typeof en === 'number' ? en : 1}"><output></output></label>` +
-          `<span class="slices">${Array.from({ length: n }, (_, i) => `<button class="sl" data-slice="${i}" title="hear slice ${i} alone (pauses the song)">${i}</button>`).join('')}</span><small class="info"></small></div>`);
+          `<span class="slices">${Array.from({ length: n }, (_, i) => `<button class="sl" data-slice="${i}" title="hear slice ${i} alone at its natural length (pauses the song)">${i}</button>`).join('')}</span><small class="info"></small></div>`);
       } else bits.push(`<label>sound ${pick(L, e, 'sound', 'default')}</label>`);
       // notes: the written line in mini-notation (scale degrees, ~ rests, @2 holds); the seeded line plays when it is empty
       if (base === 'bass' || base === 'melody') bits.push(`<label>notes ${text(L, e, 'notes', 'seeded line')}</label>`);
@@ -807,7 +807,10 @@
     if (key === 'phrase') return value > 1 ? String(Math.round(value)) : null; // 1 is the default, so it is dropped
     if (key === 'level') return Number(value) === 1 ? null : String(Number(value)); // 1 = untouched, so it is dropped
     if (key === 'seed') return String(value).trim() ? String(Math.max(1, Math.round(Number(value)))) : null;
-    if (['begin', 'end', 'bars', 'slices'].includes(key)) { const n = Number(value); return String(value).trim() && Number.isFinite(n) ? String(+n.toFixed(3)).replace(/^0\./, '.') : null; }
+    if (['begin', 'end', 'bars', 'slices'].includes(key)) { // the layer's own defaults are dropped, as phrase/level are
+      const n = Number(value), def = { begin: 0, end: 1, bars: 1, slices: 1 }[key];
+      return String(value).trim() && Number.isFinite(n) && n !== def ? String(+n.toFixed(3)).replace(/^0\./, '.') : null;
+    }
     if (key === 'stretch') return value ? 'true' : null;
     if (key === 'sounds') {
       const cur = { ...(locate(code.text).sections.find((x) => x.name === section)?.layers[layer]?.mats.sounds?.value ?? effective()[section]?.[layer]?.sounds ?? {}), [voice]: value };
@@ -819,7 +822,7 @@
   const songSeed = () => Number(/song\(\s*\{[^}]*?seed:\s*(\d+)/.exec(code.text)?.[1] ?? 1);
   const setMat = (layer, key, text) => did(() => setMaterial(code.text, mixSection, layer, key, text), `${layer}.${key} ${text ?? 'removed'}`);
   $('mats').onchange = (e) => {
-    if (e.target.type === 'file') { const f = e.target.files[0]; if (f) importSample(f, e.target.closest('[data-layer]').dataset.layer); return; }
+    if (e.target.type === 'file') { const f = e.target.files[0]; if (f) importSample(f, e.target.closest('[data-layer]').dataset.layer); e.target.value = ''; return; } // cleared so re-picking the same file fires change again
     if (e.target.dataset.trim) { clampTrim(e.target); return setMat(e.target.closest('[data-layer]').dataset.layer, e.target.dataset.trim, matText(null, e.target.dataset.trim, e.target.value)); }
     const el = e.target, key = el.dataset.mat; if (!key) return;
     setMat(el.closest('[data-layer]').dataset.layer, key, matText(null, key, el.type === 'checkbox' ? el.checked : el.value));
@@ -902,7 +905,7 @@
     const pk = peaks(buf.getChannelData(0), cv.width), mid = cv.height / 2;
     g.fillStyle = '#2a2f3a'; g.fillRect(begin * cv.width, 0, (end - begin) * cv.width, cv.height);
     g.fillStyle = '#9a9aa2'; for (let x = 0; x < cv.width; x++) { const h = Math.max(1, pk[x] * mid); g.fillRect(x, mid - h, 1, 2 * h); }
-    g.strokeStyle = '#4a86ff'; g.beginPath(); for (const p of slicePoints(begin, end, n)) { g.moveTo(Math.round(p * cv.width) + .5, 0); g.lineTo(Math.round(p * cv.width) + .5, cv.height); } g.stroke();
+    g.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2f6fed'; g.beginPath(); for (const p of slicePoints(begin, end, n)) { g.moveTo(Math.round(p * cv.width) + .5, 0); g.lineTo(Math.round(p * cv.width) + .5, cv.height); } g.stroke();
     bi.nextElementSibling.value = fmtTime(begin * buf.duration); ei.nextElementSibling.value = fmtTime(end * buf.duration);
     const bars = a.bars ?? 1;
     // no sample rate: decodeAudioData resamples to the context's rate, so it would name the browser's rate, not the file's
@@ -924,20 +927,29 @@
   // import: the file lands in this song's pack on the server, the map is reloaded so the sound exists, the song declares the pack and the part plays it
   const packName = () => $('song').value.replace(/\.strudel$/, '').replace(/[^\w-]/g, '_');
   async function importSample(file, layer) {
-    const pack = packName(), ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase(), name = file.name.slice(0, -ext.length).replace(/[^\w-]/g, '_').toLowerCase();
-    if (!name) return status('the file needs a name');
-    status(`importing ${file.name}…`);
-    const r = await fetch(`samples/user/${pack}/${name}${ext}`, { method: 'PUT', body: file });
-    if (!r.ok) return status(await r.text());
-    if (!localPacks[pack]) { // a new pack: its deploy policy, once; blank keeps it off github pages
-      const license = prompt(`License for the new pack samples/user/${pack}/ (blank keeps it local-only, off GitHub Pages)`, 'CC0-1.0')?.trim();
-      if (license) await fetch(`samples/user/${pack}/pack.json`, { method: 'PUT', body: JSON.stringify({ deploy: true, license, source: 'imported in the Compose page' }, null, 2) });
-    }
-    await strudel.samples(await (await fetch('samples/user/strudel.json', { cache: 'no-store' })).json()); // re-register with the new sound (the map carries its own _base)
-    Object.assign(localPacks, await (await fetch('samples/user/packs.json', { cache: 'no-store' })).json());
-    refreshSounds(); bufs.delete(name);
-    did(() => setMaterial(addPack(code.text, pack), mixSection, layer, 'sound', q(name)), `${layer}: imported ${file.name} as ${name}`);
-    status(`imported ${file.name} → samples/user/${pack}/${name}${ext}`);
+    try {
+      const dot = file.name.lastIndexOf('.');
+      if (dot < 1) return status('the file needs an extension (wav, mp3, ...)');
+      const pack = packName(), ext = file.name.slice(dot).toLowerCase(), name = file.name.slice(0, dot).replace(/[^\w-]/g, '_').toLowerCase();
+      if (!name) return status('the file needs a name');
+      status(`importing ${file.name}…`);
+      // superdough caches decoded buffers by url, so a re-import under a known name keeps playing the old audio until a reload
+      const replaced = name in strudel.soundMap.get();
+      const r = await fetch(`samples/user/${pack}/${name}${ext}`, { method: 'PUT', body: file });
+      if (!r.ok) return status(await r.text());
+      if (!localPacks[pack]) { // a new pack: its deploy policy, once; blank keeps it off github pages
+        const license = prompt(`License for the new pack samples/user/${pack}/ (blank keeps it local-only, off GitHub Pages)`, 'CC0-1.0')?.trim();
+        if (license) {
+          const pr = await fetch(`samples/user/${pack}/pack.json`, { method: 'PUT', body: JSON.stringify({ deploy: true, license, source: 'imported in the Compose page' }, null, 2) });
+          if (!pr.ok) status(`pack.json not written: ${await pr.text()} (the pack stays local-only)`);
+        }
+      }
+      await strudel.samples(await (await fetch('samples/user/strudel.json', { cache: 'no-store' })).json()); // re-register with the new sound (the map carries its own _base)
+      Object.assign(localPacks, await (await fetch('samples/user/packs.json', { cache: 'no-store' })).json());
+      refreshSounds(); bufs.delete(name);
+      did(() => setMaterial(addPack(code.text, pack), mixSection, layer, 'sound', q(name)), `${layer}: imported ${file.name} as ${name}`);
+      status(`imported ${file.name} → samples/user/${pack}/${name}${ext}${replaced ? ' (replaced: reload the page to hear the new file)' : ''}`);
+    } catch (e) { status(e.message); }
   }
   // two copies of the same control, one under the part rows and one in the menu: both show pvGain
   // the sliders run -1..1.7 and the gain is 10^x (x0.1 .. x50), so the first half of the travel is the fine x0.1..x1 range and the far end still reaches a whisper-quiet sample
