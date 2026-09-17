@@ -24,4 +24,5 @@ test('soundUrl: the file behind a sound and its variant index from the sound map
   assert.equal(soundUrl(map, 'HH'), 'a.wav', 'names are registered lowercase');
   assert.equal(soundUrl(map, 'piano'), null, 'a pitched map has no one file');
   assert.equal(soundUrl(map, 'nope'), null);
+  assert.equal(soundUrl(map, 'hh:abc'), null, 'a non-numeric index is no file');
 });

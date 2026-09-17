@@ -19,5 +19,6 @@ export const fmtTime = (s) => (s >= 60 ? `${Math.floor(s / 60)}:${(s % 60).toFix
 export function soundUrl(soundMap, name) {
   const [key, n = '0'] = String(name).toLowerCase().split(':');
   const list = soundMap[key]?.data?.samples;
-  return Array.isArray(list) && list.length ? list[Number(n) % list.length] : null;
+  const i = Number(n);
+  return Array.isArray(list) && list.length && Number.isInteger(i) ? list[((i % list.length) + list.length) % list.length] : null;
 }
