@@ -11,8 +11,9 @@ export function soundBehind(name) {
 }
 
 /**
- * The three caches a waveform needs, keyed by the sound behind the name: decoding a long file (and scanning it for peaks,
- * and autocorrelating it for a tempo) must not run again on every redraw.
+ * The three caches a waveform needs: decoding a long file (and scanning it for peaks, and autocorrelating it for a tempo)
+ * must not run again on every redraw. Buffers are keyed by the sound behind the name (one file, one decode); peaks and
+ * tempo by the name asked for, which is the name `forget` is given after an import.
  * `soundMap()`: the live sound map; `decode(arrayBuffer)`: a promise of an AudioBuffer; `fetchUrl(url)`: its bytes.
  */
 export function createSampleCache({ soundMap, decode, fetchUrl = async (url) => (await fetch(url)).arrayBuffer() }) {
@@ -53,6 +54,7 @@ export function createPreviewer({ ready, status, before = async () => {}, hush, 
   // the sliders run -1..1.7 and the gain is 10^x (x0.1 .. x50), so the first half of the travel is the fine x0.1..x1 range and the far end still reaches a whisper-quiet sample
   const show = () => { for (const i of ins) { i.value = Math.log10(level); i.nextElementSibling.value = `x${level < 10 ? level.toFixed(1) : Math.round(level)}`; } };
   function stop() {
+    if (!btn) return; // nothing is previewing: the song, if it plays, keeps playing
     clearTimeout(timer);
     btn?.classList.remove('on');
     btn = null;

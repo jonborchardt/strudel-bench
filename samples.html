@@ -186,9 +186,10 @@
     localStorage.setItem('strudel:snap', $('snap').value);
     render();
   }
-  // one change handler for the whole editor, so the preview-level slider's `change` (it lives in the Pack row) also runs a
-  // full readForm + render; harmless here (the form is small and the decode is cached) and cheaper than wiring each control
-  $('editor').onchange = (e) => { if (cur) readForm(e.target); };
+  // one change handler for the whole editor, cheaper than wiring each control; the preview-level slider is the exception
+  // (it lives in the Pack row but belongs to no definition): a re-render would replace the slice buttons under a running
+  // preview, leaving its ▶ detached with the class still on it
+  $('editor').onchange = (e) => { if (cur && !e.target.matches('input.pvin')) readForm(e.target); };
 
   // ---- auditioning: the Compose page's previews, the same module (the same button again stops, another replaces it)
   const pv = createPreviewer({
