@@ -1,4 +1,4 @@
-﻿import { test } from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { peaks, fmtTime, soundUrl, sliceSpec, frac, breaksIn, breakPoints, toggleBreak, detectTempo, barsGuess, snapTo, snapDivisions, SNAPS } from '../web/sampler.mjs';
 
@@ -65,7 +65,6 @@ test('toggleBreak removes the break within tolerance, else inserts in order insi
   assert.equal(toggleBreak(same, .05, .1, 1, .005), same, 'outside the region: the list itself, so the page can skip the commit');
 });
 
-
 const clicks = (bpm, secs, rate = 22050, offset = 0) => { // a click track: 5 ms bursts on every beat
   const d = new Float32Array(Math.round(secs * rate)), per = (60 / bpm) * rate;
   for (let t = offset * rate; t < d.length; t += per) for (let i = 0; i < rate * .005 && Math.round(t) + i < d.length; i++) d[Math.round(t) + i] = (i % 2 ? 1 : -1) * .8;
@@ -84,5 +83,7 @@ test('barsGuess rounds a region to a musical bar count', () => {
 test('snapTo lands on the nearest interior grid point, or leaves x alone when snapping is off', () => {
   assert.equal(snapTo(.26, 0, 1, 8), .25); assert.equal(snapTo(.02, 0, 1, 8), .125, 'never onto begin'); assert.equal(snapTo(.99, 0, 1, 8), .875, 'never onto end');
   near(snapTo(.3, .2, .6, 4), .3, 'a region'); assert.equal(snapTo(.31, 0, 1, 0), .31);
+  assert.equal(snapTo(.31, 0, 1, 1), .31, 'one division: nothing to snap to');
+  assert.equal(snapTo(.5, .2, .6, 2), .4, 'two divisions: the midpoint');
   assert.equal(snapDivisions(2, 4, 4), 32); assert.equal(SNAPS['1/16'], 4);
 });

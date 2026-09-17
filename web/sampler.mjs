@@ -54,9 +54,9 @@ export function soundUrl(soundMap, name) {
 /** Snap settings: label -> subdivisions per beat (0 = off). */
 export const SNAPS = { off: 0, '1/4': 1, '1/8': 2, '1/16': 4 };
 export const snapDivisions = (bars, beatsPerBar, sub) => Math.round(bars * beatsPerBar * sub);
-/** The nearest interior grid point of `divisions` equal parts of begin..end, or x itself when divisions is 0. */
+/** The nearest interior grid point of `divisions` equal parts of begin..end, or x itself when there is no interior point to snap to (divisions 0 or 1). */
 export function snapTo(x, begin, end, divisions) {
-  if (!divisions) return x;
+  if (divisions <= 1) return x;
   const step = (end - begin) / divisions, k = Math.min(divisions - 1, Math.max(1, Math.round((x - begin) / step)));
   return +(begin + k * step).toFixed(6);
 }
@@ -68,7 +68,7 @@ export function barsGuess(seconds, bpm, beatsPerBar = 4) {
 /**
  * Tempo of the region begin..end of a channel: onset strength (rectified rise of RMS in 5 ms hops), autocorrelated over
  * the lags of 60..200 bpm, with a mild preference for 80..160 so half and double tempos resolve the usual way, and the
- * peak refined between hops. bpm 0 when the region is shorter than 2 s or nothing periodic stands out.
+ * peak refined between hops. bpm 0 when the region is shorter than about 2 s or nothing periodic stands out.
  */
 export function detectTempo(data, rate, begin = 0, end = 1) {
   const hop = Math.max(1, Math.round(rate / 200)), s0 = Math.floor(begin * data.length), s1 = Math.floor(end * data.length);
