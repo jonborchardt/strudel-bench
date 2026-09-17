@@ -36,6 +36,7 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
     const list = JSON.parse(fs.readFileSync(path.join(out, 'songs/index.json'), 'utf8'));
     assert.ok(list.includes('demo.strudel'));
     assert.ok(list.includes('ping.strudel'), 'a song on a deployed pack ships');
+    assert.ok(list.includes('chop.strudel'), 'the sliced-sample song ships on the deployed demo pack');
     assert.ok(list.includes('_t_subset.strudel'), 'a song inside the deployed subset ships');
     assert.ok(!list.includes('_t_private.strudel'), 'a song on a local-only pack is left out of the list');
     assert.ok(!fs.existsSync(path.join(out, 'songs/_t_private.strudel')) && !fs.existsSync(path.join(out, 'songs/_t_private.notes.json')), 'and its files do not ship');
@@ -46,6 +47,7 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
     assert.equal(map.big, undefined, 'outside the subset: not in the map');
     assert.equal(map.secret, undefined, 'local-only: not in the map');
     assert.ok(fs.existsSync(path.join(out, 'samples/user/demo-pack/ping.wav')));
+    assert.ok(fs.existsSync(path.join(out, 'samples/user/demo-pack/loop.wav')), 'the loop ships with the pack');
     assert.ok(fs.existsSync(path.join(out, 'samples/user/_t_subset/pub.wav')));
     assert.ok(!fs.existsSync(path.join(out, 'samples/user/_t_subset/big.wav')), 'outside the subset: not copied');
     assert.ok(!fs.existsSync(path.join(out, 'samples/user/_t_private')), 'local-only: not copied');

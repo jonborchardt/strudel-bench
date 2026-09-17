@@ -73,3 +73,25 @@ test('a section with its own bpm fits its sample to its own tempo (ctx.cps is th
   const h = pat.strudel.sections[0].layers.sample.pattern.queryArc(0, 2).find((x) => x.hasOnset());
   near(h.value.speed, 1 * 1 / 2, 'bpm 240 in 4/4 is 1 cps: speed = cps * 1 / 2');
 });
+
+test('chop.strudel checks clean on the deployed demo pack and dumps to strudel that plays the same', async () => {
+  const path = await import('node:path'); const fs = await import('node:fs');
+  const { checkFile } = await import('../scripts/check.mjs');
+  const file = path.resolve(import.meta.dirname, '..', 'songs', 'chop.strudel');
+  const r = await checkFile(file);
+  assert.deepEqual(r.problems, []);
+  assert.ok(r.events.some((l) => l.includes('"s":"loop"') && l.includes('"unit":"c"')));
+  // soundFile (scripts/check.mjs) prints the basename + variant count, not the pack path (see the didgeridoo/steinway test above)
+  assert.ok(r.sounds.some((u) => u.name === 'loop' && /^loop\.wav \(1 variant\)$/.test(u.file)), 'the sounds block names the file');
+  // the dump: strudel's own slice/fit/speed/unit calls, and the repl transpiler turns the printed "0 1 ..." back into the pattern
+  const { dumpFile } = await import('../scripts/dump.mjs');
+  const { evaluate } = await import('@strudel/core'); const { transpiler } = await import('@strudel/transpiler');
+  await ready; globalThis.aliasBank ??= async () => {};
+  const out = await dumpFile(file);
+  assert.match(out, /\.slice\(\[0, 0\.125, .*1\], "0 1 0 3 4 \[6 7\] 7 6"\)/);
+  assert.match(out, /\.fit\(\)/); assert.match(out, /\.unit\("c"\)/);
+  const stream = (p, n) => { const o = []; for (let c = 0; c < n; c++) for (const h of p.queryArc(c, c + 1)) o.push(`${h.whole?.begin} ${h.value.s ?? ''} ${h.value.begin ?? ''} ${h.value.speed ?? ''}`); return o; };
+  const song = await (await evaluate(fs.readFileSync(file, 'utf8'), transpiler)).pattern;
+  const dumped = await (await evaluate(out, transpiler)).pattern;
+  assert.deepEqual(stream(dumped, song.strudel.total), stream(song, song.strudel.total));
+});
