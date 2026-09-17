@@ -115,6 +115,7 @@ test('slices as break points: fractions of the file inside the region, in order;
   const p = g.sample({ sound: 'ping', begin: .1, end: .9, bars: 2, slices: [.2, .5], pattern: '0 1 2' }, c);
   const hs = onsets(p);
   assert.equal(hs.length, 3);
+  assert.equal(onsets(g.sample({ sound: 'ping', bars: 2, slices: [], pattern: '0' }, c)).length, 1, 'an empty list is one slice');
   near(hs[1].value.begin, .2, 'slice 1 begins at the first break'); near(hs[1].value.end, .5, 'and ends at the second');
   near(hs[2].value.end, .9, 'the last slice ends at the region end');
   assert.throws(() => g.sample({ sound: 'ping', slices: [.2, .5], pattern: '0 3' }, c), /slice 3 is out of range \(slices: 3/);

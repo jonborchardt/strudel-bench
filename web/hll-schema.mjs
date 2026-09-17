@@ -70,7 +70,7 @@ export const SCHEMA = {
     begin: { ...unit, title: 'where the used region of the sample starts, as a fraction of the file' },
     end: { ...unit, title: 'where the used region of the sample ends, as a fraction of the file' },
     bars: { type: 'number', min: 0.25, step: 0.25, title: 'bars the region stands for at the section tempo' },
-    slices: int(1, 'equal slices the region is cut into'),
+    slices: int(1, 'equal slices the region is cut into; a list of break points instead is plain code'),
     stretch: { type: 'bool', title: 'fit each slice to its step (off: a slice keeps its own length at the fitted speed)' },
   },
   calls: {
