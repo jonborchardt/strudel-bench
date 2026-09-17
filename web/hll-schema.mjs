@@ -66,6 +66,12 @@ export const SCHEMA = {
     arp: { type: 'enum', values: Object.keys(ARP_ORDERS), title: 'arpeggio order' },
     riser: int(0, 'bars of riser into the next section (true = 4)'),
     impact: sound('the impact sample on the downbeat (true = bd)'),
+    // the sample part (lib/layers.mjs): the region of the file, what it stands for, how it is cut and played
+    begin: { ...unit, title: 'where the used region of the sample starts, as a fraction of the file' },
+    end: { ...unit, title: 'where the used region of the sample ends, as a fraction of the file' },
+    bars: { type: 'number', min: 0.25, step: 0.25, title: 'bars the region stands for at the section tempo' },
+    slices: int(1, 'equal slices the region is cut into'),
+    stretch: { type: 'bool', title: 'fit each slice to its step (off: a slice keeps its own length at the fitted speed)' },
   },
   calls: {
     section: { args: [null, int(1, 'bars in this section'), null] },
@@ -82,5 +88,6 @@ export const SCHEMA = {
     packs: 'a list of sample pack names',
     notes: 'a line in mini-notation, written by hand',
     chord: 'a scale degree or a pattern of them',
+    pattern: 'slice indices in mini-notation, spanning the sample\'s bars (0 1 [2 3] 0); the editor cannot see the slice count to offer picks',
   },
 };

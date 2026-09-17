@@ -1,5 +1,5 @@
 {
   "deploy": true,
   "license": "CC0-1.0",
-  "source": "generated: 880 Hz sine, 150 ms exponential decay, 16-bit mono 44.1 kHz"
+  "source": "generated: ping.wav an 880 Hz sine blip with a 150 ms decay; loop.wav a two-bar 120 bpm drum loop of sine kicks, noise snares and hats; both 16-bit mono 44.1 kHz"
 }

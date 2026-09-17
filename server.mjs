@@ -10,6 +10,8 @@ const RENDERS = path.join(ROOT, 'renders');
 const USER = path.join(ROOT, 'samples', 'user');
 const SONG_NAME = /^[\w.-]+\.strudel$/;
 const SONG_FILE = /^[\w.-]+\.(strudel|notes\.json)$/; // a song and its provenance metadata (why it sounds this way) live side by side
+// an imported sample: <pack>/<sound>.<audio ext>, or the pack's policy file; one folder deep, so the regex is the path check
+const SAMPLE_FILE = /^[\w-]+\/(?:[\w-]+\.(?:wav|mp3|ogg|flac|aif|aiff|m4a|webm)|pack\.json)$/i;
 const AUDIO = new Set(['.wav', '.mp3', '.ogg', '.flac', '.aif', '.aiff', '.m4a', '.webm']);
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
@@ -157,6 +159,20 @@ export function createServer() {
       return send(res, 200, path.relative(ROOT, out));
     }
 
+    // the Compose page's sample import: the file lands in samples/user/<pack>/ where userPacks() scans it, so the map,
+    // the checker's pack rule and the Pages deploy policy apply to it like to any hand-copied sample
+    if (p.startsWith('/samples/user/') && req.method === 'PUT') {
+      const name = decodeURIComponent(p.slice('/samples/user/'.length));
+      if (!SAMPLE_FILE.test(name)) return send(res, 400, 'bad sample name: <pack>/<sound>.<wav|mp3|ogg|flac|aif|aiff|m4a|webm> or <pack>/pack.json');
+      const chunks = [];
+      for await (const c of req) chunks.push(c);
+      const body = Buffer.concat(chunks);
+      if (name.endsWith('pack.json')) { try { JSON.parse(body.toString()); } catch { return send(res, 400, 'pack.json must be json'); } }
+      const file = path.join(USER, name);
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, body);
+      return send(res, 204, '');
+    }
     if (p === '/samples/user/strudel.json') return json(res, userMap());
     if (p === '/samples/user/packs.json') return json(res, userPacks()); // the pack index: what the page shows as deployed / local-only
     // strudel's UMD build resolves its clock SharedWorker against the page URL, so /assets/ must alias dist/assets

@@ -200,3 +200,22 @@ test('render route: a second POST for a name already pending gets 409, the first
   });
 });
 
+test('PUT /samples/user/<pack>/<file> stores a sample and its pack.json; the map and index see them; bad names are refused', async () => {
+  const pack = path.join(USER, '_t_up');
+  try {
+    await withServer(async (base) => {
+      const wav = new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0]);
+      assert.equal((await fetch(`${base}/samples/user/_t_up/thud.wav`, { method: 'PUT', body: wav })).status, 204);
+      assert.deepEqual([...fs.readFileSync(path.join(pack, 'thud.wav'))], [...wav]);
+      assert.equal((await fetch(`${base}/samples/user/_t_up/pack.json`, { method: 'PUT', body: JSON.stringify({ deploy: true, license: 'CC0-1.0' }) })).status, 204);
+      const m = await (await fetch(`${base}/samples/user/strudel.json`)).json();
+      assert.deepEqual(m.thud, ['_t_up/thud.wav']);
+      assert.equal((await (await fetch(`${base}/samples/user/packs.json`)).json())._t_up.deploy, true);
+      for (const bad of ['_t_up/thud.txt', '_t_up/../x.wav', '_t_up/a/b.wav', 'x.wav', '_t_up/notes.json']) {
+        assert.equal((await fetch(`${base}/samples/user/${bad}`, { method: 'PUT', body: wav })).status, 400, bad);
+      }
+      assert.equal((await fetch(`${base}/samples/user/_t_up/pack.json`, { method: 'PUT', body: 'nope' })).status, 400, 'pack.json must be json');
+    });
+  } finally { fs.rmSync(pack, { recursive: true, force: true }); }
+});
+
