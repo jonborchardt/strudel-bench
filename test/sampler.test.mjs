@@ -4,8 +4,8 @@ import { peaks, fmtTime, soundUrl } from '../web/sampler.mjs';
 
 test('peaks: the largest magnitude per column, columns wider than the data still fill', () => {
   const data = Float32Array.from([0, .5, -1, 0, .2, .1, 0, 0]);
-  assert.deepEqual([...peaks(data, 4)], [.5, 1, .2, 0]);
-  assert.deepEqual([...peaks(data, 2)], [1, .2]);
+  assert.deepEqual([...peaks(data, 4)], [.5, 1, .2, 0].map(Math.fround));
+  assert.deepEqual([...peaks(data, 2)], [1, .2].map(Math.fround));
   assert.equal(peaks(new Float32Array(3), 10).length, 10, 'more columns than samples');
   assert.deepEqual([...peaks(Float32Array.from([.3, .6, .9]), 10)].filter((x) => x > 0).length, 3, 'each sample lands in one column');
 });

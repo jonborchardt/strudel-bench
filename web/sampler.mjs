@@ -6,8 +6,7 @@ export function peaks(data, columns) {
   const out = new Array(columns).fill(0);
   for (let i = 0; i < data.length; i++) {
     const c = Math.min(columns - 1, Math.floor((i * columns) / data.length));
-    // round off float32-vs-float64 noise (data is Float32Array; e.g. .2 reads back as .20000000298023224)
-    const a = Math.round(Math.abs(data[i]) * 1e6) / 1e6;
+    const a = Math.abs(data[i]);
     if (a > out[c]) out[c] = a;
   }
   return out;
