@@ -828,10 +828,19 @@
   const setMat = (layer, key, text) => did(() => setMaterial(code.text, mixSection, layer, key, text), `${layer}.${key} ${text ?? 'removed'}`);
   $('mats').onchange = (e) => {
     if (e.target.type === 'file') { const f = e.target.files[0]; if (f) importSample(f, e.target.closest('[data-layer]').dataset.layer); e.target.value = ''; return; } // cleared so re-picking the same file fires change again
-    if (e.target.dataset.trim) { clampTrim(e.target); return setMat(e.target.closest('[data-layer]').dataset.layer, e.target.dataset.trim, matText(null, e.target.dataset.trim, e.target.value)); }
+    if (e.target.dataset.trim) { // the region moved: break points it now leaves outside go in the same edit, since the song would not build with them
+      clampTrim(e.target);
+      const layer = e.target.closest('[data-layer]').dataset.layer, key = e.target.dataset.trim, text = matText(null, key, e.target.value);
+      const [bi, ei] = e.target.closest('.wave').querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value);
+      const sv = slicesOf(layer), kept = Array.isArray(sv) ? breaksIn(sv, begin, end) : null, drop = kept ? sv.length - kept.length : 0;
+      return did(() => {
+        const src = setMaterial(code.text, mixSection, layer, key, text);
+        return drop ? setMaterial(src, mixSection, layer, 'slices', matText(null, 'slices', kept)) : src;
+      }, `${layer}.${key} ${text ?? 'removed'}${drop ? ` (${drop} break${drop === 1 ? '' : 's'} outside the region dropped)` : ''}`);
+    }
     if (e.target.dataset.breaks !== undefined) { // no data-mat: it is read in seconds, so it commits through breaksText rather than the generic path
       const layer = e.target.closest('[data-layer]').dataset.layer;
-      breaksText(layer, e.target.value).then((t) => t !== undefined && setMat(layer, 'slices', t), (err) => status(err.message));
+      breaksText(layer, e.target.value).then((t) => t !== undefined && setMat(layer, 'slices', t), (err) => ($('mixstatus').textContent = err.message));
       return;
     }
     const el = e.target, key = el.dataset.mat; if (!key) return;
@@ -858,10 +867,10 @@
     pvTimer = setTimeout(() => { strudel.hush(); btn.classList.remove('on'); pvBtn = null; }, 2000 / p.cps + 200);
   }
   // a material: this section's `layer` with `key` set to `text` (a drum voice alone on its template grid: the whole part would drown it, or not even include it, since voices join as density rises)
-  const audition = (btn, layer, key, text, voice, section = mixSection, src = code.text) => preview(btn, async () => {
-    const pat = await evalCode(ready, setMaterial(src, section, layer, key, text));
+  const audition = (btn, layer, key, text, voice, section = mixSection, src = code.text) => preview(btn, async () => { // no key: the part as it is written
+    const pat = await evalCode(ready, key ? setMaterial(src, section, layer, key, text) : src);
     const s = pat.strudel.sections.find((x) => x.name === section);
-    let pattern = s.layers[layer].pattern, what = `${key} ${text ?? 'removed'}`;
+    let pattern = s.layers[layer].pattern, what = key ? `${key} ${text ?? 'removed'}` : 'as written';
     if (voice) {
       const name = s.layers[layer].attrs.sounds?.[voice];
       pattern = voiceSound(name, voice, s.kit, gridToMini(fit(TEMPLATES[s.layers[layer].attrs.template ?? 'house'][voice], s.grid.steps))); // the same rule as the drums part: kit voice or bare sample
@@ -906,9 +915,14 @@
   }
   const partAttrs = (layer) => sections.find((x) => x.name === mixSection)?.layers[layer]?.attrs ?? {}; // the evaluated part (a spread resolved)
   const sliceSpec = (v) => (Array.isArray(v) ? v : Math.max(1, Math.round(Number(v) || 1))); // slices as written: break points, or a count
+  // `slices` the way the knobs read every material: the section's own literal first, the evaluated part (a spread) only
+  // when it has none. The evaluated song lags a commit by a render, so two quick clicks would otherwise lose the first.
+  const slicesOf = (layer) => locate(code.text).sections.find((x) => x.name === mixSection)?.layers[layer]?.mats.slices?.value ?? partAttrs(layer).slices;
+  // the break points a source may hold: as they are written (4 decimals), rising, strictly inside the region
+  const breaksIn = (fr, begin, end) => fr.map((f) => +f.toFixed(4)).filter((f, i, a) => f > begin && f < end && (i === 0 || f > a[i - 1]));
   async function waveRender(box) {
     const layer = box.dataset.wave, a = partAttrs(layer), cv = box.querySelector('canvas'), g = cv.getContext('2d');
-    const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value), spec = sliceSpec(a.slices);
+    const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value), spec = sliceSpec(slicesOf(layer));
     g.clearRect(0, 0, cv.width, cv.height);
     if (!a.sound) { box.querySelector('.info').textContent = 'pick a sample, or import one'; return; }
     let buf; try { buf = await bufferOf(a.sound); } catch (e) { box.querySelector('.info').textContent = e.message; return; }
@@ -938,26 +952,27 @@
     if (i >= pts.length - 1) throw new Error(`no slice ${i}`);
     return { pattern: strudel.s(a.sound).begin(pts[i]).end(pts[i + 1]).speed((s.cps * (pts.at(-1) - pts[0])) / (a.bars || 1)).unit('c').slow(2), cps: s.cps, what: `slice ${i} of ${a.sound}` };
   });
-  // the breaks box: seconds into the file -> the `slices` literal ([] = even slices, so the key goes away); undefined = it does not parse, and the status line says why
+  // the breaks box: seconds into the file -> the `slices` literal ([] = even slices, so the key goes away); undefined = it does not parse, and the mix status says why
   async function breaksText(layer, value) {
     const secs = String(value).trim().split(/[\s,]+/).filter(Boolean).map(Number);
-    if (secs.some((n) => !Number.isFinite(n))) { status('breaks: seconds into the file, space-separated'); return; }
+    if (secs.some((n) => !Number.isFinite(n))) { $('mixstatus').textContent = 'breaks: seconds into the file, space-separated'; return; }
     const a = partAttrs(layer), buf = await bufferOf(a.sound), begin = a.begin ?? 0, end = a.end ?? 1;
-    const fr = secs.map((s) => s / buf.duration);
-    if (fr.some((f, i) => (i > 0 && f <= fr[i - 1]) || f <= begin || f >= end)) { status(`breaks must rise and lie inside the region (${fmtTime(begin * buf.duration)} .. ${fmtTime(end * buf.duration)})`); return; }
+    const fr = secs.map((s) => +(s / buf.duration).toFixed(4)); // what would be written, so what is checked
+    if (fr.some((f, i) => (i > 0 && f <= fr[i - 1]) || f <= begin || f >= end)) { $('mixstatus').textContent = `breaks must rise and lie inside the region (${fmtTime(begin * buf.duration)} .. ${fmtTime(end * buf.duration)})`; return; }
     return matText(null, 'slices', fr);
   }
   // a click on the waveform: on a break line (within 4 px) removes it, anywhere else inside the region adds one; a count becomes its own break points first
   function waveClick(cv, ev) {
-    const box = cv.closest('.wave'), layer = box.dataset.wave, a = partAttrs(layer);
+    const box = cv.closest('.wave'), layer = box.dataset.wave, sv = slicesOf(layer);
+    if (sv === 'expr') { $('mixstatus').textContent = `${layer}.slices is an expression: edit it in the source`; return; }
     const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value);
     const rect = cv.getBoundingClientRect(), x = (ev.clientX - rect.left) / rect.width;
-    let breaks = slicePoints(begin, end, sliceSpec(a.slices)).slice(1, -1);
+    let breaks = slicePoints(begin, end, sliceSpec(sv)).slice(1, -1);
     const hit = breaks.findIndex((p) => Math.abs(p - x) < 4 / rect.width);
     if (hit >= 0) breaks = breaks.filter((_, i) => i !== hit);
     else if (x > begin && x < end) breaks = [...breaks, x].sort((p, r) => p - r);
     else return;
-    setMat(layer, 'slices', matText(null, 'slices', breaks));
+    setMat(layer, 'slices', matText(null, 'slices', breaksIn(breaks, begin, end)));
   }
   // import: the file lands in this song's pack on the server, the map is reloaded so the sound exists, the song declares the pack and the part plays it
   const packName = () => $('song').value.replace(/\.strudel$/, '').replace(/[^\w-]/g, '_');
@@ -1007,7 +1022,7 @@
     const pv = e.target.closest('[data-pv]');
     if (pv) {
       const el = pv.parentElement.querySelector('input');
-      if (el.dataset.breaks !== undefined) return breaksText(layer, el.value).then((t) => t !== undefined && audition(pv, layer, 'slices', t), (err) => status(err.message));
+      if (el.dataset.breaks !== undefined) return breaksText(layer, el.value).then((t) => t !== undefined && audition(pv, layer, t === null ? null : 'slices', t), (err) => ($('mixstatus').textContent = err.message)); // an empty box is not "remove the slices": it hears the part as written
       return audition(pv, layer, el.dataset.mat, matText(layer, el.dataset.mat, el.value));
     }
     const st = e.target.closest('[data-seed]');
