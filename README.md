@@ -164,7 +164,7 @@ Material is a literal value on a layer or a section, never an axis (rule 4). Omi
 | sample | `sound` | any loaded sample | the file the part slices (`npm run check` prints the file behind it) |
 | sample | `begin`, `end` | fractions of the file, 0..1 | the region used (default the whole file); the trim is folded into the slice grid |
 | sample | `bars` | number | what the region stands for at the section tempo (default 1): playback speed follows |
-| sample | `slices` | integer | equal slices of the region (default 1) |
+| sample | `slices` | integer, or a list of break points (fractions of the file inside the region) | equal slices of the region, or slices at exactly those points: `[.06, .125, .5]` |
 | sample | `pattern` | mini-notation of slice indices | the order, spanning the sample's bars: `'0 1 2 3 4 5 6 7'` is the loop as recorded, `'0 1 [2 3] 0'` a chop |
 | sample | `stretch` | `true` | each slice fitted to its step, what Strudel's `fit()` does, from the section tempo; off, a slice keeps its own length at the fitted speed |
 | song, section | `kit` | drum machine name | section overrides song |

@@ -105,3 +105,21 @@ test('chop.strudel checks clean on the deployed demo pack and dumps to strudel t
   const dumped = await (await evaluate(out, transpiler)).pattern;
   assert.deepEqual(stream(dumped, song.strudel.total), stream(song, song.strudel.total));
 });
+
+test('slices as break points: fractions of the file inside the region, in order; the count follows', async () => {
+  const g = await ready;
+  const { slicePoints } = await import('../lib/layers.mjs');
+  assert.deepEqual(slicePoints(.1, .9, [.2, .5]), [.1, .2, .5, .9]);
+  assert.deepEqual(slicePoints(0, 1, []), [0, 1], 'no breaks: one slice');
+  const c = { ...meta, cycles: 2 };
+  const p = g.sample({ sound: 'ping', begin: .1, end: .9, bars: 2, slices: [.2, .5], pattern: '0 1 2' }, c);
+  const hs = onsets(p);
+  assert.equal(hs.length, 3);
+  near(hs[1].value.begin, .2, 'slice 1 begins at the first break'); near(hs[1].value.end, .5, 'and ends at the second');
+  near(hs[2].value.end, .9, 'the last slice ends at the region end');
+  assert.throws(() => g.sample({ sound: 'ping', slices: [.2, .5], pattern: '0 3' }, c), /slice 3 is out of range \(slices: 3/);
+  assert.throws(() => g.sample({ sound: 'ping', slices: [.5, .2] }, c), /increasing/);
+  assert.throws(() => g.sample({ sound: 'ping', begin: .3, slices: [.2] }, c), /inside/);
+  assert.throws(() => g.sample({ sound: 'ping', slices: [.2, 'x'] }, c), /fractions of the file/);
+  assert.throws(() => g.sample({ sound: 'ping', slices: [.2, .2] }, c), /increasing/);
+});

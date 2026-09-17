@@ -209,3 +209,12 @@ test('addPack declares a pack in the song header: inserts, appends, or leaves an
   assert.throws(() => addPack(`song({ packs: P }, [section('a', 4, {})])`, 'x'), /expression/);
   assert.throws(() => addPack(`s("bd")`, 'x'), /not a song/);
 });
+
+test('locate reads an array of numbers as a material value; setMaterial rewrites it', async () => {
+  await ready;
+  const { locate, setMaterial } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { sample: { sound: 'loop', slices: [.06, .5], pattern: '0 1 2' } })])`;
+  assert.deepEqual(locate(src).sections[0].layers.sample.mats.slices.value, [.06, .5]);
+  assert.match(setMaterial(src, 'a', 'sample', 'slices', '[.1, .2, .3]'), /slices: \[\.1, \.2, \.3\], pattern/);
+  assert.equal(locate(`song({}, [section('a', 4, { sample: { slices: [.1, x] } })])`).sections[0].layers.sample.mats.slices.value, 'expr', 'a non-literal element is an expression');
+});
