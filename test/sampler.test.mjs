@@ -1,6 +1,8 @@
-import { test } from 'node:test';
+﻿import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { peaks, fmtTime, soundUrl, sliceSpec, frac, breaksIn, breakPoints, toggleBreak } from '../web/sampler.mjs';
+import { peaks, fmtTime, soundUrl, sliceSpec, frac, breaksIn, breakPoints, toggleBreak, detectTempo, barsGuess, snapTo, snapDivisions, SNAPS } from '../web/sampler.mjs';
+
+const near = (a, b, m) => assert.ok(Math.abs(a - b) < 1e-9, m);
 
 test('peaks: the largest magnitude per column, columns wider than the data still fill', () => {
   const data = Float32Array.from([0, .5, -1, 0, .2, .1, 0, 0]);
@@ -61,4 +63,26 @@ test('toggleBreak removes the break within tolerance, else inserts in order insi
   assert.deepEqual(toggleBreak([.25, .5], .4, 0, 1, .005), [.25, .4, .5]);
   const same = [.25];
   assert.equal(toggleBreak(same, .05, .1, 1, .005), same, 'outside the region: the list itself, so the page can skip the commit');
+});
+
+
+const clicks = (bpm, secs, rate = 22050, offset = 0) => { // a click track: 5 ms bursts on every beat
+  const d = new Float32Array(Math.round(secs * rate)), per = (60 / bpm) * rate;
+  for (let t = offset * rate; t < d.length; t += per) for (let i = 0; i < rate * .005 && Math.round(t) + i < d.length; i++) d[Math.round(t) + i] = (i % 2 ? 1 : -1) * .8;
+  return d;
+};
+test('detectTempo finds a click track within a bpm, on the whole file and on a region', () => {
+  const a = detectTempo(clicks(120, 8), 22050); assert.ok(Math.abs(a.bpm - 120) <= 1, `120: ${a.bpm}`); assert.ok(a.confidence > .3);
+  const b = detectTempo(clicks(94, 8), 22050); assert.ok(Math.abs(b.bpm - 94) <= 1, `94: ${b.bpm}`);
+  const c = detectTempo(clicks(120, 8, 22050, .1), 22050, .25, .75); assert.ok(Math.abs(c.bpm - 120) <= 1, `region: ${c.bpm}`);
+  const s = detectTempo(new Float32Array(22050 * 4), 22050); assert.equal(s.bpm, 0, 'silence: nothing');
+  assert.equal(detectTempo(clicks(120, 1), 22050).bpm, 0, 'too short to say');
+});
+test('barsGuess rounds a region to a musical bar count', () => {
+  assert.equal(barsGuess(4, 120, 4), 2); assert.equal(barsGuess(5.1, 94, 4), 2); assert.equal(barsGuess(1.1, 120, 4), .5); assert.equal(barsGuess(30, 120, 4), 16); assert.equal(barsGuess(2, 120, 3), 1);
+});
+test('snapTo lands on the nearest interior grid point, or leaves x alone when snapping is off', () => {
+  assert.equal(snapTo(.26, 0, 1, 8), .25); assert.equal(snapTo(.02, 0, 1, 8), .125, 'never onto begin'); assert.equal(snapTo(.99, 0, 1, 8), .875, 'never onto end');
+  near(snapTo(.3, .2, .6, 4), .3, 'a region'); assert.equal(snapTo(.31, 0, 1, 0), .31);
+  assert.equal(snapDivisions(2, 4, 4), 32); assert.equal(SNAPS['1/16'], 4);
 });
