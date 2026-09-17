@@ -141,4 +141,35 @@ test('a definition from the pack sits under the part: name resolves to the pack 
     assert.equal(t.length, 1); near(t[0].value.begin, .5, 'the definition region'); near(t[0].value.speed, .5 * .5 / 1, 'cps .5, half the file, one bar');
     assert.equal(onsets(g.sample({ sound: 'ping', pattern: '0' }, c)).length, 1, 'a written pattern wins over the default: one slice spanning the definition\'s two bars, not four');
   } finally { SAMPLES.clear(); }
+  assert.equal(onsets(g.sample({ sound: 'ping', slices: 4 }, { ...meta, cycles: 1 }), 1).length, 4, 'no definitions at all: an unwritten pattern is still every slice in order');
+});
+
+test('a definition passes a :variant suffix through to the pack sound', async () => {
+  await ready;
+  const { registerSamples, resolveSample, SAMPLES } = await import('../lib/packs.mjs');
+  registerSamples({ mine: { sounds: { kick: ['mine/kick/a.wav', 'mine/kick/b.wav'] }, samples: { kick: { bars: 1 }, 'kick-x': { sound: 'kick', end: .5 } } } });
+  try {
+    assert.equal(resolveSample({ sound: 'kick:2' }).sound, 'kick:2', 'the variant survives the definition');
+    assert.equal(resolveSample({ sound: 'kick:2' }).bars, 1, 'and the definition still applies');
+    assert.equal(resolveSample({ sound: 'kick-x:1' }).sound, 'kick:1', 'a renamed definition keeps the part\'s variant');
+  } finally { SAMPLES.clear(); }
+});
+
+test('a definition name another pack already uses is skipped and reported, but a name matching the pack\'s own sound is the sound\'s default', async () => {
+  await ready;
+  const { registerSamples, sampleDef, SAMPLES, SAMPLE_PROBLEMS } = await import('../lib/packs.mjs');
+  registerSamples({
+    a: { sounds: { hit: ['a/hit.wav'] }, samples: { shared: { sound: 'hit', end: .5 } } },
+    b: { sounds: { boom: ['b/boom.wav'] }, samples: { shared: { sound: 'boom' }, boom: { bars: 4 } } },
+    c: { sounds: { thud: ['c/thud.wav'] }, samples: { hit: { sound: 'thud' } } },
+  });
+  try {
+    assert.equal(sampleDef('shared').pack, 'a', 'packs are read in name order, so the first pack keeps the name');
+    assert.equal(sampleDef('boom').bars, 4, 'a definition named like its own pack\'s sound is that sound\'s default interpretation');
+    assert.equal(SAMPLE_PROBLEMS.length, 2);
+    assert.match(SAMPLE_PROBLEMS.join('\n'), /samples\/user\/b\/pack\.json samples\.shared: collides with sample "shared" in pack "a"/);
+    assert.match(SAMPLE_PROBLEMS.join('\n'), /samples\/user\/c\/pack\.json samples\.hit: collides with sound "hit" in pack "a"/);
+    registerSamples({});
+    assert.equal(SAMPLE_PROBLEMS.length, 0, 'the problems clear with the registry');
+  } finally { SAMPLES.clear(); }
 });

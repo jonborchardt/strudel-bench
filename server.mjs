@@ -55,7 +55,7 @@ export function userPacks() {
       const bad = Object.keys(def).find((k) => !DEF_KEYS.includes(k));
       if (bad) { problems.push(`${p}/pack.json samples.${name}: unknown key "${bad}" (known: ${DEF_KEYS.join(', ')})`); continue; }
       const sound = def.sound ?? name;
-      if (!sounds[sound]) { problems.push(`${p}/pack.json samples.${name}: sound "${sound}" is not in the pack`); continue; }
+      if (!Object.hasOwn(sounds, sound)) { problems.push(`${p}/pack.json samples.${name}: sound "${sound}" is not in the pack`); continue; }
       samples[name] = def;
     }
     packs[p] = { sounds, samples, problems, deploy: meta.deploy ?? false, license: meta.license, source: meta.source };

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { userPacks } from '../server.mjs';
 import './esm-fix.mjs'; // must run before the strudel imports below are resolved, hence dynamic imports
 import { parseProgression, chordNames } from '../lib/harmony.mjs';
-import { packsOf, registerSamples, SYNTHS } from '../lib/packs.mjs';
+import { packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS } from '../lib/packs.mjs';
 import { describeAxes } from '../lib/vocab.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
 const { transpiler } = await import('@strudel/transpiler');
@@ -73,7 +73,8 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   const declared = packsOf(code);
   for (const p of declared) {
     if (!packs[p]) problems.push(`${path.basename(file)}: missing pack "${p}" (declared, not in samples/user/)`);
-    else for (const bad of packs[p].problems ?? []) problems.push(`${path.basename(file)}: ${bad}`); // a bad sample definition in a pack the song declares
+    // a bad sample definition in a pack the song declares, and a definition of that pack another pack's name took
+    else for (const bad of [...(packs[p].problems ?? []), ...SAMPLE_PROBLEMS.filter((b) => b.startsWith(`samples/user/${p}/`))]) problems.push(`${path.basename(file)}: ${bad}`);
   }
   const unknown = new Set(), undeclared = new Map(), used = new Map();
   const haps = pattern.queryArc(0, cycles).filter((h) => h.hasOnset())

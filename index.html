@@ -132,7 +132,7 @@
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks } from './web/boot.mjs';
   import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile, verifyRows, shareEncode, shareDecode } from './web/compose.mjs';
-  import { packsOf, packKind, SYNTHS } from './lib/packs.mjs';
+  import { packsOf, packKind, registerSamples, SYNTHS } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
   import { SCHEMA, host, CHORDS } from './web/hll-schema.mjs';
@@ -1005,7 +1005,7 @@
         }
       }
       await strudel.samples(await (await fetch('samples/user/strudel.json', { cache: 'no-store' })).json()); // re-register with the new sound (the map carries its own _base)
-      Object.assign(localPacks, await (await fetch('samples/user/packs.json', { cache: 'no-store' })).json());
+      Object.assign(localPacks, await (await fetch('samples/user/packs.json', { cache: 'no-store' })).json()); registerSamples(localPacks); // the pack's definitions may have changed with it
       refreshSounds(); bufs.delete(name);
       did(() => setMaterial(addPack(code.text, pack), mixSection, layer, 'sound', q(name)), `${layer}: imported ${file.name} as ${name}`);
       status(`imported ${file.name} → samples/user/${pack}/${name}${ext}${replaced ? ' (replaced: reload the page to hear the new file)' : ''}`);

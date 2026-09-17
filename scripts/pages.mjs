@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { userPacks, userMap, songList, listedSongs } from '../server.mjs';
-import { packsOf } from '../lib/packs.mjs';
+import { packsOf, registerSamples, SAMPLE_PROBLEMS } from '../lib/packs.mjs';
 import { checkFile } from './check.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -26,8 +26,11 @@ for (const [name, p] of Object.entries(userPacks())) {
   // a sample definition ships with its pack, unless it plays a sound the deploy subset leaves out
   const samples = {};
   for (const [def, d] of Object.entries(p.samples)) if (keep.includes(d.sound ?? def)) samples[def] = d;
-  shipped[name] = { ...p, samples, sounds: Object.fromEntries(keep.map((s) => [s, p.sounds[s]])) };
+  const { problems, ...rest } = p; // the index the page reads carries what a song can use, not the reading of pack.json
+  shipped[name] = { ...rest, samples, sounds: Object.fromEntries(keep.map((s) => [s, p.sounds[s]])) };
 }
+registerSamples(shipped); // one name may mean one thing on the deployed site: a collision among the shipped packs fails the build
+if (SAMPLE_PROBLEMS.length) throw new Error(`sample definitions collide as shipped:\n  ${SAMPLE_PROBLEMS.join('\n  ')}`);
 const songs = songList();
 const declared = Object.fromEntries(songs.map((s) => [s, packsOf(fs.readFileSync(path.join(ROOT, 'songs', s), 'utf8'))]));
 const hidden = songs.filter((s) => declared[s].some((p) => !shipped[p]));
