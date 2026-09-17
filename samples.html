@@ -92,6 +92,12 @@
     })().catch((e) => { bufs.delete(sound); throw e; }));
     return bufs.get(sound);
   }
+  const peakCache = new Map(); // `sound|width` -> the drawn columns: a full scan of a long file must not run on every render
+  function peaksOf(buf, sound, width) {
+    const k = `${sound}|${width}`;
+    if (!peakCache.has(k)) peakCache.set(k, peaks(buf.getChannelData(0), width));
+    return peakCache.get(k);
+  }
   const tempos = new Map(); // `sound|begin|end` -> its detection: autocorrelation costs, and a redraw must not pay it again
   function tempoOf(buf, sound, begin, end) {
     const k = `${sound}|${begin}|${end}`;
@@ -109,8 +115,10 @@
       const rows = [...Object.keys(x.samples ?? {}).sort().map((n) => row(n, 'def')),
         ...Object.keys(x.sounds ?? {}).filter((n) => !Object.hasOwn(x.samples ?? {}, n)).sort().map((n) => row(n, 'snd')),
         ...(x.problems ?? []).map((t) => `<li class="bad">${esc(t)}</li>`)];
+      // deploy means the whole folder ships under the pack's license, files dropped later included: say so where the drop happens
+      const drop = x.deploy ? `drop audio here &middot; this pack deploys under ${esc(x.license || 'no license yet')}: what you drop ships with the site` : 'drop audio here';
       return `<section class="wpack${cur?.pack === p ? ' on' : ''}"><h3><button data-pack="${esc(p)}">${esc(p)}</button><small>${x.deploy ? 'deployed' : 'local'}</small></h3><ul>${rows.join('')}</ul>`
-        + (cur?.pack === p ? '<div class="drop">drop audio here<input type="file" id="file" accept="audio/*"></div>' : '') + '</section>';
+        + (cur?.pack === p ? `<div class="drop">${drop}<input type="file" id="file" accept="audio/*"></div>` : '') + '</section>';
     }).join('') : '<p class="muted">no local packs yet</p>';
   }
   async function refreshPacks() { // the index is the truth: a pack or a definition may have gone away, so stale keys are dropped
@@ -160,9 +168,9 @@
     set($('end'), dur ? +(d.end * dur).toFixed(3) : d.end);
     set($('breaks'), !Array.isArray(d.slices) ? '' : dur ? d.slices.map((f) => +(f * dur).toFixed(3)).join(' ') : d.slices.map(frac).join(' '));
     wave.set({
-      peaks: buf ? peaks(buf.getChannelData(0), $('wave').width) : null, duration: dur,
+      peaks: buf ? peaksOf(buf, d.sound, $('wave').width) : null, duration: dur,
       begin: d.begin, end: d.end, breaks: Array.isArray(d.slices) ? d.slices : null, count,
-      divisions: snapDivisions(d.bars, 4, SNAPS[$('snap').value]),
+      divisions: snapDivisions(d.bars, 4, SNAPS[$('snap').value]), // 4 beats per bar: the workshop has no section to take a meter from, so the snap grid is 4/4
     });
     // what the region sounds like it is: the detected tempo, the bar count that implies, and a button to take it
     const { bpm: exact, confidence } = buf ? tempoOf(buf, d.sound, d.begin, d.end) : { bpm: 0, confidence: 0 };
@@ -196,6 +204,8 @@
     localStorage.setItem('strudel:snap', $('snap').value);
     render();
   }
+  // one change handler for the whole editor, so the preview-level slider's `change` (it lives in the Pack row) also runs a
+  // full readForm + render; harmless here (the form is small and the decode is cached) and cheaper than wiring each control
   $('editor').onchange = (e) => { if (cur) readForm(e.target); };
 
   // ---- auditioning, the same shape as the Compose page's previews: the same button again stops, another replaces it
@@ -228,7 +238,13 @@
   });
 
   // ---- the pack file: one definition in, one out; the index is re-read so the list and the registry follow
-  const packMeta = async (pack) => { const r = await fetch(`samples/user/${pack}/pack.json`, { cache: 'no-store' }); return r.ok ? r.json() : {}; };
+  // only a 404 means "this pack has no pack.json yet": any other failure would silently drop deploy/license on the next write
+  const packMeta = async (pack) => {
+    const r = await fetch(`samples/user/${pack}/pack.json`, { cache: 'no-store' });
+    if (r.status === 404) return {};
+    if (!r.ok) throw new Error(`${pack}/pack.json could not be read (${r.status}): not saving, so its deploy and license are not lost`);
+    return r.json();
+  };
   async function write(name, def) {
     const problem = def && nameProblem(name, cur.pack, localPacks);
     if (problem) return status(problem);
@@ -237,7 +253,8 @@
     if (def && had && name !== cur.from && !confirm(`replace the existing definition "${name}" in ${cur.pack}?`)) return status('not saved');
     if (!def && !had) return status(`no definition "${name}" in ${cur.pack}`);
     if (!def && !confirm(`delete the definition "${name}" from ${cur.pack}?`)) return status('not deleted');
-    const next = packJsonWith(await packMeta(cur.pack), name, def);
+    let meta; try { meta = await packMeta(cur.pack); } catch (e) { return status(e.message); }
+    const next = packJsonWith(meta, name, def);
     const r = await fetch(`samples/user/${cur.pack}/pack.json`, { method: 'PUT', body: JSON.stringify(next, null, 2) });
     if (!r.ok) return status(await r.text());
     await refreshPacks();
@@ -265,9 +282,11 @@
       await strudel.samples(await (await fetch('samples/user/strudel.json', { cache: 'no-store' })).json()); // the map carries its own _base
       await refreshPacks();
       bufs.delete(name);
-      for (const k of tempos.keys()) if (k.startsWith(`${name}|`)) tempos.delete(k); // the file behind the name changed: so does what it was detected as
+      for (const m of [tempos, peakCache]) for (const k of m.keys()) if (k.startsWith(`${name}|`)) m.delete(k); // the file behind the name changed: so do its peaks and its detection
       selectSound(cur.pack, name);
-      status(`imported ${file.name} → samples/user/${cur.pack}/${name}${ext}${replaced ? ' (replaced: reload to hear the new file)' : ''}`);
+      const meta = localPacks[cur.pack]; // the file joined a deploying pack: it ships under that pack's license, which is worth saying once
+      status(`imported ${file.name} → samples/user/${cur.pack}/${name}${ext}${replaced ? ' (replaced: reload to hear the new file)' : ''}`
+        + (meta?.deploy ? ` (deployed under ${meta.license || 'no license yet'})` : ''));
     } catch (e) { status(e.message); }
   }
 

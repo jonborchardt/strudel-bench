@@ -58,10 +58,18 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
     assert.deepEqual(idx._t_subset.samples, { 'pub-hit': { sound: 'pub', end: .5 } }, 'a definition on a sound outside the deploy subset is dropped');
     assert.deepEqual(Object.keys(idx['demo-pack'].samples).sort(), ['loop', 'loop-kick', 'loop-snare'], 'the demo definitions ship');
     assert.ok(!fs.existsSync(path.join(out, 'samples/packs')), 'packs stream from the cdn');
-    for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', 'web/boot.mjs', 'web/mp3.mjs', 'web/compose.mjs', 'web/examples.mjs', 'lib/packs.mjs'])
+    for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', 'web/boot.mjs', 'web/mp3.mjs', 'web/compose.mjs', 'web/examples.mjs', 'web/waveform.mjs', 'web/workshop.mjs', 'lib/packs.mjs'])
       assert.ok(!/['`"]\/[\w.]/.test(fs.readFileSync(path.join(out, f), 'utf8')), `root-absolute url in ${f}`); // a quote, a slash, then a path character; a bare '/' is a separator
     // the page does not need the server for export: no fetch of a render/dump route without a server guard
     assert.ok(!/fetch\(`dump\//.test(fs.readFileSync(path.join(out, 'index.html'), 'utf8')), 'no server dump route');
+
+    // one name means one thing on the deployed site: a definition named after another shipped pack's sound fails the build
+    const packJson = path.join(USER, '_t_subset', 'pack.json');
+    const kept = fs.readFileSync(packJson, 'utf8');
+    try {
+      fs.writeFileSync(packJson, JSON.stringify({ deploy: ['pub'], license: 'CC0-1.0', samples: { 'pub-hit': { sound: 'pub', end: .5 }, ping: { sound: 'pub' } } }));
+      assert.throws(() => build(out), /collide as shipped[\s\S]*samples\.ping: collides with sound "ping" in pack "demo-pack"/);
+    } finally { fs.writeFileSync(packJson, kept); }
 
     // a song on a deployed pack that uses a sound outside the deployed subset would play silence on pages: the build refuses
     fs.writeFileSync(path.join(SONGS, '_t_big.strudel'), `// packs: ['_t_subset']\ns("big")`);

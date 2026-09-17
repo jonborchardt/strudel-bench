@@ -79,6 +79,12 @@ test('detectTempo finds a click track within a bpm, on the whole file and on a r
   const s = detectTempo(new Float32Array(22050 * 4), 22050); assert.equal(s.bpm, 0, 'silence: nothing');
   assert.equal(detectTempo(clicks(120, 1), 22050).bpm, 0, 'too short to say');
 });
+test('detectTempo stays in range on noise, where the refinement has no parabola to sit in', () => {
+  let s = 12345; const rnd = () => ((s = (1103515245 * s + 12345) % 2147483648) / 2147483648) * 2 - 1; // a plain LCG: the same noise every run
+  const d = new Float32Array(22050 * 8); for (let i = 0; i < d.length; i++) d[i] = rnd() * .5;
+  const { bpm } = detectTempo(d, 22050);
+  assert.ok(Number.isFinite(bpm) && bpm >= 60 && bpm <= 200, `noise: ${bpm}`);
+});
 test('detectTempo reads the demo loop as the 120 bpm it was generated at', () => {
   // a real loop, not a click track: its kicks and snares are far louder than its hats, and before the envelope was
   // measured in log energy a few loud off-beat hits outweighed the grid and it read 80

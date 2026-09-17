@@ -22,5 +22,5 @@ export function packJsonWith(meta, name, def) {
 }
 
 /** A legal sample name: letters, digits, - and _, and not a name another pack's sounds or definitions already use (registerSamples would refuse it). */
-export const nameProblem = (name, pack, packs) => (!/^[\w-]+$/.test(name) ? 'letters, digits, - and _ only'
+export const nameProblem = (name, pack, packs) => (!/^[\w-]+$/.test(name) || ['__proto__', 'constructor', 'prototype'].includes(name) ? 'letters, digits, - and _ only'
   : Object.entries(packs).find(([p, x]) => p !== pack && (x.samples?.[name] || x.sounds?.[name])) ? `"${name}" is already a sound or sample in another pack` : null);

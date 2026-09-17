@@ -51,6 +51,9 @@ export function userPacks() {
     // named sample definitions (a region of a pack sound, read as bars/slices): bad ones are reported, never thrown, so one typo does not break the index
     const samples = {}, problems = [];
     for (const [name, def] of Object.entries(meta.samples ?? {})) {
+      // a name that is not a plain word, and the three that would land on the object itself (__proto__ sets the prototype
+      // instead of a key, so the definition would silently vanish): reported, not dropped
+      if (!/^[\w-]+$/.test(name) || ['__proto__', 'constructor', 'prototype'].includes(name)) { problems.push(`${p}/pack.json samples.${name}: not a legal name (letters, digits, - and _ only)`); continue; }
       if (!def || typeof def !== 'object' || Array.isArray(def)) { problems.push(`${p}/pack.json samples.${name}: not an object`); continue; }
       const bad = Object.keys(def).find((k) => !DEF_KEYS.includes(k));
       if (bad) { problems.push(`${p}/pack.json samples.${name}: unknown key "${bad}" (known: ${DEF_KEYS.join(', ')})`); continue; }

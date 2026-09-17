@@ -32,4 +32,5 @@ test('nameProblem refuses illegal names and names another pack already uses', ()
   assert.equal(nameProblem('', '_t_ws', packs), 'letters, digits, - and _ only');
   assert.equal(nameProblem('a b', '_t_ws', packs), 'letters, digits, - and _ only');
   assert.equal(nameProblem('a.wav', '_t_ws', packs), 'letters, digits, - and _ only');
+  assert.equal(nameProblem('__proto__', '_t_ws', packs), 'letters, digits, - and _ only', 'a word, but it would set the prototype of the samples object instead of a key');
 });

@@ -224,13 +224,16 @@ test('userPacks reads sample definitions from pack.json and reports bad ones ins
   const pack = path.join(USER, '_t_defs');
   fs.mkdirSync(pack, { recursive: true });
   fs.writeFileSync(path.join(pack, 'amen.wav'), '');
-  fs.writeFileSync(path.join(pack, 'pack.json'), JSON.stringify({ samples: { amen: { bars: 2, slices: 8 }, 'amen-kick': { sound: 'amen', end: .0625, bars: .125 }, ghost: { sound: 'nope' }, odd: { bars: 1, level: 2 }, bad: 3 } }));
+  fs.writeFileSync(path.join(pack, 'pack.json'), JSON.stringify({ samples: { amen: { bars: 2, slices: 8 }, 'amen-kick': { sound: 'amen', end: .0625, bars: .125 }, ghost: { sound: 'nope' }, odd: { bars: 1, level: 2 }, bad: 3, ['__proto__']: { sound: 'amen' }, 'no spaces': { sound: 'amen' } } })); // a computed key, so __proto__ is an own property and lands in the json
   try {
     const p = userPacks()._t_defs;
     assert.deepEqual(p.samples, { amen: { bars: 2, slices: 8 }, 'amen-kick': { sound: 'amen', end: .0625, bars: .125 } }, 'only the good definitions');
-    assert.equal(p.problems.length, 3);
+    assert.equal(Object.getPrototypeOf(p.samples), Object.prototype, 'a __proto__ definition does not become the prototype');
+    assert.equal(p.problems.length, 5);
     assert.match(p.problems.join('\n'), /ghost.*sound "nope" is not in the pack/);
     assert.match(p.problems.join('\n'), /odd.*unknown key "level"/);
     assert.match(p.problems.join('\n'), /bad.*not an object/);
+    assert.match(p.problems.join('\n'), /samples\.__proto__: not a legal name/);
+    assert.match(p.problems.join('\n'), /samples\.no spaces: not a legal name/);
   } finally { fs.rmSync(pack, { recursive: true }); }
 });

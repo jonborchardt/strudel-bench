@@ -144,6 +144,19 @@ test('a definition from the pack sits under the part: name resolves to the pack 
   assert.equal(onsets(g.sample({ sound: 'ping', slices: 4 }, { ...meta, cycles: 1 }), 1).length, 4, 'no definitions at all: an unwritten pattern is still every slice in order');
 });
 
+test('a region that strands a break the definition carries does not build, and an override that keeps them inside does', async () => {
+  const g = await ready;
+  const { registerSamples, SAMPLES } = await import('../lib/packs.mjs');
+  registerSamples({ mine: { sounds: { ping: ['mine/ping.wav'] }, samples: { chop: { sound: 'ping', bars: 2, slices: [.0625, .5] } } } });
+  const c = { ...meta, cycles: 2 };
+  try {
+    // the part inherits both breaks; trimming to end .3 leaves .5 outside the region, which song() refuses (the page
+    // has to drop the stranded break in the same edit, or refuse the trim)
+    assert.throws(() => g.sample({ sound: 'chop', end: .3 }, c), /inside the region/);
+    assert.equal(onsets(g.sample({ sound: 'chop', end: .3, slices: [.0625] }, c), 2).length, 2, 'an override that keeps the breaks inside the region builds');
+  } finally { SAMPLES.clear(); }
+});
+
 test('a definition passes a :variant suffix through to the pack sound', async () => {
   await ready;
   const { registerSamples, resolveSample, SAMPLES } = await import('../lib/packs.mjs');

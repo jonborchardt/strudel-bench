@@ -222,6 +222,7 @@ test('setSongField sets, replaces and drops a song header key; bpm and cps are e
   assert.match(setSongField(bare, 'cps', null), /song\(\{ key: 'C:minor' \}/, 'removed with its separator');
   assert.match(setSongField(`song({}, [section('a', 4, {})])`, 'bpm', '94'), /song\(\{ bpm: 94 \}/, 'an empty header');
   assert.throws(() => setSongField(`song({ bpm: B }, [section('a', 4, {})])`, 'bpm', '94'), /expression/);
+  assert.throws(() => setSongField(`song({ cps: sine }, [section('a', 4, {})])`, 'bpm', '94'), /bpm cannot replace cps here: cps is an expression, change it by hand/, 'the exclusive sibling names both keys');
   assert.throws(() => setSongField(`s("bd")`, 'bpm', '94'), /not a song/);
 });
 

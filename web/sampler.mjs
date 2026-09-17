@@ -94,7 +94,10 @@ export function detectTempo(data, rate, begin = 0, end = 1) {
   }
   if (bestLag <= 0 || r[bestLag] <= 0) return { bpm: 0, confidence: 0 };
   const a = r[bestLag - 1] ?? r[bestLag], b = r[bestLag], c = r[bestLag + 1] ?? r[bestLag]; // parabolic refinement between hops
-  const lag = bestLag + (a - c) / (2 * (a - 2 * b + c) || 1);
+  // bestLag maximises the *weighted* score, so its neighbours may not sit under a downward parabola: refine only when
+  // they do, and never further than half a hop (the peak is between bestLag - .5 and bestLag + .5 by construction)
+  const den = a - 2 * b + c;
+  const lag = bestLag + (den < 0 ? Math.max(-.5, Math.min(.5, (a - c) / (2 * den))) : 0);
   const bpm = Math.round(((60 * hps) / lag) * 10) / 10;
   const avg = sum / (lagMax - lagMin + 1);
   return { bpm, confidence: Math.max(0, Math.min(1, avg ? (r[bestLag] / avg - 1) / 4 : 0)) };

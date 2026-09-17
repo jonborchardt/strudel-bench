@@ -965,7 +965,7 @@
     if (!ra.sound) { box.querySelector('.info').textContent = 'pick a sample, or import one'; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
     let buf; try { buf = await bufferOf(ra.sound); } catch (e) { box.querySelector('.info').textContent = e.message; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
     if (!box.isConnected) return; // re-rendered while decoding
-    wf.set({ peaks: peaks(buf.getChannelData(0), box.querySelector('canvas').width), duration: buf.duration, ...shape });
+    wf.set({ peaks: peaksOf(buf, ra.sound, box.querySelector('canvas').width), duration: buf.duration, ...shape });
     bi.nextElementSibling.value = fmtTime(begin * buf.duration); ei.nextElementSibling.value = fmtTime(end * buf.duration);
     fillBreaks(box, spec, buf.duration); // the breaks box reads in seconds, which needs the duration
     // no sample rate: decodeAudioData resamples to the context's rate, so it would name the browser's rate, not the file's
@@ -980,6 +980,12 @@
         + ` <button class="pick" data-songbpm="${bpm}" title="set the song's tempo to ${bpm} bpm (its cps goes away)">song bpm ${bpm}</button>`
       : '');
   }
+  const peakCache = new Map(); // `sound|width` -> the drawn columns: a full scan of a long file must not run on every mixRender
+  function peaksOf(buf, sound, width) {
+    const k = `${sound}|${width}`;
+    if (!peakCache.has(k)) peakCache.set(k, peaks(buf.getChannelData(0), width));
+    return peakCache.get(k);
+  }
   const tempos = new Map(); // `sound|begin|end` -> its detection: autocorrelation over a long file costs, and a redraw must not pay it again
   function tempoOf(buf, sound, begin, end) {
     const k = `${sound}|${begin}|${end}`;
@@ -990,7 +996,7 @@
   function waveCommit(box, { breaks, begin, end }) {
     const layer = box.dataset.wave;
     if (breaks) {
-      const sv = slicesOf(layer);
+      const sv = slicesOf(layer) ?? resolveSample(partAttrs(layer)).slices; // the definition's breaks count too: the part inherits them
       if (sv === 'expr') { $('mixstatus').textContent = `${layer}.slices is an expression: edit it in the source`; return; }
       // a removal that leaves fewer slices than the pattern plays would not build: refuse it rather than write a broken song
       const need = maxIndex(matOf(layer, 'pattern'));
@@ -1009,7 +1015,10 @@
   function trimCommit(box, keys) {
     const layer = box.dataset.wave;
     const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value);
-    const sv = slicesOf(layer), kept = Array.isArray(sv) ? breaksIn(sv, begin, end) : null, drop = kept ? sv.length - kept.length : 0;
+    // breaks the part inherits from its pack definition are just as real as written ones: a trim that strands one has to
+    // drop it (materialising the survivors as an override) or refuse, or the song stops building
+    const sv = slicesOf(layer) ?? resolveSample(partAttrs(layer)).slices;
+    const kept = Array.isArray(sv) ? breaksIn(sv, begin, end) : null, drop = kept ? sv.length - kept.length : 0;
     // the region would strand a break the play pattern needs: refuse the trim rather than write a song that cannot build
     const need = maxIndex(matOf(layer, 'pattern'));
     if (drop && kept.length + 1 <= need) {
@@ -1070,7 +1079,7 @@
       await strudel.samples(await (await fetch('samples/user/strudel.json', { cache: 'no-store' })).json()); // re-register with the new sound (the map carries its own _base)
       Object.assign(localPacks, await (await fetch('samples/user/packs.json', { cache: 'no-store' })).json()); registerSamples(localPacks); // the pack's definitions may have changed with it
       refreshSounds(); bufs.delete(name);
-      for (const k of tempos.keys()) if (k.startsWith(`${name}|`)) tempos.delete(k); // the file behind the name changed: so does what it was detected as
+      for (const m of [tempos, peakCache]) for (const k of m.keys()) if (k.startsWith(`${name}|`)) m.delete(k); // the file behind the name changed: so do its peaks and its detection
       did(() => setMaterial(addPack(code.text, pack), mixSection, layer, 'sound', q(name)), `${layer}: imported ${file.name} as ${name}`);
       status(`imported ${file.name} → samples/user/${pack}/${name}${ext}${replaced ? ' (replaced: reload the page to hear the new file)' : ''}`);
     } catch (e) { status(e.message); }
@@ -1105,9 +1114,9 @@
     if (sl) return auditionSlice(sl, layer, Number(sl.dataset.slice));
     // the detection readout: the bar count it guessed for this part, or its tempo for the whole song
     const ub = e.target.closest('[data-usebars]');
-    if (ub) { // the guess is already what the definition says: dropping the override leaves the part on it, so say that rather than "removed"
-      const t = matText(layer, 'bars', ub.dataset.usebars);
-      return did(() => setMaterial(code.text, mixSection, layer, 'bars', t), `${layer}.bars ${ub.dataset.usebars}${t === null ? " (the definition's)" : ''}`);
+    if (ub) { // the guess is already what an absent key means: dropping the override leaves the part on it, so say that rather than "removed"
+      const t = matText(layer, 'bars', ub.dataset.usebars), inherited = sampleDef(matOf(layer, 'sound')) ? "the definition's" : 'the default';
+      return did(() => setMaterial(code.text, mixSection, layer, 'bars', t), `${layer}.bars ${ub.dataset.usebars}${t === null ? ` (${inherited})` : ''}`);
     }
     const sb = e.target.closest('[data-songbpm]');
     if (sb) return did(() => setSongField(code.text, 'bpm', sb.dataset.songbpm), `song bpm ${sb.dataset.songbpm} (from ${matOf(layer, 'sound') ?? 'the sample'})`);
