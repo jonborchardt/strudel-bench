@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { GROUPS } from '../web/examples.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const USER = path.join(ROOT, 'samples', 'user');
@@ -39,6 +40,8 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
     assert.ok(list.includes('ping.strudel'), 'a song on a deployed pack ships');
     assert.ok(list.includes('chop.strudel'), 'the sliced-sample song ships on the deployed demo pack');
     assert.ok(list.includes('_t_subset.strudel'), 'a song inside the deployed subset ships');
+    for (const g of GROUPS) for (const ex of g.items) for (const v of ex.variants ?? [])
+      if (v.src) assert.ok(list.includes(v.src.replace(/^songs\//, '')), `${g.id}/${ex.title}/${v.label}: src ${v.src} does not ship (a card must not point at a local-only song)`);
     assert.ok(!list.includes('_t_private.strudel'), 'a song on a local-only pack is left out of the list');
     assert.ok(!fs.existsSync(path.join(out, 'songs/_t_private.strudel')) && !fs.existsSync(path.join(out, 'songs/_t_private.notes.json')), 'and its files do not ship');
     const map = JSON.parse(fs.readFileSync(path.join(out, 'samples/user/strudel.json'), 'utf8'));

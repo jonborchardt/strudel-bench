@@ -512,7 +512,12 @@ export const GROUPS = [
       svg: timeline([['void', 1, .15], ['signal', 8, .3], ['approach', 8, .5], ['contact', 8, .75], ['will', 8, .8], ['plea', 8, .4], ['threshold', 12, .95], ['after', 6, .3]], '59 cycles, 64 BPM, D minor'), variants: [{ label: 'arrival.strudel', src: 'songs/arrival.strudel' }] },
     { title: 'breakwater', tags: ['song', 'sample', 'break points', 'bpm'], blurb: 'A breakbeat piece in F minor whose lead voice is the demo loop cut a different way in every section: whole, halved, a trimmed bar dragged at its own tempo, quarters, a break-point chop on the isolated kick and snare, then one hit a bar.',
       svg: timeline([['shoreline', 8, .3], ['swell', 8, .5], ['undertow', 8, .6], ['surge', 8, .75], ['breakwater', 12, .95], ['backwash', 8, .3]], '52 bars, F minor; undertow at 99 bpm'), variants: [{ label: 'breakwater.strudel', src: 'songs/breakwater.strudel' }] },
-    { title: 'hunted', tags: ['song', 'sample', 'voice', 'phrygian', 'second parts', 'template'], blurb: 'A voice on the radio calls directions from a shared pack of shouted takes (samples/user/voice, one folder per phrase, each take trimmed by a definition), a theme that follows the harmony and a thing that never does: E and F against every chord. Five parts a section is what one sound per part costs; the sound lists in the Material group are the fix. hide\'s second drum layer is template: \'heartbeat\', a named template with nothing but a bare kick, so the heart is one sound and no other voice can join it.',
-      svg: timeline([['alley', 8, .3], ['chase', 16, .7], ['hide', 8, .3], ['run', 16, .95], ['found', 8, .35]], '56 bars, E phrygian'), variants: [{ label: 'hunted.strudel', src: 'songs/hunted.strudel' }] },
+    { title: 'hunted', tags: ['song', 'phrygian', 'second parts'], blurb: 'A theme that follows the harmony against a thing that never does: E and F held against every chord. The full song adds a voice on the radio from a shared pack of shouted takes, but that pack is licensed and local-only, so it never ships here -- this excerpt is the harmonic idea without the radio, the alley section on its own.',
+      svg: timeline([['alley', 8, .3], ['chase', 16, .7], ['hide', 8, .3], ['run', 16, .95], ['found', 8, .35]], '56 bars, E phrygian'), variants: [{ label: 'alley', hll: `song({ cps: .5, key: 'E:phrygian', seed: 13 }, [
+  section('alley', 8, { progression: 'i i II i',
+    melody:  { sound: 'harp', follow: true, phrase: 2, notes: '0 ~ 1 0 ~ ~ ~ ~ 4 ~ 3 ~ 1 ~ 0@2', register: .6, articulation: .5, space: .6, width: .6, brightness: .35, density: .3, level: .45 },
+    melody2: { sound: 'didgeridoo', follow: false, phrase: 2, notes: '0@6 ~ ~ 1@6 ~ ~', register: .15, brightness: .12, articulation: .1, space: .4, width: .3, density: .3, level: .26 },
+    pad:     { sound: 'pipeorgan_quiet', articulation: .05, space: .85, weight: .8, register: .2, brightness: .12, density: .3, level: .52 } }),
+])` }] },
   ] },
 ];
