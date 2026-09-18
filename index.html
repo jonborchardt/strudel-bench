@@ -346,7 +346,13 @@
     if (pinned) { const s = secs.find((x) => x.name === pinned); return s ? filt(s) : strudel.silence; } // no such section (A/B before a rename): silence, not a guess
     return arrange(secs, pat.strudel.total, filt); // song()'s own arrangement, with the parts that pass
   }
-  async function setLive() { if (playing && songPat) (await ready).scheduler.setPattern(audible(ab && abPat ? abPat : songPat)); }
+  // superdough makes an orbit on its first hap, so a ducker's first hit would find no target ("duck target orbit n does not exist"): make every part's orbit before the scheduler starts. Channels [0, 1] is superdough's default (channels [1, 2], zero-based).
+  function makeOrbits(pat) {
+    const ac = strudel.getSuperdoughAudioController?.(); if (!ac) return;
+    const n = Math.max(0, ...(pat?.strudel?.sections ?? []).map((s) => Object.keys(s.layers).length));
+    for (let i = 1; i <= n; i++) ac.getOrbit(i, [0, 1]);
+  }
+  async function setLive() { makeOrbits(songPat); if (playing && songPat) (await ready).scheduler.setPattern(audible(ab && abPat ? abPat : songPat)); }
   globalThis.strudelBench = { live: async () => (await ready).scheduler.pattern }; // for headless checks: what the scheduler holds right now
   async function applyPin(at) { // point the running scheduler at the pinned section (or back at the song) at song cycle `at`
     const r = await ready;
@@ -449,6 +455,7 @@
     const src = code.text;
     const pat = await playCode(ready, src);
     songPat = pat; evaluated = src; playing = true;
+    makeOrbits(songPat);
     setSections(pat);
     if (!wasPlaying && paused == null && loop) paused = loop.offset; // Play from stopped starts at the pin
     if (loop) setcps(loop.cps); // the pinned section loops on its own, at its own tempo
@@ -1430,6 +1437,7 @@
     strudel.resetGlobalEffects();
     strudel.setSuperdoughAudioController(null); // rebuilt lazily on the offline context
     await strudel.initAudio({ maxPolyphony: 128 });
+    makeOrbits(pat); // same lazy-orbit gap as the live scheduler: create every part's orbit on this offline context before the first hit
     const schedule = async (from, to) => {
       for (const h of pat.queryArc(from, to, { _cps: cps })) {
         if (!h.hasOnset()) continue;
