@@ -74,6 +74,7 @@ export const SCHEMA = {
     bars: { type: 'number', min: 0.25, step: 0.25, title: 'bars the region stands for at the section tempo' },
     slices: int(1, 'equal slices the region is cut into; a list of break points instead is plain code'),
     stretch: { type: 'bool', title: 'fit each slice to its step (off: a slice keeps its own length at the fitted speed)' },
+    transpose: { type: 'number', min: -24, max: 24, step: 1, title: 'semitones up or down (speed: length changes with pitch)' },
   },
   calls: {
     section: { args: [null, int(1, 'bars in this section'), null] },

@@ -209,6 +209,26 @@ test('a list of definitions on a sample part: each hit picks a take that keeps i
   } finally { SAMPLES.clear(); }
 });
 
+test('transpose: semitones on the speed, on natural and stretched slices alike', async () => {
+  const g = await ready;
+  const sp = (attrs) => onsets(g.sample({ sound: 'ping', slices: 2, pattern: '0 1', ...attrs }, { ...meta, cycles: 1 }), 1)[0].value.speed;
+  near(sp({ transpose: 12 }) / sp({}), 2, 'an octave up doubles the speed');
+  near(sp({ transpose: -12, stretch: true }) / sp({ stretch: true }), .5, 'an octave down halves it, stretched too');
+  assert.throws(() => g.sample({ sound: 'ping', transpose: 'up' }, { ...meta, cycles: 1 }), /transpose must be a number/);
+});
+
+test('transpose applies to a takes list too', async () => {
+  const g = await ready;
+  const { registerSamples, SAMPLES } = await import('../lib/packs.mjs');
+  registerSamples({ mine: { sounds: { a: ['mine/a.wav'], b: ['mine/b.wav'] }, samples: { a: { bars: .5 }, b: { bars: .5 } } } });
+  try {
+    const c = { ...meta, cycles: 4 };
+    const hs = onsets(g.sample({ sound: ['a', 'b'], pattern: '0 0 0 0' }, c), 4);
+    const hsUp = onsets(g.sample({ sound: ['a', 'b'], pattern: '0 0 0 0', transpose: 12 }, c), 4);
+    near(hsUp[0].value.speed / hs[0].value.speed, 2, 'a takes-list part transposes too');
+  } finally { SAMPLES.clear(); }
+});
+
 test('two takes that resolve to the same pack sound do not collapse: chooseIn picks the take index, not the resolved name', async () => {
   const g = await ready;
   const { registerSamples, SAMPLES } = await import('../lib/packs.mjs');
