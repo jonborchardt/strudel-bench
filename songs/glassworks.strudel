@@ -1,0 +1,55 @@
+// glassworks: patches and movements. Nothing here is a sample. Three synths wear three patches (a glass FM lead, a
+// wide unison pad, a reese bass), and every filter that moves does so by a named movement rather than a hand-written
+// signal: the pad wobbles over four bars, the lead drifts across the stereo field, the pad swells through the lift,
+// the bass pulses on the beat, and ramp still does the one-way rises. The lead follows the chord tones rather than the
+// root (follow: 'tones'), so its four degrees spell each chord as it passes, through a progression that holds its
+// tonic for two bars (@2) and voices the VI in first inversion (/1). The turn is written with the resolver's motion
+// words in the comments: "wobbling brightness" is what wrote the pad's wobble.
+// arrive -> turn -> lift -> bloom -> settle. A minor, cps .5. Axis values are 0..1 with 0.5 = the layer's baseline.
+
+const lead = { sound: 'triangle', patch: 'glass', follow: 'tones', phrase: 2, notes: '0 ~ 1 2 ~ 3 2 1 ~ 0 1 ~ 2 3@2 ~', register: .6, articulation: .55, space: .6 };
+const wide = { sound: 'sawtooth', patch: 'wide', articulation: .15, space: .7, width: .7, brightness: .4 };
+const deep = { sound: 'square', patch: 'reese', register: .25, weight: .7, articulation: .55, brightness: .4 };
+
+song({ cps: .5, key: 'A:minor', seed: 21, kit: 'RolandTR909' }, [
+
+  // a pad breathing on its own: brightness wobbles once every four bars, the room swells up and back over the section
+  section('arrive', 8, { role: 'establish', progression: 'i@2 VI/1 VII',
+    pad:   { ...wide, density: .4, brightness: wobble(.25, .55, 4), space: swell(.5, .95), level: .6 },
+    drums: { template: 'minimal', density: .25, space: .7, brightness: .3, level: .6 },
+  }),
+
+  // the lead on chord tones, drifting left and right; the bass pulses its filter four times a bar
+  section('turn', 8, { role: 'develop', progression: 'i VI/1 III VII',
+    drums:  { template: 'minimal', density: .45, groove: .6, brightness: .4, level: .7 },
+    bass:   { ...deep, density: .75, notes: '0 0 4 3', brightness: pulse(.3, .6) },
+    melody: { ...lead, density: .5, width: drift(.3, .9), brightness: .55, level: .7 },
+    pad:    { ...wide, density: .5, brightness: wobble(.3, .6, 4), level: .55 }, // "wobbling brightness"
+  }),
+
+  // everything rises: the lead's filter by a ramp, the pad's room by a swell, into a dominant seventh held for two bars
+  section('lift', 8, { role: 'develop', progression: 'iv VI/1 V7/2@2', sweep: 1,
+    drums:  { template: 'breaks', density: .6, drive: .6, brightness: .5, level: .75 },
+    bass:   { ...deep, density: .75, notes: '0 4 0 3', brightness: pulse(.35, .65), weight: .75 },
+    melody: { ...lead, density: .6, brightness: ramp(.45, .85), width: drift(.4, .9), level: .75 },
+    pad:    { ...wide, density: .6, space: swell(.6, 1), brightness: ramp(.35, .6), level: .55 },
+    fx:     { riser: 3 },
+  }),
+
+  // the bloom: a wider pad, the lead doubled an octave up by a second glass voice, the bass locked to the kick
+  section('bloom', 16, { role: 'climax', progression: 'i VI/1 III VII',
+    drums:   { template: 'breaks', density: .85, drive: .8, articulation: .6, brightness: .6, weight: .65, variation: .4, level: .85 },
+    bass:    { ...deep, density: .75, notes: '0 7 0 4', brightness: pulse(.4, .7), weight: .85, aggression: .5, duck: 'drums', duckDepth: .5 },
+    melody:  { ...lead, density: .7, brightness: .8, width: drift(.2, 1), level: .8 },
+    melody2: { ...lead, notes: '~ ~ 4 ~ ~ ~ 5 ~ ~ ~ 4 ~ ~ ~ ~ ~', register: .85, level: .45, space: .8 },
+    pad:     { ...wide, density: .75, brightness: wobble(.4, .75, 2), width: .9, duck: 'drums', duckDepth: .7, level: .6 },
+    fx:      { impact: true },
+  }),
+
+  // the tonic held four bars, the pad's wobble slowing to once every eight, the lead's last phrase unanswered
+  section('settle', 8, { role: 'release', progression: 'i@4', dropout: 1,
+    bass:   { ...deep, density: .4, notes: '0 ~', brightness: .3, weight: .6, level: .7 },
+    melody: { ...lead, notes: '0 ~ 1 2 ~ 3 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~', density: .4, brightness: ramp(.6, .3), level: .6 },
+    pad:    { ...wide, density: .5, brightness: wobble(.25, .5, 8), space: swell(.7, 1), level: .6 },
+  }),
+])
