@@ -87,6 +87,7 @@ export const SCHEMA = {
   free: {
     packs: 'a list of sample pack names',
     notes: 'a line in mini-notation, written by hand',
+    rhythm: 'a grid string (x X o . | or p/s), written by hand',
     chord: 'a scale degree or a pattern of them',
     pattern: 'slice indices in mini-notation, spanning the sample\'s bars (0 1 [2 3] 0); the editor cannot see the slice count to offer picks',
   },

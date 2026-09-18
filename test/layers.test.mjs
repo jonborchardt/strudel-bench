@@ -346,3 +346,15 @@ test('fill: n rolls the last half bar of every nth bar; true still means the sec
   assert.deepEqual([...new Set(rolls({ fill: true }, 8))], [7]);
   assert.throws(() => g.drums({ fill: 1 }, ctx), /fill must be/);
 });
+
+test('bass rhythm: a written grid replaces the density grid, keeps drive and accents, may span bars', async () => {
+  const g = await ready;
+  const at = (attrs, cycles = 2) => onsets(g.bass(attrs, { ...ctx, cycles }), cycles).map((h) => h.whole.begin.valueOf()).sort((a, b) => a - b);
+  assert.deepEqual(at({ rhythm: 'x.....x.....x...' }), [0, .375, .75, 1, 1.375, 1.75]);
+  assert.deepEqual(at({ rhythm: 'x.....x.....x...', density: .9 }), at({ rhythm: 'x.....x.....x...' }), 'density does not touch a written rhythm');
+  assert.deepEqual(at({ rhythm: '3/8+1' }, 1), [.25, .625, .875], 'euclid works on the bass (rotated left one slot)');
+  assert.equal(at({ rhythm: 'x...x...x...x...|x.x.x...........' }).length, 7, 'two bars: 4 + 3 hits');
+  assert.equal(at({ rhythm: 'x.....x.....x...', drive: .9 }).length, 6, 'drive keeps the count');
+  const gains = onsets(g.bass({ rhythm: 'X.....o.....x...' }, { ...ctx, cycles: 1 }), 1).map((h) => h.value.gain);
+  assert.ok(gains[0] > gains[2] && gains[1] < gains[2], 'accent and ghost');
+});
