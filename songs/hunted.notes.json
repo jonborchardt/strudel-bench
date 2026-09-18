@@ -112,6 +112,28 @@
           "why": "the third up did not brighten the mix: rendered run centroid 2016>2033 Hz, highRatio .217>.218 -- the change is harmonic, not spectral"
         }
       ]
+    },
+    {
+      "date": "2026-09-18",
+      "ask": "i want the song to have more depth, more parts, more complex... its too basic in all respects. use yamahary30 for the bass drum sound, more heartbeat",
+      "changes": [
+        {
+          "section": "28",
+          "why": "to 55 part instances, 23 distinct sounds. the structural idea is two forces: the runner follows the harmony (harp theme, bowed vibraphone counter-figure, both phrasing over two bars) and the thing hunting does not (follow:false didgeridoo holding E and F, tonic and phrygian b2, against whatever chord is underneath)"
+        },
+        {
+          "section": "the",
+          "why": "plain E/F alternation landed on chord tones in every bar of chase and run, so it reinforced the harmony instead of grinding; inverted it (grind const) to put the b2 on the tonic chord -- min2, maj7, b6, 4th across the four bars"
+        },
+        {
+          "section": "added",
+          "why": "lib/grid.mjs TEMPLATES.heartbeat (bd x..x....x..x....): no template could express a lub-dub. drums2 uses it with sounds.bd YamahaRY30_bd, named bank-and-all so it plays bare instead of through the song's 909"
+        },
+        {
+          "section": "mix:",
+          "why": "the climax was clipping 2.90 percent of samples before any of this, which is the opposite of depth. uniform trims (run x0.7, chase x0.78, alley x0.75) instead of spot cuts, so the voice balance survives: run 2.90>0.23 percent, and the rms arc is now monotone .148 .209 .151 .228 .088"
+        }
+      ]
     }
   ]
 }
