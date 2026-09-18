@@ -45,9 +45,21 @@ test('v2 grammar: accidentals, suffixes, sevenths, groups', async () => {
   assert.equal(chordPatterns('C:minor', parseProgression('i V7')).tones(3), '<[0,3,7] [0,4,7,10]>', '7 floors that chord at 4 tones; V7 is the dominant seventh');
   assert.equal(chordNames('C:minor', parseProgression('V7 v7 VM7 vii7')), 'G7 Gm7 Gmaj7 Bb7');
   assert.equal(chordNames('C:major', parseProgression('vii7 ii7')), 'Bm7b5 Dm7', 'a diminished triad with a minor seventh is half-diminished');
-  assert.deepEqual(chordSpec('C:major', parseProgression('bVII')[0][0]), { degree: 6, acc: -1, intervals: [0, 4, 7, 10] });
+  assert.deepEqual(chordSpec('C:major', parseProgression('bVII')[0][0]), { degree: 6, acc: -1, intervals: [0, 4, 7, 10], bass: 0 });
   assert.throws(() => parseProgression('i [VI'), /unclosed/);
   assert.throws(() => parseProgression('X'), /bad numeral/);
+});
+
+test('@n repeats a chord over n bars; /k inverts it: rotated tones, the slash bass in the name', async () => {
+  await ready;
+  const { parseProgression, chordSpec, chordName, chordNames, chordPatterns } = await import('../lib/harmony.mjs');
+  const p = parseProgression('i@2 VI/1 V7/2');
+  assert.equal(p.length, 4); assert.equal(p[0][0].numeral, 'i@2'); assert.equal(p[1][0].numeral, 'i@2'); assert.equal(p[2][0].inversion, 1); assert.equal(p[3][0].inversion, 2);
+  assert.deepEqual(chordSpec('C:minor', p[2][0]).intervals, [4, 7, 12, 11], 'Ab major first inversion: C Eb Ab; the implied seventh stays at the end for 4-tone voicings');
+  assert.deepEqual(chordSpec('C:minor', p[3][0]).intervals, [7, 10, 12, 16], 'a seventh chord rotates all four tones');
+  assert.equal(chordNames('C:minor', p), 'Cm Cm Ab/C G7/D');
+  assert.equal(chordPatterns('C:minor', parseProgression('i/1')).tones(3), '<[3,7,12]>');
+  assert.throws(() => parseProgression('i/3'), /inversion/); assert.throws(() => parseProgression('i@0'), /bars/);
 });
 
 const onsets = (p, cycles) => p.queryArc(0, cycles).filter((h) => h.hasOnset()).sort((a, b) => a.whole.begin.valueOf() - b.whole.begin.valueOf());

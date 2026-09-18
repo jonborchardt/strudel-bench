@@ -38,7 +38,7 @@ const METERS = ['2/4', '3/4', '4/4', '5/4', '6/8', '7/8', '9/8', '12/8']; // the
 const ROLES = ['establish', 'develop', 'climax', 'release']; // the vocabulary the songs use; only climax has a rule (the fill before it)
 // the chord tokens parseProgression reads: diatonic numerals in both cases, their sevenths, the common altered roots, diminished
 const NUM = NUMERALS.map((n) => n.toUpperCase());
-export const CHORDS = [...NUM.map((n) => n.toLowerCase()), ...NUM, ...NUM.map((n) => `${n}7`), ...NUM.map((n) => `${n.toLowerCase()}7`), 'bII', 'bIII', 'bVI', 'bVII', 'bIII7', 'bVII7', '#iv', 'iidim', 'viidim', 'iidim7', 'viidim7'];
+export const CHORDS = [...NUM.map((n) => n.toLowerCase()), ...NUM, ...NUM.map((n) => `${n}7`), ...NUM.map((n) => `${n.toLowerCase()}7`), 'bII', 'bIII', 'bVI', 'bVII', 'bIII7', 'bVII7', '#iv', 'iidim', 'viidim', 'iidim7', 'viidim7', 'i/1', 'I/1', 'V7/2', 'i@2', 'I@2', 'i@4'];
 const SIGNALS = ['sine', 'cosine', 'saw', 'isaw', 'tri', 'square', 'rand', 'perlin'];
 
 export const SCHEMA = {
