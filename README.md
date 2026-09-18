@@ -84,7 +84,7 @@ Songs can be written as sections × layers × axis values (see `songs/demo.strud
       section('drop', 8, { role: 'climax', drums: { density: .7, drive: .8 }, bass: { weight: .8 }, melody: {}, pad: { space: .7 } }),
     ])
 
-Six layers — drums, bass, melody, pad, fx, sample — each take axis values in 0..1 where 0.5 is that layer's baseline. Then:
+Eight layers — drums, bass, melody, pad, fx, sample, perc, raw — each take axis values in 0..1 where 0.5 is that layer's baseline. Then:
 
     npm run resolve -- songs/demo.strudel drop drums "punchier"          # what would change
     npm run resolve -- songs/demo.strudel drop drums "punchier" --write  # do it
@@ -152,15 +152,18 @@ Material is a literal value on a layer or a section, never an axis (rule 4). Omi
 
 `sound` may be a list (`['a', 'b']`: a pick per hit, deterministic), weights (`{ a: 3, b: 1 }`) or a double-quoted `"<a b>"` (per bar); drum voices in `sounds` too. On a sample part a list is a list of definitions sharing `bars` and slice count, each keeping its own region.
 
+Rhythm has one written grammar everywhere it appears: `x` hit, `X` accent, `o` ghost, `.` rest, `|` between bars, or `p/s` for `p` euclidean hits over `s` slots (`p/s+r` rotates). Drums take one grid per voice as `template: { bd: '...', rd: '...' }` (any voice name — the five kit voices stay density-gated, an extra voice always plays), bass takes the same grid as `rhythm`, and `perc` is one bare sound (no kit) on a `rhythm`. `raw` skips the grid entirely: a plain Strudel `pattern` is the part's material.
+
 | Where | Key | Value | Effect |
 |---|---|---|---|
 | bass, melody, pad, fx | `sound` | any local synth or sample name | replaces the default (sawtooth; white noise for fx). Drums take `sounds` instead |
 | any layer | `level` | number, 1 = untouched | gain multiplier, applied after every axis |
-| drums | `template` | `'house'` (default), `'breaks'`, `'minimal'`, `'halftime'` | the base grid the axes thin out, place or fill |
+| drums | `template` | `'house'` (default), `'breaks'`, `'minimal'`, `'halftime'`, or `{ voice: grid }` | the base grid the axes thin out, place or fill; a written grid may name any voice |
 | drums | `sounds` | `{ sd: 'rim', hh: 'hh:2' }` | per-voice sound; a name the kit has keeps the kit (the 909 rim), any other sample plays as named (`cajon`) |
 | bass, melody | `notes` | mini-notation of scale degrees | replaces the seeded line; density thins or doubles it instead of choosing one |
+| bass | `rhythm` | grid string | replaces the density-placed grid with a written one; `notes` still gives the pitches |
 | pad | `chord` | a scale degree or mini-notation of degrees | pins the pad to that degree instead of the progression; the bass still follows it |
-| drums | `fill` | `true`/`false` | snare roll in the last half bar of the section; on by default before a `climax` section |
+| drums | `fill` | `true`/`false` or a bar count `n` (>= 2) | snare roll in the last half bar of the section, or of every `n`th bar; on by default before a `climax` section |
 | pad | `arp` | `'up'`, `'down'`, `'updown'` or `"0 2 1 2"` | arpeggiates the chord in 8ths (8 notes a bar in 4/4, 6 in 3/4) |
 | melody | `follow` | `true` | the line moves with the chord root |
 | melody | `phrase` | integer bars | the seeded line spans that many bars |
@@ -172,6 +175,9 @@ Material is a literal value on a layer or a section, never an axis (rule 4). Omi
 | sample | `slices` | integer, or a list of break points (fractions of the file inside the region) | equal slices of the region, or slices at exactly those points: `[.06, .125, .5]` |
 | sample | `pattern` | mini-notation of slice indices | the order, spanning the sample's bars: unwritten default is every slice in order (`'0 1 2 3 4 5 6 7'`, the loop as recorded), `'0 1 [2 3] 0'` a chop |
 | sample | `stretch` | `true` | each slice fitted to its step, what Strudel's `fit()` does, from the section tempo; off, a slice keeps its own length at the fitted speed |
+| perc | `sound` | any local synth or sample name (no kit) | the one sound the part plays |
+| perc | `rhythm` | grid string | the written rhythm (default an even 16ths grid) |
+| raw | `pattern` | a plain Strudel pattern | the part's material, in place of any layer-built pattern |
 | song, section | `kit` | drum machine name | section overrides song |
 | song, section | `meter` | `'4/4'`, `'3/4'`, `'6/8'`, `'7/8'`, `'5/4'` | one bar is still one cycle; 16th grid |
 | song | `bpm` | number | instead of `cps`: beats per minute on the meter's denominator |

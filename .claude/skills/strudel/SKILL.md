@@ -38,8 +38,9 @@ axes, what each does per layer, and the descriptor words.
 ## Material
 
 Descriptors never touch material. To change a sound, level, fill, arp or meter, edit the literal by hand
-(`sound`, `notes`, `level`, `sounds`, `fill`, `arp`, `follow`, `phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`,
-`begin`, `end`, `bars`, `slices`, `pattern`, `stretch`) and re-run `npm run check`. A `sample` part slices any loaded
+(`sound`, `notes`, `level`, `sounds`, `template`, `rhythm`, `fill` (`true`/`false` or a bar count `n`), `arp`, `follow`,
+`phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`, `begin`, `end`, `bars`, `slices`, `pattern`, `stretch`) and re-run
+`npm run check`. A `sample` part slices any loaded
 sample: `sound`, the region (`begin`/`end` as fractions), `bars` it stands for, `slices` (a count, or a list of break
 points, fractions of the file inside the region), `pattern` (slice indices in
 mini-notation over those bars) and `stretch` (fit each slice to its step); the check prints the file behind the sound
@@ -76,8 +77,11 @@ interest. Do these, in this order, on every new song and whenever a song is call
    an octave up or down, on the beats the hook leaves empty. That is the one place "more instruments" helps.
 4. **Contrast per section**, already the system's strength: drums `template` per section, `variation` rising
    toward the end, `fill`/`riser`/`impact` at the boundaries, pad `arp` in one section only.
-5. **Textures outside the axes.** Plain Strudel next to `song()` (`stack(theSong, textures)`, see
-   `songs/machine.strudel`) for anything the layers do not model: noise beds, one-shots, a drone.
+5. **A `raw` part inside the section, `stack()` around the song only for what must span sections.** `raw: { pattern:
+   s("...").struct(...) }` puts a plain Strudel pattern in with the layers, so mute, solo, pin, the check table and
+   the dump all see it, for anything the built layers do not model: noise beds, one-shots, a drone. `stack(theSong,
+   textures)` (see `songs/machine.strudel`) stays for a texture that has to run under every section, not one that
+   belongs to a single section.
 
 The layer baselines already carry the sound design (bass filter pluck, melody vibrato and on-beat accents, pad
 detune drift); do not re-add those per song.
