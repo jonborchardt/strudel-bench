@@ -121,3 +121,14 @@ test('every part plays on its own orbit, numbered by its place in the section, s
   assert.deepEqual(Object.entries(m.sections[0].layers).map(([k, l]) => [k, l.orbit]), [['drums', 1], ['pad', 2], ['pad2', 3]]);
   for (const [k, l] of Object.entries(m.sections[0].layers)) assert.ok(l.pattern.queryArc(0, 1).every((h) => h.value.orbit === l.orbit), `${k} haps carry orbit ${l.orbit}`);
 });
+
+test('duck: the named part carries duckorbit for every part that names it; the pad stops faking its duck', async () => {
+  await ready;
+  const m = song({ cps: .5 }, [section('a', 1, { drums: {}, pad: { duck: 'drums', duckDepth: .8, drive: .9 }, bass: { duck: 'drums' } })]).strudel.sections[0].layers;
+  const d = m.drums.pattern.queryArc(0, 1)[0].value;
+  assert.deepEqual(d.duckorbit, [m.pad.orbit, m.bass.orbit]); assert.equal(d.duckdepth, .5, 'one depth per source hap: the last part to name it wins (bass wrote none, so the default); write the same depth on both when it matters');
+  assert.ok(m.pad.pattern.queryArc(0, 1).every((h) => h.value.gain === undefined || h.value.gain >= .45), 'no square-wave dip under a real duck');
+  assert.throws(() => song({}, [section('a', 1, { pad: { duck: 'drums' } })]), /duck: no part "drums" in section "a"/);
+  assert.throws(() => song({}, [section('a', 1, { pad: { duck: 'pad' } })]), /cannot duck itself/);
+  assert.throws(() => song({}, [section('a', 1, { drums: {}, pad: { duck: 'drums', duckDepth: 2 } })]), /duckDepth/);
+});

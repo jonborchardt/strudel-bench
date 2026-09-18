@@ -57,6 +57,7 @@ export const SCHEMA = {
     kit: { type: 'enum', values: () => host.kits(), title: 'drum machine bank' },
     // layer material
     level: { type: 'number', min: 0, max: 2, step: 0.01, title: "the part's gain multiplier" },
+    duckDepth: { ...unit, title: 'how deep the named part ducks this one' },
     template: { type: 'enum', values: Object.keys(TEMPLATES), title: 'drum pattern template' },
     sounds: { type: 'map', keys: DRUM_ORDER, values: () => host.sounds(), list: 'sounds', title: 'the sample a drum voice plays' },
     fill: { type: 'bool', title: 'a fill in the last bar' },
@@ -86,6 +87,7 @@ export const SCHEMA = {
   signals: SIGNALS,
   free: {
     packs: 'a list of sample pack names',
+    duck: 'the name of the part in this section that ducks this one',
     notes: 'a line in mini-notation, written by hand',
     rhythm: 'a grid string (x X o . | or p/s), written by hand',
     chord: 'a scale degree or a pattern of them',
