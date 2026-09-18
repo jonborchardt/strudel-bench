@@ -164,6 +164,7 @@ Rhythm has one written grammar everywhere it appears: `x` hit, `X` accent, `o` g
 | any layer | `duckDepth` | number 0..1, default .5 | how deep the duck goes; only meaningful with `duck` set |
 | drums | `template` | `'house'` (default), `'breaks'`, `'minimal'`, `'halftime'`, or `{ voice: grid }` | the base grid the axes thin out, place or fill; a written grid may name any voice |
 | drums | `sounds` | `{ sd: 'rim', hh: 'hh:2' }` | per-voice sound; a name the kit has keeps the kit (the 909 rim), any other sample plays as named (`cajon`) |
+| bass, melody, pad | `patch` | a name (`pluck`, `reese`, `hollow`, `glass`, `breath`, `wide`, `sub`, `lib/patches.json`) or an inline object of the same controls | a bundle of voice controls (filter/pitch envelopes, FM, noise, unison) applied under the axes |
 | bass, melody | `notes` | mini-notation of scale degrees | replaces the seeded line; density thins or doubles it instead of choosing one |
 | bass | `rhythm` | grid string | replaces the density-placed grid with a written one; `notes` still gives the pitches |
 | pad | `chord` | a scale degree or mini-notation of degrees | pins the pad to that degree instead of the progression; the bass still follows it |
@@ -179,6 +180,7 @@ Rhythm has one written grammar everywhere it appears: `x` hit, `X` accent, `o` g
 | sample | `slices` | integer, or a list of break points (fractions of the file inside the region) | equal slices of the region, or slices at exactly those points: `[.06, .125, .5]` |
 | sample | `pattern` | mini-notation of slice indices | the order, spanning the sample's bars: unwritten default is every slice in order (`'0 1 2 3 4 5 6 7'`, the loop as recorded), `'0 1 [2 3] 0'` a chop |
 | sample | `stretch` | `true` | each slice fitted to its step, what Strudel's `fit()` does, from the section tempo; off, a slice keeps its own length at the fitted speed |
+| sample | `transpose` | semitones, -24..24 | scales the playback speed by `2**(transpose/12)`, so pitch and length move together (no pitch-preserving stretch) |
 | perc | `sound` | any local synth or sample name (no kit) | the one sound the part plays |
 | perc | `rhythm` | grid string | the written rhythm (default an even 16ths grid) |
 | raw | `pattern` | a plain Strudel pattern | the part's material, in place of any layer-built pattern |

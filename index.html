@@ -132,7 +132,7 @@
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks } from './web/boot.mjs';
   import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile, verifyRows, shareEncode, shareDecode, levelRows } from './web/compose.mjs';
-  import { packsOf, packKind, registerSamples, resolveSample, sampleDef, SAMPLES, SYNTHS } from './lib/packs.mjs';
+  import { packsOf, packKind, registerSamples, resolveSample, sampleDef, SAMPLES, SYNTHS, PATCHES } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
   import { SCHEMA, host, CHORDS } from './web/hll-schema.mjs';
@@ -803,6 +803,7 @@
         bits.push(`<label>breaks <span class="tb"><input class="snd wide" data-breaks placeholder="even" spellcheck="false" title="${esc(BREAKS_TITLE)}"><button class="pv" data-pv title="hear ${esc(name)} with these breaks (pauses the song)">&#9654;</button></span></label>`);
         bits.push(`<label>play ${text(L, e, 'pattern', '0')}</label>`);
         const st = val(L, e, 'stretch'), sti = inh(L, e, 'stretch'); bits.push(`<label class="${sti ? 'inh' : ''}"${sti}><input type="checkbox" data-mat="stretch"${st === true ? ' checked' : ''}${st === 'expr' ? ' disabled' : ''}> fit each slice to its step</label>`);
+        bits.push(`<label>transpose ${text(L, e, 'transpose', '0', 'type="number" min="-24" max="24" step="1"')}</label>`);
         bits.push(`<div class="wave" data-wave="${esc(name)}"><canvas width="720" height="72" title="the file: the used region lit, a line per slice; click to add a break, click a line to remove it, drag a line or a region edge to move it"></canvas>` +
           `<label class="${inh(L, e, 'begin') ? 'inh' : ''}"${inh(L, e, 'begin')}>start <input type="range" min="0" max="1" step=".001" data-trim="begin" value="${typeof b === 'number' ? b : 0}"><output></output></label>` +
           `<label class="${inh(L, e, 'end') ? 'inh' : ''}"${inh(L, e, 'end')}>end <input type="range" min="0" max="1" step=".001" data-trim="end" value="${typeof en === 'number' ? en : 1}"><output></output></label>` +
@@ -814,6 +815,7 @@
       } else if (base === 'raw') {
         bits.push(`<label>pattern ${expr}</label>`);
       } else bits.push(`<label>sound ${pick(L, e, 'sound', 'default')}</label>`);
+      if (base === 'bass' || base === 'melody' || base === 'pad') bits.push(`<label>patch ${pick(L, e, 'patch', 'none')}</label>`);
       // notes: the written line in mini-notation (scale degrees, ~ rests, @2 holds); the seeded line plays when it is empty
       if (base === 'bass' || base === 'melody') bits.push(`<label>notes ${text(L, e, 'notes', 'seeded line')}</label>`);
       if (base === 'melody') {
@@ -864,6 +866,7 @@
       return String(value).trim() && Number.isFinite(n) && n !== def ? String(+n.toFixed(3)).replace(/^0\./, '.') : null;
     }
     if (key === 'stretch') return value ? 'true' : sdef()?.stretch ? 'false' : null; // false is written only when the definition says true
+    if (key === 'transpose') { const n = Number(value); return String(value).trim() && Number.isFinite(n) && n !== 0 ? String(Math.round(n)) : null; } // 0 is untouched, dropped like phrase/level
     if (key === 'sounds') {
       const cur = { ...(locate(code.text).sections.find((x) => x.name === section)?.layers[layer]?.mats.sounds?.value ?? effective()[section]?.[layer]?.sounds ?? {}), [voice]: value };
       const set = Object.entries(cur).filter(([, v]) => v && (typeof v === 'string' || Array.isArray(v))).map(([k, v]) => `${k}: ${Array.isArray(v) ? `[${v.map(q).join(', ')}]` : q(v)}`);
@@ -1149,7 +1152,7 @@
   }
   function openPick(btn, layer) { // a materials-panel button: names by key, the change through setMaterial, previews through audition
     const { mat: key, voice, ph, list } = btn.dataset;
-    const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS)
+    const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS) : key === 'patch' ? Object.keys(PATCHES)
       : key === 'sound' && layerBase(layer) === 'sample' ? sampleSounds() : [...$('snds').options].map((o) => o.value);
     const takes = list ? JSON.parse(list) : null; // a list: a pick replaces the first take, the rest stay (data-list, from pick())
     const text = (v) => matText(layer, key, takes ? [v, ...takes.slice(1)] : v, voice);
