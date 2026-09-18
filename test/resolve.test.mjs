@@ -234,3 +234,10 @@ test('locate reads an array of numbers as a material value; setMaterial rewrites
   assert.match(setMaterial(src, 'a', 'sample', 'slices', '[.1, .2, .3]'), /slices: \[\.1, \.2, \.3\], pattern/);
   assert.equal(locate(`song({}, [section('a', 4, { sample: { slices: [.1, x] } })])`).sections[0].layers.sample.mats.slices.value, 'expr', 'a non-literal element is an expression');
 });
+
+test('locate reads a list of sound names as a list, not expr', async () => {
+  const { locate } = await import('../lib/resolve.mjs');
+  const L = locate(`song({}, [section('a', 4, { melody: { sound: ['piano', 'kalimba'] }, pad: { sound: { piano: 2, harp: 1 } } })])`).sections[0].layers;
+  assert.deepEqual(L.melody.mats.sound.value, ['piano', 'kalimba']);
+  assert.deepEqual(L.pad.mats.sound.value, { piano: 2, harp: 1 });
+});

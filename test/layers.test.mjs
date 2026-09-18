@@ -293,3 +293,31 @@ test('density does not invent a voice the template leaves out: heartbeat keeps i
   const house = onsets(g.drums({ template: 'house', density: .85 }, ctx)).filter((h) => h.value.s === 'hh');
   assert.equal(house.length, 4 * 16, 'house at density .85 still fills 16th hats');
 });
+
+test('a sound list picks one name per hit, the same pick every time, and reaches every name over enough hits', async () => {
+  const g = await ready;
+  const { soundPat, soundNames } = await import('../lib/layers.mjs');
+  assert.deepEqual(soundNames(['a', 'b']), ['a', 'b']); assert.deepEqual(soundNames({ a: 2, b: 1 }), ['a', 'b']); assert.deepEqual(soundNames('a'), ['a']);
+  assert.equal(soundPat('piano'), 'piano', 'a string is untouched');
+  assert.throws(() => soundPat([]), /list must hold sound names/);
+  assert.throws(() => soundPat({ a: 0 }), /weights must be positive/);
+  const names = (attrs, cycles = 8) => onsets(g.melody({ notes: '0 1 2 3 4 5 6 7', ...attrs }, { ...ctx, cycles }), cycles).map((h) => h.value.s);
+  const a = names({ sound: ['piano', 'kalimba', 'marimba'] });
+  assert.ok(a.every((s) => ['piano', 'kalimba', 'marimba'].includes(s)), `only listed names: ${a}`);
+  assert.deepEqual(a, names({ sound: ['piano', 'kalimba', 'marimba'] }), 'deterministic');
+  assert.ok(new Set(a).size === 3, `every name is reached over 64 hits: ${[...new Set(a)]}`);
+  const w = names({ sound: { piano: 9, kalimba: 1 } });
+  assert.ok(w.filter((s) => s === 'piano').length > w.filter((s) => s === 'kalimba').length, 'weights lean the pick');
+  const m = names({ sound: g.mini('<piano kalimba>') }, 2);
+  assert.deepEqual([...new Set(m.slice(0, 8))], ['piano']); assert.deepEqual([...new Set(m.slice(8))], ['kalimba'], 'a mini pattern alternates per bar');
+  assert.ok(onsets(g.melody({ sound: ['sawtooth', 'square'] }, ctx)).every((h) => h.value.vib === 4), 'a list of synths still gets the synth vibrato');
+  assert.ok(onsets(g.melody({ sound: ['sawtooth', 'piano'] }, ctx)).every((h) => h.value.vib === undefined), 'a list with a sample does not');
+});
+
+test('a drum voice can be a list; the kit applies only when every name is a kit voice', async () => {
+  const g = await ready;
+  const sd = (sounds) => onsets(g.drums({ density: .4, sounds }, { ...ctx, cycles: 8 }), 8).filter((h) => ['sd', 'rim', 'cp'].includes(h.value.s));
+  const a = sd({ sd: ['sd', 'rim'] });
+  assert.ok(a.length > 0 && a.every((h) => h.value.bank === 'RolandTR909'), 'both are kit voices in Node (hasSound is undefined there): banked');
+  assert.ok(new Set(a.map((h) => h.value.s)).size === 2, 'both names play');
+});
