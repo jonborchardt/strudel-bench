@@ -61,7 +61,9 @@ test('ramp(a, b) resolves to a section-length saw; structural axes still refuse 
   const g = await ready;
   g.strudelLib.registerLayer('probe', (attrs) => attrs.brightness);
   const p = g.song({}, [g.section('a', 4, { probe: { brightness: g.ramp(.2, .8) } })]).strudel.sections[0].layers.probe.pattern;
-  const at = (t) => p.queryArc(t, t + 1e-3)[0].value;
+  // probe returns the raw signal, not an instrument's control object, so .orbit() (applied to every layer's
+  // pattern now) wraps it under `value` instead of merging into an existing object
+  const at = (t) => p.queryArc(t, t + 1e-3)[0].value.value;
   assert.ok(Math.abs(at(0) - .2) < .01 && Math.abs(at(3.99) - .8) < .02, `${at(0)} ${at(3.99)}`);
   assert.equal(String(g.ramp(.2, .8)), 'ramp(0.2, 0.8)');
   assert.throws(() => g.song({}, [g.section('a', 4, { drums: { density: g.ramp(0, 1) } })]), /structural/);
@@ -111,4 +113,11 @@ test('a part can carry its own seed', async () => {
   const line = (spec) => JSON.stringify(song({ cps: .5, seed: 1 }, [section('a', 8, { melody: spec })]).strudel.sections[0].layers.melody.pattern.queryArc(0, 8).map((h) => [h.whole.begin.valueOf(), h.value.note ?? h.value.n]));
   assert.equal(line({ density: .8 }), line({ density: .8, seed: 1 }), 'the song seed is the default');
   assert.notEqual(line({ density: .8 }), line({ density: .8, seed: 7 }), 'another seed, another line');
+});
+
+test('every part plays on its own orbit, numbered by its place in the section, so effects do not share one bus', async () => {
+  await ready;
+  const m = song({ cps: .5 }, [section('a', 1, { drums: {}, pad: { space: .9 }, pad2: { space: .2 } })]).strudel;
+  assert.deepEqual(Object.entries(m.sections[0].layers).map(([k, l]) => [k, l.orbit]), [['drums', 1], ['pad', 2], ['pad2', 3]]);
+  for (const [k, l] of Object.entries(m.sections[0].layers)) assert.ok(l.pattern.queryArc(0, 1).every((h) => h.value.orbit === l.orbit), `${k} haps carry orbit ${l.orbit}`);
 });

@@ -79,6 +79,11 @@ test('a raw part dumps the pattern the file wrote', async () => {
   finally { fs.rmSync(file); }
 });
 
+test('the dump prints the orbit each part plays on', async () => {
+  const out = await dumpFile(path.resolve(import.meta.dirname, '..', 'songs', 'demo.strudel'));
+  assert.match(out, /const intro_pad = [\s\S]*?\.orbit\(2\)/);
+});
+
 test('dump keeps patterns stacked around a song(), not just the song sections', async () => {
   const fs = await import('node:fs');
   const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_wrap.strudel');
