@@ -42,7 +42,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     printAxisReport(result.report);
     if (result.report.removed.length) console.log(`  removed: ${result.report.removed.join(', ')}`);
     for (const r of result.refused) console.log(`  ${r.section}.${r.layer}.${r.axis}: refused, ${r.reason}`);
-    const changed = result.report.length > 0 || result.report.removed.length > 0;
+    const changed = result.src !== src; // material edits (setMaterial) and layer removal touch src without adding to report
     if (write) {
       if (!changed) console.log('nothing changed');
       else { fs.writeFileSync(file, result.src); console.log(`wrote ${file}`); }

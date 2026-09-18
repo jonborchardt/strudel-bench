@@ -746,8 +746,8 @@
     const ev = sections.find((x) => x.name === mixSection); if (!ev) return;
     let src; try { src = locate(code.text).sections.find((x) => x.name === mixSection); } catch { return; }
     const h = harmOf(src ?? {}, ev); // rebuild from what is written, so a progression typed but not yet updated is not thrown away
-    if (/@/.test(h.progression)) return status('@n is hand-written: edit the progression in the source');
     if ('key' in b.dataset) return openPickList(b, { names: SCHEMA.props.key.values(), cur: h.key, ph: 'the song\'s key', onPick: (v) => did(() => setSectionField(code.text, mixSection, 'key', v ? q(v) : null), `${mixSection} key ${v || 'from the song'}`) });
+    if (/@/.test(h.progression)) return status('@n is hand-written: edit the progression in the source'); // only the per-bar chord picks below need the expanded-bars round trip; the key pick above does not touch the progression
     let prog; try { prog = parseProgression(h.progression); } catch { return status(`progression "${h.progression}" does not parse: edit it in the source`); }
     const i = Number(b.dataset.bar);
     const tokens = prog.map((cy) => (cy.length > 1 ? `[${cy.map((c) => c.numeral).join(' ')}]` : cy[0].numeral));

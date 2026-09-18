@@ -308,4 +308,10 @@ test('applyVerb surfaces refusals instead of silently doing nothing on an all-sp
   const r = applyVerb(src, 'a', 'lift');
   assert.ok(r.refused.length > 0, 'a fully-spread layer is refused, not silently skipped');
   assert.equal(r.src, src, 'nothing to edit: the source comes back unchanged');
+  // halftime sets material (template) directly, ahead of its phrase: that edit lands even when the phrase's own axis
+  // edits are refused for being spread, so src differs from the input although report stays empty
+  const h = applyVerb(src, 'a', 'halftime');
+  assert.notEqual(h.src, src, 'the material edit (template) still lands');
+  assert.match(h.src, /template: 'halftime'/);
+  assert.ok(h.refused.length > 0, 'the phrase half is still refused: density comes from the spread');
 });

@@ -352,6 +352,8 @@ test('fill: n rolls the last half bar of every nth bar; true still means the sec
   const noSd = { template: { bd: 'x...x...x...x...', rd: 'x.x.x.x.x.x.x.x.' } };
   assert.equal(onsets(g.drums({ ...noSd, fill: 2 }, { ...ctx, cycles: 4 })).filter((h) => h.value.s === 'sd').length, 0, 'fill: n with no sd line: no sd events');
   assert.equal(onsets(g.drums({ ...noSd, fill: true }, ctx)).filter((h) => h.value.s === 'sd').length, 0, 'fill: true with no sd line: no sd events');
+  // heartbeat writes an all-rests sd line on purpose (not no line at all): the gate must read the grid's content, not just its presence
+  assert.equal(onsets(g.drums({ template: 'heartbeat', fill: 2 }, { ...ctx, cycles: 4 })).filter((h) => h.value.s === 'sd').length, 0, 'heartbeat + fill: n: still no sd events');
 });
 
 test('perc: a bare sound on a written rhythm; density thins or adds hits, drive places them', async () => {
