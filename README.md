@@ -145,7 +145,8 @@ Rule 4 stands: harmony is material on the section, not an axis. Two reserved sec
 - `progression` is roman numerals `I..VII`, any case, one chord per cycle (or several in `[..]`), looping. Degrees are diatonic to the section key; `npm run check` prints the chords you actually got (`I` in C minor prints `Cm`). Default is `i VI`.
 - Pad voices the chord, bass transposes its line by the chord root, melody stays in key.
 - Resolve phrases accept harmony words as states: progressions (`resolved`, `tense`, `pop`, `epic`, `circular`, `static`, `unresolved`), modes (`major`, `minor`, `dorian`, `lydian`, `mixolydian`, `phrygian`) and `relative`. `npm run resolve -- songs/x.strudel drop '*' "relative major, pop"` writes both fields.
-- `@n` after a numeral holds that chord for `n` bars (`i@2 VI` is three bars, the tonic on the first two); `/1`/`/2` inverts it, rotating the lowest tone up an octave (the name gains a slash: `VI/1` is Ab/C). Melody `follow: 'tones'` maps the written line's degrees onto the chord's own tones (0 root, 1 third, 2 fifth, 3 seventh, 4 the root above) instead of the key's, so the same degrees harmonize as the chord changes.
+- `@n` after a numeral holds that chord for `n` bars (`i@2 VI` is three bars, the tonic on the first two), `n` from 1 to 64; `/1`/`/2` inverts it, rotating the lowest tone up an octave (the name gains a slash: `VI/1` is Ab/C). Melody `follow: 'tones'` maps the written line's degrees onto the chord's own tones (0 root, 1 third, 2 fifth, 3 seventh, 4 the root above) instead of the key's, so the same degrees harmonize as the chord changes.
+- `@n` is written by hand, not by the Mix card: the harmony row's per-bar chord picker refuses to edit a progression that uses it, since one bar in the picker cannot stand for a hand-written repeat count.
 - Not modeled: voice leading, chord symbols.
 
 ### Material
@@ -170,7 +171,7 @@ Rhythm has one written grammar everywhere it appears: `x` hit, `X` accent, `o` g
 | bass, melody | `notes` | mini-notation of scale degrees | replaces the seeded line; density thins or doubles it instead of choosing one |
 | bass | `rhythm` | grid string | replaces the density-placed grid with a written one; `notes` still gives the pitches |
 | pad | `chord` | a scale degree or mini-notation of degrees | pins the pad to that degree instead of the progression; the bass still follows it |
-| drums | `fill` | `true`/`false` or a bar count `n` (>= 2) | snare roll in the last half bar of the section, or of every `n`th bar; on by default before a `climax` section |
+| drums | `fill` | `true`/`false` or a bar count `n` (>= 2) | snare roll in the last half bar of the section, or of every `n`th bar; on by default before a `climax` section; the integer form replaces that automatic end-of-section roll, it does not add to it |
 | pad | `arp` | `'up'`, `'down'`, `'updown'` or `"0 2 1 2"` | arpeggiates the chord in 8ths (8 notes a bar in 4/4, 6 in 3/4) |
 | melody | `follow` | `true` or `'tones'` | `true` moves the line with the chord root; `'tones'` maps its degrees onto the chord's own tones instead |
 | melody | `phrase` | integer bars | the seeded line spans that many bars |
@@ -191,7 +192,7 @@ Rhythm has one written grammar everywhere it appears: `x` hit, `X` accent, `o` g
 | song | `bpm` | number | instead of `cps`: beats per minute on the meter's denominator |
 | section | `bpm` or `cps` | number | that section plays at its own tempo |
 | section | `dropout` | bars `n` | silences every part but fx for the last `n` bars |
-| section | `sweep` | bars `n` | closes a low-pass over every part but fx during the last `n` bars |
+| section | `sweep` | bars `n` | over every part but fx during the last `n` bars, opens the filter to 8 kHz at the start of the tail and closes it to 150 Hz by the end, overriding that part's own brightness for those bars |
 
 A key that is neither an axis nor that layer's material throws, naming both lists: a typo (`arpp: 'up'`) is a build error, not a silent no-op. The same goes for song metadata (`bmp: 120` throws).
 

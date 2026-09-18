@@ -40,9 +40,11 @@ axes, what each does per layer, and the descriptor words.
 ## Material
 
 Descriptors never touch material. To change a sound, level, fill, arp or meter, edit the literal by hand
-(`sound`, `notes`, `level`, `sounds`, `template`, `rhythm`, `fill` (`true`/`false` or a bar count `n`), `arp`, `follow`,
+(`sound`, `notes`, `level`, `sounds`, `template`, `rhythm`, `fill` (`true`/`false` or a bar count `n`; the integer
+form replaces the automatic climax-end roll rather than adding to it), `arp`, `follow`,
 `phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`, `begin`, `end`, `bars`, `slices`, `pattern`, `stretch`, `transpose`,
-`patch`, `duck`, `duckDepth`, `dropout`, `sweep`) and re-run
+`patch`, `duck`, `duckDepth`, `dropout`, `sweep` (opens the filter to 8 kHz at the start of its tail and closes it
+to 150 Hz by the end, overriding the part's own brightness in those bars)) and re-run
 `npm run check`. A `sample` part slices any loaded
 sample: `sound`, the region (`begin`/`end` as fractions), `bars` it stands for, `slices` (a count, or a list of break
 points, fractions of the file inside the region), `pattern` (slice indices in
@@ -102,7 +104,8 @@ detune drift); do not re-add those per song.
 - Harmony is per section, not an axis. Translate harmonic requests into progression words (`resolved`, `tense`,
   `pop`, `epic`, `circular`), mode words (`major`, `dorian`, ...) and `relative`; resolve writes `key`/`progression`
   on the section. The progression grammar also takes accidentals (`bVI`), quality suffixes and sevenths (`IVm`,
-  `V7`), brackets for two chords in a bar, `@n` to hold a chord for `n` bars, and `/1`/`/2` to invert it. Verify
+  `V7`), brackets for two chords in a bar, `@n` to hold a chord for `n` bars (1..64), and `/1`/`/2` to invert it.
+  `@n` is written by hand: the Mix card's harmony row refuses to edit a progression that uses it. Verify
   from the `harmony` line in the check table (code-verified). Voice leading and chord symbols are still not
   modeled: say so and offer a different section key.
 - If a word is unknown to the vocabulary, pick the closest descriptors and say which you chose. If it recurs,
