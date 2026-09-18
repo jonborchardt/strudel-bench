@@ -197,6 +197,14 @@ test('setSectionField sets, replaces and drops a section key or progression', as
   assert.throws(() => setSectionField(`song({}, [section('a', 1, { key: K })])`, 'a', 'key', "'C:minor'"), /expression/);
 });
 
+test('setSectionField sets a section dropout, and locate exposes dropoutNode', async () => {
+  await ready;
+  const { setSectionField, locate } = await import('../lib/resolve.mjs');
+  const a = setSectionField(SRC, 'verse', 'dropout', '1');
+  assert.match(a, /section\('verse', 8, \{ role: 'develop', dropout: 1,\n/, 'after role');
+  assert.equal(locate(a).sections[0].dropoutNode.value, 1);
+});
+
 test('addPack declares a pack in the song header: inserts, appends, or leaves an existing one alone', async () => {
   await ready;
   const { addPack } = await import('../lib/resolve.mjs');

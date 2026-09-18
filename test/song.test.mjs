@@ -148,3 +148,15 @@ test('duck: the named part carries duckorbit for every part that names it; the p
   assert.throws(() => song({}, [section('a', 1, { pad: { duck: 'pad' } })]), /cannot duck itself/);
   assert.throws(() => song({}, [section('a', 1, { drums: {}, pad: { duck: 'drums', duckDepth: 2 } })]), /duckDepth/);
 });
+
+test('dropout silences every part but fx for the last n bars; sweep low-passes them over the last n bars', async () => {
+  await ready;
+  const m = song({ cps: .5 }, [section('a', 4, { dropout: 1, drums: { density: .7 }, pad: {}, fx: { riser: 2 } })]).strudel.sections[0];
+  const last = (l) => m.layers[l].pattern.queryArc(3, 4).filter((h) => h.hasOnset()).length;
+  assert.equal(last('drums'), 0); assert.equal(last('pad'), 0); assert.ok(last('fx') > 0, 'the riser keeps going');
+  assert.ok(m.layers.drums.pattern.queryArc(0, 3).filter((h) => h.hasOnset()).length > 0);
+  const s = song({ cps: .5 }, [section('a', 4, { sweep: 2, drums: { density: .7 } })]).strudel.sections[0].layers.drums.pattern;
+  const cut = (t) => s.queryArc(t, t + .01)[0].value.cutoff;
+  assert.equal(cut(0), undefined, 'no filter in the head'); assert.ok(cut(2.01) > 7000 && cut(3.9) < 1000, 'sweeping down through the tail (8000 -> 150 over two bars)');
+  assert.throws(() => song({}, [section('a', 4, { dropout: 5, drums: {} })]), /dropout/);
+});

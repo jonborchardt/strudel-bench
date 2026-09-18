@@ -57,6 +57,8 @@ export const SCHEMA = {
     key: { type: 'enum', values: () => ROOTS.flatMap((r) => HARMONY.modes.map((m) => `${r}:${m}`)), list: 'keys', title: 'root and mode' },
     progression: { type: 'tokens', values: CHORDS, sep: ' ', title: 'one chord per bar, roman numerals over the key; [a b] shares a bar' },
     role: { type: 'enum', values: ROLES, title: "the section's role in the arc" },
+    dropout: int(0, 'bars of silence (all but fx) before the section ends'),
+    sweep: int(0, 'bars of low-pass sweep down (all but fx) before the section ends'),
     kit: { type: 'enum', values: () => host.kits(), title: 'drum machine bank' },
     // layer material
     level: { type: 'number', min: 0, max: 2, step: 0.01, title: "the part's gain multiplier" },
