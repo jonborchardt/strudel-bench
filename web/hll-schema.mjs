@@ -36,9 +36,12 @@ const sound = (title) => ({ type: 'enum', values: () => host.sounds(), list: 'so
 export const ROOTS = FLATS; // the roots as lib/harmony spells them
 const METERS = ['2/4', '3/4', '4/4', '5/4', '6/8', '7/8', '9/8', '12/8']; // the common ones; parseMeter takes any n/4, n/8, n/16
 const ROLES = ['establish', 'develop', 'climax', 'release']; // the vocabulary the songs use; only climax has a rule (the fill before it)
-// the chord tokens parseProgression reads: diatonic numerals in both cases, their sevenths, the common altered roots, diminished
+// the chord tokens parseProgression reads: diatonic numerals in both cases, their sevenths, the common altered roots, diminished,
+// and inversions (/1, /2: one token per bar, safe in the per-bar picker). `@n` (a chord spanning n bars) is NOT listed here: the
+// picker builds its token list from the expanded per-bar cycles, so an `@n` token would occupy n bar slots under one label and
+// editing any one of them would rewrite the whole progression with an extra bar. `@n` stays a hand-written form.
 const NUM = NUMERALS.map((n) => n.toUpperCase());
-export const CHORDS = [...NUM.map((n) => n.toLowerCase()), ...NUM, ...NUM.map((n) => `${n}7`), ...NUM.map((n) => `${n.toLowerCase()}7`), 'bII', 'bIII', 'bVI', 'bVII', 'bIII7', 'bVII7', '#iv', 'iidim', 'viidim', 'iidim7', 'viidim7', 'i/1', 'I/1', 'V7/2', 'i@2', 'I@2', 'i@4'];
+export const CHORDS = [...NUM.map((n) => n.toLowerCase()), ...NUM, ...NUM.map((n) => `${n}7`), ...NUM.map((n) => `${n.toLowerCase()}7`), 'bII', 'bIII', 'bVI', 'bVII', 'bIII7', 'bVII7', '#iv', 'iidim', 'viidim', 'iidim7', 'viidim7', 'i/1', 'I/1', 'V7/2'];
 const SIGNALS = ['sine', 'cosine', 'saw', 'isaw', 'tri', 'square', 'rand', 'perlin'];
 
 export const SCHEMA = {

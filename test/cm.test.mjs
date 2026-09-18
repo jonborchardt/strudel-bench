@@ -6,7 +6,7 @@ import { javascript } from '@codemirror/lang-javascript';
 import { ensureSyntaxTree } from '@codemirror/language';
 import { findControls, editFor, quantize, hllControls, toggleControls, controlsOf, controlsShown, decorationsOf, languageFor } from '../web/cm-controls.mjs';
 import { valuesOf, widgetFor, slider, spinner, check, select, pick, tokens } from '../web/cm-widgets.mjs';
-import { SCHEMA, host } from '../web/hll-schema.mjs';
+import { SCHEMA, host, CHORDS } from '../web/hll-schema.mjs';
 import { TEMPLATES } from '../lib/grid.mjs';
 
 const state = (doc) => EditorState.create({ doc, extensions: [javascript(), hllControls(SCHEMA)] });
@@ -145,6 +145,10 @@ test('progression is a row of chord tokens, and the widget chooser follows the s
   assert.equal(widgetFor(c['drums.fill']), check);
   assert.equal(widgetFor(c['drums.template'], ui), pick, 'with a host menu: the pick button'); assert.equal(widgetFor(c['drums.template']), select, 'without: a native select');
   assert.equal(widgetFor(c['progression'], ui), tokens); assert.equal(widgetFor(c['progression']), null, 'the chord row needs the host menu');
+  // the picker builds its token list from the expanded per-bar cycles (one numeral per bar slot); an `@n` token
+  // would occupy n slots under one label, so editing any one of them would rewrite the whole progression with
+  // an extra bar. `@n` must stay a hand-written form, never offered here.
+  assert.ok(CHORDS.every((c) => !c.includes('@')), 'no CHORDS entry uses @ (bar count): unsafe in the per-bar picker');
 });
 
 test('a pane over the song header: the document is the object itself, read as the argument of song(...)', () => {

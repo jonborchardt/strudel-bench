@@ -60,6 +60,7 @@ test('@n repeats a chord over n bars; /k inverts it: rotated tones, the slash ba
   assert.equal(chordNames('C:minor', p), 'Cm Cm Ab/C G7/D');
   assert.equal(chordPatterns('C:minor', parseProgression('i/1')).tones(3), '<[3,7,12]>');
   assert.throws(() => parseProgression('i/3'), /inversion/); assert.throws(() => parseProgression('i@0'), /bars/);
+  assert.throws(() => parseProgression('[i@2 VI]'), /bars/, '@n inside [..] must be 1: a group is already one bar');
 });
 
 const onsets = (p, cycles) => p.queryArc(0, cycles).filter((h) => h.hasOnset()).sort((a, b) => a.whole.begin.valueOf() - b.whole.begin.valueOf());
