@@ -237,3 +237,32 @@ test('userPacks reads sample definitions from pack.json and reports bad ones ins
     assert.match(p.problems.join('\n'), /samples\.no spaces: not a legal name/);
   } finally { fs.rmSync(pack, { recursive: true }); }
 });
+
+test('a malformed pack.json is one pack\'s problem, not an exception that takes the index down', () => {
+  const pack = path.join(USER, '_t_badjson');
+  fs.mkdirSync(pack, { recursive: true });
+  fs.writeFileSync(path.join(pack, 'kick.wav'), 'x');
+  fs.writeFileSync(path.join(pack, 'pack.json'), 'not json at all');
+  try {
+    const p = userPacks()._t_badjson; // the packs route, the checker, dump and the pages build all need this to return
+    assert.ok(p, 'the pack is still indexed');
+    assert.deepEqual(Object.keys(p.sounds), ['kick'], 'its sounds are still found');
+    assert.match(p.problems.join('\n'), /pack\.json: not valid json/);
+    assert.ok(!p.deploy, 'and with no readable policy it does not claim to deploy');
+  } finally { fs.rmSync(pack, { recursive: true, force: true }); }
+});
+
+test('PUT of a pack.json validates the json whatever the case of the name', async () => {
+  const pack = path.join(USER, '_t_case');
+  try {
+    await withServer(async (base) => {
+      // SAMPLE_FILE is case-insensitive, so on a case-insensitive filesystem PACK.JSON lands on the real pack.json
+      for (const name of ['pack.json', 'PACK.JSON', 'Pack.Json']) {
+        const r = await fetch(base + '/samples/user/_t_case/' + name, { method: 'PUT', body: 'not json' });
+        assert.equal(r.status, 400, name + ' is refused');
+      }
+      const ok = await fetch(base + '/samples/user/_t_case/PACK.JSON', { method: 'PUT', body: '{"license":"CC0-1.0"}' });
+      assert.equal(ok.status, 204, 'valid json still goes through');
+    });
+  } finally { fs.rmSync(pack, { recursive: true, force: true }); }
+});

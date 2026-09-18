@@ -93,7 +93,12 @@ export function detectTempo(data, rate, begin = 0, end = 1) {
     if (r[lag] * w > best) { best = r[lag] * w; bestLag = lag; }
   }
   if (bestLag <= 0 || r[bestLag] <= 0) return { bpm: 0, confidence: 0 };
-  const a = r[bestLag - 1] ?? r[bestLag], b = r[bestLag], c = r[bestLag + 1] ?? r[bestLag]; // parabolic refinement between hops
+  // parabolic refinement between hops. r is a Float32Array sized to lagMax, so an index below lagMin is still in
+  // range and reads 0, not undefined: the `?? r[bestLag]` this replaced could never fire on the low side, and a peak
+  // sitting on lagMin would have refined against a neighbour that was never computed. Ask whether the lag was filled
+  // instead. No test pins it: the 80..160 weighting keeps the peak off both ends (301 probes over click tracks from
+  // 60 to 260 bpm and random noise never reported above 195), so this is correctness by construction, not a fix.
+  const a = bestLag - 1 >= lagMin ? r[bestLag - 1] : r[bestLag], b = r[bestLag], c = bestLag + 1 <= lagMax ? r[bestLag + 1] : r[bestLag];
   // bestLag maximises the *weighted* score, so its neighbours may not sit under a downward parabola: refine only when
   // they do, and never further than half a hop (the peak is between bestLag - .5 and bestLag + .5 by construction)
   const den = a - 2 * b + c;

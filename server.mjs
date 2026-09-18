@@ -46,10 +46,16 @@ export function userPacks() {
         sounds[path.parse(e.name).name] = [`${p}/${e.name}`];
       }
     }
-    const metaFile = path.join(dir, 'pack.json');
-    const meta = fs.existsSync(metaFile) ? JSON.parse(fs.readFileSync(metaFile, 'utf8')) : {};
     // named sample definitions (a region of a pack sound, read as bars/slices): bad ones are reported, never thrown, so one typo does not break the index
     const samples = {}, problems = [];
+    // the file itself gets the same treatment. every caller of userPacks() -- the packs route, the checker, dump and
+    // the pages build -- depends on it parsing, so unparseable json is one pack's problem, not the whole index's
+    const metaFile = path.join(dir, 'pack.json');
+    let meta = {};
+    if (fs.existsSync(metaFile)) {
+      try { meta = JSON.parse(fs.readFileSync(metaFile, 'utf8')); }
+      catch (e) { problems.push(`${p}/pack.json: not valid json (${e.message})`); }
+    }
     for (const [name, def] of Object.entries(meta.samples ?? {})) {
       // a name that is not a plain word, and the three that would land on the object itself (__proto__ sets the prototype
       // instead of a key, so the definition would silently vanish): reported, not dropped
@@ -181,7 +187,9 @@ export function createServer() {
       const chunks = [];
       for await (const c of req) chunks.push(c);
       const body = Buffer.concat(chunks);
-      if (name.endsWith('pack.json')) { try { JSON.parse(body.toString()); } catch { return send(res, 400, 'pack.json must be json'); } }
+      // SAMPLE_FILE is case-insensitive, so this guard has to be too: on a case-insensitive filesystem PACK.JSON
+      // otherwise skips validation and lands on the real pack.json, which every reader of userPacks() then chokes on
+      if (/pack\.json$/i.test(name)) { try { JSON.parse(body.toString()); } catch { return send(res, 400, 'pack.json must be json'); } }
       const file = path.join(USER, name);
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, body);

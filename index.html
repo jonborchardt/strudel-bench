@@ -180,8 +180,12 @@
 `;
 
   const ready = boot({ onError: (m) => ($('err').textContent = m), onStatus: status });
-  // the synths, the packs' named sample definitions (a part naming one inherits its region, bars and slices), and every loaded sample
-  const soundNames = () => [...new Set([...SYNTHS, ...SAMPLES.keys(), ...Object.keys(strudel.soundMap.get()).sort()])];
+  // the synths and every loaded sample: what any layer can name
+  const soundNames = () => [...new Set([...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()])];
+  // plus the packs' named sample definitions (a part naming one inherits its region, bars and slices). Only a sample
+  // part resolves them (resolveSample), so they are offered there and nowhere else: s("loop-kick") on a melody is
+  // silence in the page and an unknown sound at check time.
+  const sampleSounds = () => [...new Set([...SAMPLES.keys(), ...soundNames()])];
   const defLabels = () => Object.fromEntries([...SAMPLES].map(([n, d]) => [n, `${n} · ${d.pack} sample`]));
   function refreshSounds() { // what a sound picker can autocomplete to: the synths plus every loaded sample; again after an import
     $('snds').innerHTML = soundNames().map((n) => `<option value="${esc(n)}">`).join('');
@@ -822,9 +826,16 @@
     if (key === 'phrase') return value > 1 ? String(Math.round(value)) : null; // 1 is the default, so it is dropped
     if (key === 'level') return Number(value) === 1 ? null : String(Number(value)); // 1 = untouched, so it is dropped
     if (key === 'seed') return String(value).trim() ? String(Math.max(1, Math.round(Number(value)))) : null;
-    if (key === 'slices' && Array.isArray(value)) return value.length ? `[${value.map(frac).join(', ')}]` : null; // break points, in the file's fractions; none = one slice
     // what an absent key would mean for this part: the pack definition under it when there is one, else the layer's own default
     const sdef = () => (layer ? sampleDef(matOf(layer, 'sound')) : null);
+    if (key === 'slices' && Array.isArray(value)) { // break points, in the file's fractions
+      if (value.length) return `[${value.map(frac).join(', ')}]`;
+      // an emptied list means one slice, and dropping the key does not say that: absent inherits the definition's own
+      // slices back. after a trim those inherited break points can sit outside the region, where samplePlan throws and
+      // the song stops evaluating, so the override is written out.
+      const ds = sdef()?.slices;
+      return (Array.isArray(ds) ? ds.length + 1 : ds ?? 1) > 1 ? '1' : null;
+    }
     if (['begin', 'end', 'bars', 'slices'].includes(key)) { // a value that changes nothing is dropped, as phrase/level are
       const n = Number(value), def = sdef()?.[key] ?? { begin: 0, end: 1, bars: 1, slices: 1 }[key];
       return String(value).trim() && Number.isFinite(n) && n !== def ? String(+n.toFixed(3)).replace(/^0\./, '.') : null;
@@ -1102,7 +1113,8 @@
   }
   function openPick(btn, layer) { // a materials-panel button: names by key, the change through setMaterial, previews through audition
     const { mat: key, voice, ph } = btn.dataset;
-    const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS) : [...$('snds').options].map((o) => o.value);
+    const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS)
+      : key === 'sound' && layerBase(layer) === 'sample' ? sampleSounds() : [...$('snds').options].map((o) => o.value);
     const text = (v) => matText(layer, key, v, voice);
     openPickList(btn, { names, cur: btn.querySelector('i') ? '' : btn.textContent, ph, labels: key === 'sound' ? defLabels() : {}, onPick: (v) => setMat(layer, key, text(v)), preview: (v, pv) => audition(pv, layer, key, text(v), voice) });
   }
