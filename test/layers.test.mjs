@@ -321,3 +321,28 @@ test('a drum voice can be a list; the kit applies only when every name is a kit 
   assert.ok(a.length > 0 && a.every((h) => h.value.bank === 'RolandTR909'), 'both are kit voices in Node (hasSound is undefined there): banked');
   assert.ok(new Set(a.map((h) => h.value.s)).size === 2, 'both names play');
 });
+
+test('a written drum template: any voice, accents, euclid, two bars; the five stay density-gated, others always play', async () => {
+  const g = await ready;
+  const t = { bd: 'x...x...x...x...', sd: '3/8', rd: 'x.x.x.x.x.x.x.x.|X.x.x.x.X.x.x.x.', cb: 'o.......' };
+  const hs = onsets(g.drums({ template: t, density: .3 }, { ...ctx, cycles: 2 }), 2);
+  const of = (s) => hs.filter((h) => h.value.s === s);
+  assert.equal(of('bd').length, 8); assert.equal(of('sd').length, 6, 'euclid 3/8 twice');
+  assert.equal(of('rd').length, 16, 'two bars of ride, not gated by density'); assert.equal(of('cb').length, 4, 'cb is written, so it plays at density .3');
+  assert.equal(of('hh').length, 0, 'no hh line written');
+  const rdGain = (i) => of('rd')[i].value.gain ?? 1;
+  assert.ok(Math.abs(rdGain(8) / rdGain(0) - 1.25) < 1e-6, 'the X in bar two is an accent');
+  assert.ok(Math.abs((of('cb')[0].value.gain ?? 1) / rdGain(0) - 0.4) < 1e-6, 'o is a ghost');
+  assert.ok(of('rd').every((h) => h.value.bank === 'RolandTR909'), 'written voices play through the kit in Node');
+  assert.throws(() => g.drums({ template: { bd: 'x..q' } }, ctx), /unknown character/);
+  assert.throws(() => g.drums({ template: 'nope' }, ctx), /unknown template/);
+  assert.equal(onsets(g.drums({ template: t, density: .3, drive: .9 }, { ...ctx, cycles: 2 }), 2).length, hs.length, 'drive keeps the count on a written template');
+});
+
+test('fill: n rolls the last half bar of every nth bar; true still means the section end', async () => {
+  const g = await ready;
+  const rolls = (attrs, cycles) => onsets(g.drums({ density: .12, ...attrs }, { ...ctx, cycles }), cycles).filter((h) => h.value.s === 'sd').map((h) => Math.floor(h.whole.begin.valueOf()));
+  assert.deepEqual([...new Set(rolls({ fill: 4 }, 8))], [3, 7], 'bars 4 and 8 (density .12 leaves no snare of its own)');
+  assert.deepEqual([...new Set(rolls({ fill: true }, 8))], [7]);
+  assert.throws(() => g.drums({ fill: 1 }, ctx), /fill must be/);
+});
