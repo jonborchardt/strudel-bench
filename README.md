@@ -150,6 +150,8 @@ Rule 4 stands: harmony is material on the section, not an axis. Two reserved sec
 
 Material is a literal value on a layer or a section, never an axis (rule 4). Omit it and nothing changes.
 
+`sound` may be a list (`['a', 'b']`: a pick per hit, deterministic), weights (`{ a: 3, b: 1 }`) or a double-quoted `"<a b>"` (per bar); drum voices in `sounds` too. On a sample part a list is a list of definitions sharing `bars` and slice count, each keeping its own region.
+
 | Where | Key | Value | Effect |
 |---|---|---|---|
 | bass, melody, pad, fx | `sound` | any local synth or sample name | replaces the default (sawtooth; white noise for fx). Drums take `sounds` instead |

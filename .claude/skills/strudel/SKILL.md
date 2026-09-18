@@ -46,6 +46,10 @@ mini-notation over those bars) and `stretch` (fit each slice to its step); the c
 and every event's `begin`/`end`/`speed`. A sample part may name a pack definition (`pack.json` → `samples`) and
 override any key; the check prints the pack sound the events carry.
 
+`sound` may be a list (`['a', 'b']`: a pick per hit, deterministic), weights (`{ a: 3, b: 1 }`) or a double-quoted
+`"<a b>"` (per bar); drum voices in `sounds` too. On a sample part a list is a list of definitions sharing `bars`
+and slice count, each keeping its own region. A line of different takes is one part with a list, not four parts.
+
 ## Flat, thin, simplistic, boring, aimless: material first, not axes
 
 Those words mean the notes and the sounds, and no axis fixes them. Adding more layers at once adds mass, not

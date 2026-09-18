@@ -769,7 +769,8 @@
     // a text box with a play button that shows while the box has focus: hear this part with what is typed, before or after committing it
     const text = (L, e, key, ph, extra = '', over) => { const v = over === undefined ? val(L, e, key) : over, ih = inh(L, e, key); return v === 'expr' || (v && typeof v === 'object') ? expr : `<span class="tb"><input class="snd${extra ? ' num' : ' wide'}${ih ? ' inh' : ''}"${ih} ${extra} data-mat="${key}" value="${v == null ? '' : esc(clean(v))}" placeholder="${ph}" spellcheck="false"><button class="pv" data-pv title="hear ${esc(layer(L))} with this (pauses the song)">&#9654;</button></span>`; };
     // a menu button: the popover lists `names` with a play button per row, so a choice can be heard before it is picked
-    const pick = (L, e, key, ph, voice) => { const v = val(L, e, key); const cur = voice ? v?.[voice] : v; return v === 'expr' ? expr : `<button class="pick" data-mat="${key}"${voice ? ` data-voice="${voice}"` : ''} data-ph="${esc(ph)}">${cur ? esc(clean(cur)) : `<i>${esc(ph)}</i>`}</button>`; };
+    const pick = (L, e, key, ph, voice) => { const v = val(L, e, key); const cur = voice ? v?.[voice] : v; if (v === 'expr' || (cur && typeof cur === 'object' && !Array.isArray(cur))) return expr;
+      return `<button class="pick" data-mat="${key}"${voice ? ` data-voice="${voice}"` : ''} data-ph="${esc(ph)}"${Array.isArray(cur) ? ` data-list="${esc(JSON.stringify(cur))}" title="a list: a take per hit. A pick replaces the first name; edit the rest in the source"` : ''}>${cur ? esc(clean(Array.isArray(cur) ? cur.join(', ') : cur)) : `<i>${esc(ph)}</i>`}</button>`; };
     const layer = (L) => L.layerName;
     $('matlist').innerHTML = Object.entries(s.layers).map(([name, L]) => {
       L.layerName = name;
@@ -843,9 +844,10 @@
     if (key === 'stretch') return value ? 'true' : sdef()?.stretch ? 'false' : null; // false is written only when the definition says true
     if (key === 'sounds') {
       const cur = { ...(locate(code.text).sections.find((x) => x.name === section)?.layers[layer]?.mats.sounds?.value ?? effective()[section]?.[layer]?.sounds ?? {}), [voice]: value };
-      const set = Object.entries(cur).filter(([, v]) => v && typeof v === 'string').map(([k, v]) => `${k}: ${q(v)}`);
+      const set = Object.entries(cur).filter(([, v]) => v && (typeof v === 'string' || Array.isArray(v))).map(([k, v]) => `${k}: ${Array.isArray(v) ? `[${v.map(q).join(', ')}]` : q(v)}`);
       return set.length ? `{ ${set.join(', ')} }` : null;
     }
+    if (Array.isArray(value)) return `[${value.map(q).join(', ')}]`; // sound: a list of names, a take per hit
     return String(value).trim() ? q(value) : null;
   }
   const songSeed = () => Number(/song\(\s*\{[^}]*?seed:\s*(\d+)/.exec(code.text)?.[1] ?? 1);
@@ -1112,11 +1114,12 @@
     $('picklist').querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'center' });
   }
   function openPick(btn, layer) { // a materials-panel button: names by key, the change through setMaterial, previews through audition
-    const { mat: key, voice, ph } = btn.dataset;
+    const { mat: key, voice, ph, list } = btn.dataset;
     const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS)
       : key === 'sound' && layerBase(layer) === 'sample' ? sampleSounds() : [...$('snds').options].map((o) => o.value);
-    const text = (v) => matText(layer, key, v, voice);
-    openPickList(btn, { names, cur: btn.querySelector('i') ? '' : btn.textContent, ph, labels: key === 'sound' ? defLabels() : {}, onPick: (v) => setMat(layer, key, text(v)), preview: (v, pv) => audition(pv, layer, key, text(v), voice) });
+    const takes = list ? JSON.parse(list) : null; // a list: a pick replaces the first take, the rest stay (data-list, from pick())
+    const text = (v) => matText(layer, key, takes ? [v, ...takes.slice(1)] : v, voice);
+    openPickList(btn, { names, cur: takes ? takes[0] : (btn.querySelector('i') ? '' : btn.textContent), ph, labels: key === 'sound' ? defLabels() : {}, onPick: (v) => setMat(layer, key, text(v)), preview: (v, pv) => audition(pv, layer, key, text(v), voice) });
   }
   function filterPick() { const words = $('pickq').value.toLowerCase().split(/\s+/).filter(Boolean); for (const b of $('picklist').children) b.hidden = !words.every((w) => b.textContent.toLowerCase().includes(w)); }
   $('pickq').oninput = filterPick;
