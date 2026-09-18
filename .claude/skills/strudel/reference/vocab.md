@@ -92,8 +92,8 @@ Write `key` and `progression` on the section. Numerals are diatonic to the secti
 - **circular**: i VI III VII
 - modes: major, minor, dorian, lydian, mixolydian, phrygian (keep the root, swap the mode)
 - **relative**: relative major/minor of the current key; `relative major` = relative key then that mode
-- progression grammar: `b`/`#` before a numeral, `m`/`M`/`dim` after it, `7` (dominant on uppercase: `V7`; diatonic on lowercase: `ii7`) or `M7` (major seventh), `[..]` for several chords in one bar: `'i bVI [III VII] V7'`
-- not modeled: inversions, voice leading, chords longer than a bar. For other scales use a different section key (e.g. `C:harmonic minor`).
+- progression grammar: `b`/`#` before a numeral, `m`/`M`/`dim` after it, `7` (dominant on uppercase: `V7`; diatonic on lowercase: `ii7`) or `M7` (major seventh), `[..]` for several chords in one bar, `@n` to hold a chord for `n` bars, `/1`/`/2` to invert it: `'i bVI [III VII] V7 i@2 VI/1'`
+- not modeled: voice leading, chord symbols. For other scales use a different section key (e.g. `C:harmonic minor`).
 
 ## Movements (write a movement call around the axis's current value)
 

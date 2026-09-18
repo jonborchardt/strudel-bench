@@ -79,7 +79,8 @@ interest. Do these, in this order, on every new song and whenever a song is call
    level: .5, follow: true }` is a second melody layer (any `<layer><digit>` key builds that layer again). Sparse,
    an octave up or down, on the beats the hook leaves empty. That is the one place "more instruments" helps.
 4. **Contrast per section**, already the system's strength: drums `template` per section, `variation` rising
-   toward the end, `fill`/`riser`/`impact` at the boundaries, pad `arp` in one section only.
+   toward the end, `fill`/`riser`/`impact` at the boundaries, pad `arp` in one section only, `dropout`/`sweep`
+   before a drop.
 5. **A `raw` part inside the section, `stack()` around the song only for what must span sections.** `raw: { pattern:
    s("...").struct(...) }` puts a plain Strudel pattern in with the layers, so mute, solo, pin, the check table and
    the dump all see it, for anything the built layers do not model: noise beds, one-shots, a drone. `stack(theSong,
@@ -98,8 +99,10 @@ detune drift); do not re-add those per song.
 - "Verified directionally" is the strongest claim. Never say it sounds better.
 - Harmony is per section, not an axis. Translate harmonic requests into progression words (`resolved`, `tense`,
   `pop`, `epic`, `circular`), mode words (`major`, `dorian`, ...) and `relative`; resolve writes `key`/`progression`
-  on the section. Verify from the `harmony` line in the check table (code-verified). Accidentals, sevenths and
-  borrowed chords are still not modeled: say so and offer a different section key.
+  on the section. The progression grammar also takes accidentals (`bVI`), quality suffixes and sevenths (`IVm`,
+  `V7`), brackets for two chords in a bar, `@n` to hold a chord for `n` bars, and `/1`/`/2` to invert it. Verify
+  from the `harmony` line in the check table (code-verified). Voice leading and chord symbols are still not
+  modeled: say so and offer a different section key.
 - If a word is unknown to the vocabulary, pick the closest descriptors and say which you chose. If it recurs,
   propose adding it to `lib/descriptors.json` with explicit deltas.
 - New song: start from `songs/demo.strudel`'s shape. Sections with roles, layers with a few axis values, a

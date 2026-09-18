@@ -11,6 +11,7 @@ import { DESCRIPTORS, OVERLAYS, MODIFIERS, parsePhrase, applyDeltas, loadVocab }
 import { melodyLine } from '../lib/layers.mjs';
 import { parseMeter } from '../lib/song.mjs';
 import { PATCHES } from '../lib/packs.mjs';
+import { VERBS } from '../lib/resolve.mjs';
 if (typeof window !== 'undefined') await loadVocab((f) => fetch(new URL(`../lib/${f}`, import.meta.url)).then((r) => r.json()));
 
 const num = (v) => (v === 1 || v === 0 ? String(v) : String(v).replace(/^0\./, '.'));
@@ -238,6 +239,9 @@ export const GROUPS = [
     { title: 'Modes', tags: ['harmony', 'mode'], blurb: 'A mode word swaps the scale on the same root: dorian is minor with a raised sixth, phrygian minor with a flattened second, lydian major with a raised fourth, mixolydian major with a flattened seventh.',
       svg: strip([['dorian', 'dorian'], ['phrygian', 'phrygian'], ['lydian', 'lydian'], ['mixolydian', 'mixolydian']]),
       variants: ['dorian', 'phrygian', 'lydian', 'mixolydian'].map((m) => ({ label: m, hll: `song({ cps: .5, key: 'D:${m}', seed: 3 }, [section('a', 4, { progression: 'i VII', pad: {}, bass: {}, melody: { follow: true } })]) // "${m}"` })) },
+    { title: 'A melody on chord tones', tags: ['harmony', 'follow', 'tones', 'melody'], blurb: "follow: true transposes the written line by each bar's root; follow: 'tones' maps its degrees onto the chord tones instead (0 root, 1 third, 2 fifth, 3 seventh, 4 the root above), so the same four degrees spell each chord as it passes.",
+      svg: grid([line('0 1 2 3', false, 4), line('0 1 2 3', true, 4)], ['follow: true: degrees of the key, moved by the root', "follow: 'tones': the chord's own tones"], { bottom: true }),
+      variants: [{ label: 'follow: true', hll: `song({ cps: .5, key: 'C:major', seed: 3 }, [section('a', 4, { progression: 'I IV V I', melody: { notes: '0 1 2 3 2 1 0 ~', follow: true, sound: 'piano' }, bass: {} })])` }, { label: "follow: 'tones'", hll: `song({ cps: .5, key: 'C:major', seed: 3 }, [section('a', 4, { progression: 'I IV V I', melody: { notes: '0 1 2 3 2 1 0 ~', follow: 'tones', sound: 'piano' }, bass: {} })])` }] },
   ] },
   { id: 'progressions', title: 'Progression syntax', blurb: 'Beyond the words: a progression string takes b or # before a numeral, m, M or dim after it, 7 or M7 for sevenths, and [..] to put several chords in one bar. Degrees are diatonic to the section key, any Strudel scale name. Each variant label shows the chord names npm run check prints for it, straight from lib/harmony.mjs.', items: [
     { title: 'Accidentals and borrowed chords', tags: ['progression', 'accidental', 'borrowed', 'C major'], blurb: 'b and # move the root a semitone and set the triad from the numeral\'s case; a suffix sets the quality outright. bVI in C major is Ab, #iv is F# minor, IVm the borrowed F minor.',
@@ -258,6 +262,10 @@ export const GROUPS = [
     { title: 'The default progression', tags: ['progression', 'default', 'C minor'], blurb: 'A section with no progression gets i VI: the two variants are identical.',
       svg: chords([['default', 'i VI']]),
       variants: [{ label: 'no progression', hll: `song({ cps: .5, key: 'C:minor', seed: 3 }, [section('a', 4, { pad: {}, bass: {} })])` }, prog('C:minor', 'i VI', 'Cm Ab', { alias: true })] },
+    { title: 'A chord over two bars', tags: ['progression', '@', 'bars'], blurb: '@n holds a chord for n bars: i@2 VI is three bars, the tonic on the first two. It expands to one chord per bar underneath, so the bass, pad and check see nothing new.',
+      svg: chords([['i VI', 'i VI'], ['i@2 VI', 'i i VI']]), variants: [prog('C:minor', 'i VI', 'Cm Ab'), prog('C:minor', 'i@2 VI', 'Cm Cm Ab')] },
+    { title: 'Inversions', tags: ['progression', 'inversion', 'slash chord'], blurb: 'The suffixes /1 and /2 invert the chord: the lowest tone moves up an octave, so the pad voices Ab/C instead of Ab and the melody on tones walks the rotated stack. The bass still plays the root; the name shows the slash.',
+      svg: chords([['root position', 'i VI'], ['VI/1', 'i VI/1']]), variants: [prog('C:minor', 'i VI', 'Cm Ab'), prog('C:minor', 'i VI/1', 'Cm Ab/C'), prog('C:minor', 'i VI/2', 'Cm Ab/Eb')] },
   ] },
   { id: 'material', title: 'Material', blurb: 'Material is a literal value on a layer, never an axis: a template, a sound, a line of notes, a gain. It has no baseline to move around, so the resolver never touches it; omit it and the layer\'s default stands. Each card is that default against one literal.', items: [
     { title: 'Drum template', tags: ['material', 'drums', 'template'], blurb: 'template is the base grid the axes then thin out, place or fill: house (the default), breaks, minimal or halftime. Density and drive are the same in all four.',
@@ -437,6 +445,17 @@ export const GROUPS = [
         { label: 'Spread', alias: true, hll: `${VERSE}\n${SONG}\n  section('verse', 4, verse),\n  section('verse2', 4, verse),\n])` },
         { label: 'Spread with an override', hll: `${VERSE}\n${SONG}\n  section('verse', 4, verse),\n  section('verse2', 4, { ...verse, drums: { ...verse.drums, variation: .7 } }), // the resolver will not edit this layer\n])` },
       ] },
+  ] },
+  { id: 'arrangement', title: 'Arrangement', blurb: 'Transitions beyond the fx layer, and transforms of a whole section. dropout: n silences every part but fx for the last n bars; sweep: n low-passes them down over the last n bars. The verbs (breakdown, lift, strip, halftime) are resolver phrases and part cuts over one section: the arrangement strip offers them, and their result is the same numbers the words would write.', items: [
+    { title: 'Drop-out before the drop', tags: ['arrangement', 'dropout', 'sections'], blurb: 'The build loses everything but its riser for its last bar, so the drop lands on silence.',
+      svg: timeline([['build', 4, .6, true, [.6, 0]], ['drop', 4, .95]], 'dropout: 1 on the build'),
+      variants: [{ label: 'No drop-out', hll: s2(BUILD({ riser: 2 }), DROP({ impact: 'true' })) }, { label: 'dropout: 1', hll: s2(`section('build', 4, { dropout: 1, drums: { density: .5 }, pad: { space: .6 }, fx: { riser: 2 } })`, DROP({ impact: 'true' })) }] },
+    { title: 'A sweep across every part', tags: ['arrangement', 'sweep', 'filter', 'sections'], blurb: 'sweep: 2 closes a low-pass over every part but fx during the last two bars: one filter across the mix, which no single layer axis can do.',
+      svg: timeline([['build', 4, .6, true, [1, .1]], ['drop', 4, .95]], 'sweep: 2 on the build'),
+      variants: [{ label: 'No sweep', hll: s2(BUILD(), DROP()) }, { label: 'sweep: 2', hll: s2(`section('build', 4, { sweep: 2, drums: { density: .5 }, pad: { space: .6 } })`, DROP()) }] },
+    { title: 'Verbs: breakdown and strip', tags: ['arrangement', 'verb', 'breakdown', 'strip', 'resolver'], blurb: `breakdown is "${VERBS.breakdown.phrase}" on every part and the fx removed; strip keeps the rhythm section. Both are the resolver's arithmetic, so After is exactly what the strip's ⚡ writes.`,
+      svg: timeline([['verse', 4, .7], ['verse2', 4, .35, true]], 'breakdown on verse2'),
+      variants: [{ label: 'verse', hll: sec4({ drums: { density: .8 }, bass: { weight: .6 }, melody: { follow: 'true' }, pad: { space: .5 } }) }, { label: 'breakdown', hll: sec4({ drums: said(VERBS.breakdown.phrase, { density: .8 }), bass: said(VERBS.breakdown.phrase, { weight: .6 }), melody: { follow: 'true', ...said(VERBS.breakdown.phrase) }, pad: said(VERBS.breakdown.phrase, { space: .5 }) }, 4, '"breakdown"') }, { label: 'strip', hll: sec4({ drums: { density: .8 }, bass: { weight: .6 } }, 4, '"strip": rhythm section only') }] },
   ] },
   { id: 'trajectories', title: 'Trajectories', blurb: 'A continuous axis can take a signal instead of a number. ramp(a, b) is a saw that spans exactly the section it sits in; any Strudel signal (saw, sine, perlin…) works too. Structural axes (density, drive, variation, register) take numbers only. Open the expanded Strudel to see the signal mapped through the same control the constant would use.', items: [
     { title: 'Brightness rising through a section', tags: ['trajectory', 'brightness', 'pad', 'signal'], blurb: 'The pad opens from dark to bright over eight cycles. ramp(.1, .9) and the explicit saw are the same thing; ramp just knows the section length.',
