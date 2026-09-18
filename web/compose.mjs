@@ -102,6 +102,13 @@ export function verifyRows(deltas, before, after) {
   });
 }
 
+/** Levels from a render of the section and one render per part alone: the mix in dBFS, each part relative to it. */
+export function levelRows(parts) {
+  const mix = parts[0];
+  const db = (x) => (x > 0 ? +(20 * Math.log10(x)).toFixed(1) : -Infinity);
+  return parts.map((p, i) => ({ name: p.name, db: i === 0 ? db(p.rms) : p.rms > 0 && mix.rms > 0 ? +(20 * Math.log10(p.rms / mix.rms)).toFixed(1) : -Infinity, warn: p.rms === 0 ? 'silent' : i === 0 && p.peak >= 0.98 ? 'no headroom' : null }));
+}
+
 /**
  * A song as a link: `name\nsource` deflated (deflate-raw) and base64url'd, for the url hash `#s=...`; `shareDecode`
  * reads it back as { name, src }. Nothing is fetched or stored: the link is the song, which is what a static host needs.

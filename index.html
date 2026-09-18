@@ -45,7 +45,7 @@
 
   <!-- mix: the arrangement strip over one section (the playhead's, or the pinned one) as layers x axes; knobs and word pills edit the source -->
   <details class="card rack" id="mix" open hidden>
-    <summary><h2>Mix</h2><small>&middot; the song, the shown section, one slider per axis the layer adapts</small><span class="grow"></span><button class="undo" title="undo (ctrl+z)" disabled>&#8630;</button><button class="redo" title="redo (ctrl+shift+z)" disabled>&#8631;</button><button id="ab" title="hear the song as it was before the last change, at the same place; press again for the current one. Any edit returns to the current one." disabled>A/B</button></summary>
+    <summary><h2>Mix</h2><small>&middot; the song, the shown section, one slider per axis the layer adapts</small><span class="grow"></span><button class="undo" title="undo (ctrl+z)" disabled>&#8630;</button><button class="redo" title="redo (ctrl+shift+z)" disabled>&#8631;</button><button id="ab" title="hear the song as it was before the last change, at the same place; press again for the current one. Any edit returns to the current one." disabled>A/B</button><button id="measure" title="render this section and each part alone; levels in dB next to level (nothing is written)">measure</button></summary>
     <!-- two panes over spans of the song source, each a CodeMirror editor (web/cm-editor.mjs) that follows every edit and whose own edits land in the song at that span; "controls" puts a widget after each literal the schema knows (web/hll-schema.mjs) -->
     <!-- song: the header object of song(...), parsed as one expression whose keys read as song's; above the strip, since it is not about one section -->
     <details class="panel song" id="songsrc"><summary>song<label class="tweak" title="a widget after each value with known semantics; alt-drag a number works either way"><input type="checkbox" id="tweak0"> controls</label></summary><div id="songtext" title="the song header: tempo, key, seed, kit, packs"></div></details>
@@ -131,7 +131,7 @@
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks } from './web/boot.mjs';
-  import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile, verifyRows, shareEncode, shareDecode } from './web/compose.mjs';
+  import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile, verifyRows, shareEncode, shareDecode, levelRows } from './web/compose.mjs';
   import { packsOf, packKind, registerSamples, resolveSample, sampleDef, SAMPLES, SYNTHS } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
@@ -831,7 +831,7 @@
       if (base === 'pad') bits.push(`<label>arp ${pick(L, e, 'arp', 'none')}</label>`);
       // level: the part's gain multiplier (1 = as built), the volume control the axes lack; a preview plays the part at this level too
       const lv = val(L, e, 'level');
-      bits.push(`<label class="lvl">level ${lv === 'expr' ? expr : `<input type="range" min="0" max="2" step=".05" data-mat="level" value="${lv ?? 1}" title="${esc(name)} level x${lv ?? 1}"><output>x${lv ?? 1}</output>`}</label>`);
+      bits.push(`<label class="lvl" data-level="${esc(name)}">level ${lv === 'expr' ? expr : `<input type="range" min="0" max="2" step=".05" data-mat="level" value="${lv ?? 1}" title="${esc(name)} level x${lv ?? 1}"><output>x${lv ?? 1}</output>`}<small class="db"></small></label>`);
       return `<div class="matrow" data-layer="${esc(name)}"><b>${esc(name)}</b>${bits.join('')}</div>`;
     }).join('');
     for (const box of $('matlist').querySelectorAll('.wave')) waveRender(box);
@@ -1286,6 +1286,29 @@
     finally { $('verify').disabled = $('apply').disabled = false; }
   };
 
+  // measure: render the shown section, then each part alone (renderSong shares one offline context, hence the `for`,
+  // not a Promise.all), and read the level of each off the render (lib/analyze.mjs), relative to the mix (web/compose.mjs
+  // levelRows). Writes nothing; a dB readout lands next to each level slider and the mix's own goes on the vstate badge.
+  $('measure').onclick = async () => {
+    const ev = sections.find((x) => x.name === mixSection); if (!ev) return;
+    $('measure').disabled = true;
+    try {
+      if (playing) await stop(); // the render replaces the audio context
+      await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
+      const stats = async (layer) => {
+        const buf = await renderSong({ code: code.text, section: mixSection, layer, cycles: Math.min(ev.cycles, 4), progress: (i, n) => vstate('busy', `measuring ${layer ?? mixSection} ${Math.round((i / n) * 100)}%`) });
+        const { rms, peak } = analyze({ rate: buf.sampleRate, channels: buf.numberOfChannels, frames: Array.from({ length: buf.numberOfChannels }, (_, c) => buf.getChannelData(c)) }, { cps: ev.cps });
+        return { rms, peak };
+      };
+      const parts = [{ name: 'mix', ...(await stats()) }];
+      for (const l of Object.keys(ev.layers)) parts.push({ name: l, ...(await stats(l)) }); // one render at a time: renderSong shares the offline context
+      const rows = levelRows(parts);
+      for (const r of rows.slice(1)) { const el = document.querySelector(`#matlist [data-level="${CSS.escape(r.name)}"] .db`); if (el) el.textContent = r.db === -Infinity ? 'silent' : `${r.db > 0 ? '+' : ''}${r.db} dB`; }
+      vstate(rows[0].warn ? 'fail' : 'done', `${rows[0].warn ? '&#10007;' : '&#10003;'} ${mixSection}: ${rows[0].db} dBFS rms, peak ${rows[0].warn ?? 'ok'}`);
+    } catch (e) { $('mixstatus').textContent = `measure failed: ${e.message}`; vstate('fail', `&#10007; ${esc(e.message)}`, e.message); }
+    finally { $('measure').disabled = false; }
+  };
+
   // feedback: comments pinned at the playhead's cycle become one paste-ready Claude request. Each shows as a dot on
   // the transport slider: click a dot to edit its text, drag it to move it.
   let editing = null; // index of the comment being edited
@@ -1393,14 +1416,15 @@
   /** Evaluate `code` and render it (or `cycles` of one `section` or `layer`) offline; resolves to an AudioBuffer. */
   async function renderSong({ code, cycles, section, layer, progress }) {
     await ready;
-    let pat = await strudel.evaluate(code, false);
-    if (!pat) throw new Error('source does not evaluate (see the error under it)'); // evaluate logs syntax errors instead of throwing
-    let begin = 0, end = cycles ?? (pat.strudel ? pat.strudel.total : 8);
+    const song = await strudel.evaluate(code, false);
+    if (!song) throw new Error('source does not evaluate (see the error under it)'); // evaluate logs syntax errors instead of throwing
+    let pat = song;
+    let begin = 0, end = cycles ?? (song.strudel ? song.strudel.total : 8);
     // read cps off the song pattern before a layer selector replaces it with a sub-pattern that has no .strudel
-    let cps = pat.strudel?.meta.cps ?? 0.5;
+    let cps = song.strudel?.meta.cps ?? 0.5;
     if (section || layer) {
       if (layer && !section) throw new Error('layer requires --section');
-      const s = pat.strudel?.sections.find((x) => x.name === section);
+      const s = song.strudel?.sections.find((x) => x.name === section);
       if (section && !s) throw new Error(`no section "${section}"`);
       // --cycles counts bars of the section in both branches; a section with its own tempo has span != cycles
       if (layer) {
@@ -1409,7 +1433,10 @@
         pat = src.pattern; cps = s.cps; begin = 0; end = cycles ?? s.cycles; // layer patterns run in section-local bar time
       } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles) * s.span / s.cycles; }
     }
-    return renderOffline(pat, cps, begin, end, progress);
+    // orbits are made from `song` (every section's layer count), not `pat`: a single layer's own pattern has no
+    // .strudel, so makeOrbits would see no sections and skip them, and a part rendered alone that ducks another
+    // (duckorbit pointing at a sibling's orbit) would find that orbit missing.
+    return renderOffline(pat, cps, begin, end, progress, song);
   }
 
   // Offline render, one cycle at a time. strudel.renderPatternAudio builds every event's node chain up front and
@@ -1426,7 +1453,7 @@
   // already discarded (reset orbits, finished offline context), and nothing else is affected: keep it out of the console.
   window.addEventListener('beforeunload', (e) => { if (code.text !== loaded) { e.preventDefault(); e.returnValue = ''; } }); // unsaved edits: the browser asks before leaving
   window.addEventListener('error', (e) => { if (/belonging to a different audio context/.test(e.message)) e.preventDefault(); });
-  async function renderOffline(pat, cps, begin, end, progress = () => {}) {
+  async function renderOffline(pat, cps, begin, end, progress = () => {}, orbitsOf = pat) {
     // the live context stays open: the scheduler's clock is bound to it for the life of the page (webaudioRepl
     // captures it), so closing it would freeze playback until a reload. It is silent (stopped) while we render.
     const live = strudel.getAudioContext();
@@ -1437,7 +1464,7 @@
     strudel.resetGlobalEffects();
     strudel.setSuperdoughAudioController(null); // rebuilt lazily on the offline context
     await strudel.initAudio({ maxPolyphony: 128 });
-    makeOrbits(pat); // same lazy-orbit gap as the live scheduler: create every part's orbit on this offline context before the first hit
+    makeOrbits(orbitsOf); // same lazy-orbit gap as the live scheduler: create every part's orbit on this offline context before the first hit (the song, not a lone layer's pattern, which carries no .strudel)
     const schedule = async (from, to) => {
       for (const h of pat.queryArc(from, to, { _cps: cps })) {
         if (!h.hasOnset()) continue;

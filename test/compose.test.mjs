@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { kitsIn, kitOf, setKit, sectionSource, buildRequest, sourceComments, notesView, notesFile, verifyRows, shareEncode, shareDecode } from '../web/compose.mjs';
+import { kitsIn, kitOf, setKit, sectionSource, buildRequest, sourceComments, notesView, notesFile, verifyRows, shareEncode, shareDecode, levelRows } from '../web/compose.mjs';
 import { parseChange, addNote } from '../scripts/note.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -112,4 +112,10 @@ test('a share link round-trips the name and source, url-safe and smaller than th
   assert.match(link, /^[\w-]+$/, 'base64url: no + / = to escape in a hash');
   assert.ok(link.length < src.length, `${link.length} < ${src.length}`);
   assert.deepEqual(await shareDecode(link), { name: 'demo.strudel', src });
+});
+
+test('levelRows: the mix in dBFS, each part relative to the mix, warnings for clipping and silence', async () => {
+  const { levelRows } = await import('../web/compose.mjs');
+  const rows = levelRows([{ name: 'mix', rms: .1, peak: .99 }, { name: 'drums', rms: .05, peak: .5 }, { name: 'pad', rms: 0, peak: 0 }]);
+  assert.deepEqual(rows, [{ name: 'mix', db: -20, warn: 'no headroom' }, { name: 'drums', db: -6, warn: null }, { name: 'pad', db: -Infinity, warn: 'silent' }]);
 });
