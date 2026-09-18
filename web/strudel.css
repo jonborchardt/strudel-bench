@@ -392,6 +392,14 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .matrow .wave .info button.pick { min-width: 0; padding: 0 .3rem; margin-left: .2rem; }
 .matrow .inh, .matrow input.inh { color: #77777f; } /* a value the part inherits from its pack's sample definition */
 
+/* the drum template as a clickable grid: a row per voice, a button per step (web/stepgrid.mjs) */
+.matrow .gridwrap { width: 100%; }
+.stepgrid .row { display: grid; grid-template-columns: 2.4em repeat(var(--steps), minmax(0, 1fr)); gap: 1px; align-items: center; margin: 1px 0; }
+.stepgrid .st { height: 1.25em; padding: 0; font-size: .7em; border: 1px solid #ddd; background: #f6f6f6; color: #333; }
+.stepgrid .st.beat { border-left: 2px solid #999; }
+.stepgrid .st.hit { background: #8fa6e2; } .stepgrid .st.accent { background: #2f6fed; color: #fff; } .stepgrid .st.ghost { background: #c9d4ee; }
+.rack .stepgrid .st { border-color: #444; background: #2a2a2a; color: #ddd; }
+
 /* the transition out of a block: riser bars and the next section's hit, two small picks on the block's last line */
 .strip .blk .tr { display: flex; gap: .2rem; margin-top: 3px; }
 .strip .blk .tr button { flex: 1 1 0; min-width: 0; padding: 0 .3rem; font-size: .62rem; line-height: 1.5; border: 1px solid #111; border-radius: 3px; background: #1e1e22; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: inset 0 1px 0 #3c3c42; }

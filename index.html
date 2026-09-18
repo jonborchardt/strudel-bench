@@ -138,7 +138,8 @@
   import { SCHEMA, host, CHORDS } from './web/hll-schema.mjs';
   import { fmt, locate, setAxis, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField, setSongField, addPack } from './lib/resolve.mjs';
   import { AXES, cells } from './lib/axes.mjs';
-  import { layerNames, layerBase, arrange } from './lib/song.mjs';
+  import { layerNames, layerBase, arrange, parseMeter } from './lib/song.mjs';
+  import { gridRows, addVoice, templateText, mountStepGrid } from './web/stepgrid.mjs';
   import { ARP_ORDERS, DRUM_ORDER, voiceSound, melodyLine, slicePoints } from './lib/layers.mjs';
   import { fmtTime, sliceSpec, frac, breaksIn, breakPoints, SNAPS, snapDivisions, barsGuess } from './web/sampler.mjs';
   import { createSampleCache, createPreviewer } from './web/preview.mjs';
@@ -777,6 +778,9 @@
       const e = eff[name], base = layerBase(name), bits = [];
       if (base === 'drums') {
         bits.push(`<label>template ${pick(L, e, 'template', 'house')}</label>`);
+        const tmpl = val(L, e, 'template');
+        if (tmpl && typeof tmpl === 'object') bits.push(`<details class="gridwrap" open><summary>grid</summary><div class="stepgrid" data-grid="${esc(name)}"></div><label>+ voice <input class="snd num" data-addvoice="${esc(name)}" placeholder="rd" title="add a row for a kit voice or a pack sound (Enter)"></label></details>`);
+        else if (tmpl !== 'expr') bits.push(`<button class="pick" data-gridify="${esc(name)}" title="copy the named template into the source as a grid you can click">edit as grid</button>`);
         bits.push(val(L, e, 'sounds') === 'expr' ? `<label>sounds ${expr}</label>` : `<label>sounds</label>${DRUM_ORDER.map((v) => `<label class="voice">${v} ${pick(L, e, 'sounds', 'kit', v)}</label>`).join('')}`);
       } else if (base === 'sample') {
         // the sampler: import (local server only), the sound, what the region stands for, the cut, the order, and the waveform with a button per slice
@@ -797,6 +801,11 @@
           `<label class="${inh(L, e, 'end') ? 'inh' : ''}"${inh(L, e, 'end')}>end <input type="range" min="0" max="1" step=".001" data-trim="end" value="${typeof en === 'number' ? en : 1}"><output></output></label>` +
           `<label class="snap" title="where a dragged or clicked break lands: the region cut into beats of its bars (this browser's setting, never written to the song)">snap <select data-snap>${Object.keys(SNAPS).map((k) => `<option${k === snapSetting() ? ' selected' : ''}>${k}</option>`).join('')}</select></label>` +
           `<span class="slices">${Array.from({ length: n }, (_, i) => `<button class="sl" data-slice="${i}" title="hear slice ${i} alone at its natural length (pauses the song)">${i}</button>`).join('')}</span><small class="info"></small></div>`);
+      } else if (base === 'perc') {
+        bits.push(`<label>sound ${pick(L, e, 'sound', 'pick a sample')}</label>`);
+        bits.push(`<label>rhythm ${text(L, e, 'rhythm', 'x...x...x...x...')}</label>`);
+      } else if (base === 'raw') {
+        bits.push(`<label>pattern ${expr}</label>`);
       } else bits.push(`<label>sound ${pick(L, e, 'sound', 'default')}</label>`);
       // notes: the written line in mini-notation (scale degrees, ~ rests, @2 holds); the seeded line plays when it is empty
       if (base === 'bass' || base === 'melody') bits.push(`<label>notes ${text(L, e, 'notes', 'seeded line')}</label>`);
@@ -819,6 +828,12 @@
       return `<div class="matrow" data-layer="${esc(name)}"><b>${esc(name)}</b>${bits.join('')}</div>`;
     }).join('');
     for (const box of $('matlist').querySelectorAll('.wave')) waveRender(box);
+    for (const box of $('matlist').querySelectorAll('.stepgrid')) {
+      const part = box.dataset.grid, L = s.layers[part], t = val(L, eff[part], 'template');
+      const { steps, pulse } = sections.find((x) => x.name === s.name)?.grid ?? parseMeter('4/4');
+      try { mountStepGrid(box, { rows: gridRows(t, steps), pulse, onChange: (rows) => did(() => setMaterial(code.text, s.name, part, 'template', templateText(rows)), `${s.name} ${part} template`) }); }
+      catch (e) { box.textContent = e.message; }
+    }
   }
   const q = (v) => `'${String(v).replace(/['"\\]/g, '').trim()}'`;
   // the source text for material `key` at `value` ('' removes it); `sounds` is the whole voice map with one voice replaced
@@ -1080,6 +1095,11 @@
       if (el.dataset.breaks !== undefined) return breaksText(layer, el.value).then((t) => t !== undefined && audition(pv, layer, t === null ? null : 'slices', t), (err) => ($('mixstatus').textContent = err.message)); // an empty box is not "remove the slices": it hears the part as written
       return audition(pv, layer, el.dataset.mat, matText(layer, el.dataset.mat, el.value));
     }
+    const gf = e.target.closest('[data-gridify]');
+    if (gf) { // copy the named (or default) template into the source as a grid of voices x steps, ready to click
+      const steps = sections.find((x) => x.name === mixSection)?.grid.steps ?? parseMeter('4/4').steps;
+      return did(() => setMaterial(code.text, mixSection, layer, 'template', templateText(gridRows(matOf(layer, 'template') ?? 'house', steps))), `${layer} template as grid`);
+    }
     const st = e.target.closest('[data-seed]');
     if (st) return setMat(layer, 'seed', String(Math.max(1, Number(st.dataset.cur) + Number(st.dataset.seed))));
     const ps = e.target.closest('[data-pvseed]');
@@ -1097,6 +1117,13 @@
     if (e.target.closest('[data-import]')) return e.target.closest('label').querySelector('input[type=file]').click();
     const b = e.target.closest('button.pick');
     if (b) openPick(b, layer);
+  };
+  $('mats').onkeydown = (e) => { // Enter on the grid's "+ voice" box adds a row for a kit voice or a pack sound
+    const av = e.target.closest('[data-addvoice]'); if (!av || e.key !== 'Enter') return;
+    e.preventDefault();
+    const layer = av.closest('[data-layer]').dataset.layer, voice = av.value.trim(); if (!voice) return;
+    const steps = sections.find((x) => x.name === mixSection)?.grid.steps ?? parseMeter('4/4').steps;
+    if (did(() => setMaterial(code.text, mixSection, layer, 'template', templateText(addVoice(gridRows(matOf(layer, 'template') ?? 'house', steps), voice, steps))), `${layer} template +${voice}`)) av.value = '';
   };
   $('mats').ondragover = (e) => { if (server && e.target.closest('.matrow')?.dataset.layer.startsWith('sample')) e.preventDefault(); }; // allow a drop on a sample row
   $('mats').ondrop = (e) => { const row = e.target.closest('.matrow'), f = e.dataTransfer?.files[0]; if (server && row?.dataset.layer.startsWith('sample') && f) { e.preventDefault(); importSample(f, row.dataset.layer); } };
