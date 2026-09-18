@@ -417,7 +417,11 @@
     if (op === 'pin') return pinned === s.name ? unpin() : pinTo(s);
     if (op === 'dup') return did(() => { const { src, name } = duplicateSection(code.text, s.name); mixSection = name; if (pinned) pinned = name; return src; }, `duplicated ${s.name}`);
     if (op === 'verb') return openPickList(opBtn, { names: Object.keys(VERBS), labels: Object.fromEntries(Object.entries(VERBS).map(([k, v]) => [k, v.title])),
-      onPick: (v) => did(() => applyVerb(code.text, s.name, v, effective()).src, `${s.name} ${v}`, false, s.name) });
+      onPick: (v) => { // applyVerb can refuse every layer (all spread); say so rather than silently doing nothing
+        let refused = 0;
+        const ok = did(() => { const r = applyVerb(code.text, s.name, v, effective()); refused = r.refused.length; return r.src; }, `${s.name} ${v}`, false, s.name);
+        if (ok && refused) $('mixstatus').textContent += ` (${refused} refused)`;
+      } });
     did(() => moveSection(code.text, s.name, op === 'left' ? -1 : 1), `moved ${s.name} ${op === 'left' ? 'earlier' : 'later'}`);
   };
   $('strip').onchange = (e) => {
@@ -730,9 +734,10 @@
     const h = harmOf(s, ev);
     let prog; try { prog = parseProgression(h.progression); } catch { return ($('harm').innerHTML = `<i>${esc(h.progression)}</i>`); }
     const own = s.keyNode && s.keyNode.type === 'Literal'; // the section names its key, else the song's applies
+    const atN = /@/.test(h.progression); // a hand-written @n repeat count: the per-bar picker cannot round-trip it, so bars are read-only
     const cells = Array.from({ length: Math.max(ev.cycles, prog.length) }, (_, b) => { // one cell per bar, the progression repeating; a repeat edits the chord it repeats
       const i = b % prog.length, cy = prog[i], rep = b >= prog.length;
-      return `<button class="bar${rep ? ' rep' : ''}" data-bar="${i}" title="bar ${b + 1}: ${esc(cy.map((c) => c.numeral).join(' '))}${rep ? ` (repeats bar ${i + 1})` : ''}"><b>${esc(cy.map((c) => chordName(h.key, c)).join(' '))}</b><small>${esc(cy.map((c) => c.numeral).join(' '))}</small></button>`;
+      return `<button class="bar${rep ? ' rep' : ''}" data-bar="${i}" title="bar ${b + 1}: ${esc(cy.map((c) => c.numeral).join(' '))}${rep ? ` (repeats bar ${i + 1})` : ''}${atN ? ' (@n: edit in the source)' : ''}"><b>${esc(cy.map((c) => chordName(h.key, c)).join(' '))}</b><small>${esc(cy.map((c) => c.numeral).join(' '))}</small></button>`;
     }).join('');
     $('harm').innerHTML = `<button class="pick key" data-key title="${own ? "this section's key" : "the song's key: pick one for this section"}"><b>${esc(h.key.replace(':', ' '))}</b>${own ? '' : '<small>song</small>'}</button><span class="bars">${cells}</span><button class="pick add" data-bar="${prog.length}" title="add a chord (a bar) to the progression">+</button>`;
   }
@@ -741,6 +746,7 @@
     const ev = sections.find((x) => x.name === mixSection); if (!ev) return;
     let src; try { src = locate(code.text).sections.find((x) => x.name === mixSection); } catch { return; }
     const h = harmOf(src ?? {}, ev); // rebuild from what is written, so a progression typed but not yet updated is not thrown away
+    if (/@/.test(h.progression)) return status('@n is hand-written: edit the progression in the source');
     if ('key' in b.dataset) return openPickList(b, { names: SCHEMA.props.key.values(), cur: h.key, ph: 'the song\'s key', onPick: (v) => did(() => setSectionField(code.text, mixSection, 'key', v ? q(v) : null), `${mixSection} key ${v || 'from the song'}`) });
     let prog; try { prog = parseProgression(h.progression); } catch { return status(`progression "${h.progression}" does not parse: edit it in the source`); }
     const i = Number(b.dataset.bar);
@@ -1296,7 +1302,7 @@
   $('verify').onclick = async () => {
     let p; try { p = plan(code.text); } catch (e) { return ($('mixstatus').textContent = e.message); }
     if (!p.changed) return ($('mixstatus').textContent = p.summary);
-    $('verify').disabled = $('apply').disabled = true;
+    $('verify').disabled = $('apply').disabled = $('measure').disabled = true; // measure and verify share one offline renderer
     $('vout').hidden = true;
     try {
       if (playing) await stop(); // the render replaces the audio context
@@ -1317,7 +1323,7 @@
       did(() => after, `applied: ${p.summary}`); // applied, like verify --write; Save keeps it, undo or reloading the song drops it
       vstate('done', `&#10003; ${rows.filter((r) => r.ok).length}/${rows.filter((r) => r.metric).length} moved as asked`);
     } catch (e) { $('mixstatus').textContent = `verify failed: ${e.message}`; $('err').textContent = e.message; vstate('fail', `&#10007; ${esc(e.message)}`, e.message); }
-    finally { $('verify').disabled = $('apply').disabled = false; }
+    finally { $('verify').disabled = $('apply').disabled = $('measure').disabled = false; }
   };
 
   // measure: render the shown section, then each part alone (renderSong shares one offline context, hence the `for`,
@@ -1325,7 +1331,7 @@
   // levelRows). Writes nothing; a dB readout lands next to each level slider and the mix's own goes on the vstate badge.
   $('measure').onclick = async () => {
     const ev = sections.find((x) => x.name === mixSection); if (!ev) return;
-    $('measure').disabled = true;
+    $('measure').disabled = $('verify').disabled = $('apply').disabled = true; // measure and verify share one offline renderer
     try {
       if (playing) await stop(); // the render replaces the audio context
       await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
@@ -1340,7 +1346,7 @@
       for (const r of rows.slice(1)) { const el = document.querySelector(`#matlist [data-level="${CSS.escape(r.name)}"] .db`); if (el) el.textContent = r.db === -Infinity ? 'silent' : `${r.db > 0 ? '+' : ''}${r.db} dB`; }
       vstate(rows[0].warn ? 'fail' : 'done', `${rows[0].warn ? '&#10007;' : '&#10003;'} ${mixSection}: ${rows[0].db} dBFS rms, peak ${rows[0].warn ?? 'ok'}`);
     } catch (e) { $('mixstatus').textContent = `measure failed: ${e.message}`; vstate('fail', `&#10007; ${esc(e.message)}`, e.message); }
-    finally { $('measure').disabled = false; }
+    finally { $('measure').disabled = $('verify').disabled = $('apply').disabled = false; }
   };
 
   // feedback: comments pinned at the playhead's cycle become one paste-ready Claude request. Each shows as a dot on

@@ -301,3 +301,11 @@ test('verbs: breakdown, lift, strip and halftime are resolver edits on a whole s
   assert.equal(h.mats.template.value, 'halftime'); assert.equal(h.axes.density.value, .63, 'slightly sparser: -.175 from .8');
   assert.throws(() => applyVerb(src, 'a', 'nope'), /unknown verb/);
 });
+
+test('applyVerb surfaces refusals instead of silently doing nothing on an all-spread section', async () => {
+  const { applyVerb } = await import('../lib/resolve.mjs');
+  const src = `const M = { density: .5 };\nsong({}, [section('a', 4, { drums: { ...M } } )])`;
+  const r = applyVerb(src, 'a', 'lift');
+  assert.ok(r.refused.length > 0, 'a fully-spread layer is refused, not silently skipped');
+  assert.equal(r.src, src, 'nothing to edit: the source comes back unchanged');
+});
