@@ -72,6 +72,13 @@ test('every fixture song plays the same dumped as it does built', async () => {
   }
 });
 
+test('a raw part dumps the pattern the file wrote', async () => {
+  const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_raw.strudel');
+  fs.writeFileSync(file, `song({ cps: .5 }, [section('a', 2, { raw: { pattern: s("metal:2").struct("x ~ x x").lpf(1800), level: .5 } })])`);
+  try { const out = await dumpFile(file); assert.match(out, /const a_raw = s\("metal:2"\)\n\s+\.struct\("x ~ x x"\)\n\s+\.lpf\(1800\)/); assert.match(out, /\.mul\(gain\(0\.5\)\)/); }
+  finally { fs.rmSync(file); }
+});
+
 test('dump keeps patterns stacked around a song(), not just the song sections', async () => {
   const fs = await import('node:fs');
   const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_wrap.strudel');

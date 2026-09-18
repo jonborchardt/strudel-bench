@@ -347,6 +347,29 @@ test('fill: n rolls the last half bar of every nth bar; true still means the sec
   assert.throws(() => g.drums({ fill: 1 }, ctx), /fill must be/);
 });
 
+test('perc: a bare sound on a written rhythm; density thins or adds hits, drive places them', async () => {
+  const g = await ready;
+  const at = (attrs) => onsets(g.perc({ sound: 'cb', ...attrs }, ctx));
+  assert.equal(onsets(g.perc({}, ctx)).length, 0, 'no sound: silence');
+  const base = at({ rhythm: 'x.x.x.x.' });
+  assert.equal(base.length, 32, 'eight hits a bar over four bars'); assert.ok(base.every((h) => h.value.s === 'cb' && h.value.bank === undefined), 'bare, no kit');
+  assert.deepEqual(at({ rhythm: 'x.x.x.x.', density: .5 }).map((h) => h.whole.begin.valueOf()), base.map((h) => h.whole.begin.valueOf()));
+  assert.equal(at({ rhythm: 'x.x.x.x.', density: .25 }).length, 16, 'half the hits');
+  assert.ok(at({ rhythm: 'x.x.x.x.', density: 1 }).length > 32, 'more hits from the empty steps');
+  assert.equal(at({ rhythm: 'x.x.x.x.', drive: .1 }).length, 32);
+  assert.ok(at({ rhythm: '3/8', articulation: .9 })[0].value.clip < 1);
+});
+
+test('raw: a plain strudel pattern as a part, with the pattern-agnostic cells and level', async () => {
+  const g = await ready;
+  const p = g.s('metal:2').struct('x ~ x x ~ x ~ x');
+  assert.equal(onsets(g.raw({}, ctx)).length, 0, 'no pattern: silence');
+  const hs = onsets(g.raw({ pattern: p, level: .5, brightness: .2, space: .8 }, ctx));
+  assert.equal(hs.length, 20);
+  assert.match(String(hs[0].value.s), /^metal/); assert.equal(hs[0].value.gain, .5); assert.ok(hs[0].value.cutoff < 20000); assert.ok(hs[0].value.room > 0);
+  assert.throws(() => g.raw({ pattern: 'x x' }, ctx), /raw.pattern must be a strudel pattern/);
+});
+
 test('bass rhythm: a written grid replaces the density grid, keeps drive and accents, may span bars', async () => {
   const g = await ready;
   const at = (attrs, cycles = 2) => onsets(g.bass(attrs, { ...ctx, cycles }), cycles).map((h) => h.whole.begin.valueOf()).sort((a, b) => a - b);
