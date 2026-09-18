@@ -11,7 +11,7 @@ import { DESCRIPTORS, OVERLAYS, MODIFIERS, parsePhrase, applyDeltas, loadVocab }
 import { melodyLine } from '../lib/layers.mjs';
 import { parseMeter } from '../lib/song.mjs';
 import { PATCHES } from '../lib/packs.mjs';
-import { VERBS } from '../lib/resolve.mjs';
+import VERBS from '../lib/verbs.json' with { type: 'json' }; // the json, not lib/resolve.mjs: that would pull acorn into the examples page for three phrase strings
 if (typeof window !== 'undefined') await loadVocab((f) => fetch(new URL(`../lib/${f}`, import.meta.url)).then((r) => r.json()));
 
 const num = (v) => (v === 1 || v === 0 ? String(v) : String(v).replace(/^0\./, '.'));

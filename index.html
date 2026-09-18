@@ -136,18 +136,18 @@
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
   import { SCHEMA, host, CHORDS } from './web/hll-schema.mjs';
-  import { fmt, locate, setAxis, setAxisText, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField, setSongField, addPack, VERBS, applyVerb } from './lib/resolve.mjs';
+  import { fmt, locate, setAxis, setAxisText, motionText, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField, setSongField, addPack, VERBS, applyVerb } from './lib/resolve.mjs';
   import { lanePoints, laneSvg } from './web/lane.mjs';
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase, arrange, parseMeter } from './lib/song.mjs';
-  import { gridRows, addVoice, templateText, mountStepGrid } from './web/stepgrid.mjs';
+  import { addVoice, templateText, mountStepGrid } from './web/stepgrid.mjs';
   import { ARP_ORDERS, DRUM_ORDER, voiceSound, melodyLine, slicePoints } from './lib/layers.mjs';
   import { fmtTime, sliceSpec, frac, breaksIn, breakPoints, SNAPS, snapDivisions, barsGuess } from './web/sampler.mjs';
   import { createSampleCache, createPreviewer } from './web/preview.mjs';
   import { createWaveform } from './web/waveform.mjs';
   import { hasSound, isPattern } from './lib/strudel.mjs';
   import { parseProgression, chordName } from './lib/harmony.mjs';
-  import { TEMPLATES, fit, gridToMini } from './lib/grid.mjs';
+  import { TEMPLATES, fit, gridToMini, parseTemplate } from './lib/grid.mjs';
   import { analyze } from './lib/analyze.mjs';
   import { DESCRIPTORS, OVERLAYS, HARMONY, MODIFIERS, COMPARATIVE } from './lib/vocab.mjs';
   const $ = (id) => document.getElementById(id);
@@ -311,7 +311,8 @@
   }
   // dropout/sweep: bars of silence, or filter sweep to silence, at the tail of section `s` (lib/song.mjs); 0 = none
   function fade(s) {
-    return `<span class="tr" title="the tail of ${esc(s.name)}"><input type="number" class="fade" min="0" max="${s.cycles}" step="1" value="${s.dropout || ''}" placeholder="dropout" title="dropout: bars of silence at the end of ${esc(s.name)}" data-fld="dropout" data-name="${esc(s.name)}"><input type="number" class="fade" min="0" max="${s.cycles}" step="1" value="${s.sweep || ''}" placeholder="sweep" title="sweep: bars of filter sweep to silence at the end of ${esc(s.name)}" data-fld="sweep" data-name="${esc(s.name)}"></span>`;
+    const box = (f, what) => `<input type="number" class="fade" min="0" max="${s.cycles}" step="1" value="${s[f] || ''}" placeholder="${f}" title="${f}: bars of ${what} at the end of ${esc(s.name)}" data-fld="${f}" data-name="${esc(s.name)}">`;
+    return `<span class="tr" title="the tail of ${esc(s.name)}">${box('dropout', 'silence')}${box('sweep', 'filter sweep to silence')}</span>`;
   }
   // the transition out of section `s`: its fx riser (bars into the next) and the next section's fx impact (a hit on its downbeat); both picks
   function transition(s, next) {
@@ -351,13 +352,7 @@
     if (pinned) { const s = secs.find((x) => x.name === pinned); return s ? filt(s) : strudel.silence; } // no such section (A/B before a rename): silence, not a guess
     return arrange(secs, pat.strudel.total, filt); // song()'s own arrangement, with the parts that pass
   }
-  // superdough makes an orbit on its first hap, so a ducker's first hit would find no target ("duck target orbit n does not exist"): make every part's orbit before the scheduler starts. Channels [0, 1] is superdough's default (channels [1, 2], zero-based).
-  function makeOrbits(pat) {
-    const ac = strudel.getSuperdoughAudioController?.(); if (!ac) return;
-    const n = Math.max(0, ...(pat?.strudel?.sections ?? []).map((s) => Object.keys(s.layers).length));
-    for (let i = 1; i <= n; i++) ac.getOrbit(i, [0, 1]);
-  }
-  async function setLive() { makeOrbits(songPat); if (playing && songPat) (await ready).scheduler.setPattern(audible(ab && abPat ? abPat : songPat)); }
+  async function setLive() { if (playing && songPat) (await ready).scheduler.setPattern(audible(ab && abPat ? abPat : songPat)); }
   globalThis.strudelBench = { live: async () => (await ready).scheduler.pattern }; // for headless checks: what the scheduler holds right now
   async function applyPin(at) { // point the running scheduler at the pinned section (or back at the song) at song cycle `at`
     const r = await ready;
@@ -410,6 +405,7 @@
   $('strip').onclick = (e) => {
     const b = e.target.closest('.blk'); if (!b || e.target.closest('.rn')) return;
     const opBtn = e.target.closest('[data-op]'), s = sections[b.dataset.i], op = opBtn?.dataset.op;
+    if (e.target.closest('.fade')) return; // a click into a dropout/sweep box is not a scrub (onchange below writes it)
     const tr = e.target.closest('[data-tr]'); if (tr) return transitionPick(tr, s, sections[Number(b.dataset.i) + 1]);
     if (!op) return pinned && pinned !== s.name ? pinTo(s) : seek(s.offset); // pinned: a click moves the pin
     if (op === 'del') return did(() => { const out = removeSection(code.text, s.name); if (pinned === s.name) { pinned = null; loop = null; } return out; }, `removed ${s.name}`);
@@ -471,7 +467,6 @@
     const src = code.text;
     const pat = await playCode(ready, src);
     songPat = pat; evaluated = src; playing = true;
-    makeOrbits(songPat);
     setSections(pat);
     if (!wasPlaying && paused == null && loop) paused = loop.offset; // Play from stopped starts at the pin
     if (loop) setcps(loop.cps); // the pinned section loops on its own, at its own tempo
@@ -588,7 +583,7 @@
     catch (e) { throw new Error(`${e.message} (if playback misbehaves afterwards, reload the page)`); } // a render that dies half-way may leave superdough state behind
     xstate('busy', `encoding ${esc(name)}…`);
     await new Promise((r) => setTimeout(r)); // let the badge paint before the encoder blocks the thread
-    const blob = new Blob([encodeMp3(Array.from({ length: buf.numberOfChannels }, (_, c) => buf.getChannelData(c)), buf.sampleRate)], { type: 'audio/mpeg' });
+    const blob = new Blob([encodeMp3(frames(buf), buf.sampleRate)], { type: 'audio/mpeg' });
     download(blob, name);
     xstate('done', `&#10003; ${esc(name)} <small>${buf.duration.toFixed(1)} s</small>`, await keep(blob, name));
   });
@@ -718,14 +713,33 @@
   // seeing: under each knob row, the part's onsets across the section's bars (from the evaluated song, so a spread or a
   // signal shows what it does), with the playhead (--ph) sweeping while that section sounds
   const evCache = new WeakMap(); // pattern -> its strip: the haps only change when the song is re-evaluated, the card re-renders on every keystroke
+  // A miss is rendered as an empty strip and queried later, one bar of one part per task: the card follows the playhead into
+  // a new section from a timer tick, and querying every part over the whole section there blocked the thread past the
+  // scheduler's latency (0.1 s), so superdough dropped the haps due in that window: an audible hole at every section change.
+  let evPending = [], evGen = 0;
   function evRow(sectionName, layer) {
     const ev = sections.find((x) => x.name === sectionName), L = ev?.layers[layer];
     if (!L) return '<div class="ev"></div>';
-    if (!evCache.has(L.pattern)) {
-      const hs = L.pattern.queryArc(0, ev.cycles).filter((h) => h.hasOnset());
-      evCache.set(L.pattern, `<div class="ev" style="--bars:${ev.cycles}" title="${esc(layer)}: ${hs.length} events over ${ev.cycles} bars">${hs.map((h) => `<i style="left:${((h.whole.begin.valueOf() / ev.cycles) * 100).toFixed(2)}%;width:${Math.max(0.3, (h.duration.valueOf() / ev.cycles) * 100).toFixed(2)}%"></i>`).join('')}</div>`);
+    if (evCache.has(L.pattern)) return evCache.get(L.pattern);
+    evPending.push({ sectionName, layer, bar: 0, n: 0, html: '' });
+    return `<div class="ev" data-ev="${esc(layer)}" style="--bars:${ev.cycles}"></div>`;
+  }
+  function evFill(gen) {
+    if (gen !== evGen || !evPending.length) return;
+    const job = evPending[0], ev = sections.find((x) => x.name === job.sectionName), L = ev?.layers[job.layer];
+    const slot = $('knobs').querySelector(`.ev[data-ev="${CSS.escape(job.layer)}"]`);
+    if (!L || !slot) evPending.shift();
+    else if (evCache.has(L.pattern)) { slot.outerHTML = evCache.get(L.pattern); evPending.shift(); }
+    else {
+      const hs = L.pattern.queryArc(job.bar, Math.min(job.bar + 1, ev.cycles)).filter((h) => h.hasOnset());
+      const bit = hs.map((h) => `<i style="left:${((h.whole.begin.valueOf() / ev.cycles) * 100).toFixed(2)}%;width:${Math.max(0.3, (h.duration.valueOf() / ev.cycles) * 100).toFixed(2)}%"></i>`).join('');
+      slot.insertAdjacentHTML('beforeend', bit); job.html += bit; job.n += hs.length;
+      if (++job.bar >= ev.cycles) {
+        evCache.set(L.pattern, `<div class="ev" style="--bars:${ev.cycles}" title="${esc(job.layer)}: ${job.n} events over ${ev.cycles} bars">${job.html}</div>`);
+        slot.outerHTML = evCache.get(L.pattern); evPending.shift();
+      }
     }
-    return evCache.get(L.pattern);
+    setTimeout(evFill, 0, gen);
   }
   // the section's harmony as written: the source literal when there is one (typed while playing, it is not evaluated yet), else what the evaluated song has
   const harmOf = (s, ev) => ({ key: s.keyNode?.type === 'Literal' ? s.keyNode.value : ev.key, progression: s.progressionNode?.type === 'Literal' ? s.progressionNode.value : ev.progression });
@@ -771,17 +785,19 @@
     for (const el of document.querySelectorAll('.mixsec')) el.textContent = `· ${s.name}${pinned === s.name ? ' (pinned)' : ''}`;
     const head = `<span></span>${AXES.map((a) => `<span class="ax" title="${esc(a.meaning)}">${a.name}</span>`).join('')}`;
     const eff = effective()[s.name] ?? {}; // what a spread brought in: the source shows `...base`, the evaluated song shows the numbers
+    evPending = []; const gen = ++evGen; // strips not yet cached fill in after this render, one per task (see evRow)
     $('knobs').innerHTML = head + Object.entries(s.layers).map(([layer, L]) => `<b><span class="nm">${esc(layer)}</span><span class="ops"><button class="ms${muted.has(layer) ? ' on' : ''}" data-mute="${esc(layer)}" title="mute ${esc(layer)} (what you hear, not the song)">${ICON.mute}</button><button class="ms${solo.has(layer) ? ' on' : ''}" data-solo="${esc(layer)}" title="solo ${esc(layer)} (what you hear, not the song)">${ICON.solo}</button><button class="rm" data-rm="${esc(layer)}" title="remove ${esc(layer)} from ${esc(s.name)} (undo brings it back)">${ICON.rm}</button></span></b>` + AXES.map((a) => {
       if (!cells[layerBase(layer)]?.[a.name]) return '<span></span>';
       const v = L.axes[a.name], e = eff[layer]?.[a.name];
       const shapeBtn = a.kind === 'continuous' ? `<button class="shape" data-shape="${esc(layer)}/${a.name}" title="pick a shape for ${esc(layer)} ${a.name}">&#9662;</button>` : '';
       if (v?.value === 'expr' || (!v && e && typeof e === 'object')) {
-        const body = isPattern(e) ? laneSvg(lanePoints(e, s.cycles), s.cycles) : 'expr';
+        const body = isPattern(e) ? lane(e, s.cycles) : 'expr';
         return `<span class="expr" data-lane="${esc(layer)}/${a.name}" title="a signal: ${esc(String(e?.src ?? 'expression'))}. Click for a shape">${body}</span>`;
       }
       const value = v ? v.value : typeof e === 'number' ? e : .5;
       return `<span class="axcell"><input type="range" min="0" max="1" step=".01" value="${value}" style="--v:${value}" data-layer="${esc(layer)}" data-axis="${a.name}" title="${esc(layer)} ${a.name}: ${value}${v ? '' : typeof e === 'number' ? ' (from the spread; dragging adds an override)' : ' (not in the source: baseline)'}">${shapeBtn}</span>`;
     }).join('') + evRow(s.name, layer)).join('');
+    setTimeout(evFill, 0, gen);
     harmRender(s);
     // a part the section lacks can be added at its baseline; a second of the same kind gets a number (drums2)
     matsRender(s, eff);
@@ -861,8 +877,8 @@
     for (const box of $('matlist').querySelectorAll('.wave')) waveRender(box);
     for (const box of $('matlist').querySelectorAll('.stepgrid')) {
       const part = box.dataset.grid, L = s.layers[part], t = val(L, eff[part], 'template');
-      const { steps, pulse } = sections.find((x) => x.name === s.name)?.grid ?? parseMeter('4/4');
-      try { mountStepGrid(box, { rows: gridRows(t, steps), pulse, onChange: (rows) => did(() => setMaterial(code.text, s.name, part, 'template', templateText(rows)), `${s.name} ${part} template`) }); }
+      const { steps, pulse } = gridOf(s.name);
+      try { mountStepGrid(box, { rows: parseTemplate(t, steps), pulse, onChange: (rows) => did(() => setMaterial(code.text, s.name, part, 'template', templateText(rows)), `${s.name} ${part} template`) }); }
       catch (e) { box.textContent = e.message; }
     }
   }
@@ -874,7 +890,7 @@
     if (key === 'level') return Number(value) === 1 ? null : String(Number(value)); // 1 = untouched, so it is dropped
     if (key === 'seed') return String(value).trim() ? String(Math.max(1, Math.round(Number(value)))) : null;
     // what an absent key would mean for this part: the pack definition under it when there is one, else the layer's own default
-    const sdef = () => (layer ? sampleDef(matOf(layer, 'sound')) : null);
+    const sdef = () => (layer ? sampleDef(firstTake(matOf(layer, 'sound'))) : null);
     if (key === 'slices' && Array.isArray(value)) { // break points, in the file's fractions
       if (value.length) return `[${value.map(frac).join(', ')}]`;
       // an emptied list means one slice, and dropping the key does not say that: absent inherits the definition's own
@@ -932,7 +948,9 @@
     let pattern = s.layers[layer].pattern, what = key ? `${key} ${text ?? 'removed'}` : 'as written';
     if (voice) {
       const name = s.layers[layer].attrs.sounds?.[voice];
-      pattern = voiceSound(name, voice, s.kit, gridToMini(fit(TEMPLATES[s.layers[layer].attrs.template ?? 'house'][voice], s.grid.steps))); // the same rule as the drums part: kit voice or bare sample
+      const row = parseTemplate(s.layers[layer].attrs.template, s.grid.steps).find((r) => r.voice === voice); // a named or written template; a voice it has no line for plays on the beats
+      pattern = voiceSound(name, voice, s.kit, gridToMini(row?.grid ?? fit('x...', s.grid.steps))); // the same rule as the drums part: kit voice or bare sample
+      if (row?.bars > 1) pattern = pattern.slow(row.bars);
       what = `${voice} ${name ?? `${s.kit} ${voice}`}`;
     }
     return { pattern, cps: s.cps, what: `${section} ${layer} ${what}` };
@@ -970,6 +988,8 @@
   // sample definition, whose underlying sound is what there is a file for)
   const cache = createSampleCache({ soundMap: () => strudel.soundMap.get(), decode: (ab) => strudel.getAudioContext().decodeAudioData(ab) });
   const partAttrs = (layer) => sections.find((x) => x.name === mixSection)?.layers[layer]?.attrs ?? {}; // the evaluated part (a spread resolved)
+  const takeAttrs = (layer) => { const a = partAttrs(layer); return Array.isArray(a.sound) ? { ...a, sound: a.sound[0] } : a; }; // a takes list on a sample part: the waveform shows the first take
+  const firstTake = (sound) => (Array.isArray(sound) ? sound[0] : sound);
   // a material the way the knobs read every material: the section's own literal first, the evaluated part (a spread) only
   // when it has none. The evaluated song lags a commit by a render, so two quick clicks would otherwise lose the first.
   const matOf = (layer, key) => locate(code.text).sections.find((x) => x.name === mixSection)?.layers[layer]?.mats[key]?.value ?? partAttrs(layer)[key];
@@ -999,7 +1019,7 @@
     const layer = box.dataset.wave, wf = waveOf(box);
     // the part with its pack definition underneath: the file to decode is the definition's sound (which may differ from
     // its name), and the snap grid counts the region in beats of the bars it stands for, inherited or written
-    const ra = resolveSample(partAttrs(layer)), bars = ra.bars ?? 1;
+    const ra = resolveSample(takeAttrs(layer)), bars = ra.bars ?? 1;
     const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value), spec = sliceSpec(slicesOf(layer) ?? ra.slices);
     const beats = sections.find((x) => x.name === mixSection)?.grid.beats ?? 4;
     const shape = { begin, end, breaks: Array.isArray(spec) ? spec : null, count: Array.isArray(spec) ? spec.length + 1 : spec, divisions: snapDivisions(bars, beats, SNAPS[snapSetting()]) };
@@ -1025,7 +1045,7 @@
   function waveCommit(box, { breaks, begin, end }) {
     const layer = box.dataset.wave;
     if (breaks) {
-      const sv = slicesOf(layer) ?? resolveSample(partAttrs(layer)).slices; // the definition's breaks count too: the part inherits them
+      const sv = slicesOf(layer) ?? resolveSample(takeAttrs(layer)).slices; // the definition's breaks count too: the part inherits them
       if (sv === 'expr') { $('mixstatus').textContent = `${layer}.slices is an expression: edit it in the source`; return; }
       // a removal that leaves fewer slices than the pattern plays would not build: refuse it rather than write a broken song
       const need = maxIndex(matOf(layer, 'pattern'));
@@ -1046,7 +1066,7 @@
     const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value);
     // breaks the part inherits from its pack definition are just as real as written ones: a trim that strands one has to
     // drop it (materialising the survivors as an override) or refuse, or the song stops building
-    const sv = slicesOf(layer) ?? resolveSample(partAttrs(layer)).slices;
+    const sv = slicesOf(layer) ?? resolveSample(takeAttrs(layer)).slices;
     const kept = Array.isArray(sv) ? breaksIn(sv, begin, end) : null, drop = kept ? sv.length - kept.length : 0;
     // the region would strand a break the play pattern needs: refuse the trim rather than write a song that cannot build
     const need = maxIndex(matOf(layer, 'pattern'));
@@ -1069,7 +1089,7 @@
   }
   // one slice alone, at the fitted speed, for as long as it lasts (natural playback of that piece)
   const auditionSlice = (btn, layer, i) => pv.preview(btn, () => {
-    const s = sections.find((x) => x.name === mixSection), a = resolveSample(s.layers[layer].attrs); // the part over its pack definition: region, bars and slices it inherits
+    const s = sections.find((x) => x.name === mixSection), a = resolveSample(takeAttrs(layer)); // the part over its pack definition: region, bars and slices it inherits (a takes list: the first take)
     if (!a.sound) throw new Error('pick a sample first');
     const [begin, end] = trimOf(layer, a); // the source's region and break points: the buttons are drawn from those, and the evaluated song lags a commit
     const pts = slicePoints(begin, end, sliceSpec(slicesOf(layer) ?? a.slices));
@@ -1129,8 +1149,7 @@
     }
     const gf = e.target.closest('[data-gridify]');
     if (gf) { // copy the named (or default) template into the source as a grid of voices x steps, ready to click
-      const steps = sections.find((x) => x.name === mixSection)?.grid.steps ?? parseMeter('4/4').steps;
-      return did(() => setMaterial(code.text, mixSection, layer, 'template', templateText(gridRows(matOf(layer, 'template') ?? 'house', steps))), `${layer} template as grid`);
+      return did(() => setMaterial(code.text, mixSection, layer, 'template', templateText(parseTemplate(matOf(layer, 'template'), gridOf().steps))), `${layer} template as grid`);
     }
     const st = e.target.closest('[data-seed]');
     if (st) return setMat(layer, 'seed', String(Math.max(1, Number(st.dataset.cur) + Number(st.dataset.seed))));
@@ -1154,8 +1173,8 @@
     const av = e.target.closest('[data-addvoice]'); if (!av || e.key !== 'Enter') return;
     e.preventDefault();
     const layer = av.closest('[data-layer]').dataset.layer, voice = av.value.trim(); if (!voice) return;
-    const steps = sections.find((x) => x.name === mixSection)?.grid.steps ?? parseMeter('4/4').steps;
-    if (did(() => setMaterial(code.text, mixSection, layer, 'template', templateText(addVoice(gridRows(matOf(layer, 'template') ?? 'house', steps), voice, steps))), `${layer} template +${voice}`)) av.value = '';
+    const { steps } = gridOf();
+    if (did(() => setMaterial(code.text, mixSection, layer, 'template', templateText(addVoice(parseTemplate(matOf(layer, 'template'), steps), voice, steps))), `${layer} template +${voice}`)) av.value = '';
   };
   $('mats').ondragover = (e) => { if (server && e.target.closest('.matrow')?.dataset.layer.startsWith('sample')) e.preventDefault(); }; // allow a drop on a sample row
   $('mats').ondrop = (e) => { const row = e.target.closest('.matrow'), f = e.dataTransfer?.files[0]; if (server && row?.dataset.layer.startsWith('sample') && f) { e.preventDefault(); importSample(f, row.dataset.layer); } };
@@ -1191,25 +1210,22 @@
   };
   $('pick').ontoggle = (e) => { if (e.newState === 'closed' && pv.button && $('pick').contains(pv.button)) pv.stop(); }; // closing the menu ends its preview
   const effective = () => Object.fromEntries(sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([l, x]) => [l, x.attrs]))])); // the evaluated song's resolved attrs per section and layer
+  const laneCache = new WeakMap(); // signal cell svg per evaluated attr pattern: the pattern only changes on re-evaluation, mixRender runs on every keystroke
+  const lane = (e, cycles) => { let svg = laneCache.get(e); if (!svg) laneCache.set(e, svg = laneSvg(lanePoints(e, cycles), cycles)); return svg; };
+  const gridOf = (name = mixSection) => sections.find((x) => x.name === name)?.grid ?? parseMeter('4/4'); // the section's meter grid ({ steps, pulse }) from the evaluated song; 4/4 before it evaluates
   for (const id of ['addaxes', 'addmats']) $(id).onchange = (e) => { // the pick adds the part; the re-render puts the dropdown back on its placeholder
     const l = e.target.value; if (!l) return;
     did(() => addLayer(code.text, mixSection, l).src, `added a ${l} part to ${mixSection}`);
   };
-  // the shape pick: a movement literal centred on the cell's current number (.5 for a signal cell, which has none)
-  const SHAPES = ['constant', 'ramp up', 'ramp down', 'wobble', 'drift', 'pulse', 'swell'];
-  function shapeText(name, v) {
-    const c = (x) => fmt(Math.min(1, Math.max(0, x)));
-    if (name === 'constant') return c(v);
-    if (name === 'ramp up') return `ramp(${c(v)}, ${c(v + .3)})`;
-    if (name === 'ramp down') return `ramp(${c(v)}, ${c(v - .3)})`;
-    return `${name}(${c(v - .2)}, ${c(v + .2)})`;
-  }
+  // the shape pick: a movement literal centred on the cell's current number (.5 for a signal cell, which has none); the same text the motion words write
+  const SHAPES = { constant: null, 'ramp up': 'rise', 'ramp down': 'fall', wobble: 'wobble', drift: 'drift', pulse: 'pulse', swell: 'swell' };
+  const shapeText = (name, v) => (SHAPES[name] ? motionText(SHAPES[name], v) : fmt(v));
   $('knobs').onclick = (e) => {
     const shapeEl = e.target.closest('[data-shape], [data-lane]');
     if (shapeEl) {
       const [layer, axisName] = (shapeEl.dataset.shape ?? shapeEl.dataset.lane).split('/');
-      const v = Number(shapeEl.closest('.axcell')?.querySelector('input')?.value) || .5;
-      return openPickList(shapeEl, { names: SHAPES, ph: 'shape', onPick: (name) => did(() => setAxisText(code.text, mixSection, layer, axisName, shapeText(name, v)), `${layer} ${axisName} ${name}`) });
+      const v = Number(shapeEl.closest('.axcell')?.querySelector('input')?.value ?? .5); // a signal cell has no input: centre on .5; a knob at 0 is 0
+      return openPickList(shapeEl, { names: Object.keys(SHAPES), ph: 'shape', onPick: (name) => did(() => setAxisText(code.text, mixSection, layer, axisName, shapeText(name, v)), `${layer} ${axisName} ${name}`) });
     }
     const t = e.target.closest('[data-rm], [data-mute], [data-solo]'); if (!t) return;
     if (t.dataset.rm) return did(() => removeLayer(code.text, mixSection, t.dataset.rm), `removed ${t.dataset.rm} from ${mixSection}`);
@@ -1313,8 +1329,8 @@
       vstate('busy', 'rendering before…');
       const A = await render(src, 'before'), B = await render(after, 'after');
       vstate('busy', 'measuring…'); await new Promise((r) => setTimeout(r)); // let the badge paint before the analysis blocks the thread
-      const metrics = (buf) => analyze({ rate: buf.sampleRate, channels: buf.numberOfChannels, frames: Array.from({ length: buf.numberOfChannels }, (_, c) => buf.getChannelData(c)) }, { cps: s.cps, steps: s.grid.steps });
-      const rows = verifyRows(p.deltas, metrics(A), metrics(B));
+      const opts = { cps: s.cps, steps: s.grid.steps };
+      const rows = verifyRows(p.deltas, metricsOf(A, opts), metricsOf(B, opts));
       const sign = (x) => (x >= 0 ? '+' : '') + x.toFixed(2);
       $('vout').innerHTML = `<table class="vt"><tr><th>axis</th><th>asked</th><th>metric</th><th>before</th><th>after</th><th></th></tr>${rows.map((r) => `<tr><td>${r.axis}</td><td>${sign(r.requested)}</td>${r.metric ? `<td>${r.metric}</td><td>${r.before}</td><td>${r.after}</td><td class="${r.ok ? 'ok' : 'no'}">${r.ok ? '✓ moved as asked' : '✗ did not'}</td>` : '<td colspan="4" class="muted">no audio metric (verified by the event stream)</td>'}</tr>`).join('')}</table>
         <span class="row">before <audio controls src="${URL.createObjectURL(toWav(A))}"></audio> after <audio controls src="${URL.createObjectURL(toWav(B))}"></audio><span class="grow"></span><button id="vclose" title="close this comparison (the edit stays; undo reverts it)">&times; close</button></span>`;
@@ -1335,11 +1351,8 @@
     try {
       if (playing) await stop(); // the render replaces the audio context
       await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
-      const stats = async (layer) => {
-        const buf = await renderSong({ code: code.text, section: mixSection, layer, cycles: Math.min(ev.cycles, 4), progress: (i, n) => vstate('busy', `measuring ${layer ?? mixSection} ${Math.round((i / n) * 100)}%`) });
-        const { rms, peak } = analyze({ rate: buf.sampleRate, channels: buf.numberOfChannels, frames: Array.from({ length: buf.numberOfChannels }, (_, c) => buf.getChannelData(c)) }, { cps: ev.cps });
-        return { rms, peak };
-      };
+      const song = await strudel.evaluate(code.text, false); // once, not once per render
+      const stats = async (layer) => metricsOf(await renderSong({ song, section: mixSection, layer, cycles: Math.min(ev.cycles, 4), progress: (i, n) => vstate('busy', `measuring ${layer ?? mixSection} ${Math.round((i / n) * 100)}%`) }), { cps: ev.cps }); // levelRows reads rms and peak
       const parts = [{ name: 'mix', ...(await stats()) }];
       for (const l of Object.keys(ev.layers)) parts.push({ name: l, ...(await stats(l)) }); // one render at a time: renderSong shares the offline context
       const rows = levelRows(parts);
@@ -1454,9 +1467,9 @@
     }
   }
   /** Evaluate `code` and render it (or `cycles` of one `section` or `layer`) offline; resolves to an AudioBuffer. */
-  async function renderSong({ code, cycles, section, layer, progress }) {
+  async function renderSong({ code, song, cycles, section, layer, progress }) { // `song`: an already evaluated pattern (measure renders one section many ways from one evaluation)
     await ready;
-    const song = await strudel.evaluate(code, false);
+    song ??= await strudel.evaluate(code, false);
     if (!song) throw new Error('source does not evaluate (see the error under it)'); // evaluate logs syntax errors instead of throwing
     let pat = song;
     let begin = 0, end = cycles ?? (song.strudel ? song.strudel.total : 8);
@@ -1473,10 +1486,7 @@
         pat = src.pattern; cps = s.cps; begin = 0; end = cycles ?? s.cycles; // layer patterns run in section-local bar time
       } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles) * s.span / s.cycles; }
     }
-    // orbits are made from `song` (every section's layer count), not `pat`: a single layer's own pattern has no
-    // .strudel, so makeOrbits would see no sections and skip them, and a part rendered alone that ducks another
-    // (duckorbit pointing at a sibling's orbit) would find that orbit missing.
-    return renderOffline(pat, cps, begin, end, progress, song);
+    return renderOffline(pat, cps, begin, end, progress);
   }
 
   // Offline render, one cycle at a time. strudel.renderPatternAudio builds every event's node chain up front and
@@ -1493,7 +1503,7 @@
   // already discarded (reset orbits, finished offline context), and nothing else is affected: keep it out of the console.
   window.addEventListener('beforeunload', (e) => { if (code.text !== loaded) { e.preventDefault(); e.returnValue = ''; } }); // unsaved edits: the browser asks before leaving
   window.addEventListener('error', (e) => { if (/belonging to a different audio context/.test(e.message)) e.preventDefault(); });
-  async function renderOffline(pat, cps, begin, end, progress = () => {}, orbitsOf = pat) {
+  async function renderOffline(pat, cps, begin, end, progress = () => {}) {
     // the live context stays open: the scheduler's clock is bound to it for the life of the page (webaudioRepl
     // captures it), so closing it would freeze playback until a reload. It is silent (stopped) while we render.
     const live = strudel.getAudioContext();
@@ -1504,7 +1514,6 @@
     strudel.resetGlobalEffects();
     strudel.setSuperdoughAudioController(null); // rebuilt lazily on the offline context
     await strudel.initAudio({ maxPolyphony: 128 });
-    makeOrbits(orbitsOf); // same lazy-orbit gap as the live scheduler: create every part's orbit on this offline context before the first hit (the song, not a lone layer's pattern, which carries no .strudel)
     const schedule = async (from, to) => {
       for (const h of pat.queryArc(from, to, { _cps: cps })) {
         if (!h.hasOnset()) continue;
@@ -1532,6 +1541,8 @@
       strudel.setAudioContext(live); // back to the clock's context; effects and the controller rebuild lazily on it
     }
   }
+  const frames = (buf) => Array.from({ length: buf.numberOfChannels }, (_, c) => buf.getChannelData(c)); // an AudioBuffer as one Float32Array per channel
+  const metricsOf = (buf, opts) => analyze({ rate: buf.sampleRate, channels: buf.numberOfChannels, frames: frames(buf) }, opts); // lib/analyze.mjs over a render: verify and measure read the same numbers
   function toWav(buf) { // 16-bit PCM, interleaved
     const n = buf.length, ch = buf.numberOfChannels, bytes = n * ch * 2, v = new DataView(new ArrayBuffer(44 + bytes));
     const tag = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
@@ -1539,7 +1550,7 @@
     v.setUint16(20, 1, true); v.setUint16(22, ch, true); v.setUint32(24, buf.sampleRate, true);
     v.setUint32(28, buf.sampleRate * ch * 2, true); v.setUint16(32, ch * 2, true); v.setUint16(34, 16, true);
     tag(36, 'data'); v.setUint32(40, bytes, true);
-    const chans = Array.from({ length: ch }, (_, c) => buf.getChannelData(c));
+    const chans = frames(buf);
     for (let i = 0, o = 44; i < n; i++) for (const c of chans) { const s = Math.max(-1, Math.min(1, c[i])); v.setInt16(o, s < 0 ? s * 32768 : s * 32767, true); o += 2; }
     return new Blob([v], { type: 'audio/wav' });
   }

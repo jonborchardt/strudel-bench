@@ -5,7 +5,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AXIS_NAMES } from '../lib/axes.mjs';
 import { layerBase } from '../lib/song.mjs';
+import { soundNames } from '../lib/packs.mjs';
 import { checkFile, missingPackOnly } from './check.mjs';
+
+// the check table prints a list or weights sound as its JSON; a plain name is itself; a pattern is the word "signal"
+const soundsOf = (v) => { try { return soundNames(JSON.parse(v)); } catch { return [v]; } };
 
 const DEFAULT_SOUND = { bass: 'sawtooth', melody: 'sawtooth', pad: 'sawtooth', fx: 'white' }; // what a part plays when it names no sound (lib/layers.mjs)
 const SAW = new Set(['sawtooth', 'saw', 'supersaw']);
@@ -24,7 +28,7 @@ export function lint({ sections, problems = [] }) {
   sections.forEach((s, i) => {
     const prev = sections[i - 1];
     if (prev && same(prev.layers, s.layers)) warn(s.name, `identical to ${prev.name}: same parts, same values; change something or merge them`);
-    const saws = Object.entries(s.layers).filter(([l, x]) => SAW.has(x.attrs.sound ?? DEFAULT_SOUND[layerBase(l)])).map(([l]) => l);
+    const saws = Object.entries(s.layers).filter(([l, x]) => soundsOf(x.attrs.sound ?? DEFAULT_SOUND[layerBase(l)]).some((n) => SAW.has(n))).map(([l]) => l);
     if (saws.length > 1) warn(s.name, `${saws.join(', ')}: raw saws in one section are mud, give all but one a pack instrument`);
     for (const [l, x] of Object.entries(s.layers)) {
       const base = layerBase(l);

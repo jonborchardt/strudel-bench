@@ -299,7 +299,7 @@ test('density does not invent a voice the template leaves out: heartbeat keeps i
 
 test('a sound list picks one name per hit, the same pick every time, and reaches every name over enough hits', async () => {
   const g = await ready;
-  const { soundPat, soundNames } = await import('../lib/layers.mjs');
+  const { soundPat } = await import('../lib/layers.mjs'), { soundNames } = await import('../lib/packs.mjs');
   assert.deepEqual(soundNames(['a', 'b']), ['a', 'b']); assert.deepEqual(soundNames({ a: 2, b: 1 }), ['a', 'b']); assert.deepEqual(soundNames('a'), ['a']);
   assert.equal(soundPat('piano'), 'piano', 'a string is untouched');
   assert.throws(() => soundPat([]), /list must hold sound names/);
@@ -354,6 +354,25 @@ test('fill: n rolls the last half bar of every nth bar; true still means the sec
   assert.equal(onsets(g.drums({ ...noSd, fill: true }, ctx)).filter((h) => h.value.s === 'sd').length, 0, 'fill: true with no sd line: no sd events');
   // heartbeat writes an all-rests sd line on purpose (not no line at all): the gate must read the grid's content, not just its presence
   assert.equal(onsets(g.drums({ template: 'heartbeat', fill: 2 }, { ...ctx, cycles: 4 })).filter((h) => h.value.s === 'sd').length, 0, 'heartbeat + fill: n: still no sd events');
+});
+
+test('a drum voice list mixing kit voices and pack samples keeps the kit for the kit voices (written in full) and the samples bare', async () => {
+  const g = await ready;
+  const { S } = await import('../lib/strudel.mjs');
+  S.soundMap = { get: () => ({ rolandtr909_sd: 1, rolandtr909_rim: 1, clap: 1 }) }; // the page's sound map; Node has none (hasSound undefined) and assumes the kit
+  try {
+    const hs = onsets(g.drums({ density: .4, sounds: { sd: ['sd', 'clap'] } }, { ...ctx, cycles: 8 }), 8).filter((h) => h.value.s !== 'bd' && h.value.s !== 'hh');
+    assert.deepEqual([...new Set(hs.map((h) => h.value.s))].sort(), ['RolandTR909_sd', 'clap']);
+    assert.ok(hs.every((h) => h.value.bank === undefined), 'no bank: it would hide the sample');
+    const kit = onsets(g.drums({ density: .4, sounds: { sd: ['sd', 'rim'] } }, { ...ctx, cycles: 8 }), 8).filter((h) => h.value.s === 'sd' || h.value.s === 'rim');
+    assert.ok(kit.length && kit.every((h) => h.value.bank === 'RolandTR909'), 'all kit voices: banked as before');
+  } finally { delete S.soundMap; }
+});
+
+test('perc: the default rhythm is a hit per quarter note in any meter (tiled like the drum templates), not a 16-step string the meter rejects', async () => {
+  const g = await ready;
+  const { parseMeter } = await import('../lib/song.mjs');
+  for (const m of ['3/4', '6/8', '7/8', '2/4']) assert.equal(onsets(g.perc({ sound: 'cb' }, { ...ctx, cycles: 1, meter: m }), 1).length, Math.ceil(parseMeter(m).steps / 4), m);
 });
 
 test('perc: a bare sound on a written rhythm; density thins or adds hits, drive places them', async () => {

@@ -4,7 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { planEdits, applyEdits, applyVerb, fmt } from '../lib/resolve.mjs';
-import { ensureScope } from './check.mjs';
+import { ensureScope, effectiveOf } from './check.mjs';
+
+// the evaluated song, so a spread layer resolves here as it does on the page; a song that does not evaluate leaves it undefined, and spread layers are refused as before
+const evaluated = async (src) => { try { return await effectiveOf(src); } catch { return undefined; } };
 
 function printAxisReport(report) {
   for (const r of report) {
@@ -38,22 +41,19 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (!file || !sectionSel) { console.error('usage: node scripts/resolve.mjs songs/x.strudel <section> --verb <breakdown|lift|strip|halftime> [--write]'); process.exit(2); }
     const src = fs.readFileSync(file, 'utf8');
     let result;
-    try { result = applyVerb(src, sectionSel, verb); } catch (e) { console.error(e.message); process.exit(2); }
+    try { result = applyVerb(src, sectionSel, verb, await evaluated(src)); } catch (e) { console.error(e.message); process.exit(2); }
     printAxisReport(result.report);
-    if (result.report.removed.length) console.log(`  removed: ${result.report.removed.join(', ')}`);
+    if (result.removed.length) console.log(`  removed: ${result.removed.join(', ')}`);
     for (const r of result.refused) console.log(`  ${r.section}.${r.layer}.${r.axis}: refused, ${r.reason}`);
-    const changed = result.src !== src; // material edits (setMaterial) and layer removal touch src without adding to report
-    if (write) {
-      if (!changed) console.log('nothing changed');
-      else { fs.writeFileSync(file, result.src); console.log(`wrote ${file}`); }
-    } else if (!changed) console.log('nothing changed');
+    if (result.src === src) console.log('nothing changed'); // material edits (setMaterial) and layer removal touch src without adding to report
+    else if (write) { fs.writeFileSync(file, result.src); console.log(`wrote ${file}`); }
     process.exit(0);
   }
   const [file, sectionSel = '*', layerSel = '*', phrase] = args.filter((a) => a !== '--write');
   if (!file || !phrase) { console.error('usage: node scripts/resolve.mjs songs/x.strudel <section|*> <layer|*> "phrase" [--write]'); process.exit(2); }
   const src = fs.readFileSync(file, 'utf8');
   let plan;
-  try { plan = planEdits(src, sectionSel, layerSel, phrase); } catch (e) { console.error(e.message); process.exit(2); }
+  try { plan = planEdits(src, sectionSel, layerSel, phrase, await evaluated(src)); } catch (e) { console.error(e.message); process.exit(2); }
   if (plan.report.length === 0 && plan.refused.length === 0 && plan.harmonyReport.length === 0) {
     console.error(`no matching section/layer for ${sectionSel}/${layerSel}`);
     process.exit(2);

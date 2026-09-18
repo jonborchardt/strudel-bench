@@ -114,8 +114,7 @@ test('a share link round-trips the name and source, url-safe and smaller than th
   assert.deepEqual(await shareDecode(link), { name: 'demo.strudel', src });
 });
 
-test('levelRows: the mix in dBFS, each part relative to the mix, warnings for clipping and silence', async () => {
-  const { levelRows } = await import('../web/compose.mjs');
+test('levelRows: the mix in dBFS, each part relative to the mix, warnings for clipping and silence', () => {
   const rows = levelRows([{ name: 'mix', rms: .1, peak: .99 }, { name: 'drums', rms: .05, peak: .5 }, { name: 'pad', rms: 0, peak: 0 }]);
   assert.deepEqual(rows, [{ name: 'mix', db: -20, warn: 'no headroom' }, { name: 'drums', db: -6, warn: null }, { name: 'pad', db: -Infinity, warn: 'silent' }]);
 });

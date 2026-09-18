@@ -1,25 +1,17 @@
 // The step grid: voices x steps over a drum template, the visual editor for a written template (lib/grid.mjs grammar).
-// The model is the grid strings themselves; the page writes templateText() back into the source as the `template` literal.
-import { parseGrid, fit, TEMPLATES } from '../lib/grid.mjs';
+// The model is the grid strings themselves ([{ voice, grid, bars }], what lib/grid.mjs parseTemplate reads from a
+// template); the page writes templateText() back into the source as the `template` literal.
+import { barsOf } from '../lib/grid.mjs';
 
 const CYCLE = { '.': 'x', x: 'X', X: 'o', o: '.' };
 const NAME = { '.': 'rest', x: 'hit', X: 'accent', o: 'ghost' };
-export function gridRows(template, steps) {
-  const named = !(template && typeof template === 'object');
-  const t = named ? TEMPLATES[template ?? 'house'] : template;
-  if (!t) throw new Error(`unknown template "${template}"`);
-  // a named template is a plain x/. string sized for 4/4 (16 steps): fit it to the section's meter first, mirroring
-  // drumPlan in lib/layers.mjs, so "edit as grid" works in a meter like 6/8 instead of hitting parseGrid's error
-  return Object.entries(t).map(([voice, g]) => { const { grid, bars } = parseGrid(named ? fit(g, steps) : g, steps); return { voice, grid, bars }; });
-}
 export const toggleStep = (rows, voice, step) => rows.map((r) => (r.voice !== voice ? r : { ...r, grid: r.grid.slice(0, step) + CYCLE[r.grid[step]] + r.grid.slice(step + 1) }));
 export function addVoice(rows, voice, steps) {
   if (rows.some((r) => r.voice === voice)) throw new Error(`voice "${voice}" is already in the grid`);
   return [...rows, { voice, grid: '.'.repeat(steps), bars: 1 }];
 }
-const barsOf = (r) => (r.grid.match(new RegExp(`.{1,${r.grid.length / r.bars}}`, 'g')) ?? [r.grid]).join('|');
 export function templateText(rows) {
-  const items = rows.map((r) => `${r.voice}: '${barsOf(r)}'`);
+  const items = rows.map((r) => `${r.voice}: '${barsOf(r.grid, r.grid.length / r.bars).join('|')}'`);
   return rows.some((r) => r.bars > 1) ? `{\n      ${items.join(',\n      ')},\n    }` : `{ ${items.join(', ')} }`;
 }
 /** Mount the grid in `el`: a row per voice, a button per step (a beat mark every `pulse`), click toggles and reports the rows. */

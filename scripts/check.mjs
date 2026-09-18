@@ -24,6 +24,17 @@ export const ensureScope = () => (scopeReady ??= (async () => {
   await import('../lib/index.mjs');
 })());
 
+/**
+ * The evaluated song's resolved attrs per section and layer (what the page's mixer reads as `effective()`), so the
+ * resolver can edit a spread layer on the CLI as it does on the page; undefined when `code` is not a song().
+ */
+export async function effectiveOf(code) {
+  await ensureScope();
+  registerSamples(userPacks());
+  const pattern = await (await evaluate(code, transpiler)).pattern;
+  return pattern?.strudel && Object.fromEntries(pattern.strudel.sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([l, x]) => [l, x.attrs]))]));
+}
+
 /** Built-in sounds: the synths plus every downloaded/CDN pack map in samples/packs. */
 function builtinSounds() {
   const known = new Set(SYNTHS);

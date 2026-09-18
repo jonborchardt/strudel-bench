@@ -21,8 +21,8 @@
 
 | axis | drums | bass | melody | pad | fx | sample | perc | raw |
 |---|---|---|---|---|---|---|---|---|
-| density | voices bd / voices bd+sd+hh+oh, 16th hats | 1 notes per cycle / 8 notes per cycle | drop 48% of notes / double notes p=0.60 | 1 chord tones / 4 chord tones | — | — | keep 40% of the hits / add 60% of the empty steps | — |
-| drive | kick/snare pushed to offbeats / kick onto the pulse, snare onto the backbeat, hats accent on-beat | notes syncopated / notes pulled onto beats, on-beat accent | — | no duck / pulse duck depth 0.36 | — | — | hits pushed off it / hits pulled onto the pulse, on-beat accent | — |
+| density | voices bd (of the template's voices) / voices bd+sd+hh+oh (of the template's voices), 16th hats | 1 notes per cycle / 8 notes per cycle | drop 48% of notes / double notes p=0.60 | 1 chord tones / 4 chord tones | — | — | keep 40% of the hits / add 60% of the empty steps | — |
+| drive | kick/snare pushed to offbeats / kick onto the pulse, snare onto the backbeat, hats accent on-beat | notes syncopated / notes pulled onto beats, on-beat accent | — | no duck / pulse duck depth 0.36 (a faked dip; a duck: material replaces it) | — | — | hits pushed off it / hits pulled onto the pulse, on-beat accent | — |
 | brightness | lpf 2899 Hz / hpf 267 Hz | lpf 400 Hz -> 152 Hz / lpf 400 Hz -> 1051 Hz | lpf 2000 Hz -> 641 Hz / lpf 2000 Hz -> 4595 Hz | lpf 1200 Hz -> 410 Hz / lpf 1200 Hz -> 3152 Hz | lpf x0.44 / lpf x1.73 | lpf 1913 Hz / open | lpf 2899 Hz / hpf 267 Hz | lpf 1913 Hz / open |
 | weight | gain x0.76 / gain x1.12 | gain x0.85, lpf x1.00 / gain x1.23, lpf x0.85, octave down | — | gain x0.80 / gain x1.27, low voicing | gain x0.70 / gain x1.30 | gain x0.70 / gain x1.30 | gain x0.76 / gain x1.12 | gain x0.70 / gain x1.30 |
 | space | room 0.00 / room 0.24 | room 0.00 / room 0.18 | room 0.08, delay 0.00 / room 0.62, delay 0.24 | room 0.12, size 0.48 / room 0.66, size 0.81 | room 0.20 / room 0.77 | room 0.20 / room 0.77 | room 0.00 / room 0.24 | room 0.20 / room 0.77 |

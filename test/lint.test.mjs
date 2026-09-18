@@ -16,6 +16,9 @@ test('lint: the rules the skill states, as findings', () => {
   assert.ok(texts.some((t) => /no section has role climax/.test(t)), texts);
   assert.ok(texts.some((t) => /warn b identical to a/.test(t)), texts);
   assert.ok(texts.some((t) => /bass, pad, melody: raw saws/.test(t)), texts);
+  // the check table prints a list or weights sound as JSON: a raw saw inside one still counts
+  const lists = lint({ sections: [sec('a', 'climax', { bass: { sound: '["sawtooth","square"]' }, melody: { sound: '{"saw":2,"piano":1}' }, pad: { sound: 'piano' } }, 2)] });
+  assert.ok(lists.some((x) => /bass, melody: raw saws/.test(x.text)), JSON.stringify(lists));
   assert.ok(texts.some((t) => /melody plays the seeded line/.test(t)) && texts.some((t) => /bass plays the seeded line/.test(t)), texts);
   assert.ok(texts.some((t) => /error c melody.density is 1.2/.test(t)), texts);
   assert.ok(texts.some((t) => /melody.level is 3/.test(t)), texts);

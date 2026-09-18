@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { gridRows, toggleStep, addVoice, templateText } from '../web/stepgrid.mjs';
+import { toggleStep, addVoice, templateText } from '../web/stepgrid.mjs';
+import { parseTemplate as gridRows } from '../lib/grid.mjs';
 
-test('gridRows reads a named or written template; toggleStep cycles a cell; templateText writes the literal back', () => {
+test('parseTemplate reads a named or written template; toggleStep cycles a cell; templateText writes the literal back', () => {
   const rows = gridRows('house', 16);
   assert.deepEqual(rows.map((r) => r.voice), ['bd', 'sd', 'hh', 'oh', 'cp']);
   assert.equal(rows[0].grid, 'x...x...x...x...');

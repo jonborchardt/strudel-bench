@@ -44,6 +44,7 @@ test('v2 grammar: accidentals, suffixes, sevenths, groups', async () => {
   assert.equal(cp.tones(3), '<[0,3,7] [[0,4,7] [0,4,7]]>');
   assert.equal(chordPatterns('C:minor', parseProgression('i V7')).tones(3), '<[0,3,7] [0,4,7,10]>', '7 floors that chord at 4 tones; V7 is the dominant seventh');
   assert.equal(chordNames('C:minor', parseProgression('V7 v7 VM7 vii7')), 'G7 Gm7 Gmaj7 Bb7');
+  assert.equal(chordNames('C:minor', parseProgression('ivM7')), 'Fmaj7', 'M7 is the major seventh chord whatever the case: a major triad, not a minor-major seventh');
   assert.equal(chordNames('C:major', parseProgression('vii7 ii7')), 'Bm7b5 Dm7', 'a diminished triad with a minor seventh is half-diminished');
   assert.deepEqual(chordSpec('C:major', parseProgression('bVII')[0][0]), { degree: 6, acc: -1, intervals: [0, 4, 7, 10], bass: 0 });
   assert.throws(() => parseProgression('i [VI'), /unclosed/);

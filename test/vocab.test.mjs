@@ -75,6 +75,9 @@ test('motion words attach to the axis next to them', async () => {
   assert.deepEqual(parsePhrase('brightness rising, much darker').deltas, { brightness: -.6, register: -.2 });
   const p = parsePhrase('wobbling');
   assert.deepEqual(p.motion, []); assert.deepEqual(p.unknown, ['wobbling (no axis named)']);
+  assert.deepEqual(parsePhrase('more width').unknown, ['width'], 'an axis name with no motion word is not a descriptor: reported, not swallowed');
+  assert.deepEqual(parsePhrase('brightness rising, space falling').motion.map((m) => [m.fn, m.axis]), [['rise', 'brightness'], ['fall', 'space']], 'each word takes the axis on its own side of the comma');
+  assert.deepEqual(parsePhrase('wobbling brightness, brighter').unknown, [], 'the label next to a motion word is spent, the descriptor after it still counts');
 });
 
 test('describeAxes reads axis values back as the words that would have set them', async () => {

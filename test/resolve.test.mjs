@@ -269,7 +269,7 @@ test('a second motion on an axis already holding one in this phrase is refused, 
   await ready;
   const { planEdits, applyEdits, locate } = await import('../lib/resolve.mjs');
   const src = `song({}, [section('a', 4, { pad: { brightness: .6 } })])`;
-  const plan = planEdits(src, 'a', 'pad', 'wobbling brightness pulsing');
+  const plan = planEdits(src, 'a', 'pad', 'wobbling brightness, brightness pulsing'); // each motion word labels one axis name, so the axis is named twice
   assert.equal(plan.edits.length, 1);
   assert.deepEqual(plan.refused.map((x) => x.reason), ['brightness already has a movement in this phrase; one per axis']);
   const out = applyEdits(src, plan.edits);
@@ -281,6 +281,11 @@ test('locate reads a list of sound names as a list, not expr', async () => {
   const L = locate(`song({}, [section('a', 4, { melody: { sound: ['piano', 'kalimba'] }, pad: { sound: { piano: 2, harp: 1 } } })])`).sections[0].layers;
   assert.deepEqual(L.melody.mats.sound.value, ['piano', 'kalimba']);
   assert.deepEqual(L.pad.mats.sound.value, { piano: 2, harp: 1 });
+  const D = locate(`song({}, [section('a', 4, { drums: { sounds: { sd: ['sd', 'rim'], hh: 'hh' } } })])`).sections[0].layers.drums;
+  assert.deepEqual(D.mats.sounds.value, { sd: ['sd', 'rim'], hh: 'hh' }, 'a voice list inside sounds is data too, so the voice picks stay live');
+  const M = locate(`song({}, [section('a', 4, { drums: { sounds: { sd: "<sd rim>", hh: 'hh' } }, melody: { sound: ["a", 'b'] } })])`).sections[0].layers;
+  assert.equal(M.drums.mats.sounds.value, 'expr', 'a double-quoted voice is a mini pattern: the map is not rebuilt around it with single quotes');
+  assert.equal(M.melody.mats.sound.value, 'expr', 'the same inside a list');
 });
 
 test('setAxisText replaces any value, expression included, or inserts the key', async () => {
@@ -294,7 +299,7 @@ test('verbs: breakdown, lift, strip and halftime are resolver edits on a whole s
   const { applyVerb, locate } = await import('../lib/resolve.mjs');
   const src = `song({}, [section('a', 4, { drums: { density: .8 }, bass: { weight: .6 }, melody: { follow: true }, pad: { space: .5 }, fx: { riser: 2 } })])`;
   const b = applyVerb(src, 'a', 'breakdown');
-  assert.match(b.src, /drums: \{ density: \.45/, 'sparser: -.35'); assert.match(b.src, /space: \.85/); assert.match(b.src, /brightness: \.2/); assert.doesNotMatch(b.src, /fx:/); assert.deepEqual(b.report.removed, ['fx']);
+  assert.match(b.src, /drums: \{ density: \.45/, 'sparser: -.35'); assert.match(b.src, /space: \.85/); assert.match(b.src, /brightness: \.2/); assert.doesNotMatch(b.src, /fx:/); assert.deepEqual(b.removed, ['fx']);
   const s = applyVerb(src, 'a', 'strip');
   assert.deepEqual(Object.keys(locate(s.src).sections[0].layers), ['drums', 'bass']);
   const h = locate(applyVerb(src, 'a', 'halftime').src).sections[0].layers.drums;

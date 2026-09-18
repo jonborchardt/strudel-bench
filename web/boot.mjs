@@ -29,6 +29,14 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
   });
   // surface strudel's own error log lines (e.g. "sound not found")
   document.addEventListener('strudel.log', (e) => { if (e.detail.type === 'error') onError(e.detail.message); });
+  // superdough makes an orbit on its first hap, so a ducking hit (lib/song.mjs `duck`: duckorbit names the ducked part's
+  // orbit) whose target has not sounded yet finds none ("duck target orbit n does not exist") and nothing ducks: make the
+  // target on demand. On the controller's prototype, so the live scheduler, auditions, the Examples page and the controller
+  // Compose rebuilds on its offline render context are all covered. [0, 1] is superdough's default channel pair.
+  ready.then(() => {
+    const P = Object.getPrototypeOf(strudel.getSuperdoughAudioController()), duck = P.duck;
+    if (!P.ducksOnDemand) { P.ducksOnDemand = true; P.duck = function (targets, ...rest) { for (const t of [targets].flat()) this.getOrbit(t, [0, 1]); return duck.call(this, targets, ...rest); }; }
+  });
   return ready;
 }
 

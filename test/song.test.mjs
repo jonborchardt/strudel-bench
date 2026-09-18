@@ -142,7 +142,7 @@ test('duck: the named part carries duckorbit for every part that names it; the p
   await ready;
   const m = song({ cps: .5 }, [section('a', 1, { drums: {}, pad: { duck: 'drums', duckDepth: .8, drive: .9 }, bass: { duck: 'drums' } })]).strudel.sections[0].layers;
   const d = m.drums.pattern.queryArc(0, 1)[0].value;
-  assert.deepEqual(d.duckorbit, [m.pad.orbit, m.bass.orbit]); assert.equal(d.duckdepth, .5, 'one depth per source hap: the last part to name it wins (bass wrote none, so the default); write the same depth on both when it matters');
+  assert.deepEqual(d.duckorbit, [m.pad.orbit, m.bass.orbit]); assert.deepEqual(d.duckdepth, [.8, .5], 'a depth per target, in step with duckorbit (bass wrote none: the default)');
   assert.ok(m.pad.pattern.queryArc(0, 1).every((h) => h.value.gain === undefined || h.value.gain >= .45), 'no square-wave dip under a real duck');
   assert.throws(() => song({}, [section('a', 1, { pad: { duck: 'drums' } })]), /duck: no part "drums" in section "a"/);
   assert.throws(() => song({}, [section('a', 1, { pad: { duck: 'pad' } })]), /cannot duck itself/);
@@ -158,5 +158,8 @@ test('dropout silences every part but fx for the last n bars; sweep low-passes t
   const s = song({ cps: .5 }, [section('a', 4, { sweep: 2, drums: { density: .7 } })]).strudel.sections[0].layers.drums.pattern;
   const cut = (t) => s.queryArc(t, t + .01)[0].value.cutoff;
   assert.equal(cut(0), undefined, 'no filter in the head'); assert.ok(cut(2.01) > 7000 && cut(3.9) < 1000, 'sweeping down through the tail (8000 -> 150 over two bars)');
+  const dark = song({ cps: .5 }, [section('a', 4, { sweep: 2, drums: { density: .7, brightness: .1 } })]).strudel.sections[0].layers.drums.pattern;
+  const own = dark.queryArc(0, .01)[0].value.cutoff;
+  assert.ok(own < 2000 && dark.queryArc(2.01, 2.02)[0].value.cutoff === own, 'a part already darker than the sweep keeps its own cutoff at the sweep start'); assert.ok(dark.queryArc(3.9, 3.91)[0].value.cutoff < own, 'and closes further as the sweep passes it');
   assert.throws(() => song({}, [section('a', 4, { dropout: 5, drums: {} })]), /dropout/);
 });
