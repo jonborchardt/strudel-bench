@@ -1,0 +1,78 @@
+{
+  "prompt": "a breakbeat piece built on the sliced demo loop, showing every way the sample part can cut it",
+  "requests": [
+    {
+      "date": "2026-09-17",
+      "ask": "make a much more interesting example song",
+      "changes": [
+        {
+          "section": "shoreline",
+          "layer": "sample",
+          "why": "the loop as recorded, eight equal slices, filtered and far off so the break is the whole arrangement"
+        },
+        {
+          "section": "swell",
+          "layer": "sample",
+          "why": "halves: bar two swaps for a repeat of bar one every other pass, and the square bass enters on the octave leap"
+        },
+        {
+          "section": "undertow",
+          "layer": "sample",
+          "why": "the trimmed second bar only (begin .5) quartered, at its own bpm 99 so the break drops in pitch and gets heavy"
+        },
+        {
+          "section": "surge",
+          "layer": "sample",
+          "why": "quarters with one step doubled and the last alternating; fx riser into the climax and the marimba answers undertow's question"
+        },
+        {
+          "section": "breakwater",
+          "layer": "sample",
+          "why": "break points isolating the first kick and the first snare, played syncopated with stretch so the long slice is squeezed; piano hook, glockenspiel counter-line, impact on the downbeat"
+        },
+        {
+          "section": "backwash",
+          "layer": "sample",
+          "why": "the same eight slices with all but two deleted, space .9: the tide out"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "review: the climax chop isolates two kicks and no snare, and stretch transposes the slices wildly",
+      "changes": [
+        {
+          "section": "breakwater",
+          "layer": "sample",
+          "why": "break points .0625 .125 .1875 .25 .5 so slice 0 is the first kick and slice 2 the first snare (the decoded loop puts a snare at .125, not at .5); the pattern now plays kick on one, snare on two, snare and kick on the backbeat"
+        },
+        {
+          "section": "breakwater",
+          "layer": "sample",
+          "why": "every hit sits on an eighth-of-a-bar step and the half-bar slice on a half-bar step, so stretch locks the fit instead of transposing: every event is at the natural speed 0.275"
+        },
+        {
+          "section": "undertow",
+          "layer": "melody",
+          "why": "the phrase now ends on the fifth (5@2) rather than degree 2, so the question the surge answers is a real half-cadence"
+        },
+        {
+          "section": "backwash",
+          "layer": "progression",
+          "why": "VI VII i instead of repeating swell's i VI, so the release has its own harmonic move home"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "review: undertow's line ends on degree 5, which is the sixth, not the fifth",
+      "changes": [
+        {
+          "section": "undertow",
+          "layer": "melody",
+          "why": "the phrase ends on degree 4 (the fifth) instead of 5 (the sixth): '0 ~ 3 ~ 2 ~ 0@2 ~ 3 ~ 4 ~ 7 4@2', an open half cadence that surge's line answers on the root"
+        }
+      ]
+    }
+  ]
+}

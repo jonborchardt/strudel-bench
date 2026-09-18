@@ -1,7 +1,7 @@
 // Shared page bootstrap: initStrudel with the local packs (or the Strudel CDN on GitHub Pages), lib/ loaded into
 // the scope, and strudel's own error log routed to the caller. Both index.html and examples.html start here.
 import { dump } from '../lib/dump.mjs';
-import { packKind } from '../lib/packs.mjs';
+import { packKind, registerSamples } from '../lib/packs.mjs';
 
 /** The local packs this environment has (samples/user/packs.json): `{ name: { sounds, deploy, license } }`; on GitHub Pages only the deployed ones. */
 export const localPacks = {};
@@ -20,6 +20,7 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
         strudel.samples('samples/user/strudel.json'),
         fetch('samples/user/packs.json').then((r) => (r.ok ? r.json() : {})).then((idx) => Object.assign(localPacks, idx)),
       ]);
+      registerSamples(localPacks); // the packs' named sample definitions, so a part naming one resolves here as it does in the checker
       if (packs.includes('tidal-drum-machines')) strudel.aliasBank(local ? 'samples/packs/tidal-drum-machines-alias.json' : cdn.alias);
       await import('../lib/index.mjs');
       const user = Object.entries(localPacks).map(([n, p]) => `${n} (${packKind(p)})`);
@@ -54,8 +55,9 @@ export async function expandCode(ready, code) {
 
 /** Nav bar shared by every page; `page` marks the current one. */
 export function nav(page) {
-  const link = (href, name) => `<a href="${href}" class="${page === name ? 'on' : ''}">${name}</a>`;
-  return `<a class="brand" href="./">strudel-bench</a>${link('./', 'Compose')}${link('examples.html', 'Examples')}${link('about.html', 'About')}<span class="status" id="status"></span><span class="narrow" role="alert">Made for a desktop browser: this window is too narrow for the mix card and panes.</span>`;
+  const link = (href, name, extra = '') => `<a href="${href}" class="${page === name ? 'on' : ''}"${extra}>${name}</a>`;
+  // the sample workshop is local-only (it writes samples/user/), so it stays hidden until a page knows it has the server
+  return `<a class="brand" href="./">strudel-bench</a>${link('./', 'Compose')}${link('examples.html', 'Examples')}${link('samples.html', 'Samples', ' hidden')}${link('about.html', 'About')}<span class="status" id="status"></span><span class="narrow" role="alert">Made for a desktop browser: this window is too narrow for the mix card and panes.</span>`;
 }
 
 /** Site footer shared by every page: author line, links, copyright. */

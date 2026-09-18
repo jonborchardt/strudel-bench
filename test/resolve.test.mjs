@@ -196,3 +196,41 @@ test('setSectionField sets, replaces and drops a section key or progression', as
   assert.match(setSectionField(SRC, 'drop', 'key', "'E:minor'"), /section\('drop', 8, \{ key: 'E:minor',\n/, 'no role: first in the spec');
   assert.throws(() => setSectionField(`song({}, [section('a', 1, { key: K })])`, 'a', 'key', "'C:minor'"), /expression/);
 });
+
+test('addPack declares a pack in the song header: inserts, appends, or leaves an existing one alone', async () => {
+  await ready;
+  const { addPack } = await import('../lib/resolve.mjs');
+  const bare = `song({ cps: .5, key: 'C:minor' }, [section('a', 4, { drums: {} })])`;
+  assert.match(addPack(bare, 'mine'), /song\(\{ cps: \.5, key: 'C:minor', packs: \['mine'\] \}/);
+  const one = `song({ cps: .5, packs: ['demo-pack'] }, [section('a', 4, {})])`;
+  assert.match(addPack(one, 'mine'), /packs: \['demo-pack', 'mine'\]/);
+  assert.equal(addPack(one, 'demo-pack'), one, 'already declared: unchanged');
+  assert.match(addPack(`song({ packs: [] }, [section('a', 4, {})])`, 'x'), /packs: \['x'\]/, 'an empty list');
+  assert.throws(() => addPack(`song({ packs: P }, [section('a', 4, {})])`, 'x'), /expression/);
+  assert.throws(() => addPack(`s("bd")`, 'x'), /not a song/);
+});
+
+test('setSongField sets, replaces and drops a song header key; bpm and cps are exclusive', async () => {
+  await ready;
+  const { setSongField } = await import('../lib/resolve.mjs');
+  const bare = `song({ cps: .5, key: 'C:minor' }, [section('a', 4, { drums: {} })])`;
+  assert.match(setSongField(bare, 'bpm', '94'), /song\(\{ key: 'C:minor', bpm: 94 \}/, 'bpm inserted, cps dropped');
+  assert.match(setSongField(`song({ bpm: 120 }, [section('a', 4, {})])`, 'bpm', '94'), /song\(\{ bpm: 94 \}/, 'replaced');
+  assert.match(setSongField(`song({ bpm: 120, key: 'C:minor' }, [section('a', 4, {})])`, 'cps', '.5'), /song\(\{ key: 'C:minor', cps: \.5 \}/, 'cps drops bpm');
+  assert.match(setSongField(bare, 'key', "'E:minor'"), /song\(\{ cps: \.5, key: 'E:minor' \}/, 'another key is replaced in place');
+  assert.match(setSongField(bare, 'bpm', null), /song\(\{ cps: \.5, key: 'C:minor' \}/, 'removing what is not there leaves the header alone');
+  assert.match(setSongField(bare, 'cps', null), /song\(\{ key: 'C:minor' \}/, 'removed with its separator');
+  assert.match(setSongField(`song({}, [section('a', 4, {})])`, 'bpm', '94'), /song\(\{ bpm: 94 \}/, 'an empty header');
+  assert.throws(() => setSongField(`song({ bpm: B }, [section('a', 4, {})])`, 'bpm', '94'), /expression/);
+  assert.throws(() => setSongField(`song({ cps: sine }, [section('a', 4, {})])`, 'bpm', '94'), /bpm cannot replace cps here: cps is an expression, change it by hand/, 'the exclusive sibling names both keys');
+  assert.throws(() => setSongField(`s("bd")`, 'bpm', '94'), /not a song/);
+});
+
+test('locate reads an array of numbers as a material value; setMaterial rewrites it', async () => {
+  await ready;
+  const { locate, setMaterial } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { sample: { sound: 'loop', slices: [.06, .5], pattern: '0 1 2' } })])`;
+  assert.deepEqual(locate(src).sections[0].layers.sample.mats.slices.value, [.06, .5]);
+  assert.match(setMaterial(src, 'a', 'sample', 'slices', '[.1, .2, .3]'), /slices: \[\.1, \.2, \.3\], pattern/);
+  assert.equal(locate(`song({}, [section('a', 4, { sample: { slices: [.1, x] } })])`).sections[0].layers.sample.mats.slices.value, 'expr', 'a non-literal element is an expression');
+});

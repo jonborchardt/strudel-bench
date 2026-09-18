@@ -1,0 +1,82 @@
+// breakwater: a breakbeat piece in F minor whose lead voice is a sliced sample, not a synth. One two-bar drum loop
+// (demo-pack/loop.wav) is cut a different way in every section - whole, halved, a trimmed second bar dragged at its
+// own tempo, quarters, a break-point chop on the isolated kick and snare, then one hit a bar - so the arrangement is
+// the editing, and the written bass, marimba hook and pad only answer what the break is doing. The tide goes out at
+// the end: the same loop, almost all of it deleted.
+// shoreline -> swell -> undertow -> surge -> breakwater -> backwash. 52 bars (54.7 cycles: undertow's eight bars
+// run at its own slower tempo, so they take longer than eight cycles of the song).
+// Axis values are 0..1 with 0.5 = the layer's baseline.
+
+// the break itself: the whole file, two bars, eight equal slices. Sections override slices/pattern/region.
+const brk  = { sound: 'loop', bars: 2, slices: 8, pattern: '0 1 2 3 4 5 6 7' };
+// the answering voices, kept constant so the sample is what changes
+const low  = { sound: 'square', register: .25, weight: .75, articulation: .6, brightness: .35 };
+const lead = { sound: 'marimba', follow: true, phrase: 2, register: .55, articulation: .45, space: .5, width: .55 };
+const wash = { register: .4, articulation: .15, space: .8, brightness: .3, level: .7 };
+
+song({ bpm: 132, key: 'F:minor', seed: 19, kit: 'RolandTR909', packs: ['demo-pack'] }, [
+
+  // the loop as recorded, filtered and far off: the break is the whole arrangement, and nothing answers it yet.
+  section('shoreline', 8, { role: 'establish', progression: 'i',
+    sample: { ...brk, level: .55, brightness: .3, weight: .4, space: .8, width: .4 },
+    pad:    { ...wash, density: .25, space: .95, brightness: .15, level: .5 },
+  }),
+
+  // halves: bar two of the loop swaps for a repeat of bar one every other pass, so the break starts to stutter.
+  // The bass enters on the octave leap; the hats of the drums layer sit under the loop rather than over it.
+  section('swell', 8, { role: 'develop', progression: 'i VI',
+    sample: { ...brk, slices: 2, pattern: '0 <1 0>', level: .8, brightness: .5, weight: .55, space: .55, width: .5 },
+    drums:  { template: 'minimal', density: .35, brightness: .25, space: .5, level: .6 },
+    bass:   { ...low, density: .8, notes: '0 ~ ~ 0 ~ 7 ~ 3', drive: .4 },
+    pad:    { ...wash, density: .4, space: .8 },
+  }),
+
+  // the undertow: only the second bar of the file (begin .5), quartered, at three quarters of the tempo. Slower cps
+  // means a slower playback rate, so the break drops in pitch and gets heavy - the one section with its own bpm.
+  section('undertow', 8, { role: 'develop', bpm: 99, progression: 'i VII VI VII',
+    sample: { ...brk, begin: .5, end: 1, bars: 1, slices: 4, pattern: '0 1 [2 2] 3', level: .9, brightness: .35, weight: .85, space: .6, width: .6 },
+    drums:  { template: 'halftime', density: .4, weight: .7, brightness: .2, articulation: .3, space: .65, level: .7 },
+    bass:   { ...low, density: .8, notes: '0 ~ ~ ~ 3 ~ 0 ~', weight: .9, register: .15, brightness: .25 },
+    melody: { ...lead, density: .45, notes: '0 ~ 3 ~ 2 ~ 0@2 ~ 3 ~ 4 ~ 7 4@2', brightness: .4, space: .7, level: .7 },
+    pad:    { ...wash, density: .35, brightness: .2, space: .85 },
+  }),
+
+  // back to tempo and up a gear: quarters of the loop, one of them doubled, the last alternating - the break is being
+  // played now, not played back. Riser into the climax; the marimba answers the undertow question and lands home.
+  section('surge', 8, { role: 'develop', progression: 'i VI VII',
+    sample: { ...brk, slices: 4, pattern: '0 1 [2 0] <3 2>', level: .95, brightness: .65, weight: .6, space: .4, width: .6 },
+    drums:  { template: 'breaks', density: .62, drive: .6, brightness: .55, articulation: .6 },
+    bass:   { ...low, density: .8, notes: '0 ~ 0 7 ~ 3 ~ 0', drive: .6, brightness: .5 },
+    melody: { ...lead, density: .6, notes: '0 ~ 3 2 ~ 4 3@2 ~ 5 4 3 ~ 2 0@2', brightness: .6 },
+    pad:    { ...wash, density: .5, brightness: .45, space: .6 },
+    fx:     { riser: 4 },
+  }),
+
+  // the climax, and the reason for the break points: the file is two bars, so 1/16 of it is one eighth note. The
+  // list cuts at .0625 .125 .1875 .25 .5, giving slice 0 = the first kick, 1 = the gap after it, 2 = the first snare,
+  // 3 = the gap after that and 4 = the second half of bar one, its kick and snare together. (The last break at .5
+  // leaves bar two as slice 5; this chop never reaches for it - bar two is what the other sections play.)
+  // So the pattern can play a real groove out of order: kick on one, snare on two, snare and kick on the backbeat.
+  // Every hit sits on an eighth-of-a-bar step and slice 4 on a half-bar step - each step is exactly as long as the
+  // slice is, so stretch only locks the fit and every hit still plays at its own pitch (speed .275, as everywhere
+  // else in the song). stretch is the timing, not a transposition.
+  section('breakwater', 12, { role: 'climax', progression: 'i VI III VII',
+    sample:  { ...brk, slices: [.0625, .125, .1875, .25, .5], pattern: '[0 ~] [2 0] [~ 0] [2 <0 2>] [0 ~] [2 0] 4@2', stretch: true,
+               level: 1.1, brightness: .8, weight: .8, space: .45, width: .75 },
+    drums:   { template: 'breaks', density: .9, drive: .85, articulation: .8, brightness: .7, weight: .7, variation: .35 },
+    bass:    { ...low, density: .8, notes: '0 0 7 ~ 5 ~ 3 0', weight: .9, drive: .7, aggression: .55, brightness: .6 },
+    melody:  { ...lead, sound: 'piano', density: .65, notes: '0 3 ~ 5 4 3@2 ~ 7 ~ 5 4 3 ~ 0@2', brightness: .8, width: .8, level: 1.1 },
+    melody2: { sound: 'glockenspiel', follow: true, notes: '~ ~ 7 ~ ~ ~ 5 ~', register: .85, density: .4, level: .5, space: .7, width: .8 },
+    pad:     { ...wash, density: .6, brightness: .6, width: .8, space: .5, level: .8 },
+    fx:      { impact: true },
+  }),
+
+  // the tide out: the same eight slices, all but two of them deleted, wide open room. Nothing answers but the pad
+  // and one falling marimba phrase that ends on the root.
+  section('backwash', 8, { role: 'release', progression: 'VI VII i',
+    sample: { ...brk, pattern: '0 ~ ~ ~ 4 ~ ~ ~', level: .7, brightness: .35, weight: .5, space: .9, width: .8 },
+    melody: { ...lead, density: .4, phrase: 1, notes: '0 ~ ~ 3 2 ~ 0@2', brightness: .35, space: .85, level: .6 },
+    pad:    { ...wash, density: .35, space: .95, brightness: .2, level: .6 },
+  }),
+
+])

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AXIS_NAMES } from '../lib/axes.mjs';
 import { layerBase } from '../lib/song.mjs';
-import { checkFile } from './check.mjs';
+import { checkFile, missingPackOnly } from './check.mjs';
 
 const DEFAULT_SOUND = { bass: 'sawtooth', melody: 'sawtooth', pad: 'sawtooth', fx: 'white' }; // what a part plays when it names no sound (lib/layers.mjs)
 const SAW = new Set(['sawtooth', 'saw', 'supersaw']);
@@ -41,7 +41,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const files = process.argv.slice(2).length ? process.argv.slice(2) : fs.readdirSync(path.join(ROOT, 'songs')).filter((f) => f.endsWith('.strudel')).map((f) => path.join(ROOT, 'songs', f));
   let bad = 0;
   for (const f of files) {
-    const findings = lint(await checkFile(f));
+    const r = await checkFile(f);
+    if (files.length > 1 && missingPackOnly(r)) { // as in check.mjs: scanning them all, a song whose pack is not here is skipped
+      console.log(`== ${path.relative(ROOT, f)} skipped: ${r.problems[0].replace(/^[^:]+: /, '')}`);
+      continue;
+    }
+    const findings = lint(r);
     console.log(`== ${path.relative(ROOT, f)}: ${findings.length ? `${findings.filter((x) => x.level === 'error').length} errors, ${findings.filter((x) => x.level === 'warn').length} warnings` : 'clean'}`);
     for (const x of findings) console.log(`  ${x.level === 'error' ? '✖' : '!'} ${x.section ? x.section + ': ' : ''}${x.text}`);
     if (findings.some((x) => x.level === 'error')) bad++;

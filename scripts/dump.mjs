@@ -3,6 +3,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { userPacks } from '../server.mjs';
+import { registerSamples } from '../lib/packs.mjs';
 console.log = () => {}; // strudel prints load banners to stdout; only the dump belongs there
 const { ensureScope } = await import('./check.mjs'); // runs esm-fix before the dynamic strudel imports below
 const core = await import('@strudel/core');
@@ -13,6 +15,7 @@ const { dump } = await import('../lib/dump.mjs');
 
 export async function dumpFile(file) {
   await ensureScope();
+  registerSamples(userPacks()); // a sample part may name a pack definition; the dump prints the pack sound it resolves to
   return dump(fs.readFileSync(file, 'utf8'), { modules: [core, mini, tonal], Pattern: core.Pattern, evaluate: (code) => core.evaluate(code, transpiler) });
 }
 

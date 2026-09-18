@@ -1,0 +1,139 @@
+{
+  "prompt": "Someone running from a monster while a voice tells them where to go; they hide, then have to run again. Built to exercise sample definitions and a shared sample pack with break points.",
+  "requests": [
+    {
+      "date": "2026-09-17",
+      "ask": "make sharable samples from the voice recordings and a scary chase song that uses them",
+      "changes": [
+        {
+          "section": "pack",
+          "why": "voice: 8 phrase sounds, each trimmed in pack.json to the shouted words so bars 1 at cps .5 drops the line on the downbeat at its recorded speed; back-chop and out-chop add break points between the words for the climax"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "the sounds are slowed way down... is that an issue with how we do things",
+      "changes": [
+        {
+          "section": "voice",
+          "why": "pack bars 1>0.5 -- the takes are stereo and about 1.0 s of speech, which is half a bar at this tempo, not a whole one; the first pass sized every region against a file duration read as mono, so every line played at exactly half speed. Voice patterns doubled their rest counts to keep their placement, and the climax chops dropped stretch so the words stay words."
+        }
+      ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "9 pinned notes: alley/chase directions too repetitive, more immediacy at chase bar 14, nothing said twice in hide, run melody too happy and too common, run drums too spatish, make bar 14 of run feel like they should run, found should not repeat and should feel defeated",
+      "changes": [
+        {
+          "section": "voices:",
+          "why": "one sound per part means variety is extra parts. alley 4 turns on 3 words, chase on co-prime periods 7/5/11 half-bars so the order never repeats and all three land on bar 14, hide 3 warnings one each, found says hes here then go back then stops"
+        },
+        {
+          "section": "run",
+          "layer": "melody",
+          "why": "glockenspiel>vibraphone_bowed, notes rising 7-10-12 > falling 7-6-5-4-2, register .35: the old line was the bright motif used in other songs here"
+        },
+        {
+          "section": "run",
+          "layer": "fx",
+          "why": "riser removed - the reverbed noise sweep over bars 12-16 was the spacious wash, and a riser inside the drop is the cliche. urgency now comes from the chops closing up (bars 0,2,4,6,9,11,12,13,14,15,15.5). run.drums.brightness .6>.42 closes the hats 20000>11950 Hz"
+        },
+        {
+          "section": "found:",
+          "why": "progression i i VI i > i VII VI v so it sinks instead of resolving, drums level .5>.35, a low bass drone added; section rms 0.029 against runs 0.33"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "no.. less spastic (the run drums, not spacious)",
+      "changes": [
+        {
+          "section": "run",
+          "layer": "drums",
+          "axis": "articulation",
+          "from": 0.75,
+          "to": 0.45,
+          "why": "-- past .6 the hats choke and release falls to 0.02-0.05 s, so every hit clicked and cut the one before it; rendered decay tail 0.041>0.115"
+        },
+        {
+          "section": "run",
+          "layer": "drums",
+          "axis": "density",
+          "from": 0.95,
+          "to": 0.82,
+          "why": "-- under .85 drops the clap, so four voices carry it instead of five; 36>26 onsets per cycle. chase.drums.articulation .6>.55 to get it off the same choke threshold"
+        },
+        {
+          "section": "found",
+          "layer": "drums",
+          "axis": "density",
+          "from": 0.08,
+          "to": 0.12,
+          "why": "-- .08 was under bd's own .1 threshold so the section had no drums at all; .12 leaves a bare kick"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "'go right' is hard, louder and harder than left, so it should be used differently. change pad sound on run and maybe elsewhere to harp",
+      "changes": [
+        {
+          "section": "voice",
+          "why": "takes are not interchangeable: 18 dB between softest and loudest in the pack. right:1 is +7.9 dB over left:0 and was on the most frequent period (6 calls a section); it is now a single call at chase bar 14, shouted over left and forward as they converge. alley uses right:0 (-2.1 dB) instead, nothing being urgent yet"
+        },
+        {
+          "section": "found",
+          "layer": "sample",
+          "why": "here:0>here:1 -- here:0 is the quietest take in the pack (-6.2 dB) and it was carrying the reveal. take 2 delivers the line, level .5 keeps it in a defeated mix. the take picks the performance, level places it"
+        },
+        {
+          "section": "run",
+          "layer": "pad",
+          "why": "psaltery_bow>harp with arp down; plucked it renders 2.8 dB under the bowed pad, so level 1.4 puts it back at parity (rms .0191 vs .0190)"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-17",
+      "ask": "choose a new key for the song. i want scary, not upbeat",
+      "changes": [
+        {
+          "section": "key",
+          "why": "C:minor>E:phrygian. minor was not the problem -- the progressions were: run's i VI III WII in C minor is Cm Ab Eb Bb, and Ab-Eb-Bb is IV-I-V in the relative major, so the climax was reading as a bright pop cadence"
+        },
+        {
+          "section": "progressions",
+          "why": "rewritten off the bright degrees (III, VI) and onto the phrygian b2 and the diminished v: alley i i II i (Em Em F Em), chase i II i v (Em F Em Bdim), run i II iv v (Em F Am Bdim), found i i vii v (Em Em Dm Bdim). hide stays a static Em drone. the only major chord left anywhere is the bII"
+        },
+        {
+          "section": "checked",
+          "why": "the third up did not brighten the mix: rendered run centroid 2016>2033 Hz, highRatio .217>.218 -- the change is harmonic, not spectral"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-18",
+      "ask": "i want the song to have more depth, more parts, more complex... its too basic in all respects. use yamahary30 for the bass drum sound, more heartbeat",
+      "changes": [
+        {
+          "section": "28",
+          "why": "to 55 part instances, 23 distinct sounds. the structural idea is two forces: the runner follows the harmony (harp theme, bowed vibraphone counter-figure, both phrasing over two bars) and the thing hunting does not (follow:false didgeridoo holding E and F, tonic and phrygian b2, against whatever chord is underneath)"
+        },
+        {
+          "section": "the",
+          "why": "plain E/F alternation landed on chord tones in every bar of chase and run, so it reinforced the harmony instead of grinding; inverted it (grind const) to put the b2 on the tonic chord -- min2, maj7, b6, 4th across the four bars"
+        },
+        {
+          "section": "added",
+          "why": "lib/grid.mjs TEMPLATES.heartbeat (bd x..x....x..x....): no template could express a lub-dub. drums2 uses it with sounds.bd YamahaRY30_bd, named bank-and-all so it plays bare instead of through the song's 909"
+        },
+        {
+          "section": "mix:",
+          "why": "the climax was clipping 2.90 percent of samples before any of this, which is the opposite of depth. uniform trims (run x0.7, chase x0.78, alley x0.75) instead of spot cuts, so the voice balance survives: run 2.90>0.23 percent, and the rms arc is now monotone .148 .209 .151 .228 .088"
+        }
+      ]
+    }
+  ]
+}

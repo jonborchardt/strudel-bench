@@ -377,8 +377,52 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .matrow label.seed .pv { color: #ccc; background: none; border: 0; padding: 0 .2rem; }
 .matrow button.next { min-width: 0; margin-left: .2rem; }
 
+/* the sampler row (a sample part in materials): the waveform with the used region lit and a line per slice, its trim sliders, a button per slice */
+.matrow .wave { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .8rem; width: 100%; }
+.matrow .wave canvas { display: block; width: 100%; height: 72px; background: #131316; border: 1px solid #111; border-radius: 4px; cursor: crosshair; touch-action: none; }
+.matrow .wave label { gap: .4rem; min-width: 14rem; }
+.matrow .wave label.snap { min-width: 0; }
+.matrow .wave input[type=range] { flex: 1; min-width: 8rem; accent-color: var(--accent); }
+.matrow .wave output { min-width: 3.6rem; font-variant-numeric: tabular-nums; color: #9a9aa2; }
+.matrow .wave .slices { display: flex; gap: .15rem; flex-wrap: wrap; }
+.matrow .wave button.sl { min-width: 1.8rem; padding: .1rem .3rem; font: inherit; font-size: .8rem; border: 1px solid #111; border-radius: 4px; background: #1e1e22; color: #eee; box-shadow: inset 0 1px 0 #3c3c42, 0 1px 0 #48484e; }
+.matrow .wave button.sl.on { background: var(--accent); border-color: var(--accent); }
+.matrow .wave .info { color: #77777f; }
+.matrow .wave .info .unsure { opacity: .6; font-style: italic; } /* a detection nothing periodic really supports */
+.matrow .wave .info button.pick { min-width: 0; padding: 0 .3rem; margin-left: .2rem; }
+.matrow .inh, .matrow input.inh { color: #77777f; } /* a value the part inherits from its pack's sample definition */
+
 /* the transition out of a block: riser bars and the next section's hit, two small picks on the block's last line */
 .strip .blk .tr { display: flex; gap: .2rem; margin-top: 3px; }
 .strip .blk .tr button { flex: 1 1 0; min-width: 0; padding: 0 .3rem; font-size: .62rem; line-height: 1.5; border: 1px solid #111; border-radius: 3px; background: #1e1e22; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: inset 0 1px 0 #3c3c42; }
 .strip .blk .tr button i { display: inline; height: auto; background: none; box-shadow: none; color: #77777f; font-style: normal; } /* a placeholder, not a density bar */
 .strip .blk .tr button:hover { color: #fff; border-color: #444; }
+
+/* the sample workshop (samples.html, local only): packs on the left, one definition's waveform and form on the right */
+.workshop { grid-template-columns: 16rem 1fr; align-items: start; }
+.workshop #packs h2, .workshop #packs h3 { margin: 0 0 .4rem; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; }
+.workshop .wpack { margin-bottom: .8rem; }
+.workshop .wpack h3 { display: flex; align-items: baseline; gap: .4rem; }
+.workshop .wpack h3 button { font: inherit; padding: 0; border: 0; background: none; color: var(--ink); cursor: pointer; text-transform: none; letter-spacing: 0; }
+.workshop .wpack.on h3 button { color: var(--accent); }
+.workshop .wpack small { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+.workshop .wpack ul { list-style: none; margin: 0; padding: 0 0 0 .3rem; font-size: .85rem; }
+.workshop .wpack li button { font: inherit; padding: .05rem .25rem; border: 0; border-radius: 3px; background: none; color: var(--ink); cursor: pointer; text-align: left; }
+.workshop .wpack li.snd button { color: var(--muted); } /* a pack sound: the file, not a definition of it */
+.workshop .wpack li.sel button { background: var(--accent); color: var(--accent-ink); }
+.workshop .wpack li.bad { color: var(--err); padding: .1rem .25rem; }
+.workshop .drop { margin: .3rem 0 0; padding: .4rem; border: 1px dashed var(--line); border-radius: 4px; color: var(--muted); font-size: .8rem; text-align: center; }
+.workshop .drop input { display: block; width: 100%; margin-top: .3rem; font: inherit; font-size: .75rem; }
+.workshop #newpack { display: grid; gap: .3rem; padding-top: .6rem; border-top: 1px solid var(--line); }
+.workshop #newpack input { font: inherit; font-size: .85rem; padding: .2rem .4rem; border: 1px solid var(--line); border-radius: 4px; }
+.workshop #editor { display: grid; gap: .2rem; }
+.workshop #editor[hidden] { display: none; } /* the id rule above would otherwise beat the hidden attribute (no pack selected) */
+.workshop #wave { display: block; width: 100%; height: 160px; background: #131316; border: 1px solid #111; border-radius: 4px; cursor: crosshair; touch-action: none; }
+.workshop #editor .info { color: #77777f; font-size: .85rem; min-height: 1.2em; }
+.workshop #editor .info .unsure { opacity: .6; font-style: italic; }
+.workshop #editor .info button.pick { min-width: 0; padding: 0 .3rem; }
+.workshop #editor .slices { display: flex; gap: .15rem; flex-wrap: wrap; }
+.workshop #editor button.sl { min-width: 1.8rem; padding: .1rem .3rem; font: inherit; font-size: .8rem; border: 1px solid #111; border-radius: 4px; background: #1e1e22; color: #eee; box-shadow: inset 0 1px 0 #3c3c42, 0 1px 0 #48484e; }
+.workshop #editor button.sl.on, .workshop #editor button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.workshop #wstatus { min-height: 1.2em; color: #9a9aa2; font-size: .85rem; }
+@media (max-width: 60rem) { .workshop { grid-template-columns: 1fr; } }

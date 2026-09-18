@@ -176,3 +176,8 @@ test('half-typed source does not throw and keeps the controls it can still see',
   const partial = controlsOf(state(`section('a', 4, { drums: { density: .7, `));
   assert.ok(partial.some((c) => c.path === 'drums.density' && c.value === 0.7), 'the finished literal is still a control mid-edit');
 });
+
+test('a sample part has sliders for its region, spinners for bars and slices, a toggle for stretch; the pattern is free', () => {
+  const paths = controls(`section('a', 4, { sample: { sound: 'loop', begin: .1, end: .9, bars: 2, slices: 8, pattern: '0 1', stretch: true } })`).map((c) => c.path);
+  assert.deepEqual(paths, ['section(1)', 'sample.sound', 'sample.begin', 'sample.end', 'sample.bars', 'sample.slices', 'sample.stretch']);
+});

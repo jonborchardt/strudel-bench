@@ -1,0 +1,143 @@
+// @hidden
+// hunted: someone is running from something, and a voice on the radio tells them where to go.
+//
+// The `voice` pack this needs is not in the repo: the takes are licensed from GameDevMarket, whose Licence (A) 4.2(b)
+// forbids redistributing the asset other than as part of a media product, so they are gitignored and the pack never
+// deploys. On any other machine this song reports `missing pack "voice"` and is skipped by the checker and the build.
+//
+// Two things play at once and they do not agree. The runner follows the harmony -- harp and bowed vibraphone,
+// moving, phrasing over two bars, always reaching back for the tonic. The thing hunting does not follow it at all
+// (`follow: false`): it holds degree 0 and degree 1, E and F, the tonic and the phrygian b2, against whatever chord
+// is underneath. That semitone is what the mode is for, and it is the whole score in one interval. In `found` the
+// thing stops alternating and simply holds the F.
+//
+// The voice comes from samples/user/voice, a shared pack: one folder per phrase, two or three takes inside each, so
+// `forward` is a sound with variants and `forward:1` is the second take. The pack's pack.json trims every take to the
+// shouted words (begin/end are fractions of the file) and calls that region half a bar -- each shout is about a
+// second, and a bar here is two -- so `bars: 0.5` is what makes it play at its recorded speed.
+//
+// bars is also the pattern's span, so one step of a voice pattern below is half a bar, not a whole one, and `~!6` is
+// six rests: `<0 ~!6>` is a shout every seven half-bars. A part can only hold one sound, so a line of different
+// directions is several parts laid over each other. In chase left and forward run on co-prime periods (7 and 5
+// half-bars) so the order never repeats, and they converge on bar 14.
+//
+// The takes are not interchangeable: there is 18 dB between the softest and the loudest in this pack. 'go right'
+// take 2 is the hardest direction in it (+7.9 dB over 'go left' take 1), so it is not a routine call -- it is kept
+// for bar 14, shouted over the other two, and 'get out of there' (+12.3 dB, the loudest thing here) only ever lands
+// where the section breaks. The take picks how the line is delivered; `level` places it in the mix.
+//
+// `back-chop` and `out-chop` are the same takes with break points between the words -- slices as a list of fractions
+// of the file, not a count -- so 'go / back' and 'get / out of there' can be re-ordered and stuttered once the runner
+// stops being given time to listen. They are left unstretched: a slice keeps its own length, so the words stay words.
+
+// --- the runner: follows the harmony, phrases over two bars, keeps reaching for the tonic
+const theme   = { sound: 'harp', follow: true, phrase: 2, notes: '0 ~ 1 0 ~ ~ ~ ~ 4 ~ 3 ~ 1 ~ 0@2', register: .6, articulation: .5, space: .6, width: .6, brightness: .45 };
+const answer  = { ...theme, notes: '0 ~ 1 0 ~ 1 ~ ~ 4 ~ 5 4 ~ 1 0@2' };
+const broken  = { ...theme, notes: '0 ~ 1 0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~' };
+// a counter-figure, not a second theme: it enters where the theme rests and leans on 5, the b6
+const glass   = { sound: 'vibraphone_bowed', follow: true, phrase: 2, notes: '~ ~ ~ ~ 4 ~ 5 ~ ~ ~ ~ ~ 6 ~ 5@2', register: .5, articulation: .2, space: .75, width: .7, brightness: .35, level: .7 };
+const chimes  = { sound: 'handchimes', follow: false, notes: '~ ~ 1 ~ ~ ~ ~ ~', register: .85, articulation: .35, space: .95, width: .85, level: .45 };
+
+// --- the thing: follow false, so the chords move under it and it does not. 0 and 1 are E and F.
+const stalker = { sound: 'didgeridoo', follow: false, phrase: 2, notes: '0@6 ~ ~ 1@6 ~ ~', register: .15, brightness: .12, articulation: .1, space: .4, width: .3 };
+// inverted, so the b2 lands on the tonic chord instead of on its own: over Em F Am Bdim that is a minor 2nd,
+// a major 7th, a b6 and a 4th -- dissonant in every bar, where the plain alternation happened to be chord tones
+const grind   = { ...stalker, notes: '1@6 ~ ~ 0@6 ~ ~' };
+const held    = { ...stalker, notes: '1@8 1@8' }; // it stops alternating: the b2, and it stays there
+const toll    = { sound: 'gong', follow: false, phrase: 2, notes: '0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~', register: .3, articulation: .1, space: 1, width: .9, brightness: .25, level: .45 };
+
+// --- the room
+const drone   = { sound: 'pipeorgan_quiet', articulation: .05, space: .85, width: .5, weight: .8, register: .2, brightness: .15, level: .7 };
+const strings = { sound: 'psaltery_bow', articulation: .1, space: .8, width: .85, weight: .6, brightness: .3 };
+const breath  = { sound: 'wineglass_slow', articulation: .15, space: .95, width: .9, register: .75, brightness: .45, level: .35 };
+
+// --- a heartbeat that only exists once they stop moving. the RY30 kick is big and clean enough to read as a body
+// rather than a drum machine; `sounds` names it bank-and-all so it plays bare instead of through the song's 909.
+// density stays under .3 so no other voice joins it: a heart is one sound.
+const heart   = { template: 'heartbeat', sounds: { bd: 'YamahaRY30_bd' }, space: .8, brightness: .2, articulation: .3, variation: 0 };
+
+song({ cps: .5, key: 'E:phrygian', seed: 13, kit: 'RolandTR909', packs: ['voice'] }, [
+
+  // out in the open, moving but not yet chased: four turns called, never the same twice, and something already
+  // underneath that is not moving with the chords
+  section('alley', 8, { role: 'establish', progression: 'i i II i',
+    drums:   { density: .3, space: .7, brightness: .3, articulation: .35, level: .6 },
+    bass:    { weight: .5, density: .3, brightness: .3, notes: '0 ~ ~ ~ 0 ~ ~ ~', level: .52 },
+    melody:  { ...theme, density: .3, level: .45, brightness: .35 },
+    melody2: { ...stalker, density: .3, level: .26 },
+    pad:     { ...drone, density: .3, brightness: .12, level: .52 },
+    pad2:    { ...strings, density: .3, brightness: .2, register: .3, level: .38 },
+    sample:  { sound: 'forward',   pattern: '<0 ~!15>',     space: .7, brightness: .45, level: .75 },
+    sample2: { sound: 'left',      pattern: '<~!5 0 ~!10>', space: .7, brightness: .45, level: .75 },
+    sample3: { sound: 'right',     pattern: '<~!11 0 ~!4>', space: .7, brightness: .45, level: .75 }, // take 1: the quiet 'right', nothing is urgent yet
+    sample4: { sound: 'forward:1', pattern: '<~!14 0 ~>',   space: .7, brightness: .45, level: .75 },
+  }),
+
+  // it has our scent. left and forward on co-prime periods, so the turns come in an order that never settles; at bar
+  // 14 they land together and 'go right' -- the hardest take in the pack -- arrives over the top, its only appearance.
+  // the riser takes the last four bars, then 'get out of there' on the way out
+  section('chase', 16, { role: 'develop', progression: 'i II i v',
+    drums:   { density: .7, drive: .65, articulation: .55, brightness: .55, variation: .5, weight: .42, level: .78 },
+    bass:    { weight: .6, density: .65, brightness: .45, notes: '0 ~ 0 0 ~ 3 ~ 0', level: .66 },
+    melody:  { ...theme, density: .5, brightness: saw.range(.3, .55).slow(8), level: .59 },
+    melody2: { ...glass, density: .4, brightness: .3, level: .47 },
+    melody3: { ...grind, density: .5, level: .43 },
+    pad:     { ...drone, density: .5, brightness: .18, level: .55 },
+    pad2:    { ...strings, density: .5, brightness: .25, register: .35, level: .47 },
+    fx:      { riser: 4, level: .78 },
+    sample:  { sound: 'left',      pattern: '<0 ~!6>',      space: .6, brightness: .5, level: .78 },  // period 7
+    sample2: { sound: 'forward:1', pattern: '<~!3 0 ~>',    space: .6, brightness: .5, level: .59 },  // period 5
+    sample3: { sound: 'right:1',   pattern: '<~!28 0 ~!3>', space: .6, brightness: .5, level: .62 },  // bar 14 only
+    sample4: { sound: 'out',       pattern: '<~!31 0>',     space: .55, brightness: .55, level: .55 },
+  }),
+
+  // pressed into a doorway, not breathing. the kit stops and a timpani heartbeat takes over; the thing is close
+  // enough now to be the loudest voice in the section, and it is still not following the chords
+  section('hide', 8, { role: 'release', progression: 'i i i i',
+    drums:   { density: .12, space: .9, brightness: .2, articulation: .2, level: .4 },
+    drums2:  { ...heart, density: .25, level: .4 }, // felt, not dominant: at .9 it doubled the section's rms
+    melody:  { ...chimes, density: .25, level: .4 },
+    melody2: { ...stalker, density: .5, level: .8, brightness: .15 },
+    pad:     { ...drone, density: .3, brightness: .1, level: .6 },
+    pad2:    { ...strings, density: .3, brightness: .15, register: .25, level: .5 },
+    pad3:    { ...breath, density: .25, level: .3 },
+    sample:  { sound: 'down',   pattern: '<0 ~!15>',    space: .85, brightness: .3,  weight: .35, level: .6 },
+    sample2: { sound: 'coming', pattern: '<~!6 0 ~!9>', space: .9,  brightness: .25, weight: .4, level: .9 },
+    sample3: { sound: 'out',    pattern: '<~!14 0 ~>',  space: .7,  brightness: .45, weight: .6, level: .8 },
+  }),
+
+  // found. the chops arrive at bars 0, 2, 4, 6, then 9, 11, 12, 13, 14, 15, 15.5: the gaps close until there is no
+  // time left to listen. no riser here: a reverbed noise sweep over the last four bars washed the kit out and made
+  // the drop announce itself. the acceleration is the build. the kit drives rather than twitches: density under .85
+  // drops the clap so four voices carry it, and articulation under .6 lets the hats ring instead of choking
+  section('run', 16, { role: 'climax', progression: 'i II iv v',
+    drums:   { density: .82, drive: .9, articulation: .45, brightness: .42, variation: .45, weight: .62, level: .7 },
+    drums2:  { ...heart, density: .28, level: .22, space: .5 },
+    bass:    { weight: .7, density: .8, brightness: .55, notes: '0 0 7 0 3 0 ~ 10', level: .56 },
+    melody:  { ...answer, density: .7, brightness: .6, level: .56, register: .55 },
+    melody2: { ...glass, density: .6, brightness: .4, level: .5 },
+    melody3: { ...grind, density: .7, level: .42, brightness: .18 },
+    melody4: { ...toll, density: .5, level: .35 },
+    pad:     { sound: 'harp', arp: 'down', space: .5, brightness: .6, width: .85, level: .77 }, // plucked: 2.8 dB under the bowed pad it replaced, so level puts it back
+    pad2:    { ...drone, density: .7, brightness: .25, weight: .75, level: .32 },
+    pad3:    { ...strings, density: .6, brightness: .35, register: .4, level: .39 },
+    fx:      { impact: true, level: .7 },
+    sample:  { sound: 'out-chop',  pattern: '<[0 0 ~ 1] ~!7 [0 0 ~ 1] ~!9 [0 0 ~ 1] ~!5 [0 0 ~ 1] ~!3 [0 0 ~ 1] ~ [0 0 ~ 1] ~>', space: .5, brightness: .65, level: .42 },
+    sample2: { sound: 'back-chop', pattern: '<~!4 [0 1 2 ~] ~!7 [0 1 2 ~] ~!9 [0 1 2 ~] ~!3 [0 1 2 ~] ~!4 [0 1 2 ~]>', space: .42, brightness: .6, level: .77 }, // back take 1 is -5.4 dB, the quietest chop source; the break points do not fit take 2
+  }),
+
+  // defeated: "he's here", one last useless instruction, and then the radio stops. the runner's theme gets four notes
+  // in and gives up; the thing stops alternating and holds the b2 for the rest of the song
+  section('found', 8, { role: 'release', progression: 'i i vii v',
+    drums:   { density: .12, space: .9, brightness: .15, articulation: .15, level: .35 }, // .12: over bd's .1 threshold, under sd's .3, so a bare kick is left
+    bass:    { weight: .85, density: .12, brightness: .15, notes: '0 ~ ~ ~ ~ ~ ~ ~', level: .7 },
+    melody:  { ...broken, density: .25, level: .5, brightness: .3 },
+    melody2: { ...held, density: .5, level: .7, brightness: .12 },
+    melody3: { ...toll, density: .3, level: .4 },
+    pad:     { ...drone, density: .3, brightness: .1, level: .6 },
+    pad2:    { ...strings, density: .3, brightness: .12, register: .25, level: .5 },
+    pad3:    { ...breath, density: .2, level: .25 },
+    sample:  { sound: 'here:1', pattern: '<0 ~!15>',  space: .9, brightness: .35, weight: .6, level: .5 }, // take 2 delivers it; level puts it in a defeated mix
+    sample2: { sound: 'back', pattern: '<~!6 0 ~!9>', space: .95, brightness: .2, weight: .35 }, // take 1 is the feeble one: right performance, audible level
+  }),
+])

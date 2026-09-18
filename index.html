@@ -132,14 +132,17 @@
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks } from './web/boot.mjs';
   import { kitsIn, kitOf, setKit, buildRequest, notesView, notesFile, verifyRows, shareEncode, shareDecode } from './web/compose.mjs';
-  import { packsOf, packKind, SYNTHS } from './lib/packs.mjs';
+  import { packsOf, packKind, registerSamples, resolveSample, sampleDef, SAMPLES, SYNTHS } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
   import { SCHEMA, host, CHORDS } from './web/hll-schema.mjs';
-  import { fmt, locate, setAxis, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField } from './lib/resolve.mjs';
+  import { fmt, locate, setAxis, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField, setSongField, addPack } from './lib/resolve.mjs';
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase, arrange } from './lib/song.mjs';
-  import { ARP_ORDERS, DRUM_ORDER, voiceSound, melodyLine } from './lib/layers.mjs';
+  import { ARP_ORDERS, DRUM_ORDER, voiceSound, melodyLine, slicePoints } from './lib/layers.mjs';
+  import { fmtTime, sliceSpec, frac, breaksIn, breakPoints, SNAPS, snapDivisions, barsGuess } from './web/sampler.mjs';
+  import { createSampleCache, createPreviewer } from './web/preview.mjs';
+  import { createWaveform } from './web/waveform.mjs';
   import { hasSound } from './lib/strudel.mjs';
   import { parseProgression, chordName } from './lib/harmony.mjs';
   import { TEMPLATES, fit, gridToMini } from './lib/grid.mjs';
@@ -177,11 +180,21 @@
 `;
 
   const ready = boot({ onError: (m) => ($('err').textContent = m), onStatus: status });
+  // the synths and every loaded sample: what any layer can name
+  const soundNames = () => [...new Set([...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()])];
+  // plus the packs' named sample definitions (a part naming one inherits its region, bars and slices). Only a sample
+  // part resolves them (resolveSample), so they are offered there and nowhere else: s("loop-kick") on a melody is
+  // silence in the page and an unknown sound at check time.
+  const sampleSounds = () => [...new Set([...SAMPLES.keys(), ...soundNames()])];
+  const defLabels = () => Object.fromEntries([...SAMPLES].map(([n, d]) => [n, `${n} · ${d.pack} sample`]));
+  function refreshSounds() { // what a sound picker can autocomplete to: the synths plus every loaded sample; again after an import
+    $('snds').innerHTML = soundNames().map((n) => `<option value="${esc(n)}">`).join('');
+    host.sounds = soundNames;
+  }
   Promise.all([ready, fetch('lib/kits.json').then((r) => r.json())]).then(([, info]) => { // what the packs actually loaded, local or cdn
     kitInfo = info;
     kits = kitsIn(Object.keys(info), Object.keys(strudel.soundMap.get()));
-    $('snds').innerHTML = [...new Set([...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()])].map((n) => `<option value="${esc(n)}">`).join(''); // what a sound picker can autocomplete to (the map has most synths already)
-    host.sounds = () => [...new Set([...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()])]; host.kits = () => kits; // the section pane's sound and kit controls list what is loaded
+    refreshSounds(); host.kits = () => kits; // the section pane's sound and kit controls list what is loaded
     sourceChanged();
   });
 
@@ -478,7 +491,9 @@
     const ph = s.name === mixSection ? ((c - s.offset) / s.span).toFixed(4) : '-1'; // the event strips' playhead, when the shown section is the one sounding
     if (ph !== lastPh) $('knobs').style.setProperty('--ph', (lastPh = ph)); // an unchanged custom property still costs a style pass over every strip
     for (const b of $('strip').children) b.classList.toggle('on', sections[b.dataset.i] === s);
-    if (!pinned && mixSection !== s.name) { mixSection = s.name; mixRender(); } // the mix card follows the playhead unless pinned
+    // the mix card follows the playhead unless pinned, but never mid-gesture: a knob or waveform drag that spans a
+    // section change must commit into the section it started in, so the card catches up on the tick after the release
+    if (!pinned && mixSection !== s.name && !knobDrag && !waveDragging()) { mixSection = s.name; mixRender(); }
   }
   const chordAt = (s, bar) => { try { const prog = parseProgression(s.progression); return ' · ' + prog[bar % prog.length].map((ch) => chordName(s.key, ch)).join(' '); } catch { return ''; } }; // the chord under bar `bar` (0-based) of section `s`
   // songs/ on the local server; this browser's localStorage on a static host
@@ -586,7 +601,7 @@
     did(() => setKit(code.text, kit), `kit ${kit}`);
   };
   $('kits').ontoggle = (e) => { // popovers open centred by default: pin this one under its button
-    if (e.newState !== 'open') { if (pvBtn && $('kits').contains(pvBtn)) preview(pvBtn); return; } // closing the menu ends its preview
+    if (e.newState !== 'open') { if (pv.button && $('kits').contains(pv.button)) pv.stop(); return; } // closing the menu ends its preview
     const r = $('kit').getBoundingClientRect();
     Object.assign($('kits').style, { top: `${r.bottom + 4}px`, left: `${r.left}px` });
     $('kitq').value = ''; filterKits();
@@ -724,7 +739,7 @@
     if (!typing) secPane.show(s.node);
     $('songsrc').hidden = !m.song; // a song() header to show (its keys sit before every section, so its span holds still while a section is typed in)
     if (m.song && !songPane.typing()) songPane.show(m.song);
-    if (knobDrag) return; // a knob is being dragged: its value is already right, and rebuilding the knobs would drop the drag; the pane above still followed
+    if (knobDrag || waveDragging()) return; // a knob or a waveform line is being dragged: the value is already right, and rebuilding would drop the drag; the pane above still followed
     parts = Object.keys(s.layers); listTerms(); // the pill box offers this section's part names
     $('mix').hidden = false;
     for (const el of document.querySelectorAll('.mixsec')) el.textContent = `· ${s.name}${pinned === s.name ? ' (pinned)' : ''}`;
@@ -746,10 +761,13 @@
   // materials: a value comes from the literal in the source, else from the evaluated song (a spread), else it is unset
   function matsRender(s, eff) {
     const clean = (v) => String(v).replace(/['"\\]/g, '');
-    const val = (L, e, key) => (L.mats[key] ? L.mats[key].value : e?.[key]);
+    // the part's own literal, then the evaluated part (a spread), then the pack definition its sound names (L.def)
+    const val = (L, e, key) => (L.mats[key] ? L.mats[key].value : e?.[key] ?? L.def?.[key]);
+    // a value neither written here nor brought in by a spread: it comes from the definition, so it is greyed and says so
+    const inh = (L, e, key) => (!L.mats[key] && e?.[key] === undefined && L.def?.[key] !== undefined ? ` title="from the pack definition &quot;${esc(L.def.name)}&quot;; editing writes an override on this part"` : '');
     const expr = '<i title="an expression: edit it in the source">expr</i>';
     // a text box with a play button that shows while the box has focus: hear this part with what is typed, before or after committing it
-    const text = (L, e, key, ph, extra = '') => { const v = val(L, e, key); return v === 'expr' || (v && typeof v === 'object') ? expr : `<span class="tb"><input class="snd${extra ? ' num' : ' wide'}" ${extra} data-mat="${key}" value="${v == null ? '' : esc(clean(v))}" placeholder="${ph}" spellcheck="false"><button class="pv" data-pv title="hear ${esc(layer(L))} with this (pauses the song)">&#9654;</button></span>`; };
+    const text = (L, e, key, ph, extra = '', over) => { const v = over === undefined ? val(L, e, key) : over, ih = inh(L, e, key); return v === 'expr' || (v && typeof v === 'object') ? expr : `<span class="tb"><input class="snd${extra ? ' num' : ' wide'}${ih ? ' inh' : ''}"${ih} ${extra} data-mat="${key}" value="${v == null ? '' : esc(clean(v))}" placeholder="${ph}" spellcheck="false"><button class="pv" data-pv title="hear ${esc(layer(L))} with this (pauses the song)">&#9654;</button></span>`; };
     // a menu button: the popover lists `names` with a play button per row, so a choice can be heard before it is picked
     const pick = (L, e, key, ph, voice) => { const v = val(L, e, key); const cur = voice ? v?.[voice] : v; return v === 'expr' ? expr : `<button class="pick" data-mat="${key}"${voice ? ` data-voice="${voice}"` : ''} data-ph="${esc(ph)}">${cur ? esc(clean(cur)) : `<i>${esc(ph)}</i>`}</button>`; };
     const layer = (L) => L.layerName;
@@ -759,6 +777,25 @@
       if (base === 'drums') {
         bits.push(`<label>template ${pick(L, e, 'template', 'house')}</label>`);
         bits.push(val(L, e, 'sounds') === 'expr' ? `<label>sounds ${expr}</label>` : `<label>sounds</label>${DRUM_ORDER.map((v) => `<label class="voice">${v} ${pick(L, e, 'sounds', 'kit', v)}</label>`).join('')}`);
+      } else if (base === 'sample') {
+        // the sampler: import (local server only), the sound, what the region stands for, the cut, the order, and the waveform with a button per slice
+        const snd = val(L, e, 'sound'), d = snd && sampleDef(snd); // a named definition in a pack: its keys show greyed under what the part writes
+        L.def = d ? { ...d, name: String(snd).split(':')[0] } : null;
+        bits.push(`<label>sound ${pick(L, e, 'sound', 'pick a sample')}</label>`);
+        if (server) bits.push(`<label class="imp" title="add an audio file to this song's pack, samples/user/${esc(packName())}/, declare the pack, and play it here"><button class="pick" data-import>import&hellip;</button><input type="file" accept="audio/*,.wav,.mp3,.ogg,.flac,.aif,.aiff,.m4a,.webm" hidden></label>`);
+        bits.push(`<label>bars ${text(L, e, 'bars', '1', 'type="number" min=".25" step=".25"')}</label>`);
+        // slices: a count, or break points (fractions of the file) written as seconds in the breaks box and clicked on the waveform
+        const sv = val(L, e, 'slices'), spec = sliceSpec(sv), b = val(L, e, 'begin'), en = val(L, e, 'end');
+        const n = slicePoints(typeof b === 'number' ? b : 0, typeof en === 'number' ? en : 1, spec).length - 1;
+        bits.push(`<label>slices ${text(L, e, 'slices', '1', 'type="number" min="1" step="1"', Array.isArray(sv) ? n : undefined)}</label>`);
+        bits.push(`<label>breaks <span class="tb"><input class="snd wide" data-breaks placeholder="even" spellcheck="false" title="${esc(BREAKS_TITLE)}"><button class="pv" data-pv title="hear ${esc(name)} with these breaks (pauses the song)">&#9654;</button></span></label>`);
+        bits.push(`<label>play ${text(L, e, 'pattern', '0')}</label>`);
+        const st = val(L, e, 'stretch'), sti = inh(L, e, 'stretch'); bits.push(`<label class="${sti ? 'inh' : ''}"${sti}><input type="checkbox" data-mat="stretch"${st === true ? ' checked' : ''}${st === 'expr' ? ' disabled' : ''}> fit each slice to its step</label>`);
+        bits.push(`<div class="wave" data-wave="${esc(name)}"><canvas width="720" height="72" title="the file: the used region lit, a line per slice; click to add a break, click a line to remove it, drag a line or a region edge to move it"></canvas>` +
+          `<label class="${inh(L, e, 'begin') ? 'inh' : ''}"${inh(L, e, 'begin')}>start <input type="range" min="0" max="1" step=".001" data-trim="begin" value="${typeof b === 'number' ? b : 0}"><output></output></label>` +
+          `<label class="${inh(L, e, 'end') ? 'inh' : ''}"${inh(L, e, 'end')}>end <input type="range" min="0" max="1" step=".001" data-trim="end" value="${typeof en === 'number' ? en : 1}"><output></output></label>` +
+          `<label class="snap" title="where a dragged or clicked break lands: the region cut into beats of its bars (this browser's setting, never written to the song)">snap <select data-snap>${Object.keys(SNAPS).map((k) => `<option${k === snapSetting() ? ' selected' : ''}>${k}</option>`).join('')}</select></label>` +
+          `<span class="slices">${Array.from({ length: n }, (_, i) => `<button class="sl" data-slice="${i}" title="hear slice ${i} alone at its natural length (pauses the song)">${i}</button>`).join('')}</span><small class="info"></small></div>`);
       } else bits.push(`<label>sound ${pick(L, e, 'sound', 'default')}</label>`);
       // notes: the written line in mini-notation (scale degrees, ~ rests, @2 holds); the seeded line plays when it is empty
       if (base === 'bass' || base === 'melody') bits.push(`<label>notes ${text(L, e, 'notes', 'seeded line')}</label>`);
@@ -780,6 +817,7 @@
       bits.push(`<label class="lvl">level ${lv === 'expr' ? expr : `<input type="range" min="0" max="2" step=".05" data-mat="level" value="${lv ?? 1}" title="${esc(name)} level x${lv ?? 1}"><output>x${lv ?? 1}</output>`}</label>`);
       return `<div class="matrow" data-layer="${esc(name)}"><b>${esc(name)}</b>${bits.join('')}</div>`;
     }).join('');
+    for (const box of $('matlist').querySelectorAll('.wave')) waveRender(box);
   }
   const q = (v) => `'${String(v).replace(/['"\\]/g, '').trim()}'`;
   // the source text for material `key` at `value` ('' removes it); `sounds` is the whole voice map with one voice replaced
@@ -788,6 +826,21 @@
     if (key === 'phrase') return value > 1 ? String(Math.round(value)) : null; // 1 is the default, so it is dropped
     if (key === 'level') return Number(value) === 1 ? null : String(Number(value)); // 1 = untouched, so it is dropped
     if (key === 'seed') return String(value).trim() ? String(Math.max(1, Math.round(Number(value)))) : null;
+    // what an absent key would mean for this part: the pack definition under it when there is one, else the layer's own default
+    const sdef = () => (layer ? sampleDef(matOf(layer, 'sound')) : null);
+    if (key === 'slices' && Array.isArray(value)) { // break points, in the file's fractions
+      if (value.length) return `[${value.map(frac).join(', ')}]`;
+      // an emptied list means one slice, and dropping the key does not say that: absent inherits the definition's own
+      // slices back. after a trim those inherited break points can sit outside the region, where samplePlan throws and
+      // the song stops evaluating, so the override is written out.
+      const ds = sdef()?.slices;
+      return (Array.isArray(ds) ? ds.length + 1 : ds ?? 1) > 1 ? '1' : null;
+    }
+    if (['begin', 'end', 'bars', 'slices'].includes(key)) { // a value that changes nothing is dropped, as phrase/level are
+      const n = Number(value), def = sdef()?.[key] ?? { begin: 0, end: 1, bars: 1, slices: 1 }[key];
+      return String(value).trim() && Number.isFinite(n) && n !== def ? String(+n.toFixed(3)).replace(/^0\./, '.') : null;
+    }
+    if (key === 'stretch') return value ? 'true' : sdef()?.stretch ? 'false' : null; // false is written only when the definition says true
     if (key === 'sounds') {
       const cur = { ...(locate(code.text).sections.find((x) => x.name === section)?.layers[layer]?.mats.sounds?.value ?? effective()[section]?.[layer]?.sounds ?? {}), [voice]: value };
       const set = Object.entries(cur).filter(([, v]) => v && typeof v === 'string').map(([k, v]) => `${k}: ${q(v)}`);
@@ -798,34 +851,36 @@
   const songSeed = () => Number(/song\(\s*\{[^}]*?seed:\s*(\d+)/.exec(code.text)?.[1] ?? 1);
   const setMat = (layer, key, text) => did(() => setMaterial(code.text, mixSection, layer, key, text), `${layer}.${key} ${text ?? 'removed'}`);
   $('mats').onchange = (e) => {
-    const el = e.target, key = el.dataset.mat; if (!key) return;
-    setMat(el.closest('[data-layer]').dataset.layer, key, matText(null, key, el.type === 'checkbox' ? el.checked : el.value));
+    if (e.target.type === 'file') { const f = e.target.files[0]; if (f) importSample(f, e.target.closest('[data-layer]').dataset.layer); e.target.value = ''; return; } // cleared so re-picking the same file fires change again
+    if (e.target.dataset.trim) { clampTrim(e.target); return trimCommit(e.target.closest('.wave'), [e.target.dataset.trim]); }
+    if (e.target.dataset.snap !== undefined) { // a page setting, not the song's: every waveform snaps the same way
+      localStorage.setItem('strudel:snap', e.target.value);
+      for (const box of $('matlist').querySelectorAll('.wave')) { box.querySelector('[data-snap]').value = e.target.value; waveRender(box); }
+      return;
+    }
+    if (e.target.dataset.breaks !== undefined) { // no data-mat: it is read in seconds, so it commits through breaksText rather than the generic path
+      const layer = e.target.closest('[data-layer]').dataset.layer;
+      breaksText(layer, e.target.value).then((t) => t !== undefined && setMat(layer, 'slices', t), (err) => ($('mixstatus').textContent = err.message));
+      return;
+    }
+    const el = e.target, key = el.dataset.mat; if (!key) return; // the preview level slider and the add-part select are in here too, and belong to no part
+    const mlayer = el.closest('[data-layer]').dataset.layer;
+    setMat(mlayer, key, matText(mlayer, key, el.type === 'checkbox' ? el.checked : el.value));
   };
   // audition: pause the song, then play only this section's `layer` with material `key` set to `text`, for two bars
-  let pvTimer, pvBtn, pvLast, pvGain = Number(localStorage.getItem('strudel:pvlvl')) || 1; // pvGain: preview volume, a page setting rather than part of the song
-  // preview(btn, build): build() -> { pattern, cps, what }; the same button again stops it, another button replaces it
-  async function preview(btn, build) {
-    clearTimeout(pvTimer); pvBtn?.classList.remove('on');
-    if (pvBtn === btn) { pvBtn = null; strudel.hush(); return; }
-    pvBtn = btn; pvLast = [btn, build];
-    await run(btn, build);
-  }
-  async function run(btn, build) {
-    if (playing) await pause();
-    strudel.hush();
-    const r = await ready;
-    await strudel.getAudioContext().resume(); // this ▶ may be the page's first click: the context starts suspended until a gesture resumes it
-    let p; try { p = await build(); } catch (err) { $('mixstatus').textContent = err.message; pvBtn = null; return; }
-    btn.classList.add('on');
-    $('mixstatus').textContent = `hearing ${p.what}${pvGain === 1 ? '' : ` at x${pvGain}`}`;
-    r.setCps(p.cps); r.setPattern(p.pattern.mul(strudel.gain(pvGain)), true); // the repl's own setCps: the `setcps` global only exists once the song has been evaluated
-    pvTimer = setTimeout(() => { strudel.hush(); btn.classList.remove('on'); pvBtn = null; }, 2000 / p.cps + 200);
-  }
+  const pv = createPreviewer({ // web/preview.mjs: the same one-button preview the sample workshop uses
+    ready,
+    status: (t) => ($('mixstatus').textContent = t),
+    before: async () => { if (playing) await pause(); },
+    hush: () => strudel.hush(),
+    resume: () => strudel.getAudioContext().resume(),
+    gain: (p, g) => p.mul(strudel.gain(g)),
+  });
   // a material: this section's `layer` with `key` set to `text` (a drum voice alone on its template grid: the whole part would drown it, or not even include it, since voices join as density rises)
-  const audition = (btn, layer, key, text, voice, section = mixSection, src = code.text) => preview(btn, async () => {
-    const pat = await evalCode(ready, setMaterial(src, section, layer, key, text));
+  const audition = (btn, layer, key, text, voice, section = mixSection, src = code.text) => pv.preview(btn, async () => { // no key: the part as it is written
+    const pat = await evalCode(ready, key ? setMaterial(src, section, layer, key, text) : src);
     const s = pat.strudel.sections.find((x) => x.name === section);
-    let pattern = s.layers[layer].pattern, what = `${key} ${text ?? 'removed'}`;
+    let pattern = s.layers[layer].pattern, what = key ? `${key} ${text ?? 'removed'}` : 'as written';
     if (voice) {
       const name = s.layers[layer].attrs.sounds?.[voice];
       pattern = voiceSound(name, voice, s.kit, gridToMini(fit(TEMPLATES[s.layers[layer].attrs.template ?? 'house'][voice], s.grid.steps))); // the same rule as the drums part: kit voice or bare sample
@@ -850,7 +905,7 @@
     mt:  '.............................x..',
     lt:  '..............................xx',
   };
-  const auditionKit = (btn, kit) => preview(btn, async () => {
+  const auditionKit = (btn, kit) => pv.preview(btn, async () => {
     const has = Object.keys(KIT_GRIDS).filter((v) => hasSound(`${kit}_${v}`) !== false), missing = Object.keys(KIT_GRIDS).filter((v) => !has.includes(v));
     return {
       pattern: strudel.stack(...has.map((v) => strudel.s(v).struct(gridToMini(KIT_GRIDS[v])).bank(kit))).slow(2),
@@ -858,28 +913,191 @@
       what: `kit ${kit}${missing.length ? ` (no ${missing.join(', ')})` : ''}`,
     };
   });
-  // two copies of the same control, one under the part rows and one in the menu: both show pvGain
-  // the sliders run -1..1.7 and the gain is 10^x (x0.1 .. x50), so the first half of the travel is the fine x0.1..x1 range and the far end still reaches a whisper-quiet sample
-  const pvIns = [...document.querySelectorAll('input.pvin')];
-  const showPvGain = () => { for (const i of pvIns) { i.value = Math.log10(pvGain); i.nextElementSibling.value = `x${pvGain < 10 ? pvGain.toFixed(1) : Math.round(pvGain)}`; } };
-  showPvGain();
-  for (const i of pvIns) {
-    i.oninput = (e) => { pvGain = +(10 ** Number(e.target.value)).toFixed(2); localStorage.setItem('strudel:pvlvl', pvGain); showPvGain(); };
-    i.onchange = () => { if (pvBtn) { clearTimeout(pvTimer); run(...pvLast); } }; // a running preview restarts at the new level
+  // the sampler row: the file behind the part's sound, decoded once per name on the live context, drawn as peaks with the region and its slice grid
+  const BREAKS_TITLE = 'break points in seconds into the file, space-separated; empty = equal slices; click the waveform to add one, click a line to remove it, drag one to move it; converting a count to breaks pins them to the file, so a later trim drops the ones it leaves outside';
+  const snapSetting = () => { const s = localStorage.getItem('strudel:snap'); return Object.hasOwn(SNAPS, s) ? s : '1/16'; }; // where a dragged or clicked break lands: this browser's setting, never the song's
+  const maxIndex = (pattern) => Math.max(0, ...String(pattern ?? '').match(/(?<![*!\/@%:.\w])\d+/g)?.map(Number) ?? []); // the highest slice a play pattern names (modifiers like *2 and @3 are not indices)
+  // the decoded audio, its drawn peaks and its detected tempo, each computed once (web/preview.mjs; a name may be a pack's
+  // sample definition, whose underlying sound is what there is a file for)
+  const cache = createSampleCache({ soundMap: () => strudel.soundMap.get(), decode: (ab) => strudel.getAudioContext().decodeAudioData(ab) });
+  const partAttrs = (layer) => sections.find((x) => x.name === mixSection)?.layers[layer]?.attrs ?? {}; // the evaluated part (a spread resolved)
+  // a material the way the knobs read every material: the section's own literal first, the evaluated part (a spread) only
+  // when it has none. The evaluated song lags a commit by a render, so two quick clicks would otherwise lose the first.
+  const matOf = (layer, key) => locate(code.text).sections.find((x) => x.name === mixSection)?.layers[layer]?.mats[key]?.value ?? partAttrs(layer)[key];
+  const slicesOf = (layer) => matOf(layer, 'slices');
+  // the region as the row's sliders show it (source-first, and already moved mid-drag), the evaluated part only when there is no row
+  function trimOf(layer, a = partAttrs(layer)) {
+    const [bi, ei] = $('matlist').querySelector(`.wave[data-wave="${layer}"]`)?.querySelectorAll('[data-trim]') ?? [];
+    return [bi ? Number(bi.value) : a.begin ?? 0, ei ? Number(ei.value) : a.end ?? 1];
   }
-  $('mats').oninput = (e) => { if (e.target.dataset.mat === 'level') e.target.nextElementSibling.value = `x${e.target.value}`; }; // the readout follows the drag; the source changes on release (change)
+  // the breaks box and the count box must never disagree: seconds when the audio is decoded, the written fractions when it is not
+  function fillBreaks(box, spec, duration) {
+    const bx = box.closest('.matrow').querySelector('[data-breaks]');
+    if (!bx || document.activeElement === bx) return; // a box being typed in is left alone
+    bx.value = !Array.isArray(spec) ? '' : duration ? spec.map((f) => (f * duration).toFixed(3).replace(/\.?0+$/, '')).join(' ') : spec.map(frac).join(' ');
+    bx.title = Array.isArray(spec) && !duration ? 'fractions of the file (no audio decoded)' : BREAKS_TITLE;
+  }
+  // the waveform component (web/waveform.mjs) draws and handles the gestures; the row feeds it state and turns its commits into source edits
+  const waves = new WeakMap(); // canvas -> its component; the row's markup is rebuilt on every render, so a new canvas gets a new one
+  function waveOf(box) {
+    const cv = box.querySelector('canvas');
+    if (!waves.has(cv)) waves.set(cv, createWaveform(cv, { onCommit: (c) => waveCommit(box, c), onStatus: (t) => ($('mixstatus').textContent = t) }));
+    return waves.get(cv);
+  }
+  // a gesture on a waveform holds the row still, as a knob drag does: a rebuilt matlist would detach the canvas mid-drag
+  const waveDragging = () => [...$('matlist').querySelectorAll('.wave canvas')].some((cv) => waves.get(cv)?.dragging);
+  async function waveRender(box) {
+    const layer = box.dataset.wave, wf = waveOf(box);
+    // the part with its pack definition underneath: the file to decode is the definition's sound (which may differ from
+    // its name), and the snap grid counts the region in beats of the bars it stands for, inherited or written
+    const ra = resolveSample(partAttrs(layer)), bars = ra.bars ?? 1;
+    const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value), spec = sliceSpec(slicesOf(layer) ?? ra.slices);
+    const beats = sections.find((x) => x.name === mixSection)?.grid.beats ?? 4;
+    const shape = { begin, end, breaks: Array.isArray(spec) ? spec : null, count: Array.isArray(spec) ? spec.length + 1 : spec, divisions: snapDivisions(bars, beats, SNAPS[snapSetting()]) };
+    if (!ra.sound) { box.querySelector('.info').textContent = 'pick a sample, or import one'; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
+    let buf; try { buf = await cache.bufferOf(ra.sound); } catch (e) { box.querySelector('.info').textContent = e.message; wf.set({ peaks: null, duration: 0, ...shape }); fillBreaks(box, spec); return; }
+    if (!box.isConnected) return; // re-rendered while decoding
+    wf.set({ peaks: cache.peaksOf(buf, ra.sound, box.querySelector('canvas').width), duration: buf.duration, ...shape });
+    bi.nextElementSibling.value = fmtTime(begin * buf.duration); ei.nextElementSibling.value = fmtTime(end * buf.duration);
+    fillBreaks(box, spec, buf.duration); // the breaks box reads in seconds, which needs the duration
+    // no sample rate: decodeAudioData resamples to the context's rate, so it would name the browser's rate, not the file's
+    const info = `${fmtTime(buf.duration)} · ${buf.numberOfChannels === 2 ? 'stereo' : buf.numberOfChannels === 1 ? 'mono' : `${buf.numberOfChannels} ch`} · region ${fmtTime((end - begin) * buf.duration)} as ${bars} bar${bars === 1 ? '' : 's'}`;
+    // what the region sounds like it is: the detected tempo, the bar count that implies, and a button for each of the two ways to use it
+    const { bpm: exact, confidence } = cache.tempoOf(buf, ra.sound, begin, end);
+    const guess = exact && barsGuess((end - begin) * buf.duration, exact, beats);
+    const bpm = Math.round(exact); // the bar count is guessed from the measurement; a tempo to write into the song is a whole number
+    box.querySelector('.info').innerHTML = esc(info) + (bpm
+      ? `<span class="${confidence < .3 ? 'unsure' : ''}" title="detected from the region's onsets${confidence < .3 ? ': nothing periodic really stands out, so treat it as a guess' : ''}"> · &asymp; ${bpm} bpm · ${guess} bars?${confidence < .3 ? ' (unsure)' : ''}</span>`
+        + ` <button class="pick" data-usebars="${guess}" title="this part's bars: ${guess}">use</button>`
+        + ` <button class="pick" data-songbpm="${bpm}" title="set the song's tempo to ${bpm} bpm (its cps goes away)">song bpm ${bpm}</button>`
+      : '');
+  }
+  // a gesture on the waveform: break points straight to `slices`, a dragged region edge through the sliders' own commit path
+  function waveCommit(box, { breaks, begin, end }) {
+    const layer = box.dataset.wave;
+    if (breaks) {
+      const sv = slicesOf(layer) ?? resolveSample(partAttrs(layer)).slices; // the definition's breaks count too: the part inherits them
+      if (sv === 'expr') { $('mixstatus').textContent = `${layer}.slices is an expression: edit it in the source`; return; }
+      // a removal that leaves fewer slices than the pattern plays would not build: refuse it rather than write a broken song
+      const need = maxIndex(matOf(layer, 'pattern'));
+      if (breaks.length + 1 <= need) { $('mixstatus').textContent = `slices: the pattern plays slice ${need}; remove it from the pattern first`; return; }
+      return setMat(layer, 'slices', matText(layer, 'slices', breaks));
+    }
+    const keys = [];
+    for (const [k, v] of [['begin', begin], ['end', end]]) {
+      const el = box.querySelector(`[data-trim="${k}"]`); // the slider follows the drag, then commits as if it had been the one moved
+      if (Number(el.value) !== v) { el.value = String(v); keys.push(k); }
+    }
+    if (keys.length) trimCommit(box, keys);
+  }
+  // the region as the sliders now stand -> the source; break points it now leaves outside go in the same edit (the song
+  // would not build with them), unless dropping one would leave fewer slices than the play pattern names: then it is refused
+  function trimCommit(box, keys) {
+    const layer = box.dataset.wave;
+    const [bi, ei] = box.querySelectorAll('[data-trim]'), begin = Number(bi.value), end = Number(ei.value);
+    // breaks the part inherits from its pack definition are just as real as written ones: a trim that strands one has to
+    // drop it (materialising the survivors as an override) or refuse, or the song stops building
+    const sv = slicesOf(layer) ?? resolveSample(partAttrs(layer)).slices;
+    const kept = Array.isArray(sv) ? breaksIn(sv, begin, end) : null, drop = kept ? sv.length - kept.length : 0;
+    // the region would strand a break the play pattern needs: refuse the trim rather than write a song that cannot build
+    const need = maxIndex(matOf(layer, 'pattern'));
+    if (drop && kept.length + 1 <= need) {
+      $('mixstatus').textContent = `slices: the pattern plays slice ${need}; the region would drop it`;
+      mixRender(); // the sliders and the drawn region spring back to what the source says
+      return false;
+    }
+    const texts = keys.map((k) => [k, matText(layer, k, k === 'begin' ? begin : end)]);
+    return did(() => {
+      let src = code.text;
+      for (const [k, t] of texts) src = setMaterial(src, mixSection, layer, k, t);
+      return drop ? setMaterial(src, mixSection, layer, 'slices', matText(layer, 'slices', kept)) : src;
+    }, `${layer}.${texts.map(([k, t]) => `${k} ${t ?? 'removed'}`).join(', ')}${drop ? ` (${drop} break${drop === 1 ? '' : 's'} outside the region dropped)` : ''}`);
+  }
+  // begin and end cannot cross: the moving slider stops .001 short of the other, so the committed region is always a region
+  function clampTrim(el) {
+    const [bi, ei] = el.closest('.wave').querySelectorAll('[data-trim]');
+    el.value = String(el === bi ? Math.min(Number(el.value), Number(ei.value) - .001) : Math.max(Number(el.value), Number(bi.value) + .001));
+  }
+  // one slice alone, at the fitted speed, for as long as it lasts (natural playback of that piece)
+  const auditionSlice = (btn, layer, i) => pv.preview(btn, () => {
+    const s = sections.find((x) => x.name === mixSection), a = resolveSample(s.layers[layer].attrs); // the part over its pack definition: region, bars and slices it inherits
+    if (!a.sound) throw new Error('pick a sample first');
+    const [begin, end] = trimOf(layer, a); // the source's region and break points: the buttons are drawn from those, and the evaluated song lags a commit
+    const pts = slicePoints(begin, end, sliceSpec(slicesOf(layer) ?? a.slices));
+    if (i >= pts.length - 1) throw new Error(`no slice ${i}`);
+    return { pattern: strudel.s(a.sound).begin(pts[i]).end(pts[i + 1]).speed((s.cps * (pts.at(-1) - pts[0])) / (a.bars || 1)).unit('c').slow(2), cps: s.cps, what: `slice ${i} of ${a.sound}` };
+  });
+  // the breaks box: seconds into the file -> the `slices` literal ([] = even slices, so the key goes away); undefined = it does not parse, and the mix status says why
+  async function breaksText(layer, value) {
+    const secs = String(value).trim().split(/[\s,]+/).filter(Boolean).map(Number);
+    if (secs.some((n) => !Number.isFinite(n))) { $('mixstatus').textContent = 'breaks: seconds into the file, space-separated'; return; }
+    const a = partAttrs(layer), buf = await cache.bufferOf(a.sound), [begin, end] = trimOf(layer, a); // the region the sliders show, which a drag moves before the source does
+    const fr = breakPoints(secs, buf.duration, begin, end); // rounded to what would be written, so what is checked
+    if (typeof fr === 'string') { $('mixstatus').textContent = fr; return; }
+    return matText(layer, 'slices', fr);
+  }
+  // import: the file lands in this song's pack on the server, the map is reloaded so the sound exists, the song declares the pack and the part plays it
+  const packName = () => $('song').value.replace(/\.strudel$/, '').replace(/[^\w-]/g, '_');
+  async function importSample(file, layer) {
+    try {
+      const dot = file.name.lastIndexOf('.');
+      if (dot < 1) return status('the file needs an extension (wav, mp3, ...)');
+      const pack = packName(), ext = file.name.slice(dot).toLowerCase(), name = file.name.slice(0, dot).replace(/[^\w-]/g, '_').toLowerCase();
+      if (!name) return status('the file needs a name');
+      status(`importing ${file.name}…`);
+      // superdough caches decoded buffers by url, so a re-import under a known name keeps playing the old audio until a reload
+      const replaced = name in strudel.soundMap.get();
+      const r = await fetch(`samples/user/${pack}/${name}${ext}`, { method: 'PUT', body: file });
+      if (!r.ok) return status(await r.text());
+      if (!localPacks[pack]) { // a new pack: its deploy policy, once; blank keeps it off github pages
+        const license = prompt(`License for the new pack samples/user/${pack}/ (blank keeps it local-only, off GitHub Pages)`, 'CC0-1.0')?.trim();
+        if (license) {
+          const pr = await fetch(`samples/user/${pack}/pack.json`, { method: 'PUT', body: JSON.stringify({ deploy: true, license, source: 'imported in the Compose page' }, null, 2) });
+          if (!pr.ok) status(`pack.json not written: ${await pr.text()} (the pack stays local-only)`);
+        }
+      }
+      await strudel.samples(await (await fetch('samples/user/strudel.json', { cache: 'no-store' })).json()); // re-register with the new sound (the map carries its own _base)
+      Object.assign(localPacks, await (await fetch('samples/user/packs.json', { cache: 'no-store' })).json()); registerSamples(localPacks); // the pack's definitions may have changed with it
+      refreshSounds(); cache.forget(name); // the file behind the name changed: so do its peaks and its detection
+      did(() => setMaterial(addPack(code.text, pack), mixSection, layer, 'sound', q(name)), `${layer}: imported ${file.name} as ${name}`);
+      status(`imported ${file.name} → samples/user/${pack}/${name}${ext}${replaced ? ' (replaced: reload the page to hear the new file)' : ''}`);
+    } catch (e) { status(e.message); }
+  }
+  // two copies of the same control, one under the part rows and one in the menu: both show the one preview level
+  for (const i of document.querySelectorAll('input.pvin')) pv.bindLevel(i);
+  $('mats').oninput = (e) => {
+    if (e.target.dataset.mat === 'level') e.target.nextElementSibling.value = `x${e.target.value}`; // the readout follows the drag; the source changes on release (change)
+    if (e.target.dataset.trim) { clampTrim(e.target); waveRender(e.target.closest('.wave')); } // the region follows the drag (stopping at the other end); the source changes on release
+  };
   $('mats').onmousedown = (e) => { if (e.target.closest('[data-pv]')) e.preventDefault(); }; // keep the text box focused, so its play button stays
   $('mats').onclick = (e) => {
     const layer = e.target.closest('[data-layer]')?.dataset.layer;
     const pv = e.target.closest('[data-pv]');
-    if (pv) { const el = pv.parentElement.querySelector('input'); return audition(pv, layer, el.dataset.mat, matText(layer, el.dataset.mat, el.value)); }
+    if (pv) {
+      const el = pv.parentElement.querySelector('input');
+      if (el.dataset.breaks !== undefined) return breaksText(layer, el.value).then((t) => t !== undefined && audition(pv, layer, t === null ? null : 'slices', t), (err) => ($('mixstatus').textContent = err.message)); // an empty box is not "remove the slices": it hears the part as written
+      return audition(pv, layer, el.dataset.mat, matText(layer, el.dataset.mat, el.value));
+    }
     const st = e.target.closest('[data-seed]');
     if (st) return setMat(layer, 'seed', String(Math.max(1, Number(st.dataset.cur) + Number(st.dataset.seed))));
     const ps = e.target.closest('[data-pvseed]');
     if (ps) return audition(ps, layer, 'seed', ps.dataset.pvseed);
+    const sl = e.target.closest('[data-slice]');
+    if (sl) return auditionSlice(sl, layer, Number(sl.dataset.slice));
+    // the detection readout: the bar count it guessed for this part, or its tempo for the whole song
+    const ub = e.target.closest('[data-usebars]');
+    if (ub) { // the guess is already what an absent key means: dropping the override leaves the part on it, so say that rather than "removed"
+      const t = matText(layer, 'bars', ub.dataset.usebars), inherited = sampleDef(matOf(layer, 'sound')) ? "the definition's" : 'the default';
+      return did(() => setMaterial(code.text, mixSection, layer, 'bars', t), `${layer}.bars ${ub.dataset.usebars}${t === null ? ` (${inherited})` : ''}`);
+    }
+    const sb = e.target.closest('[data-songbpm]');
+    if (sb) return did(() => setSongField(code.text, 'bpm', sb.dataset.songbpm), `song bpm ${sb.dataset.songbpm} (from ${matOf(layer, 'sound') ?? 'the sample'})`);
+    if (e.target.closest('[data-import]')) return e.target.closest('label').querySelector('input[type=file]').click();
     const b = e.target.closest('button.pick');
     if (b) openPick(b, layer);
   };
+  $('mats').ondragover = (e) => { if (server && e.target.closest('.matrow')?.dataset.layer.startsWith('sample')) e.preventDefault(); }; // allow a drop on a sample row
+  $('mats').ondrop = (e) => { const row = e.target.closest('.matrow'), f = e.dataTransfer?.files[0]; if (server && row?.dataset.layer.startsWith('sample') && f) { e.preventDefault(); importSample(f, row.dataset.layer); } };
   let pickFor = null; // what the open #pick menu does: { onPick(value), preview?(value, btn) }
   // the one menu behind every pick button, the materials panel's and the section pane's: `names` as rows (`labels` for their
   // text, `icon` for html before it), a play button per row when `preview` is given, and an empty row meaning "unset" when `ph` is
@@ -895,9 +1113,10 @@
   }
   function openPick(btn, layer) { // a materials-panel button: names by key, the change through setMaterial, previews through audition
     const { mat: key, voice, ph } = btn.dataset;
-    const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS) : [...$('snds').options].map((o) => o.value);
+    const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS)
+      : key === 'sound' && layerBase(layer) === 'sample' ? sampleSounds() : [...$('snds').options].map((o) => o.value);
     const text = (v) => matText(layer, key, v, voice);
-    openPickList(btn, { names, cur: btn.querySelector('i') ? '' : btn.textContent, ph, onPick: (v) => setMat(layer, key, text(v)), preview: (v, pv) => audition(pv, layer, key, text(v), voice) });
+    openPickList(btn, { names, cur: btn.querySelector('i') ? '' : btn.textContent, ph, labels: key === 'sound' ? defLabels() : {}, onPick: (v) => setMat(layer, key, text(v)), preview: (v, pv) => audition(pv, layer, key, text(v), voice) });
   }
   function filterPick() { const words = $('pickq').value.toLowerCase().split(/\s+/).filter(Boolean); for (const b of $('picklist').children) b.hidden = !words.every((w) => b.textContent.toLowerCase().includes(w)); }
   $('pickq').oninput = filterPick;
@@ -908,7 +1127,7 @@
     $('pick').hidePopover();
     pickFor.onPick(row.dataset.v);
   };
-  $('pick').ontoggle = (e) => { if (e.newState === 'closed' && pvBtn && $('pick').contains(pvBtn)) preview(pvBtn); }; // closing the menu ends its preview (the same button again stops it)
+  $('pick').ontoggle = (e) => { if (e.newState === 'closed' && pv.button && $('pick').contains(pv.button)) pv.stop(); }; // closing the menu ends its preview
   const effective = () => Object.fromEntries(sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([l, x]) => [l, x.attrs]))])); // the evaluated song's resolved attrs per section and layer
   for (const id of ['addaxes', 'addmats']) $(id).onchange = (e) => { // the pick adds the part; the re-render puts the dropdown back on its placeholder
     const l = e.target.value; if (!l) return;
@@ -1091,6 +1310,7 @@
   // reload from disk when the current song file changes (fs.watch fires twice on Windows, hence the debounce)
   let timer;
   const events = new EventSource('events');
+  events.onopen = () => { $('nav').querySelector('a[href="samples.html"]').hidden = false; }; // the server is there: the sample workshop can be reached
   // a static host (github pages) answers /events with 404, which closes the stream for good: disable what needs the server
   events.onerror = () => {
     if (events.readyState !== EventSource.CLOSED) return;

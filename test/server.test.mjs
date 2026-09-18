@@ -26,7 +26,7 @@ test('userPacks: a folder per pack, inside it folders are sounds with variants a
   fs.writeFileSync(path.join(USER, '_t_bare', 'x.wav'), '');
   try {
     const packs = userPacks();
-    assert.deepEqual(packs._t_pack, { sounds: { kick: ['_t_pack/kick/a.wav', '_t_pack/kick/b.wav'], loose: ['_t_pack/loose.mp3'] }, deploy: ['kick'], license: 'CC0-1.0', source: undefined });
+    assert.deepEqual(packs._t_pack, { sounds: { kick: ['_t_pack/kick/a.wav', '_t_pack/kick/b.wav'], loose: ['_t_pack/loose.mp3'] }, samples: {}, problems: [], deploy: ['kick'], license: 'CC0-1.0', source: undefined });
     assert.equal(packs._t_bare.deploy, false, 'no pack.json: local-only');
     const m = userMap();
     assert.equal(m._base, '/samples/user/');
@@ -200,3 +200,69 @@ test('render route: a second POST for a name already pending gets 409, the first
   });
 });
 
+test('PUT /samples/user/<pack>/<file> stores a sample and its pack.json; the map and index see them; bad names are refused', async () => {
+  const pack = path.join(USER, '_t_up');
+  try {
+    await withServer(async (base) => {
+      const wav = new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0]);
+      assert.equal((await fetch(`${base}/samples/user/_t_up/thud.wav`, { method: 'PUT', body: wav })).status, 204);
+      assert.deepEqual([...fs.readFileSync(path.join(pack, 'thud.wav'))], [...wav]);
+      assert.equal((await fetch(`${base}/samples/user/_t_up/pack.json`, { method: 'PUT', body: JSON.stringify({ deploy: true, license: 'CC0-1.0' }) })).status, 204);
+      const m = await (await fetch(`${base}/samples/user/strudel.json`)).json();
+      assert.deepEqual(m.thud, ['_t_up/thud.wav']);
+      assert.equal((await (await fetch(`${base}/samples/user/packs.json`)).json())._t_up.deploy, true);
+      for (const bad of ['_t_up/thud.txt', '_t_up/../x.wav', '_t_up/a/b.wav', 'x.wav', '_t_up/notes.json']) {
+        assert.equal((await fetch(`${base}/samples/user/${bad}`, { method: 'PUT', body: wav })).status, 400, bad);
+      }
+      assert.equal((await fetch(`${base}/samples/user/_t_up/pack.json`, { method: 'PUT', body: 'nope' })).status, 400, 'pack.json must be json');
+    });
+  } finally { fs.rmSync(pack, { recursive: true, force: true }); }
+});
+
+
+test('userPacks reads sample definitions from pack.json and reports bad ones instead of throwing', () => {
+  const pack = path.join(USER, '_t_defs');
+  fs.mkdirSync(pack, { recursive: true });
+  fs.writeFileSync(path.join(pack, 'amen.wav'), '');
+  fs.writeFileSync(path.join(pack, 'pack.json'), JSON.stringify({ samples: { amen: { bars: 2, slices: 8 }, 'amen-kick': { sound: 'amen', end: .0625, bars: .125 }, ghost: { sound: 'nope' }, odd: { bars: 1, level: 2 }, bad: 3, ['__proto__']: { sound: 'amen' }, 'no spaces': { sound: 'amen' } } })); // a computed key, so __proto__ is an own property and lands in the json
+  try {
+    const p = userPacks()._t_defs;
+    assert.deepEqual(p.samples, { amen: { bars: 2, slices: 8 }, 'amen-kick': { sound: 'amen', end: .0625, bars: .125 } }, 'only the good definitions');
+    assert.equal(Object.getPrototypeOf(p.samples), Object.prototype, 'a __proto__ definition does not become the prototype');
+    assert.equal(p.problems.length, 5);
+    assert.match(p.problems.join('\n'), /ghost.*sound "nope" is not in the pack/);
+    assert.match(p.problems.join('\n'), /odd.*unknown key "level"/);
+    assert.match(p.problems.join('\n'), /bad.*not an object/);
+    assert.match(p.problems.join('\n'), /samples\.__proto__: not a legal name/);
+    assert.match(p.problems.join('\n'), /samples\.no spaces: not a legal name/);
+  } finally { fs.rmSync(pack, { recursive: true }); }
+});
+
+test('a malformed pack.json is one pack\'s problem, not an exception that takes the index down', () => {
+  const pack = path.join(USER, '_t_badjson');
+  fs.mkdirSync(pack, { recursive: true });
+  fs.writeFileSync(path.join(pack, 'kick.wav'), 'x');
+  fs.writeFileSync(path.join(pack, 'pack.json'), 'not json at all');
+  try {
+    const p = userPacks()._t_badjson; // the packs route, the checker, dump and the pages build all need this to return
+    assert.ok(p, 'the pack is still indexed');
+    assert.deepEqual(Object.keys(p.sounds), ['kick'], 'its sounds are still found');
+    assert.match(p.problems.join('\n'), /pack\.json: not valid json/);
+    assert.ok(!p.deploy, 'and with no readable policy it does not claim to deploy');
+  } finally { fs.rmSync(pack, { recursive: true, force: true }); }
+});
+
+test('PUT of a pack.json validates the json whatever the case of the name', async () => {
+  const pack = path.join(USER, '_t_case');
+  try {
+    await withServer(async (base) => {
+      // SAMPLE_FILE is case-insensitive, so on a case-insensitive filesystem PACK.JSON lands on the real pack.json
+      for (const name of ['pack.json', 'PACK.JSON', 'Pack.Json']) {
+        const r = await fetch(base + '/samples/user/_t_case/' + name, { method: 'PUT', body: 'not json' });
+        assert.equal(r.status, 400, name + ' is refused');
+      }
+      const ok = await fetch(base + '/samples/user/_t_case/PACK.JSON', { method: 'PUT', body: '{"license":"CC0-1.0"}' });
+      assert.equal(ok.status, 204, 'valid json still goes through');
+    });
+  } finally { fs.rmSync(pack, { recursive: true, force: true }); }
+});

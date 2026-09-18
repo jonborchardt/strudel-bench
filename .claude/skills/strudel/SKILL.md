@@ -5,7 +5,7 @@ description: Use when the user asks to change how a song in songs/ sounds (make 
 
 # strudel: editing songs by musical axes
 
-Songs are `songs/*.strudel`. A song written with `song()`/`section()` has layers (drums, bass, melody, pad)
+Songs are `songs/*.strudel`. A song written with `song()`/`section()` has layers (drums, bass, melody, pad, fx, sample)
 with axis values in 0..1 where 0.5 is that layer's baseline. See `reference/vocab.md` (generated) for the
 axes, what each does per layer, and the descriptor words.
 
@@ -38,8 +38,13 @@ axes, what each does per layer, and the descriptor words.
 ## Material
 
 Descriptors never touch material. To change a sound, level, fill, arp or meter, edit the literal by hand
-(`sound`, `notes`, `level`, `sounds`, `fill`, `arp`, `follow`, `phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`) and
-re-run `npm run check`.
+(`sound`, `notes`, `level`, `sounds`, `fill`, `arp`, `follow`, `phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`,
+`begin`, `end`, `bars`, `slices`, `pattern`, `stretch`) and re-run `npm run check`. A `sample` part slices any loaded
+sample: `sound`, the region (`begin`/`end` as fractions), `bars` it stands for, `slices` (a count, or a list of break
+points, fractions of the file inside the region), `pattern` (slice indices in
+mini-notation over those bars) and `stretch` (fit each slice to its step); the check prints the file behind the sound
+and every event's `begin`/`end`/`speed`. A sample part may name a pack definition (`pack.json` → `samples`) and
+override any key; the check prints the pack sound the events carry.
 
 ## Flat, thin, simplistic, boring, aimless: material first, not axes
 

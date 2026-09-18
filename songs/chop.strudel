@@ -1,0 +1,23 @@
+// chop: the sample part. samples/user/demo-pack/loop.wav is a generated two-bar drum loop (CC0). The part cuts the
+// whole file (begin 0, end 1) into 8 slices standing for 2 bars at the song tempo and plays them in the order
+// `pattern` writes: slice indices in mini-notation, spanning the sample's bars, so '0 1 2 3 4 5 6 7' is the loop as
+// recorded. `stretch: true` fits each slice to its step; without it a slice keeps its own length at the fitted speed.
+// `slices` can also be a list of break points (fractions of the file inside the region) for uneven slices, as the
+// third section shows.
+song({ cps: .5, key: 'C:minor', seed: 7, kit: 'RolandTR909', packs: ['demo-pack'] }, [
+  section('loop', 4, { role: 'establish',
+    // the pack's definition of 'loop' (samples/user/demo-pack/pack.json) supplies bars 2 and slices 8, and an
+    // unwritten pattern is every slice in order, so naming the sample alone plays the loop as recorded
+    sample: { sound: 'loop' },
+  }),
+  section('chop', 4, { role: 'climax', progression: 'i VI III VII',
+    sample: { sound: 'loop', bars: 2, slices: 8, pattern: '0 1 0 3 4 [6 7] 7 6', stretch: true, space: .6 },
+    bass:   { weight: .6, density: .8, notes: '0 ~ 0 7 ~ 4 3 ~' },
+  }),
+  section('breaks', 4, { role: 'release',
+    // break points instead of a count: fractions of the file, so the first kick (0 .. 1/16 of the loop) is slice 0
+    // and the first snare (1/8 .. 3/16, the file is two bars, so a hit is 1/16 of it) is slice 2; 1 is the gap
+    // between them, 3 the rest of bar one and 4 the whole of bar two
+    sample: { sound: 'loop', bars: 2, slices: [.0625, .125, .1875, .5], pattern: '0 ~ 2 ~ 0 0 2 [3 4]', level: .8 },
+  }),
+])

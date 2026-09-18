@@ -280,3 +280,16 @@ test('drive below .5 leaves the pulse in 6/8; arp follows the meter grid; drums.
   assert.throws(() => g.drums({ sound: 'rim' }, ctx), /unknown key "sound"/);
   assert.throws(() => g.song({ bmp: 120 }, []), /unknown song key "bmp"/);
 });
+
+test('density does not invent a voice the template leaves out: heartbeat keeps its empty hat line at any density', async () => {
+  const g = await ready;
+  // density >= .8 fills hats to 16ths, which is right for a kit template and wrong for one whose hh line is empty
+  // on purpose. a lub-dub is a body, not a kit: raising density must not hand it a hi-hat.
+  for (const density of [.25, .5, .85, 1]) {
+    const hits = onsets(g.drums({ template: 'heartbeat', density }, ctx)).map((h) => h.value.s);
+    assert.deepEqual([...new Set(hits)], ['bd'], `heartbeat at density ${density}`);
+  }
+  // the guard is conditional, not a blanket removal: a template that does have hats still gets its 16ths
+  const house = onsets(g.drums({ template: 'house', density: .85 }, ctx)).filter((h) => h.value.s === 'hh');
+  assert.equal(house.length, 4 * 16, 'house at density .85 still fills 16th hats');
+});
