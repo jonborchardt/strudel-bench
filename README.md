@@ -191,7 +191,7 @@ Rhythm has one written grammar everywhere it appears: `x` hit, `X` accent, `o` g
 
 A key that is neither an axis nor that layer's material throws, naming both lists: a typo (`arpp: 'up'`) is a build error, not a silent no-op. The same goes for song metadata (`bmp: 120` throws).
 
-`ramp(a, b)` is an axis value that sweeps over exactly the section: `brightness: ramp(.3, .8)`.
+`ramp(a, b)` is an axis value that sweeps over exactly the section: `brightness: ramp(.3, .8)`. `wobble(a, b, bars)`, `drift(a, b)`, `pulse(a, b, per)` and `swell(a, b)` are named movements next to it: a sine, a perlin wander, a square dipping every `per` beats a bar, and a sine centred in the section, each already knowing the section's length. A motion word next to an axis name in a resolve phrase writes one of these around the current value: `"wobbling brightness"` writes `wobble(v-.2, v+.2)`, `"brightness rising"` writes `ramp(v, v+.3)`; structural axes and existing signals refuse, same as every other signal edit.
 
 Sections are JavaScript, so reuse them with spread: `const verse = { drums: {...}, bass: {...} }; section('verse2', 8, { ...verse, drums: { ...verse.drums, variation: .5 } })`. The resolver reads literal values only, so it refuses a layer built with spread (it cannot see the baseline it would be editing) — set those axes by hand.
 

@@ -136,7 +136,8 @@
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
   import { SCHEMA, host, CHORDS } from './web/hll-schema.mjs';
-  import { fmt, locate, setAxis, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField, setSongField, addPack } from './lib/resolve.mjs';
+  import { fmt, locate, setAxis, setAxisText, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField, setSongField, addPack } from './lib/resolve.mjs';
+  import { lanePoints, laneSvg } from './web/lane.mjs';
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase, arrange, parseMeter } from './lib/song.mjs';
   import { gridRows, addVoice, templateText, mountStepGrid } from './web/stepgrid.mjs';
@@ -144,7 +145,7 @@
   import { fmtTime, sliceSpec, frac, breaksIn, breakPoints, SNAPS, snapDivisions, barsGuess } from './web/sampler.mjs';
   import { createSampleCache, createPreviewer } from './web/preview.mjs';
   import { createWaveform } from './web/waveform.mjs';
-  import { hasSound } from './lib/strudel.mjs';
+  import { hasSound, isPattern } from './lib/strudel.mjs';
   import { parseProgression, chordName } from './lib/harmony.mjs';
   import { TEMPLATES, fit, gridToMini } from './lib/grid.mjs';
   import { analyze } from './lib/analyze.mjs';
@@ -756,9 +757,13 @@
     $('knobs').innerHTML = head + Object.entries(s.layers).map(([layer, L]) => `<b><span class="nm">${esc(layer)}</span><span class="ops"><button class="ms${muted.has(layer) ? ' on' : ''}" data-mute="${esc(layer)}" title="mute ${esc(layer)} (what you hear, not the song)">${ICON.mute}</button><button class="ms${solo.has(layer) ? ' on' : ''}" data-solo="${esc(layer)}" title="solo ${esc(layer)} (what you hear, not the song)">${ICON.solo}</button><button class="rm" data-rm="${esc(layer)}" title="remove ${esc(layer)} from ${esc(s.name)} (undo brings it back)">${ICON.rm}</button></span></b>` + AXES.map((a) => {
       if (!cells[layerBase(layer)]?.[a.name]) return '<span></span>';
       const v = L.axes[a.name], e = eff[layer]?.[a.name];
-      if (v?.value === 'expr' || (!v && e && typeof e === 'object')) return `<span class="expr" title="a signal or expression: edit it in the source">expr</span>`;
+      const shapeBtn = a.kind === 'continuous' ? `<button class="shape" data-shape="${esc(layer)}/${a.name}" title="pick a shape for ${esc(layer)} ${a.name}">&#9662;</button>` : '';
+      if (v?.value === 'expr' || (!v && e && typeof e === 'object')) {
+        const body = isPattern(e) ? laneSvg(lanePoints(e, s.cycles), s.cycles) : 'expr';
+        return `<span class="expr" data-lane="${esc(layer)}/${a.name}" title="a signal: ${esc(String(e?.src ?? 'expression'))}. Click for a shape">${body}</span>`;
+      }
       const value = v ? v.value : typeof e === 'number' ? e : .5;
-      return `<input type="range" min="0" max="1" step=".01" value="${value}" style="--v:${value}" data-layer="${esc(layer)}" data-axis="${a.name}" title="${esc(layer)} ${a.name}: ${value}${v ? '' : typeof e === 'number' ? ' (from the spread; dragging adds an override)' : ' (not in the source: baseline)'}">`;
+      return `<span class="axcell"><input type="range" min="0" max="1" step=".01" value="${value}" style="--v:${value}" data-layer="${esc(layer)}" data-axis="${a.name}" title="${esc(layer)} ${a.name}: ${value}${v ? '' : typeof e === 'number' ? ' (from the spread; dragging adds an override)' : ' (not in the source: baseline)'}">${shapeBtn}</span>`;
     }).join('') + evRow(s.name, layer)).join('');
     harmRender(s);
     // a part the section lacks can be added at its baseline; a second of the same kind gets a number (drums2)
@@ -1173,7 +1178,22 @@
     const l = e.target.value; if (!l) return;
     did(() => addLayer(code.text, mixSection, l).src, `added a ${l} part to ${mixSection}`);
   };
+  // the shape pick: a movement literal centred on the cell's current number (.5 for a signal cell, which has none)
+  const SHAPES = ['constant', 'ramp up', 'ramp down', 'wobble', 'drift', 'pulse', 'swell'];
+  function shapeText(name, v) {
+    const c = (x) => fmt(Math.min(1, Math.max(0, x)));
+    if (name === 'constant') return c(v);
+    if (name === 'ramp up') return `ramp(${c(v)}, ${c(v + .3)})`;
+    if (name === 'ramp down') return `ramp(${c(v)}, ${c(v - .3)})`;
+    return `${name}(${c(v - .2)}, ${c(v + .2)})`;
+  }
   $('knobs').onclick = (e) => {
+    const shapeEl = e.target.closest('[data-shape], [data-lane]');
+    if (shapeEl) {
+      const [layer, axisName] = (shapeEl.dataset.shape ?? shapeEl.dataset.lane).split('/');
+      const v = Number(shapeEl.closest('.axcell')?.querySelector('input')?.value) || .5;
+      return openPickList(shapeEl, { names: SHAPES, ph: 'shape', onPick: (name) => did(() => setAxisText(code.text, mixSection, layer, axisName, shapeText(name, v)), `${layer} ${axisName} ${name}`) });
+    }
     const t = e.target.closest('[data-rm], [data-mute], [data-solo]'); if (!t) return;
     if (t.dataset.rm) return did(() => removeLayer(code.text, mixSection, t.dataset.rm), `removed ${t.dataset.rm} from ${mixSection}`);
     const set = t.dataset.mute ? muted : solo, l = t.dataset.mute ?? t.dataset.solo;

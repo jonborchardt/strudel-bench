@@ -253,3 +253,10 @@ test('locate reads a list of sound names as a list, not expr', async () => {
   assert.deepEqual(L.melody.mats.sound.value, ['piano', 'kalimba']);
   assert.deepEqual(L.pad.mats.sound.value, { piano: 2, harp: 1 });
 });
+
+test('setAxisText replaces any value, expression included, or inserts the key', async () => {
+  const { setAxisText } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { pad: { brightness: sine.range(.2, .8), space: .3 } })])`;
+  assert.match(setAxisText(src, 'a', 'pad', 'brightness', 'wobble(.3, .7)'), /brightness: wobble\(\.3, \.7\), space/);
+  assert.match(setAxisText(src, 'a', 'pad', 'width', '.7'), /space: \.3, width: \.7/);
+});

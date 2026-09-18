@@ -14,7 +14,9 @@ axes, what each does per layer, and the descriptor words.
 1. **Baseline.** `npm run check -- songs/<name>.strudel`. Read the per-section, per-layer table.
 2. **Translate.** Turn the request into a resolve phrase using descriptor words (`punchier`, `much darker`,
    `a little more spacious`). If the user gave explicit axes ("brightness up .2"), use those numbers directly.
-   Scope it: which section(s), which layer(s). Default to `*` only when the user meant the whole song.
+   A motion word next to an axis: `wobbling brightness` writes `wobble` around the current value, `brightness
+   rising` writes `ramp(v, v+.3)`; structural axes and existing signals refuse it. Scope it: which section(s),
+   which layer(s). Default to `*` only when the user meant the whole song.
 3. **Resolve.** `npm run resolve -- songs/<name>.strudel <section|*> <layer|*> "<phrase>"` and read the report:
    collisions, saturation, refusals (signals are never rewritten; offer to change the signal's range by hand).
    Then rerun with `--write`.
