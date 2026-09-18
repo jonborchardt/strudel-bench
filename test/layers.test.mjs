@@ -371,6 +371,19 @@ test('raw: a plain strudel pattern as a part, with the pattern-agnostic cells an
   assert.throws(() => g.raw({ pattern: 'x x' }, ctx), /raw.pattern must be a strudel pattern/);
 });
 
+test('patch: a named bundle of voice controls, or an object of them, applied under the axes', async () => {
+  const g = await ready;
+  const { resolvePatch, PATCHES } = await import('../lib/packs.mjs');
+  assert.deepEqual(resolvePatch('pluck'), PATCHES.pluck); assert.deepEqual(resolvePatch({ unison: 3 }), { unison: 3 }); assert.equal(resolvePatch(undefined), null);
+  assert.throws(() => resolvePatch('nope'), /unknown patch "nope"/); assert.throws(() => resolvePatch({ lpf: 300 }), /patch: unknown key "lpf"/);
+  const v = (L, attrs) => onsets(g[L](attrs, ctx))[0].value;
+  assert.equal(v('pad', { patch: 'wide' }).unison, 5); assert.equal(v('pad', { patch: 'wide' }).detune, .18);
+  assert.equal(onsets(g.pad({ patch: 'wide' }, ctx)).length, onsets(g.pad({}, ctx)).length, 'unison adds voices inside a hap, not onsets');
+  assert.equal(v('melody', { patch: 'pluck' }).vib, 0, 'the patch overrides the layer baseline');
+  assert.equal(v('bass', { patch: { lpq: .5 }, brightness: .9 }).resonance ?? v('bass', { patch: { lpq: .5 }, brightness: .9 }).lpq, .5);
+  assert.ok(v('bass', { patch: { lpq: .5 }, brightness: .9 }).cutoff > 400, 'brightness still sets the cutoff on top');
+});
+
 test('bass rhythm: a written grid replaces the density grid, keeps drive and accents, may span bars', async () => {
   const g = await ready;
   const at = (attrs, cycles = 2) => onsets(g.bass(attrs, { ...ctx, cycles }), cycles).map((h) => h.whole.begin.valueOf()).sort((a, b) => a - b);

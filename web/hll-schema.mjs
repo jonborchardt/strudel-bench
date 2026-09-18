@@ -23,7 +23,7 @@
 import { AXES } from '../lib/axes.mjs';
 import { TEMPLATES } from '../lib/grid.mjs';
 import { ARP_ORDERS, DRUM_ORDER } from '../lib/layers.mjs';
-import { SYNTHS } from '../lib/packs.mjs';
+import { SYNTHS, PATCHES } from '../lib/packs.mjs';
 import { HARMONY } from '../lib/vocab.mjs';
 import { FLATS, NUMERALS } from '../lib/harmony.mjs';
 
@@ -62,6 +62,7 @@ export const SCHEMA = {
     sounds: { type: 'map', keys: DRUM_ORDER, values: () => host.sounds(), list: 'sounds', title: 'the sample a drum voice plays' },
     fill: { type: 'bool', title: 'a fill in the last bar' },
     sound: sound('the synth or sample the part plays'),
+    patch: { type: 'enum', values: () => Object.keys(PATCHES), title: 'a named voice patch (lib/patches.json); an object of controls is plain code' },
     follow: { type: 'bool', title: 'the melody follows the chords' },
     phrase: int(1, 'bars of seeded melody before it repeats'),
     arp: { type: 'enum', values: Object.keys(ARP_ORDERS), title: 'arpeggio order' },

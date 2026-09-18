@@ -1,0 +1,9 @@
+{
+  "pluck":  { "lpq": 0.35, "lpenv": 3, "lpdecay": 0.12, "vib": 0, "vibmod": 0 },
+  "reese":  { "unison": 3, "detune": 0.3, "lpq": 0.2 },
+  "hollow": { "fmi": 1.5, "fmh": 2, "lpq": 0.1 },
+  "glass":  { "fmi": 3, "fmh": 3.5, "pdecay": 0.08, "penv": 6 },
+  "breath": { "noise": 0.3, "lpattack": 0.25, "lpenv": 2 },
+  "wide":   { "unison": 5, "detune": 0.18 },
+  "sub":    { "lpq": 0, "vib": 0, "vibmod": 0 }
+}
