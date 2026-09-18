@@ -292,6 +292,9 @@ test('density does not invent a voice the template leaves out: heartbeat keeps i
   // the guard is conditional, not a blanket removal: a template that does have hats still gets its 16ths
   const house = onsets(g.drums({ template: 'house', density: .85 }, ctx)).filter((h) => h.value.s === 'hh');
   assert.equal(house.length, 4 * 16, 'house at density .85 still fills 16th hats');
+  // an hh line written with only accents or ghosts (no lowercase x) still counts as "has hats"
+  const accented = onsets(g.drums({ template: { bd: 'x...x...x...x...', hh: 'X...X...X...X...' }, density: .85 }, ctx)).filter((h) => h.value.s === 'hh');
+  assert.equal(accented.length, 4 * 16, 'an hh line of X or o still fills 16th hats');
 });
 
 test('a sound list picks one name per hit, the same pick every time, and reaches every name over enough hits', async () => {
@@ -345,6 +348,10 @@ test('fill: n rolls the last half bar of every nth bar; true still means the sec
   assert.deepEqual([...new Set(rolls({ fill: 4 }, 8))], [3, 7], 'bars 4 and 8 (density .12 leaves no snare of its own)');
   assert.deepEqual([...new Set(rolls({ fill: true }, 8))], [7]);
   assert.throws(() => g.drums({ fill: 1 }, ctx), /fill must be/);
+  // a template that leaves sd out on purpose (no line at all) does not get a snare roll invented for it
+  const noSd = { template: { bd: 'x...x...x...x...', rd: 'x.x.x.x.x.x.x.x.' } };
+  assert.equal(onsets(g.drums({ ...noSd, fill: 2 }, { ...ctx, cycles: 4 })).filter((h) => h.value.s === 'sd').length, 0, 'fill: n with no sd line: no sd events');
+  assert.equal(onsets(g.drums({ ...noSd, fill: true }, ctx)).filter((h) => h.value.s === 'sd').length, 0, 'fill: true with no sd line: no sd events');
 });
 
 test('perc: a bare sound on a written rhythm; density thins or adds hits, drive places them', async () => {
@@ -393,6 +400,9 @@ test("follow: 'tones' maps written degrees onto the chord tones of each bar", as
   assert.equal(notes({ notes: '4 5', follow: 'tones' }, 1)[0] % 12, 0, 'degree 4 is the root an octave up');
   assert.equal(notes({ notes: '4 5', follow: 'tones' }, 1)[0] - notes({ notes: '0 1', follow: 'tones' }, 1)[0], 12);
   assert.throws(() => notes({ follow: 'chords' }), /follow must be true, false or 'tones'/);
+  const neg = notes({ notes: '-1 0', follow: 'tones' }, 1);
+  assert.ok(neg.every(Number.isFinite), 'a negative degree must not NaN');
+  assert.deepEqual(neg, [59, 60], 'degree -1 is the tone below the root, an octave down from degree 3');
 });
 
 test('bass rhythm: a written grid replaces the density grid, keeps drive and accents, may span bars', async () => {
