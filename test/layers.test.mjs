@@ -358,6 +358,7 @@ test('perc: a bare sound on a written rhythm; density thins or adds hits, drive 
   assert.ok(at({ rhythm: 'x.x.x.x.', density: 1 }).length > 32, 'more hits from the empty steps');
   assert.equal(at({ rhythm: 'x.x.x.x.', drive: .1 }).length, 32);
   assert.ok(at({ rhythm: '3/8', articulation: .9 })[0].value.clip < 1);
+  assert.doesNotMatch(g.strudelLib.cells.perc.articulation.describe(.5, .9), /choke/);
 });
 
 test('raw: a plain strudel pattern as a part, with the pattern-agnostic cells and level', async () => {
