@@ -79,6 +79,10 @@ export const SCHEMA = {
   calls: {
     section: { args: [null, int(1, 'bars in this section'), null] },
     ramp: { args: ['inherit', 'inherit'] }, // from, to across the section, in the bounds of the number it stands in for
+    wobble: { args: ['inherit', 'inherit', int(1, 'bars per cycle of the wobble')] },
+    drift: { args: ['inherit', 'inherit'] },
+    pulse: { args: ['inherit', 'inherit', int(1, 'dips per bar')] },
+    swell: { args: ['inherit', 'inherit'] },
   },
   methods: {
     range: { args: ['inherit', 'inherit'] }, // the signal swings between low and high, in the bounds of the number it stands in for

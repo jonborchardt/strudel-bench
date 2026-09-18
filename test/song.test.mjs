@@ -69,6 +69,22 @@ test('ramp(a, b) resolves to a section-length saw; structural axes still refuse 
   assert.throws(() => g.song({}, [g.section('a', 4, { drums: { density: g.ramp(0, 1) } })]), /structural/);
 });
 
+test('movements: wobble, drift, pulse and swell resolve against the section like ramp, and print by name', async () => {
+  const g = await ready;
+  g.strudelLib.registerLayer('probe', (attrs) => attrs.brightness);
+  const at = (p, t) => { const v = p.queryArc(t, t + 1e-3)[0].value; return typeof v === 'object' ? v.value : v; };
+  const P = (v, cycles = 4) => g.song({}, [g.section('a', cycles, { probe: { brightness: v } })]).strudel.sections[0].layers.probe.pattern;
+  const w = P(g.wobble(.2, .8, 2));
+  assert.ok(Math.abs(at(w, 0) - .5) < .02 && Math.abs(at(w, .5) - .8) < .02 && Math.abs(at(w, 2) - .5) < .02, 'a sine over two bars');
+  const s = P(g.swell(.2, .8));
+  assert.ok(Math.abs(at(s, 0) - .2) < .02 && Math.abs(at(s, 2) - .8) < .02 && Math.abs(at(s, 3.99) - .2) < .03, 'starts low, peaks mid-section, returns');
+  const p = P(g.pulse(.2, .8));
+  assert.ok(Math.abs(at(p, 0.01) - .8) < 1e-9 && Math.abs(at(p, 0.13) - .2) < 1e-9, 'four dips a bar, from the high value');
+  assert.ok(at(P(g.drift(.2, .8)), 1) >= .2 && at(P(g.drift(.2, .8)), 1) <= .8);
+  assert.equal(String(g.wobble(.2, .8, 2)), 'wobble(0.2, 0.8, 2)'); assert.equal(String(g.swell(.2, .8)), 'swell(0.2, 0.8)');
+  assert.throws(() => g.song({}, [g.section('a', 4, { drums: { density: g.wobble(0, 1) } })]), /structural/);
+});
+
 test('meter and bpm: grid follows the meter, cps follows bpm', async () => {
   const g = await ready;
   const m = g.song({ meter: '3/4', bpm: 120 }, [g.section('a', 1, { drums: {}, bass: {} })]).strudel;

@@ -129,6 +129,12 @@ test('strudel expressions as values: signals, .range/.slow/.fast/.segment and ra
   assert.match(apply(c['slow(0)'], 0), /slow\(\.125\)/, 'clamped to the floor');
 });
 
+test('movement calls take the bounds of the number they stand in for', () => {
+  const c = byPath(`section('a', 4, { pad: { brightness: wobble(.2, .8, 2), space: swell(.3, 1) } })`);
+  assert.equal(c['pad.brightness.wobble(0)'].spec.max, 1); assert.equal(c['pad.brightness.wobble(2)'].spec.step, 1, 'bars is a spinner');
+  assert.equal(c['pad.space.swell(1)'].value, 1);
+});
+
 test('progression is a row of chord tokens, and the widget chooser follows the spec and the host', () => {
   const c = byPath(`song({ seed: 3 }, [section('a', 4, { progression: 'i [VI VII] bIII7', drums: { fill: true, template: 'house' }, melody: { phrase: 2 } })])`);
   assert.equal(c['progression'].kind, 'tokens'); assert.ok(valuesOf(c['progression'].spec).includes('bVII'));
