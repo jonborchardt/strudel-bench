@@ -1,3 +1,17 @@
 {
-  "prompt": "showcase: rhythm you write (written grids with accents, ghosts, euclid, extra kit voices, bass rhythm, fill every n, sound lists on perc, duck, dropout, sweep)"
+  "prompt": "showcase: rhythm you write (written grids with accents, ghosts, euclid, extra kit voices, bass rhythm, fill every n, sound lists on perc, duck, dropout, sweep)",
+  "requests": [
+    {
+      "date": "2026-09-18",
+      "ask": "showcase the written-rhythm features",
+      "changes": [
+        {
+          "section": "drop",
+          "layer": "drums",
+          "axis": "template",
+          "why": "written grid with X accents, o ghosts, a two-bar hat line, rd and rim voices; drop.pad.duck drums so the pad pumps under the kick; build.dropout 1 and sweep 2 so the drop lands on silence"
+        }
+      ]
+    }
+  ]
 }

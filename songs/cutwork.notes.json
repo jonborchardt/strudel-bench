@@ -1,3 +1,17 @@
 {
-  "prompt": "showcase: a sample part with a list of takes, transpose, raw parts, weighted and listed sounds, perc euclid, duck, dropout, sweep"
+  "prompt": "showcase: a sample part with a list of takes, transpose, raw parts, weighted and listed sounds, perc euclid, duck, dropout, sweep",
+  "requests": [
+    {
+      "date": "2026-09-18",
+      "ask": "showcase sample takes, transpose and raw parts",
+      "changes": [
+        {
+          "section": "deal",
+          "layer": "sample",
+          "axis": "sound",
+          "why": "['loop-kick', 'loop-snare'] one kit dealt from one loop; shuffle.sample2.transpose -12 the loop as a sub; build.raw2 static bursts as a raw part; drop.pad.duck sample"
+        }
+      ]
+    }
+  ]
 }

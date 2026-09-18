@@ -1,3 +1,17 @@
 {
-  "prompt": "showcase: patches (glass, wide, reese), movements (wobble, drift, pulse, swell), follow: 'tones', @n chords and /1 /2 inversions, duck, dropout"
+  "prompt": "showcase: patches (glass, wide, reese), movements (wobble, drift, pulse, swell), follow: 'tones', @n chords and /1 /2 inversions, duck, dropout",
+  "requests": [
+    {
+      "date": "2026-09-18",
+      "ask": "showcase patches and movements",
+      "changes": [
+        {
+          "section": "turn",
+          "layer": "pad",
+          "axis": "brightness",
+          "why": "wobble(.3, .6, 4) written by 'wobbling brightness'; turn.melody.follow tones so the line spells each chord; arrive.progression i@2 VI/1 VII: a held tonic and an inverted VI"
+        }
+      ]
+    }
+  ]
 }
