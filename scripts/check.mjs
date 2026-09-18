@@ -59,6 +59,12 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   registerSamples(packs); // a song's sample part may name a definition from a pack; samplePlan resolves it through the registry
   const problems = [];
   const events = [];
+  const declared = packsOf(code);
+  // A declared pack that is not on this machine is the cause of everything downstream, not a peer of it: the
+  // definitions it supplies vanish, so a sample part falls back to one slice and its pattern's indices go out of
+  // range. Checked before evaluating, and reported alone, so the message names the pack rather than the symptom.
+  const absent = declared.filter((p) => !packs[p]);
+  if (absent.length) return { ok: false, events, cycles, problems: absent.map((p) => `${path.basename(file)}: missing pack "${p}" (declared, not in samples/user/)`) };
   let pattern;
   try {
     ({ pattern } = await evaluate(code, transpiler));
@@ -70,12 +76,9 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   cycles = pattern.strudel?.total ?? cycles;
   const known = builtinSounds();
   const local = localSounds(packs);
-  const declared = packsOf(code);
-  for (const p of declared) {
-    if (!packs[p]) problems.push(`${path.basename(file)}: missing pack "${p}" (declared, not in samples/user/)`);
-    // a bad sample definition in a pack the song declares, and a definition of that pack another pack's name took
-    else for (const bad of [...(packs[p].problems ?? []), ...SAMPLE_PROBLEMS.filter((b) => b.startsWith(`samples/user/${p}/`))]) problems.push(`${path.basename(file)}: ${bad}`);
-  }
+  // a bad sample definition in a pack the song declares, and a definition of that pack another pack's name took
+  for (const p of declared)
+    for (const bad of [...(packs[p].problems ?? []), ...SAMPLE_PROBLEMS.filter((b) => b.startsWith(`samples/user/${p}/`))]) problems.push(`${path.basename(file)}: ${bad}`);
   const unknown = new Set(), undeclared = new Map(), used = new Map();
   const haps = pattern.queryArc(0, cycles).filter((h) => h.hasOnset())
     .sort((a, b) => a.whole.begin.valueOf() - b.whole.begin.valueOf());
@@ -121,6 +124,13 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps };
 }
 
+/**
+ * Is the only thing wrong with this result that a pack the song declares is not on this machine? A local-only pack
+ * (one whose licence keeps it off the repo, say) cannot be checked where it does not exist, and that is not the
+ * song's fault. Scanning every song skips these; naming one explicitly still fails, because you asked for that song.
+ */
+export const missingPackOnly = (r) => r.problems.length > 0 && r.problems.every((p) => /missing pack "[^"]+" \(declared, not in samples\/user\/\)/.test(p));
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const files = process.argv.slice(2).length
     ? process.argv.slice(2)
@@ -128,6 +138,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   let bad = 0;
   for (const f of files) {
     const r = await checkFile(f);
+    if (files.length > 1 && missingPackOnly(r)) { // scanning them all: a song whose pack is not here is skipped, not failed
+      console.log(`== ${path.relative(ROOT, f)} skipped: ${r.problems[0].replace(/^[^:]+: /, '')}`);
+      continue;
+    }
     console.log(`== ${path.relative(ROOT, f)} (${r.events.length} events in ${r.cycles} cycles)`);
     if (files.length === 1) console.log(r.events.join('\n'));
     if (files.length === 1 && r.sounds?.length) { // which file each sample name plays: a name says nothing about its variants

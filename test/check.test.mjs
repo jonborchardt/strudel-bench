@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { checkFile } from '../scripts/check.mjs';
+import { checkFile, missingPackOnly } from '../scripts/check.mjs';
 
 const tmp = (name, code) => {
   const f = path.join(import.meta.dirname, name);
@@ -112,10 +112,13 @@ test('song() files report each section energy (form) and each layer as words', a
   assert.ok(by.drop.layers.drums.words.includes('very busy'), JSON.stringify(by.drop.layers.drums.words));
 });
 
-test('every song in songs/ checks clean', async () => {
+test('every song in songs/ checks clean, except one whose local-only pack is not on this machine', async () => {
   const dir = path.resolve(import.meta.dirname, '..', 'songs');
   for (const f of fs.readdirSync(dir).filter((f) => f.endsWith('.strudel') && !f.startsWith('_t_'))) {
     const r = await checkFile(path.join(dir, f));
+    // a song on a gitignored pack (a licence that forbids redistributing the audio) cannot be checked on a clone that
+    // does not have it. That one skip is allowed; every other problem, in that song or any other, still fails.
+    if (missingPackOnly(r)) continue;
     assert.deepEqual(r.problems, [], f);
     assert.ok(r.events.length > 0, `${f}: silent`);
   }

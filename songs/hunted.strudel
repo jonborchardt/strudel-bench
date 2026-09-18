@@ -1,4 +1,9 @@
+// @hidden
 // hunted: someone is running from something, and a voice on the radio tells them where to go.
+//
+// The `voice` pack this needs is not in the repo: the takes are licensed from GameDevMarket, whose Licence (A) 4.2(b)
+// forbids redistributing the asset other than as part of a media product, so they are gitignored and the pack never
+// deploys. On any other machine this song reports `missing pack "voice"` and is skipped by the checker and the build.
 //
 // Two things play at once and they do not agree. The runner follows the harmony -- harp and bowed vibraphone,
 // moving, phrasing over two bars, always reaching back for the tonic. The thing hunting does not follow it at all

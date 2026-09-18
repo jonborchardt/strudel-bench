@@ -2,6 +2,11 @@ node_modules/
 samples/packs/*
 !samples/packs/.gitkeep
 !samples/packs/*.json
+# samples/user/voice: takes licensed from GameDevMarket under its Marketplace Terms, Licence (A). 4.1 allows using and
+# adapting them inside a media product without limit; 4.2(b) forbids sharing or redistributing the asset other than as
+# part of that product, and a public git repo is exactly that. The pack stays on the machine that licensed it, so
+# songs/hunted.strudel checks and plays here and reports a missing pack anywhere else.
+samples/user/voice/
 .playwright-mcp/
 .claude/*
 !.claude/skills/
