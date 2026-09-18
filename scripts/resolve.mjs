@@ -13,6 +13,7 @@ function printReport({ report, refused, parsed, harmonyReport = [], harmonyNotic
   }
   for (const r of report) {
     if (r.skipped) { console.log(`  ${r.section}.${r.layer}.${r.axis}: skipped (${r.skipped})`); continue; }
+    if (r.motion) { console.log(`  ${r.section}.${r.layer}.${r.axis}: ${fmt(r.from)} -> ${r.motion}`); continue; }
     const sat = r.saturated ? `   applied ${r.appliedDelta >= 0 ? '+' : ''}${r.appliedDelta} of requested ${r.requestedDelta >= 0 ? '+' : ''}${r.requestedDelta.toFixed(2)}   saturated` : '';
     console.log(`  ${r.section}.${r.layer}.${r.axis} ${fmt(r.from)} → ${fmt(r.to)}${r.describe ? '   ' + r.describe : ''}${sat}`);
   }

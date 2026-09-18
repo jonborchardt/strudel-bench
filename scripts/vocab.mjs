@@ -1,6 +1,6 @@
 // Generates the skill's vocabulary reference from code so it cannot drift. usage: node scripts/vocab.mjs > .claude/skills/strudel/reference/vocab.md
 import { AXES, PHASES, cells } from '../lib/axes.mjs';
-import { DESCRIPTORS, OVERLAYS, MODIFIERS, HARMONY } from '../lib/vocab.mjs';
+import { DESCRIPTORS, OVERLAYS, MODIFIERS, HARMONY, MOTION } from '../lib/vocab.mjs';
 import '../lib/layers.mjs';
 
 const out = [];
@@ -25,4 +25,14 @@ out.push(`- modes: ${HARMONY.modes.join(', ')} (keep the root, swap the mode)`);
 out.push('- **relative**: relative major/minor of the current key; `relative major` = relative key then that mode');
 out.push('- progression grammar: `b`/`#` before a numeral, `m`/`M`/`dim` after it, `7` (dominant on uppercase: `V7`; diatonic on lowercase: `ii7`) or `M7` (major seventh), `[..]` for several chords in one bar: `\'i bVI [III VII] V7\'`');
 out.push('- not modeled: inversions, voice leading, chords longer than a bar. For other scales use a different section key (e.g. `C:harmonic minor`).');
+out.push('\n## Movements (write a movement call around the axis\'s current value)\n');
+const byFn = {};
+for (const [word, fn] of Object.entries(MOTION)) (byFn[fn] ??= []).push(word);
+for (const [fn, words] of Object.entries(byFn)) out.push(`- **${fn}**: ${words.join(', ')}`);
+out.push('\nSignatures:');
+out.push('- `wobble(a, b, bars=1)` — sine, one cycle of wobble per `bars`');
+out.push('- `drift(a, b)` — smooth wandering noise (perlin)');
+out.push('- `pulse(a, b, per=4)` — square, `per` beats per cycle');
+out.push('- `swell(a, b)` — sine timed to the section, peaking a quarter of the way through');
+out.push('- `rise`/`fall` write `ramp(v, v+.3)` / `ramp(v, v-.3)` from the axis\'s current value `v`, not a MOTION function');
 console.log(out.join('\n'));

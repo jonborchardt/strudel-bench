@@ -94,3 +94,19 @@ Write `key` and `progression` on the section. Numerals are diatonic to the secti
 - **relative**: relative major/minor of the current key; `relative major` = relative key then that mode
 - progression grammar: `b`/`#` before a numeral, `m`/`M`/`dim` after it, `7` (dominant on uppercase: `V7`; diatonic on lowercase: `ii7`) or `M7` (major seventh), `[..]` for several chords in one bar: `'i bVI [III VII] V7'`
 - not modeled: inversions, voice leading, chords longer than a bar. For other scales use a different section key (e.g. `C:harmonic minor`).
+
+## Movements (write a movement call around the axis's current value)
+
+- **wobble**: wobbling, wobble, wobbly
+- **drift**: drifting, drift
+- **pulse**: pulsing, pulse, pumping
+- **swell**: swelling, swell, breathing
+- **rise**: rising, rise, opening
+- **fall**: falling, fall, closing
+
+Signatures:
+- `wobble(a, b, bars=1)` — sine, one cycle of wobble per `bars`
+- `drift(a, b)` — smooth wandering noise (perlin)
+- `pulse(a, b, per=4)` — square, `per` beats per cycle
+- `swell(a, b)` — sine timed to the section, peaking a quarter of the way through
+- `rise`/`fall` write `ramp(v, v+.3)` / `ramp(v, v-.3)` from the axis's current value `v`, not a MOTION function

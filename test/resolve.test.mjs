@@ -235,6 +235,18 @@ test('locate reads an array of numbers as a material value; setMaterial rewrites
   assert.equal(locate(`song({}, [section('a', 4, { sample: { slices: [.1, x] } })])`).sections[0].layers.sample.mats.slices.value, 'expr', 'a non-literal element is an expression');
 });
 
+test('a motion word writes a movement call around the current value; structural axes and expressions refuse', async () => {
+  await ready;
+  const { planEdits, applyEdits } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { pad: { brightness: .6, space: sine }, drums: { density: .7 } })])`;
+  const r = planEdits(src, 'a', 'pad', 'wobbling brightness');
+  assert.deepEqual(r.report.filter((x) => x.motion).map((x) => [x.axis, x.motion]), [['brightness', 'wobble(.4, .8)']]);
+  assert.match(applyEdits(src, r.edits), /brightness: wobble\(\.4, \.8\)/);
+  assert.match(applyEdits(src, planEdits(src, 'a', 'pad', 'rising width').edits), /width: ramp\(\.5, \.8\)/, 'an axis not in the source starts at .5 and is inserted');
+  assert.deepEqual(planEdits(src, 'a', 'pad', 'pulsing space').refused.map((x) => x.reason), ['space is a signal here; change its range by hand']);
+  assert.deepEqual(planEdits(src, 'a', 'drums', 'wobbling density').refused.map((x) => x.reason), ['density is structural: it takes a number, not a movement']);
+});
+
 test('locate reads a list of sound names as a list, not expr', async () => {
   const { locate } = await import('../lib/resolve.mjs');
   const L = locate(`song({}, [section('a', 4, { melody: { sound: ['piano', 'kalimba'] }, pad: { sound: { piano: 2, harp: 1 } } })])`).sections[0].layers;

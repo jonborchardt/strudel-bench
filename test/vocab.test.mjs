@@ -68,6 +68,15 @@ test('harmony words are consumed as states, not deltas or unknowns', () => {
   assert.deepEqual(parsePhrase('much dorian').harmony, [{ word: 'dorian', kind: 'mode', value: 'dorian', relative: false }], 'modifiers ignored on harmony words');
 });
 
+test('motion words attach to the axis next to them', async () => {
+  const { parsePhrase } = await import('../lib/vocab.mjs');
+  assert.deepEqual(parsePhrase('wobbling brightness').motion, [{ word: 'wobbling', fn: 'wobble', axis: 'brightness' }]);
+  assert.deepEqual(parsePhrase('brightness rising, much darker').motion, [{ word: 'rising', fn: 'rise', axis: 'brightness' }]);
+  assert.deepEqual(parsePhrase('brightness rising, much darker').deltas, { brightness: -.6, register: -.2 });
+  const p = parsePhrase('wobbling');
+  assert.deepEqual(p.motion, []); assert.deepEqual(p.unknown, ['wobbling (no axis named)']);
+});
+
 test('describeAxes reads axis values back as the words that would have set them', async () => {
   const { describeAxes } = await import('../lib/vocab.mjs');
   assert.deepEqual(describeAxes({ brightness: .2, density: .9, space: .5, sound: 'piano' }), ['dark', 'very busy']);
