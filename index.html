@@ -136,7 +136,7 @@
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
   import { SCHEMA, host, CHORDS } from './web/hll-schema.mjs';
-  import { fmt, locate, setAxis, setAxisText, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField, setSongField, addPack } from './lib/resolve.mjs';
+  import { fmt, locate, setAxis, setAxisText, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField, setSongField, addPack, VERBS, applyVerb } from './lib/resolve.mjs';
   import { lanePoints, laneSvg } from './web/lane.mjs';
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase, arrange, parseMeter } from './lib/song.mjs';
@@ -304,10 +304,14 @@
   let loop = null; // its section object from the last evaluation (offset, span), or null
   function stripRender() { // a block per section, flex-grown by its span; a row per layer whose opacity is its density (× level when set)
     const at = sections.findLast((x) => x.offset <= Number($('pos').value));
-    $('strip').innerHTML = sections.map((s, i) => `<div class="blk${s.name === pinned ? ' pin' : ''}${s === at ? ' on' : ''}" data-i="${i}" style="flex-grow:${s.span}" title="${esc(s.name)}: ${s.cycles} bars${s.role ? ', ' + s.role : ''}. Click to scrub here."><span class="nm">${esc(s.name)}</span><span class="ops"><button data-op="pin" title="${s.name === pinned ? 'unpin: follow the playhead again' : 'pin: loop this section, start Play here, keep the mix on it'}">&#128204;</button><button data-op="left" title="move earlier"${i ? '' : ' disabled'}>&#9664;</button><button data-op="right" title="move later"${i < sections.length - 1 ? '' : ' disabled'}>&#9654;</button><button data-op="dup" title="duplicate it after this one">&#10697;</button><button data-op="ren" title="rename (or double-click the name)">&#9998;</button><button data-op="del" title="remove this section (undo brings it back)">&times;</button></span>${layerNames().map((l) => {
+    $('strip').innerHTML = sections.map((s, i) => `<div class="blk${s.name === pinned ? ' pin' : ''}${s === at ? ' on' : ''}" data-i="${i}" style="flex-grow:${s.span}" title="${esc(s.name)}: ${s.cycles} bars${s.role ? ', ' + s.role : ''}. Click to scrub here."><span class="nm">${esc(s.name)}</span><span class="ops"><button data-op="pin" title="${s.name === pinned ? 'unpin: follow the playhead again' : 'pin: loop this section, start Play here, keep the mix on it'}">&#128204;</button><button data-op="left" title="move earlier"${i ? '' : ' disabled'}>&#9664;</button><button data-op="right" title="move later"${i < sections.length - 1 ? '' : ' disabled'}>&#9654;</button><button data-op="dup" title="duplicate it after this one">&#10697;</button><button data-op="ren" title="rename (or double-click the name)">&#9998;</button><button data-op="verb" title="a transform: breakdown, lift, strip, halftime">&#9889;</button><button data-op="del" title="remove this section (undo brings it back)">&times;</button></span>${layerNames().map((l) => {
       const a = s.layers[l]?.attrs, d = typeof a?.density === 'number' ? a.density : .5;
       return `<i style="opacity:${a ? ((.3 + .7 * d) * Math.min(1, a.level ?? 1)).toFixed(2) : 0}" title="${l}${a ? `: density ${d}` : ' (silent)'}"></i>`;
-    }).join('')}${transition(s, sections[i + 1])}</div>`).join('');
+    }).join('')}${transition(s, sections[i + 1])}${fade(s)}</div>`).join('');
+  }
+  // dropout/sweep: bars of silence, or filter sweep to silence, at the tail of section `s` (lib/song.mjs); 0 = none
+  function fade(s) {
+    return `<span class="tr" title="the tail of ${esc(s.name)}"><input type="number" class="fade" min="0" max="${s.cycles}" step="1" value="${s.dropout || ''}" placeholder="dropout" title="dropout: bars of silence at the end of ${esc(s.name)}" data-fld="dropout" data-name="${esc(s.name)}"><input type="number" class="fade" min="0" max="${s.cycles}" step="1" value="${s.sweep || ''}" placeholder="sweep" title="sweep: bars of filter sweep to silence at the end of ${esc(s.name)}" data-fld="sweep" data-name="${esc(s.name)}"></span>`;
   }
   // the transition out of section `s`: its fx riser (bars into the next) and the next section's fx impact (a hit on its downbeat); both picks
   function transition(s, next) {
@@ -405,14 +409,21 @@
   $('strip').ondblclick = (e) => { const b = e.target.closest('.blk'); if (b && e.target.closest('.nm') && !e.target.closest('.rn')) renameAt(b, sections[b.dataset.i]); };
   $('strip').onclick = (e) => {
     const b = e.target.closest('.blk'); if (!b || e.target.closest('.rn')) return;
-    const s = sections[b.dataset.i], op = e.target.closest('[data-op]')?.dataset.op;
+    const opBtn = e.target.closest('[data-op]'), s = sections[b.dataset.i], op = opBtn?.dataset.op;
     const tr = e.target.closest('[data-tr]'); if (tr) return transitionPick(tr, s, sections[Number(b.dataset.i) + 1]);
     if (!op) return pinned && pinned !== s.name ? pinTo(s) : seek(s.offset); // pinned: a click moves the pin
     if (op === 'del') return did(() => { const out = removeSection(code.text, s.name); if (pinned === s.name) { pinned = null; loop = null; } return out; }, `removed ${s.name}`);
     if (op === 'ren') return renameAt(b, s);
     if (op === 'pin') return pinned === s.name ? unpin() : pinTo(s);
-    if (op === 'dup') did(() => { const { src, name } = duplicateSection(code.text, s.name); mixSection = name; if (pinned) pinned = name; return src; }, `duplicated ${s.name}`);
-    else did(() => moveSection(code.text, s.name, op === 'left' ? -1 : 1), `moved ${s.name} ${op === 'left' ? 'earlier' : 'later'}`);
+    if (op === 'dup') return did(() => { const { src, name } = duplicateSection(code.text, s.name); mixSection = name; if (pinned) pinned = name; return src; }, `duplicated ${s.name}`);
+    if (op === 'verb') return openPickList(opBtn, { names: Object.keys(VERBS), labels: Object.fromEntries(Object.entries(VERBS).map(([k, v]) => [k, v.title])),
+      onPick: (v) => did(() => applyVerb(code.text, s.name, v, effective()).src, `${s.name} ${v}`, false, s.name) });
+    did(() => moveSection(code.text, s.name, op === 'left' ? -1 : 1), `moved ${s.name} ${op === 'left' ? 'earlier' : 'later'}`);
+  };
+  $('strip').onchange = (e) => {
+    const el = e.target; if (!el.dataset.fld) return;
+    const n = el.value.trim() === '' ? 0 : Math.max(0, Math.round(Number(el.value)));
+    did(() => setSectionField(code.text, el.dataset.name, el.dataset.fld, n ? String(n) : null), `${el.dataset.name} ${el.dataset.fld} ${n || 'off'}`, false, el.dataset.name);
   };
   // undo/redo: one stack for every way the source changes (typing, knobs, words, section ops, kit). Typing and knob
   // drags coalesce within a second; a drag's end resets that so the next drag is its own step.

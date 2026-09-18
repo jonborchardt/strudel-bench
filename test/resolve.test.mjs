@@ -289,3 +289,15 @@ test('setAxisText replaces any value, expression included, or inserts the key', 
   assert.match(setAxisText(src, 'a', 'pad', 'brightness', 'wobble(.3, .7)'), /brightness: wobble\(\.3, \.7\), space/);
   assert.match(setAxisText(src, 'a', 'pad', 'width', '.7'), /space: \.3, width: \.7/);
 });
+
+test('verbs: breakdown, lift, strip and halftime are resolver edits on a whole section', async () => {
+  const { applyVerb, locate } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { drums: { density: .8 }, bass: { weight: .6 }, melody: { follow: true }, pad: { space: .5 }, fx: { riser: 2 } })])`;
+  const b = applyVerb(src, 'a', 'breakdown');
+  assert.match(b.src, /drums: \{ density: \.45/, 'sparser: -.35'); assert.match(b.src, /space: \.85/); assert.match(b.src, /brightness: \.2/); assert.doesNotMatch(b.src, /fx:/); assert.deepEqual(b.report.removed, ['fx']);
+  const s = applyVerb(src, 'a', 'strip');
+  assert.deepEqual(Object.keys(locate(s.src).sections[0].layers), ['drums', 'bass']);
+  const h = locate(applyVerb(src, 'a', 'halftime').src).sections[0].layers.drums;
+  assert.equal(h.mats.template.value, 'halftime'); assert.equal(h.axes.density.value, .63, 'slightly sparser: -.175 from .8');
+  assert.throws(() => applyVerb(src, 'a', 'nope'), /unknown verb/);
+});
