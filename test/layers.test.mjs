@@ -384,6 +384,17 @@ test('patch: a named bundle of voice controls, or an object of them, applied und
   assert.ok(v('bass', { patch: { lpq: .5 }, brightness: .9 }).cutoff > 400, 'brightness still sets the cutoff on top');
 });
 
+test("follow: 'tones' maps written degrees onto the chord tones of each bar", async () => {
+  await ready;
+  const notes = (spec, cycles = 2) => song({ cps: .5, key: 'C:major' }, [section('a', cycles, { progression: 'I IV', melody: { sound: 'piano', ...spec } })]).strudel.sections[0].layers.melody.pattern.queryArc(0, cycles).filter((h) => h.hasOnset()).sort((a, b) => a.whole.begin.valueOf() - b.whole.begin.valueOf()).map((h) => h.value.note);
+  const t = notes({ notes: '0 1 2 3', follow: 'tones' });
+  assert.deepEqual(t.slice(0, 4).map((n) => n % 12), [0, 4, 7, 11], 'C E G B over I');
+  assert.deepEqual(t.slice(4).map((n) => n % 12), [5, 9, 0, 4], 'F A C E over IV');
+  assert.equal(notes({ notes: '4 5', follow: 'tones' }, 1)[0] % 12, 0, 'degree 4 is the root an octave up');
+  assert.equal(notes({ notes: '4 5', follow: 'tones' }, 1)[0] - notes({ notes: '0 1', follow: 'tones' }, 1)[0], 12);
+  assert.throws(() => notes({ follow: 'chords' }), /follow must be true, false or 'tones'/);
+});
+
 test('bass rhythm: a written grid replaces the density grid, keeps drive and accents, may span bars', async () => {
   const g = await ready;
   const at = (attrs, cycles = 2) => onsets(g.bass(attrs, { ...ctx, cycles }), cycles).map((h) => h.whole.begin.valueOf()).sort((a, b) => a - b);
