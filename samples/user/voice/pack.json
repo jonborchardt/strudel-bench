@@ -1,7 +1,7 @@
 {
-  "deploy": true,
-  "license": "Licensed to the repo owner for redistribution with this site",
-  "source": "voice-over session (rwp_tough_*): one actor shouting directions and warnings, 16-bit stereo 44.1 kHz, 1.5-2.2 s per take with a little silence either side",
+  "deploy": false,
+  "license": "GameDevMarket Marketplace Terms, Licence (A) (https://static.gamedevmarket.net/terms-conditions/). The takes may be used and adapted inside a media product without limit, but clause 4.2(b) forbids sharing or redistributing the asset other than as part of that product, and 4.2(c) forbids letting anyone extract it. A deployed pack is served as addressable .wav files for other songs to name, which is exactly that -- so this pack is local-only and must stay so.",
+  "source": "voice-over session (rwp_tough_*), licensed from GameDevMarket: one actor shouting directions and warnings, 16-bit stereo 44.1 kHz, 1.5-2.2 s per take with a little silence either side",
   "samples": {
     "back":    { "begin": 0.24, "end": 0.753, "bars": 0.5 },
     "coming":  { "begin": 0.30, "end": 0.936, "bars": 0.5 },
