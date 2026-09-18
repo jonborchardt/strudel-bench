@@ -5,8 +5,8 @@ description: Use when the user asks to change how a song in songs/ sounds (make 
 
 # strudel: editing songs by musical axes
 
-Songs are `songs/*.strudel`. A song written with `song()`/`section()` has layers (drums, bass, melody, pad, fx, sample)
-with axis values in 0..1 where 0.5 is that layer's baseline. See `reference/vocab.md` (generated) for the
+Songs are `songs/*.strudel`. A song written with `song()`/`section()` has eight layers (drums, bass, melody, pad, fx,
+sample, perc, raw) with axis values in 0..1 where 0.5 is that layer's baseline. See `reference/vocab.md` (generated) for the
 axes, what each does per layer, and the descriptor words.
 
 ## Workflow
@@ -41,11 +41,13 @@ axes, what each does per layer, and the descriptor words.
 
 Descriptors never touch material. To change a sound, level, fill, arp or meter, edit the literal by hand
 (`sound`, `notes`, `level`, `sounds`, `template`, `rhythm`, `fill` (`true`/`false` or a bar count `n`), `arp`, `follow`,
-`phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`, `begin`, `end`, `bars`, `slices`, `pattern`, `stretch`) and re-run
+`phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`, `begin`, `end`, `bars`, `slices`, `pattern`, `stretch`, `transpose`,
+`patch`, `duck`, `duckDepth`, `dropout`, `sweep`) and re-run
 `npm run check`. A `sample` part slices any loaded
 sample: `sound`, the region (`begin`/`end` as fractions), `bars` it stands for, `slices` (a count, or a list of break
 points, fractions of the file inside the region), `pattern` (slice indices in
-mini-notation over those bars) and `stretch` (fit each slice to its step); the check prints the file behind the sound
+mini-notation over those bars), `stretch` (fit each slice to its step) and `transpose` (semitones, scales playback
+speed since there is no pitch-preserving stretch); the check prints the file behind the sound
 and every event's `begin`/`end`/`speed`. A sample part may name a pack definition (`pack.json` → `samples`) and
 override any key; the check prints the pack sound the events carry.
 

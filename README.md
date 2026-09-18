@@ -46,9 +46,10 @@ The page has two views: **Compose** (index.html) and **Examples** (examples.html
     web/                 boot.mjs (shared initStrudel/prebake, playCode, nav, footer), compose.mjs (kit + notes + request helpers),
                          examples.mjs (the GROUPS data), mp3.mjs (lamejs wrapper), sampler.mjs (waveform peaks, time labels, tempo detection, snapping),
                          waveform.mjs (the waveform component: draw, drag, snap; shared by Compose and Samples), workshop.mjs (Samples page's pack.json helpers),
+                         stepgrid.mjs (the step grid editor: voices x steps, click to cycle rest/hit/accent/ghost), lane.mjs (a signal axis's automation lane, drawn across its section),
                          kits/ (one icon per kit), strudel.css, icon.svg, og.png
     songs/               one .strudel file per song
-    lib/                 the axis system (see below), loaded by both the page and the Node scripts
+    lib/                 the axis system (see below) plus data files patches.json (named voice-control bundles) and motion.json (motion words), loaded by both the page and the Node scripts
     samples/packs/       downloaded packs (gitignored) + <pack>.json maps + packs.json
     samples/user/        your sample packs, one folder each; pack.json = deploy policy (see Use)
     renders/             wav/mp3 renders and dumps (gitignored)

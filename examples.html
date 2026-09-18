@@ -19,7 +19,10 @@
     <p>strudel-bench songs are written with a small musical vocabulary: eight layers (drums, bass, melody, pad, fx, sample, perc, raw), twelve axes from 0 to 1 where
       0.5 is each layer's baseline, descriptors that move several axes at once, modifiers that scale them, and harmony words that pick keys
       and progressions. A song is a list of sections, each with its own layer settings, and an edit request names the section it is about.
-      An axis can also be a signal that moves through its section instead of a constant.</p>
+      An axis can also be a signal that moves through its section instead of a constant. Drums, bass and perc can
+      also write their rhythm directly as a grid of hits, accents, ghosts and rests. A continuous axis can carry a
+      named movement — wobble, drift, pulse, swell — instead of a plain ramp. And a whole section can be reshaped by
+      an arrangement verb like breakdown, lift, strip or halftime.</p>
     <p>Why write at this level? Plain Strudel says what to play: a sample name, a note list, a filter cutoff in hertz. The vocabulary says
       what it should sound like, and the layers turn that into the right pattern calls for their instrument. "Darker" is one word instead
       of a cutoff, a gain change and a sample swap across three layers, so an edit request stays small and a change touches only the section
