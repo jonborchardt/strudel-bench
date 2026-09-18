@@ -247,6 +247,27 @@ test('a motion word writes a movement call around the current value; structural 
   assert.deepEqual(planEdits(src, 'a', 'drums', 'wobbling density').refused.map((x) => x.reason), ['density is structural: it takes a number, not a movement']);
 });
 
+test('a motion centres on the value after the phrase\'s own delta on that axis, and replaces the delta\'s edit rather than doubling it', async () => {
+  await ready;
+  const { planEdits, applyEdits, locate } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { pad: { brightness: .6 } })])`;
+  const plan = planEdits(src, 'a', 'pad', 'brightness rising, much darker');
+  const out = applyEdits(src, plan.edits);
+  assert.doesNotThrow(() => locate(out), out);
+  assert.match(out, /brightness: ramp\(0, \.3\)/, out);
+});
+
+test('a second motion on an axis already holding one in this phrase is refused, the first still writes', async () => {
+  await ready;
+  const { planEdits, applyEdits, locate } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { pad: { brightness: .6 } })])`;
+  const plan = planEdits(src, 'a', 'pad', 'wobbling brightness pulsing');
+  assert.equal(plan.edits.length, 1);
+  assert.deepEqual(plan.refused.map((x) => x.reason), ['brightness already has a movement in this phrase; one per axis']);
+  const out = applyEdits(src, plan.edits);
+  assert.doesNotThrow(() => locate(out), out);
+});
+
 test('locate reads a list of sound names as a list, not expr', async () => {
   const { locate } = await import('../lib/resolve.mjs');
   const L = locate(`song({}, [section('a', 4, { melody: { sound: ['piano', 'kalimba'] }, pad: { sound: { piano: 2, harp: 1 } } })])`).sections[0].layers;
