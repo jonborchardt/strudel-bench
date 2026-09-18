@@ -41,6 +41,8 @@ test('parseGrid: characters, tiling, bars, euclid shorthand, errors', async () =
   assert.throws(() => parseGrid('x..y', 16), /unknown character "y"/);
   assert.throws(() => parseGrid('x'.repeat(20), 16), /whole number of bars/);
   assert.throws(() => parseGrid('3/5', 16), /divide the bar/);
+  assert.throws(() => parseGrid('', 16), /empty/);
+  assert.throws(() => parseGrid('  ', 16), /empty/);
   assert.equal(bjorklund(3, 8), 'x..x..x.'); assert.equal(bjorklund(0, 4), '....'); assert.equal(bjorklund(4, 4), 'xxxx');
   assert.equal(gains('x.X.o.'), '1 1 1.25 1 .4 1'); assert.equal(gains('x...x...'), null);
   assert.deepEqual(positions('X.o.'), [0, 2]);
