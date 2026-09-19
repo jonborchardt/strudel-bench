@@ -45,8 +45,8 @@ form replaces the automatic climax-end roll rather than adding to it), `arp`, `f
 `phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`, `begin`, `end`, `bars`, `slices`, `pattern`, `stretch`, `transpose`,
 `patch`, `duck`, `duckDepth`, `duckAttack`, `position` (-1..1, where the part sits), `velocity` (a mini string of
 per-step multipliers), `humanize` (`{ timingMs, velocity, length, correlation }`, a seeded correlated feel),
-`compressor` (`{ threshold, ratio, knee, attack, release }`), the song/section `room` (`{ size, decay, damping,
-dimension, ir }`, one reverb character for every part), `dropout`, `sweep` (opens the filter to 8 kHz at the start of
+`compressor` (`{ threshold, ratio, knee, attack, release }`), the song/section `room` (`{ size, fade, damping,
+dimension, ir, irbegin }`, one reverb character for every part), `dropout`, `sweep` (opens the filter to 8 kHz at the start of
 its tail and closes it to 150 Hz by the end, overriding the part's own brightness in those bars)) and re-run
 `npm run check`. A `sample` part slices any loaded
 sample: `sound`, the region (`begin`/`end` as fractions), `bars` it stands for, `slices` (a count, or a list of break
@@ -82,6 +82,8 @@ interest. Do these, in this order, on every new song and whenever a song is call
    drop it, so a sound that survives those is in the layers and one that vanishes is in the textures. Melodic: `piano`, `kalimba`, `marimba`, `vibraphone`, `glockenspiel`, `folkharp`, `harp`,
    `clavisynth`, `fmpiano`, `steinway`, `organ_8inch`, `casio`, `supersaw`. Bass: `square` or `sawtooth`.
    Keep at most one raw sawtooth layer; two saws in the same octave is mud.
+   Beyond the loaded packs, `reference/sample-banks.md` lists the community `github:` banks and the two
+   steps that make one usable here (an entry in `lib/packs.json`, then `npm run samples -- <pack>`).
 3. **Counter-line in the climax.** `melody2: { notes: '~ 7 ~ ~ 5 ~ ~ ~', sound: 'glockenspiel', register: .8,
    level: .5, follow: true }` is a second melody layer (any `<layer><digit>` key builds that layer again). Sparse,
    an octave up or down, on the beats the hook leaves empty. That is the one place "more instruments" helps.
@@ -122,10 +124,13 @@ under 300 Hz, mid 300..3000, high above): shared band energy times time together
 1. **Hierarchy.** Name each part foreground, support, background or foundation (kick and bass) from its role in the
    section. Foreground sits 6..12 dB under the mix, support 10..18, background 16..26; those are defaults, not
    rules. A part more than 30 dB under the mix is inaudible: cut it or raise it, never leave it. Set `level`.
-   `compressor: { threshold: -18, ratio: 3 }` only on a part whose `crest` is the problem (peaks far over its rms).
-   The lint's "no headroom" (a real share of samples at full scale) is a level problem; its "transients touch full
-   scale" (a few kick attacks, under 0.01% of samples) is not fixed by level: a compressor on the kit with a 2 ms
-   attack takes most of it, and what is left needs the master limiter that is not built. Say so, do not chase it.
+   `compressor: { threshold: -18, ratio: 3 }` only on a sparse part whose `crest` is the problem (peaks far over
+   its rms): superdough builds one compressor node per hit, so on a dense kit it is dozens of live nodes a bar and
+   playback drops out (the check lint says so above 16 hits a bar). The lint's "no headroom" (a real share of
+   samples at full scale) is a level problem; its "transients touch full scale" (a few kick attacks, under 0.01% of
+   samples) is not fixed by level either, and needs the master limiter that is not built. Say so, do not chase it.
+   Reverb is per orbit and parts wanting the same reverb share one (`orbitKey`), so a song `room` with a `size` is
+   one convolver for the whole section; without it, keep pads at a shared `space` value rather than one each.
 2. **Collisions, arrangement first.** Fix a masking pair in this order and stop at the first that works: fewer notes
    (`density`) or a rest where the other part plays; an octave apart (`register`, or the pad's low voicing off by
    `weight` ≤ .5); a `position` each; darker on the one that matters less (`brightness`); only then `duck`. Kick
@@ -140,7 +145,7 @@ under 300 Hz, mid 300..3000, high above): shared band energy times time together
    (`position` unset or within ±.1, `width` ≤ .5); support parts off to a side (`position: ±.3`, opposite sides for
    two of them); the pad wide (`width: .7`, or `.8` for `jux`); at most one part moving (`panStd` > .2). A drum kit's
    own voice spread moves as one with its `position`. The lint's "flat stage" is three non-foundation parts at centre.
-5. **One room, then contrast across sections.** A `room` on the song (`{ size, decay, damping }`) gives every part
+5. **One room, then contrast across sections.** A `room` on the song (`{ size, fade, damping }`) gives every part
    the same reverb character and turns each part's `space` into a send: dry kick and bass (`space` ≤ .5), a little on
    the hook, more on the pad and fx. Then the `arc:` line of the check and each section's mix `dB`, `centroid` and
    `onsetsPerSec` must differ across roles: a climax that measures like its verse is a flat song, not a flat mix.

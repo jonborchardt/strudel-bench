@@ -1,0 +1,31 @@
+{
+  "prompt": "a song to test the generated impulse responses of samples/user/rooms",
+  "requests": [
+    {
+      "date": "2026-09-19",
+      "ask": "make a song for me to test the ir",
+      "changes": [
+        {
+          "section": "dry",
+          "why": "no room: superdough's own synthesized tail, the reference with no impulse and no pre-delay"
+        },
+        {
+          "section": "small",
+          "why": "room.ir=room 8 ms pre-delay in a close box, 0.9 s"
+        },
+        {
+          "section": "plate",
+          "why": "room.ir=plate 15 ms, dense taps, no geometry, damping 9000 to keep it bright"
+        },
+        {
+          "section": "hall",
+          "why": "room.ir=hall 30 ms pre-delay, 3.2 s, the climax: the gap is clearest on the rim and the glockenspiel"
+        },
+        {
+          "section": "tight",
+          "why": "room.ir=hall irbegin .015 reads past the silent head: the same hall with the pre-delay removed, to A/B against hall"
+        }
+      ]
+    }
+  ]
+}

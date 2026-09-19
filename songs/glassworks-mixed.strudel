@@ -12,7 +12,7 @@ const lead = { sound: 'triangle', patch: 'glass', follow: 'tones', phrase: 2, no
 const wide = { sound: 'sawtooth', patch: 'wide', articulation: .15, space: .7, width: .7, brightness: .4 };
 const deep = { sound: 'square', patch: 'reese', register: .25, weight: .7, articulation: .55, brightness: .4, space: .4 };
 
-song({ cps: .5, key: 'A:minor', seed: 21, kit: 'RolandTR909', room: { size: 1.2, decay: .3, damping: 7000 } }, [
+song({ cps: .5, key: 'A:minor', seed: 21, kit: 'RolandTR909', room: { size: 1.2, fade: .3, damping: 7000 } }, [
 
   // a pad breathing on its own: brightness wobbles once every four bars, the room swells up and back over the section
   section('arrive', 8, { role: 'establish', progression: 'i@2 VI/1 VII',
@@ -39,7 +39,7 @@ song({ cps: .5, key: 'A:minor', seed: 21, kit: 'RolandTR909', room: { size: 1.2,
 
   // the bloom: a wider pad, the lead doubled an octave up by a second glass voice off to the other side, the bass locked to the kick
   section('bloom', 16, { role: 'climax', progression: 'i VI/1 III VII',
-    drums:   { template: 'breaks', density: .85, drive: .8, articulation: .6, brightness: .5, weight: .55, variation: .4, level: .4, compressor: { threshold: -24, ratio: 4, attack: .002, release: .08 } }, // the kit's crest (16 dB) is what clips the downbeat, not its level; brightness a notch down since the compressor lifts the hats against the kick
+    drums:   { template: 'breaks', density: .85, drive: .8, articulation: .6, brightness: .6, weight: .55, variation: .4, level: .35 }, // a kit compressor was tried for the downbeat's transient clip and dropped (superdough builds one per hit): the level is a notch lower instead
     bass:    { ...deep, density: .75, notes: '0 7 0 4', brightness: pulse(.4, .7), weight: .85, aggression: .5, duck: 'drums', duckDepth: .5, duckAttack: .15, level: .75 },
     melody:  { ...lead, density: .7, brightness: .8, width: drift(.5, .9), level: 1.3 },
     melody2: { ...lead, notes: '~ ~ 4 ~ ~ ~ 5 ~ ~ ~ 4 ~ ~ ~ ~ ~', register: .85, level: 1.6, space: .75, brightness: .4, position: -.4 },

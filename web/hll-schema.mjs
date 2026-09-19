@@ -104,7 +104,7 @@ export const SCHEMA = {
     velocity: 'a mini string of per-step gain multipliers, written by hand',
     humanize: 'an object { timingMs, velocity, length, correlation }: a seeded, correlated played feel',
     compressor: 'an object { threshold, ratio, knee, attack, release }: the part\'s own compressor',
-    room: 'an object { size, decay, damping, dimension, ir }: one reverb character for every part',
+    room: 'an object { size, fade, damping, dimension, ir, irbegin }: one reverb character for every part',
     notes: 'a line in mini-notation, written by hand',
     rhythm: 'a grid string (x X o . | or p/s), written by hand',
     chord: 'a scale degree or a pattern of them',

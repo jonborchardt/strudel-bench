@@ -1,0 +1,54 @@
+// @hidden
+// rooms: the same phrase carried through four reverbs, so the generated impulses of samples/user/rooms can be heard
+// against each other and against no impulse at all. Sections differ by their `room` first and by one step of density
+// second; the material is deliberately sparse and transient-heavy (marimba plucks, rim, a dry kick) because that is
+// what a pre-delay and a set of early reflections are audible in — a dense pad hides both.
+//
+//   dry    no room key at all: superdough synthesizes its own decaying-noise tail. No early reflections, no gap.
+//   small  rooms/room.wav, 8 ms pre-delay, 0.9 s: the attack stays in front of the reverb, the box is close.
+//   plate  rooms/plate.wav, 15 ms, 1.8 s: no geometry, dense taps, bright — a plate has no walls to speak of.
+//   hall   rooms/hall.wav, 30 ms, 3.2 s: the gap is obvious on the rim, the tail outlasts the bar. The climax.
+//   tight  the same hall read from 1.5% in (irbegin), which skips the silent head: the same room with the
+//          pre-delay removed. A/B this against `hall` to hear what the pre-delay alone was doing.
+//
+// room.size truncates an impulse and never stretches it, so each section's size is set at or under its file's length.
+song({ cps: .52, key: 'D:minor', seed: 7, kit: 'RolandTR909', packs: ['rooms'] }, [
+
+  section('dry', 4, { role: 'establish', progression: 'i VI III VII',
+    drums:  { density: .45, space: .4, position: -.05 },
+    melody: { sound: 'marimba', notes: '0 ~ 2 ~ 4 ~ ~ 3 ~ 2 ~ ~ 0 ~ ~ ~', follow: true, phrase: 2, register: .55, space: .7, articulation: .65 },
+    pad:    { density: .4, space: .55, brightness: .35, width: .7, level: .5 },
+  }),
+
+  section('small', 8, { role: 'develop', progression: 'i VI III VII', room: { ir: 'room', size: .9 },
+    drums:  { density: .55, space: .5, position: -.05 },
+    bass:   { sound: 'square', patch: 'sub', notes: '0 ~ 0 5', density: .75, weight: .7, register: .3, space: .35, duck: 'drums', duckDepth: .3 },
+    melody: { sound: 'marimba', notes: '0 ~ 2 ~ 4 ~ ~ 3 ~ 2 ~ ~ 0 ~ ~ ~', follow: true, phrase: 2, register: .55, space: .75, articulation: .65 },
+    perc:   { sound: 'rim', rhythm: '..x.....x...x...', space: .8, position: .35, level: .7, humanize: { timingMs: 9, velocity: .1, correlation: 'bar' } },
+    pad:    { density: .4, space: .6, brightness: .35, width: .7, level: .5 },
+  }),
+
+  section('plate', 8, { role: 'develop', progression: 'i VI III VII', room: { ir: 'plate', size: 1.8, damping: 9000 },
+    drums:  { density: .6, space: .5, variation: .4, position: -.05 },
+    bass:   { sound: 'square', patch: 'sub', notes: '0 ~ 0 5', density: .75, weight: .7, register: .3, space: .35, duck: 'drums', duckDepth: .3 },
+    melody: { sound: 'marimba', notes: '0 ~ 2 ~ 4 ~ ~ 3 ~ 2 ~ 4 5 ~ 4 ~', follow: true, phrase: 2, register: .55, space: .8, articulation: .7, brightness: .6 },
+    perc:   { sound: 'rim', rhythm: '..x.....x...x.x.', space: .85, position: .35, level: .7, humanize: { timingMs: 9, velocity: .1, correlation: 'bar' } },
+    pad:    { density: .45, space: .6, brightness: .4, width: .75, level: .5 },
+  }),
+
+  section('hall', 8, { role: 'climax', progression: 'i VI III VII', room: { ir: 'hall', size: 3.2, damping: 5000 },
+    drums:   { density: .75, space: .55, drive: .65, articulation: .6, variation: .5, position: -.05 },
+    bass:    { sound: 'square', patch: 'sub', notes: '0 ~ 0 5 ~ 3 ~ ~', density: .8, weight: .8, register: .3, space: .3, duck: 'drums', duckDepth: .4, duckAttack: .15 },
+    melody:  { sound: 'marimba', notes: '0 ~ 2 ~ 4 ~ 7@2 ~ 5 ~ 4 ~ 2 0 ~', follow: true, phrase: 2, register: .55, space: .85, articulation: .7, brightness: .6 },
+    melody2: { sound: 'glockenspiel', notes: '~ ~ ~ 7 ~ ~ ~ ~ ~ 5 ~ ~ ~ ~ ~ ~', follow: true, register: .85, level: .55, space: .9, width: .6, position: .25 },
+    perc:    { sound: 'rim', rhythm: '..x.....x...x.x.', space: .9, position: .35, level: .7, humanize: { timingMs: 9, velocity: .1, correlation: 'bar' } },
+    pad:     { density: .5, space: .65, brightness: .4, width: .8, level: .5 },
+  }),
+
+  section('tight', 4, { role: 'release', progression: 'i VI III VII', room: { ir: 'hall', size: 3.2, damping: 5000, irbegin: .015 },
+    drums:  { density: .45, space: .55, position: -.05 },
+    melody: { sound: 'marimba', notes: '0 ~ 2 ~ 4 ~ ~ 3 ~ 2 ~ ~ 0 ~ ~ ~', follow: true, phrase: 2, register: .55, space: .85, articulation: .65 },
+    perc:   { sound: 'rim', rhythm: '..x.....x.......', space: .9, position: .35, level: .7 },
+    pad:    { density: .4, space: .6, brightness: .35, width: .7, level: .5 },
+  }),
+])

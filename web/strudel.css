@@ -317,11 +317,19 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .placeholder { border: 1px dashed #c9c9c9; border-radius: 6px; padding: .5rem .75rem; color: var(--muted); font-size: .9rem; }
 
 /* examples page */
-.subnav { display: flex; gap: .25rem; flex-wrap: wrap; position: sticky; top: 2.6rem; z-index: 1; background: var(--bg); padding: .5rem 0; }
+/* one row per arc: the arc name, then its group pills */
+.subnav { display: grid; gap: .3rem; position: sticky; top: 2.6rem; z-index: 1; background: var(--bg); padding: .5rem 0; }
+.subnav div { display: flex; gap: .25rem; flex-wrap: wrap; align-items: center; }
 .subnav a { text-decoration: none; padding: .2rem .6rem; border-radius: 99px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: .9rem; }
+.subnav b { flex: 0 0 7.5rem; color: var(--muted); font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+/* the overview diagram: full width of the intro card, its links the same blue as the page's */
+.map { margin: 1rem 0 0; }
+.map svg { width: 100%; height: auto; max-width: 62rem; }
+.map svg a text { text-decoration: underline; text-underline-offset: 2px; }
+.map figcaption { max-width: 62rem; margin-top: .3rem; color: var(--muted); font-size: .85rem; }
 .intro p { max-width: 60rem; }
 #groups { display: grid; gap: 3rem; margin-top: 1rem; }
-.exgroup { display: grid; gap: .75rem; scroll-margin-top: 5.5rem; } /* anchors land below the sticky subnav */
+.exgroup { display: grid; gap: .75rem; scroll-margin-top: 11rem; } /* anchors land below the sticky subnav */
 .exgroup + .exgroup { border-top: 1px solid var(--line); padding-top: 2.5rem; }
 .exgroup > h2 { font-size: 1.4rem; }
 .exgroup > p { max-width: 60rem; margin: 0; color: var(--muted); }

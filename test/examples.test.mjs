@@ -53,8 +53,8 @@ test('every variant evaluates with known sounds, and an A/B actually differs', a
 test('the samples group explains the sample part with the demo pack, and both sample songs are listed', () => {
   const g = GROUPS.find((x) => x.id === 'samples');
   assert.ok(g, 'a samples group');
-  assert.deepEqual(g.items.map((x) => x.title), ['A sample part', 'The region', 'Break points', 'Stretch', 'Named definitions', 'A kit out of one loop', 'Where definitions are made']);
-  for (const ex of g.items) for (const v of ex.variants) assert.match(v.hll ?? v.src, /demo-pack|chop\.strudel/, `${ex.title}/${v.label} uses the deployed pack`);
+  assert.deepEqual(g.items.map((x) => x.title), ['A sample part', 'The region', 'Break points', 'Stretch', 'Transpose a sample', 'Named definitions', 'Sample takes', 'A kit out of one loop', 'Sample packs', 'Where definitions are made']);
+  for (const ex of g.items) for (const v of ex.variants) assert.match(v.hll ?? v.src, /demo-pack|chop\.strudel|ping\.strudel/, `${ex.title}/${v.label} uses the deployed pack`);
   const songs = GROUPS.find((x) => x.id === 'songs').items.map((x) => x.title);
   assert.ok(songs.includes('breakwater') && songs.includes('hunted'));
 });

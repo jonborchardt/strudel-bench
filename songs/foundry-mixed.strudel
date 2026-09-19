@@ -4,8 +4,8 @@
 // dead centre, and every part in its own room. Now: one room on the song with each part's space as its send; the bass
 // under the kick (level, and ducked with a written recovery); the hook up to foreground with a phrase-shaped velocity
 // line; the bell twin lower in register so its samples carry, set right; the perc set left and played (humanize: a
-// seeded lean, not dice); the pad set slightly left and behind; drums brought down with a compressor on the kit where
-// its crest clipped the downbeat. `npm run measure -- songs/foundry-mixed.strudel drop` shows the table; compare with
+// seeded lean, not dice); the pad set slightly left and behind; drums brought down (a kit compressor was tried
+// and dropped: superdough builds one per hit). `npm run measure -- songs/foundry-mixed.strudel drop` shows the table; compare with
 // the same on songs/foundry.strudel.
 // intro -> verse -> build -> drop -> breakdown -> drop2 -> outro. E minor, 124 bpm, RolandTR808. Axis values are
 // 0..1 with 0.5 = the layer's baseline.
@@ -24,9 +24,8 @@ const bell  = { sound: 'vibraphone', follow: true, notes: '~ ~ 7 ~ ~ 5 ~ ~', reg
 const low   = { sound: 'square', patch: 'reese', register: .3, weight: .7, articulation: .6, brightness: .4, space: .35, level: .55, duck: 'drums', duckDepth: .35, duckAttack: .12 };
 const bed   = { sound: 'organ_8inch', articulation: .1, space: .75, brightness: .3, position: -.25 };
 const shake = { sound: ['tambourine', 'cajon'], rhythm: '..x...x...x...x.', position: -.35, humanize: { timingMs: 12, velocity: .12, correlation: 'bar' } };
-const kit   = { compressor: { threshold: -24, ratio: 4, attack: .002, release: .08 } }; // the kit's crest clips the downbeat, not its level
 
-song({ bpm: 124, key: 'E:minor', seed: 5, kit: 'RolandTR808', room: { size: 1.4, decay: .35, damping: 6500 } }, [
+song({ bpm: 124, key: 'E:minor', seed: 5, kit: 'RolandTR808', room: { size: 1.4, fade: .35, damping: 6500 } }, [
 
   // ride and rim alone: the written extras play whatever density says, the five kit voices wait for it
   section('intro', 8, { role: 'establish', progression: 'i@2 VI VII',
@@ -55,7 +54,7 @@ song({ bpm: 124, key: 'E:minor', seed: 5, kit: 'RolandTR808', room: { size: 1.4,
 
   // the whole kit, accents and ghosts, hats at sixteenths; the pad pumps under the kick because the kick ducks it
   section('drop', 16, { role: 'climax', progression: 'i VI III VII',
-    drums:   { ...kit, template: full, density: .9, drive: .85, articulation: .65, brightness: .5, weight: .6, variation: .35, level: .55 },
+    drums:   { template: full, density: .9, drive: .85, articulation: .65, brightness: .5, weight: .6, variation: .35, level: .45 },
     bass:    { ...low, rhythm: 'x..x..x.x.x.x...', notes: '0 ~ 0 7 ~ 4 3 0', density: .8, weight: .8, aggression: .55, brightness: .55, level: .5 },
     perc:    { ...shake, sound: { cajon: 3, bongo: 1 }, rhythm: '3/8+1', level: .6, width: .6 },
     melody:  { ...hook, density: .7, brightness: .7, width: .7, level: 2 },
@@ -74,7 +73,7 @@ song({ bpm: 124, key: 'E:minor', seed: 5, kit: 'RolandTR808', room: { size: 1.4,
 
   // the same drop, more variation, a fill every four bars, the counter-line an octave down as well as up
   section('drop2', 16, { role: 'climax', progression: 'i VI III VII',
-    drums:   { ...kit, template: full, density: .9, drive: .85, articulation: .65, brightness: .55, weight: .65, variation: .6, fill: 4, level: .55 },
+    drums:   { template: full, density: .9, drive: .85, articulation: .65, brightness: .55, weight: .65, variation: .6, fill: 4, level: .45 },
     bass:    { ...low, rhythm: 'x..x..x.x.x.x...', notes: '0 ~ 0 7 ~ 4 3 0', density: .8, weight: .85, aggression: .6, brightness: .6, level: .5 },
     perc:    { ...shake, sound: { cajon: 3, bongo: 1 }, rhythm: '3/8+1', level: .6, width: .7 },
     melody:  { ...hook, density: .75, brightness: .75, width: .75, level: 2 },
