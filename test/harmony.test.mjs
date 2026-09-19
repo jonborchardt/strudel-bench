@@ -113,6 +113,21 @@ test('relativeKey, withMode and applyHarmonyWords', async () => {
   assert.deepEqual(applyHarmonyWords(s0, parsePhrase('major').harmony), { key: 'C:major', progression: 'i VI' });
   assert.deepEqual(applyHarmonyWords(s0, parsePhrase('relative').harmony), { key: 'Eb:major', progression: 'i VI' });
   assert.deepEqual(applyHarmonyWords(s0, parsePhrase('punchier').harmony), s0, 'no harmony words: unchanged');
-  assert.deepEqual(applyHarmonyWords(s0, parsePhrase('tense, resolved').harmony).progression, 'I IV V I', 'last progression word wins');
+  assert.deepEqual(applyHarmonyWords(s0, parsePhrase('tense, resolved').harmony).progression, 'i iv VM i', 'last progression word wins, in the key\'s own mode');
+  assert.deepEqual(applyHarmonyWords(s0, parsePhrase('pop').harmony).progression, 'i iv VI VII', 'a major-written word spells itself for a minor key');
   assert.deepEqual(applyHarmonyWords({ key: 'C:aeolian', progression: 'i VI' }, parsePhrase('relative minor').harmony), { key: 'C:minor', progression: 'i VI' });
+});
+
+test('every progression word fits both mode families', async () => {
+  await ready;
+  const { parseProgression, chordNames, progressionFor } = await import('../lib/harmony.mjs');
+  const { HARMONY } = await import('../lib/vocab.mjs');
+  for (const [word, v] of Object.entries(HARMONY.progressions))
+    for (const key of ['C:major', 'C:minor', 'C:dorian', 'C:lydian', 'C:mixolydian', 'C:phrygian']) {
+      const names = chordNames(key, parseProgression(progressionFor(v, key)));
+      // a diminished triad on a plain diatonic numeral is an accident of the degree, not tension: no word asks for one
+      assert.ok(!/dim/.test(names), `${word} in ${key}: ${names}`);
+    }
+  assert.equal(chordNames('C:major', parseProgression(progressionFor(HARMONY.progressions.tense, 'C:major'))), 'C Bb Ab Bb');
+  assert.equal(chordNames('C:minor', parseProgression(progressionFor(HARMONY.progressions.resolved, 'C:minor'))), 'Cm Fm G Cm');
 });

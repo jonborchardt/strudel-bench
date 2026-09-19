@@ -62,7 +62,10 @@ test('strudelLib.DESCRIPTORS/OVERLAYS are live getters that reflect loadVocab', 
 test('harmony words are consumed as states, not deltas or unknowns', () => {
   const r = parsePhrase('happy, relative major, pop');
   assert.deepEqual(r.unknown, []);
-  assert.deepEqual(r.harmony, [{ word: 'major', kind: 'mode', value: 'major', relative: true }, { word: 'pop', kind: 'progression', value: 'I V vi IV' }]);
+  // a progression word carries its whole entry: applyHarmonyWords picks the spelling once the key is settled
+  assert.deepEqual(r.harmony.map(({ word, kind }) => [word, kind]), [['major', 'mode'], ['pop', 'progression']]);
+  assert.equal(r.harmony[0].relative, true);
+  assert.equal(r.harmony[1].value.major, 'I V vi IV');
   assert.ok(r.deltas.brightness > 0, 'axis overlay still applied');
   assert.deepEqual(parsePhrase('relative').harmony, [{ word: 'relative', kind: 'relative' }]);
   assert.deepEqual(parsePhrase('much dorian').harmony, [{ word: 'dorian', kind: 'mode', value: 'dorian', relative: false }], 'modifiers ignored on harmony words');

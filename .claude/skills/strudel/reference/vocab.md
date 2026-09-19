@@ -85,15 +85,15 @@ slightly ×0.5, a little ×0.5, a bit ×0.5, somewhat ×0.75, more ×1, much ×2
 
 ## Harmony words (states, not deltas; modifiers ignored)
 
-Write `key` and `progression` on the section. Numerals are diatonic to the section key; one chord per cycle unless bracketed; default `i VI`.
+Write `key` and `progression` on the section. Numerals are diatonic to the section key; one chord per cycle unless bracketed; default `i VI`. A word spells itself for the section key's mode: its own mode where it has one, else its mode family (minor third or major third).
 
 - **static**: i
-- **resolved**: I IV V I
-- **unresolved**: i VI VII
-- **tense**: i VII VI VII
-- **pop**: I V vi IV
-- **epic**: vi IV I V
-- **circular**: i VI III VII
+- **resolved**: i iv VM i in a minor key, I IV V I in a major one, I II V I in lydian, I IV VM I in mixolydian
+- **unresolved**: i VI VII in a minor key, I vi IV in a major one, I II vi in lydian, i IV VII in dorian
+- **tense**: i VII VI VII in a minor key, I bVII bVI bVII in a major one, i VII IV VII in dorian, I VII VI VII in mixolydian
+- **pop**: i iv VI VII in a minor key, I V vi IV in a major one, I V vi II in lydian, i IV III VII in dorian
+- **epic**: i VI III VII in a minor key, vi IV I V in a major one, vi II I V in lydian, i III VII IV in dorian
+- **circular**: i VII VI VM in a minor key, I vi IV V in a major one, I vi II V in lydian, i VII IV VM in dorian
 - modes: major, minor, dorian, lydian, mixolydian, phrygian (keep the root, swap the mode)
 - **relative**: relative major/minor of the current key; `relative major` = relative key then that mode
 - progression grammar: `b`/`#` before a numeral, `m`/`M`/`dim` after it, `7` (dominant on uppercase: `V7`; diatonic on lowercase: `ii7`) or `M7` (major seventh), `[..]` for several chords in one bar, `@n` to hold a chord for `n` bars, `/1`/`/2` to invert it: `'i bVI [III VII] V7 i@2 VI/1'`

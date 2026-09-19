@@ -302,9 +302,9 @@ export const GROUPS = [
     { title: 'Resolved vs tense', tags: ['harmony', 'progression', 'pad', 'bass'], blurb: 'resolved = I IV V I comes home on the last bar; tense = i VII VI VII never does. The word becomes the progression string.',
       svg: chords([['resolved', 'I IV V I'], ['tense', 'i VII VI VII']]), explain: 'One box per cycle. The filled box is the tonic: resolved ends on it, tense leaves it after the first bar and never returns.',
       variants: [{ label: 'Resolved', hll: `song({ cps: .5, key: 'C:major' }, [section('a', 4, { progression: 'I IV V I', pad: {}, bass: {} })])` }, { label: 'Tense', hll: `song({ cps: .5, key: 'C:minor' }, [section('a', 4, { progression: 'i VII VI VII', pad: {}, bass: {} })])` }] },
-    { title: 'Progression words', tags: ['harmony', 'progression', 'pad', 'bass', 'melody'], blurb: 'The remaining words, each on the same C-rooted section with a following melody: pop = I V vi IV, epic = vi IV I V, circular = i VI III VII, static = i, unresolved = i VI VII.',
-      svg: chords([['pop', 'I V vi IV'], ['epic', 'vi IV I V'], ['circular', 'i VI III VII'], ['static', 'i'], ['unresolved', 'i VI VII']]),
-      variants: [['pop', 'C:major', 'I V vi IV'], ['epic', 'C:major', 'vi IV I V'], ['circular', 'C:minor', 'i VI III VII'], ['static', 'C:minor', 'i'], ['unresolved', 'C:minor', 'i VI VII']]
+    { title: 'Progression words', tags: ['harmony', 'progression', 'pad', 'bass', 'melody'], blurb: 'The remaining words, each on the same C-rooted section with a following melody: pop = I V vi IV, epic = vi IV I V, circular = i VII VI VM, static = i, unresolved = i VI VII. Every word has a spelling per mode, so it means the same thing in a major key as in a minor one: pop in C minor is i iv VI VII.',
+      svg: chords([['pop', 'I V vi IV'], ['epic', 'vi IV I V'], ['circular', 'i VII VI VM'], ['static', 'i'], ['unresolved', 'i VI VII']]),
+      variants: [['pop', 'C:major', 'I V vi IV'], ['epic', 'C:major', 'vi IV I V'], ['circular', 'C:minor', 'i VII VI VM'], ['static', 'C:minor', 'i'], ['unresolved', 'C:minor', 'i VI VII']]
         .map(([w, key, p]) => ({ label: w, hll: `song({ cps: .5, key: '${key}', seed: 3 }, [section('a', 4, { progression: '${p}', pad: {}, bass: {}, melody: { follow: true } })]) // "${w}"` })) },
     { title: 'Relative major / minor', tags: ['harmony', 'key', 'relative'], blurb: 'The word "relative" switches to the relative key: the same seven notes, a different home. C minor and Eb major share every note, so only the root the bass and pad gravitate to changes.',
       svg: strip([['C minor', 'minor', 0], ['Eb major', 'major', 3]]), explain: 'Both rows are drawn from C. The filled cells are identical; only the accented root moves, from C to Eb.',
@@ -556,11 +556,11 @@ export const GROUPS = [
   ] },
   { id: 'songs', arc: 'Form', title: 'Full songs', blurb: 'Sections, layers, axes, descriptors, harmony and trajectories together: the system as a composition tool. The miniature is inline; the rest play the files in songs/, and the comments in each file name the words the numbers came from. Each picture is the song\'s form: block width is cycles, height is roughly how much is going on.', items: [
     { title: 'miniature', tags: ['song', 'sections', 'descriptor', 'harmony', 'trajectory'], blurb: 'Sixteen cycles: a dreamy intro, a verse, a chorus that lifts into the relative major with a pop progression and a rising melody, and an outro whose pad swells and darkens away.',
-      svg: timeline([['intro', 4, .2], ['verse', 4, .5], ['chorus', 4, .9, false, [.5, .9]], ['outro', 4, .3, false, [.6, 1]]], 'dreamy · circular · relative, pop, punchy, heavy · static'),
+      svg: timeline([['intro', 4, .2], ['verse', 4, .5], ['chorus', 4, .9, false, [.5, .9]], ['outro', 4, .3, false, [.6, 1]]], 'dreamy · epic · relative, pop, punchy, heavy · static'),
       variants: [{ label: 'miniature', hll: `song({ cps: .5, key: 'A:minor', seed: 7, kit: 'RolandTR808' }, [
   section('intro', 4, { role: 'establish',
     pad: ${attrs(said('dreamy'))} }), // "dreamy"
-  section('verse', 4, { role: 'develop', progression: 'i VI III VII', // "circular"
+  section('verse', 4, { role: 'develop', progression: 'i VI III VII', // "epic"
     drums: { density: .6, groove: .65 }, bass: { weight: .7, register: .3 }, melody: { follow: true }, pad: { space: .6 } }),
   section('chorus', 4, { role: 'climax', key: 'C:major', progression: 'I V vi IV', // "relative", "pop"
     drums: ${attrs(said('punchy', { density: .85 }))}, // "punchy"
@@ -571,7 +571,7 @@ export const GROUPS = [
     drums: { density: .3, space: .8 }, pad: { space: ramp(.6, 1), brightness: ramp(.6, .2), articulation: .3 } }),
 ])` }] },
     { title: 'demo', tags: ['song', 'sections', 'trajectory', 'harmony'], blurb: 'intro → verse → drop. The verse melody\'s brightness is a saw ramp; the drop switches progression.',
-      svg: timeline([['intro', 4, .3], ['verse', 8, .6, false, [.3, .7]], ['drop', 8, .95]], '20 cycles, C minor; the drop goes circular'), variants: [{ label: 'demo.strudel', src: 'songs/demo.strudel' }] },
+      svg: timeline([['intro', 4, .3], ['verse', 8, .6, false, [.3, .7]], ['drop', 8, .95]], '20 cycles, C minor; the drop goes epic'), variants: [{ label: 'demo.strudel', src: 'songs/demo.strudel' }] },
     { title: 'arc', tags: ['song', 'sections', 'key change'], blurb: 'Sad to happy over 40 cycles: intro → verse → lift → drop → outro, with a key change into the drop.',
       svg: timeline([['intro', 8, .25], ['verse', 8, .5, false, [.2, .5]], ['lift', 8, .7], ['drop', 8, .95], ['outro', 8, .6]], '40 cycles, C minor into Eb major at the drop'), variants: [{ label: 'arc.strudel', src: 'songs/arc.strudel' }] },
     { title: 'machine', tags: ['song', 'sections', 'aggression', 'static'], blurb: 'Industrial rock at 120 BPM on one static minor chord for 68 cycles. All the tension is density, drive, distortion and filtering; harmony never moves.',

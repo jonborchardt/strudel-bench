@@ -23,6 +23,7 @@ const intro_drums = stack(
 )
   .room(0.08)
   .size(0.4)
+  .orbit(1)
 
 const intro_pad = n("<0 5>")
   .scale("C4:minor")
@@ -45,5 +46,6 @@ const intro_pad = n("<0 5>")
   .lpf(701.029)
   .room(0.66)
   .size(0.81)
+  .orbit(2)
 
 stack(intro_drums, intro_pad)

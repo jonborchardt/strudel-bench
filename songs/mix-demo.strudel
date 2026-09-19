@@ -1,0 +1,35 @@
+// @hidden
+// @blog
+// mix-demo: pairs of sections for the blog post "mixing as a scene": the same material with one mix key changed.
+// duck on/off, organicness (dice per hit) against humanize (a played feel), separate reverbs against one hall.
+const kit  = { template: 'house', density: .6, drive: .7, articulation: .6, space: .3, level: .8 };
+const bed  = { sound: 'sawtooth', patch: 'wide', density: .8, register: .4, brightness: .45, width: .6, space: .6, level: .9, articulation: 0 };
+const sub  = { sound: 'square', patch: 'sub', notes: '0 ~ 0 5', density: .75, weight: .8, register: .3, space: .3, level: .8 };
+const line = { sound: 'marimba', notes: '0 ~ 2 ~ 4 ~ 7@2 ~ 5 ~ 4 ~ 2 0 ~', follow: true, phrase: 2, register: .6, articulation: .7, space: .5, level: 1.1 };
+const rim  = { sound: 'rim', rhythm: '..x.....x...x.x.', space: .6, level: .7, position: .3 };
+song({ cps: .5, key: 'D:minor', seed: 7, kit: 'RolandTR909', packs: ['rooms'] }, [
+  // duck: the same kit, sub and pad; the second section sidechains the pad and the sub under the kick
+  section('noduck', 4, { role: 'establish', progression: 'i VI',
+    drums: kit, bass: sub, pad: bed,
+  }),
+  section('duck', 4, { role: 'develop', progression: 'i VI',
+    drums: kit, bass: { ...sub, duck: 'drums', duckDepth: .5, duckAttack: .12 }, pad: { ...bed, duck: 'drums', duckDepth: .6, duckAttack: .25 },
+  }),
+  // feel: the same marimba line and rim, three ways
+  section('stiff', 4, { role: 'develop', progression: 'i VI III VII',
+    melody: { ...line, organicness: 0 }, perc: { ...rim, organicness: 0 },
+  }),
+  section('dice', 4, { role: 'develop', progression: 'i VI III VII',
+    melody: { ...line, organicness: .85 }, perc: { ...rim, organicness: .85 },
+  }),
+  section('played', 4, { role: 'develop', progression: 'i VI III VII',
+    melody: { ...line, humanize: { timingMs: 28, velocity: .2, correlation: 'phrase' } }, perc: { ...rim, humanize: { timingMs: 20, velocity: .15, correlation: 'bar' } },
+  }),
+  // scene: every part dead centre, each in its own reverb; then one hall on the section, a position each, space as the send
+  section('separate', 4, { role: 'climax', progression: 'i VI III VII',
+    drums: { ...kit, density: .5 }, bass: sub, melody: { ...line, space: .8 }, perc: { ...rim, position: 0, space: .9 }, pad: { ...bed, width: .5, space: .9, level: .6 },
+  }),
+  section('onehall', 4, { role: 'climax', progression: 'i VI III VII', room: { ir: 'hall', size: 3.2, damping: 4500 },
+    drums: { ...kit, density: .5 }, bass: sub, melody: { ...line, space: .7, position: .15 }, perc: { ...rim, position: .35, space: .8 }, pad: { ...bed, width: .7, space: .9, level: .6, position: -.25 },
+  }),
+])
