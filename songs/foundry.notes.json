@@ -12,6 +12,69 @@
           "why": "written grid with X accents, o ghosts, a two-bar hat line, rd and rim voices; drop.pad.duck drums so the pad pumps under the kick; build.dropout 1 and sweep 2 so the drop lands on silence"
         }
       ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "do both code tranches of the mix plan, then mix an existing song so it can be A/B'd",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "size 1.4 decay .35 damping 6500: one room, space as the send"
+        },
+        {
+          "section": "drop",
+          "layer": "bass",
+          "axis": "level",
+          "from": 1,
+          "to": 0.5,
+          "why": "the bass was the mix (-1.7 dB under it); ducked under the kick with a written 120 ms recovery"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "axis": "level",
+          "from": 0.8,
+          "to": 2,
+          "why": "the clavisynth hook was 26 dB under the mix; at the top of level's range it reaches -16, a support level: the instrument is quiet, the ceiling is the sample"
+        },
+        {
+          "section": "drop",
+          "layer": "melody2",
+          "axis": "sound",
+          "why": "glockenspiel>vibraphone the bell twin measured 52 dB under the mix (inaudible) and 39 at level 2; a vibraphone at register .7 sits at -17, set right (position .4)"
+        },
+        {
+          "section": "drop",
+          "layer": "perc",
+          "axis": "position",
+          "why": "-.35 and pad -.25: the stage was flat (perc, pad, fx all centre); the perc is played (humanize 12 ms, correlated per bar), the hook has a phrase-shaped velocity line"
+        },
+        {
+          "section": "drop",
+          "layer": "drums",
+          "axis": "level",
+          "from": 0.9,
+          "to": 0.55,
+          "why": "with a compressor on the kit: the kit clipped the downbeat by its crest, not its level"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "foundry-mixed from drop to breakdown needs a transition (sweep+dropout tried first, heard as worse)",
+      "changes": [
+        {
+          "section": "drop",
+          "layer": "fx",
+          "why": "riser 0>2 a white-noise riser over the drop's last two bars, keeping every hit under it: the strip-down is announced, not cut"
+        },
+        {
+          "section": "breakdown",
+          "layer": "fx",
+          "why": "impact none>bd the breakdown lands on a low hit instead of the drop just stopping"
+        }
+      ]
     }
   ]
 }

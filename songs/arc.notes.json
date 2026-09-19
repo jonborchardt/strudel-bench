@@ -25,6 +25,120 @@
           "why": "piano, descending line home"
         }
       ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "add a -mixed version of arc, arrival, breakwater, cutwork, hunted and machine without altering the originals",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "size 1.3 fade .35 damping 6500: one room, each part's space as its send"
+        },
+        {
+          "section": "drop",
+          "layer": "drums",
+          "axis": "level",
+          "from": 1,
+          "to": 0.4,
+          "why": "the kit was the mix (1.2 dB under it, 1.2% of samples clipping); it still peaks at full scale alone, so the rest came up to it instead"
+        },
+        {
+          "section": "drop",
+          "layer": "bass",
+          "axis": "level",
+          "from": 1,
+          "to": 0.75,
+          "why": "under the kick, ducked with a written 120 ms recovery (duckDepth .35)"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "axis": "level",
+          "from": 1,
+          "to": 2,
+          "why": "the piano hook was 18 dB under the mix; now 8, foreground, a little right with a phrase-shaped velocity line"
+        },
+        {
+          "section": "drop",
+          "layer": "melody2",
+          "axis": "sound",
+          "why": "glockenspiel>vibraphone the bell twin measured 56 dB under the mix (inaudible): the glockenspiel sample is too quiet to place; a vibraphone at register .7 sits at 12, set left"
+        },
+        {
+          "section": "drop",
+          "layer": "pad",
+          "axis": "level",
+          "from": 1,
+          "to": 0.4,
+          "why": "the pad was 9 dB under the mix in the original; wide, a little left, lightly ducked, now background"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "use the new mixing tools on the -mixed songs: impulse-response rooms, humanize, compressor, depth words",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "synthetic>plate the generated plate impulse (samples/user/rooms, 1.8 s, 15 ms pre-delay): the reverb has early reflections and a real pre-delay now, one convolver for every part"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "axis": "humanize",
+          "why": "the hook is played (12 ms, phrase-correlated), not exact; velocity line kept"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "axis": "space",
+          "from": 0.45,
+          "to": 0.3,
+          "why": "closer: space down, weight up (.58); depth by tone, not level alone"
+        },
+        {
+          "section": "drop",
+          "layer": "melody2",
+          "axis": "space",
+          "from": 0.65,
+          "to": 0.8,
+          "why": "farther: darker (.38), wetter, lighter (.42)"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "arc-mixed needs some sweep between sections, or maybe riser",
+      "changes": [
+        {
+          "section": "intro",
+          "why": "sweep 0>2 the filter closes over the last two bars so the verse opens fresh"
+        },
+        {
+          "section": "verse",
+          "why": "sweep 0>2 same closing sweep into the lift"
+        },
+        {
+          "section": "lift",
+          "why": "sweep 0>2 closes into the drop"
+        },
+        {
+          "section": "drop",
+          "why": "sweep 0>2 closes into the outro"
+        },
+        {
+          "section": "lift",
+          "layer": "fx",
+          "why": "riser 0>2 white-noise riser over the same two bars as the sweep, the one boundary that earns it"
+        },
+        {
+          "section": "drop",
+          "layer": "fx",
+          "why": "impact none>bd a hit on the drop downbeat to land the riser"
+        }
+      ]
     }
   ],
   "prompt": "A longer take on demo that travels from sad C minor to happy Eb major: intro, verse, lift, drop, outro"

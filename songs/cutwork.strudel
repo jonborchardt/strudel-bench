@@ -4,62 +4,76 @@
 // second sample part drags the loop an octave down (transpose: -12) as a bass drum sub; the melody alternates
 // kalimba and marimba per note, the perc leans on bongo over conga three to one, and raw parts hold the noise bed
 // and the static bursts the layers do not model. The build strips to the takes and the bed, sweeps shut, and drops.
+// Mixed as a scene: before the mixing pass the drop had the sub as the mix (3.5 dB under it)
+// with the dealt takes right behind (4.5), the plinking line 23 dB down, the perc, the rattle, the noise bed and the
+// glockenspiel twin all past 30 dB down (inaudible), and the takes, sub, line, bursts and impact all dead centre, each
+// in its own room. Now: one short room on the song with each part's space as its send; the takes and the sub set as
+// the foundation and brought down; the line up to foreground with a phrase-shaped velocity line, a little right; the
+// bongo and conga up (quiet samples) and played, set left; the rattle up and set right; the bell twin a vibraphone
+// (the glockenspiel sample is too quiet to place), lower in register, set left; the noise bed a real bed; the bursts
+// off to one side; the organ wide, behind and a little left, ducked with a written recovery.
+// `npm run measure -- songs/cutwork.strudel drop` shows the table.
 // deal -> shuffle -> build -> drop -> fold. C minor, cps .5. Axis values are 0..1 with 0.5 = the layer's baseline.
 
 // the takes: each definition keeps its own region of loop.wav; the part only says how they are dealt
 const takes = { sound: ['loop-kick', 'loop-snare'] };  // bars .125 each: one token of the pattern is an eighth of a bar
 const sub   = { sound: 'loop', transpose: -12, pattern: '0 ~ ~ ~ 4 ~ ~ ~', brightness: .2, weight: .8 }; // the loop as recorded, an octave down, only its two downbeat slices
-const plink = { sound: ['kalimba', 'marimba'], follow: true, phrase: 2, notes: '0 2 3 ~ 5 ~ 3 2 ~ 0 ~ 2 3@2 ~ 0', register: .65, articulation: .6, space: .5, width: .6 };
-const hiss  = { pattern: s("pink").clip(1), level: .1, brightness: .75, width: .6 };
-const burst = { pattern: s("white").struct("~ ~ ~ x ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~").clip(.12).hpf(2000), level: .35, space: .6 };
+const plink = { sound: ['kalimba', 'marimba'], follow: true, phrase: 2, notes: '0 2 3 ~ 5 ~ 3 2 ~ 0 ~ 2 3@2 ~ 0', register: .65, articulation: .6, space: .3, weight: .58, width: .5, position: .15, velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } }; // closer, and played
+const bell  = { sound: 'vibraphone', follow: true, notes: '~ 7 ~ ~ 5 ~ ~ ~', register: .7, level: .5, space: .68, brightness: .38, weight: .42, position: -.4 }; // farther
+const hand  = { sound: { bongo: 3, conga: 1 }, rhythm: '5/16', position: -.35, humanize: { timingMs: 12, velocity: .12, correlation: 'bar' } };
+const hiss  = { pattern: s("pink").clip(1), level: .2, brightness: .75, width: .6 };
+const burst = { pattern: s("white").struct("~ ~ ~ x ~ ~ ~ ~ ~ ~ x ~ ~ ~ ~ ~").clip(.12).hpf(2000), level: .6, space: .6, position: .3, compressor: { threshold: -18, ratio: 3 } }; // sparse and spiky (crest 25): a compressor per hit is cheap here
+const organ = { sound: 'pipeorgan_quiet', articulation: .1, width: .7, position: -.25 };
 
-song({ cps: .5, key: 'C:minor', seed: 11, kit: 'RolandTR909', packs: ['demo-pack'] }, [
+// second pass: a generated small room (samples/user/rooms, 0.9 s) instead of the synthetic tail; the line humanized; the two spiky sparse
+// parts (bursts, rattle) compressed; depth by the closer/farther words, not level alone.
+song({ cps: .5, key: 'C:minor', seed: 11, kit: 'RolandTR909', packs: ['demo-pack', 'rooms'], room: { ir: 'room', size: .9, damping: 6500 } }, [
 
   // a kick or a snare on every quarter, dealt by the hit's own position, so the deal is the same every play
   section('deal', 8, { role: 'establish', progression: 'i@2 VI VII',
-    sample: { ...takes, pattern: '<0 ~>', level: .8, space: .5 },
+    sample: { ...takes, pattern: '<0 ~>', level: .7, space: .5 },
     raw:    { ...hiss },
-    pad:    { sound: 'pipeorgan_quiet', articulation: .1, space: .85, brightness: .25, density: .4, level: .55 },
+    pad:    { ...organ, space: .85, brightness: .25, density: .4, level: .6 },
   }),
 
   // eighths now, the sub under it, the plinking line on top with a bongo-heavy perc line in fives
   section('shuffle', 8, { role: 'develop', progression: 'i VI III VII',
-    sample:  { ...takes, pattern: '<0>', level: .8, space: .45 },
-    sample2: { ...sub, level: .7 },
-    perc:    { sound: { bongo: 3, conga: 1 }, rhythm: '5/16', level: .45, width: .7, space: .5 },
-    melody:  { ...plink, density: .55, brightness: .55, level: .7 },
+    sample:  { ...takes, pattern: '<0>', level: .7, space: .45 },
+    sample2: { ...sub, level: .5 },
+    perc:    { ...hand, level: 1.4, width: .6, space: .5 },
+    melody:  { ...plink, density: .55, brightness: .55, level: 1.6 },
     raw:     { ...hiss },
-    pad:     { sound: 'pipeorgan_quiet', articulation: .1, space: .8, brightness: .3, density: .5, level: .5 },
+    pad:     { ...organ, space: .8, brightness: .3, density: .5, level: .55, duck: 'sample', duckDepth: .3, duckAttack: .2 },
   }),
 
   // the takes and the bed only, a riser, the filter closing over the last two bars, then a bar of nothing
   section('build', 8, { role: 'develop', progression: 'iv VI VII@2', dropout: 1, sweep: 2,
-    sample: { ...takes, pattern: '<0>', level: .85, space: .4, brightness: ramp(.5, .9) },
-    raw:    { ...hiss, level: .15 },
+    sample: { ...takes, pattern: '<0>', level: .75, space: .4, brightness: ramp(.5, .9) },
+    raw:    { ...hiss, level: .25 },
     raw2:   { ...burst },
-    pad:    { sound: 'pipeorgan_quiet', articulation: .1, space: ramp(.6, .95), brightness: .3, density: .5, level: .5 },
-    fx:     { riser: 4 },
+    pad:    { ...organ, space: ramp(.6, .95), brightness: .3, density: .5, level: .55 },
+    fx:     { riser: 4, level: .6 },
   }),
 
   // sixteenths: the deal at full speed, the sub, the loop itself an octave up as a rattle, both raw parts, a bell answering the line
   section('drop', 16, { role: 'climax', progression: 'i VI III VII',
-    sample:  { ...takes, pattern: '<0 0>', level: .9, space: .4, width: .6 },
-    sample2: { ...sub, level: .75, weight: .9 },
-    sample3: { sound: 'loop', transpose: 12, pattern: '~ 1 ~ 1 ~ 5 ~ 1', brightness: .8, level: .3, width: .9 },
-    perc:    { sound: { bongo: 3, conga: 1 }, rhythm: '5/16', density: .7, level: .5, width: .8 },
-    melody:  { ...plink, density: .7, brightness: .7, width: .8, level: .75 },
-    melody2: { sound: 'glockenspiel', follow: true, notes: '~ 7 ~ ~ 5 ~ ~ ~', register: .85, level: .45, space: .7, width: .8 },
-    raw:     { ...hiss, level: .12 },
-    raw2:    { ...burst, level: .4 },
-    pad:     { sound: 'pipeorgan_quiet', articulation: .1, space: .6, brightness: .4, density: .65, duck: 'sample', duckDepth: .7, level: .5 },
-    fx:      { impact: true },
+    sample:  { ...takes, pattern: '<0 0>', level: .55, space: .4, width: .5 },
+    sample2: { ...sub, level: .45, weight: .9 },
+    sample3: { sound: 'loop', transpose: 12, pattern: '~ 1 ~ 1 ~ 5 ~ 1', brightness: .8, level: 1.2, width: .6, position: .35, compressor: { threshold: -18, ratio: 3 } },
+    perc:    { ...hand, density: .7, level: 2, width: .6 },
+    melody:  { ...plink, density: .7, brightness: .7, width: .6, level: 2 },
+    melody2: { ...bell },
+    raw:     { ...hiss, level: .2 },
+    raw2:    { ...burst },
+    pad:     { ...organ, space: .6, brightness: .4, density: .65, duck: 'sample', duckDepth: .5, duckAttack: .2, level: .6 },
+    fx:      { impact: true, level: .5 },
   }),
 
   // the deal slows back to quarters and the last bar folds to silence
   section('fold', 8, { role: 'release', progression: 'VI VII i@2', dropout: 1,
-    sample: { ...takes, pattern: '<0 ~>', level: .7, space: .7, brightness: .4 },
-    sample2: { ...sub, level: .5, space: .7 },
-    raw:    { ...hiss, level: .08 },
-    pad:    { sound: 'pipeorgan_quiet', articulation: .05, space: .95, brightness: .2, density: .4, level: .55 },
+    sample: { ...takes, pattern: '<0 ~>', level: .6, space: .7, brightness: .4 },
+    sample2: { ...sub, level: .4, space: .7 },
+    raw:    { ...hiss, level: .12 },
+    pad:    { ...organ, articulation: .05, space: .95, brightness: .2, density: .4, level: .6 },
   }),
 ])
