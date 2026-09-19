@@ -22,7 +22,7 @@ Song flags are comment lines: `// @hidden` keeps a song off the song dropdown (`
     node gen/euclid.mjs --seed=3 > songs/euclid.strudel
     npm run form -- --mood=ominous --bars=64 --seed=5 > songs/new.strudel   # a song skeleton: roles, bars, harmony and axis values shaped by the mood (lib/overlays.json); then material first
     npm run lint -- songs/x.strudel    # musical lint over the check table: no climax, climax not the peak, identical sections, raw saws together, seeded melody/bass, axes out of 0..1; exit 1 on errors
-    npm run measure -- songs/x.strudel <section> [--json]   # page open: renders the section's mix and every part alone, prints dB under the mix, depth (with relativeDb/highRatio/tail next to it), pan, and the masking pairs; writes renders/<song>.<section>.measure.json
+    npm run measure -- songs/x.strudel <section> [--cycles n] [--json]   # page open: renders the section's mix and every part alone (four bars unless --cycles), prints dB under the mix, depth (with relativeDb/highRatio/tail next to it), pan, and the masking pairs; writes renders/<song>.<section>.measure.json
     npm run lint -- --measure renders/x.s.measure.json      # mix lint over that: no headroom, inaudible/dominant part, flat stage, masking low/mid, no depth contrast
     npm run headless -- songs/x.strudel   # opens the page in a headless Chromium (playwright-core, or CHROME=<binary>) so render/verify run with no window; starts the server if none answers
 

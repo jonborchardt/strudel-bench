@@ -188,7 +188,7 @@ test('mix material: position shifts every hap\'s pan together; velocity, humaniz
   const straight = build({ density: .7 }), leaned = build({ density: .7, humanize: hum });
   assert.equal(leaned.length, straight.length, 'every hit still there');
   const offs = leaned.map((t, i) => (t - straight[i]) / .5 * 1000); // cycles -> ms at cps .5
-  assert.ok(offs.every((ms) => Math.abs(ms) <= 20) && offs.some((ms) => ms !== 0), `timing moves the hap itself, within ± timingMs: ${offs.slice(0, 6).map((x) => x.toFixed(1))}`);
+  assert.ok(offs.every((ms) => ms >= -1e-9 && ms <= 20.001) && offs.some((ms) => ms > 1), `timing moves the hap itself, late by 0..timingMs (never early: an early downbeat falls before a render's start and is dropped): ${offs.slice(0, 6).map((x) => x.toFixed(1))}`);
   assert.ok(new Set(offs.map((x) => x.toFixed(2))).size > 4, 'and not one constant');
   assert.deepEqual(build({ density: .7, humanize: hum }), leaned, 'seeded: the same lean every build');
   const kitHaps = song({ cps: .5, seed: 3 }, [section('a', 1, { drums: { density: .7, humanize: hum } })]).strudel.sections[0].layers.drums.pattern.queryArc(0, 1);
