@@ -1,0 +1,141 @@
+// arrival-mixed: arrival after the mixing pass, kept next to the original so the two can be A/B'd. Same score, same
+// two wills; what changed is the mix. Measured as written, `threshold` had the impact as the mix (4.8 dB under it),
+// the choir as loud as the piano theme (9 dB down, and sharing the mids with the organ and the bowed vibraphone),
+// the timpani pulse 30 dB down and the glockenspiel doubling 41 dB down (both inaudible), and every part dead centre
+// in its own room. Now: one hall on the song with each part's space as its send (the textures keep their own sizes,
+// so the outer .size() moved onto them); the impact and riser set back; the pulse up to where it is felt; the piano
+// theme kept in front, a little right, with a phrase-shaped velocity line; the alien signal and the bells together on
+// the right, the harp and the recorders on the left; the doubling a vibraphone (the glockenspiel sample is too quiet
+// to place) far left; the choir behind and to the right, darker, so the organ keeps the low mids; the strings wide and
+// a little left; the bowed vibraphone left. `npm run measure -- songs/arrival-mixed.strudel threshold` shows the table;
+// compare with the same on songs/arrival.strudel.
+// void → signal → approach → contact → will → plea → threshold → after. 59 cycles, one cycle = one bar.
+// Axis values are 0..1 with 0.5 = the layer's baseline. The piano keeps one setting for the whole song: space .5 (room only;
+// anything above sends it to a delay line, which reads as a pop behind each note) and articulation .05 so every note rings out.
+const theme    = { sound: 'piano', follow: true, phrase: 2, notes: '0 ~ 2 4@2 ~ 5 4@2 0 ~ 2 4@2 ~ 7 6@2', register: .55, articulation: .05, brightness: .6, space: .5, width: .5, organicness: .6, position: .1, velocity: '.85 1 .9 1 .8 1 .9 .95' };
+const answer   = { ...theme, notes: '0 ~ 2 4@2 ~ 5 4@2 7 6 5 4@2 ~ 2 0@2' };
+const signal   = { sound: 'handchimes', follow: false, notes: '0 ~ ~ 6 ~ ~ 3 ~ ~ 0 ~ ~ 6 3 ~ ~', register: .85, articulation: .35, space: .9, width: .7, level: .6, organicness: 0, position: .35 };
+const bells    = { sound: 'tubularbells', follow: false, notes: '0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 6 ~ ~ ~', register: .3, articulation: .1, space: .95, width: .8, level: .7, organicness: 0, position: .35 };
+const harp     = { sound: 'harp', follow: true, notes: '0 2 4 7 2 4 7 2 4 7 2 4 7 4 2 0', register: .75, articulation: .6, space: .75, width: .6, level: .8, density: .5, position: -.3 };
+const winds    = { sound: 'recorder_alto_sus', follow: true, notes: '~ ~ ~ ~ 4@4 ~ ~ ~ ~ 2@4', register: .65, articulation: .15, space: .7, width: .6, level: .35, position: -.2 };
+const strings  = { sound: 'psaltery_bow', articulation: .1, space: .8, width: .75, weight: .6, brightness: .35, position: -.15 };
+const organ    = { sound: 'pipeorgan_quiet', articulation: .05, space: .85, width: .5, weight: .8, register: .2, brightness: .2, level: .6 };
+const choir    = { sound: 'super64_vib', articulation: .1, space: .9, width: .8, register: .6, brightness: .35, level: .2, position: .3 };
+const pedal    = { sound: 'pipeorgan_loud_pedal', register: .1, weight: .9, articulation: .1, space: .4, brightness: .2, drive: .8, level: .8 };
+const pulse    = { template: 'halftime', sounds: { bd: 'timpani', sd: 'snare_low', hh: 'triangles', oh: 'sus_cymbal', cp: 'bassdrum2' }, space: .8, brightness: .2, articulation: .3, variation: 0, organicness: .3, level: 2 }; // the timpani sample is quiet: at level 1 the pulse measured 30 dB under the mix
+
+const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808', room: { size: 2.6, fade: .5, damping: 4500 } }, [
+  section('void', 1, { role: 'establish', progression: 'i',
+    pad:  { ...organ, density: .2, brightness: .1, space: 1 },
+    pad2: { ...strings, density: .2, brightness: .15, weight: .8, register: .2, level: .5 },
+  }),
+  section('signal', 8, { role: 'establish', progression: 'i VI',
+    melody: { ...signal, density: .3 },
+    pad:    { ...organ, density: .2, brightness: .15 },
+    pad2:   { ...strings, density: .4, brightness: .25, register: .3, level: .6 },
+    pad3:   { ...choir, density: .2, brightness: .25, level: .15 },
+  }),
+  section('approach', 8, { role: 'develop', progression: 'i VI VII',
+    drums:   { ...pulse, density: .25 },
+    bass:    { ...pedal, density: .4, notes: '0 0' },
+    melody:  { ...theme, density: .4, brightness: saw.range(.45, .7).slow(8) },
+    melody2: { ...signal, density: .3 },
+    melody3: { ...winds, density: .4 },
+    pad:     { ...strings, density: .55, brightness: saw.range(.25, .45).slow(8), register: .4 },
+    pad2:    { ...organ, density: .4 },
+    pad3:    { ...choir, density: .4, brightness: .35 },
+    fx:      { riser: 4, level: .5 },
+  }),
+  section('contact', 8, { role: 'climax', progression: 'i VI III VII',
+    drums:   { ...pulse, density: .5, weight: .8 },
+    bass:    { ...pedal, density: .75, notes: '0 0 4 0', weight: 1 },
+    melody:  { ...theme, density: .55, brightness: .65, width: .6, level: 1.1 },
+    melody2: { ...signal, density: .5, level: .7 },
+    melody3: { ...bells, density: .5 },
+    melody4: { ...harp, density: .5, brightness: .7 },
+    melody5: { ...winds, density: .5, level: .4 },
+    pad:     { ...strings, density: .8, brightness: .5, weight: .7, width: .75 },
+    pad2:    { ...organ, density: .6, brightness: .3, weight: .9 },
+    pad3:    { ...choir, density: .6, brightness: .4, level: .2 },
+    fx:      { impact: true, level: .3 },
+  }),
+  section('will', 8, { role: 'develop', key: 'D:phrygian', progression: 'i II i II',
+    drums:   { ...pulse, template: 'minimal', density: .25, space: .6 },
+    bass:    { ...pedal, sound: 'didgeridoo:8', density: .4, notes: '0 ~', register: .15, brightness: .15, weight: 1, aggression: .55, space: .35 },
+    melody:  { ...theme, notes: '0 ~ ~ ~ 1 ~ 0@2 ~ ~ ~ ~ 1 ~ 0@2', density: .3, register: .35, brightness: .25, space: .8 },
+    melody2: { ...signal, density: .4, level: .75, brightness: .6, space: .6 },
+    melody3: { ...bells, density: .5, level: .8, register: .2, space: .7 },
+    pad:     { ...organ, density: .5, brightness: .15, weight: .95, space: .6 },
+    pad2:    { ...strings, density: .3, brightness: .2, register: .2, level: .6, space: .5 },
+  }),
+  section('plea', 8, { role: 'develop', key: 'F:major', progression: 'I V vi IV',
+    drums:   { ...pulse, density: .3, space: .9 },
+    bass:    { ...pedal, density: .4, notes: '0 4', weight: .7, brightness: .3 },
+    melody:  { ...theme, density: .5, brightness: saw.range(.45, .8).slow(8), register: .65, width: .6 },
+    melody2: { ...harp, density: .5, brightness: saw.range(.5, .8).slow(8) },
+    melody3: { ...winds, density: .5, level: .4, notes: '~ ~ 4@4 ~ ~ 5@4 ~ ~ 7@2' },
+    melody4: { ...signal, density: .25, level: .4 },
+    pad:     { ...strings, density: .6, brightness: saw.range(.35, .6).slow(8), register: .5, width: .75 },
+    pad2:    { ...choir, density: .6, brightness: .4, level: .2 },
+    pad3:    { ...organ, density: .4, brightness: .3, level: .45 },
+    fx:      { riser: 4, level: .5 },
+  }),
+  section('threshold', 12, { role: 'climax', progression: 'i VI III VII',
+    drums:   { ...pulse, density: .55, weight: .9, variation: .3 },
+    bass:    { ...pedal, density: .75, notes: '0 0 4 7', weight: 1, brightness: .25, aggression: .55 },
+    melody:  { ...answer, density: .6, brightness: .75, register: .65, width: .6, level: 1.2 },
+    melody2: { ...signal, density: .6, level: .7, brightness: .7 },
+    melody3: { ...bells, density: .6, level: 1 },
+    melody4: { ...harp, density: .5, brightness: .8, level: .9 },
+    melody5: { ...winds, density: .6, level: .4, notes: '~ ~ 7@4 ~ ~ 5@4 ~ ~ 4@2' },
+    melody6: { sound: 'vibraphone', follow: true, phrase: 2, notes: theme.notes, articulation: .05, register: .8, density: .3, level: .2, space: .8, width: .6, position: -.45 }, // .2: the vibraphone at this register measured 3 dB under the mix at level 1, a doubling at 9.5 at .3
+    // the two widest pads sit under .8: width .8+ is jux, a doubled copy of every voice, and with them this section ran ~49
+    // voices at once, past what the audio thread renders in real time (it crackled); at .75 they sweep instead, ~37 voices
+    pad:     { ...strings, density: .85, brightness: .55, weight: .8, width: .75, level: 1 },
+    pad2:    { ...organ, sound: 'pipeorgan_loud', density: .8, brightness: .3, weight: 1, level: .5 },
+    pad3:    { ...choir, density: .8, brightness: .4, level: .2, width: .75 },
+    pad4:    { ...strings, sound: 'vibraphone_bowed', density: .4, register: .85, brightness: .8, level: .35, arp: 'up', position: -.35 },
+    fx:      { impact: true, level: .3 },
+  }),
+  section('after', 6, { role: 'release', progression: 'i VI',
+    melody:  { ...theme, notes: '0 ~ 2 4@2 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~', density: .3, brightness: saw.range(.6, .3).slow(6), space: .9 },
+    melody2: { ...signal, density: .3, level: .5 },
+    melody3: { ...bells, density: .4, level: .6 },
+    pad:     { ...strings, density: .4, brightness: saw.range(.5, .2).slow(6), width: .75 },
+    pad2:    { ...organ, density: .3, brightness: saw.range(.3, .1).slow(6), space: 1 },
+    pad3:    { ...choir, density: .3, brightness: .3, level: .2 },
+  }),
+]);
+
+// Orchestral material the layers do not model: a timpani roll, a deep bass drum every four bars, gong, cymbal swells, a heartbeat frame drum,
+// a sustained didgeridoo drone, wind gusts, a brown-noise rumble, a glass drone and shimmer on the arrivals.
+const roll    = s("timpani_roll").struct("<~ ~ ~ x>").clip(1).gain(saw.range(.2, .7).slow(4)).room(.4);
+const boom    = s("bassdrum2").struct("<x ~ ~ ~>").room(.6).size(.9).gain(.8);
+const gong    = s("gong").struct("<x ~ ~ ~ ~ ~ ~ ~>").room(.7).size(.9).gain(.6);
+const gong2   = s("gong2").struct("<~ ~ ~ ~ x ~ ~ ~>").room(.7).size(.9).gain(.45);
+const swell   = s("sus_cymbal").struct("<~ ~ ~ x>").clip(1).room(.5).gain(.35);
+const heart   = s("framedrum").struct("x x ~ ~ ~ ~ ~ ~").lpf(400).gain(.5);
+const drone   = s("didgeridoo:8").slow(2).clip(1).lpf(300).room(.5).size(.9).gain(.35); // :8 is a sustained note; :0 is a bark
+const wind    = s("wind").n("<0 1 2>").clip(1).lpf(1500).gain(.25).pan(sine.slow(11));
+const deep    = s("brown").clip(1).lpf(220).gain(.2).pan(sine.slow(7).range(.3, .7)); // the Dirt "space" samples are short blips, not a bed
+const glass   = note("<a5 d6 f5 a5>").s("wineglass_slow").clip(1).slow(2).room(.8).size(.9).gain(.18).pan(sine.slow(5));
+const shimmer = s("<belltree marktrees>").struct("<x ~ ~ ~>").room(.8).size(.9).gain(.3).pan(.7);
+
+const textures = arrange(
+  [2,  stack(wind.gain(.1), drone.gain(.25), deep.gain(.1))],
+  [8,  stack(wind.gain(.1), deep, drone, glass.gain(.1))],
+  [8,  stack(wind.gain(.15), deep, drone, glass, roll, swell)],
+  [8,  stack(boom, gong, gong2, swell, shimmer, deep.gain(.1))],
+  [8,  stack(heart, drone, deep, wind.gain(.15), glass.gain(.1), gong2.gain(.3))],
+  [8,  stack(wind.gain(.15), glass, roll, swell, shimmer.gain(.2))],
+  [12, stack(boom, gong, gong2, swell, shimmer, drone.gain(.2), glass)],
+  [6,  stack(wind, deep, glass, gong.gain(.3), drone.gain(.2))],
+);
+
+// One reverb size for the textures: superdough keeps one reverb per orbit and rebuilds its impulse response whenever an
+// event arrives with a different size, swapping the buffer under whatever is sounding. The textures share the default
+// orbit, so they take one size; the song's parts share one room of their own (the `room` on song(), one orbit for all).
+// stack() drops the song metadata the checker, resolver and page use for section tables; put it back.
+const out = stack(score, textures.size(.9));
+out.strudel = score.strudel;
+out

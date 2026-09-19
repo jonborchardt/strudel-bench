@@ -1,0 +1,62 @@
+{
+  "prompt": "arrival after the mixing pass: a twin of arrival to A/B, same score, mixed as a scene",
+  "requests": [
+    {
+      "date": "2026-09-19",
+      "ask": "add a -mixed version of arc, arrival, breakwater, cutwork, hunted and machine without altering the originals",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "size 2.6 fade .5 damping 4500: one hall for the score, each part's space as its send; the textures keep their own sizes (the outer .size(.9) moved onto them)"
+        },
+        {
+          "section": "threshold",
+          "layer": "fx",
+          "axis": "level",
+          "from": 1,
+          "to": 0.3,
+          "why": "the impact was the mix (4.8 dB under it); now 12"
+        },
+        {
+          "section": "threshold",
+          "layer": "drums",
+          "axis": "level",
+          "from": 1,
+          "to": 2,
+          "why": "the timpani pulse was 30 dB under the mix (inaudible); the sample is quiet, at the top of level's range it is felt at 21"
+        },
+        {
+          "section": "threshold",
+          "layer": "melody6",
+          "axis": "sound",
+          "why": "glockenspiel>vibraphone the doubling was 41 dB under the mix (inaudible); a vibraphone at register .8 is loud (3 dB under the mix at level 1), so level .2 puts it at 15, far left"
+        },
+        {
+          "section": "threshold",
+          "layer": "pad3",
+          "axis": "level",
+          "from": 0.55,
+          "to": 0.2,
+          "why": "the choir was as loud as the piano theme (9 dB under the mix) and sharing the mids with the organ; darker, behind and to the right at 20; the organ keeps the low mids at 11"
+        },
+        {
+          "section": "threshold",
+          "layer": "pad4",
+          "axis": "level",
+          "from": 0.35,
+          "to": 0.35,
+          "why": "the bowed vibraphone arp set left; it still shares the mids with the organ and choir by the masking table (level-independent), left as the register already separates them"
+        },
+        {
+          "section": "threshold",
+          "layer": "melody",
+          "axis": "position",
+          "from": 0,
+          "to": 0.1,
+          "why": "the piano theme kept in front (8 dB under the mix) with a phrase-shaped velocity line; the alien signal and bells right, the harp and recorders left"
+        }
+      ]
+    }
+  ]
+}

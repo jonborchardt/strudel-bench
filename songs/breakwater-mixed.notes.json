@@ -1,0 +1,62 @@
+{
+  "prompt": "breakwater after the mixing pass: a twin of breakwater to A/B, same loop and cuts, mixed as a scene",
+  "requests": [
+    {
+      "date": "2026-09-19",
+      "ask": "add a -mixed version of arc, arrival, breakwater, cutwork, hunted and machine without altering the originals",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "size 1.1 fade .3 damping 6000: one short room for a breakbeat, each part's space as its send"
+        },
+        {
+          "section": "breakwater",
+          "layer": "drums",
+          "axis": "level",
+          "from": 1,
+          "to": 0.35,
+          "why": "the drums layer was the mix (0.8 dB under it, 5% of samples clipping) over a loop that is the real kit; now 3 under, next to the break at 4"
+        },
+        {
+          "section": "breakwater",
+          "layer": "bass",
+          "axis": "level",
+          "from": 1,
+          "to": 0.55,
+          "why": "the bass was 6.5 dB under the mix; under the kick, ducked with a written recovery"
+        },
+        {
+          "section": "breakwater",
+          "layer": "melody",
+          "axis": "level",
+          "from": 1.1,
+          "to": 2,
+          "why": "the piano hook was 21 dB under the mix; now 11, foreground, a little right with a velocity line"
+        },
+        {
+          "section": "breakwater",
+          "layer": "melody2",
+          "axis": "sound",
+          "why": "glockenspiel>vibraphone the bell twin measured 57 dB under the mix (inaudible); a vibraphone at register .7 sits at 19, set left"
+        },
+        {
+          "section": "breakwater",
+          "layer": "pad",
+          "axis": "level",
+          "from": 0.8,
+          "to": 0.4,
+          "why": "wide, behind, a little left, lightly ducked"
+        },
+        {
+          "section": "breakwater",
+          "layer": "fx",
+          "axis": "level",
+          "from": 1,
+          "to": 0.5,
+          "why": "the impact set back"
+        }
+      ]
+    }
+  ]
+}

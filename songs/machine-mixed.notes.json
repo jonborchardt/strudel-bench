@@ -1,0 +1,48 @@
+{
+  "prompt": "machine after the mixing pass: a twin of machine to A/B, same loop and textures, mixed as a scene",
+  "requests": [
+    {
+      "date": "2026-09-19",
+      "ask": "add a -mixed version of arc, arrival, breakwater, cutwork, hunted and machine without altering the originals",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "size .5 fade .15 damping 3500: one small dead room, the machine stays dry"
+        },
+        {
+          "section": "chorus3",
+          "layer": "drums",
+          "axis": "level",
+          "from": 1,
+          "to": 0.3,
+          "why": "the kit was the mix (1.7 dB under it, 8% of samples clipping); level does not move its peak (the kit saturates before the gain), so the rest came down and the clip share fell to .5%; a master limiter is not built"
+        },
+        {
+          "section": "chorus3",
+          "layer": "bass",
+          "axis": "level",
+          "from": 1,
+          "to": 0.7,
+          "why": "under the kick, ducked with a written 100 ms recovery"
+        },
+        {
+          "section": "chorus3",
+          "layer": "pad",
+          "axis": "level",
+          "from": 1,
+          "to": 0.4,
+          "why": "the sub pad peaked at full scale on its own; now ducked under the kick"
+        },
+        {
+          "section": "chorus3",
+          "layer": "melody",
+          "axis": "level",
+          "from": 1,
+          "to": 1.6,
+          "why": "the melody was 19 dB under the mix; now 10, foreground, a little right"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "prompt": "arc after the mixing pass: a twin of arc to A/B, same notes and sounds, mixed as a scene",
+  "requests": [
+    {
+      "date": "2026-09-19",
+      "ask": "add a -mixed version of arc, arrival, breakwater, cutwork, hunted and machine without altering the originals",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "size 1.3 fade .35 damping 6500: one room, each part's space as its send"
+        },
+        {
+          "section": "drop",
+          "layer": "drums",
+          "axis": "level",
+          "from": 1,
+          "to": 0.4,
+          "why": "the kit was the mix (1.2 dB under it, 1.2% of samples clipping); it still peaks at full scale alone, so the rest came up to it instead"
+        },
+        {
+          "section": "drop",
+          "layer": "bass",
+          "axis": "level",
+          "from": 1,
+          "to": 0.75,
+          "why": "under the kick, ducked with a written 120 ms recovery (duckDepth .35)"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "axis": "level",
+          "from": 1,
+          "to": 2,
+          "why": "the piano hook was 18 dB under the mix; now 8, foreground, a little right with a phrase-shaped velocity line"
+        },
+        {
+          "section": "drop",
+          "layer": "melody2",
+          "axis": "sound",
+          "why": "glockenspiel>vibraphone the bell twin measured 56 dB under the mix (inaudible): the glockenspiel sample is too quiet to place; a vibraphone at register .7 sits at 12, set left"
+        },
+        {
+          "section": "drop",
+          "layer": "pad",
+          "axis": "level",
+          "from": 1,
+          "to": 0.4,
+          "why": "the pad was 9 dB under the mix in the original; wide, a little left, lightly ducked, now background"
+        }
+      ]
+    }
+  ]
+}

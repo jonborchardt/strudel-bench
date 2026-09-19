@@ -1,0 +1,78 @@
+{
+  "prompt": "cutwork after the mixing pass: a twin of cutwork to A/B, same takes and deal, mixed as a scene",
+  "requests": [
+    {
+      "date": "2026-09-19",
+      "ask": "add a -mixed version of arc, arrival, breakwater, cutwork, hunted and machine without altering the originals",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "size 1.1 fade .3 damping 6500: one short room, each part's space as its send"
+        },
+        {
+          "section": "drop",
+          "layer": "sample",
+          "axis": "level",
+          "from": 0.9,
+          "to": 0.55,
+          "why": "the dealt takes and the sub were the mix (4.5 and 3.5 dB under it); now the foundation at 3.4 and 5.6"
+        },
+        {
+          "section": "drop",
+          "layer": "sample2",
+          "axis": "level",
+          "from": 0.75,
+          "to": 0.45,
+          "why": "the sub under the takes"
+        },
+        {
+          "section": "drop",
+          "layer": "sample3",
+          "axis": "level",
+          "from": 0.3,
+          "to": 1.2,
+          "why": "the rattle was 34 dB under the mix (inaudible); now 19, set right"
+        },
+        {
+          "section": "drop",
+          "layer": "perc",
+          "axis": "level",
+          "from": 0.5,
+          "to": 2,
+          "why": "bongo and conga were 34 dB under the mix (quiet samples); now 19, set left and played (humanize, correlated per bar)"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "axis": "level",
+          "from": 0.75,
+          "to": 2,
+          "why": "the plinking line was 23 dB under the mix; now 13, the top of level's range for kalimba and marimba, a little right with a velocity line"
+        },
+        {
+          "section": "drop",
+          "layer": "melody2",
+          "axis": "sound",
+          "why": "glockenspiel>vibraphone the bell twin measured 50 dB under the mix (inaudible); a vibraphone at register .7 sits at 15, set left"
+        },
+        {
+          "section": "drop",
+          "layer": "raw2",
+          "axis": "level",
+          "from": 0.4,
+          "to": 0.6,
+          "why": "the bursts were 25 dB under the mix; now 22, off to the right"
+        },
+        {
+          "section": "drop",
+          "layer": "raw",
+          "axis": "level",
+          "from": 0.12,
+          "to": 0.2,
+          "why": "the noise bed a real bed at 26"
+        }
+      ]
+    }
+  ]
+}

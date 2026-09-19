@@ -1,0 +1,84 @@
+{
+  "prompt": "hunted after the mixing pass: a twin of hunted to A/B, same takes and lines, mixed as a scene",
+  "requests": [
+    {
+      "date": "2026-09-19",
+      "ask": "add a -mixed version of arc, arrival, breakwater, cutwork, hunted and machine without altering the originals",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "size 1.8 fade .4 damping 5000: one dark room, each part's space as its send"
+        },
+        {
+          "section": "run",
+          "layer": "drums",
+          "axis": "level",
+          "from": 0.7,
+          "to": 0.3,
+          "why": "the kit was the mix (0.8 dB under it, clipping); now 5 under"
+        },
+        {
+          "section": "run",
+          "layer": "bass",
+          "axis": "level",
+          "from": 0.56,
+          "to": 0.8,
+          "why": "under the kick, ducked with a written recovery"
+        },
+        {
+          "section": "run",
+          "layer": "sample",
+          "axis": "level",
+          "from": 0.42,
+          "to": 1,
+          "why": "the radio was 16 dB under the mix; now 6, foreground, and every voice part sits at position .3 (one radio)"
+        },
+        {
+          "section": "run",
+          "layer": "sample2",
+          "axis": "level",
+          "from": 0.77,
+          "to": 2,
+          "why": "the quiet back take was 29 dB under the mix; now 15"
+        },
+        {
+          "section": "run",
+          "layer": "melody",
+          "axis": "level",
+          "from": 0.56,
+          "to": 2,
+          "why": "the runner's harp was 31 dB under the mix (inaudible); now 16, a little right with a velocity line"
+        },
+        {
+          "section": "run",
+          "layer": "melody2",
+          "axis": "sound",
+          "why": "vibraphone_bowed>vibraphone the bowed sample measured 53 dB under the mix; struck, at level .6, it sits at 13, set left"
+        },
+        {
+          "section": "run",
+          "layer": "melody3",
+          "axis": "sound",
+          "why": "didgeridoo>pipeorgan_loud_pedal the thing: the bark take is over before it is heard and the sustained take measured 34 dB under the mix at level 2; the loud pedal holds the semitone at 21, just off centre"
+        },
+        {
+          "section": "run",
+          "layer": "melody4",
+          "axis": "level",
+          "from": 0.35,
+          "to": 2,
+          "why": "the gong was 43 dB under the mix; now 21, set right"
+        },
+        {
+          "section": "run",
+          "layer": "pad3",
+          "axis": "level",
+          "from": 0.39,
+          "to": 2,
+          "why": "the bowed strings were 38 dB under the mix; now 25, set right"
+        }
+      ]
+    }
+  ]
+}
