@@ -98,12 +98,12 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
     const begin = hap.whole.begin.valueOf().toFixed(3);
     const dur = (hap.whole.end.valueOf() - hap.whole.begin.valueOf()).toFixed(3);
     events.push(`${begin} +${dur} ${JSON.stringify(v)}`);
-    const s = typeof v === 'object' && v !== null ? v.s : undefined;
-    if (s === undefined) continue;
-    for (const name of String(s).split(':')[0].split(',')) {
+    // room.ir names a sample like s() does (superdough resolves it through the same sound map), so it goes through the same rule
+    const names = typeof v === 'object' && v !== null ? [...(v.s === undefined ? [] : String(v.s).split(':')[0].split(',')), ...(typeof v.ir === 'string' ? [v.ir] : [])] : [];
+    for (const name of names) {
       const bare = name.trim();
       const full = v.bank && known.has(`${v.bank}_${bare}`) ? `${v.bank}_${bare}` : bare;
-      const idx = v.n ?? +(String(s).split(':')[1] ?? 0);
+      const idx = bare === v.ir ? 0 : v.n ?? +(String(v.s).split(':')[1] ?? 0);
       used.set(`${full}:${idx}`, { name: full, n: idx });
       if (known.has(full)) continue;
       const pack = local.get(bare);
@@ -125,12 +125,18 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
             typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean' ? v
             : v && typeof v === 'object' && typeof v.queryArc !== 'function' ? JSON.stringify(v) : 'signal'])),
           onsetsPerCycle: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).length / s.cycles).toFixed(2),
+          // voices sounding at once, on average: each hit lives for its length plus its release (a voice is a chain of ~8 audio
+          // nodes, so this is the audio thread's load; a section near 50 crackled on a laptop, see lint)
+          voices: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).reduce((n, h) => n + h.duration.valueOf() + (h.value.release ?? 0) * s.cps, 0) / s.cycles).toFixed(1),
           words: describeAxes(l.attrs), // the axis values read back as vocabulary words
         }])),
       };
     });
     // form: a section's energy is its onsets per cycle summed over its parts, each scaled by its level; the arc line prints them
-    for (const sct of sections) sct.energy = +Object.values(sct.layers).reduce((n, l) => n + l.onsetsPerCycle * (typeof l.attrs.level === 'number' ? l.attrs.level : 1), 0).toFixed(1);
+    for (const sct of sections) {
+      sct.energy = +Object.values(sct.layers).reduce((n, l) => n + l.onsetsPerCycle * (typeof l.attrs.level === 'number' ? l.attrs.level : 1), 0).toFixed(1);
+      sct.voices = +Object.values(sct.layers).reduce((n, l) => n + l.voices, 0).toFixed(0);
+    }
   }
   return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps };
 }
@@ -160,7 +166,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       for (const u of r.sounds) console.log(`    ${`${u.name}:${u.n}`.padEnd(24)} ${u.file}`);
     }
     for (const sct of r.sections ?? []) {
-      console.log(`  [${sct.offset}-${sct.offset + sct.span}) ${sct.name}${sct.role ? ' (' + sct.role + ')' : ''}`);
+      console.log(`  [${sct.offset}-${sct.offset + sct.span}) ${sct.name}${sct.role ? ' (' + sct.role + ')' : ''}  ~${sct.voices} voices at once`);
       console.log(`    harmony ${sct.harmony}`);
       for (const [layer, l] of Object.entries(sct.layers)) {
         const attrs = Object.entries(l.attrs).map(([a, v]) => `${a}=${v}`).join(' ');

@@ -1,0 +1,27 @@
+{
+  "prompt": "arrival with its climax under the audio thread's limit: two jux pads at width .75, the rest note for note",
+  "requests": [
+    {
+      "date": "2026-09-19",
+      "ask": "arrival's threshold crackles in real time; make a new file rather than editing arrival",
+      "changes": [
+        {
+          "section": "threshold",
+          "layer": "pad",
+          "axis": "width",
+          "from": 0.95,
+          "to": 0.75,
+          "why": "width .8+ is jux, a doubled copy of every voice: the section ran ~49 voices at once and a trace showed the audio thread at 100% of its render budget; .75 is a pan sweep"
+        },
+        {
+          "section": "threshold",
+          "layer": "pad3",
+          "axis": "width",
+          "from": 0.9,
+          "to": 0.75,
+          "why": "the choir's spread was jux too; with both, threshold is ~37 voices, under the lint's 40"
+        }
+      ]
+    }
+  ]
+}

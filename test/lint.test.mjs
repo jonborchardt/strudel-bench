@@ -34,6 +34,10 @@ test('lint: a load warning for a per-hit compressor on a dense part; density alo
   assert.ok(t.some((s) => /^drums\.compressor is applied per hit \(50 a bar/.test(s)), t);
   assert.ok(!t.some((s) => /^bass\.compressor/.test(s)), 'four hits a bar is fine');
   assert.ok(!t.some((s) => /hits a bar/.test(s)), 'density alone is not a load warning: the dropouts were convolvers per part, fixed in song()');
+  const V = (attrs, voices) => ({ attrs, onsetsPerCycle: 4, voices });
+  const crowded = lint({ sections: [{ name: 'peak', role: 'climax', energy: 30, voices: 52, layers: { pad: V({}, 13), pad2: V({}, 13), pad3: V({}, 10), bass: V({ notes: '0' }, 1), drums: V({}, 2), melody: V({ notes: '0' }, 13) } }] });
+  assert.ok(crowded.some((x) => /^~52 voices sounding at once \(pad 13, pad2 13, melody 13\)/.test(x.text)), JSON.stringify(crowded));
+  assert.ok(!lint({ sections: [{ name: 'a', role: 'climax', energy: 20, voices: 30, layers: { pad: V({}, 30) } }] }).some((x) => /voices/.test(x.text)), 'thirty is fine');
   const light = lint({ sections: [{ name: 'a', role: 'climax', energy: 20, layers: { drums: L({ notes: 'x' }, 20), bass: L({ notes: '0' }, 4) } }] });
   assert.ok(!light.some((x) => /compressor/.test(x.text)), JSON.stringify(light));
 });
