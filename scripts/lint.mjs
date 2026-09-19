@@ -13,8 +13,7 @@ const soundsOf = (v) => { try { return soundNames(JSON.parse(v)); } catch { retu
 
 const DEFAULT_SOUND = { bass: 'sawtooth', melody: 'sawtooth', pad: 'sawtooth', fx: 'white' }; // what a part plays when it names no sound (lib/layers.mjs)
 const SAW = new Set(['sawtooth', 'saw', 'supersaw']);
-// superdough builds a DynamicsCompressorNode per hit; above this many hits a bar that is a real audio-thread cost (the dropouts of 2026-09-18 were convolvers per part, since fixed in song(): a density rule that stood in for that was dropped)
-const COMPRESSOR_HITS = 16;
+const COMPRESSOR_HITS = 16; // superdough builds a DynamicsCompressorNode per hit; above this many hits a bar that is a real audio-thread cost
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 /** Findings for one checkFile result: [{ level: 'error' | 'warn', section?, text }]. A plain-Strudel file has no sections and no findings. */
@@ -45,34 +44,34 @@ export function lint({ sections, problems = [] }) {
 }
 
 // ponytail: the thresholds below are heuristics from the first measured songs; retune them from renders, not by argument.
-const MIX = { headroom: 0.98, clipped: 1e-4, inaudibleDb: -30, dominantDb: -2, centre: 0.05, maskingLow: 0.5, maskingMid: 0.6, depthSpread: 0.15 }; // clipped: fraction of samples at full scale below which a peak at 1 is a transient, not a level
+const MIX = { headroom: 0.98, clipped: 1e-4, inaudibleDb: -30, dominantDb: -2, centre: 0.05, wide: 0.2, maskingLow: 0.5, maskingMid: 0.6, depthSpread: 0.15 }; // clipped: fraction of samples at full scale below which a peak at 1 is a transient, not a level
 const FOUNDATION = (n) => ['drums', 'bass'].includes(layerBase(n)); // centre by convention: never "flat stage" material
 
 /** Findings over a measured section (scripts/measure.mjs's json: the mix row first, then a row per part, and the masking pairs). */
 export function lintMeasure({ section, parts, pairs = [] }) {
   const out = [], warn = (text) => out.push({ level: 'warn', section, text });
   const [mix, ...rows] = parts;
-  if (mix?.peak >= MIX.headroom) {
+  if (mix?.peak >= MIX.headroom || mix?.clipped > 0) { // peak is mono, clipped is per channel: a hard-panned part can clip one side under a tame mono peak
     if (!(mix.clipped < MIX.clipped)) warn(`no headroom: the mix peaks at ${mix.peak} (${mix.relativeDb} dBFS)${mix.clipped ? `, ${(mix.clipped * 100).toFixed(2)}% of samples clip` : ''}; bring levels down`);
     else warn(`transients touch full scale (${(mix.clipped * 100).toFixed(3)}% of samples, ${mix.relativeDb} dBFS): a compressor on the part with the crest, not level; a master limiter is not built`);
   }
   for (const p of rows) {
-    if (!Number.isFinite(p.relativeDb) || p.relativeDb < MIX.inaudibleDb) warn(`${p.name} is inaudible (${p.relativeDb} dB under the mix): raise its level or cut it`);
+    if (!Number.isFinite(p.relativeDb)) warn(`${p.name} is silent: cut it or give it something to play`); // -Infinity, or null after the JSON round trip
+    else if (p.relativeDb < MIX.inaudibleDb) warn(`${p.name} is inaudible (${p.relativeDb} dB under the mix): raise its level or cut it`);
     else if (p.relativeDb > MIX.dominantDb && rows.length > 1 && !FOUNDATION(p.name)) warn(`${p.name} dominates (${p.relativeDb} dB under the mix): it is most of what is heard`);
   }
   const heard = rows.filter((p) => Number.isFinite(p.relativeDb) && p.relativeDb >= MIX.inaudibleDb);
-  const centred = heard.filter((p) => !FOUNDATION(p.name) && Math.abs(p.meanPan - 0.5) < MIX.centre);
+  const centred = heard.filter((p) => !FOUNDATION(p.name) && Math.abs(p.meanPan - 0.5) < MIX.centre && (p.width ?? 0) < MIX.wide); // a wide pad averages to centre but fills the field
   if (centred.length >= 3) warn(`flat stage: ${centred.map((p) => p.name).join(', ')} all sit centre; give some a position`);
   for (const q of pairs) {
     if (q.low >= MIX.maskingLow) warn(`${q.a} and ${q.b} share the low band (masking ${q.low}): move one up (register), thin it (density), or duck it`);
     if (q.mid >= MIX.maskingMid) warn(`${q.a} and ${q.b} share the mids (masking ${q.mid}): rest where the other plays (density), an octave apart (register), darken one (brightness), or a position each`);
   }
-  const deep = heard.filter((p) => p.depth !== null);
-  if (deep.length >= 3) {
-    const spread = (k) => Math.max(...deep.map((p) => p[k])) - Math.min(...deep.map((p) => p[k]));
+  if (heard.length >= 3) { // every heard part has a depth (it is null only for silence, which heard excludes)
+    const spread = (k) => Math.max(...heard.map((p) => p[k])) - Math.min(...heard.map((p) => p[k]));
     if (spread('depth') < MIX.depthSpread) {
-      const same = spread('relativeDb') < 4 ? 'the same level' : spread('highRatio') < 0.03 ? 'the same brightness' : spread('tail') < 0.1 ? 'the same tail' : 'no one component apart';
-      warn(`no depth contrast: ${deep.map((p) => `${p.name} ${p.depth}`).join(', ')} read at one distance (${same}); push one back (level down, brightness down, space up) or bring one forward`);
+      const shared = spread('relativeDb') < 4 ? 'the same level' : spread('highRatio') < 0.03 ? 'the same brightness' : spread('tail') < 0.1 ? 'the same tail' : 'no one component apart';
+      warn(`no depth contrast: ${heard.map((p) => `${p.name} ${p.depth}`).join(', ')} read at one distance (${shared}); push one back (level down, brightness down, space up) or bring one forward`);
     }
   }
   return out;

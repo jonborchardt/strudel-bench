@@ -27,7 +27,7 @@ test('lint: the rules the skill states, as findings', () => {
   assert.deepEqual(lint({ sections: undefined, problems: [] }), [], 'plain strudel: nothing to say');
 });
 
-test('lint: load warnings for a per-hit compressor on a dense part and for a section with too many hits a bar', () => {
+test('lint: a load warning for a per-hit compressor on a dense part; density alone warns nothing', () => {
   const L = (attrs, onsetsPerCycle) => ({ attrs, onsetsPerCycle });
   const out = lint({ sections: [{ name: 'drop', role: 'climax', energy: 70, layers: { drums: L({ compressor: { threshold: -24 }, notes: 'x' }, 50), bass: L({ notes: '0', compressor: { threshold: -18 } }, 4), pad: L({}, 12), melody: L({ notes: '0' }, 11), perc: L({}, 3) } }] });
   const t = out.map((x) => x.text);
@@ -54,8 +54,10 @@ test('lintMeasure: headroom, inaudible and dominant parts, a flat stage, masking
   assert.ok(t.some((s) => /^bass and pad share the low band \(masking 0.62\)/.test(s)), t);
   assert.ok(t.some((s) => /^pad and melody share the mids/.test(s)) && !t.some((s) => /bass and melody/.test(s)), t);
   assert.ok(t.some((s) => /^no depth contrast: bass 0.4, pad 0.4, melody 0.4, fx 0.4 .*\(the same brightness\)/.test(s)), t); // levels spread 7 dB (fx at -1), so brightness is the component they share
-  const fine = lintMeasure({ section: 'b', parts: [row('mix', -6), row('bass', -8), row('pad', -14, { meanPan: .3, depth: .6 }), row('melody', -9, { meanPan: .6, depth: .2 })], pairs: [{ a: 'bass', b: 'pad', low: .2, mid: .1, high: 0 }] });
-  assert.deepEqual(fine, [], JSON.stringify(fine));
+  const fine = lintMeasure({ section: 'b', parts: [row('mix', -6), row('bass', -8), row('pad', -14, { meanPan: .3, depth: .6 }), row('melody', -9, { meanPan: .6, depth: .2 }), row('pad2', -12, { width: .5, depth: .4 }), row('fx', -20, { depth: .5, meanPan: .5 })], pairs: [{ a: 'bass', b: 'pad', low: .2, mid: .1, high: 0 }] });
+  assert.deepEqual(fine, [], `a wide pad at centre is not a flat stage: ${JSON.stringify(fine)}`);
+  const oneSide = lintMeasure({ section: 'c', parts: [row('mix', -6, { peak: .6, clipped: .01 }), row('bass', -8)] });
+  assert.ok(oneSide.some((x) => /^no headroom/.test(x.text)), `one channel clipping under a tame mono peak: ${JSON.stringify(oneSide)}`);
 });
 
 test('lint runs over a real song and only warns', async () => {

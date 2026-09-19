@@ -9,15 +9,14 @@ import { parseArgs } from 'node:util';
 import { analyze, readWav, masking, depthOf, BANDS } from '../lib/analyze.mjs';
 import { checkFile } from './check.mjs';
 import { renderVia } from './render.mjs';
+import { levelRows } from '../web/compose.mjs';
 
-const db = (x) => (x > 0 ? +(20 * Math.log10(x)).toFixed(1) : -Infinity);
-
-/** The rows and pairs of a measured section from the analyzer results: [mix, ...parts] as { name, metrics }. */
+/** The rows and pairs of a measured section from the analyzer results: [mix, ...parts] as { name, metrics }. The dB column is the page's measure button's (levelRows). */
 export function measureRows(stems) {
-  const mix = stems[0];
-  const parts = stems.map(({ name, metrics: m }, i) => {
-    const relativeDb = i === 0 ? db(m.rms) : m.rms > 0 && mix.metrics.rms > 0 ? +(20 * Math.log10(m.rms / mix.metrics.rms)).toFixed(1) : -Infinity;
-    const row = { name, relativeDb, highRatio: m.highRatio, tail: m.tail, centroidHz: m.centroidHz, lowRatio: m.lowRatio, crest: m.crest, meanPan: m.meanPan, panStd: m.panStd, peak: m.peak, clipped: m.clipped, onsetsPerSec: m.onsetsPerSec };
+  const levels = levelRows(stems.map((s) => ({ name: s.name, ...s.metrics })));
+  const parts = stems.map(({ name, metrics: m, ducked }, i) => {
+    const relativeDb = levels[i].db;
+    const row = { name, relativeDb, warn: levels[i].warn, ducked: !!ducked, width: m.width, highRatio: m.highRatio, tail: m.tail, centroidHz: m.centroidHz, lowRatio: m.lowRatio, crest: m.crest, meanPan: m.meanPan, panStd: m.panStd, peak: m.peak, clipped: m.clipped, onsetsPerSec: m.onsetsPerSec };
     row.depth = i === 0 || !Number.isFinite(relativeDb) ? null : depthOf(row);
     return row;
   });
@@ -34,7 +33,8 @@ export function printMeasure({ section, parts, pairs }) {
   const f = (x, d = 2) => (x === null || x === undefined ? '-' : Number.isFinite(x) ? x.toFixed(d) : String(x));
   const lines = [`== ${section}: ${parts.length - 1} parts (dB: the mix in dBFS, each part under the mix; depth 0 close .. 1 far, read with its three inputs)`];
   lines.push(['part', 'dB', 'depth', 'highRatio', 'tail', 'centroid', 'lowRatio', 'crest', 'pan', 'panStd', 'peak', 'clip%'].map((h, i) => (i ? h.padStart(10) : h.padEnd(10))).join(''));
-  for (const p of parts) lines.push([p.name.padEnd(10), f(p.relativeDb, 1), f(p.depth), f(p.highRatio, 3), f(p.tail), String(p.centroidHz), f(p.lowRatio), f(p.crest, 1), f(p.meanPan), f(p.panStd), f(p.peak, 3), f(p.clipped * 100, 3)].map((c, i) => (i ? c.padStart(10) : c)).join(''));
+  for (const p of parts) lines.push([(p.ducked ? p.name + '*' : p.name).padEnd(10), f(p.relativeDb, 1), f(p.depth), f(p.highRatio, 3), f(p.tail), String(p.centroidHz), f(p.lowRatio), f(p.crest, 1), f(p.meanPan), f(p.panStd), f(p.peak, 3), f(p.clipped * 100, 3)].map((c, i) => (i ? c.padStart(10) : c)).join(''));
+  if (parts.some((p) => p.ducked)) lines.push('* a ducked part, measured alone and so un-ducked: in the mix it sits lower than its row says');
   if (pairs.length) {
     lines.push(`masking (shared band energy x time together; ${Object.entries(BANDS).map(([k, [a, b]]) => `${k} ${a}-${b === Infinity ? '' : b} Hz`).join(', ')}):`);
     for (const p of pairs) lines.push(`  ${`${p.a} / ${p.b}`.padEnd(22)} low ${f(p.low)}  mid ${f(p.mid)}  high ${f(p.high)}`);
@@ -53,9 +53,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const stems = [];
   for (const layer of [undefined, ...Object.keys(sec.layers)]) { // one at a time: the page shares one offline context
     let wav;
-    try { wav = await renderVia({ song: path.basename(file), section, layer, cycles: o.cycles ? Number(o.cycles) : undefined, name: `${base}.${section}.${layer ?? 'mix'}` }); }
+    // four bars by default, as the page's measure button renders: the metrics read the same off four bars and a 16-bar section is nine long offline renders against the server's 60 s waiter
+    try { wav = await renderVia({ song: path.basename(file), section, layer, cycles: o.cycles ? Number(o.cycles) : Math.min(sec.cycles, 4), name: `${base}.${section}.${layer ?? 'mix'}` }); }
     catch (e) { console.error(`render ${layer ?? 'mix'}: ${e.message}`); process.exit(1); }
-    stems.push({ name: layer ?? 'mix', metrics: analyze(readWav(fs.readFileSync(wav)), { cps: sec.cps, steps: sec.grid?.steps ?? 16, bands: true }) });
+    stems.push({ name: layer ?? 'mix', ducked: layer !== undefined && sec.layers[layer].attrs.duck !== undefined, metrics: analyze(readWav(fs.readFileSync(wav)), { cps: sec.cps, steps: sec.grid?.steps ?? 16, bands: true }) });
   }
   const out = { song: base, section, cps: sec.cps, ...measureRows(stems) };
   const jsonPath = path.join('renders', `${base}.${section}.measure.json`);

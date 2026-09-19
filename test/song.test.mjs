@@ -139,6 +139,7 @@ test('orbits: parts wanting different reverbs get their own bus; identical rever
   for (const [k, l] of Object.entries(m.sections[0].layers)) assert.ok(l.pattern.queryArc(0, 1).every((h) => h.value.orbit === l.orbit), `${k} haps carry orbit ${l.orbit}`);
   assert.deepEqual(orbitsOf({ pad: { space: .7 }, melody: { space: .7 }, pad2: { space: .7 }, melody2: {}, bass: { space: .9 }, pad3: { space: .6 } }), [['pad', 1], ['melody', 2], ['pad2', 1], ['melody2', 2], ['bass', 2], ['pad3', 3]], 'the same layer kind at the same space shares; bass and melody only send, so they share the default reverb at any space; another size is another bus');
   assert.deepEqual(orbitsOf({ drums: {}, bass: { space: .3 }, pad: { space: .9 }, melody: {} }, { cps: .5, room: { size: 1.2 } }), [['drums', 1], ['bass', 1], ['pad', 1], ['melody', 1]], 'under a room every part wants the same reverb: one convolver');
+  assert.deepEqual(orbitsOf({ drums: {}, pad: { space: .9 }, pad2: { space: .9 }, melody: {} }, { cps: .5, room: { damping: 5000 } }), [['drums', 1], ['pad', 2], ['pad2', 2], ['melody', 3]], 'a room without a size leaves each part its own size, so the buses still split by it (one bus with two sizes would regenerate its reverb every hit)');
   assert.deepEqual(orbitsOf({ drums: {}, pad: { duck: 'drums' }, pad2: {}, raw: { pattern: g.s('hh*4') }, pad3: { space: g.sine } }), [['drums', 1], ['pad', 2], ['pad2', 3], ['raw', 4], ['pad3', 5]], 'a ducked part is alone on its bus (the duck dips the whole orbit); raw and a space signal too');
 });
 
@@ -181,12 +182,21 @@ test('mix material: position shifts every hap\'s pan together; velocity, humaniz
   const v = song({ cps: .5 }, [section('a', 1, { bass: { velocity: '.5 1', notes: '0 0 0 0', density: .75 } })]).strudel.sections[0];
   assert.deepEqual(v.layers.bass.pattern.queryArc(0, 1).filter((h) => h.hasOnset()).map((h) => h.value.velocity), [.5, .5, 1, 1]);
   assert.throws(() => song({}, [section('a', 1, { bass: { velocity: 'loud' } })]), /velocity must be a mini string/);
+  assert.throws(() => song({}, [section('a', 1, { bass: { velocity: '.5 ~' } })]), /no ~/, 'a rest in the velocity string would drop the notes under it');
   const hum = { timingMs: 20, velocity: .2, length: .1, correlation: 'phrase' };
-  const haps = song({ cps: .5, seed: 3 }, [section('a', 4, { drums: { density: .7, humanize: hum } })]).strudel.sections[0].layers.drums.pattern.queryArc(0, 4).filter((x) => x.hasOnset());
-  assert.ok(haps.every((x) => Math.abs(x.value.nudge) <= .02 && x.value.gain > 0), 'timing within ± timingMs');
-  assert.ok(new Set(haps.map((x) => x.value.nudge)).size > 4, 'and not one constant');
-  const again = song({ cps: .5, seed: 3 }, [section('a', 4, { drums: { density: .7, humanize: hum } })]).strudel.sections[0].layers.drums.pattern.queryArc(0, 4).filter((x) => x.hasOnset());
-  assert.deepEqual(again.map((x) => x.value.nudge), haps.map((x) => x.value.nudge), 'seeded: the same lean every build');
+  const build = (spec) => song({ cps: .5, seed: 3 }, [section('a', 4, { drums: spec })]).strudel.sections[0].layers.drums.pattern.queryArc(-.1, 4.1).filter((x) => x.hasOnset()).map((x) => x.whole.begin.valueOf());
+  const straight = build({ density: .7 }), leaned = build({ density: .7, humanize: hum });
+  assert.equal(leaned.length, straight.length, 'every hit still there');
+  const offs = leaned.map((t, i) => (t - straight[i]) / .5 * 1000); // cycles -> ms at cps .5
+  assert.ok(offs.every((ms) => Math.abs(ms) <= 20) && offs.some((ms) => ms !== 0), `timing moves the hap itself, within ± timingMs: ${offs.slice(0, 6).map((x) => x.toFixed(1))}`);
+  assert.ok(new Set(offs.map((x) => x.toFixed(2))).size > 4, 'and not one constant');
+  assert.deepEqual(build({ density: .7, humanize: hum }), leaned, 'seeded: the same lean every build');
+  const kitHaps = song({ cps: .5, seed: 3 }, [section('a', 1, { drums: { density: .7, humanize: hum } })]).strudel.sections[0].layers.drums.pattern.queryArc(0, 1);
+  assert.ok(kitHaps.every((x) => x.value.clip === undefined), 'length leaves a sample with no clip alone: writing one would cut the hit at its step');
+  const bassHaps = song({ cps: .5, seed: 3 }, [section('a', 1, { bass: { notes: '0 0 0 0', density: .75, humanize: { length: .2 } } })]).strudel.sections[0].layers.bass.pattern.queryArc(0, 1);
+  assert.ok(bassHaps.every((x) => x.value.clip > 0.6 && x.value.clip < 1) && new Set(bassHaps.map((x) => x.value.clip)).size > 1, 'and scales a clip the part has (bass baseline .8)');
+  const synth = song({ cps: .5, seed: 3 }, [section('a', 1, { bass: { notes: '0 0 0 0', density: .75, humanize: { timingMs: 15 } } })]).strudel.sections[0].layers.bass.pattern.queryArc(0, 1).filter((x) => x.hasOnset());
+  assert.ok(synth.some((x) => x.whole.begin.valueOf() % .25 !== 0) && synth.every((x) => x.value.nudge === undefined), 'a synth part moves too (nudge would only reach the sampler)');
   assert.throws(() => song({}, [section('a', 1, { drums: { humanize: { swing: 1 } } })]), /humanize takes timingMs/);
   const c = song({ cps: .5 }, [section('a', 1, { bass: { compressor: { threshold: -18, ratio: 3 } } })]).strudel.sections[0];
   assert.equal(at(c, 'bass').compressor, -18); assert.equal(at(c, 'bass').compressorRatio, 3); assert.equal(at(c, 'bass').compressorKnee, 10);
