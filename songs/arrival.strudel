@@ -84,9 +84,11 @@ const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808' }, [
     melody4: { ...harp, density: .5, brightness: .8, level: .6 },
     melody5: { ...winds, density: .6, level: .55, notes: '~ ~ 7@4 ~ ~ 5@4 ~ ~ 4@2' },
     melody6: { ...theme, sound: 'glockenspiel', register: .9, density: .3, level: .45, space: .95, width: .9 },
-    pad:     { ...strings, density: .85, brightness: .55, weight: .8, width: .95, level: 1.1 },
+    // the two widest pads sit under .8: width .8+ is jux, a doubled copy of every voice, and with them this section ran ~49
+    // voices at once, past what the audio thread renders in real time (it crackled); at .75 they sweep instead, ~37 voices
+    pad:     { ...strings, density: .85, brightness: .55, weight: .8, width: .75, level: 1.1 },
     pad2:    { ...organ, sound: 'pipeorgan_loud', density: .8, brightness: .35, weight: 1, level: .6 },
-    pad3:    { ...choir, density: .8, brightness: .6, level: .55 },
+    pad3:    { ...choir, density: .8, brightness: .6, level: .55, width: .75 },
     pad4:    { ...strings, sound: 'vibraphone_bowed', density: .4, register: .85, brightness: .8, level: .35, arp: 'up' },
     fx:      { impact: true },
   }),

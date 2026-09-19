@@ -191,6 +191,28 @@
           "why": "the single-song check now prints a sounds block naming the file behind every sound:index heard, so a bark, a bowed cymbal or a blip is visible before it is called a drone"
         }
       ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "threshold crackles in real time; keep the section under the audio thread's limit",
+      "changes": [
+        {
+          "section": "threshold",
+          "layer": "pad",
+          "axis": "width",
+          "from": 0.95,
+          "to": 0.75,
+          "why": "width .8+ is jux, a doubled copy of every voice: the section ran ~49 voices at once and a trace showed the audio thread at 100% of its render budget; .75 is a pan sweep"
+        },
+        {
+          "section": "threshold",
+          "layer": "pad3",
+          "axis": "width",
+          "from": 0.9,
+          "to": 0.75,
+          "why": "the choir's spread was jux too; with both, threshold is ~37 voices, under the lint's 40"
+        }
+      ]
     }
   ]
 }
