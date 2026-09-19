@@ -13,8 +13,10 @@ export function encodeMp3(channels, rate, { kbps = 192, mono = false } = {}) {
   const pcm = src.map((f) => Int16Array.from(f, (s) => Math.round(Math.max(-1, Math.min(1, s)) * 32767)));
   const enc = new Mp3Encoder(pcm.length, rate, kbps);
   const out = [];
-  for (let i = 0; i < pcm[0].length; i += 1152 * 32) { // ponytail: whole file in memory; fine for song-length renders
-    const chunk = enc.encodeBuffer(...pcm.map((c) => c.subarray(i, i + 1152 * 32)));
+  // one MPEG frame (1152 samples) per call: @breezystack/lamejs 1.2.7 mis-encodes a call carrying several frames, quiet
+  // material comes out as silence and a full mix loses its sampled instruments (test/mp3.test.mjs pins it)
+  for (let i = 0; i < pcm[0].length; i += 1152) { // ponytail: whole file in memory; fine for song-length renders
+    const chunk = enc.encodeBuffer(...pcm.map((c) => c.subarray(i, i + 1152)));
     if (chunk.length) out.push(chunk);
   }
   out.push(enc.flush());

@@ -5,6 +5,7 @@ import path from 'node:path';
 import { writeWav } from '../scripts/analyze.mjs';
 import { tone } from '../lib/analyze.mjs';
 import { wavToMp3 } from '../scripts/mp3.mjs';
+import { encodeMp3 } from '../web/mp3.mjs';
 
 test('wavToMp3 writes an mp3 next to the wav', () => {
   const wav = path.join(import.meta.dirname, '_t_tone.wav');
@@ -33,4 +34,12 @@ test('snippet settings: mono at a low bitrate is much smaller, and still an mp3'
     fs.unlinkSync(wav.replace(/\.wav$/, '.big.mp3'));
     fs.unlinkSync(wav.replace(/\.wav$/, '.small.mp3'));
   } finally { fs.unlinkSync(wav); }
+});
+
+test('a quiet signal survives the encoder: lamejs mis-encodes a call carrying more than one frame, and quiet content vanishes', () => {
+  // no decoder in Node: a CBR frame of near-silence is mostly zero padding, a frame carrying the tone is Huffman data
+  const t = tone(44100, 440, 3).map((s) => s * 0.1);
+  const mp3 = encodeMp3([t, t], 44100, { kbps: 96 });
+  const zeros = mp3.reduce((n, b) => n + (b === 0), 0) / mp3.length;
+  assert.ok(zeros < 0.3, `${Math.round(zeros * 100)}% zero bytes: the tone was encoded as silence`);
 });
