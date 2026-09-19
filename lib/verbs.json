@@ -1,0 +1,6 @@
+{
+  "breakdown": { "phrase": "sparser, more spacious, darker", "drop": ["fx"], "title": "thin it out, open the room, take the fx" },
+  "lift": { "phrase": "busier, brighter, more driving", "title": "more of everything, onto the pulse" },
+  "strip": { "keep": ["drums", "bass", "sample", "perc", "raw"], "title": "rhythm section only" },
+  "halftime": { "material": { "drums": { "template": "'halftime'" } }, "phrase": "slightly sparser", "title": "the halftime template, a little sparser" }
+}

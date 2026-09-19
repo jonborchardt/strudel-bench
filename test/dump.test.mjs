@@ -72,6 +72,35 @@ test('every fixture song plays the same dumped as it does built', async () => {
   }
 });
 
+test('the mix material dumps and plays back: room, compressor, humanize, position and velocity survive the round trip', async () => {
+  const { evaluate } = await import('@strudel/core');
+  const { transpiler } = await import('@strudel/transpiler');
+  await ready;
+  globalThis.aliasBank ??= async () => {};
+  const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_mix.strudel');
+  fs.writeFileSync(file, `song({ cps: .5, seed: 3, room: { size: 1.2, fade: .3, damping: 6000 } }, [section('a', 2, { drums: { density: .7, humanize: { timingMs: 12, velocity: .1, correlation: 'bar' }, compressor: { threshold: -18, ratio: 3 } }, bass: { notes: '0 0 4 3', density: .75, position: -.3, velocity: '.8 1', duck: 'drums', duckAttack: .2 }, pad: { position: .4 } })])`);
+  try {
+    const out = await dumpFile(file);
+    assert.doesNotMatch(out, /\/\*pattern\*\//, 'nothing printed as an opaque pattern');
+    const song = (await evaluate(fs.readFileSync(file, 'utf8'), transpiler)).pattern, dumped = (await evaluate(out, transpiler)).pattern;
+    const stream = (p) => p.queryArc(0, 2).map((h) => `${h.whole?.begin} ${JSON.stringify(h.value)}`).sort();
+    assert.deepEqual(stream(dumped), stream(song), 'the dump plays exactly what the song builds, every control included');
+    assert.ok(stream(song).some((s) => /"roomsize":1.2/.test(s)) && stream(song).some((s) => /"compressorRatio":3/.test(s)), 'and those controls are in the stream');
+  } finally { fs.rmSync(file); }
+});
+
+test('a raw part dumps the pattern the file wrote', async () => {
+  const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_raw.strudel');
+  fs.writeFileSync(file, `song({ cps: .5 }, [section('a', 2, { raw: { pattern: s("metal:2").struct("x ~ x x").lpf(1800), level: .5 } })])`);
+  try { const out = await dumpFile(file); assert.match(out, /const a_raw = s\("metal:2"\)\n\s+\.struct\("x ~ x x"\)\n\s+\.lpf\(1800\)/); assert.match(out, /\.mul\(gain\(0\.5\)\)/); }
+  finally { fs.rmSync(file); }
+});
+
+test('the dump prints the orbit each part plays on', async () => {
+  const out = await dumpFile(path.resolve(import.meta.dirname, '..', 'songs', 'demo.strudel'));
+  assert.match(out, /const intro_pad = [\s\S]*?\.orbit\(2\)/);
+});
+
 test('dump keeps patterns stacked around a song(), not just the song sections', async () => {
   const fs = await import('node:fs');
   const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_wrap.strudel');

@@ -1,7 +1,8 @@
 // Full chain: render before -> resolve --write -> check -> render after -> analyze -> report.
 // usage: node scripts/verify.mjs songs/x.strudel <section> <layer> "punchier"
 import fs from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+import { renderVia } from './render.mjs';
 import { AXES } from '../lib/axes.mjs';
 import { planEdits, applyEdits } from '../lib/resolve.mjs';
 import { checkFile, ensureScope } from './check.mjs';
@@ -10,10 +11,8 @@ import { analyze, readWav } from '../lib/analyze.mjs';
 const [file, sectionSel, layerSel, phrase] = process.argv.slice(2);
 if (!phrase) { console.error('usage: node scripts/verify.mjs songs/x.strudel <section> <layer> "phrase"'); process.exit(2); }
 if (sectionSel === '*' || layerSel === '*') { console.error('verify needs a concrete <section> and <layer> (not "*"): render targets a single song build'); process.exit(2); }
-const run = (args) => execFileSync(process.execPath, args, { encoding: 'utf8' }).trim();
-const render = (name) => run(['scripts/render.mjs', file, '--section', sectionSel, '--layer', layerSel, '--name', name]);
-// execFileSync errors carry stdout/stderr as separate strings (we pass encoding: 'utf8'); join what's present.
-const combineOutput = (e) => [e.stdout, e.stderr].map((s) => s?.trim()).filter(Boolean).join('\n') || e.message;
+const render = (name) => renderVia({ song: path.basename(file), section: sectionSel, layer: layerSel, name });
+const combineOutput = (e) => e.message;
 const port = process.env.PORT || 3000;
 
 const before = fs.readFileSync(file, 'utf8');
@@ -25,7 +24,7 @@ if (plan.report.length === 0 && plan.refused.length === 0 && plan.harmonyReport.
 }
 
 let wavA;
-try { wavA = render('verify.before'); }
+try { wavA = await render('verify.before'); }
 catch (e) { console.error(`render failed: ${combineOutput(e)}. Is the page open at http://localhost:${port} and stopped?`); process.exit(1); }
 
 // code-class axes (drive, register) have no audio metric, so their evidence comes from check: the same
@@ -42,7 +41,7 @@ const onsetsB = onsetsPerCycle(checked);
 // from here on the file holds the edit: any failure (render, or reading/analyzing either wav) must restore it.
 let wavB, A, B;
 try {
-  wavB = render('verify.after');
+  wavB = await render('verify.after');
   // the render is one layer of one section, so measure on that section's tempo and grid (a section may carry its own
   // bpm). song() files carry the tempo in metadata; plain strudel files still need the regex.
   const sec = checked.sections?.find((s) => s.name === sectionSel);

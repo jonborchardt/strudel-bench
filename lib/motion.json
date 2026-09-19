@@ -1,0 +1,8 @@
+{
+  "wobbling": "wobble", "wobble": "wobble", "wobbly": "wobble",
+  "drifting": "drift", "drift": "drift",
+  "pulsing": "pulse", "pulse": "pulse", "pumping": "pulse",
+  "swelling": "swell", "swell": "swell", "breathing": "swell",
+  "rising": "rise", "rise": "rise", "opening": "rise",
+  "falling": "fall", "fall": "fall", "closing": "fall"
+}

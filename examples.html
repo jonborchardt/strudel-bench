@@ -16,10 +16,13 @@
 <main>
   <section class="card intro">
     <h1>How the vocabulary becomes Strudel</h1>
-    <p>strudel-bench songs are written with a small musical vocabulary: five layers (drums, bass, melody, pad, fx), twelve axes from 0 to 1 where
+    <p>strudel-bench songs are written with a small musical vocabulary: eight layers (drums, bass, melody, pad, fx, sample, perc, raw), twelve axes from 0 to 1 where
       0.5 is each layer's baseline, descriptors that move several axes at once, modifiers that scale them, and harmony words that pick keys
       and progressions. A song is a list of sections, each with its own layer settings, and an edit request names the section it is about.
-      An axis can also be a signal that moves through its section instead of a constant.</p>
+      An axis can also be a signal that moves through its section instead of a constant. Drums, bass and perc can
+      also write their rhythm directly as a grid of hits, accents, ghosts and rests. A continuous axis can carry a
+      named movement — wobble, drift, pulse, swell — instead of a plain ramp. And a whole section can be reshaped by
+      an arrangement verb like breakdown, lift, strip or halftime.</p>
     <p>Why write at this level? Plain Strudel says what to play: a sample name, a note list, a filter cutoff in hertz. The vocabulary says
       what it should sound like, and the layers turn that into the right pattern calls for their instrument. "Darker" is one word instead
       of a cutoff, a gain change and a sample swap across three layers, so an edit request stays small and a change touches only the section
@@ -28,6 +31,7 @@
     <p>Every entry below is playable and editable. Press a variant, listen, then open the expanded Strudel: the top pane is the high-level
       language you write, the bottom pane is the plain Strudel it becomes, regenerated as you type. Only one example plays at a time.</p>
     <nav class="subnav" id="subnav"></nav>
+    <figure class="map" id="map"></figure>
   </section>
   <div id="groups"></div>
   <section class="card intro">
@@ -41,7 +45,7 @@
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
   import { boot, playCode, expandCode, nav, footer } from './web/boot.mjs';
-  import { GROUPS } from './web/examples.mjs';
+  import { GROUPS, MAP } from './web/examples.mjs';
   const $ = (id) => document.getElementById(id);
   $('nav').innerHTML = nav('Examples');
   $('foot').innerHTML = footer();
@@ -106,7 +110,10 @@
     status('');
   }
 
-  $('subnav').innerHTML = GROUPS.map((g) => `<a href="#${g.id}">${g.title}</a>`).join('');
+  $('map').innerHTML = MAP + '<figcaption>The shape of a song, and the section below that explains each part of it. Every label is a link.</figcaption>';
+  // one row per arc: the groups run in arc order, so each arc is a contiguous run
+  $('subnav').innerHTML = [...new Set(GROUPS.map((g) => g.arc))]
+    .map((arc) => `<div><b>${arc}</b>${GROUPS.filter((g) => g.arc === arc).map((g) => `<a href="#${g.id}">${g.title}</a>`).join('')}</div>`).join('');
   for (const g of GROUPS) {
     const sec = document.createElement('section'); sec.className = 'exgroup'; sec.id = g.id;
     sec.innerHTML = `<h2>${g.title}</h2><p>${g.blurb}</p>`;

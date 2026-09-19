@@ -58,7 +58,7 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .field { display: inline-flex; align-items: center; gap: .35rem; color: var(--muted); }
 .field select, .field button { color: var(--ink); }
 
-/* kit menu: a native popover pinned under its button; each entry is the kit name over its one-line description */
+/* pick menu: a native popover pinned under its button; each entry is a name over its one-line description */
 .menu { margin: 0; padding: .25rem; border: 1px solid #bbb; border-radius: 6px; background: #fff; box-shadow: 0 6px 20px rgba(0, 0, 0, .15); max-height: 60vh; overflow-y: auto; width: 24rem; max-width: calc(100vw - 2rem); }
 .menu button { display: grid; grid-template-columns: auto 1fr auto; column-gap: .6rem; align-items: center; width: 100%; border: 0; border-radius: 4px; padding: .3rem .3rem .3rem .6rem; text-align: left; line-height: 1.3; }
 .menu button .pv { grid-row: span 2; } /* the kit row's play control: a span, since a button cannot nest one */
@@ -69,7 +69,6 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .menu .key i { font-style: normal; color: var(--line); }
 .menu .key img { width: 18px; height: 18px; }
 .menu input { position: sticky; top: 0; box-sizing: border-box; width: 100%; margin-bottom: .25rem; padding: .35rem .6rem; font: inherit; border: 1px solid #bbb; border-radius: 4px; background: #fff; }
-#kit img { width: 20px; height: 20px; vertical-align: -5px; margin-right: .4rem; }
 .menu button:hover, .menu button:focus-visible { background: #eef3fd; outline: 0; }
 .menu button[aria-selected="true"] { background: #e6eefc; }
 .menu small { font-size: .8rem; color: var(--muted); }
@@ -80,7 +79,8 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .transport #stop { border-radius: 99px; }
 .transport #update { border-color: var(--accent); color: var(--accent); border-radius: 99px; }
 .transport input[type=range] { flex: 1; min-width: 12rem; accent-color: var(--accent); }
-.transport .where { font: var(--mono); min-width: 13rem; color: var(--muted); }
+.transport .where { font: var(--mono); min-width: 0; margin-left: -.2rem; color: var(--muted); }
+.transport #scope { flex: 1.2 1 12rem; min-width: 9rem; height: 2.6rem; background: #0b0f0b; border: 1px solid #111; border-radius: 4px; box-shadow: inset 0 1px 3px #000, 0 1px 0 #48484e; } /* the master scope, an LCD like the readout */
 .transport .where::before { content: ''; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; margin-right: .4rem; background: #c9c9c9; vertical-align: 0; }
 .transport.playing .where::before { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .3; } }
@@ -93,10 +93,11 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .knobs b { display: flex; align-items: center; gap: .2rem; }
 .knobs b button { border: 0; background: none; padding: 0 .2rem; color: var(--muted); line-height: 1; opacity: .5; }
 .knobs b:hover button { opacity: 1; }
-.strip .blk { position: relative; flex: 1 1 0; min-width: 5.5rem; display: grid; gap: 2px; padding: .3rem .45rem; border: 1px solid #111; border-radius: 5px; color: #ddd; background: linear-gradient(#2c2c30, #222225); box-shadow: inset 0 1px 0 #48484e; cursor: pointer; }
+.strip .blk { position: relative; flex: 1 1 0; min-width: 4.5rem; display: grid; gap: 2px; padding: .3rem .45rem; border: 1px solid #111; border-radius: 5px; color: #ddd; background: linear-gradient(#2c2c30, #222225); box-shadow: inset 0 1px 0 #48484e; cursor: pointer; }
 .strip .blk .nm { font-size: .65rem; line-height: 1.6; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .strip .blk i { display: block; height: 4px; border-radius: 2px; background: var(--accent); box-shadow: inset 0 1px 2px #000; }
 .strip .blk.on { border-color: var(--accent); box-shadow: inset 0 1px 0 #48484e, 0 0 0 1px var(--accent), 0 0 8px #2f6fed88; color: #fff; }
+.strip .blk.on, .strip .blk.pin { min-width: 222px; } /* the selected section gets the room; the rest shrink toward their minimum */
 .strip .blk.pin { border-color: #e8a040; box-shadow: inset 0 1px 0 #48484e, 0 0 0 1px #e8a040; }
 .strip .ops { position: absolute; top: .1rem; right: .15rem; display: inline-flex; gap: 0; background: inherit; border-radius: 3px; opacity: .45; }
 .strip .blk:hover .ops, .strip .blk.pin .ops { opacity: 1; }
@@ -119,7 +120,7 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .rack #pos { --d: 0%; --w: 14px; height: 28px; } /* the transport fader: fills from the start, a wider cap */
 .rack #pos::-webkit-slider-thumb { height: 24px; margin-top: -10px; }
 .rack #pos::-moz-range-thumb { height: 24px; }
-.rack .where { color: #7fd38a; background: #0b0f0b; padding: .25rem .6rem; border: 1px solid #111; border-radius: 4px; box-shadow: inset 0 1px 3px #000, 0 1px 0 #48484e; } /* the readout as an LCD */
+.rack .where { color: #7fd38a; background: #0b0f0b; padding: .25rem .4rem; border: 1px solid #111; border-radius: 4px; box-shadow: inset 0 1px 3px #000, 0 1px 0 #48484e; } /* the readout as an LCD */
 .rack .where::before { background: #2a3a2c; }
 .rack.playing .where::before { background: #7fd38a; }
 #ticks { position: absolute; left: 0; right: 0; top: .6rem; height: 28px; pointer-events: none; }
@@ -140,7 +141,12 @@ button.on { background: #e6eefc; border-color: var(--accent); }
   padding: .6rem .8rem; border-radius: 6px; color: #ddd; background: linear-gradient(#2c2c30, #222225); border: 1px solid #111; box-shadow: inset 0 1px 0 #48484e; }
 .knobs b { font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: #eee; }
 .knobs .ax { color: #9a9aa2; font-size: .65rem; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.knobs .expr { color: #8a8a92; font-style: italic; text-align: center; }
+.knobs .expr { color: #8a8a92; font-style: italic; text-align: center; cursor: pointer; }
+.knobs .lane { width: 100%; height: 1.1em; color: #2f6fed; }
+.knobs .axcell { display: flex; align-items: center; gap: .1rem; }
+.knobs .axcell input[type=range] { flex: 1; }
+.knobs .shape { border: 0; background: none; padding: 0 .1rem; color: var(--muted); opacity: .5; cursor: pointer; }
+.knobs .shape:hover { opacity: 1; }
 .rack input[type=range] { --p: calc(var(--v, .5) * (100% - var(--w, 10px)) + var(--w, 10px) / 2); width: 100%; height: 22px; margin: 0; appearance: none; -webkit-appearance: none; background: none; cursor: ew-resize; }
 /* the track and cap rules are written twice: a selector list mixing -webkit- and -moz- pseudo-elements is dropped whole by both browsers */
 .rack input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; border: 1px solid #0a0a0a; box-shadow: inset 0 1px 2px #000, 0 1px 0 #3a3a40;
@@ -279,7 +285,7 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .xstate.fail { background: #fbe9ec; color: var(--err); }
 
 /* the transport slider's lane: one dot per change comment sits above the knob */
-.lane { position: relative; flex: 1; min-width: 12rem; display: flex; align-items: center; padding-top: .6rem; margin-top: -.6rem; } /* the padding holds the dots; the negative margin keeps the slider on the buttons' centre line */
+span.lane { position: relative; flex: 1; min-width: 12rem; display: flex; align-items: center; padding-top: .6rem; margin-top: -.6rem; } /* the padding holds the dots; the negative margin keeps the slider on the buttons' centre line */
 .lane input[type=range] { width: 100%; margin: 0; }
 .fbbar { flex-wrap: nowrap; margin-bottom: .5rem; }
 .lane.small { margin: 0; min-width: 0; }
@@ -312,11 +318,19 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .placeholder { border: 1px dashed #c9c9c9; border-radius: 6px; padding: .5rem .75rem; color: var(--muted); font-size: .9rem; }
 
 /* examples page */
-.subnav { display: flex; gap: .25rem; flex-wrap: wrap; position: sticky; top: 2.6rem; z-index: 1; background: var(--bg); padding: .5rem 0; }
+/* one row per arc: the arc name, then its group pills */
+.subnav { display: grid; gap: .3rem; position: sticky; top: 2.6rem; z-index: 1; background: var(--bg); padding: .5rem 0; }
+.subnav div { display: flex; gap: .25rem; flex-wrap: wrap; align-items: center; }
 .subnav a { text-decoration: none; padding: .2rem .6rem; border-radius: 99px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: .9rem; }
+.subnav b { flex: 0 0 7.5rem; color: var(--muted); font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+/* the overview diagram: full width of the intro card, its links the same blue as the page's */
+.map { margin: 1rem 0 0; }
+.map svg { width: 100%; height: auto; max-width: 62rem; }
+.map svg a text { text-decoration: underline; text-underline-offset: 2px; }
+.map figcaption { max-width: 62rem; margin-top: .3rem; color: var(--muted); font-size: .85rem; }
 .intro p { max-width: 60rem; }
 #groups { display: grid; gap: 3rem; margin-top: 1rem; }
-.exgroup { display: grid; gap: .75rem; scroll-margin-top: 5.5rem; } /* anchors land below the sticky subnav */
+.exgroup { display: grid; gap: .75rem; scroll-margin-top: 11rem; } /* anchors land below the sticky subnav */
 .exgroup + .exgroup { border-top: 1px solid var(--line); padding-top: 2.5rem; }
 .exgroup > h2 { font-size: 1.4rem; }
 .exgroup > p { max-width: 60rem; margin: 0; color: var(--muted); }
@@ -391,6 +405,16 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .matrow .wave .info .unsure { opacity: .6; font-style: italic; } /* a detection nothing periodic really supports */
 .matrow .wave .info button.pick { min-width: 0; padding: 0 .3rem; margin-left: .2rem; }
 .matrow .inh, .matrow input.inh { color: #77777f; } /* a value the part inherits from its pack's sample definition */
+
+/* the drum template as a clickable grid: a row per voice, a button per step (web/stepgrid.mjs) */
+.matrow .gridwrap { width: 100%; }
+:is(.stepgrid, .roll) .row { display: grid; grid-template-columns: 2.4em repeat(var(--steps), minmax(0, 1fr)); gap: 1px; align-items: center; margin: 1px 0; }
+:is(.stepgrid, .roll) .st { height: 1.25em; padding: 0; font-size: .7em; border: 1px solid #ddd; background: #f6f6f6; color: #333; }
+.rack :is(.stepgrid, .roll) .st { border-color: #444; background: #2a2a2a; color: #ddd; }
+:is(.stepgrid, .roll) .st.beat { border-left: 2px solid #999; }
+:is(.stepgrid, .roll) .st.hit { background: #8fa6e2; } .stepgrid .st.accent { background: #2f6fed; color: #fff; } .stepgrid .st.ghost { background: #c9d4ee; }
+.roll .st.hold { background: #5f7ac8; } /* the note roll (web/roll.mjs): a held note's continuation */
+.matrow .rollwrap summary .pv { color: #ccc; padding: 0 .3rem; } /* the roll's own play button, always shown */
 
 /* the transition out of a block: riser bars and the next section's hit, two small picks on the block's last line */
 .strip .blk .tr { display: flex; gap: .2rem; margin-top: 3px; }

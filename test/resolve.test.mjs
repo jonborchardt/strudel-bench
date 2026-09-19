@@ -197,6 +197,14 @@ test('setSectionField sets, replaces and drops a section key or progression', as
   assert.throws(() => setSectionField(`song({}, [section('a', 1, { key: K })])`, 'a', 'key', "'C:minor'"), /expression/);
 });
 
+test('setSectionField sets a section dropout, and locate exposes dropoutNode', async () => {
+  await ready;
+  const { setSectionField, locate } = await import('../lib/resolve.mjs');
+  const a = setSectionField(SRC, 'verse', 'dropout', '1');
+  assert.match(a, /section\('verse', 8, \{ role: 'develop', dropout: 1,\n/, 'after role');
+  assert.equal(locate(a).sections[0].dropoutNode.value, 1);
+});
+
 test('addPack declares a pack in the song header: inserts, appends, or leaves an existing one alone', async () => {
   await ready;
   const { addPack } = await import('../lib/resolve.mjs');
@@ -233,4 +241,82 @@ test('locate reads an array of numbers as a material value; setMaterial rewrites
   assert.deepEqual(locate(src).sections[0].layers.sample.mats.slices.value, [.06, .5]);
   assert.match(setMaterial(src, 'a', 'sample', 'slices', '[.1, .2, .3]'), /slices: \[\.1, \.2, \.3\], pattern/);
   assert.equal(locate(`song({}, [section('a', 4, { sample: { slices: [.1, x] } })])`).sections[0].layers.sample.mats.slices.value, 'expr', 'a non-literal element is an expression');
+});
+
+test('a motion word writes a movement call around the current value; structural axes and expressions refuse', async () => {
+  await ready;
+  const { planEdits, applyEdits } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { pad: { brightness: .6, space: sine }, drums: { density: .7 } })])`;
+  const r = planEdits(src, 'a', 'pad', 'wobbling brightness');
+  assert.deepEqual(r.report.filter((x) => x.motion).map((x) => [x.axis, x.motion]), [['brightness', 'wobble(.4, .8)']]);
+  assert.match(applyEdits(src, r.edits), /brightness: wobble\(\.4, \.8\)/);
+  assert.match(applyEdits(src, planEdits(src, 'a', 'pad', 'rising width').edits), /width: ramp\(\.5, \.8\)/, 'an axis not in the source starts at .5 and is inserted');
+  assert.deepEqual(planEdits(src, 'a', 'pad', 'pulsing space').refused.map((x) => x.reason), ['space is a signal here; change its range by hand']);
+  assert.deepEqual(planEdits(src, 'a', 'drums', 'wobbling density').refused.map((x) => x.reason), ['density is structural: it takes a number, not a movement']);
+});
+
+test('a motion centres on the value after the phrase\'s own delta on that axis, and replaces the delta\'s edit rather than doubling it', async () => {
+  await ready;
+  const { planEdits, applyEdits, locate } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { pad: { brightness: .6 } })])`;
+  const plan = planEdits(src, 'a', 'pad', 'brightness rising, much darker');
+  const out = applyEdits(src, plan.edits);
+  assert.doesNotThrow(() => locate(out), out);
+  assert.match(out, /brightness: ramp\(0, \.3\)/, out);
+});
+
+test('a second motion on an axis already holding one in this phrase is refused, the first still writes', async () => {
+  await ready;
+  const { planEdits, applyEdits, locate } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { pad: { brightness: .6 } })])`;
+  const plan = planEdits(src, 'a', 'pad', 'wobbling brightness, brightness pulsing'); // each motion word labels one axis name, so the axis is named twice
+  assert.equal(plan.edits.length, 1);
+  assert.deepEqual(plan.refused.map((x) => x.reason), ['brightness already has a movement in this phrase; one per axis']);
+  const out = applyEdits(src, plan.edits);
+  assert.doesNotThrow(() => locate(out), out);
+});
+
+test('locate reads a list of sound names as a list, not expr', async () => {
+  const { locate } = await import('../lib/resolve.mjs');
+  const L = locate(`song({}, [section('a', 4, { melody: { sound: ['piano', 'kalimba'] }, pad: { sound: { piano: 2, harp: 1 } } })])`).sections[0].layers;
+  assert.deepEqual(L.melody.mats.sound.value, ['piano', 'kalimba']);
+  assert.deepEqual(L.pad.mats.sound.value, { piano: 2, harp: 1 });
+  const D = locate(`song({}, [section('a', 4, { drums: { sounds: { sd: ['sd', 'rim'], hh: 'hh' } } })])`).sections[0].layers.drums;
+  assert.deepEqual(D.mats.sounds.value, { sd: ['sd', 'rim'], hh: 'hh' }, 'a voice list inside sounds is data too, so the voice picks stay live');
+  const M = locate(`song({}, [section('a', 4, { drums: { sounds: { sd: "<sd rim>", hh: 'hh' } }, melody: { sound: ["a", 'b'] } })])`).sections[0].layers;
+  assert.equal(M.drums.mats.sounds.value, 'expr', 'a double-quoted voice is a mini pattern: the map is not rebuilt around it with single quotes');
+  assert.equal(M.melody.mats.sound.value, 'expr', 'the same inside a list');
+});
+
+test('setAxisText replaces any value, expression included, or inserts the key', async () => {
+  const { setAxisText } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { pad: { brightness: sine.range(.2, .8), space: .3 } })])`;
+  assert.match(setAxisText(src, 'a', 'pad', 'brightness', 'wobble(.3, .7)'), /brightness: wobble\(\.3, \.7\), space/);
+  assert.match(setAxisText(src, 'a', 'pad', 'width', '.7'), /space: \.3, width: \.7/);
+});
+
+test('verbs: breakdown, lift, strip and halftime are resolver edits on a whole section', async () => {
+  const { applyVerb, locate } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 4, { drums: { density: .8 }, bass: { weight: .6 }, melody: { follow: true }, pad: { space: .5 }, fx: { riser: 2 } })])`;
+  const b = applyVerb(src, 'a', 'breakdown');
+  assert.match(b.src, /drums: \{ density: \.45/, 'sparser: -.35'); assert.match(b.src, /space: \.85/); assert.match(b.src, /brightness: \.2/); assert.doesNotMatch(b.src, /fx:/); assert.deepEqual(b.removed, ['fx']);
+  const s = applyVerb(src, 'a', 'strip');
+  assert.deepEqual(Object.keys(locate(s.src).sections[0].layers), ['drums', 'bass']);
+  const h = locate(applyVerb(src, 'a', 'halftime').src).sections[0].layers.drums;
+  assert.equal(h.mats.template.value, 'halftime'); assert.equal(h.axes.density.value, .63, 'slightly sparser: -.175 from .8');
+  assert.throws(() => applyVerb(src, 'a', 'nope'), /unknown verb/);
+});
+
+test('applyVerb surfaces refusals instead of silently doing nothing on an all-spread section', async () => {
+  const { applyVerb } = await import('../lib/resolve.mjs');
+  const src = `const M = { density: .5 };\nsong({}, [section('a', 4, { drums: { ...M } } )])`;
+  const r = applyVerb(src, 'a', 'lift');
+  assert.ok(r.refused.length > 0, 'a fully-spread layer is refused, not silently skipped');
+  assert.equal(r.src, src, 'nothing to edit: the source comes back unchanged');
+  // halftime sets material (template) directly, ahead of its phrase: that edit lands even when the phrase's own axis
+  // edits are refused for being spread, so src differs from the input although report stays empty
+  const h = applyVerb(src, 'a', 'halftime');
+  assert.notEqual(h.src, src, 'the material edit (template) still lands');
+  assert.match(h.src, /template: 'halftime'/);
+  assert.ok(h.refused.length > 0, 'the phrase half is still refused: density comes from the spread');
 });

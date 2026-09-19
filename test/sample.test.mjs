@@ -186,3 +186,58 @@ test('a definition name another pack already uses is skipped and reported, but a
     assert.equal(SAMPLE_PROBLEMS.length, 0, 'the problems clear with the registry');
   } finally { SAMPLES.clear(); }
 });
+
+test('a list of definitions on a sample part: each hit picks a take that keeps its own region; bars and slice count must agree', async () => {
+  const g = await ready;
+  const { registerSamples, SAMPLES } = await import('../lib/packs.mjs');
+  registerSamples({ mine: { sounds: { a: ['mine/a.wav'], b: ['mine/b.wav'] }, samples: { a: { begin: .2, end: .6, bars: .5 }, b: { begin: .3, end: .9, bars: .5 }, c: { sound: 'b', bars: 1 } } } });
+  try {
+    const hs = onsets(g.sample({ sound: ['a', 'b'], pattern: '0 0 0 0' }, { ...meta, cycles: 4 }), 4);
+    assert.equal(hs.length, 32, 'four hits per half bar over four bars');
+    assert.ok(new Set(hs.map((h) => h.value.s)).size === 2, 'both takes play');
+    for (const h of hs) { const [b0, e0] = h.value.s === 'a' ? [.2, .6] : [.3, .9]; near(h.value.begin, b0, `${h.value.s} keeps its region`); near(h.value.end, e0, 'end'); near(h.value.speed, .5 * (e0 - b0) / .5, 'its own natural speed'); assert.equal(h.value.unit, 'c'); assert.equal(h.value.n, undefined, 'no stray n'); assert.equal(h.value.take, undefined, 'no stray take'); }
+    assert.deepEqual(hs.map((h) => h.value.s), onsets(g.sample({ sound: ['a', 'b'], pattern: '0 0 0 0' }, { ...meta, cycles: 4 }), 4).map((h) => h.value.s), 'deterministic');
+    // bars .5 (from both definitions) compresses the pattern to repeat every half cycle (as the 32-hit check above
+    // shows for the natural case too), so one real cycle holds two repeats of the 3-event pattern: 6 onsets, not 3.
+    const st = onsets(g.sample({ sound: ['a', 'b'], pattern: '0 [0 0]', stretch: true }, { ...meta, cycles: 1 }), 1);
+    assert.equal(st.length, 6); assert.ok(st[1].value.speed > st[0].value.speed || st[1].value.s !== st[0].value.s, 'stretched: a slice on the half step plays faster than the same take on the full step');
+    // absolute, not relative: speed must match this hap's *own* real (post-slow) step duration, so slow(bars) run
+    // after withHaps (using the pre-slow duration) can't hide behind a same-direction comparison.
+    near(st[0].value.speed, (meta.cps / st[0].whole.duration.valueOf()) * (st[0].value.end - st[0].value.begin), 'stretch speed uses the real step duration');
+    assert.throws(() => g.sample({ sound: ['a', 'c'] }, { ...meta, cycles: 1 }), /bars .* must agree/);
+    assert.throws(() => g.sample({ sound: ['a', 'b'], slices: [.25] }, { ...meta, cycles: 1 }), /inside the region/, 'a shared break point must sit inside every take\'s region (.25 is outside b\'s .3..9)');
+  } finally { SAMPLES.clear(); }
+});
+
+test('transpose: semitones on the speed, on natural and stretched slices alike', async () => {
+  const g = await ready;
+  const sp = (attrs) => onsets(g.sample({ sound: 'ping', slices: 2, pattern: '0 1', ...attrs }, { ...meta, cycles: 1 }), 1)[0].value.speed;
+  near(sp({ transpose: 12 }) / sp({}), 2, 'an octave up doubles the speed');
+  near(sp({ transpose: -12, stretch: true }) / sp({ stretch: true }), .5, 'an octave down halves it, stretched too');
+  assert.throws(() => g.sample({ sound: 'ping', transpose: 'up' }, { ...meta, cycles: 1 }), /transpose must be a number/);
+});
+
+test('transpose applies to a takes list too', async () => {
+  const g = await ready;
+  const { registerSamples, SAMPLES } = await import('../lib/packs.mjs');
+  registerSamples({ mine: { sounds: { a: ['mine/a.wav'], b: ['mine/b.wav'] }, samples: { a: { bars: .5 }, b: { bars: .5 } } } });
+  try {
+    const c = { ...meta, cycles: 4 };
+    const hs = onsets(g.sample({ sound: ['a', 'b'], pattern: '0 0 0 0' }, c), 4);
+    const hsUp = onsets(g.sample({ sound: ['a', 'b'], pattern: '0 0 0 0', transpose: 12 }, c), 4);
+    near(hsUp[0].value.speed / hs[0].value.speed, 2, 'a takes-list part transposes too');
+  } finally { SAMPLES.clear(); }
+});
+
+test('two takes that resolve to the same pack sound do not collapse: chooseIn picks the take index, not the resolved name', async () => {
+  const g = await ready;
+  const { registerSamples, SAMPLES } = await import('../lib/packs.mjs');
+  registerSamples({ mine: { sounds: { loop: ['mine/loop.wav'] }, samples: { kick: { sound: 'loop', end: .25, bars: .5 }, snare: { sound: 'loop', begin: .25, end: .5, bars: .5 } } } });
+  try {
+    const hs = onsets(g.sample({ sound: ['kick', 'snare'], pattern: '0 0 0 0' }, { ...meta, cycles: 4 }), 4);
+    assert.ok(hs.length > 0);
+    assert.ok(hs.every((h) => h.value.s === 'loop'), 'both takes resolve to the same pack sound');
+    const begins = new Set(hs.map((h) => h.value.begin));
+    assert.ok(begins.has(0) && begins.has(.25), 'both takes\' own regions still play, not just one');
+  } finally { SAMPLES.clear(); }
+});

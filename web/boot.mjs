@@ -28,7 +28,22 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
     },
   });
   // surface strudel's own error log lines (e.g. "sound not found")
-  document.addEventListener('strudel.log', (e) => { if (e.detail.type === 'error') onError(e.detail.message); });
+  // the repl's trigger catches a hap that fails to sound (a raw part naming a sound that is not loaded, say) so the rest
+  // keeps playing, but it logs that without the error type: match the line too, or the part is just silent
+  document.addEventListener('strudel.log', (e) => { if (e.detail.type === 'error' || /^\[(getTrigger|cyclist)\] error/.test(e.detail.message)) onError(e.detail.message); });
+  // superdough makes an orbit on its first hap, so a ducking hit (lib/song.mjs `duck`: duckorbit names the ducked part's
+  // orbit) whose target has not sounded yet finds none ("duck target orbit n does not exist") and nothing ducks: make the
+  // target on demand. On the controller's prototype, so the live scheduler, auditions, the Examples page and the controller
+  // Compose rebuilds on its offline render context are all covered. [0, 1] is superdough's default channel pair.
+  ready.then((r) => {
+    // Hits are scheduled this far ahead of the clock. Strudel's 0.1 s is the gap a main-thread stall has to fit in before
+    // the hits due in it are dropped, and querying a 13-part section costs the main thread bursts of 200-400 ms (Fraction
+    // math in the pattern engine), so dense sections went silent under load. 0.3 s buys that slack at the price of an edit,
+    // a knob or a section jump reaching the ears 0.3 s later.
+    r.scheduler.latency = 0.3;
+    const P = Object.getPrototypeOf(strudel.getSuperdoughAudioController()), duck = P.duck;
+    if (!P.ducksOnDemand) { P.ducksOnDemand = true; P.duck = function (targets, ...rest) { for (const t of [targets].flat()) this.getOrbit(t, [0, 1]); return duck.call(this, targets, ...rest); }; }
+  });
   return ready;
 }
 

@@ -70,8 +70,31 @@ test('novelty: alternating cycle contents raise it, a loop keeps it low', () => 
   assert.ok(alt.novelty > 0.3, `${alt.novelty}`);
 });
 
+test('pan: energy-weighted position and its spread; masking: shared band energy when both sound; depth reads its three inputs', async () => {
+  const { masking, depthOf } = await import('../lib/analyze.mjs');
+  const t = tone(rate, 440, 1), quiet = t.map((x) => x * .2);
+  const right = analyze({ rate, channels: 2, frames: [quiet, t] });
+  assert.ok(right.meanPan > 0.9 && right.panStd < 0.01, `${right.meanPan} ${right.panStd}`);
+  assert.equal(analyze({ rate, channels: 2, frames: [t, t] }).meanPan, 0.5);
+  const moving = analyze({ rate, channels: 2, frames: [t.map((x, i) => x * (i < rate / 2 ? 1 : .1)), t.map((x, i) => x * (i < rate / 2 ? .1 : 1))] });
+  assert.ok(moving.panStd > 0.3, `${moving.panStd}`);
+  const low = analyze({ rate, channels: 1, frames: [tone(rate, 80, 1)] }, { bands: true }), low2 = analyze({ rate, channels: 1, frames: [tone(rate, 100, 1)] }, { bands: true });
+  const high = analyze({ rate, channels: 1, frames: [tone(rate, 5000, 1)] }, { bands: true });
+  assert.ok(masking(low, low2).low > 0.5 && masking(low, high).low < 0.05, JSON.stringify([masking(low, low2), masking(low, high)]));
+  const half = new Float32Array(rate); half.set(tone(rate, 100, .5), 0);
+  const m = masking(low, analyze({ rate, channels: 1, frames: [half] }, { bands: true }));
+  assert.ok(m.low > 0.2 && m.low < 0.7, `sounding together half the time halves the risk: ${m.low}`);
+  assert.equal(analyze({ rate, channels: 1, frames: [t] }).bands, undefined, 'bands only on request');
+  const near = depthOf({ relativeDb: -3, highRatio: .3, tail: 0 }), far = depthOf({ relativeDb: -24, highRatio: .02, tail: .5 });
+  assert.ok(near < 0.15 && far > 0.85, `${near} ${far}`);
+  assert.ok(depthOf({ relativeDb: -30, highRatio: .3, tail: 0 }) < depthOf({ relativeDb: -30, highRatio: .02, tail: .5 }), 'level alone is not distance');
+});
+
 test('flatness: a clipped sine is flatter than a clean one', () => {
   const clean = analyze({ rate, channels: 1, frames: [tone(rate, 220, 2)] });
   const clipped = analyze({ rate, channels: 1, frames: [tone(rate, 220, 2).map((x) => Math.max(-0.1, Math.min(0.1, x)) * 5)] });
   assert.ok(clean.flatness < clipped.flatness, `${clean.flatness} ${clipped.flatness}`);
+  assert.equal(clean.clipped, 0);
+  const hot = analyze({ rate, channels: 1, frames: [tone(rate, 220, 1, 2).map((x) => Math.max(-1, Math.min(1, x)))] });
+  assert.ok(hot.clipped > 0.5, `most of a sine driven to twice full scale sits at it: ${hot.clipped}`);
 });

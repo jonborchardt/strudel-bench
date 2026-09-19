@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { kitsIn, kitOf, setKit, sectionSource, buildRequest, sourceComments, notesView, notesFile, verifyRows, shareEncode, shareDecode } from '../web/compose.mjs';
+import { kitsIn, sectionSource, buildRequest, sourceComments, notesView, notesFile, verifyRows, shareEncode, shareDecode, levelRows } from '../web/compose.mjs';
 import { parseChange, addNote } from '../scripts/note.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -11,18 +11,6 @@ const demo = fs.readFileSync(path.join(ROOT, 'songs', 'demo.strudel'), 'utf8');
 test('kitsIn lists the described kits whose kick, snare and hats are loaded (strudel lower-cases sound names)', () => {
   const page = ['rolandtr909_bd', 'rolandtr909_sd', 'rolandtr909_hh', 'ajkpercusyn_bd', 'ajkpercusyn_sd', 'linndrum_hh', 'linndrum_sd', 'linndrum_bd'];
   assert.deepEqual(kitsIn(['RolandTR909', 'AJKPercusyn', 'LinnDrum', 'KorgM1'], page), ['LinnDrum', 'RolandTR909']);
-});
-
-test('setKit rewrites or inserts the song-level kit and leaves section kits alone', () => {
-  assert.equal(kitOf(demo), 'RolandTR909');
-  const out = setKit(demo, 'LinnDrum');
-  assert.equal(kitOf(out), 'LinnDrum');
-  assert.equal(out.replace("kit: 'LinnDrum'", "kit: 'RolandTR909'"), demo, 'only the kit literal changed');
-  const two = "song({ cps: .5, kit: \"RolandTR808\" }, [\n  section('a', 2, { kit: 'LinnLM2', drums: {} }),\n])\n";
-  assert.match(setKit(two, 'KorgM1'), /song\(\{ cps: \.5, kit: 'KorgM1' \}, \[\n  section\('a', 2, \{ kit: 'LinnLM2'/);
-  assert.equal(setKit("song({ cps: .5 }, [])", 'KorgM1'), "song({ kit: 'KorgM1', cps: .5 }, [])");
-  assert.equal(setKit('song({}, [])', 'KorgM1'), "song({ kit: 'KorgM1',}, [])");
-  assert.equal(setKit('s("bd sd")', 'KorgM1'), 's("bd sd")', 'plain strudel untouched');
 });
 
 test('buildRequest places each note at its cycle and quotes the sections around the spots', () => {
@@ -112,4 +100,9 @@ test('a share link round-trips the name and source, url-safe and smaller than th
   assert.match(link, /^[\w-]+$/, 'base64url: no + / = to escape in a hash');
   assert.ok(link.length < src.length, `${link.length} < ${src.length}`);
   assert.deepEqual(await shareDecode(link), { name: 'demo.strudel', src });
+});
+
+test('levelRows: the mix in dBFS, each part relative to the mix, warnings for clipping and silence', () => {
+  const rows = levelRows([{ name: 'mix', rms: .1, peak: .99 }, { name: 'drums', rms: .05, peak: .5 }, { name: 'pad', rms: 0, peak: 0 }]);
+  assert.deepEqual(rows, [{ name: 'mix', db: -20, warn: 'no headroom' }, { name: 'drums', db: -6, warn: null }, { name: 'pad', db: -Infinity, warn: 'silent' }]);
 });

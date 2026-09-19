@@ -23,7 +23,7 @@
 import { AXES } from '../lib/axes.mjs';
 import { TEMPLATES } from '../lib/grid.mjs';
 import { ARP_ORDERS, DRUM_ORDER } from '../lib/layers.mjs';
-import { SYNTHS } from '../lib/packs.mjs';
+import { SYNTHS, PATCHES } from '../lib/packs.mjs';
 import { HARMONY } from '../lib/vocab.mjs';
 import { FLATS, NUMERALS } from '../lib/harmony.mjs';
 
@@ -36,9 +36,12 @@ const sound = (title) => ({ type: 'enum', values: () => host.sounds(), list: 'so
 export const ROOTS = FLATS; // the roots as lib/harmony spells them
 const METERS = ['2/4', '3/4', '4/4', '5/4', '6/8', '7/8', '9/8', '12/8']; // the common ones; parseMeter takes any n/4, n/8, n/16
 const ROLES = ['establish', 'develop', 'climax', 'release']; // the vocabulary the songs use; only climax has a rule (the fill before it)
-// the chord tokens parseProgression reads: diatonic numerals in both cases, their sevenths, the common altered roots, diminished
+// the chord tokens parseProgression reads: diatonic numerals in both cases, their sevenths, the common altered roots, diminished,
+// and inversions (/1, /2: one token per bar, safe in the per-bar picker). `@n` (a chord spanning n bars) is NOT listed here: the
+// picker builds its token list from the expanded per-bar cycles, so an `@n` token would occupy n bar slots under one label and
+// editing any one of them would rewrite the whole progression with an extra bar. `@n` stays a hand-written form.
 const NUM = NUMERALS.map((n) => n.toUpperCase());
-export const CHORDS = [...NUM.map((n) => n.toLowerCase()), ...NUM, ...NUM.map((n) => `${n}7`), ...NUM.map((n) => `${n.toLowerCase()}7`), 'bII', 'bIII', 'bVI', 'bVII', 'bIII7', 'bVII7', '#iv', 'iidim', 'viidim', 'iidim7', 'viidim7'];
+export const CHORDS = [...NUM.map((n) => n.toLowerCase()), ...NUM, ...NUM.map((n) => `${n}7`), ...NUM.map((n) => `${n.toLowerCase()}7`), 'bII', 'bIII', 'bVI', 'bVII', 'bIII7', 'bVII7', '#iv', 'iidim', 'viidim', 'iidim7', 'viidim7', 'i/1', 'I/1', 'V7/2'];
 const SIGNALS = ['sine', 'cosine', 'saw', 'isaw', 'tri', 'square', 'rand', 'perlin'];
 
 export const SCHEMA = {
@@ -54,13 +57,19 @@ export const SCHEMA = {
     key: { type: 'enum', values: () => ROOTS.flatMap((r) => HARMONY.modes.map((m) => `${r}:${m}`)), list: 'keys', title: 'root and mode' },
     progression: { type: 'tokens', values: CHORDS, sep: ' ', title: 'one chord per bar, roman numerals over the key; [a b] shares a bar' },
     role: { type: 'enum', values: ROLES, title: "the section's role in the arc" },
+    dropout: int(0, 'bars of silence (all but fx) before the section ends'),
+    sweep: int(0, 'bars of low-pass sweep down (all but fx) before the section ends'),
     kit: { type: 'enum', values: () => host.kits(), title: 'drum machine bank' },
     // layer material
     level: { type: 'number', min: 0, max: 2, step: 0.01, title: "the part's gain multiplier" },
+    position: { type: 'number', min: -1, max: 1, step: 0.01, title: 'where the part sits, left -1 to right 1 (0 centre); width moves around it' },
+    duckDepth: { ...unit, title: 'how deep the named part ducks this one' },
+    duckAttack: { type: 'number', min: 0, max: 2, step: 0.01, title: 'seconds the duck takes to recover' },
     template: { type: 'enum', values: Object.keys(TEMPLATES), title: 'drum pattern template' },
     sounds: { type: 'map', keys: DRUM_ORDER, values: () => host.sounds(), list: 'sounds', title: 'the sample a drum voice plays' },
     fill: { type: 'bool', title: 'a fill in the last bar' },
     sound: sound('the synth or sample the part plays'),
+    patch: { type: 'enum', values: () => Object.keys(PATCHES), title: 'a named voice patch (lib/patches.json); an object of controls is plain code' },
     follow: { type: 'bool', title: 'the melody follows the chords' },
     phrase: int(1, 'bars of seeded melody before it repeats'),
     arp: { type: 'enum', values: Object.keys(ARP_ORDERS), title: 'arpeggio order' },
@@ -72,10 +81,15 @@ export const SCHEMA = {
     bars: { type: 'number', min: 0.25, step: 0.25, title: 'bars the region stands for at the section tempo' },
     slices: int(1, 'equal slices the region is cut into; a list of break points instead is plain code'),
     stretch: { type: 'bool', title: 'fit each slice to its step (off: a slice keeps its own length at the fitted speed)' },
+    transpose: { type: 'number', min: -24, max: 24, step: 1, title: 'semitones up or down (speed: length changes with pitch)' },
   },
   calls: {
     section: { args: [null, int(1, 'bars in this section'), null] },
     ramp: { args: ['inherit', 'inherit'] }, // from, to across the section, in the bounds of the number it stands in for
+    wobble: { args: ['inherit', 'inherit', int(1, 'bars per cycle of the wobble')] },
+    drift: { args: ['inherit', 'inherit'] },
+    pulse: { args: ['inherit', 'inherit', int(1, 'dips per bar')] },
+    swell: { args: ['inherit', 'inherit'] },
   },
   methods: {
     range: { args: ['inherit', 'inherit'] }, // the signal swings between low and high, in the bounds of the number it stands in for
@@ -86,8 +100,14 @@ export const SCHEMA = {
   signals: SIGNALS,
   free: {
     packs: 'a list of sample pack names',
+    duck: 'the name of the part in this section that ducks this one',
+    velocity: 'a mini string of per-step gain multipliers, written by hand',
+    humanize: 'an object { timingMs, velocity, length, correlation }: a seeded, correlated played feel',
+    compressor: 'an object { threshold, ratio, knee, attack, release }: the part\'s own compressor',
+    room: 'an object { size, fade, damping, dimension, ir, irbegin }: one reverb character for every part',
     notes: 'a line in mini-notation, written by hand',
+    rhythm: 'a grid string (x X o . | or p/s), written by hand',
     chord: 'a scale degree or a pattern of them',
-    pattern: 'slice indices in mini-notation, spanning the sample\'s bars (0 1 [2 3] 0); the editor cannot see the slice count to offer picks',
+    pattern: 'on a sample part, slice indices in mini-notation spanning its bars (0 1 [2 3] 0); on a raw part, a plain strudel pattern',
   },
 };

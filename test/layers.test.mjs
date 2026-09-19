@@ -292,4 +292,148 @@ test('density does not invent a voice the template leaves out: heartbeat keeps i
   // the guard is conditional, not a blanket removal: a template that does have hats still gets its 16ths
   const house = onsets(g.drums({ template: 'house', density: .85 }, ctx)).filter((h) => h.value.s === 'hh');
   assert.equal(house.length, 4 * 16, 'house at density .85 still fills 16th hats');
+  // an hh line written with only accents or ghosts (no lowercase x) still counts as "has hats"
+  const accented = onsets(g.drums({ template: { bd: 'x...x...x...x...', hh: 'X...X...X...X...' }, density: .85 }, ctx)).filter((h) => h.value.s === 'hh');
+  assert.equal(accented.length, 4 * 16, 'an hh line of X or o still fills 16th hats');
+});
+
+test('a sound list picks one name per hit, the same pick every time, and reaches every name over enough hits', async () => {
+  const g = await ready;
+  const { soundPat } = await import('../lib/layers.mjs'), { soundNames } = await import('../lib/packs.mjs');
+  assert.deepEqual(soundNames(['a', 'b']), ['a', 'b']); assert.deepEqual(soundNames({ a: 2, b: 1 }), ['a', 'b']); assert.deepEqual(soundNames('a'), ['a']);
+  assert.equal(soundPat('piano'), 'piano', 'a string is untouched');
+  assert.throws(() => soundPat([]), /list must hold sound names/);
+  assert.throws(() => soundPat({ a: 0 }), /weights must be positive/);
+  const names = (attrs, cycles = 8) => onsets(g.melody({ notes: '0 1 2 3 4 5 6 7', ...attrs }, { ...ctx, cycles }), cycles).map((h) => h.value.s);
+  const a = names({ sound: ['piano', 'kalimba', 'marimba'] });
+  assert.ok(a.every((s) => ['piano', 'kalimba', 'marimba'].includes(s)), `only listed names: ${a}`);
+  assert.deepEqual(a, names({ sound: ['piano', 'kalimba', 'marimba'] }), 'deterministic');
+  assert.ok(new Set(a).size === 3, `every name is reached over 64 hits: ${[...new Set(a)]}`);
+  const w = names({ sound: { piano: 9, kalimba: 1 } });
+  assert.ok(w.filter((s) => s === 'piano').length > w.filter((s) => s === 'kalimba').length, 'weights lean the pick');
+  const m = names({ sound: g.mini('<piano kalimba>') }, 2);
+  assert.deepEqual([...new Set(m.slice(0, 8))], ['piano']); assert.deepEqual([...new Set(m.slice(8))], ['kalimba'], 'a mini pattern alternates per bar');
+  assert.ok(onsets(g.melody({ sound: ['sawtooth', 'square'] }, ctx)).every((h) => h.value.vib === 4), 'a list of synths still gets the synth vibrato');
+  assert.ok(onsets(g.melody({ sound: ['sawtooth', 'piano'] }, ctx)).every((h) => h.value.vib === undefined), 'a list with a sample does not');
+});
+
+test('a drum voice can be a list; the kit applies only when every name is a kit voice', async () => {
+  const g = await ready;
+  const sd = (sounds) => onsets(g.drums({ density: .4, sounds }, { ...ctx, cycles: 8 }), 8).filter((h) => ['sd', 'rim', 'cp'].includes(h.value.s));
+  const a = sd({ sd: ['sd', 'rim'] });
+  assert.ok(a.length > 0 && a.every((h) => h.value.bank === 'RolandTR909'), 'both are kit voices in Node (hasSound is undefined there): banked');
+  assert.ok(new Set(a.map((h) => h.value.s)).size === 2, 'both names play');
+});
+
+test('a written drum template: any voice, accents, euclid, two bars; the five stay density-gated, others always play', async () => {
+  const g = await ready;
+  const t = { bd: 'x...x...x...x...', sd: '3/8', rd: 'x.x.x.x.x.x.x.x.|X.x.x.x.X.x.x.x.', cb: 'o.......' };
+  const hs = onsets(g.drums({ template: t, density: .3 }, { ...ctx, cycles: 2 }), 2);
+  const of = (s) => hs.filter((h) => h.value.s === s);
+  assert.equal(of('bd').length, 8); assert.equal(of('sd').length, 6, 'euclid 3/8 twice');
+  assert.equal(of('rd').length, 16, 'two bars of ride, not gated by density'); assert.equal(of('cb').length, 4, 'cb is written, so it plays at density .3');
+  assert.equal(of('hh').length, 0, 'no hh line written');
+  const rdGain = (i) => of('rd')[i].value.gain ?? 1;
+  assert.ok(Math.abs(rdGain(8) / rdGain(0) - 1.25) < 1e-6, 'the X in bar two is an accent');
+  assert.ok(Math.abs((of('cb')[0].value.gain ?? 1) / rdGain(0) - 0.4) < 1e-6, 'o is a ghost');
+  assert.ok(of('rd').every((h) => h.value.bank === 'RolandTR909'), 'written voices play through the kit in Node');
+  assert.throws(() => g.drums({ template: { bd: 'x..q' } }, ctx), /unknown character/);
+  assert.throws(() => g.drums({ template: 'nope' }, ctx), /unknown template/);
+  assert.equal(onsets(g.drums({ template: t, density: .3, drive: .9 }, { ...ctx, cycles: 2 }), 2).length, hs.length, 'drive keeps the count on a written template');
+});
+
+test('fill: n rolls the last half bar of every nth bar; true still means the section end', async () => {
+  const g = await ready;
+  const rolls = (attrs, cycles) => onsets(g.drums({ density: .12, ...attrs }, { ...ctx, cycles }), cycles).filter((h) => h.value.s === 'sd').map((h) => Math.floor(h.whole.begin.valueOf()));
+  assert.deepEqual([...new Set(rolls({ fill: 4 }, 8))], [3, 7], 'bars 4 and 8 (density .12 leaves no snare of its own)');
+  assert.deepEqual([...new Set(rolls({ fill: true }, 8))], [7]);
+  assert.throws(() => g.drums({ fill: 1 }, ctx), /fill must be/);
+  // a template that leaves sd out on purpose (no line at all) does not get a snare roll invented for it
+  const noSd = { template: { bd: 'x...x...x...x...', rd: 'x.x.x.x.x.x.x.x.' } };
+  assert.equal(onsets(g.drums({ ...noSd, fill: 2 }, { ...ctx, cycles: 4 })).filter((h) => h.value.s === 'sd').length, 0, 'fill: n with no sd line: no sd events');
+  assert.equal(onsets(g.drums({ ...noSd, fill: true }, ctx)).filter((h) => h.value.s === 'sd').length, 0, 'fill: true with no sd line: no sd events');
+  // heartbeat writes an all-rests sd line on purpose (not no line at all): the gate must read the grid's content, not just its presence
+  assert.equal(onsets(g.drums({ template: 'heartbeat', fill: 2 }, { ...ctx, cycles: 4 })).filter((h) => h.value.s === 'sd').length, 0, 'heartbeat + fill: n: still no sd events');
+});
+
+test('a drum voice list mixing kit voices and pack samples keeps the kit for the kit voices (written in full) and the samples bare', async () => {
+  const g = await ready;
+  const { S } = await import('../lib/strudel.mjs');
+  S.soundMap = { get: () => ({ rolandtr909_sd: 1, rolandtr909_rim: 1, clap: 1 }) }; // the page's sound map; Node has none (hasSound undefined) and assumes the kit
+  try {
+    const hs = onsets(g.drums({ density: .4, sounds: { sd: ['sd', 'clap'] } }, { ...ctx, cycles: 8 }), 8).filter((h) => h.value.s !== 'bd' && h.value.s !== 'hh');
+    assert.deepEqual([...new Set(hs.map((h) => h.value.s))].sort(), ['RolandTR909_sd', 'clap']);
+    assert.ok(hs.every((h) => h.value.bank === undefined), 'no bank: it would hide the sample');
+    const kit = onsets(g.drums({ density: .4, sounds: { sd: ['sd', 'rim'] } }, { ...ctx, cycles: 8 }), 8).filter((h) => h.value.s === 'sd' || h.value.s === 'rim');
+    assert.ok(kit.length && kit.every((h) => h.value.bank === 'RolandTR909'), 'all kit voices: banked as before');
+  } finally { delete S.soundMap; }
+});
+
+test('perc: the default rhythm is a hit per quarter note in any meter (tiled like the drum templates), not a 16-step string the meter rejects', async () => {
+  const g = await ready;
+  const { parseMeter } = await import('../lib/song.mjs');
+  for (const m of ['3/4', '6/8', '7/8', '2/4']) assert.equal(onsets(g.perc({ sound: 'cb' }, { ...ctx, cycles: 1, meter: m }), 1).length, Math.ceil(parseMeter(m).steps / 4), m);
+});
+
+test('perc: a bare sound on a written rhythm; density thins or adds hits, drive places them', async () => {
+  const g = await ready;
+  const at = (attrs) => onsets(g.perc({ sound: 'cb', ...attrs }, ctx));
+  assert.equal(onsets(g.perc({}, ctx)).length, 0, 'no sound: silence');
+  const base = at({ rhythm: 'x.x.x.x.' });
+  assert.equal(base.length, 32, 'eight hits a bar over four bars'); assert.ok(base.every((h) => h.value.s === 'cb' && h.value.bank === undefined), 'bare, no kit');
+  assert.deepEqual(at({ rhythm: 'x.x.x.x.', density: .5 }).map((h) => h.whole.begin.valueOf()), base.map((h) => h.whole.begin.valueOf()));
+  assert.equal(at({ rhythm: 'x.x.x.x.', density: .25 }).length, 16, 'half the hits');
+  assert.ok(at({ rhythm: 'x.x.x.x.', density: 1 }).length > 32, 'more hits from the empty steps');
+  assert.equal(at({ rhythm: 'x.x.x.x.', drive: .1 }).length, 32);
+  assert.ok(at({ rhythm: '3/8', articulation: .9 })[0].value.clip < 1);
+  assert.doesNotMatch(g.strudelLib.cells.perc.articulation.describe(.5, .9), /choke/);
+});
+
+test('raw: a plain strudel pattern as a part, with the pattern-agnostic cells and level', async () => {
+  const g = await ready;
+  const p = g.s('metal:2').struct('x ~ x x ~ x ~ x');
+  assert.equal(onsets(g.raw({}, ctx)).length, 0, 'no pattern: silence');
+  const hs = onsets(g.raw({ pattern: p, level: .5, brightness: .2, space: .8 }, ctx));
+  assert.equal(hs.length, 20);
+  assert.match(String(hs[0].value.s), /^metal/); assert.equal(hs[0].value.gain, .5); assert.ok(hs[0].value.cutoff < 20000); assert.ok(hs[0].value.room > 0);
+  assert.throws(() => g.raw({ pattern: 'x x' }, ctx), /raw.pattern must be a strudel pattern/);
+});
+
+test('patch: a named bundle of voice controls, or an object of them, applied under the axes', async () => {
+  const g = await ready;
+  const { resolvePatch, PATCHES } = await import('../lib/packs.mjs');
+  assert.deepEqual(resolvePatch('pluck'), PATCHES.pluck); assert.deepEqual(resolvePatch({ unison: 3 }), { unison: 3 }); assert.equal(resolvePatch(undefined), null);
+  assert.throws(() => resolvePatch('nope'), /unknown patch "nope"/); assert.throws(() => resolvePatch({ lpf: 300 }), /patch: unknown key "lpf"/);
+  const v = (L, attrs) => onsets(g[L](attrs, ctx))[0].value;
+  assert.equal(v('pad', { patch: 'wide' }).unison, 5); assert.equal(v('pad', { patch: 'wide' }).detune, .18);
+  assert.equal(onsets(g.pad({ patch: 'wide' }, ctx)).length, onsets(g.pad({}, ctx)).length, 'unison adds voices inside a hap, not onsets');
+  assert.equal(v('melody', { patch: 'pluck' }).vib, 0, 'the patch overrides the layer baseline');
+  assert.equal(v('bass', { patch: { lpq: .5 }, brightness: .9 }).resonance ?? v('bass', { patch: { lpq: .5 }, brightness: .9 }).lpq, .5);
+  assert.ok(v('bass', { patch: { lpq: .5 }, brightness: .9 }).cutoff > 400, 'brightness still sets the cutoff on top');
+});
+
+test("follow: 'tones' maps written degrees onto the chord tones of each bar", async () => {
+  await ready;
+  const notes = (spec, cycles = 2) => song({ cps: .5, key: 'C:major' }, [section('a', cycles, { progression: 'I IV', melody: { sound: 'piano', ...spec } })]).strudel.sections[0].layers.melody.pattern.queryArc(0, cycles).filter((h) => h.hasOnset()).sort((a, b) => a.whole.begin.valueOf() - b.whole.begin.valueOf()).map((h) => h.value.note);
+  const t = notes({ notes: '0 1 2 3', follow: 'tones' });
+  assert.deepEqual(t.slice(0, 4).map((n) => n % 12), [0, 4, 7, 11], 'C E G B over I');
+  assert.deepEqual(t.slice(4).map((n) => n % 12), [5, 9, 0, 4], 'F A C E over IV');
+  assert.equal(notes({ notes: '4 5', follow: 'tones' }, 1)[0] % 12, 0, 'degree 4 is the root an octave up');
+  assert.equal(notes({ notes: '4 5', follow: 'tones' }, 1)[0] - notes({ notes: '0 1', follow: 'tones' }, 1)[0], 12);
+  assert.throws(() => notes({ follow: 'chords' }), /follow must be true, false or 'tones'/);
+  const neg = notes({ notes: '-1 0', follow: 'tones' }, 1);
+  assert.ok(neg.every(Number.isFinite), 'a negative degree must not NaN');
+  assert.deepEqual(neg, [59, 60], 'degree -1 is the tone below the root, an octave down from degree 3');
+});
+
+test('bass rhythm: a written grid replaces the density grid, keeps drive and accents, may span bars', async () => {
+  const g = await ready;
+  const at = (attrs, cycles = 2) => onsets(g.bass(attrs, { ...ctx, cycles }), cycles).map((h) => h.whole.begin.valueOf()).sort((a, b) => a - b);
+  assert.deepEqual(at({ rhythm: 'x.....x.....x...' }), [0, .375, .75, 1, 1.375, 1.75]);
+  assert.deepEqual(at({ rhythm: 'x.....x.....x...', density: .9 }), at({ rhythm: 'x.....x.....x...' }), 'density does not touch a written rhythm');
+  assert.deepEqual(at({ rhythm: '3/8+1' }, 1), [.25, .625, .875], 'euclid works on the bass (rotated left one slot)');
+  assert.equal(at({ rhythm: 'x...x...x...x...|x.x.x...........' }).length, 7, 'two bars: 4 + 3 hits');
+  assert.equal(at({ rhythm: 'x.....x.....x...', drive: .9 }).length, 6, 'drive keeps the count');
+  const gains = onsets(g.bass({ rhythm: 'X.....o.....x...' }, { ...ctx, cycles: 1 }), 1).map((h) => h.value.gain);
+  assert.ok(gains[0] > gains[2] && gains[1] < gains[2], 'accent and ghost');
 });

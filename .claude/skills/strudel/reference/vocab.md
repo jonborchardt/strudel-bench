@@ -19,20 +19,20 @@
 
 ## Adapter cells (what each axis does per layer at 0.2 / 0.8)
 
-| axis | drums | bass | melody | pad | fx | sample |
-|---|---|---|---|---|---|---|
-| density | voices bd / voices bd+sd+hh+oh, 16th hats | 1 notes per cycle / 8 notes per cycle | drop 48% of notes / double notes p=0.60 | 1 chord tones / 4 chord tones | — | — |
-| drive | kick/snare pushed to offbeats / kick onto the pulse, snare onto the backbeat, hats accent on-beat | notes syncopated / notes pulled onto beats, on-beat accent | — | no duck / pulse duck depth 0.36 | — | — |
-| brightness | lpf 2899 Hz / hpf 267 Hz | lpf 400 Hz -> 152 Hz / lpf 400 Hz -> 1051 Hz | lpf 2000 Hz -> 641 Hz / lpf 2000 Hz -> 4595 Hz | lpf 1200 Hz -> 410 Hz / lpf 1200 Hz -> 3152 Hz | lpf x0.44 / lpf x1.73 | lpf 1913 Hz / open |
-| weight | gain x0.76 / gain x1.12 | gain x0.85, lpf x1.00 / gain x1.23, lpf x0.85, octave down | — | gain x0.80 / gain x1.27, low voicing | gain x0.70 / gain x1.30 | gain x0.70 / gain x1.30 |
-| space | room 0.00 / room 0.24 | room 0.00 / room 0.18 | room 0.08, delay 0.00 / room 0.62, delay 0.24 | room 0.12, size 0.48 / room 0.66, size 0.81 | room 0.20 / room 0.77 | room 0.20 / room 0.77 |
-| articulation | clip 1.12, release 0.28 s / clip 0.52, release 0.05 s, hats choke | clip 0.98, release 0.22 s / clip 0.50, release 0.06 s | clip 0.98, release 0.22 s / clip 0.50, release 0.06 s | clip 1.12, attack 0.42 s, release 1.44 s / clip 0.58, attack 0.06 s, release 0.27 s | — | — |
-| aggression | distort 0.00 / distort 0.36 | distort 0.00 / distort 0.42 | distort 0.00 / distort 0.24, coarse | distort 0.00 / distort 0.18 | — | — |
-| groove | swing 0 -> 0 / swing 0 -> 0.18 | swing 0 -> 0 / swing 0 -> 0.18 | swing 0 -> 0 / swing 0 -> 0.18 | — | — | — |
-| variation | pure loop / fills with p=0.60, reversed every 4th | pure loop / octave jumps p=0.60 | pure loop / bursts p=0.60, reversed every 4th | — | — | — |
-| organicness | timing jitter +/-0 ms, gain jitter 0% / timing jitter +/-24 ms, gain jitter 12% | timing jitter +/-0 ms, gain jitter 0% / timing jitter +/-24 ms, gain jitter 12% | timing jitter +/-0 ms, gain jitter 0% / timing jitter +/-24 ms, gain jitter 12% | gain jitter 0% / gain jitter 12% | — | — |
-| width | stereo spread +/-0.04 / stereo spread +/-0.34 | — | centred / pan sweep +/-0.30 | pan sweep +/-0.04 / jux(rev) | centred / pan sweep +/-0.30 | centred / pan sweep +/-0.30 |
-| register | — | octave 1 / octave 3 | octave 3 / octave 5 | octave 3 / octave 5 | — | — |
+| axis | drums | bass | melody | pad | fx | sample | perc | raw |
+|---|---|---|---|---|---|---|---|---|
+| density | voices bd (of the template's voices) / voices bd+sd+hh+oh (of the template's voices), 16th hats | 1 notes per cycle / 8 notes per cycle | drop 48% of notes / double notes p=0.60 | 1 chord tones / 4 chord tones | — | — | keep 40% of the hits / add 60% of the empty steps | — |
+| drive | kick/snare pushed to offbeats / kick onto the pulse, snare onto the backbeat, hats accent on-beat | notes syncopated / notes pulled onto beats, on-beat accent | — | no duck / pulse duck depth 0.36 (a faked dip; a duck: material replaces it) | — | — | hits pushed off it / hits pulled onto the pulse, on-beat accent | — |
+| brightness | lpf 2899 Hz / hpf 267 Hz | lpf 400 Hz -> 152 Hz / lpf 400 Hz -> 1051 Hz | lpf 2000 Hz -> 641 Hz / lpf 2000 Hz -> 4595 Hz | lpf 1200 Hz -> 410 Hz / lpf 1200 Hz -> 3152 Hz | lpf x0.44 / lpf x1.73 | lpf 1913 Hz / open | lpf 2899 Hz / hpf 267 Hz | lpf 1913 Hz / open |
+| weight | gain x0.76 / gain x1.12 | gain x0.85, lpf x1.00 / gain x1.23, lpf x0.85, octave down | — | gain x0.80 / gain x1.27, low voicing | gain x0.70 / gain x1.30 | gain x0.70 / gain x1.30 | gain x0.76 / gain x1.12 | gain x0.70 / gain x1.30 |
+| space | room 0.00 / room 0.24 | room 0.00 / room 0.18 | room 0.08, delay 0.00 / room 0.62, delay 0.24 | room 0.12, size 0.48 / room 0.66, size 0.81 | room 0.20 / room 0.77 | room 0.20 / room 0.77 | room 0.00 / room 0.24 | room 0.20 / room 0.77 |
+| articulation | clip 1.12, release 0.28 s / clip 0.52, release 0.05 s, hats choke | clip 0.98, release 0.22 s / clip 0.50, release 0.06 s | clip 0.98, release 0.22 s / clip 0.50, release 0.06 s | clip 1.12, attack 0.42 s, release 1.44 s / clip 0.58, attack 0.06 s, release 0.27 s | — | — | clip 1.12, release 0.28 s / clip 0.52, release 0.05 s | — |
+| aggression | distort 0.00 / distort 0.36 | distort 0.00 / distort 0.42 | distort 0.00 / distort 0.24, coarse | distort 0.00 / distort 0.18 | — | — | distort 0.00 / distort 0.36 | — |
+| groove | swing 0 -> 0 / swing 0 -> 0.18 | swing 0 -> 0 / swing 0 -> 0.18 | swing 0 -> 0 / swing 0 -> 0.18 | — | — | — | swing 0 -> 0 / swing 0 -> 0.18 | — |
+| variation | pure loop / fills with p=0.60, reversed every 4th | pure loop / octave jumps p=0.60 | pure loop / bursts p=0.60, reversed every 4th | — | — | — | — | — |
+| organicness | timing jitter +/-0 ms, gain jitter 0% / timing jitter +/-24 ms, gain jitter 12% | timing jitter +/-0 ms, gain jitter 0% / timing jitter +/-24 ms, gain jitter 12% | timing jitter +/-0 ms, gain jitter 0% / timing jitter +/-24 ms, gain jitter 12% | gain jitter 0% / gain jitter 12% | — | — | timing jitter +/-0 ms, gain jitter 0% / timing jitter +/-24 ms, gain jitter 12% | — |
+| width | stereo spread +/-0.04 / stereo spread +/-0.34 | — | centred / pan sweep +/-0.30 | pan sweep +/-0.04 / jux(rev) | centred / pan sweep +/-0.30 | centred / pan sweep +/-0.30 | centred / pan sweep +/-0.30 | centred / pan sweep +/-0.30 |
+| register | — | octave 1 / octave 3 | octave 3 / octave 5 | octave 3 / octave 5 | — | — | — | — |
 
 Phases: structural → timing → pitch → articulation → spectral → spatial → level
 
@@ -61,6 +61,10 @@ Phases: structural → timing → pitch → articulation → spectral → spatia
 - **floating**: drive -0.35, space +0.15
 - **swung**: groove +0.35
 - **straight**: groove -0.35
+- **closer**: brightness +0.12, space -0.18, weight +0.08
+- **forward**: brightness +0.12, space -0.18, weight +0.08
+- **farther**: brightness -0.12, space +0.18, weight -0.08
+- **background**: brightness -0.15, space +0.2, weight -0.12
 - **aggressive**: aggression +0.4, articulation +0.1
 - **smooth**: aggression -0.35, articulation -0.15
 
@@ -92,5 +96,21 @@ Write `key` and `progression` on the section. Numerals are diatonic to the secti
 - **circular**: i VI III VII
 - modes: major, minor, dorian, lydian, mixolydian, phrygian (keep the root, swap the mode)
 - **relative**: relative major/minor of the current key; `relative major` = relative key then that mode
-- progression grammar: `b`/`#` before a numeral, `m`/`M`/`dim` after it, `7` (dominant on uppercase: `V7`; diatonic on lowercase: `ii7`) or `M7` (major seventh), `[..]` for several chords in one bar: `'i bVI [III VII] V7'`
-- not modeled: inversions, voice leading, chords longer than a bar. For other scales use a different section key (e.g. `C:harmonic minor`).
+- progression grammar: `b`/`#` before a numeral, `m`/`M`/`dim` after it, `7` (dominant on uppercase: `V7`; diatonic on lowercase: `ii7`) or `M7` (major seventh), `[..]` for several chords in one bar, `@n` to hold a chord for `n` bars, `/1`/`/2` to invert it: `'i bVI [III VII] V7 i@2 VI/1'`
+- not modeled: voice leading, chord symbols. For other scales use a different section key (e.g. `C:harmonic minor`).
+
+## Movements (write a movement call around the axis's current value)
+
+- **wobble**: wobbling, wobble, wobbly
+- **drift**: drifting, drift
+- **pulse**: pulsing, pulse, pumping
+- **swell**: swelling, swell, breathing
+- **rise**: rising, rise, opening
+- **fall**: falling, fall, closing
+
+Signatures:
+- `wobble(a, b, bars=1)` — sine, one cycle of wobble per `bars`
+- `drift(a, b)` — smooth wandering noise (perlin)
+- `pulse(a, b, per=4)` — square, `per` beats per cycle
+- `swell(a, b)` — sine timed to the section, peaking a quarter of the way through
+- `rise`/`fall` write `ramp(v, v+.3)` / `ramp(v, v-.3)` from the axis's current value `v`, not a MOTION function

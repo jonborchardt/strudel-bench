@@ -1,0 +1,95 @@
+// foundry: rhythm you write. Every drum grid in this song is typed, not picked from a template: X is an accent, o a
+// ghost, | starts the second bar of a line, '3/8+1' is three euclidean hits over eight slots rotated by one. The
+// kit gets a ride and a rim the five density voices never had, the bass carries its own rhythm grid, the perc part
+// picks a different take per hit, the pad is sidechained to the kick for real (duck), and the build drops out for a
+// bar and sweeps its filter shut before the drop lands. fill: 2 rolls every other bar of the build.
+// Mixed as a scene: before the mixing pass the drop had the bass 1.7 dB under the mix (the bass
+// was the mix), the clavisynth hook 26 dB down, the glockenspiel twin 52 dB down (inaudible), the perc, pad and fx all
+// dead centre, and every part in its own room. Now: one room on the song with each part's space as its send; the bass
+// under the kick (level, and ducked with a written recovery); the hook up to foreground with a phrase-shaped velocity
+// line; the bell twin lower in register so its samples carry, set right; the perc set left and played (humanize: a
+// seeded lean, not dice); the pad set slightly left and behind; drums brought down (a kit compressor was tried
+// and dropped: superdough builds one per hit). `npm run measure -- songs/foundry.strudel drop` shows the table.
+// intro -> verse -> build -> drop -> breakdown -> drop2 -> outro. E minor, 124 bpm, RolandTR808. Axis values are
+// 0..1 with 0.5 = the layer's baseline.
+
+// the grids. One string per voice; any voice name the kit has works.
+const kick  = 'x......ox...x...';                       // a ghost before beat three
+const snare = '....X.......X..o';                       // accented backbeat, a pickup ghost into the next bar
+const hats  = 'x.x.x.x.x.x.x.x.|x.x.x.x.x.x.xxxx';      // two bars: the second ends in a run
+const ride  = 'x.x.x.x.x.x.x.x.';
+const full  = { bd: kick, sd: snare, hh: hats, oh: '..x...x...x...x.', cp: '....x.......x...', rd: ride, rim: '.......o.......o' };
+const bare  = { bd: 'x...x...x...x...', rim: '.......o.......o', rd: ride };
+
+// the lines, each with a place on the stage
+const hook  = { sound: 'clavisynth', follow: true, phrase: 2, notes: '0 ~ 0 2 3 ~ 2 0 ~ 4 3 2 ~ 0@2 ~', register: .55, articulation: .7, brightness: .55, width: .55, position: .1, velocity: '.85 1 .9 1 .8 1 .9 .95', space: .45 };
+const bell  = { sound: 'vibraphone', follow: true, notes: '~ ~ 7 ~ ~ 5 ~ ~', register: .7, level: .8, space: .65, position: .4 }; // the glockenspiel twin measured 52 dB under the mix in the original and 39 at level 2: the sample is too quiet to place
+const low   = { sound: 'square', patch: 'reese', register: .3, weight: .7, articulation: .6, brightness: .4, space: .35, level: .55, duck: 'drums', duckDepth: .35, duckAttack: .12 };
+const bed   = { sound: 'organ_8inch', articulation: .1, space: .75, brightness: .3, position: -.25 };
+const shake = { sound: ['tambourine', 'cajon'], rhythm: '..x...x...x...x.', position: -.35, humanize: { timingMs: 12, velocity: .12, correlation: 'bar' } };
+
+song({ bpm: 124, key: 'E:minor', seed: 5, kit: 'RolandTR808', room: { size: 1.4, fade: .35, damping: 6500 } }, [
+
+  // ride and rim alone: the written extras play whatever density says, the five kit voices wait for it
+  section('intro', 8, { role: 'establish', progression: 'i@2 VI VII',
+    drums: { template: bare, density: .3, space: .55, brightness: .35, level: .55 },
+    perc:  { ...shake, level: .5, space: .55 },
+    pad:   { ...bed, density: .4, level: .6 },
+  }),
+
+  // the bass gets a grid of its own instead of the density grid; the hook arrives
+  section('verse', 8, { role: 'develop', progression: 'i VI III VII',
+    drums:  { template: full, density: .5, drive: .6, brightness: .45, level: .6 },
+    bass:   { ...low, rhythm: 'x..x..x...x.x...', notes: '0 ~ 0 7 ~ 4 3 ~', density: .8 },
+    perc:   { ...shake, level: .5, space: .5 },
+    melody: { ...hook, density: .5, level: 1.6 },
+    pad:    { ...bed, density: .5, level: .5 },
+  }),
+
+  // fill every other bar, a riser under it, then one bar of nothing but the riser and a filter closing on the way out
+  section('build', 8, { role: 'develop', progression: 'iv@2 VI VII', dropout: 1, sweep: 2,
+    drums:  { template: full, density: .7, drive: .75, fill: 2, brightness: .5, level: .65 },
+    bass:   { ...low, rhythm: 'x..x..x...x.x...', notes: '0 ~ 0 7 ~ 4 3 ~', density: .8, brightness: .55 },
+    melody: { ...hook, density: .6, brightness: ramp(.5, .8), level: 1.6 },
+    pad:    { ...bed, density: .6, space: ramp(.6, .95), level: .5 },
+    fx:     { riser: 4, level: .7 },
+  }),
+
+  // the whole kit, accents and ghosts, hats at sixteenths; the pad pumps under the kick because the kick ducks it
+  // a riser over the last two bars, so the breakdown lands on the impact instead of the drop just stopping
+  section('drop', 16, { role: 'climax', progression: 'i VI III VII',
+    drums:   { template: full, density: .9, drive: .85, articulation: .65, brightness: .5, weight: .6, variation: .35, level: .45 },
+    bass:    { ...low, rhythm: 'x..x..x.x.x.x...', notes: '0 ~ 0 7 ~ 4 3 0', density: .8, weight: .8, aggression: .55, brightness: .55, level: .5 },
+    perc:    { ...shake, sound: { cajon: 3, bongo: 1 }, rhythm: '3/8+1', level: .6, width: .6 },
+    melody:  { ...hook, density: .7, brightness: .7, width: .7, level: 2 },
+    melody2: { ...bell },
+    pad:     { ...bed, density: .7, duck: 'drums', duckDepth: .8, duckAttack: .2, brightness: .45, level: .55 },
+    fx:      { impact: true, riser: 2, level: .5 },
+  }),
+
+  // strip it: the bare grid and the bed land on an impact, the filter closing over the last two bars into the second drop
+  section('breakdown', 8, { role: 'release', progression: 'VI VII i@2', sweep: 2,
+    drums: { template: bare, density: .3, space: .65, brightness: .3, level: .55 },
+    perc:  { ...shake, density: .3, level: .45, space: .65 },
+    pad:   { ...bed, density: .5, space: .9, level: .55 },
+    fx:    { riser: 2, impact: true, level: .7 },
+  }),
+
+  // the same drop, more variation, a fill every four bars, the counter-line an octave down as well as up
+  section('drop2', 16, { role: 'climax', progression: 'i VI III VII',
+    drums:   { template: full, density: .9, drive: .85, articulation: .65, brightness: .55, weight: .65, variation: .6, fill: 4, level: .45 },
+    bass:    { ...low, rhythm: 'x..x..x.x.x.x...', notes: '0 ~ 0 7 ~ 4 3 0', density: .8, weight: .85, aggression: .6, brightness: .6, level: .5 },
+    perc:    { ...shake, sound: { cajon: 3, bongo: 1 }, rhythm: '3/8+1', level: .6, width: .7 },
+    melody:  { ...hook, density: .75, brightness: .75, width: .75, level: 2 },
+    melody2: { ...bell },
+    melody3: { ...bell, sound: 'marimba', register: .3, notes: '~ 4 ~ ~ ~ 2 ~ ~', level: 1.2, position: -.4 },
+    pad:     { ...bed, density: .7, duck: 'drums', duckDepth: .8, duckAttack: .2, brightness: .5, level: .55 },
+    fx:      { impact: true, level: .5 },
+  }),
+
+  // the ride and the bed again, then the last bar is silence
+  section('outro', 8, { role: 'release', progression: 'i@4', dropout: 1,
+    drums: { template: bare, density: .3, space: .75, brightness: .25, level: .5 },
+    pad:   { ...bed, density: .4, space: .95, brightness: .25, level: .55 },
+  }),
+])

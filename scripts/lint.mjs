@@ -5,10 +5,21 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AXIS_NAMES } from '../lib/axes.mjs';
 import { layerBase } from '../lib/song.mjs';
+import { soundNames } from '../lib/packs.mjs';
 import { checkFile, missingPackOnly } from './check.mjs';
+
+// the check table prints a list or weights sound as its JSON; a plain name is itself; a pattern is the word "signal"
+const soundsOf = (v) => { try { return soundNames(JSON.parse(v)); } catch { return [v]; } };
 
 const DEFAULT_SOUND = { bass: 'sawtooth', melody: 'sawtooth', pad: 'sawtooth', fx: 'white' }; // what a part plays when it names no sound (lib/layers.mjs)
 const SAW = new Set(['sawtooth', 'saw', 'supersaw']);
+const COMPRESSOR_HITS = 16; // superdough builds a DynamicsCompressorNode per hit; above this many hits a bar that is a real audio-thread cost
+// voices sounding at once (the check's `voices`: hit length plus release, summed, one more per worklet effect on the hit, over
+// the whole pattern including a stack() around the song): each is ~8 audio nodes, and a trace of arrival's threshold (~50
+// voices, five reverbs) showed the audio thread at 100% of its render budget on a laptop, crackling; machine's chorus3 at ~46
+// (half of it distortion worklets) ran the thread at 60-70% with the slowest callbacks over their deadline, scratching.
+// ponytail: one machine's number; retune from more traces.
+const VOICES = 40;
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 /** Findings for one checkFile result: [{ level: 'error' | 'warn', section?, text }]. A plain-Strudel file has no sections and no findings. */
@@ -24,20 +35,68 @@ export function lint({ sections, problems = [] }) {
   sections.forEach((s, i) => {
     const prev = sections[i - 1];
     if (prev && same(prev.layers, s.layers)) warn(s.name, `identical to ${prev.name}: same parts, same values; change something or merge them`);
-    const saws = Object.entries(s.layers).filter(([l, x]) => SAW.has(x.attrs.sound ?? DEFAULT_SOUND[layerBase(l)])).map(([l]) => l);
+    const saws = Object.entries(s.layers).filter(([l, x]) => soundsOf(x.attrs.sound ?? DEFAULT_SOUND[layerBase(l)]).some((n) => SAW.has(n))).map(([l]) => l);
     if (saws.length > 1) warn(s.name, `${saws.join(', ')}: raw saws in one section are mud, give all but one a pack instrument`);
     for (const [l, x] of Object.entries(s.layers)) {
       const base = layerBase(l);
       if ((base === 'melody' || base === 'bass') && x.attrs.notes === undefined) warn(s.name, `${l} plays the seeded line: write its notes (the hook) in mini-notation`);
       for (const a of AXIS_NAMES) if (typeof x.attrs[a] === 'number' && (x.attrs[a] < 0 || x.attrs[a] > 1)) out.push({ level: 'error', section: s.name, text: `${l}.${a} is ${x.attrs[a]}: axes take 0..1` });
       if (typeof x.attrs.level === 'number' && (x.attrs.level < 0 || x.attrs.level > 2)) warn(s.name, `${l}.level is ${x.attrs.level}: 0..2 is the useful range (1 = as built)`);
+      // superdough builds a DynamicsCompressorNode per hit, not per part: on a dense kit that is dozens of live nodes a bar on the audio thread
+      if (x.attrs.compressor !== undefined && x.onsetsPerCycle > COMPRESSOR_HITS) warn(s.name, `${l}.compressor is applied per hit (${x.onsetsPerCycle} a bar, each its own compressor node): keep it off dense parts, lower level instead`);
+    }
+    if (s.voices > VOICES) {
+      const heavy = Object.entries(s.layers).sort((a, b) => b[1].voices - a[1].voices).slice(0, 3).map(([l, x]) => `${l} ${x.voices}`).concat(s.outside ? [`${s.outside} outside the parts`] : []).join(', ');
+      warn(s.name, `~${s.voices} voices sounding at once (${heavy}): past ~${VOICES} the audio thread cannot render in real time on a laptop and playback crackles; width under .8 (jux doubles every voice), aggression at .5 (a distortion worklet per hit counts as a voice), shorter releases (articulation up), fewer chord tones (pad density down), or one pad fewer`);
     }
   });
   return out;
 }
 
+// ponytail: the thresholds below are heuristics from the first measured songs; retune them from renders, not by argument.
+const MIX = { headroom: 0.98, clipped: 1e-4, inaudibleDb: -30, dominantDb: -2, centre: 0.05, wide: 0.2, maskingLow: 0.5, maskingMid: 0.6, depthSpread: 0.15 }; // clipped: fraction of samples at full scale below which a peak at 1 is a transient, not a level
+const FOUNDATION = (n) => ['drums', 'bass'].includes(layerBase(n)); // centre by convention: never "flat stage" material
+
+/** Findings over a measured section (scripts/measure.mjs's json: the mix row first, then a row per part, and the masking pairs). */
+export function lintMeasure({ section, parts, pairs = [] }) {
+  const out = [], warn = (text) => out.push({ level: 'warn', section, text });
+  const [mix, ...rows] = parts;
+  if (mix?.peak >= MIX.headroom || mix?.clipped > 0) { // peak is mono, clipped is per channel: a hard-panned part can clip one side under a tame mono peak
+    if (!(mix.clipped < MIX.clipped)) warn(`no headroom: the mix peaks at ${mix.peak} (${mix.relativeDb} dBFS)${mix.clipped ? `, ${(mix.clipped * 100).toFixed(2)}% of samples clip` : ''}; bring levels down`);
+    else warn(`transients touch full scale (${(mix.clipped * 100).toFixed(3)}% of samples, ${mix.relativeDb} dBFS): a compressor on the part with the crest, not level; a master limiter is not built`);
+  }
+  for (const p of rows) {
+    if (!Number.isFinite(p.relativeDb)) warn(`${p.name} is silent: cut it or give it something to play`); // -Infinity, or null after the JSON round trip
+    else if (p.relativeDb < MIX.inaudibleDb) warn(`${p.name} is inaudible (${p.relativeDb} dB under the mix): raise its level or cut it`);
+    else if (p.relativeDb > MIX.dominantDb && rows.length > 1 && !FOUNDATION(p.name)) warn(`${p.name} dominates (${p.relativeDb} dB under the mix): it is most of what is heard`);
+  }
+  const heard = rows.filter((p) => Number.isFinite(p.relativeDb) && p.relativeDb >= MIX.inaudibleDb);
+  const centred = heard.filter((p) => !FOUNDATION(p.name) && Math.abs(p.meanPan - 0.5) < MIX.centre && (p.width ?? 0) < MIX.wide); // a wide pad averages to centre but fills the field
+  if (centred.length >= 3) warn(`flat stage: ${centred.map((p) => p.name).join(', ')} all sit centre; give some a position`);
+  for (const q of pairs) {
+    if (q.low >= MIX.maskingLow) warn(`${q.a} and ${q.b} share the low band (masking ${q.low}): move one up (register), thin it (density), or duck it`);
+    if (q.mid >= MIX.maskingMid) warn(`${q.a} and ${q.b} share the mids (masking ${q.mid}): rest where the other plays (density), an octave apart (register), darken one (brightness), or a position each`);
+  }
+  if (heard.length >= 3) { // every heard part has a depth (it is null only for silence, which heard excludes)
+    const spread = (k) => Math.max(...heard.map((p) => p[k])) - Math.min(...heard.map((p) => p[k]));
+    if (spread('depth') < MIX.depthSpread) {
+      const shared = spread('relativeDb') < 4 ? 'the same level' : spread('highRatio') < 0.03 ? 'the same brightness' : spread('tail') < 0.1 ? 'the same tail' : 'no one component apart';
+      warn(`no depth contrast: ${heard.map((p) => `${p.name} ${p.depth}`).join(', ')} read at one distance (${shared}); push one back (level down, brightness down, space up) or bring one forward`);
+    }
+  }
+  return out;
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const ROOT = path.resolve(import.meta.dirname, '..');
+  const mi = process.argv.indexOf('--measure');
+  if (mi > 0) {
+    const m = JSON.parse(fs.readFileSync(process.argv[mi + 1], 'utf8'));
+    const findings = lintMeasure(m);
+    console.log(`== ${m.song} ${m.section}: ${findings.length ? `${findings.length} warnings` : 'clean'}`);
+    for (const x of findings) console.log(`  ! ${x.text}`);
+    process.exit(0);
+  }
   const files = process.argv.slice(2).length ? process.argv.slice(2) : fs.readdirSync(path.join(ROOT, 'songs')).filter((f) => f.endsWith('.strudel')).map((f) => path.join(ROOT, 'songs', f));
   let bad = 0;
   for (const f of files) {
