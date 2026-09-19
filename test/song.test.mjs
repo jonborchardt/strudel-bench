@@ -163,3 +163,36 @@ test('dropout silences every part but fx for the last n bars; sweep low-passes t
   assert.ok(own < 2000 && dark.queryArc(2.01, 2.02)[0].value.cutoff === own, 'a part already darker than the sweep keeps its own cutoff at the sweep start'); assert.ok(dark.queryArc(3.9, 3.91)[0].value.cutoff < own, 'and closes further as the sweep passes it');
   assert.throws(() => song({}, [section('a', 4, { dropout: 5, drums: {} })]), /dropout/);
 });
+
+test('mix material: position shifts every hap\'s pan together; velocity, humanize, compressor and room reach the events; unset leaves a part alone', async () => {
+  await ready;
+  const at = (m, l, t = 0) => m.layers[l].pattern.queryArc(t, t + .01)[0].value;
+  const plain = song({ cps: .5 }, [section('a', 1, { drums: { density: .7 }, pad: {} })]).strudel.sections[0];
+  const m = song({ cps: .5 }, [section('a', 1, { drums: { density: .7, position: -.5 }, pad: { position: .5 }, bass: { position: 0 } })]).strudel.sections[0];
+  const pans = (s, l) => s.layers[l].pattern.queryArc(0, 1).filter((h) => h.hasOnset()).map((h) => h.value.pan);
+  assert.deepEqual(pans(m, 'drums').map((p) => +p.toFixed(6)), pans(plain, 'drums').map((p) => +(p - .25).toFixed(6)), 'the kit\'s voice spread moves as one');
+  assert.ok(pans(m, 'pad').every((p, i) => Math.abs(p - (pans(plain, 'pad')[i] + .25)) < 1e-9));
+  assert.equal(at(m, 'bass').pan, undefined, 'position 0 writes nothing');
+  assert.throws(() => song({}, [section('a', 1, { pad: { position: 2 } })]), /position must be a number in -1..1/);
+  const v = song({ cps: .5 }, [section('a', 1, { bass: { velocity: '.5 1', notes: '0 0 0 0', density: .75 } })]).strudel.sections[0];
+  assert.deepEqual(v.layers.bass.pattern.queryArc(0, 1).filter((h) => h.hasOnset()).map((h) => h.value.velocity), [.5, .5, 1, 1]);
+  assert.throws(() => song({}, [section('a', 1, { bass: { velocity: 'loud' } })]), /velocity must be a mini string/);
+  const hum = { timingMs: 20, velocity: .2, length: .1, correlation: 'phrase' };
+  const haps = song({ cps: .5, seed: 3 }, [section('a', 4, { drums: { density: .7, humanize: hum } })]).strudel.sections[0].layers.drums.pattern.queryArc(0, 4).filter((x) => x.hasOnset());
+  assert.ok(haps.every((x) => Math.abs(x.value.nudge) <= .02 && x.value.gain > 0), 'timing within ± timingMs');
+  assert.ok(new Set(haps.map((x) => x.value.nudge)).size > 4, 'and not one constant');
+  const again = song({ cps: .5, seed: 3 }, [section('a', 4, { drums: { density: .7, humanize: hum } })]).strudel.sections[0].layers.drums.pattern.queryArc(0, 4).filter((x) => x.hasOnset());
+  assert.deepEqual(again.map((x) => x.value.nudge), haps.map((x) => x.value.nudge), 'seeded: the same lean every build');
+  assert.throws(() => song({}, [section('a', 1, { drums: { humanize: { swing: 1 } } })]), /humanize takes timingMs/);
+  const c = song({ cps: .5 }, [section('a', 1, { bass: { compressor: { threshold: -18, ratio: 3 } } })]).strudel.sections[0];
+  assert.equal(at(c, 'bass').compressor, -18); assert.equal(at(c, 'bass').compressorRatio, 3); assert.equal(at(c, 'bass').compressorKnee, 10);
+  assert.throws(() => song({}, [section('a', 1, { bass: { compressor: { ratio: 3 } } })]), /compressor.threshold/);
+  const r = song({ cps: .5, room: { size: 2, decay: .6, damping: 5000 } }, [section('a', 1, { drums: {}, pad: { space: .8 } }), section('b', 1, { room: { size: 6 }, pad: {} })]).strudel.sections;
+  assert.equal(at(r[0], 'drums').roomsize, 2); assert.equal(at(r[0], 'pad').roomfade, .6); assert.equal(at(r[0], 'pad').roomlp, 5000);
+  assert.equal(at(r[0], 'pad').roomsize, 2, 'the room wins over the send\'s own size: space is the send');
+  assert.equal(at(r[1], 'pad').roomsize, 6, 'a section may name its own room');
+  assert.throws(() => song({ room: { echo: 1 } }, [section('a', 1, { pad: {} })]), /room takes size, decay/);
+  const d = song({ cps: .5 }, [section('a', 1, { drums: {}, bass: { duck: 'drums', duckAttack: .3 }, pad: { duck: 'drums' } })]).strudel.sections[0];
+  assert.deepEqual(at(d, 'drums').duckattack, [.3, .1], 'an attack per target once any part sets one; the default is superdough\'s');
+  assert.equal(at(plain, 'drums').duckattack, undefined);
+});

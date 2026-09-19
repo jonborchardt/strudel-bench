@@ -165,6 +165,12 @@ Rhythm has one written grammar everywhere it appears: `x` hit, `X` accent, `o` g
 | any layer | `level` | number, 1 = untouched | gain multiplier, applied after every axis |
 | any layer | `duck` | another part's name in the section | that part's hits sidechain this part's bus (superdough's own duck), dipping and recovering it |
 | any layer | `duckDepth` | number 0..1, default .5 | how deep the duck goes; only meaningful with `duck` set |
+| any layer | `duckAttack` | seconds, default .1 | how long the duck takes to recover; only meaningful with `duck` set |
+| any layer | `position` | -1 (left) .. 1 (right), 0 centre | where the part sits: shifts every hap's pan by `position/2`, so `width` moves around it and a drum kit's voice spread moves as one |
+| any layer | `velocity` | a mini string of multipliers, `'.8 1 .9 1'` | superdough's velocity per step over one bar (`'<[...] [...]>'` for two), under gain and the grid's accents |
+| any layer | `humanize` | `{ timingMs, velocity, length, correlation }` | a seeded played feel that is correlated, not dice per hit: three curves of time (a slow wave over `correlation` bars: `'bar'`, `'phrase'` = 4, or a count; a fixed lean per beat position; a little residual) move timing (± ms), gain (± fraction) and note length (± fraction) together, the same way every play |
+| any layer | `compressor` | `{ threshold (dBFS), ratio, knee, attack, release }` | the part's own DynamicsCompressorNode; only `threshold` is required |
+| song, section | `room` | `{ size, decay, damping, dimension, ir }` | one reverb character for every part (superdough's `roomsize`/`roomfade`/`roomlp`/`roomdim`/`ir` on every orbit); a part's `space` stays its send, its `size` is overridden; section overrides song |
 | drums | `template` | `'house'` (default), `'breaks'`, `'minimal'`, `'halftime'`, or `{ voice: grid }` | the base grid the axes thin out, place or fill; a written grid may name any voice |
 | drums | `sounds` | `{ sd: 'rim', hh: 'hh:2' }` | per-voice sound; a name the kit has keeps the kit (the 909 rim), any other sample plays as named (`cajon`) |
 | bass, melody, pad | `patch` | a name (`pluck`, `reese`, `hollow`, `glass`, `breath`, `wide`, `sub`, `lib/patches.json`) or an inline object of the same controls | a bundle of voice controls (filter/pitch envelopes, FM, noise, unison) applied under the axes |

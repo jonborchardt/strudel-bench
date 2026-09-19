@@ -1,0 +1,69 @@
+// Measure one section as a mix: render the section and every part alone through the open page, run the analyzer over
+// all of them, and print one row per part (its level under the mix, how far back it reads and why, where it sits) plus
+// the pairs that mask each other. Writes renders/<song>.<section>.measure.json for `lint --measure`. Nothing is edited.
+// usage: node scripts/measure.mjs songs/x.strudel <section> [--cycles n] [--json]   (PORT env overrides 3000)
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { analyze, readWav, masking, depthOf, BANDS } from '../lib/analyze.mjs';
+import { checkFile } from './check.mjs';
+
+const db = (x) => (x > 0 ? +(20 * Math.log10(x)).toFixed(1) : -Infinity);
+
+/** The rows and pairs of a measured section from the analyzer results: [mix, ...parts] as { name, metrics }. */
+export function measureRows(stems) {
+  const mix = stems[0];
+  const parts = stems.map(({ name, metrics: m }, i) => {
+    const relativeDb = i === 0 ? db(m.rms) : m.rms > 0 && mix.metrics.rms > 0 ? +(20 * Math.log10(m.rms / mix.metrics.rms)).toFixed(1) : -Infinity;
+    const row = { name, relativeDb, highRatio: m.highRatio, tail: m.tail, centroidHz: m.centroidHz, lowRatio: m.lowRatio, crest: m.crest, meanPan: m.meanPan, panStd: m.panStd, peak: m.peak, clipped: m.clipped, onsetsPerSec: m.onsetsPerSec };
+    row.depth = i === 0 || !Number.isFinite(relativeDb) ? null : depthOf(row);
+    return row;
+  });
+  const pairs = [];
+  for (let i = 1; i < stems.length; i++) for (let j = i + 1; j < stems.length; j++) {
+    if (!stems[i].metrics.bands || !stems[j].metrics.bands) continue;
+    pairs.push({ a: stems[i].name, b: stems[j].name, ...masking(stems[i].metrics, stems[j].metrics) });
+  }
+  pairs.sort((x, y) => Math.max(y.low, y.mid, y.high) - Math.max(x.low, x.mid, x.high));
+  return { parts, pairs };
+}
+
+export function printMeasure({ section, parts, pairs }) {
+  const f = (x, d = 2) => (x === null || x === undefined ? '-' : Number.isFinite(x) ? x.toFixed(d) : String(x));
+  const lines = [`== ${section}: ${parts.length - 1} parts (dB: the mix in dBFS, each part under the mix; depth 0 close .. 1 far, read with its three inputs)`];
+  lines.push(['part', 'dB', 'depth', 'highRatio', 'tail', 'centroid', 'lowRatio', 'crest', 'pan', 'panStd'].map((h, i) => (i ? h.padStart(10) : h.padEnd(10))).join(''));
+  for (const p of parts) lines.push([p.name.padEnd(10), f(p.relativeDb, 1), f(p.depth), f(p.highRatio, 3), f(p.tail), String(p.centroidHz), f(p.lowRatio), f(p.crest, 1), f(p.meanPan), f(p.panStd)].map((c, i) => (i ? c.padStart(10) : c)).join(''));
+  if (pairs.length) {
+    lines.push(`masking (shared band energy x time together; ${Object.entries(BANDS).map(([k, [a, b]]) => `${k} ${a}-${b === Infinity ? '' : b} Hz`).join(', ')}):`);
+    for (const p of pairs) lines.push(`  ${`${p.a} / ${p.b}`.padEnd(22)} low ${f(p.low)}  mid ${f(p.mid)}  high ${f(p.high)}`);
+  }
+  return lines.join('\n');
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const args = process.argv.slice(2);
+  const opt = (k) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : undefined; };
+  const positional = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--cycles');
+  const file = positional.find((a) => a.endsWith('.strudel')), section = positional.find((a) => a !== file);
+  if (!file || !section) { console.error('usage: node scripts/measure.mjs songs/x.strudel <section> [--cycles n] [--json]'); process.exit(2); }
+  const checked = await checkFile(file);
+  const sec = checked.sections?.find((s) => s.name === section);
+  if (!sec) { console.error(`no section "${section}" in ${file}${checked.sections ? ` (sections: ${checked.sections.map((s) => s.name).join(', ')})` : ': not a song() file'}`); process.exit(2); }
+  const port = process.env.PORT || 3000, base = path.basename(file, '.strudel');
+  const render = async (layer) => {
+    const name = `${base}.${section}.${layer ?? 'mix'}`;
+    const res = await fetch(`http://localhost:${port}/render`, { method: 'POST', body: JSON.stringify({ song: path.basename(file), section, layer, cycles: opt('cycles') ? Number(opt('cycles')) : undefined, name }) }).catch(() => null);
+    if (!res) { console.error(`server not running on :${port}. run: npm start`); process.exit(1); }
+    if (!res.ok) { console.error(`render ${name}: ${res.status} ${await res.text()}`); process.exit(1); }
+    return (await res.json()).path;
+  };
+  const stems = [];
+  for (const layer of [undefined, ...Object.keys(sec.layers)]) { // one at a time: the page shares one offline context
+    const wav = await render(layer);
+    stems.push({ name: layer ?? 'mix', metrics: analyze(readWav(fs.readFileSync(wav)), { cps: sec.cps, steps: sec.grid?.steps ?? 16, bands: true }) });
+  }
+  const out = { song: base, section, cps: sec.cps, ...measureRows(stems) };
+  const jsonPath = path.join('renders', `${base}.${section}.measure.json`);
+  fs.writeFileSync(jsonPath, JSON.stringify(out, null, 1));
+  console.log(args.includes('--json') ? JSON.stringify(out, null, 1) : printMeasure(out) + `\n${jsonPath} written; lint it: node scripts/lint.mjs --measure ${jsonPath}`);
+}

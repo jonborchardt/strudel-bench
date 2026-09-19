@@ -20,6 +20,7 @@
     "verify": "node scripts/verify.mjs",
     "vocab": "node scripts/vocab.mjs > .claude/skills/strudel/reference/vocab.md",
     "lint": "node scripts/lint.mjs",
+    "measure": "node scripts/measure.mjs",
     "headless": "node scripts/headless.mjs",
     "form": "node gen/form.mjs"
   },

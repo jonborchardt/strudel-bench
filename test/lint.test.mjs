@@ -27,6 +27,26 @@ test('lint: the rules the skill states, as findings', () => {
   assert.deepEqual(lint({ sections: undefined, problems: [] }), [], 'plain strudel: nothing to say');
 });
 
+test('lintMeasure: headroom, inaudible and dominant parts, a flat stage, masking pairs and no depth contrast', async () => {
+  const { lintMeasure } = await import('../scripts/lint.mjs');
+  const row = (name, relativeDb, more = {}) => ({ name, relativeDb, highRatio: .1, tail: .2, meanPan: .5, panStd: 0, depth: .4, peak: .5, ...more });
+  const grazed = lintMeasure({ section: 'a', parts: [row('mix', -6, { peak: 1, clipped: .00002 }), row('bass', -8)] });
+  assert.ok(grazed.length === 1 && /^transients touch full scale \(0\.002%/.test(grazed[0].text), JSON.stringify(grazed));
+  const out = lintMeasure({ section: 'a', parts: [row('mix', -6, { peak: .99, clipped: .01 }), row('bass', -8), row('pad', -9), row('melody', -10), row('perc', -35), row('fx', -1)],
+    pairs: [{ a: 'bass', b: 'pad', low: .62, mid: .2, high: 0 }, { a: 'pad', b: 'melody', low: 0, mid: .7, high: .1 }, { a: 'bass', b: 'melody', low: .1, mid: .1, high: 0 }] });
+  const t = out.map((x) => x.text);
+  assert.ok(out.every((x) => x.level === 'warn' && x.section === 'a'));
+  assert.ok(t.some((s) => /^no headroom: the mix peaks at 0.99 \(-6 dBFS\), 1.00% of samples clip/.test(s)), t);
+  assert.ok(t.some((s) => /^perc is inaudible/.test(s)), t);
+  assert.ok(t.some((s) => /^fx dominates/.test(s)), t);
+  assert.ok(t.some((s) => /^flat stage: pad, melody, fx/.test(s)), t);
+  assert.ok(t.some((s) => /^bass and pad share the low band \(masking 0.62\)/.test(s)), t);
+  assert.ok(t.some((s) => /^pad and melody share the mids/.test(s)) && !t.some((s) => /bass and melody/.test(s)), t);
+  assert.ok(t.some((s) => /^no depth contrast: bass 0.4, pad 0.4, melody 0.4, fx 0.4 .*\(the same brightness\)/.test(s)), t); // levels spread 7 dB (fx at -1), so brightness is the component they share
+  const fine = lintMeasure({ section: 'b', parts: [row('mix', -6), row('bass', -8), row('pad', -14, { meanPan: .3, depth: .6 }), row('melody', -9, { meanPan: .6, depth: .2 })], pairs: [{ a: 'bass', b: 'pad', low: .2, mid: .1, high: 0 }] });
+  assert.deepEqual(fine, [], JSON.stringify(fine));
+});
+
 test('lint runs over a real song and only warns', async () => {
   const out = lint(await checkFile(path.resolve(import.meta.dirname, '..', 'songs', 'demo.strudel')));
   assert.ok(out.every((x) => x.level === 'warn'), JSON.stringify(out));

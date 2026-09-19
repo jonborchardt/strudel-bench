@@ -61,6 +61,10 @@ Phases: structural → timing → pitch → articulation → spectral → spatia
 - **floating**: drive -0.35, space +0.15
 - **swung**: groove +0.35
 - **straight**: groove -0.35
+- **closer**: brightness +0.12, space -0.18, weight +0.08
+- **forward**: brightness +0.12, space -0.18, weight +0.08
+- **farther**: brightness -0.12, space +0.18, weight -0.08
+- **background**: brightness -0.15, space +0.2, weight -0.12
 - **aggressive**: aggression +0.4, articulation +0.1
 - **smooth**: aggression -0.35, articulation -0.15
 

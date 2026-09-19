@@ -40,8 +40,50 @@ export function lint({ sections, problems = [] }) {
   return out;
 }
 
+// ponytail: the thresholds below are heuristics from the first measured songs; retune them from renders, not by argument.
+const MIX = { headroom: 0.98, clipped: 1e-4, inaudibleDb: -30, dominantDb: -2, centre: 0.05, maskingLow: 0.5, maskingMid: 0.6, depthSpread: 0.15 }; // clipped: fraction of samples at full scale below which a peak at 1 is a transient, not a level
+const FOUNDATION = (n) => ['drums', 'bass'].includes(layerBase(n)); // centre by convention: never "flat stage" material
+
+/** Findings over a measured section (scripts/measure.mjs's json: the mix row first, then a row per part, and the masking pairs). */
+export function lintMeasure({ section, parts, pairs = [] }) {
+  const out = [], warn = (text) => out.push({ level: 'warn', section, text });
+  const [mix, ...rows] = parts;
+  if (mix?.peak >= MIX.headroom) {
+    if (!(mix.clipped < MIX.clipped)) warn(`no headroom: the mix peaks at ${mix.peak} (${mix.relativeDb} dBFS)${mix.clipped ? `, ${(mix.clipped * 100).toFixed(2)}% of samples clip` : ''}; bring levels down`);
+    else warn(`transients touch full scale (${(mix.clipped * 100).toFixed(3)}% of samples, ${mix.relativeDb} dBFS): a compressor on the part with the crest, not level; a master limiter is not built`);
+  }
+  for (const p of rows) {
+    if (!Number.isFinite(p.relativeDb) || p.relativeDb < MIX.inaudibleDb) warn(`${p.name} is inaudible (${p.relativeDb} dB under the mix): raise its level or cut it`);
+    else if (p.relativeDb > MIX.dominantDb && rows.length > 1 && !FOUNDATION(p.name)) warn(`${p.name} dominates (${p.relativeDb} dB under the mix): it is most of what is heard`);
+  }
+  const heard = rows.filter((p) => Number.isFinite(p.relativeDb) && p.relativeDb >= MIX.inaudibleDb);
+  const centred = heard.filter((p) => !FOUNDATION(p.name) && Math.abs(p.meanPan - 0.5) < MIX.centre);
+  if (centred.length >= 3) warn(`flat stage: ${centred.map((p) => p.name).join(', ')} all sit centre; give some a position`);
+  for (const q of pairs) {
+    if (q.low >= MIX.maskingLow) warn(`${q.a} and ${q.b} share the low band (masking ${q.low}): move one up (register), thin it (density), or duck it`);
+    if (q.mid >= MIX.maskingMid) warn(`${q.a} and ${q.b} share the mids (masking ${q.mid}): rest where the other plays (density), an octave apart (register), darken one (brightness), or a position each`);
+  }
+  const deep = heard.filter((p) => p.depth !== null);
+  if (deep.length >= 3) {
+    const spread = (k) => Math.max(...deep.map((p) => p[k])) - Math.min(...deep.map((p) => p[k]));
+    if (spread('depth') < MIX.depthSpread) {
+      const same = spread('relativeDb') < 4 ? 'the same level' : spread('highRatio') < 0.03 ? 'the same brightness' : spread('tail') < 0.1 ? 'the same tail' : 'no one component apart';
+      warn(`no depth contrast: ${deep.map((p) => `${p.name} ${p.depth}`).join(', ')} read at one distance (${same}); push one back (level down, brightness down, space up) or bring one forward`);
+    }
+  }
+  return out;
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const ROOT = path.resolve(import.meta.dirname, '..');
+  const mi = process.argv.indexOf('--measure');
+  if (mi > 0) {
+    const m = JSON.parse(fs.readFileSync(process.argv[mi + 1], 'utf8'));
+    const findings = lintMeasure(m);
+    console.log(`== ${m.song} ${m.section}: ${findings.length ? `${findings.length} warnings` : 'clean'}`);
+    for (const x of findings) console.log(`  ! ${x.text}`);
+    process.exit(0);
+  }
   const files = process.argv.slice(2).length ? process.argv.slice(2) : fs.readdirSync(path.join(ROOT, 'songs')).filter((f) => f.endsWith('.strudel')).map((f) => path.join(ROOT, 'songs', f));
   let bad = 0;
   for (const f of files) {

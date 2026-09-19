@@ -1,6 +1,6 @@
 ---
 name: strudel
-description: Use when the user asks to change how a song in songs/ sounds (make it darker, punchier, sparser, add a beat, more dreamy, etc.), create a new song, or ask what a song currently sounds like. Encodes the axis workflow: baseline → resolve → check → render/verify → report.
+description: Use when the user asks to change how a song in songs/ sounds (make it darker, punchier, sparser, add a beat, more dreamy, etc.), create a new song, ask what a song currently sounds like, or says a song sounds muddy, cluttered, flat as a mix, or like a pile of parts. Encodes the axis workflow: baseline → resolve → check → render/verify → report, and the mixing pass that runs after the material is written.
 ---
 
 # strudel: editing songs by musical axes
@@ -43,8 +43,11 @@ Descriptors never touch material. To change a sound, level, fill, arp or meter, 
 (`sound`, `notes`, `level`, `sounds`, `template`, `rhythm`, `fill` (`true`/`false` or a bar count `n`; the integer
 form replaces the automatic climax-end roll rather than adding to it), `arp`, `follow`,
 `phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`, `begin`, `end`, `bars`, `slices`, `pattern`, `stretch`, `transpose`,
-`patch`, `duck`, `duckDepth`, `dropout`, `sweep` (opens the filter to 8 kHz at the start of its tail and closes it
-to 150 Hz by the end, overriding the part's own brightness in those bars)) and re-run
+`patch`, `duck`, `duckDepth`, `duckAttack`, `position` (-1..1, where the part sits), `velocity` (a mini string of
+per-step multipliers), `humanize` (`{ timingMs, velocity, length, correlation }`, a seeded correlated feel),
+`compressor` (`{ threshold, ratio, knee, attack, release }`), the song/section `room` (`{ size, decay, damping,
+dimension, ir }`, one reverb character for every part), `dropout`, `sweep` (opens the filter to 8 kHz at the start of
+its tail and closes it to 150 Hz by the end, overriding the part's own brightness in those bars)) and re-run
 `npm run check`. A `sample` part slices any loaded
 sample: `sound`, the region (`begin`/`end` as fractions), `bars` it stands for, `slices` (a count, or a list of break
 points, fractions of the file inside the region), `pattern` (slice indices in
@@ -93,6 +96,60 @@ interest. Do these, in this order, on every new song and whenever a song is call
 
 The layer baselines already carry the sound design (bass filter pluck, melody vibrato and on-beat accents, pad
 detune drift); do not re-add those per song.
+
+## The mixing pass: muddy, cluttered, a pile of parts
+
+Run this after the material is written, on every new song and whenever the user says a song sounds muddy,
+cluttered, flat as a mix, or like every part is on top of every other. The parts are already there; the pass
+decides where each one sits. It needs the page open (renders). Measure first, change second, one section at a time,
+climax first.
+
+**Measure a section.** One command renders the mix and every part alone and prints one row per part plus the pairs
+that mask each other, then the mix lint reads the same file:
+
+    npm run measure -- songs/<name>.strudel <section>
+    npm run lint -- --measure renders/<name>.<section>.measure.json
+
+Columns: `dB` (the mix in dBFS, each part under the mix), `depth` (0 close .. 1 far) **with the three numbers it is
+made of next to it**: `dB`, `highRatio`, `tail`. Always read the three, never the score alone: a part reads as
+background because it is quiet, or dark, or wet, and the fix is the one that is wrong. Never add reverb to a part
+that is only too loud. Then `centroid`/`lowRatio` (who occupies which band), `crest` (who has transients), `pan`
+(where it sits, 0 left .. 1 right) and `panStd` (how much it moves). The masking table is per pair and per band (low
+under 300 Hz, mid 300..3000, high above): shared band energy times time together, level-independent.
+
+**Then five passes, each written as material or axes and re-measured:**
+
+1. **Hierarchy.** Name each part foreground, support, background or foundation (kick and bass) from its role in the
+   section. Foreground sits 6..12 dB under the mix, support 10..18, background 16..26; those are defaults, not
+   rules. A part more than 30 dB under the mix is inaudible: cut it or raise it, never leave it. Set `level`.
+   `compressor: { threshold: -18, ratio: 3 }` only on a part whose `crest` is the problem (peaks far over its rms).
+   The lint's "no headroom" (a real share of samples at full scale) is a level problem; its "transients touch full
+   scale" (a few kick attacks, under 0.01% of samples) is not fixed by level: a compressor on the kit with a 2 ms
+   attack takes most of it, and what is left needs the master limiter that is not built. Say so, do not chase it.
+2. **Collisions, arrangement first.** Fix a masking pair in this order and stop at the first that works: fewer notes
+   (`density`) or a rest where the other part plays; an octave apart (`register`, or the pad's low voicing off by
+   `weight` ≤ .5); a `position` each; darker on the one that matters less (`brightness`); only then `duck`. Kick
+   under bass and pad is a written convention, never silent: `bass: { duck: 'drums', duckDepth: .35 }`,
+   `pad: { duck: 'drums', duckDepth: .15, duckAttack: .2 }`. Two raw saws in one octave is mud (the lint says so).
+3. **Depth.** The words `closer`/`forward` and `farther`/`background` are descriptors: each moves `brightness`,
+   `space` and `weight` (the level-ish axis) together, `npm run resolve -- <song> <section> <part> "farther"`. A
+   larger step is `level` down by hand with the words. Foreground and background must land on different `dB`,
+   `highRatio` and `tail`, not the same three numbers at different levels (the lint's "no depth contrast" names the
+   component they share).
+4. **Stage.** `position: -1..1` is where a part sits; `width` moves around it. Kick, bass and the hook near centre
+   (`position` unset or within ±.1, `width` ≤ .5); support parts off to a side (`position: ±.3`, opposite sides for
+   two of them); the pad wide (`width: .7`, or `.8` for `jux`); at most one part moving (`panStd` > .2). A drum kit's
+   own voice spread moves as one with its `position`. The lint's "flat stage" is three non-foundation parts at centre.
+5. **One room, then contrast across sections.** A `room` on the song (`{ size, decay, damping }`) gives every part
+   the same reverb character and turns each part's `space` into a send: dry kick and bass (`space` ≤ .5), a little on
+   the hook, more on the pad and fx. Then the `arc:` line of the check and each section's mix `dB`, `centroid` and
+   `onsetsPerSec` must differ across roles: a climax that measures like its verse is a flat song, not a flat mix.
+   A played feel is `humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' }` on the part that should sound
+   played, never `organicness` by default (that is dice per hit).
+
+**Report** the before/after measure table per part (dB, depth with highRatio and tail, pan, the worst masking
+pairs), which pass each change came from, and what could not be measured. "Verified directionally" stays the
+strongest claim.
 
 ## Rules
 

@@ -62,7 +62,9 @@ export const SCHEMA = {
     kit: { type: 'enum', values: () => host.kits(), title: 'drum machine bank' },
     // layer material
     level: { type: 'number', min: 0, max: 2, step: 0.01, title: "the part's gain multiplier" },
+    position: { type: 'number', min: -1, max: 1, step: 0.01, title: 'where the part sits, left -1 to right 1 (0 centre); width moves around it' },
     duckDepth: { ...unit, title: 'how deep the named part ducks this one' },
+    duckAttack: { type: 'number', min: 0, max: 2, step: 0.01, title: 'seconds the duck takes to recover' },
     template: { type: 'enum', values: Object.keys(TEMPLATES), title: 'drum pattern template' },
     sounds: { type: 'map', keys: DRUM_ORDER, values: () => host.sounds(), list: 'sounds', title: 'the sample a drum voice plays' },
     fill: { type: 'bool', title: 'a fill in the last bar' },
@@ -99,6 +101,10 @@ export const SCHEMA = {
   free: {
     packs: 'a list of sample pack names',
     duck: 'the name of the part in this section that ducks this one',
+    velocity: 'a mini string of per-step gain multipliers, written by hand',
+    humanize: 'an object { timingMs, velocity, length, correlation }: a seeded, correlated played feel',
+    compressor: 'an object { threshold, ratio, knee, attack, release }: the part\'s own compressor',
+    room: 'an object { size, decay, damping, dimension, ir }: one reverb character for every part',
     notes: 'a line in mini-notation, written by hand',
     rhythm: 'a grid string (x X o . | or p/s), written by hand',
     chord: 'a scale degree or a pattern of them',
