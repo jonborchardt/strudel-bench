@@ -53,6 +53,7 @@ song({ bpm: 124, key: 'E:minor', seed: 5, kit: 'RolandTR808', room: { size: 1.4,
   }),
 
   // the whole kit, accents and ghosts, hats at sixteenths; the pad pumps under the kick because the kick ducks it
+  // a riser over the last two bars, so the breakdown lands on the impact instead of the drop just stopping
   section('drop', 16, { role: 'climax', progression: 'i VI III VII',
     drums:   { template: full, density: .9, drive: .85, articulation: .65, brightness: .5, weight: .6, variation: .35, level: .45 },
     bass:    { ...low, rhythm: 'x..x..x.x.x.x...', notes: '0 ~ 0 7 ~ 4 3 0', density: .8, weight: .8, aggression: .55, brightness: .55, level: .5 },
@@ -60,15 +61,15 @@ song({ bpm: 124, key: 'E:minor', seed: 5, kit: 'RolandTR808', room: { size: 1.4,
     melody:  { ...hook, density: .7, brightness: .7, width: .7, level: 2 },
     melody2: { ...bell },
     pad:     { ...bed, density: .7, duck: 'drums', duckDepth: .8, duckAttack: .2, brightness: .45, level: .55 },
-    fx:      { impact: true, level: .5 },
+    fx:      { impact: true, riser: 2, level: .5 },
   }),
 
-  // strip it: the bare grid and the bed, the filter closing over the last two bars into the second drop
+  // strip it: the bare grid and the bed land on an impact, the filter closing over the last two bars into the second drop
   section('breakdown', 8, { role: 'release', progression: 'VI VII i@2', sweep: 2,
     drums: { template: bare, density: .3, space: .65, brightness: .3, level: .55 },
     perc:  { ...shake, density: .3, level: .45, space: .65 },
     pad:   { ...bed, density: .5, space: .9, level: .55 },
-    fx:    { riser: 2, level: .7 },
+    fx:    { riser: 2, impact: true, level: .7 },
   }),
 
   // the same drop, more variation, a fill every four bars, the counter-line an octave down as well as up

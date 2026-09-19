@@ -47,6 +47,22 @@
           "why": "with a compressor on the kit: the kit clipped the downbeat by its crest, not its level"
         }
       ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "foundry-mixed from drop to breakdown needs a transition (sweep+dropout tried first, heard as worse)",
+      "changes": [
+        {
+          "section": "drop",
+          "layer": "fx",
+          "why": "riser 0>2 a white-noise riser over the drop's last two bars, keeping every hit under it: the strip-down is announced, not cut"
+        },
+        {
+          "section": "breakdown",
+          "layer": "fx",
+          "why": "impact none>bd the breakdown lands on a low hit instead of the drop just stopping"
+        }
+      ]
     }
   ]
 }
