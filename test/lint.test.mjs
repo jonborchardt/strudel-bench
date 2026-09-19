@@ -33,9 +33,9 @@ test('lint: load warnings for a per-hit compressor on a dense part and for a sec
   const t = out.map((x) => x.text);
   assert.ok(t.some((s) => /^drums\.compressor is applied per hit \(50 a bar/.test(s)), t);
   assert.ok(!t.some((s) => /^bass\.compressor/.test(s)), 'four hits a bar is fine');
-  assert.ok(t.some((s) => /^80 hits a bar over 5 parts/.test(s)), t);
+  assert.ok(!t.some((s) => /hits a bar/.test(s)), 'density alone is not a load warning: the dropouts were convolvers per part, fixed in song()');
   const light = lint({ sections: [{ name: 'a', role: 'climax', energy: 20, layers: { drums: L({ notes: 'x' }, 20), bass: L({ notes: '0' }, 4) } }] });
-  assert.ok(!light.some((x) => /hits a bar|compressor/.test(x.text)), JSON.stringify(light));
+  assert.ok(!light.some((x) => /compressor/.test(x.text)), JSON.stringify(light));
 });
 
 test('lintMeasure: headroom, inaudible and dominant parts, a flat stage, masking pairs and no depth contrast', async () => {
