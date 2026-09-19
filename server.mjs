@@ -146,7 +146,7 @@ export function createServer() {
       const key = `${name}.wav`;
       if (waiters.has(key)) return send(res, 409, `render "${name}" already pending`);
       const done = new Promise((resolve, reject) => {
-        const timer = setTimeout(() => { if (waiters.delete(key)) reject(new Error('render timed out')); }, 60_000);
+        const timer = setTimeout(() => { if (waiters.delete(key)) reject(new Error('render timed out')); }, 900_000);
         timer.unref?.();
         waiters.set(key, { resolve, reject, timer });
       });
