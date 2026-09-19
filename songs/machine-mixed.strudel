@@ -11,9 +11,11 @@
 const M = { organicness: 0, groove: 0 };
 const kit = { ...M, level: .3 };
 const low = { ...M, level: .7, duck: 'drums', duckDepth: .3, duckAttack: .1 };
-const top = { ...M, level: 1.6, position: .1 };
+const top = { ...M, level: 1.6, position: .1, weight: .58 }; // closer
 const sub = { level: .4, duck: 'drums', duckDepth: .4, duckAttack: .15 };
-const machine = song({ cps: .5, key: 'E:minor', seed: 23, kit: 'RolandTR909', room: { size: .5, fade: .15, damping: 3500 } }, [
+// second pass: the generated small room (samples/user/rooms) cut to half a second: early reflections and a door, no tail. No humanize: the
+// machine is mechanical by design. Depth on the melody by the closer word.
+const machine = song({ cps: .5, key: 'E:minor', seed: 23, kit: 'RolandTR909', packs: ['rooms'], room: { ir: 'room', size: .5, damping: 3500 } }, [
   section('intro', 4, { role: 'establish', progression: 'i',
     drums: { ...kit, template: 'minimal', density: .2, drive: .9, articulation: .9, brightness: .2, space: .1, variation: 0 },
   }),
@@ -35,7 +37,10 @@ const machine = song({ cps: .5, key: 'E:minor', seed: 23, kit: 'RolandTR909', ro
     drums:  { ...kit, density: .85, drive: .95, articulation: .75, brightness: .5, space: .4, weight: .9, aggression: .7, width: .7, variation: .25 },
     bass:   { ...low, weight: .9, density: .6, drive: .9, articulation: .8, register: .15, brightness: .4, space: .05, aggression: .8, variation: 0 },
     melody: { ...top, notes: '0 ~ 0 3@2 ~ 2 0', density: .4, articulation: .8, register: .2, brightness: .45, space: .3, width: .6, aggression: .8, variation: .15 },
-    pad:    { ...sub, density: .5, articulation: .2, brightness: .35, weight: .95, space: .5, width: .9, aggression: .95, register: .1 },
+    // the pad sits under width .8 in every climax: .8+ is jux, a doubled copy of every voice, and here every voice also carries
+    // a distortion worklet; with it chorus3 ran ~46 voices at once (worklets counted), past what the audio thread renders in real
+    // time (scratches, dropped hits); at .75 it sweeps instead, ~32
+    pad:    { ...sub, density: .5, articulation: .2, brightness: .35, weight: .95, space: .5, width: .75, aggression: .95, register: .1 },
   }),
   section('breakdown', 4, { role: 'develop', progression: 'i',
     drums: { ...kit, template: 'minimal', density: .2, drive: .9, articulation: .9, brightness: .2, space: .5, weight: .8, variation: 0 },
@@ -55,13 +60,13 @@ const machine = song({ cps: .5, key: 'E:minor', seed: 23, kit: 'RolandTR909', ro
     drums:  { ...kit, density: .9, drive: .95, articulation: .7, brightness: .55, space: .45, weight: .95, aggression: .85, width: .8, variation: .45 },
     bass:   { ...low, weight: .95, density: .65, drive: .9, articulation: .8, register: .15, brightness: .45, space: .05, aggression: .9, variation: .1 },
     melody: { ...top, notes: '0 ~ 0 3@2 ~ 2 0', density: .5, articulation: .8, register: .2, brightness: .5, space: .3, width: .7, aggression: .9, variation: .3 },
-    pad:    { ...sub, density: .75, articulation: .2, brightness: .4, weight: 1, space: .55, width: .9, aggression: 1, register: .1 },
+    pad:    { ...sub, density: .75, articulation: .2, brightness: .4, weight: 1, space: .55, width: .75, aggression: 1, register: .1 },
   }),
   section('chorus3', 8, { role: 'climax', progression: 'i',
     drums:  { ...kit, density: .95, drive: .95, articulation: .7, brightness: .6, space: .5, weight: 1, aggression: .9, width: .85, variation: .5 },
     bass:   { ...low, weight: 1, density: .65, drive: .9, articulation: .8, register: .15, brightness: .5, space: .05, aggression: 1, variation: .1 },
     melody: { ...top, notes: '0 ~ 0 3@2 ~ 2 0', density: .55, articulation: .8, register: .2, brightness: .55, space: .3, width: .75, aggression: .95, variation: .3 },
-    pad:    { ...sub, density: .9, articulation: .2, brightness: .45, weight: 1, space: .6, width: .9, aggression: 1, register: .1 },
+    pad:    { ...sub, density: .9, articulation: .2, brightness: .45, weight: 1, space: .6, width: .75, aggression: 1, register: .1 },
   }),
   section('burnout', 8, { role: 'release', progression: 'i',
     drums: { ...kit, template: 'minimal', density: .15, drive: .9, articulation: .9, brightness: saw.range(.3, 0).slow(8), space: .8, weight: .9, aggression: .9, variation: .3 },

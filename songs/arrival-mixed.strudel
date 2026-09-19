@@ -12,19 +12,21 @@
 // void → signal → approach → contact → will → plea → threshold → after. 59 cycles, one cycle = one bar.
 // Axis values are 0..1 with 0.5 = the layer's baseline. The piano keeps one setting for the whole song: space .5 (room only;
 // anything above sends it to a delay line, which reads as a pop behind each note) and articulation .05 so every note rings out.
-const theme    = { sound: 'piano', follow: true, phrase: 2, notes: '0 ~ 2 4@2 ~ 5 4@2 0 ~ 2 4@2 ~ 7 6@2', register: .55, articulation: .05, brightness: .6, space: .5, width: .5, organicness: .6, position: .1, velocity: '.85 1 .9 1 .8 1 .9 .95' };
+const theme    = { sound: 'piano', follow: true, phrase: 2, notes: '0 ~ 2 4@2 ~ 5 4@2 0 ~ 2 4@2 ~ 7 6@2', register: .55, articulation: .05, brightness: .6, space: .32, weight: .58, width: .5, position: .1, velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } }; // closer; played (a seeded, phrase-correlated feel), not diced per hit
 const answer   = { ...theme, notes: '0 ~ 2 4@2 ~ 5 4@2 7 6 5 4@2 ~ 2 0@2' };
 const signal   = { sound: 'handchimes', follow: false, notes: '0 ~ ~ 6 ~ ~ 3 ~ ~ 0 ~ ~ 6 3 ~ ~', register: .85, articulation: .35, space: .9, width: .7, level: .6, organicness: 0, position: .35 };
-const bells    = { sound: 'tubularbells', follow: false, notes: '0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 6 ~ ~ ~', register: .3, articulation: .1, space: .95, width: .8, level: .7, organicness: 0, position: .35 };
+const bells    = { sound: 'tubularbells', follow: false, notes: '0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 6 ~ ~ ~', register: .3, articulation: .1, space: .95, width: .8, level: .7, organicness: 0, position: .35, compressor: { threshold: -18, ratio: 3 } }; // two strikes a bar, spiky: a compressor per hit is cheap
 const harp     = { sound: 'harp', follow: true, notes: '0 2 4 7 2 4 7 2 4 7 2 4 7 4 2 0', register: .75, articulation: .6, space: .75, width: .6, level: .8, density: .5, position: -.3 };
 const winds    = { sound: 'recorder_alto_sus', follow: true, notes: '~ ~ ~ ~ 4@4 ~ ~ ~ ~ 2@4', register: .65, articulation: .15, space: .7, width: .6, level: .35, position: -.2 };
 const strings  = { sound: 'psaltery_bow', articulation: .1, space: .8, width: .75, weight: .6, brightness: .35, position: -.15 };
 const organ    = { sound: 'pipeorgan_quiet', articulation: .05, space: .85, width: .5, weight: .8, register: .2, brightness: .2, level: .6 };
-const choir    = { sound: 'super64_vib', articulation: .1, space: .9, width: .8, register: .6, brightness: .35, level: .2, position: .3 };
+const choir    = { sound: 'super64_vib', articulation: .1, space: .9, width: .8, register: .6, brightness: .23, space: 1, weight: .42, level: .2, position: .3 }; // farther
 const pedal    = { sound: 'pipeorgan_loud_pedal', register: .1, weight: .9, articulation: .1, space: .4, brightness: .2, drive: .8, level: .8 };
-const pulse    = { template: 'halftime', sounds: { bd: 'timpani', sd: 'snare_low', hh: 'triangles', oh: 'sus_cymbal', cp: 'bassdrum2' }, space: .8, brightness: .2, articulation: .3, variation: 0, organicness: .3, level: 2 }; // the timpani sample is quiet: at level 1 the pulse measured 30 dB under the mix
+const pulse    = { template: 'halftime', sounds: { bd: 'timpani', sd: 'snare_low', hh: 'triangles', oh: 'sus_cymbal', cp: 'bassdrum2' }, space: .8, brightness: .2, articulation: .3, variation: 0, humanize: { timingMs: 15, velocity: .12, correlation: 'bar' }, level: 2 }; // the timpani sample is quiet: at level 1 the pulse measured 30 dB under the mix
 
-const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808', room: { size: 2.6, fade: .5, damping: 4500 } }, [
+// second pass: a generated hall (samples/user/rooms, 3.2 s, 30 ms pre-delay) instead of the synthetic tail; the piano and the pulse humanized
+// (seeded, correlated) instead of organicness (dice per hit); the bells compressed; depth by the closer/farther words on the theme, choir and arp.
+const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808', packs: ['rooms'], room: { ir: 'hall', size: 3.2, damping: 4500 } }, [
   section('void', 1, { role: 'establish', progression: 'i',
     pad:  { ...organ, density: .2, brightness: .1, space: 1 },
     pad2: { ...strings, density: .2, brightness: .15, weight: .8, register: .2, level: .5 },
@@ -94,7 +96,7 @@ const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808', room
     pad:     { ...strings, density: .85, brightness: .55, weight: .8, width: .75, level: 1 },
     pad2:    { ...organ, sound: 'pipeorgan_loud', density: .8, brightness: .3, weight: 1, level: .5 },
     pad3:    { ...choir, density: .8, brightness: .4, level: .2, width: .75 },
-    pad4:    { ...strings, sound: 'vibraphone_bowed', density: .4, register: .85, brightness: .8, level: .35, arp: 'up', position: -.35 },
+    pad4:    { ...strings, sound: 'vibraphone_bowed', density: .4, register: .85, brightness: .68, space: .98, weight: .52, level: .35, arp: 'up', position: -.35 }, // farther
     fx:      { impact: true, level: .3 },
   }),
   section('after', 6, { role: 'release', progression: 'i VI',

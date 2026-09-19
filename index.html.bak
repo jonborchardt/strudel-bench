@@ -1352,7 +1352,7 @@
 
   // measure: render the shown section, then each part alone (renderSong shares one offline context, hence the `for`,
   // not a Promise.all), and read the level of each off the render (lib/analyze.mjs), relative to the mix (web/compose.mjs
-  // levelRows). Writes nothing; a dB readout lands next to each level slider and the mix's own on the badge beside the button.
+  // levelRows). Writes nothing; a dB readout lands next to each level slider and the mix's own goes on the vstate badge.
   $('measure').onclick = async (e) => {
     e.preventDefault(); // a button in the card's summary: the card must not fold
     const ev = sections.find((x) => x.name === mixSection); if (!ev) return;
@@ -1361,13 +1361,13 @@
       if (playing) await stop(); // the render replaces the audio context
       await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
       const song = await strudel.evaluate(code.text, false); // once, not once per render
-      const stats = async (layer) => metricsOf(await renderSong({ song, section: mixSection, layer, cycles: Math.min(ev.cycles, 4), progress: (i, n) => mstate('busy', `measuring ${layer ?? mixSection} ${Math.round((i / n) * 100)}%`) }), { cps: ev.cps }); // levelRows reads rms and peak
+      const stats = async (layer) => metricsOf(await renderSong({ song, section: mixSection, layer, cycles: Math.min(ev.cycles, 4), progress: (i, n) => vstate('busy', `measuring ${layer ?? mixSection} ${Math.round((i / n) * 100)}%`) }), { cps: ev.cps }); // levelRows reads rms and peak
       const parts = [{ name: 'mix', ...(await stats()) }];
       for (const l of Object.keys(ev.layers)) parts.push({ name: l, ...(await stats(l)) }); // one render at a time: renderSong shares the offline context
       const rows = levelRows(parts);
       for (const r of rows.slice(1)) { const el = document.querySelector(`#matlist [data-level="${CSS.escape(r.name)}"] .db`); if (el) el.textContent = r.db === -Infinity ? 'silent' : `${r.db > 0 ? '+' : ''}${r.db} dB`; }
-      mstate(rows[0].warn ? 'fail' : 'done', `${rows[0].warn ? '&#10007;' : '&#10003;'} ${mixSection}: ${rows[0].db} dBFS rms, peak ${rows[0].warn ?? 'ok'}`);
-    } catch (e) { $('mixstatus').textContent = `measure failed: ${e.message}`; mstate('fail', `&#10007; ${esc(e.message)}`, e.message); }
+      vstate(rows[0].warn ? 'fail' : 'done', `${rows[0].warn ? '&#10007;' : '&#10003;'} ${mixSection}: ${rows[0].db} dBFS rms, peak ${rows[0].warn ?? 'ok'}`);
+    } catch (e) { $('mixstatus').textContent = `measure failed: ${e.message}`; vstate('fail', `&#10007; ${esc(e.message)}`, e.message); }
     finally { $('measure').disabled = $('verify').disabled = $('apply').disabled = false; }
   };
 

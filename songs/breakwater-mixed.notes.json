@@ -57,6 +57,39 @@
           "why": "the impact set back"
         }
       ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "use the new mixing tools on the -mixed songs: impulse-response rooms, humanize, compressor, depth words",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "synthetic>room the generated small room (0.9 s, 8 ms pre-delay) keeps the break's attacks in front of the reverb"
+        },
+        {
+          "section": "breakwater",
+          "layer": "melody",
+          "axis": "humanize",
+          "why": "the marimba and piano played (12 ms, phrase-correlated)"
+        },
+        {
+          "section": "breakwater",
+          "layer": "melody",
+          "axis": "space",
+          "from": 0.45,
+          "to": 0.3,
+          "why": "closer: weight up (.58)"
+        },
+        {
+          "section": "breakwater",
+          "layer": "melody2",
+          "axis": "space",
+          "from": 0.65,
+          "to": 0.8,
+          "why": "farther: darker (.38), lighter (.42)"
+        }
+      ]
     }
   ]
 }

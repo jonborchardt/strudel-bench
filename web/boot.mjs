@@ -28,7 +28,9 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
     },
   });
   // surface strudel's own error log lines (e.g. "sound not found")
-  document.addEventListener('strudel.log', (e) => { if (e.detail.type === 'error') onError(e.detail.message); });
+  // the repl's trigger catches a hap that fails to sound (a raw part naming a sound that is not loaded, say) so the rest
+  // keeps playing, but it logs that without the error type: match the line too, or the part is just silent
+  document.addEventListener('strudel.log', (e) => { if (e.detail.type === 'error' || /^\[(getTrigger|cyclist)\] error/.test(e.detail.message)) onError(e.detail.message); });
   // superdough makes an orbit on its first hap, so a ducking hit (lib/song.mjs `duck`: duckorbit names the ducked part's
   // orbit) whose target has not sounded yet finds none ("duck target orbit n does not exist") and nothing ducks: make the
   // target on demand. On the controller's prototype, so the live scheduler, auditions, the Examples page and the controller

@@ -73,6 +73,51 @@
           "why": "the noise bed a real bed at 26"
         }
       ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "use the new mixing tools on the -mixed songs: impulse-response rooms, humanize, compressor, depth words",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "synthetic>room the generated small room (0.9 s) for a cut-up loop"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "axis": "humanize",
+          "why": "the line played (12 ms, phrase-correlated), the perc already was"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "axis": "space",
+          "from": 0.45,
+          "to": 0.3,
+          "why": "closer: weight up (.58)"
+        },
+        {
+          "section": "drop",
+          "layer": "melody2",
+          "axis": "space",
+          "from": 0.5,
+          "to": 0.68,
+          "why": "farther: darker (.38), lighter (.42)"
+        },
+        {
+          "section": "drop",
+          "layer": "raw2",
+          "axis": "compressor",
+          "why": "threshold -18 ratio 3: the bursts are sparse and spiky (crest 25), so a compressor per hit is cheap and evens the peaks"
+        },
+        {
+          "section": "drop",
+          "layer": "sample3",
+          "axis": "compressor",
+          "why": "threshold -18 ratio 3: the rattle (crest 24), the same"
+        }
+      ]
     }
   ]
 }

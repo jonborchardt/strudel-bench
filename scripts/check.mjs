@@ -15,6 +15,10 @@ const { miniAllStrings } = await import('@strudel/mini');
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const PACKS = path.join(ROOT, 'samples', 'packs');
+const WORKLETS = ['coarse', 'crush', 'shape', 'distort']; // superdough builds an AudioWorkletNode per hit for each of these
+// the audio thread's load from one hit: it lives for its length (in cycles at `cps`) plus its release, as a chain of ~8 audio
+// nodes; each worklet effect on it is a JavaScript processor run every quantum and counts as one voice more
+const load = (h, cycles, cps) => (1 + WORKLETS.filter((k) => h.value[k] !== undefined).length) * (cycles + (h.value.release ?? 0) * cps);
 
 let scopeReady;
 export const ensureScope = () => (scopeReady ??= (async () => {
@@ -125,9 +129,8 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
             typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean' ? v
             : v && typeof v === 'object' && typeof v.queryArc !== 'function' ? JSON.stringify(v) : 'signal'])),
           onsetsPerCycle: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).length / s.cycles).toFixed(2),
-          // voices sounding at once, on average: each hit lives for its length plus its release (a voice is a chain of ~8 audio
-          // nodes, so this is the audio thread's load; a section near 50 crackled on a laptop, see lint)
-          voices: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).reduce((n, h) => n + h.duration.valueOf() + (h.value.release ?? 0) * s.cps, 0) / s.cycles).toFixed(1),
+          // voices sounding at once, on average (`load`: the audio thread's load; a section near 50 crackled on a laptop, see lint)
+          voices: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).reduce((n, h) => n + load(h, h.duration.valueOf(), s.cps), 0) / s.cycles).toFixed(1),
           words: describeAxes(l.attrs), // the axis values read back as vocabulary words
         }])),
       };
@@ -135,10 +138,32 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
     // form: a section's energy is its onsets per cycle summed over its parts, each scaled by its level; the arc line prints them
     for (const sct of sections) {
       sct.energy = +Object.values(sct.layers).reduce((n, l) => n + l.onsetsPerCycle * (typeof l.attrs.level === 'number' ? l.attrs.level : 1), 0).toFixed(1);
-      sct.voices = +Object.values(sct.layers).reduce((n, l) => n + l.voices, 0).toFixed(0);
+      const parts = Object.values(sct.layers).reduce((n, l) => n + l.voices, 0);
+      // the whole pattern over the section's window too, so a stack() of textures around the song() (songs/machine.strudel)
+      // is counted: machine's chorus3 read 22 from its parts alone and scratched, ~46 with its textures and distortion counted
+      const whole = haps.filter((h) => h.whole.begin.valueOf() >= sct.offset && h.whole.begin.valueOf() < sct.offset + sct.span)
+        .reduce((n, h) => n + load(h, h.duration.valueOf() * sct.cycles / sct.span, sct.cps), 0) / sct.cycles;
+      sct.outside = +Math.max(0, whole - parts).toFixed(0); // voices outside the parts (a stack around the song)
+      sct.voices = +(parts + sct.outside).toFixed(0);
     }
+    formLetters(sections).forEach((f, i) => { sections[i].form = f; });
   }
   return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps };
+}
+
+/**
+ * Form letters: sections with the same set of sounding parts share a letter (A, B, ...), so the arc reads as ABAB or
+ * through-composed at a glance; a prime marks one whose energy differs from that letter's first section by more than a
+ * fifth of the loudest section's (the same parts, but a lift or a breakdown).
+ */
+export function formLetters(sections) {
+  const max = Math.max(...sections.map((s) => s.energy), 1e-9), seen = new Map();
+  return sections.map((s) => {
+    const sig = Object.entries(s.layers).filter(([, l]) => l.onsetsPerCycle > 0).map(([k]) => k).sort().join(' ');
+    if (!seen.has(sig)) seen.set(sig, { letter: String.fromCharCode(65 + seen.size), energy: s.energy });
+    const f = seen.get(sig);
+    return f.letter + (Math.abs(s.energy - f.energy) > max / 5 ? "'" : '');
+  });
 }
 
 /**
@@ -166,7 +191,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       for (const u of r.sounds) console.log(`    ${`${u.name}:${u.n}`.padEnd(24)} ${u.file}`);
     }
     for (const sct of r.sections ?? []) {
-      console.log(`  [${sct.offset}-${sct.offset + sct.span}) ${sct.name}${sct.role ? ' (' + sct.role + ')' : ''}  ~${sct.voices} voices at once`);
+      console.log(`  [${sct.offset}-${sct.offset + sct.span}) ${sct.name}${sct.role ? ' (' + sct.role + ')' : ''}  ~${sct.voices} voices at once${sct.outside ? ` (${sct.outside} outside the parts)` : ''}`);
       console.log(`    harmony ${sct.harmony}`);
       for (const [layer, l] of Object.entries(sct.layers)) {
         const attrs = Object.entries(l.attrs).map(([a, v]) => `${a}=${v}`).join(' ');
@@ -175,7 +200,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     }
     if (r.sections?.length) { // the arc: each section's energy against the loudest, so the shape reads at a glance
       const max = Math.max(...r.sections.map((s) => s.energy), 1e-9), bar = '▁▂▃▄▅▆▇█';
-      console.log(`  arc: ${r.sections.map((s) => `${s.name} ${s.energy} ${bar[Math.round((s.energy / max) * 7)]}`).join(' · ')}`);
+      console.log(`  arc: ${r.sections.map((s) => `${s.name} ${s.energy} ${bar[Math.round((s.energy / max) * 7)]} ${s.form}`).join(' · ')}`);
     }
     for (const p of r.problems) console.error('  ' + p);
     if (!r.ok) bad++;

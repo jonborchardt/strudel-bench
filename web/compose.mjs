@@ -1,4 +1,4 @@
-// Pure helpers behind the Compose page's kit selector and "Ask Claude" card. No DOM, no strudel: index.html feeds
+// Pure helpers behind the Compose page: the kit list, the "Ask Claude" card, notes, verify rows, share links. No DOM, no strudel: index.html feeds
 // them text and gets text back, and test/compose.test.mjs runs them in Node.
 import { axis } from '../lib/axes.mjs';
 
@@ -6,17 +6,6 @@ const VOICES = ['bd', 'sd', 'hh']; // the drums layer's baseline voices: a kit m
 
 /** The kits of `kitNames` (lib/kits.json keys) whose baseline voices are among the loaded `soundNames` (strudel keys its sound map in lower case), sorted. */
 export const kitsIn = (kitNames, soundNames) => { const have = new Set(soundNames); return kitNames.filter((k) => VOICES.every((v) => have.has(`${k.toLowerCase()}_${v}`))).sort(); };
-
-const KIT = /kit:\s*(['"])[^'"]+\1/;
-/** The song-level kit in `src` (the song({ ... }) header), or `fallback` when it names none. */
-export const kitOf = (src, fallback = 'RolandTR909') => src.match(/song\(\s*\{[^}]*?kit:\s*['"]([^'"]+)['"]/)?.[1] ?? fallback;
-/** `src` with its song-level kit set to `kit`: rewrites the existing literal or inserts one into the song header. */
-export function setKit(src, kit) {
-  const m = src.match(/song\(\s*\{[^}]*?\}/);
-  if (!m) return src; // plain strudel: nothing to set
-  const head = KIT.test(m[0]) ? m[0].replace(KIT, `kit: '${kit}'`) : m[0].replace(/\{/, `{ kit: '${kit}',`);
-  return src.slice(0, m.index) + head + src.slice(m.index + m[0].length);
-}
 
 /** Source of one section(...) call, or '' when `src` has none by that name. */
 export const sectionSource = (src, name) => src.match(new RegExp(`section\\(\\s*['"]${name}['"][\\s\\S]*?\\n\\s*\\}\\),?`))?.[0].trim() ?? '';

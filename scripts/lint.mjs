@@ -14,8 +14,10 @@ const soundsOf = (v) => { try { return soundNames(JSON.parse(v)); } catch { retu
 const DEFAULT_SOUND = { bass: 'sawtooth', melody: 'sawtooth', pad: 'sawtooth', fx: 'white' }; // what a part plays when it names no sound (lib/layers.mjs)
 const SAW = new Set(['sawtooth', 'saw', 'supersaw']);
 const COMPRESSOR_HITS = 16; // superdough builds a DynamicsCompressorNode per hit; above this many hits a bar that is a real audio-thread cost
-// voices sounding at once (the check's `voices`: hit length plus release, summed): each is ~8 audio nodes, and a trace of
-// arrival's threshold (~50 voices, five reverbs) showed the audio thread at 100% of its render budget on a laptop, crackling.
+// voices sounding at once (the check's `voices`: hit length plus release, summed, one more per worklet effect on the hit, over
+// the whole pattern including a stack() around the song): each is ~8 audio nodes, and a trace of arrival's threshold (~50
+// voices, five reverbs) showed the audio thread at 100% of its render budget on a laptop, crackling; machine's chorus3 at ~46
+// (half of it distortion worklets) ran the thread at 60-70% with the slowest callbacks over their deadline, scratching.
 // ponytail: one machine's number; retune from more traces.
 const VOICES = 40;
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -44,8 +46,8 @@ export function lint({ sections, problems = [] }) {
       if (x.attrs.compressor !== undefined && x.onsetsPerCycle > COMPRESSOR_HITS) warn(s.name, `${l}.compressor is applied per hit (${x.onsetsPerCycle} a bar, each its own compressor node): keep it off dense parts, lower level instead`);
     }
     if (s.voices > VOICES) {
-      const heavy = Object.entries(s.layers).sort((a, b) => b[1].voices - a[1].voices).slice(0, 3).map(([l, x]) => `${l} ${x.voices}`).join(', ');
-      warn(s.name, `~${s.voices} voices sounding at once (${heavy}): past ~${VOICES} the audio thread cannot render in real time on a laptop and playback crackles; shorter releases (articulation up), fewer chord tones (pad density down), or one pad fewer`);
+      const heavy = Object.entries(s.layers).sort((a, b) => b[1].voices - a[1].voices).slice(0, 3).map(([l, x]) => `${l} ${x.voices}`).concat(s.outside ? [`${s.outside} outside the parts`] : []).join(', ');
+      warn(s.name, `~${s.voices} voices sounding at once (${heavy}): past ~${VOICES} the audio thread cannot render in real time on a laptop and playback crackles; width under .8 (jux doubles every voice), aggression at .5 (a distortion worklet per hit counts as a voice), shorter releases (articulation up), fewer chord tones (pad density down), or one pad fewer`);
     }
   });
   return out;

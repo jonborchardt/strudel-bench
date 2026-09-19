@@ -57,6 +57,59 @@
           "why": "the piano theme kept in front (8 dB under the mix) with a phrase-shaped velocity line; the alien signal and bells right, the harp and recorders left"
         }
       ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "use the new mixing tools on the -mixed songs: impulse-response rooms, humanize, compressor, depth words",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "synthetic>hall the generated hall (3.2 s, 30 ms pre-delay, damping 4500) for the score; the textures keep their own reverb"
+        },
+        {
+          "section": "threshold",
+          "layer": "melody",
+          "axis": "humanize",
+          "why": "organicness .6 (dice per hit) replaced by a seeded, phrase-correlated feel (12 ms, velocity .1)"
+        },
+        {
+          "section": "threshold",
+          "layer": "drums",
+          "axis": "humanize",
+          "why": "the pulse's organicness .3 replaced by a bar-correlated feel (15 ms)"
+        },
+        {
+          "section": "threshold",
+          "layer": "melody3",
+          "axis": "compressor",
+          "why": "threshold -18 ratio 3: the bells strike twice a bar, spiky"
+        },
+        {
+          "section": "threshold",
+          "layer": "melody",
+          "axis": "space",
+          "from": 0.5,
+          "to": 0.32,
+          "why": "closer on the theme: weight up (.58); the piano's delay-line note in the header still holds, .32 is below the .5 line"
+        },
+        {
+          "section": "threshold",
+          "layer": "pad3",
+          "axis": "space",
+          "from": 0.9,
+          "to": 1,
+          "why": "farther on the choir: darker (.23), lighter (.42)"
+        },
+        {
+          "section": "threshold",
+          "layer": "pad4",
+          "axis": "space",
+          "from": 0.8,
+          "to": 0.98,
+          "why": "farther on the bowed arp: darker (.68), lighter (.52)"
+        }
+      ]
     }
   ]
 }

@@ -15,12 +15,14 @@
 const brk  = { sound: 'loop', bars: 2, slices: 8, pattern: '0 1 2 3 4 5 6 7' };
 // the answering voices, each with a place on the stage
 const low  = { sound: 'square', register: .25, weight: .75, articulation: .6, brightness: .35, space: .35, duck: 'drums', duckDepth: .35, duckAttack: .12, level: .55 };
-const lead = { sound: 'marimba', follow: true, phrase: 2, register: .55, articulation: .45, space: .45, width: .5, position: .15, velocity: '.85 1 .9 1 .8 1 .9 .95' };
-const bell = { sound: 'vibraphone', follow: true, register: .7, level: .8, space: .65, position: -.4 };
+const lead = { sound: 'marimba', follow: true, phrase: 2, register: .55, articulation: .45, space: .3, weight: .58, width: .5, position: .15, velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } }; // closer, and played
+const bell = { sound: 'vibraphone', follow: true, register: .7, level: .8, space: .8, brightness: .38, weight: .42, position: -.4 }; // farther
 const wash = { register: .4, articulation: .15, space: .75, brightness: .3, level: .5, width: .7, position: -.25 };
 const under = { duck: 'drums', duckDepth: .15, duckAttack: .2 }; // the pad under the kick, only where there is a kit
 
-song({ bpm: 132, key: 'F:minor', seed: 19, kit: 'RolandTR909', packs: ['demo-pack'], room: { size: 1.1, fade: .3, damping: 6000 } }, [
+// second pass: a generated small room (samples/user/rooms, 0.9 s, 8 ms pre-delay) so the break's attacks stay in front of the reverb; the
+// lead humanized; depth by the closer/farther words, not level alone.
+song({ bpm: 132, key: 'F:minor', seed: 19, kit: 'RolandTR909', packs: ['demo-pack', 'rooms'], room: { ir: 'room', size: .9, damping: 6000 } }, [
 
   // the loop as recorded, filtered and far off: the break is the whole arrangement, and nothing answers it yet.
   section('shoreline', 8, { role: 'establish', progression: 'i',

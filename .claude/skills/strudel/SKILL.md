@@ -145,12 +145,29 @@ under 300 Hz, mid 300..3000, high above): shared band energy times time together
    (`position` unset or within ±.1, `width` ≤ .5); support parts off to a side (`position: ±.3`, opposite sides for
    two of them); the pad wide (`width: .7`, or `.8` for `jux`); at most one part moving (`panStd` > .2). A drum kit's
    own voice spread moves as one with its `position`. The lint's "flat stage" is three non-foundation parts at centre.
-5. **One room, then contrast across sections.** A `room` on the song (`{ size, fade, damping }`) gives every part
-   the same reverb character and turns each part's `space` into a send: dry kick and bass (`space` ≤ .5), a little on
-   the hook, more on the pad and fx. Then the `arc:` line of the check and each section's mix `dB`, `centroid` and
-   `onsetsPerSec` must differ across roles: a climax that measures like its verse is a flat song, not a flat mix.
-   A played feel is `humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' }` on the part that should sound
-   played, never `organicness` by default (that is dice per hit).
+5. **One room, then contrast across sections.** A `room` on the song gives every part the same reverb character and
+   turns each part's `space` into a send: dry kick and bass (`space` ≤ .5), a little on the hook, more on the pad and
+   fx. **Use a generated impulse, not the synthetic tail**: `room: { ir: 'room', size: .9 }` (a small box, 8 ms
+   pre-delay, for kits, breaks and anything dry), `{ ir: 'plate', size: 1.8, damping: 7000 }` (no walls, bright, for
+   bells, glass, piano pop), `{ ir: 'hall', size: 3.2, damping: 4500 }` (30 ms pre-delay, the tail outlasts the bar,
+   for a score or anything slow and dark); the song must declare `packs: ['rooms']`. `size` truncates the impulse and
+   never stretches it (`.5` on `room` is early reflections and a door, no tail); `irbegin` skips the silent head to
+   remove the pre-delay; `songs/rooms.strudel` plays the four against each other. `{ size, fade, damping }` without
+   `ir` is the fallback, not the default. Then the `arc:` line of the check and each section's mix `dB`, `centroid`
+   and `onsetsPerSec` must differ across roles: a climax that measures like its verse is a flat song, not a flat mix.
+
+**Every pass, not one of them, checks off the mix material**: a twin that stops at `level`, `position` and `duck` has
+done half the job. Before reporting, every one of these has been used or ruled out by name:
+- `room.ir` on the song (pass 5), and `packs: ['rooms']` with it.
+- `humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' }` on every part that should sound played (a hook,
+  a harp, a hand drum, a pulse with `correlation: 'bar'`), replacing any `organicness` it had (that is dice per hit);
+  a mechanical song says so and keeps none.
+- `velocity` on the hook, a phrase-shaped line such as `'.85 1 .9 1 .8 1 .9 .95'`.
+- `compressor: { threshold: -18, ratio: 3 }` on each sparse part whose `crest` is over ~9 in the measure table (a
+  shout, a gong, a burst, a rattle), never on a kit.
+- depth by the words, not by level alone: `closer`/`farther` deltas (`lib/descriptors.json`: brightness ±.12, space
+  ∓.18, weight ±.08) on the foreground and background parts, written by `resolve` or by hand on a spread layer.
+- `duck` with a written `duckAttack`, and `position` per support part (passes 2 and 4).
 
 **Report** the before/after measure table per part (dB, depth with highRatio and tail, pan, the worst masking
 pairs), which pass each change came from, and what could not be measured. "Verified directionally" stays the
@@ -159,6 +176,16 @@ strongest claim.
 ## Rules
 
 - Never invent sound names; the checker fails on unknown sounds.
+- **Load is a bound, read it on every climax.** Each section header of the check prints `~n voices at once`, and the
+  lint warns past 40: beyond that the audio thread cannot render in real time on a laptop and the song scratches and
+  drops hits (arrival's threshold at ~49, machine's chorus3 at ~46). The count is hits sounding at once over the whole
+  pattern in the section's window, a `stack()` of textures around the song included (`n outside the parts`), and a
+  hit with a distortion, shape or coarse worklet counts one more per effect, so an aggressive song is loud in this
+  count long before it is loud in parts. Fixes in order: `width` under .8 on any pad or kit at .8+ (jux plays a
+  doubled copy of every voice), `aggression`/`weight` at .5 on the part with the most hits (no worklet per hit), a
+  shorter release (`articulation` up), fewer chord tones (pad `density` down), one pad fewer. A distorted part also
+  ignores its `level` for peaks: superdough distorts after the gain and the output saturates at full scale, so the
+  mix lint's "no headroom" on such a part is fixed by less distortion, not by level.
 - A song edit needs `npm run check` only. The moment the fix reaches `lib/`, `scripts/` or `web/`, run `npm test`
   and fix what it turns red before reporting — including the golden fixtures, which are read (did only the
   fixtures you expected move?) and never blind-regenerated.

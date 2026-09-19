@@ -17,7 +17,7 @@
 // See songs/hunted.strudel for the score's own notes: the runner, the thing, the radio, the takes and the chops.
 
 // --- the runner: follows the harmony, phrases over two bars, keeps reaching for the tonic
-const theme   = { sound: 'harp', follow: true, phrase: 2, notes: '0 ~ 1 0 ~ ~ ~ ~ 4 ~ 3 ~ 1 ~ 0@2', register: .6, articulation: .5, space: .5, width: .5, brightness: .45, position: .15, velocity: '.85 1 .9 1 .8 1 .9 .95' };
+const theme   = { sound: 'harp', follow: true, phrase: 2, notes: '0 ~ 1 0 ~ ~ ~ ~ 4 ~ 3 ~ 1 ~ 0@2', register: .6, articulation: .5, space: .5, width: .5, brightness: .45, position: .15, velocity: '.85 1 .9 1 .8 1 .9 .95', weight: .58, humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } }; // closer, and played
 const answer  = { ...theme, notes: '0 ~ 1 0 ~ 1 ~ ~ 4 ~ 5 4 ~ 1 0@2' };
 const broken  = { ...theme, notes: '0 ~ 1 0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~' };
 // a counter-figure, not a second theme: it enters where the theme rests and leans on 5, the b6
@@ -28,11 +28,11 @@ const chimes  = { sound: 'handchimes', follow: false, notes: '~ ~ 1 ~ ~ ~ ~ ~', 
 const stalker = { sound: 'pipeorgan_loud_pedal', follow: false, phrase: 2, notes: '0@6 ~ ~ 1@6 ~ ~', register: .2, brightness: .2, articulation: .1, space: .4, width: .3, position: -.1 }; // the didgeridoo takes never carried: the bark (:0) is over before it is heard and the sustained one (:8) measured 34 dB under the mix at level 2; the loud pedal holds the semitone against the quiet organ drone
 const grind   = { ...stalker, notes: '1@6 ~ ~ 0@6 ~ ~' };
 const held    = { ...stalker, notes: '1@8 1@8' }; // it stops alternating: the b2, and it stays there
-const toll    = { sound: 'gong', follow: false, phrase: 2, notes: '0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~', register: .3, articulation: .1, space: .95, width: .8, brightness: .25, level: 2, position: .35 };
+const toll    = { sound: 'gong', follow: false, phrase: 2, notes: '0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~', register: .3, articulation: .1, space: .95, width: .8, brightness: .25, level: 2, position: .35, compressor: { threshold: -18, ratio: 3 } };
 
 // --- the room
 const drone   = { sound: 'pipeorgan_quiet', articulation: .05, space: .8, width: .5, weight: .8, register: .2, brightness: .15 };
-const strings = { sound: 'psaltery_bow', articulation: .1, space: .75, width: .7, weight: .6, brightness: .3, position: .25 };
+const strings = { sound: 'psaltery_bow', articulation: .1, space: .93, width: .7, weight: .52, brightness: .18, position: .25 }; // farther
 const breath  = { sound: 'wineglass_slow', articulation: .15, space: .9, width: .8, register: .75, brightness: .45, position: -.2 };
 const low     = { space: .35, duck: 'drums', duckDepth: .3, duckAttack: .12 };
 
@@ -40,9 +40,11 @@ const low     = { space: .35, duck: 'drums', duckDepth: .3, duckAttack: .12 };
 const heart   = { template: 'heartbeat', sounds: { bd: 'YamahaRY30_bd' }, space: .7, brightness: .2, articulation: .3, variation: 0 };
 
 // --- the radio: one set, one place on the stage
-const radio   = { position: .3 };
+const radio   = { position: .3, weight: .58, compressor: { threshold: -18, ratio: 3 } }; // closer; the shouts are sparse and spiky (crest 11..19), so a compressor per hit is cheap
 
-song({ cps: .5, key: 'E:phrygian', seed: 13, kit: 'RolandTR909', packs: ['voice'], room: { size: 1.8, fade: .4, damping: 5000 } }, [
+// second pass: a generated hall (samples/user/rooms, 3.2 s, 30 ms pre-delay) instead of the synthetic tail; the harp humanized; the radio
+// and the gong compressed (sparse, spiky); depth by the closer/farther words on the radio and the strings, not level alone.
+song({ cps: .5, key: 'E:phrygian', seed: 13, kit: 'RolandTR909', packs: ['voice', 'rooms'], room: { ir: 'hall', size: 3.2, damping: 4500 } }, [
 
   // out in the open, moving but not yet chased: four turns called, never the same twice, and something already
   // underneath that is not moving with the chords
@@ -53,10 +55,10 @@ song({ cps: .5, key: 'E:phrygian', seed: 13, kit: 'RolandTR909', packs: ['voice'
     melody2: { ...stalker, density: .3, level: .5 },
     pad:     { ...drone, density: .3, brightness: .12, level: .7 },
     pad2:    { ...strings, density: .3, brightness: .2, register: .3, level: .8 },
-    sample:  { ...radio, sound: 'forward',   pattern: '<0 ~!15>',     space: .65, brightness: .45, level: 1.3 },
-    sample2: { ...radio, sound: 'left',      pattern: '<~!5 0 ~!10>', space: .65, brightness: .45, level: 1.3 },
-    sample3: { ...radio, sound: 'right',     pattern: '<~!11 0 ~!4>', space: .65, brightness: .45, level: 1.3 }, // take 1: the quiet 'right', nothing is urgent yet
-    sample4: { ...radio, sound: 'forward:1', pattern: '<~!14 0 ~>',   space: .65, brightness: .45, level: 1.3 },
+    sample:  { ...radio, sound: 'forward',   pattern: '<0 ~!15>',     space: .65, brightness: .45, level: .325 },
+    sample2: { ...radio, sound: 'left',      pattern: '<~!5 0 ~!10>', space: .65, brightness: .45, level: .325 },
+    sample3: { ...radio, sound: 'right',     pattern: '<~!11 0 ~!4>', space: .65, brightness: .45, level: .325 }, // take 1: the quiet 'right', nothing is urgent yet
+    sample4: { ...radio, sound: 'forward:1', pattern: '<~!14 0 ~>',   space: .65, brightness: .45, level: .325 },
   }),
 
   // it has our scent. left and forward on co-prime periods, so the turns come in an order that never settles; at bar
@@ -71,10 +73,10 @@ song({ cps: .5, key: 'E:phrygian', seed: 13, kit: 'RolandTR909', packs: ['voice'
     pad:     { ...drone, density: .5, brightness: .18, level: .7 },
     pad2:    { ...strings, density: .5, brightness: .25, register: .35, level: .9 },
     fx:      { riser: 4, level: .5 },
-    sample:  { ...radio, sound: 'left',      pattern: '<0 ~!6>',      space: .55, brightness: .5, level: 1.3 },  // period 7
-    sample2: { ...radio, sound: 'forward:1', pattern: '<~!3 0 ~>',    space: .55, brightness: .5, level: 1 },    // period 5
-    sample3: { ...radio, sound: 'right:1',   pattern: '<~!28 0 ~!3>', space: .55, brightness: .5, level: 1 },    // bar 14 only
-    sample4: { ...radio, sound: 'out',       pattern: '<~!31 0>',     space: .5, brightness: .55, level: .9 },
+    sample:  { ...radio, sound: 'left',      pattern: '<0 ~!6>',      space: .55, brightness: .5, level: .325 },  // period 7
+    sample2: { ...radio, sound: 'forward:1', pattern: '<~!3 0 ~>',    space: .55, brightness: .5, level: .25 },    // period 5
+    sample3: { ...radio, sound: 'right:1',   pattern: '<~!28 0 ~!3>', space: .55, brightness: .5, level: .25 },    // bar 14 only
+    sample4: { ...radio, sound: 'out',       pattern: '<~!31 0>',     space: .5, brightness: .55, level: .225 },
   }),
 
   // pressed into a doorway, not breathing. the kit stops and a timpani heartbeat takes over; the thing is close
@@ -87,9 +89,9 @@ song({ cps: .5, key: 'E:phrygian', seed: 13, kit: 'RolandTR909', packs: ['voice'
     pad:     { ...drone, density: .3, brightness: .1, level: .8 },
     pad2:    { ...strings, density: .3, brightness: .15, register: .25, level: 1 },
     pad3:    { ...breath, density: .25, level: .6 },
-    sample:  { ...radio, sound: 'down',   pattern: '<0 ~!15>',    space: .8, brightness: .3,  weight: .35, level: 1 },
-    sample2: { ...radio, sound: 'coming', pattern: '<~!6 0 ~!9>', space: .85, brightness: .25, weight: .4, level: 1.4 },
-    sample3: { ...radio, sound: 'out',    pattern: '<~!14 0 ~>',  space: .65, brightness: .45, weight: .6, level: 1.2 },
+    sample:  { ...radio, sound: 'down',   pattern: '<0 ~!15>',    space: .8, brightness: .3,  weight: .35, level: .25 },
+    sample2: { ...radio, sound: 'coming', pattern: '<~!6 0 ~!9>', space: .85, brightness: .25, weight: .4, level: .35 },
+    sample3: { ...radio, sound: 'out',    pattern: '<~!14 0 ~>',  space: .65, brightness: .45, weight: .6, level: .3 },
   }),
 
   // found. the chops arrive at bars 0, 2, 4, 6, then 9, 11, 12, 13, 14, 15, 15.5: the gaps close until there is no
@@ -104,10 +106,10 @@ song({ cps: .5, key: 'E:phrygian', seed: 13, kit: 'RolandTR909', packs: ['voice'
     melody4: { ...toll, density: .5 },
     pad:     { sound: 'harp', arp: 'down', space: .5, brightness: .6, width: .7, level: 1.4, position: -.2 },
     pad2:    { ...drone, density: .7, brightness: .25, weight: .75, level: .7 },
-    pad3:    { ...strings, density: .6, brightness: .35, register: .4, level: 2 },
+    pad3:    { ...strings, density: .6, brightness: .23, register: .4, level: 2 },
     fx:      { impact: true, level: .5 },
-    sample:  { ...radio, sound: 'out-chop',  pattern: '<[0 0 ~ 1] ~!7 [0 0 ~ 1] ~!9 [0 0 ~ 1] ~!5 [0 0 ~ 1] ~!3 [0 0 ~ 1] ~ [0 0 ~ 1] ~>', space: .45, brightness: .65, level: 1 },
-    sample2: { ...radio, sound: 'back-chop', pattern: '<~!4 [0 1 2 ~] ~!7 [0 1 2 ~] ~!9 [0 1 2 ~] ~!3 [0 1 2 ~] ~!4 [0 1 2 ~]>', space: .4, brightness: .6, level: 2 }, // back take 1 is -5.4 dB, the quietest chop source; the break points do not fit take 2
+    sample:  { ...radio, sound: 'out-chop',  pattern: '<[0 0 ~ 1] ~!7 [0 0 ~ 1] ~!9 [0 0 ~ 1] ~!5 [0 0 ~ 1] ~!3 [0 0 ~ 1] ~ [0 0 ~ 1] ~>', space: .27, brightness: .65, level: .25 },
+    sample2: { ...radio, sound: 'back-chop', pattern: '<~!4 [0 1 2 ~] ~!7 [0 1 2 ~] ~!9 [0 1 2 ~] ~!3 [0 1 2 ~] ~!4 [0 1 2 ~]>', space: .22, brightness: .6, level: .5 }, // back take 1 is -5.4 dB, the quietest chop source; the break points do not fit take 2
   }),
 
   // defeated: "he's here", one last useless instruction, and then the radio stops. the runner's theme gets four notes
@@ -121,7 +123,7 @@ song({ cps: .5, key: 'E:phrygian', seed: 13, kit: 'RolandTR909', packs: ['voice'
     pad:     { ...drone, density: .3, brightness: .1, level: .8 },
     pad2:    { ...strings, density: .3, brightness: .12, register: .25, level: 1 },
     pad3:    { ...breath, density: .2, level: .5 },
-    sample:  { ...radio, sound: 'here:1', pattern: '<0 ~!15>',  space: .85, brightness: .35, weight: .6, level: .9 }, // take 2 delivers it; level puts it in a defeated mix
-    sample2: { ...radio, sound: 'back', pattern: '<~!6 0 ~!9>', space: .9, brightness: .2, weight: .35, level: 1.6 }, // take 1 is the feeble one: right performance, audible level
+    sample:  { ...radio, sound: 'here:1', pattern: '<0 ~!15>',  space: .85, brightness: .35, weight: .6, level: .225 }, // take 2 delivers it; level puts it in a defeated mix
+    sample2: { ...radio, sound: 'back', pattern: '<~!6 0 ~!9>', space: .9, brightness: .2, weight: .35, level: .4 }, // take 1 is the feeble one: right performance, audible level
   }),
 ])

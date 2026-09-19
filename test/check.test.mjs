@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { checkFile, missingPackOnly } from '../scripts/check.mjs';
+import { checkFile, checkCode, missingPackOnly, formLetters } from '../scripts/check.mjs';
 
 const tmp = (name, code) => {
   const f = path.join(import.meta.dirname, name);
@@ -110,6 +110,27 @@ test('song() files report each section energy (form) and each layer as words', a
   const by = Object.fromEntries(r.sections.map((s) => [s.name, s]));
   assert.ok(by.drop.energy > by.intro.energy, `drop ${by.drop.energy} > intro ${by.intro.energy}`);
   assert.ok(by.drop.layers.drums.words.includes('very busy'), JSON.stringify(by.drop.layers.drums.words));
+});
+
+test('voices: a worklet effect per hit counts as a voice more, and a stack() around the song is counted outside the parts', async () => {
+  const drums = (extra) => checkCode(`song({ cps: .5, key: 'C:minor', seed: 1, kit: 'RolandTR909' }, [section('a', 4, { drums: { density: .8${extra} } })])`, 'v.strudel');
+  const [plain, hot] = await Promise.all([drums(''), drums(', aggression: .9, weight: .9')]);
+  assert.ok(plain.sections[0].voices > 0 && plain.sections[0].outside === 0, JSON.stringify(plain.sections[0]));
+  assert.ok(hot.sections[0].layers.drums.voices > plain.sections[0].layers.drums.voices * 2, `distort+shape ${hot.sections[0].layers.drums.voices} vs plain ${plain.sections[0].layers.drums.voices}`);
+  const m = await checkFile(path.resolve(import.meta.dirname, '..', 'songs', 'machine.strudel'));
+  const c3 = m.sections.find((s) => s.name === 'chorus3');
+  assert.ok(c3.outside > 0, 'the textures stacked around the song count');
+  assert.equal(c3.voices, +(Object.values(c3.layers).reduce((n, l) => n + l.voices, 0) + c3.outside).toFixed(0));
+});
+
+test('form letters: the same sounding parts share a letter, a prime marks a lift or a breakdown of it', async () => {
+  const L = (parts) => Object.fromEntries(parts.map((p) => [p, { onsetsPerCycle: 4 }]));
+  const secs = [{ energy: 4, layers: L(['drums', 'bass']) }, { energy: 9, layers: L(['drums', 'bass', 'melody']) }, { energy: 4.5, layers: L(['bass', 'drums']) },
+    { energy: 9, layers: L(['drums', 'bass', 'melody']) }, { energy: 6, layers: { ...L(['drums', 'bass', 'melody']), fx: { onsetsPerCycle: 0 } } }, { energy: 2, layers: L(['drums', 'bass']) }];
+  assert.deepEqual(formLetters(secs), ['A', 'B', 'A', 'B', "B'", "A'"], 'order and part names ignored; a silent part does not count; energy far off the first: prime');
+  const r = await checkFile(path.resolve(import.meta.dirname, '..', 'songs', 'demo.strudel'));
+  assert.ok(r.sections.every((s) => /^[A-Z]'?$/.test(s.form)), JSON.stringify(r.sections.map((s) => s.form)));
+  assert.equal(r.sections[0].form, 'A');
 });
 
 test('every song in songs/ checks clean, except one whose local-only pack is not on this machine', async () => {
