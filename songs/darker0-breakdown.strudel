@@ -1,0 +1,24 @@
+// @hidden
+// @blog
+// demo: intro → verse → drop, written in the strudel-bench axis vocabulary.
+// Axis values are 0..1 with 0.5 = the layer's baseline. See docs/superpowers/specs/2026-09-11-musical-axes-design.md
+song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909' }, [
+  section('intro', 4, { role: 'establish',
+    drums: { density: .3, space: .6 },
+    pad:   { space: .8, articulation: .2, brightness: .35 },
+  }),
+  section('verse', 8, { role: 'develop',
+    drums:  { density: .6, groove: .6 },
+    bass:   { weight: .7, register: .3 },
+    melody: { density: .5, brightness: saw.range(.3, .7).slow(8), sound: 'piano', follow: true, phrase: 2, notes: '0 2 3@2 ~ 4 3 2 0 2 3@2 ~ 5@2 4' },
+    pad:    { space: .6 },
+    fx:     { riser: 2 },
+  }),
+  section('drop', 8, { role: 'climax', progression: 'i VI III VII',
+    drums:  { density: .55, drive: .8, articulation: .7, space: .85, width: .7, brightness: .2 },
+    bass:   { weight: .9, aggression: .6, density: .4, notes: '0 7 0 4', space: .85, brightness: .2, register: .4 },
+    melody: { density: .35, width: 1, brightness: .4, sound: 'piano', follow: true, phrase: 2, notes: '0 2 4 7@2 6 4 2 0 2 4 7@2 5 4@2', space: .85, register: .4 },
+    melody2: { notes: '~ 7 ~ ~ 5 ~ 4 ~', sound: 'glockenspiel', register: .7, level: .5, follow: true, space: 1, width: .9, density: .15, brightness: .2 },
+    pad:    { space: .85, brightness: .4, width: 1, arp: 'up', density: .15, register: .4 },
+  }),
+])

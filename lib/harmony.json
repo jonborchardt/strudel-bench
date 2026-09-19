@@ -1,12 +1,13 @@
 {
+  "_progressions": "One spelling per mode family (minor = minor third, major = major third), because the same numerals mean different chords in each: `tense` as i VII VI VII is a diminished chord twice over in a major key. A mode key overrides its family where the family spelling lands on that mode's own diminished or altered degree (lydian's IV, dorian's VI, mixolydian's flat seventh and minor V).",
   "progressions": {
     "static":     "i",
-    "resolved":   "I IV V I",
-    "unresolved": "i VI VII",
-    "tense":      "i VII VI VII",
-    "pop":        "I V vi IV",
-    "epic":       "vi IV I V",
-    "circular":   "i VI III VII"
+    "resolved":   { "minor": "i iv VM i",    "major": "I IV V I",         "lydian": "I II V I",    "mixolydian": "I IV VM I" },
+    "unresolved": { "minor": "i VI VII",     "major": "I vi IV",          "lydian": "I II vi",     "dorian": "i IV VII" },
+    "tense":      { "minor": "i VII VI VII", "major": "I bVII bVI bVII",  "dorian": "i VII IV VII", "mixolydian": "I VII VI VII" },
+    "pop":        { "minor": "i iv VI VII",  "major": "I V vi IV",        "lydian": "I V vi II",   "dorian": "i IV III VII" },
+    "epic":       { "minor": "i VI III VII", "major": "vi IV I V",        "lydian": "vi II I V",   "dorian": "i III VII IV" },
+    "circular":   { "minor": "i VII VI VM",  "major": "I vi IV V",        "lydian": "I vi II V",   "dorian": "i VII IV VM" }
   },
   "modes": ["major", "minor", "dorian", "lydian", "mixolydian", "phrygian"]
 }

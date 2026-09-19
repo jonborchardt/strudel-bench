@@ -15,3 +15,4 @@ samples/user/voice/
 /docs
 dist/
 renders/
+*.bak
