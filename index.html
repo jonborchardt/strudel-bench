@@ -715,7 +715,7 @@
   const evCache = new WeakMap(); // pattern -> its strip: the haps only change when the song is re-evaluated, the card re-renders on every keystroke
   // A miss is rendered as an empty strip and queried later, one bar of one part per task: the card follows the playhead into
   // a new section from a timer tick, and querying every part over the whole section there blocked the thread past the
-  // scheduler's latency (0.1 s), so superdough dropped the haps due in that window: an audible hole at every section change.
+  // scheduler's latency (0.3 s, raised from Strudel's 0.1 in web/boot.mjs), so superdough dropped the haps due in that window: an audible hole at every section change.
   let evPending = [], evGen = 0;
   function evRow(sectionName, layer) {
     const ev = sections.find((x) => x.name === sectionName), L = ev?.layers[layer];

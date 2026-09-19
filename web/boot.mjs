@@ -33,7 +33,12 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
   // orbit) whose target has not sounded yet finds none ("duck target orbit n does not exist") and nothing ducks: make the
   // target on demand. On the controller's prototype, so the live scheduler, auditions, the Examples page and the controller
   // Compose rebuilds on its offline render context are all covered. [0, 1] is superdough's default channel pair.
-  ready.then(() => {
+  ready.then((r) => {
+    // Hits are scheduled this far ahead of the clock. Strudel's 0.1 s is the gap a main-thread stall has to fit in before
+    // the hits due in it are dropped, and querying a 13-part section costs the main thread bursts of 200-400 ms (Fraction
+    // math in the pattern engine), so dense sections went silent under load. 0.3 s buys that slack at the price of an edit,
+    // a knob or a section jump reaching the ears 0.3 s later.
+    r.scheduler.latency = 0.3;
     const P = Object.getPrototypeOf(strudel.getSuperdoughAudioController()), duck = P.duck;
     if (!P.ducksOnDemand) { P.ducksOnDemand = true; P.duck = function (targets, ...rest) { for (const t of [targets].flat()) this.getOrbit(t, [0, 1]); return duck.call(this, targets, ...rest); }; }
   });
