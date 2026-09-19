@@ -131,11 +131,15 @@ test('a part can carry its own seed', async () => {
   assert.notEqual(line({ density: .8 }), line({ density: .8, seed: 7 }), 'another seed, another line');
 });
 
-test('every part plays on its own orbit, numbered by its place in the section, so effects do not share one bus', async () => {
-  await ready;
+test('orbits: parts wanting different reverbs get their own bus; identical reverbs share one; duck, raw and a space signal stay private', async () => {
+  const g = await ready;
+  const orbitsOf = (spec, meta = { cps: .5 }) => Object.entries(song(meta, [section('a', 1, spec)]).strudel.sections[0].layers).map(([k, l]) => [k, l.orbit]);
   const m = song({ cps: .5 }, [section('a', 1, { drums: {}, pad: { space: .9 }, pad2: { space: .2 } })]).strudel;
-  assert.deepEqual(Object.entries(m.sections[0].layers).map(([k, l]) => [k, l.orbit]), [['drums', 1], ['pad', 2], ['pad2', 3]]);
+  assert.deepEqual(Object.entries(m.sections[0].layers).map(([k, l]) => [k, l.orbit]), [['drums', 1], ['pad', 2], ['pad2', 3]], 'three different reverbs, three orbits, numbered in order');
   for (const [k, l] of Object.entries(m.sections[0].layers)) assert.ok(l.pattern.queryArc(0, 1).every((h) => h.value.orbit === l.orbit), `${k} haps carry orbit ${l.orbit}`);
+  assert.deepEqual(orbitsOf({ pad: { space: .7 }, melody: { space: .7 }, pad2: { space: .7 }, melody2: {}, bass: { space: .9 }, pad3: { space: .6 } }), [['pad', 1], ['melody', 2], ['pad2', 1], ['melody2', 2], ['bass', 2], ['pad3', 3]], 'the same layer kind at the same space shares; bass and melody only send, so they share the default reverb at any space; another size is another bus');
+  assert.deepEqual(orbitsOf({ drums: {}, bass: { space: .3 }, pad: { space: .9 }, melody: {} }, { cps: .5, room: { size: 1.2 } }), [['drums', 1], ['bass', 1], ['pad', 1], ['melody', 1]], 'under a room every part wants the same reverb: one convolver');
+  assert.deepEqual(orbitsOf({ drums: {}, pad: { duck: 'drums' }, pad2: {}, raw: { pattern: g.s('hh*4') }, pad3: { space: g.sine } }), [['drums', 1], ['pad', 2], ['pad2', 3], ['raw', 4], ['pad3', 5]], 'a ducked part is alone on its bus (the duck dips the whole orbit); raw and a space signal too');
 });
 
 test('duck: the named part carries duckorbit for every part that names it; the pad stops faking its duck', async () => {
@@ -187,11 +191,14 @@ test('mix material: position shifts every hap\'s pan together; velocity, humaniz
   const c = song({ cps: .5 }, [section('a', 1, { bass: { compressor: { threshold: -18, ratio: 3 } } })]).strudel.sections[0];
   assert.equal(at(c, 'bass').compressor, -18); assert.equal(at(c, 'bass').compressorRatio, 3); assert.equal(at(c, 'bass').compressorKnee, 10);
   assert.throws(() => song({}, [section('a', 1, { bass: { compressor: { ratio: 3 } } })]), /compressor.threshold/);
-  const r = song({ cps: .5, room: { size: 2, decay: .6, damping: 5000 } }, [section('a', 1, { drums: {}, pad: { space: .8 } }), section('b', 1, { room: { size: 6 }, pad: {} })]).strudel.sections;
+  const r = song({ cps: .5, room: { size: 2, fade: .6, damping: 5000 } }, [section('a', 1, { drums: {}, pad: { space: .8 } }), section('b', 1, { room: { size: 6 }, pad: {} })]).strudel.sections;
   assert.equal(at(r[0], 'drums').roomsize, 2); assert.equal(at(r[0], 'pad').roomfade, .6); assert.equal(at(r[0], 'pad').roomlp, 5000);
   assert.equal(at(r[0], 'pad').roomsize, 2, 'the room wins over the send\'s own size: space is the send');
   assert.equal(at(r[1], 'pad').roomsize, 6, 'a section may name its own room');
-  assert.throws(() => song({ room: { echo: 1 } }, [section('a', 1, { pad: {} })]), /room takes size, decay/);
+  assert.throws(() => song({ room: { echo: 1 } }, [section('a', 1, { pad: {} })]), /room takes size, fade/);
+  const ir = song({ cps: .5, room: { ir: 'hall', irbegin: .25 } }, [section('a', 1, { pad: {} })]).strudel.sections[0];
+  assert.equal(at(ir, 'pad').ir, 'hall'); assert.equal(at(ir, 'pad').irbegin, .25, 'one impulse read from a fraction in: another pre-delay from the same file');
+  assert.throws(() => song({ room: { irbegin: .25 } }, [section('a', 1, { pad: {} })]), /irbegin only means something with room.ir/);
   const d = song({ cps: .5 }, [section('a', 1, { drums: {}, bass: { duck: 'drums', duckAttack: .3 }, pad: { duck: 'drums' } })]).strudel.sections[0];
   assert.deepEqual(at(d, 'drums').duckattack, [.3, .1], 'an attack per target once any part sets one; the default is superdough\'s');
   assert.equal(at(plain, 'drums').duckattack, undefined);

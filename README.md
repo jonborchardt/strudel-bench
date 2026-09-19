@@ -153,7 +153,7 @@ Rule 4 stands: harmony is material on the section, not an axis. Two reserved sec
 
 Material is a literal value on a layer or a section, never an axis (rule 4). Omit it and nothing changes.
 
-Every part renders on its own superdough orbit (`.orbit(n)`, numbered by its place in the section), so reverb, delay and duck are per part instead of shared across the whole mix.
+Parts render on superdough orbits (`.orbit(n)`), where reverb and delay live. Parts whose reverb would be identical share one orbit, one convolver (`orbitKey` in `lib/song.mjs`): under a `room` every part; bass and melody at any `space` (their cells only set the send, never a size, so they share superdough's default reverb); otherwise the same layer kind at the same `space` value. A ducked part, a raw part and a part with a space signal get a private orbit. Sends stay per hap, so parts on one bus keep their own amounts. Numbers run in order of first appearance in the section.
 
 `sound` may be a list (`['a', 'b']`: a pick per hit, deterministic), weights (`{ a: 3, b: 1 }`) or a double-quoted `"<a b>"` (per bar); drum voices in `sounds` too. On a sample part a list is a list of definitions sharing `bars` and slice count, each keeping its own region.
 
@@ -170,7 +170,7 @@ Rhythm has one written grammar everywhere it appears: `x` hit, `X` accent, `o` g
 | any layer | `velocity` | a mini string of multipliers, `'.8 1 .9 1'` | superdough's velocity per step over one bar (`'<[...] [...]>'` for two), under gain and the grid's accents |
 | any layer | `humanize` | `{ timingMs, velocity, length, correlation }` | a seeded played feel that is correlated, not dice per hit: three curves of time (a slow wave over `correlation` bars: `'bar'`, `'phrase'` = 4, or a count; a fixed lean per beat position; a little residual) move timing (± ms), gain (± fraction) and note length (± fraction) together, the same way every play |
 | any layer | `compressor` | `{ threshold (dBFS), ratio, knee, attack, release }` | the part's own DynamicsCompressorNode; only `threshold` is required |
-| song, section | `room` | `{ size, decay, damping, dimension, ir }` | one reverb character for every part (superdough's `roomsize`/`roomfade`/`roomlp`/`roomdim`/`ir` on every orbit); a part's `space` stays its send, its `size` is overridden; section overrides song |
+| song, section | `room` | `{ size, fade, damping, dimension, ir, irbegin }` | one reverb character for every part (superdough's `roomsize`/`roomfade`/`roomlp`/`roomdim`/`ir`/`irbegin` on every orbit); a part's `space` stays its send, its `size` is overridden; section overrides song. `size` is the decay in seconds and truncates an `ir`; `fade` ramps the reverb's own head up from zero (softens an attack, not a true pre-delay); an `ir` with a silent head is a real pre-delay and `irbegin` (0..1) reads it from a fraction in |
 | drums | `template` | `'house'` (default), `'breaks'`, `'minimal'`, `'halftime'`, or `{ voice: grid }` | the base grid the axes thin out, place or fill; a written grid may name any voice |
 | drums | `sounds` | `{ sd: 'rim', hh: 'hh:2' }` | per-voice sound; a name the kit has keeps the kit (the 909 rim), any other sample plays as named (`cajon`) |
 | bass, melody, pad | `patch` | a name (`pluck`, `reese`, `hollow`, `glass`, `breath`, `wide`, `sub`, `lib/patches.json`) or an inline object of the same controls | a bundle of voice controls (filter/pitch envelopes, FM, noise, unison) applied under the axes |
