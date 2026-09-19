@@ -2,14 +2,21 @@
 // usage: node scripts/render.mjs songs/x.strudel [--section s] [--layer l] [--cycles n] [--name out] [--mp3]   (PORT env overrides 3000)
 // --cycles n: song cycles for a whole-song render, bars of the section when --section is given
 import path from 'node:path';
+import { parseArgs } from 'node:util';
+import { fileURLToPath } from 'node:url';
 
-const args = process.argv.slice(2);
-const opt = (k) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : undefined; };
-const file = args.find((a) => a.endsWith('.strudel'));
-if (!file) { console.error('usage: node scripts/render.mjs songs/x.strudel [--section s] [--layer l] [--cycles n] [--name out]'); process.exit(2); }
-const body = { song: path.basename(file), section: opt('section'), layer: opt('layer'), cycles: opt('cycles') ? Number(opt('cycles')) : undefined, name: opt('name'), mp3: args.includes('--mp3') };
-const port = process.env.PORT || 3000;
-const res = await fetch(`http://localhost:${port}/render`, { method: 'POST', body: JSON.stringify(body) }).catch(() => null);
-if (!res) { console.error(`server not running on :${port}. run: npm start`); process.exit(1); }
-if (!res.ok) { console.error(`${res.status}: ${await res.text()}`); process.exit(1); }
-console.log((await res.json()).path);
+/** POST /render on the server at `port` and return the path of the file it wrote; throws with the server's text when it cannot. */
+export async function renderVia(body, port = process.env.PORT || 3000) {
+  const res = await fetch(`http://localhost:${port}/render`, { method: 'POST', body: JSON.stringify(body) }).catch(() => null);
+  if (!res) throw new Error(`server not running on :${port}. run: npm start`);
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+  return (await res.json()).path;
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const { values: o, positionals } = parseArgs({ allowPositionals: true, options: { section: { type: 'string' }, layer: { type: 'string' }, cycles: { type: 'string' }, name: { type: 'string' }, mp3: { type: 'boolean' } } });
+  const file = positionals.find((a) => a.endsWith('.strudel'));
+  if (!file) { console.error('usage: node scripts/render.mjs songs/x.strudel [--section s] [--layer l] [--cycles n] [--name out]'); process.exit(2); }
+  try { console.log(await renderVia({ song: path.basename(file), section: o.section, layer: o.layer, cycles: o.cycles ? Number(o.cycles) : undefined, name: o.name, mp3: !!o.mp3 })); }
+  catch (e) { console.error(e.message); process.exit(1); }
+}

@@ -14,7 +14,7 @@ const soundsOf = (v) => { try { return soundNames(JSON.parse(v)); } catch { retu
 const DEFAULT_SOUND = { bass: 'sawtooth', melody: 'sawtooth', pad: 'sawtooth', fx: 'white' }; // what a part plays when it names no sound (lib/layers.mjs)
 const SAW = new Set(['sawtooth', 'saw', 'supersaw']);
 // superdough builds a DynamicsCompressorNode per hit; above this many hits a bar that is a real audio-thread cost (the dropouts of 2026-09-18 were convolvers per part, since fixed in song(): a density rule that stood in for that was dropped)
-const LOAD = { compressorHits: 16 };
+const COMPRESSOR_HITS = 16;
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 /** Findings for one checkFile result: [{ level: 'error' | 'warn', section?, text }]. A plain-Strudel file has no sections and no findings. */
@@ -38,7 +38,7 @@ export function lint({ sections, problems = [] }) {
       for (const a of AXIS_NAMES) if (typeof x.attrs[a] === 'number' && (x.attrs[a] < 0 || x.attrs[a] > 1)) out.push({ level: 'error', section: s.name, text: `${l}.${a} is ${x.attrs[a]}: axes take 0..1` });
       if (typeof x.attrs.level === 'number' && (x.attrs.level < 0 || x.attrs.level > 2)) warn(s.name, `${l}.level is ${x.attrs.level}: 0..2 is the useful range (1 = as built)`);
       // superdough builds a DynamicsCompressorNode per hit, not per part: on a dense kit that is dozens of live nodes a bar on the audio thread
-      if (x.attrs.compressor !== undefined && x.onsetsPerCycle > LOAD.compressorHits) warn(s.name, `${l}.compressor is applied per hit (${x.onsetsPerCycle} a bar, each its own compressor node): keep it off dense parts, lower level instead`);
+      if (x.attrs.compressor !== undefined && x.onsetsPerCycle > COMPRESSOR_HITS) warn(s.name, `${l}.compressor is applied per hit (${x.onsetsPerCycle} a bar, each its own compressor node): keep it off dense parts, lower level instead`);
     }
   });
   return out;
