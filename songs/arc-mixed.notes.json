@@ -49,6 +49,71 @@
           "why": "the pad was 9 dB under the mix in the original; wide, a little left, lightly ducked, now background"
         }
       ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "use the new mixing tools on the -mixed songs: impulse-response rooms, humanize, compressor, depth words",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "synthetic>plate the generated plate impulse (samples/user/rooms, 1.8 s, 15 ms pre-delay): the reverb has early reflections and a real pre-delay now, one convolver for every part"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "axis": "humanize",
+          "why": "the hook is played (12 ms, phrase-correlated), not exact; velocity line kept"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "axis": "space",
+          "from": 0.45,
+          "to": 0.3,
+          "why": "closer: space down, weight up (.58); depth by tone, not level alone"
+        },
+        {
+          "section": "drop",
+          "layer": "melody2",
+          "axis": "space",
+          "from": 0.65,
+          "to": 0.8,
+          "why": "farther: darker (.38), wetter, lighter (.42)"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-19",
+      "ask": "arc-mixed needs some sweep between sections, or maybe riser",
+      "changes": [
+        {
+          "section": "intro",
+          "why": "sweep 0>2 the filter closes over the last two bars so the verse opens fresh"
+        },
+        {
+          "section": "verse",
+          "why": "sweep 0>2 same closing sweep into the lift"
+        },
+        {
+          "section": "lift",
+          "why": "sweep 0>2 closes into the drop"
+        },
+        {
+          "section": "drop",
+          "why": "sweep 0>2 closes into the outro"
+        },
+        {
+          "section": "lift",
+          "layer": "fx",
+          "why": "riser 0>2 white-noise riser over the same two bars as the sweep, the one boundary that earns it"
+        },
+        {
+          "section": "drop",
+          "layer": "fx",
+          "why": "impact none>bd a hit on the drop downbeat to land the riser"
+        }
+      ]
     }
   ]
 }
