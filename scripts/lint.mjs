@@ -13,6 +13,8 @@ const soundsOf = (v) => { try { return soundNames(JSON.parse(v)); } catch { retu
 
 const DEFAULT_SOUND = { bass: 'sawtooth', melody: 'sawtooth', pad: 'sawtooth', fx: 'white' }; // what a part plays when it names no sound (lib/layers.mjs)
 const SAW = new Set(['sawtooth', 'saw', 'supersaw']);
+// ponytail: load thresholds from the first section that dropped out in playback (foundry drop2: 78 hits a bar, a compressor on a 50-hit kit); retune from more songs
+const LOAD = { compressorHits: 16, hitsPerBar: 64 };
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 /** Findings for one checkFile result: [{ level: 'error' | 'warn', section?, text }]. A plain-Strudel file has no sections and no findings. */
@@ -35,7 +37,12 @@ export function lint({ sections, problems = [] }) {
       if ((base === 'melody' || base === 'bass') && x.attrs.notes === undefined) warn(s.name, `${l} plays the seeded line: write its notes (the hook) in mini-notation`);
       for (const a of AXIS_NAMES) if (typeof x.attrs[a] === 'number' && (x.attrs[a] < 0 || x.attrs[a] > 1)) out.push({ level: 'error', section: s.name, text: `${l}.${a} is ${x.attrs[a]}: axes take 0..1` });
       if (typeof x.attrs.level === 'number' && (x.attrs.level < 0 || x.attrs.level > 2)) warn(s.name, `${l}.level is ${x.attrs.level}: 0..2 is the useful range (1 = as built)`);
+      // superdough builds a DynamicsCompressorNode per hit, not per part: on a dense kit that is dozens of live nodes a bar on the audio thread
+      if (x.attrs.compressor !== undefined && x.onsetsPerCycle > LOAD.compressorHits) warn(s.name, `${l}.compressor is applied per hit (${x.onsetsPerCycle} a bar, each its own compressor node): keep it off dense parts, lower level instead`);
     }
+    // ponytail: onsets a bar as the load proxy; the real costs (voices ringing, convolver length) are not in the check table
+    const hits = Object.values(s.layers).reduce((n, x) => n + x.onsetsPerCycle, 0);
+    if (hits > LOAD.hitsPerBar) warn(s.name, `${Math.round(hits)} hits a bar over ${Object.keys(s.layers).length} parts: the densest sections are where playback drops out (superdough's 128-voice cap, per-hit effect nodes); thin a part or drop one`);
   });
   return out;
 }

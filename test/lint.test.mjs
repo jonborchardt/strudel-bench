@@ -27,6 +27,17 @@ test('lint: the rules the skill states, as findings', () => {
   assert.deepEqual(lint({ sections: undefined, problems: [] }), [], 'plain strudel: nothing to say');
 });
 
+test('lint: load warnings for a per-hit compressor on a dense part and for a section with too many hits a bar', () => {
+  const L = (attrs, onsetsPerCycle) => ({ attrs, onsetsPerCycle });
+  const out = lint({ sections: [{ name: 'drop', role: 'climax', energy: 70, layers: { drums: L({ compressor: { threshold: -24 }, notes: 'x' }, 50), bass: L({ notes: '0', compressor: { threshold: -18 } }, 4), pad: L({}, 12), melody: L({ notes: '0' }, 11), perc: L({}, 3) } }] });
+  const t = out.map((x) => x.text);
+  assert.ok(t.some((s) => /^drums\.compressor is applied per hit \(50 a bar/.test(s)), t);
+  assert.ok(!t.some((s) => /^bass\.compressor/.test(s)), 'four hits a bar is fine');
+  assert.ok(t.some((s) => /^80 hits a bar over 5 parts/.test(s)), t);
+  const light = lint({ sections: [{ name: 'a', role: 'climax', energy: 20, layers: { drums: L({ notes: 'x' }, 20), bass: L({ notes: '0' }, 4) } }] });
+  assert.ok(!light.some((x) => /hits a bar|compressor/.test(x.text)), JSON.stringify(light));
+});
+
 test('lintMeasure: headroom, inaudible and dominant parts, a flat stage, masking pairs and no depth contrast', async () => {
   const { lintMeasure } = await import('../scripts/lint.mjs');
   const row = (name, relativeDb, more = {}) => ({ name, relativeDb, highRatio: .1, tail: .2, meanPan: .5, panStd: 0, depth: .4, peak: .5, ...more });
