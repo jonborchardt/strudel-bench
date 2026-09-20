@@ -135,7 +135,8 @@ under 300 Hz, mid 300..3000, high above): shared band energy times time together
    its rms): superdough builds one compressor node per hit, so on a dense kit it is dozens of live nodes a bar and
    playback drops out (the check lint says so above 16 hits a bar). The lint's "no headroom" (a real share of
    samples at full scale) is a level problem; its "transients touch full scale" (a few kick attacks, under 0.01% of
-   samples) is not fixed by level either, and needs the master limiter that is not built. Say so, do not chase it.
+   samples) is not fixed by level either: the page's output soft clip (`limit` in `web/boot.mjs`, identity to 0.8 and a
+   tanh wall at 1, on the live context and every offline render) rounds those off. Say so, do not chase it.
    Reverb is per orbit and parts wanting the same reverb share one (`orbitKey`), so a song `room` with a `size` is
    one convolver for the whole section; without it, keep pads at a shared `space` value rather than one each.
 2. **Collisions, arrangement first.** Fix a masking pair in this order and stop at the first that works: fewer notes

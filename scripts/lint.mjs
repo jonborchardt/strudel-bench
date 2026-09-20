@@ -83,7 +83,7 @@ export function lintMeasure({ section, parts, pairs = [] }) {
   const [mix, ...rows] = parts;
   if (mix?.peak >= MIX.headroom || mix?.clipped > 0) { // peak is mono, clipped is per channel: a hard-panned part can clip one side under a tame mono peak
     if (!(mix.clipped < MIX.clipped)) warn(`no headroom: the mix peaks at ${mix.peak} (${mix.relativeDb} dBFS)${mix.clipped ? `, ${(mix.clipped * 100).toFixed(2)}% of samples clip` : ''}; bring levels down`);
-    else warn(`transients touch full scale (${(mix.clipped * 100).toFixed(3)}% of samples, ${mix.relativeDb} dBFS): a compressor on the part with the crest, not level; a master limiter is not built`);
+    else warn(`transients touch full scale (${(mix.clipped * 100).toFixed(3)}% of samples, ${mix.relativeDb} dBFS): the output soft clip (web/boot.mjs) rounds these off; a compressor on the part with the crest if it must not`);
   }
   for (const p of rows) {
     if (!Number.isFinite(p.relativeDb)) warn(`${p.name} is silent: cut it or give it something to play`); // -Infinity, or null after the JSON round trip

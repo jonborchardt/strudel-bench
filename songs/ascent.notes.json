@@ -33,7 +33,7 @@
         {
           "section": "orbit",
           "layer": "drums",
-          "why": "drive .8>.6 the clipping: distortion saturates after the level, so drive came down and the level only trimmed"
+          "why": "level .6>.32 the clipping: the 909 samples peak at full scale and the downbeat sums past 1; drive .8>.6 too, which is placement and hat accents, not distortion"
         },
         {
           "section": "orbit",
@@ -49,6 +49,108 @@
           "section": "orbit",
           "layer": "perc",
           "why": "numbers 1..8 one per bar the AI counting the bars"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-20",
+      "ask": "do a full mix, all passes; a master limiter so a summed downbeat never clips again",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "soft clip on superdough's output (web/boot.mjs limit): every render and the page share the wall, orbit's mix peak .958 with no clipped samples"
+        },
+        {
+          "section": "forge",
+          "layer": "melody",
+          "axis": "brightness",
+          "from": 0.5,
+          "to": 0.62,
+          "why": "closer: the harmonica in front of the metal"
+        },
+        {
+          "section": "forge",
+          "layer": "melody",
+          "axis": "space",
+          "from": 0.6,
+          "to": 0.42,
+          "why": "closer"
+        },
+        {
+          "section": "forge",
+          "layer": "bass",
+          "why": "level 1>.7 the sawtooth measured over the mix un-ducked"
+        },
+        {
+          "section": "electric",
+          "layer": "melody",
+          "axis": "brightness",
+          "from": 0.6,
+          "to": 0.72,
+          "why": "closer: the clavinet foreground at -8 dB"
+        },
+        {
+          "section": "electric",
+          "layer": "melody",
+          "axis": "space",
+          "from": 0.5,
+          "to": 0.32,
+          "why": "closer"
+        },
+        {
+          "section": "electric",
+          "layer": "bass",
+          "why": "level .55>.4 the reese measured over the mix"
+        },
+        {
+          "section": "electric",
+          "layer": "pad",
+          "why": "level .4>.3 position -.2, off the side the counter-line sits on"
+        },
+        {
+          "section": "digital",
+          "layer": "pad",
+          "why": "level .3>.25 position -.25 the pad, counter-line and perc all measured right of centre"
+        },
+        {
+          "section": "digital",
+          "layer": "bass",
+          "why": "level .7>.5 over the mix un-ducked"
+        },
+        {
+          "section": "orbit",
+          "layer": "pad",
+          "axis": "brightness",
+          "from": 0.55,
+          "to": 0.43,
+          "why": "farther: the pad behind the inverted lead, mid masking .24"
+        },
+        {
+          "section": "orbit",
+          "layer": "pad",
+          "axis": "space",
+          "from": 0.5,
+          "to": 0.68,
+          "why": "farther"
+        },
+        {
+          "section": "orbit",
+          "layer": "pad",
+          "axis": "density",
+          "from": 0.6,
+          "to": 0.5,
+          "why": "fewer chord tones under the lead"
+        },
+        {
+          "section": "orbit",
+          "layer": "melody2",
+          "why": "level .7>.45 the ocarina a whisper under the machine, -13 dB"
+        },
+        {
+          "section": "orbit",
+          "layer": "perc2",
+          "why": "level .5>.35 brightness .5>.75 the blips out of the kick's band (lowRatio .88>.36)"
         }
       ]
     }
