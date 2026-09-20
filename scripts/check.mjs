@@ -9,6 +9,7 @@ import './esm-fix.mjs'; // must run before the strudel imports below are resolve
 import { parseProgression, chordNames } from '../lib/harmony.mjs';
 import { packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS } from '../lib/packs.mjs';
 import { describeAxes } from '../lib/vocab.mjs';
+import { composeVisual, describeVisual } from '../lib/visual.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
 const { transpiler } = await import('@strudel/transpiler');
 const { miniAllStrings } = await import('@strudel/mini');
@@ -157,7 +158,7 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   const sounds = [...used.values()].map((u) => ({ ...u, file: soundFile(u.name, u.n, packs), ...soundMeta(u.name, u.n, packs) })).filter((u) => u.file);
   for (const u of unknown) problems.push(`${path.basename(file)}: unknown sound "${u}"`);
   for (const [s, p] of undeclared) problems.push(`${path.basename(file)}: sound "${s}" is in local pack "${p}" which the song does not declare: add packs: ['${p}']`);
-  let sections;
+  let sections, visual;
   if (pattern.strudel) {
     sections = pattern.strudel.sections.map((s) => {
       return {
@@ -192,8 +193,10 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
       sct.voices = +(parts + sct.outside).toFixed(0);
     }
     formLetters(sections).forEach((f, i) => { sections[i].form = f; });
+    // the visual score (lib/visual.mjs): what a renderer composes from, fed the onset counts above so nothing is queried twice
+    visual = composeVisual(pattern.strudel, { onsets: Object.fromEntries(sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, l.onsetsPerCycle]))])) });
   }
-  return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps };
+  return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps, visual };
 }
 
 /**
@@ -247,6 +250,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       const max = Math.max(...r.sections.map((s) => s.energy), 1e-9), bar = '▁▂▃▄▅▆▇█';
       console.log(`  arc: ${r.sections.map((s) => `${s.name} ${s.energy} ${bar[Math.round((s.energy / max) * 7)]} ${s.form}`).join(' · ')}`);
     }
+    if (r.visual) console.log(`  visual: ${describeVisual(r.visual).join(' · ')}`); // the composition a renderer would draw: world, each part's slot, the peak against the climax
     for (const p of r.problems) console.error('  ' + p);
     if (!r.ok) bad++;
   }
