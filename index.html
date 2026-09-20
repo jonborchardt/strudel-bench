@@ -378,7 +378,7 @@
     return arrange(secs, pat.strudel.total, filt); // song()'s own arrangement, with the parts that pass
   }
   async function setLive() { if (playing && songPat) (await ready).scheduler.setPattern(audible(ab && abPat ? abPat : songPat).analyze(1)); } // analyze: every hap feeds analyser 1, the scope
-  globalThis.strudelBench = { live: async () => (await ready).scheduler.pattern, source: () => code.text }; // for headless checks: what the scheduler holds right now, and the source as edited
+  globalThis.strudelBench = { live: async () => (await ready).scheduler.pattern, source: () => code.text, evalCode: (src) => evalCode(ready, src) }; // for headless checks: what the scheduler holds right now, the source as edited, and a scheduler-free evaluation of any source
   // the stage (web/visual/stage.mjs): the world plays from the same clock as the ear. The scheduler's now() runs its lookahead
   // (latency, web/boot.mjs) ahead of what is sounding, so the visual cycle is now() minus latency in cycles; events themselves fire at
   // their targetTime on the audio clock. A pinned section's clock is its own bars: toSong puts it in song cycles like the transport
