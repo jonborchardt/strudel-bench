@@ -1,4 +1,4 @@
-// strata: a memory being rebuilt. Three strata, one ground, at 76 BPM for 320 bars (~17 minutes).
+// strata: a memory being rebuilt. Three strata, one ground, at 76 BPM for 294 bars (~15 minutes).
 // The refrain is the memory. It opens as three notes on a kalimba (root, sixth, octave) and is recovered over three
 // movements, a note at a time, until the whole line plays at the end in every voice at once, and then alone.
 // The line never changes on the page: its degrees 1 and 5 are the two notes the modes change under it, so the same
@@ -6,9 +6,10 @@
 // The refrain parts hold the line against the chords (`follow: false`, like arrival's signal); the counter-lines follow.
 // The bass ostinato is root, fourth and fifth only, the degrees every mode shares, and the progressions are mostly `i`
 // (the bass follows the chord root), so the ground under the memory never moves while the light on it does.
-// I wood: dust → wood → ground → carry → fade (aeolian, 96). II stone: stone → iron → forge → crack → strain (the false
-// summit, still full of holes) → shatter → hold → ash (phrygian, 112). III air: light (the full line, first time, on the
-// harp) → gather → join → rise → whole (climax: everything, in unison) → again → after → alone → dust2 (dorian, 112).
+// I wood: dust → wood → ground → carry → fade → drone (the didge alone for a bar; aeolian, 84). II stone: stone → iron →
+// forge → crack → strain (the false summit, still full of holes) → shatter → pedal (the organ alone for two bars) → hold →
+// ash (phrygian, 112). III air: light (the full line, first time, on the harp) → gather → join → rise → whole (climax:
+// everything, in unison) → again → after → alone → dust2 (dorian, 98).
 // Sections shorten toward the climax and the coda stretches out; the coda returns to the small room of the opening.
 // Mixed as a scene, from a loudness table of the samples themselves (rms of the loudest half second, dBFS): the
 // mridangam strokes are normalized to full scale, the harmonica choir is the loudest sample here (-13), the gong -18
@@ -69,7 +70,7 @@ const WALK = { bd: 'x.......x.......', sd: '........x.......', hh: 'x..x..x.x..x
 const TREAD = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.x.', oh: '..x.......x.....', cp: '.......x......x.' }; // everyone walking
 const STORM = { bd: 'x..x..x.x..x..x.', sd: '....x..x....x..x', hh: '.x.xx.x..x.xx.x.', oh: '..x.......x...x.', cp: '.x....x...x....x' };  // the hands blur
 const hands  = { sounds: MRID, humanize: { timingMs: 16, velocity: .14, correlation: 'bar' }, level: .16, space: .3, brightness: .5 };
-const skins  = { sounds: { bd: 'timpani:5', sd: 'framedrum:8', hh: 'cajon:8', oh: 'sus_cymbal:11', cp: 'bassdrum2:4' }, humanize: { timingMs: 15, velocity: .12, correlation: 'bar' }, level: .3, space: .6, brightness: .35, weight: .8, articulation: .65 };
+const skins  = { sounds: { bd: 'timpani:5', sd: 'framedrum:8', hh: 'cajon:8', oh: 'sus_cymbal:11', cp: 'bassdrum2:4' }, humanize: { timingMs: 15, velocity: .12, correlation: 'bar' }, level: .34, space: .6, brightness: .35, weight: .5, articulation: .65 }; // weight .8 was a shape worklet on every hit (24 a bar in whole): the audio thread peaked at 70% on whole's downbeat; .5 with the gain folded into level
 
 // metal and stone
 const slit   = { sound: 'slitdrum:2', rhythm: '3/8', level: .5, position: -.4, space: .4 };
@@ -92,7 +93,7 @@ song({ bpm: 76, key: 'D:minor', seed: 19, kit: 'RolandTR808', packs: ['rooms'], 
     melody: { ...kalimba, notes: L0, density: .5, space: .6, level: 2 },
     pad:    { ...didge, density: .2, level: 2 },
   }),
-  section('wood', 24, { role: 'establish', progression: 'i',
+  section('wood', 16, { role: 'establish', progression: 'i',
     drums:  { ...hands, template: WALK, density: .35, variation: .1 },
     bass:   { ...groundI, notes: '0 ~ ~ ~ ~ 4 ~ ~', density: .8 },
     melody: { ...kalimba, notes: L0, density: .5 },
@@ -100,13 +101,13 @@ song({ bpm: 76, key: 'D:minor', seed: 19, kit: 'RolandTR808', packs: ['rooms'], 
     pad2:   { ...organ, density: .25, brightness: .25 },
     perc:   { ...slit, level: .3 },
   }),
-  section('ground', 24, { role: 'develop', progression: 'i i i VI',
+  section('ground', 20, { role: 'develop', progression: 'i i i VI',
     drums:   { ...hands, template: WALK, density: .55, variation: .15 },
     bass:    groundI,
     melody:  { ...kalimba, notes: L1, density: .5 },
     melody2: { ...balafon, notes: L1, density: .5 },
     pad:     { ...didge, density: .25 },
-    pad2:    { ...organ, density: .35, brightness: saw.range(.25, .4).slow(24) },
+    pad2:    { ...organ, density: .35, brightness: saw.range(.25, .4).slow(20) },
     perc:    slit,
     perc2:   wood,
   }),
@@ -124,12 +125,16 @@ song({ bpm: 76, key: 'D:minor', seed: 19, kit: 'RolandTR808', packs: ['rooms'], 
     perc3:   { ...swell, level: .35 },
     fx:      { riser: 4, level: .3 },
   }),
-  section('fade', 16, { role: 'develop', progression: 'i', dropout: 2,
+  section('fade', 15, { role: 'develop', progression: 'i',
     drums:   { ...hands, template: WALK, density: .35, variation: .1, space: .5 },
     bass:    { ...groundI, notes: '0 ~ ~ ~ ~ 4 ~ ~', level: .45 },
-    melody:  { ...kalimba, notes: L1, density: .5, space: .7, brightness: saw.range(.5, .35).slow(16) },
-    pad:     { ...didge, density: .2, brightness: saw.range(.3, .15).slow(16) },
+    melody:  { ...kalimba, notes: L1, density: .5, space: .7, brightness: saw.range(.5, .35).slow(15) },
+    pad:     { ...didge, density: .2, brightness: saw.range(.3, .15).slow(15) },
     pad2:    { ...organ, density: .3, brightness: .25 },
+  }),
+  // the drone alone for a bar into stone (a `dropout` masks every part, so the tail is its own section)
+  section('drone', 1, { role: 'develop', progression: 'i',
+    pad:     { ...didge, density: .2, brightness: .15 },
   }),
 
   // ---- II stone (D phrygian): the line on a zither, an organ, metal; a false summit that shatters ----
@@ -194,14 +199,18 @@ song({ bpm: 76, key: 'D:minor', seed: 19, kit: 'RolandTR808', packs: ['rooms'], 
     perc4:   { ...gong, level: .12 },
     fx:      { riser: 2, level: .5 },
   }),
-  section('shatter', 8, { role: 'develop', key: 'D:phrygian', progression: 'i', room: STONE, dropout: 3,
-    drums:   { ...hands, template: 'halftime', density: .3, variation: .2, space: .7, brightness: saw.range(.5, .2).slow(8) },
+  section('shatter', 6, { role: 'develop', key: 'D:phrygian', progression: 'i', room: STONE,
+    drums:   { ...hands, template: 'halftime', density: .3, variation: .2, space: .7, brightness: saw.range(.5, .2).slow(6) },
     bass:    { ...groundII, notes: '0 ~ ~ ~ ~ 4 ~ ~', level: .9 },
-    melody:  { ...zither, notes: L0, density: .5, space: .8, brightness: saw.range(.5, .3).slow(8) },
+    melody:  { ...zither, notes: L0, density: .5, space: .8, brightness: saw.range(.5, .3).slow(6) },
     pad:     { ...pedal, density: .3 },
-    pad2:    { ...choir, density: .4, brightness: saw.range(.4, .2).slow(8) },
+    pad2:    { ...choir, density: .4, brightness: saw.range(.4, .2).slow(6) },
     perc:    { ...gong, rhythm: 'x...............', level: .25 },
     fx:      { impact: 'gong:3', level: .3 },
+  }),
+  // the quiet organ pedal alone for two bars into hold (was three bars of dropout silence)
+  section('pedal', 2, { role: 'develop', key: 'D:phrygian', progression: 'i', room: STONE,
+    pad:     { ...pedal, density: .3 },
   }),
   section('hold', 8, { role: 'develop', key: 'D:phrygian', progression: 'i', room: STONE, sweep: 4,
     melody:  { ...bowed, notes: '0@16', density: .5, brightness: .4 },
@@ -216,7 +225,7 @@ song({ bpm: 76, key: 'D:minor', seed: 19, kit: 'RolandTR808', packs: ['rooms'], 
   }),
 
   // ---- III air (D dorian): the whole line, first on a harp, then in every voice; then alone ----
-  section('light', 16, { role: 'develop', key: 'D:dorian', progression: 'i', room: AIR,
+  section('light', 12, { role: 'develop', key: 'D:dorian', progression: 'i', room: AIR,
     bass:    { ...groundIII, notes: '0 ~ ~ ~ ~ 4 ~ ~', level: .7, duck: undefined },
     melody:  { ...harp, notes: L3, density: .5, brightness: .55 },
     pad:     { ...organ, density: .3, brightness: .4 },
@@ -300,12 +309,12 @@ song({ bpm: 76, key: 'D:minor', seed: 19, kit: 'RolandTR808', packs: ['rooms'], 
     pad:     { ...organ, density: .35, brightness: .4 },
     pad2:    { ...glasses, density: .3 },
   }),
-  section('alone', 16, { role: 'release', key: 'D:dorian', progression: 'i',
+  section('alone', 12, { role: 'release', key: 'D:dorian', progression: 'i',
     melody:  { ...kalimba, notes: L3, density: .5, space: .5, level: 1.8 },
-    pad:     { ...didge, density: .2, level: 1.5, brightness: .25 },
+    pad:     { ...didge, density: .2, level: 2, brightness: .25 },
   }),
-  section('dust2', 16, { role: 'release', key: 'D:dorian', progression: 'i',
-    melody:  { ...kalimba, notes: L0, density: .5, space: .6, brightness: saw.range(.5, .3).slow(16), level: 1.4 },
-    pad:     { ...didge, density: .2, level: 1.5, brightness: saw.range(.25, .1).slow(16) },
+  section('dust2', 10, { role: 'release', key: 'D:dorian', progression: 'i',
+    melody:  { ...kalimba, notes: L0, density: .5, space: .6, brightness: saw.range(.5, .3).slow(10), level: 1.4 },
+    pad:     { ...didge, density: .2, level: 2, brightness: saw.range(.25, .1).slow(10) },
   }),
 ])

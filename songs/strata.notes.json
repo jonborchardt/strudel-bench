@@ -62,6 +62,82 @@
           "why": "STORM .75>TREAD .6, strain.drums STORM .8>.65: the mridangam storm thinned in the two sections that run it rather than cut short everywhere; strain 54%>38%"
         }
       ]
+    },
+    {
+      "date": "2026-09-20",
+      "ask": "wood 16 long, ground 20 long, light 12 long, alone 12 long with more didge, dust2 10 long with more didge; between fade and stone and between shatter and hold don't go completely quiet (keep the drone / the quiet organ pedal, half the fade); the start of whole still crackles",
+      "changes": [
+        {
+          "section": "wood",
+          "from": 24,
+          "to": 16,
+          "why": "shorter procession"
+        },
+        {
+          "section": "ground",
+          "why": "20 shorter"
+        },
+        {
+          "section": "ground",
+          "layer": "pad2",
+          "axis": "brightness",
+          "why": "slow(24)>slow(20) the ramp spans the shortened section"
+        },
+        {
+          "section": "fade",
+          "from": 16,
+          "to": 15,
+          "why": "and drone 1: the dropout masked every part, so the didge alone is its own one-bar section instead of two bars of silence into stone"
+        },
+        {
+          "section": "shatter",
+          "from": 8,
+          "to": 6,
+          "why": "and pedal 2: the quiet organ pedal alone for two bars into hold instead of three bars of dropout silence"
+        },
+        {
+          "section": "light",
+          "from": 16,
+          "to": 12,
+          "why": "shorter"
+        },
+        {
+          "section": "alone",
+          "from": 16,
+          "to": 12,
+          "why": "shorter"
+        },
+        {
+          "section": "alone",
+          "layer": "pad",
+          "axis": "level",
+          "from": 1.5,
+          "to": 2,
+          "why": "more didge under the last full line"
+        },
+        {
+          "section": "dust2",
+          "from": 16,
+          "to": 10,
+          "why": "shorter coda"
+        },
+        {
+          "section": "dust2",
+          "layer": "pad",
+          "axis": "level",
+          "from": 1.5,
+          "to": 2,
+          "why": "more didge in the coda"
+        },
+        {
+          "section": "song",
+          "layer": "skins",
+          "axis": "weight",
+          "from": 0.8,
+          "to": 0.5,
+          "why": "a shape worklet on every timpani-kit hit peaked the audio thread at 70% on whole's downbeat (traced), 51-58% at .5; gain folded into level .3>.34"
+        }
+      ]
     }
   ]
 }
