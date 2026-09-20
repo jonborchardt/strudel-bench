@@ -151,7 +151,7 @@ export function createServer() {
         waiters.set(key, { resolve, reject, timer });
       });
       for (const c of clients) c.write(`data: ${JSON.stringify({ render: { ...body, name } })}\n\n`);
-      try { await done; return json(res, { path: path.join('renders', `${name}.${body.mp3 ? 'mp3' : 'wav'}`) }); }
+      try { const out = await done; return json(res, { path: out || path.join('renders', `${name}.${body.mp3 ? 'mp3' : 'wav'}`) }); } // a video job resolves with the file it wrote (mp4 or webm, the page's choice)
       catch (e) { return send(res, e.status || 504, e.message); }
     }
     if (p === '/render-error' && req.method === 'POST') {
@@ -164,18 +164,19 @@ export function createServer() {
       }
       return send(res, 204, '');
     }
-    // wav from a render job (?mp3 converts it too); mp3 and .txt (expanded strudel) come ready-made from the page's export buttons
+    // wav from a render job (?mp3 converts it too); mp3, .txt (expanded strudel) and video (mp4 or webm) come ready-made from the page's export buttons
     if (p.startsWith('/renders/') && req.method === 'PUT') {
       const name = decodeURIComponent(p.slice('/renders/'.length));
-      if (!/^[\w.-]+\.(wav|mp3|txt)$/.test(name)) return send(res, 400, 'bad render name');
+      if (!/^[\w.-]+\.(wav|mp3|txt|mp4|webm)$/.test(name)) return send(res, 400, 'bad render name');
       fs.mkdirSync(RENDERS, { recursive: true });
       const chunks = [];
       for await (const c of req) chunks.push(c);
       const file = path.join(RENDERS, name);
       fs.writeFileSync(file, Buffer.concat(chunks));
       const out = searchParams.has('mp3') && name.endsWith('.wav') ? await wavToMp3Async(file) : file;
-      const w = waiters.get(name);
-      if (w) { waiters.delete(name); clearTimeout(w.timer); w.resolve(); }
+      const key = /\.(mp4|webm)$/.test(name) ? name.replace(/\.(mp4|webm)$/, '.wav') : name; // a video job waits under the wav key: the extension is the page's choice
+      const w = waiters.get(key);
+      if (w) { waiters.delete(key); clearTimeout(w.timer); w.resolve(path.relative(ROOT, out)); }
       return send(res, 200, path.relative(ROOT, out));
     }
 

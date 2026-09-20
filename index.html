@@ -24,6 +24,7 @@
     <span class="group" id="exports" aria-label="export">
       <span class="lbl">Export</span>
       <button id="export" title="render the source offline in this browser and download <song>.mp3 (stops playback)">MP3</button>
+      <button id="video" title="the song as a 1080p30 video: the audio rendered offline, the stage's world run frame by frame from the same score, a title and a tail; MP4 when this browser encodes H.264 and AAC, else WebM (stops playback)">Video</button>
       <button id="dump" title="download the expanded Strudel as <song>.strudel.txt, ready to paste into the strudel.cc REPL">Strudel</button>
       <button id="open" title="open the expanded Strudel in the strudel.cc REPL">REPL &#8599;</button>
       <button id="share" title="copy a link that carries this song (name and source, as edited here): anyone with it opens it in this page, unsaved">Link</button>
@@ -115,6 +116,8 @@
 <footer class="site" id="foot"></footer>
 <script type="importmap">{ "imports": {
   "acorn": "./node_modules/acorn/dist/acorn.mjs",
+  "mp4-muxer": "./node_modules/mp4-muxer/build/mp4-muxer.mjs",
+  "webm-muxer": "./node_modules/webm-muxer/build/webm-muxer.mjs",
   "@codemirror/state": "./node_modules/@codemirror/state/dist/index.js",
   "@codemirror/view": "./node_modules/@codemirror/view/dist/index.js",
   "@codemirror/language": "./node_modules/@codemirror/language/dist/index.js",
@@ -154,8 +157,9 @@
   import { analyze } from './lib/analyze.mjs';
   import { DESCRIPTORS, OVERLAYS, HARMONY, MODIFIERS, COMPARATIVE } from './lib/vocab.mjs';
   import { composeVisual, onsetsOf } from './lib/visual.mjs';
-  import { mountStage } from './web/visual/stage.mjs';
+  import { mountStage, worldOf } from './web/visual/stage.mjs';
   import { fallbackScore } from './web/visual/host.mjs';
+  import { streamOf, titleOf, exportVideo, pickCodecs, TAIL } from './web/visual/export.mjs';
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
   $('nav').innerHTML = nav('Compose');
@@ -644,6 +648,25 @@
     const blob = new Blob([encodeMp3(frames(buf), buf.sampleRate)], { type: 'audio/mpeg' });
     download(blob, name);
     xstate('done', `&#10003; ${esc(name)} <small>${buf.duration.toFixed(1)} s</small>`, await keep(blob, name));
+  });
+  // the video: the audio from the offline render (with the tail), the world from the same score and stream the stage would play, frame by
+  // frame at 30 fps through WebCodecs (web/visual/export.mjs); never a recording of the page. Shared by the button and the server's job.
+  async function makeVideo({ code, name, progress }) {
+    progress('checking codecs');
+    const pick = await pickCodecs();
+    const song = await evalCode(ready, code);
+    if (!song) throw new Error('source does not evaluate (see the error under it)');
+    const score = stageScore(song), stream = streamOf(song), seconds = (song.strudel ? song.strudel.total : 8) / (song.strudel?.meta.cps ?? 0.5);
+    const audio = await renderSong({ song, code, tail: TAIL, progress: (i, n) => progress(`audio ${Math.round((i / n) * 100)}%`) });
+    return exportVideo({ pick, audio, world: worldOf(score), score, stream, title: titleOf(name, code), seconds, progress: (k, n) => progress(`frames ${Math.round((k / n) * 100)}%`) });
+  }
+  $('video').onclick = () => exporting(async () => {
+    if (playing) await stop(); // the render replaces the audio context
+    await strudel.getAudioContext().resume();
+    const { blob, ext, seconds } = await makeVideo({ code: code.text, name: $('song').value, progress: (s) => xstate('busy', `video: ${esc(s)}`) });
+    const name = `${base()}.${ext}`;
+    download(blob, name);
+    xstate('done', `&#10003; ${esc(name)} <small>${seconds.toFixed(1)} s · ${(blob.size / 1e6).toFixed(0)} MB</small>`, await keep(blob, name));
   });
   const expanded = async () => { // the expanded pane's text, re-expanded now so a fresh edit is not missed
     const gen = await expandCode(ready, code.text);
@@ -1505,12 +1528,17 @@
   };
 
   // a render job from scripts/render.mjs (over SSE): the saved file, as wav into renders/, errors reported back
-  async function renderToServer({ song, cycles, section, layer, name, mp3 }) {
+  async function renderToServer({ song, cycles, section, layer, name, mp3, video }) {
     const fail = (message) => fetch('render-error', { method: 'POST', body: JSON.stringify({ name, message }) });
     status(`rendering ${name}…`);
     if (playing) await stop(); // the render replaces the audio context
     try {
       const code = await (await fetch(`songs/${song}`)).text();
+      if (video) { // scripts/video.mjs: the whole song as a video into renders/
+        const { blob, ext, seconds } = await makeVideo({ code, name: song, progress: (s) => status(`video ${name}: ${s}`) });
+        const out = await (await fetch(`renders/${name}.${ext}`, { method: 'PUT', body: blob })).text();
+        return status(`rendered ${out} (${seconds.toFixed(1)} s, ${(blob.size / 1e6).toFixed(0)} MB)`);
+      }
       const buf = await renderSong({ code, cycles, section, layer, progress: (i, n) => status(`rendering ${name} ${Math.round((i / n) * 100)}%`) });
       const out = await (await fetch(`renders/${name}.wav${mp3 ? '?mp3' : ''}`, { method: 'PUT', body: toWav(buf) })).text();
       status(`rendered ${out} (${buf.duration.toFixed(1)} s)`);
@@ -1522,7 +1550,7 @@
     }
   }
   /** Evaluate `code` and render it (or `cycles` of one `section` or `layer`) offline; resolves to an AudioBuffer. */
-  async function renderSong({ code, song, cycles, section, layer, progress }) { // `song`: an already evaluated pattern (measure renders one section many ways from one evaluation)
+  async function renderSong({ code, song, cycles, section, layer, progress, tail = 0 }) { // `song`: an already evaluated pattern (measure renders one section many ways from one evaluation); `tail`: seconds after the last cycle for the reverb to ring (the video)
     await ready;
     song ??= await strudel.evaluate(code, false);
     if (!song) throw new Error('source does not evaluate (see the error under it)'); // evaluate logs syntax errors instead of throwing
@@ -1541,7 +1569,7 @@
         pat = src.pattern; cps = s.cps; begin = 0; end = cycles ?? s.cycles; // layer patterns run in section-local bar time
       } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles) * s.span / s.cycles; }
     }
-    return renderOffline(pat, cps, begin, end, progress);
+    return renderOffline(pat, cps, begin, end, progress, tail);
   }
 
   // Offline render, one cycle at a time. strudel.renderPatternAudio builds every event's node chain up front and
@@ -1558,7 +1586,7 @@
   // already discarded (reset orbits, finished offline context), and nothing else is affected: keep it out of the console.
   window.addEventListener('beforeunload', (e) => { if (code.text !== loaded) { e.preventDefault(); e.returnValue = ''; } }); // unsaved edits: the browser asks before leaving
   window.addEventListener('error', (e) => { if (/belonging to a different audio context/.test(e.message)) e.preventDefault(); });
-  async function renderOffline(pat, cps, begin, end, progress = () => {}) {
+  async function renderOffline(pat, cps, begin, end, progress = () => {}, tail = 0) {
     // the live context stays open: the scheduler's clock is bound to it for the life of the page (webaudioRepl
     // captures it), so closing it would freeze playback until a reload. It is silent (stopped) while we render.
     const live = strudel.getAudioContext();
@@ -1567,7 +1595,7 @@
     // that first loaded it, and a ConvolverNode refuses a buffer at another rate. After a live play (48 kHz on most machines)
     // a 44.1 kHz render threw on every hit carrying a room impulse and dropped the hit whole: the mp3 lost most of the song.
     const rate = live.sampleRate;
-    const ctx = new OfflineAudioContext(2, Math.ceil((end - begin) / cps * rate), rate);
+    const ctx = new OfflineAudioContext(2, Math.ceil(((end - begin) / cps + tail) * rate), rate);
     strudel.setAudioContext(ctx);
     strudel.resetGlobalEffects();
     strudel.setSuperdoughAudioController(null); // rebuilt lazily on the offline context

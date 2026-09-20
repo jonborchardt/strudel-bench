@@ -46,7 +46,7 @@ export const fallbackScore = (cps = 0.5) => ({
  */
 export function clockOf(score, cycle, prev = null) {
   const beats = +String(score.meter ?? '4/4').split('/')[0] || 4;
-  const c = score.total > 0 ? ((cycle % score.total) + score.total) % score.total : Math.max(0, cycle);
+  const c = cycle < 0 ? 0 : score.total > 0 ? cycle % score.total : cycle; // before the start (the live clock's first lookahead, an export's title lead) is the start, never the song's end
   const i = score.sections.findLastIndex((s) => s.at <= c);
   const s = i >= 0 ? score.sections[i] : null;
   const local = s ? ((c - s.at) * s.bars) / (s.until - s.at) : c; // bars into the section (its own tempo)

@@ -5,7 +5,9 @@ import { createPerformance, eventOf, fallbackScore } from './host.mjs';
 import tunnel from './tunnel.mjs';
 import ink from './ink.mjs';
 
-const WORLDS = { tunnel, ink };
+export const WORLDS = { tunnel, ink };
+/** The world a score names, tunnel when it names one that is not built. */
+export const worldOf = (score) => WORLDS[score.world] ?? tunnel;
 
 /**
  * `clock()` is the page's: `{ now }` on the audio clock in seconds and `{ cycle }`, the song cycle sounding at that
@@ -29,7 +31,7 @@ export function mountStage(box, canvas, { clock, debug = false, solo = null }) {
   function setScore(next) {
     const id = JSON.stringify([next.world, next.seed, next.palette]);
     if (perf && id === identity) perf.setScore(next);
-    else perf = createPerformance(WORLDS[next.world] ?? tunnel, next, { w: 16, h: 9 });
+    else perf = createPerformance(worldOf(next), next, { w: 16, h: 9 });
     score = next; identity = id;
     if (!running) idle();
   }

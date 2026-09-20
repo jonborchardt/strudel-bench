@@ -13,6 +13,7 @@
     "pages": "node scripts/pages.mjs",
     "render": "node scripts/render.mjs",
     "mp3": "node scripts/mp3.mjs",
+    "video": "node scripts/video.mjs",
     "snippets": "node scripts/snippets.mjs",
     "resolve": "node scripts/resolve.mjs",
     "dump": "node scripts/dump.mjs",
@@ -37,7 +38,9 @@
     "@strudel/tonal": "^1.2.6",
     "@strudel/transpiler": "^1.2.6",
     "@strudel/web": "^1.3.0",
-    "acorn": "^8.18.0"
+    "acorn": "^8.18.0",
+    "mp4-muxer": "^5.2.2",
+    "webm-muxer": "^5.1.4"
   },
   "devDependencies": {
     "playwright-core": "^1.55.0"
