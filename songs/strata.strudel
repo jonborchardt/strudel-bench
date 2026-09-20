@@ -1,0 +1,308 @@
+// strata: a memory being rebuilt. Three strata, one ground, at 76 BPM for 320 bars (~17 minutes).
+// The refrain is the memory. It opens as three notes on a kalimba (root, sixth, octave) and is recovered over three
+// movements, a note at a time, until the whole line plays at the end in every voice at once, and then alone.
+// The line never changes on the page: its degrees 1 and 5 are the two notes the modes change under it, so the same
+// notes read grave in D aeolian (wood), a semitone darker in D phrygian (stone) and warm in D dorian (air).
+// The refrain parts hold the line against the chords (`follow: false`, like arrival's signal); the counter-lines follow.
+// The bass ostinato is root, fourth and fifth only, the degrees every mode shares, and the progressions are mostly `i`
+// (the bass follows the chord root), so the ground under the memory never moves while the light on it does.
+// I wood: dust → wood → ground → carry → fade (aeolian, 96). II stone: stone → iron → forge → crack → strain (the false
+// summit, still full of holes) → shatter → hold → ash (phrygian, 112). III air: light (the full line, first time, on the
+// harp) → gather → join → rise → whole (climax: everything, in unison) → again → after → alone → dust2 (dorian, 112).
+// Sections shorten toward the climax and the coda stretches out; the coda returns to the small room of the opening.
+// Mixed as a scene, from a loudness table of the samples themselves (rms of the loudest half second, dBFS): the
+// mridangam strokes are normalized to full scale, the harmonica choir is the loudest sample here (-13), the gong -18
+// with a 27 s tail, while the concert harp that leads movement III is -32, the zither -40 and the marimba -58 (dropped
+// for the balafon), and the `:0` takes of anvil, agogo and brake drum are the pp layers at -60 (the v3 takes are used).
+// Levels are set from that table and then checked with `npm run measure -- songs/strata.strudel whole` (and strain,
+// carry, dust): the kits and the ground as the foundation 5..9 dB under the mix, the line's voices as one foreground
+// group, pads and bells behind. The grounds sit at octave 2 (register .4, weight under .7): the layer's octave-down at
+// register .3 put the organ pedal at D0, which nothing plays.
+// Axis values are 0..1 with 0.5 = the layer's baseline.
+
+// the memory, in four states of recovery; 16 slots over two bars (phrase 2)
+const L0 = '0 ~ ~ 5@2 ~ ~ ~ ~ ~ ~ 7@2 ~ ~ ~';
+const L1 = '0 ~ 2 5@2 ~ ~ ~ ~ ~ 0 7@2 ~ ~ ~';
+const L2 = '0 ~ 4 5@2 4 ~ 1 0 ~ 4 7@2 ~ 4 ~';
+const L3 = '0 2 4 5@2 4 2 1 0 ~ 4 7@2 5 4 0';
+const OST = '0 ~ 0 0 ~ 4 ~ 3';                       // the ground: eight slots (density .8)
+const HIGH = '~ 7 ~ ~ ~ 7 ~ ~ 7 ~ ~ ~ ~ 7 ~ ~';       // a bell on the octave in the line's gaps
+const LOW = '0@4 ~@4 0@2 ~@2 3@2 4@2';                // the line's bones an octave down, for organ and bowed strings
+
+const played = { timingMs: 14, velocity: .12, correlation: 'phrase' };
+const VEL = '.9 1 .85 1 .8 .95 .9 1';
+const line = { follow: false, phrase: 2, humanize: played, velocity: VEL };
+const under = { follow: true, phrase: 2 };
+
+// the line's voices. I wood: kalimba, balafon. II stone: zither tremolo, bowed psaltery. III air: harp, balafon above, chimes, bells.
+const kalimba  = { ...line, sound: 'kalimba', articulation: .3, space: .45, width: .4, position: .15, brightness: .5, level: 1.5 };
+const balafon  = { ...line, sound: 'balafon', articulation: .4, space: .5, position: -.3, level: 1.6, register: .55 };
+const zither   = { ...line, sound: 'dantranh_tremolo', articulation: .5, space: .6, position: .25, register: .55, brightness: .45, level: .8 }; // the plain dantranh take is 18 dB quieter and vanished
+const bowed    = { ...under, sound: 'psaltery_bow', articulation: .1, space: .8, width: .6, position: -.3, level: 1.2, brightness: .35 };
+const harp     = { ...line, sound: 'harp', articulation: .45, space: .6, width: .5, position: -.2, register: .6, level: 2 };
+const high     = { ...line, sound: 'balafon', articulation: .4, space: .5, position: .3, level: 1.2, register: .7 }; // the balafon of movement I an octave up
+const chimes   = { ...line, sound: 'handchimes', articulation: .2, space: .85, width: .7, position: .35, register: .8, level: .8 };
+const bells    = { ...under, sound: 'tubularbells', notes: HIGH, articulation: .15, space: .9, width: .7, register: .5, level: 2, compressor: { threshold: -18, ratio: 3 } };
+const deep     = { ...line, sound: 'pipeorgan_loud_pedal', notes: LOW, register: .2, articulation: .05, space: .5, weight: .8, level: .5, velocity: undefined };
+const glass    = { ...line, sound: 'wineglass', articulation: .05, space: .9, width: .6, register: .6, level: 1.5, velocity: undefined };
+
+// the ground. I: folk harp plucked low. II: organ pedal. III: a low mbira, the kalimba's own family come back as the floor.
+const groundI   = { sound: 'folkharp', notes: OST, density: .8, register: .4, articulation: .5, weight: .6, space: .3, level: .45, humanize: { ...played, correlation: 'bar' }, duck: 'drums', duckDepth: .2, duckAttack: .15 };
+const groundII  = { sound: 'pipeorgan_loud_pedal', notes: OST, density: .8, register: .4, articulation: .3, weight: .65, brightness: .35, space: .2, level: 1.2, duck: 'drums', duckDepth: .3, duckAttack: .12 };
+const groundIII = { sound: 'kalimba3', notes: OST, density: .8, register: .4, articulation: .5, weight: .65, space: .35, level: .9, humanize: { ...played, correlation: 'bar' }, duck: 'drums', duckDepth: .25, duckAttack: .15 };
+
+// beds. didgeridoo:9 is the sustained take (0 is a bark); organ and choir set the movement's colour.
+const didge   = { sound: 'didgeridoo:9', density: .2, articulation: .05, register: .2, brightness: .3, space: .7, weight: .8, width: .4, level: 1.5 };
+const organ   = { sound: 'organ_8inch', density: .35, articulation: .05, register: .35, brightness: .3, space: .75, width: .5, level: .18 };
+const pedal   = { sound: 'pipeorgan_quiet_pedal', density: .2, articulation: .05, register: .15, brightness: .2, space: .8, weight: .85, level: .35 };
+const choir   = { sound: 'super64', density: .4, articulation: .1, register: .7, brightness: .25, space: .95, width: .7, level: .15, position: .35 };
+const choirIII = { ...choir, sound: 'super64_vib', brightness: .4, level: .18, register: .7 };
+const strings = { sound: 'psaltery_bow', density: .4, articulation: .1, register: .5, brightness: .35, space: .85, width: .7, level: .6, position: -.25 };
+const glasses = { sound: 'wineglass', density: .35, articulation: .05, register: .7, brightness: .5, space: .95, width: .7, level: 1, position: .2 };
+
+// the pulse: a mridangam kit (thom the bass stroke, nam the open, ki the closed tap, dhin the ring, ta the slap)
+const MRID = { bd: 'mridangam_thom', sd: 'mridangam_nam', hh: 'mridangam_ki', oh: 'mridangam_dhin', cp: 'mridangam_ta' };
+const WALK = { bd: 'x.......x.......', sd: '........x.......', hh: 'x..x..x.x..x..x.', oh: '..............x.', cp: '......x.......x.' };  // a procession
+const TREAD = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.x.', oh: '..x.......x.....', cp: '.......x......x.' }; // everyone walking
+const STORM = { bd: 'x..x..x.x..x..x.', sd: '....x..x....x..x', hh: '.x.xx.x..x.xx.x.', oh: '..x.......x...x.', cp: '.x....x...x....x' };  // the hands blur
+const hands  = { sounds: MRID, humanize: { timingMs: 16, velocity: .14, correlation: 'bar' }, level: .16, space: .3, brightness: .5 };
+const skins  = { sounds: { bd: 'timpani:5', sd: 'framedrum:8', hh: 'cajon:8', oh: 'sus_cymbal:11', cp: 'bassdrum2:4' }, humanize: { timingMs: 15, velocity: .12, correlation: 'bar' }, level: .3, space: .6, brightness: .35, weight: .8 };
+
+// metal and stone
+const slit   = { sound: 'slitdrum:2', rhythm: '3/8', level: .5, position: -.4, space: .4 };
+const wood   = { sound: 'woodblock:5', rhythm: '..x...x...x.x...', level: .5, position: .45, space: .35 };
+const anvil  = { sound: 'anvil:8', rhythm: 'x.......x.......|x.......x...x...', level: .18, position: .4, space: .6, compressor: { threshold: -18, ratio: 3 } };
+const brake  = { sound: 'brakedrum:3', rhythm: '....x.......x...', level: .35, position: -.4, space: .6 };
+const agogo  = { sound: 'agogo:2', rhythm: '5/16+2', level: 2, position: .5, space: .4 };
+const gong   = { sound: 'gong:3', rhythm: 'x...............|................|................|................', level: .12, space: .9, width: .5, position: -.2, compressor: { threshold: -18, ratio: 3 } };
+const hbells = { sound: 'handbells', rhythm: '..x.....x...x...', level: 1.6, position: -.35, space: .8 };
+const tree   = { sound: 'marktrees:0', rhythm: 'x...............|................', level: 1.2, position: .5, space: .9 }; // wind chimes
+const swell  = { sound: 'sus_cymbal:6', rhythm: '............x...|................|................|................', level: .5, space: .8, width: .5 };
+
+const ROOM = { ir: 'room', size: .9 };
+const STONE = { ir: 'hall', size: 3.2, damping: 3000 };
+const AIR = { ir: 'hall', size: 3.2, damping: 7000 };
+
+song({ bpm: 76, key: 'D:minor', seed: 19, kit: 'RolandTR808', packs: ['rooms'], room: ROOM }, [
+  // ---- I wood (D aeolian): the fragment, a hand drum, a walk ----
+  section('dust', 8, { role: 'establish', progression: 'i',
+    melody: { ...kalimba, notes: L0, density: .5, space: .6, level: 2 },
+    pad:    { ...didge, density: .2, level: 2 },
+  }),
+  section('wood', 24, { role: 'establish', progression: 'i',
+    drums:  { ...hands, template: WALK, density: .35, variation: .1 },
+    bass:   { ...groundI, notes: '0 ~ ~ ~ ~ 4 ~ ~', density: .8 },
+    melody: { ...kalimba, notes: L0, density: .5 },
+    pad:    { ...didge, density: .2, level: 2 },
+    pad2:   { ...organ, density: .25, brightness: .25 },
+    perc:   { ...slit, level: .3 },
+  }),
+  section('ground', 24, { role: 'develop', progression: 'i i i VI',
+    drums:   { ...hands, template: WALK, density: .55, variation: .15 },
+    bass:    groundI,
+    melody:  { ...kalimba, notes: L1, density: .5 },
+    melody2: { ...balafon, notes: L1, density: .5 },
+    pad:     { ...didge, density: .25 },
+    pad2:    { ...organ, density: .35, brightness: saw.range(.25, .4).slow(24) },
+    perc:    slit,
+    perc2:   wood,
+  }),
+  section('carry', 24, { role: 'develop', progression: 'i VI i VII',
+    drums:   { ...hands, template: TREAD, density: .7, variation: .25, width: .6 },
+    bass:    { ...groundI, weight: .7 },
+    melody:  { ...kalimba, notes: L1, density: .5, brightness: .55 },
+    melody2: { ...balafon, notes: L1, density: .5 },
+    melody3: { ...bowed, notes: LOW, density: .5, register: .4 },
+    pad:     { ...didge, density: .25 },
+    pad2:    { ...organ, density: .4, brightness: .4 },
+    pad3:    { ...strings, density: .35 },
+    perc:    slit,
+    perc2:   wood,
+    perc3:   { ...swell, level: .35 },
+    fx:      { riser: 4, level: .3 },
+  }),
+  section('fade', 16, { role: 'develop', progression: 'i', dropout: 2,
+    drums:   { ...hands, template: WALK, density: .35, variation: .1, space: .5 },
+    bass:    { ...groundI, notes: '0 ~ ~ ~ ~ 4 ~ ~', level: .45 },
+    melody:  { ...kalimba, notes: L1, density: .5, space: .7, brightness: saw.range(.5, .35).slow(16) },
+    pad:     { ...didge, density: .2, brightness: saw.range(.3, .15).slow(16) },
+    pad2:    { ...organ, density: .3, brightness: .25 },
+  }),
+
+  // ---- II stone (D phrygian): the line on a zither, an organ, metal; a false summit that shatters ----
+  section('stone', 24, { role: 'develop', key: 'D:phrygian', progression: 'i', room: STONE,
+    drums:   { ...hands, template: WALK, density: .45, variation: .15, brightness: .4 },
+    bass:    groundII,
+    melody:  { ...zither, notes: L2, density: .5 },
+    pad:     { ...pedal, density: .2 },
+    pad2:    { ...choir, density: .35 },
+    perc:    { ...anvil, level: .1 },
+    perc2:   { ...brake, level: .25 },
+  }),
+  section('iron', 16, { role: 'develop', key: 'D:phrygian', progression: 'i i II i', room: STONE,
+    drums:   { ...hands, template: TREAD, density: .65, variation: .2, brightness: .45 },
+    bass:    groundII,
+    melody:  { ...zither, notes: L2, density: .5 },
+    melody2: { ...bowed, notes: LOW, density: .5, register: .4 },
+    pad:     { ...pedal, density: .25 },
+    pad2:    { ...choir, density: .4, brightness: .3 },
+    perc:    anvil,
+    perc2:   brake,
+    perc3:   agogo,
+  }),
+  section('forge', 16, { role: 'develop', key: 'D:phrygian', progression: 'i II i VII', room: STONE,
+    drums:   { ...hands, template: TREAD, density: .75, variation: .3, brightness: .5 },
+    bass:    { ...groundII, weight: .7 },
+    melody:  { ...zither, notes: L2, density: .5, brightness: .5 },
+    melody2: { ...bowed, notes: LOW, density: .5, register: .4 },
+    melody3: { ...deep, density: .5 },
+    pad:     { ...pedal, density: .3 },
+    pad2:    { ...choir, density: .45, brightness: .35 },
+    perc:    anvil,
+    perc2:   brake,
+    perc3:   agogo,
+    perc4:   gong,
+  }),
+  section('crack', 12, { role: 'develop', key: 'D:phrygian', progression: 'i II', room: STONE,
+    drums:   { ...hands, template: 'halftime', density: .6, variation: .35, weight: .7, brightness: .5 },
+    bass:    { ...groundII, weight: .7, density: .75, notes: '0 0 4 3' },
+    melody:  { ...zither, notes: L2, density: .5, brightness: .55, level: 1 },
+    melody2: { ...bowed, notes: L2, density: .5 },
+    melody3: { ...deep, density: .5 },
+    pad:     { ...pedal, density: .35 },
+    pad2:    { ...choir, density: .5, brightness: .4 },
+    perc:    anvil,
+    perc2:   brake,
+    perc3:   { ...swell, level: .5 },
+    fx:      { riser: 4, level: .4 },
+  }),
+  section('strain', 12, { role: 'develop', key: 'D:phrygian', progression: 'i II i II', room: STONE,
+    drums:   { ...hands, template: STORM, density: .8, variation: .45, weight: .7, brightness: .55, width: .6, level: .15 },
+    bass:    { ...groundII, weight: .7, density: .8, brightness: .4 },
+    melody:  { ...zither, notes: L2, density: .55, brightness: .6, level: 1.1 },
+    melody2: { ...bowed, notes: L2, density: .5, brightness: .45 },
+    melody3: { ...deep, density: .5, level: .6 },
+    melody4: { ...chimes, notes: L2, density: .5, level: .6 },
+    pad:     { ...pedal, density: .4, weight: .9 },
+    pad2:    { ...choir, density: .5, brightness: .45, level: .22 },
+    perc:    { ...anvil, level: .18 },
+    perc2:   { ...brake, level: .35 },
+    perc3:   agogo,
+    perc4:   { ...gong, level: .12 },
+    fx:      { riser: 2, level: .5 },
+  }),
+  section('shatter', 8, { role: 'develop', key: 'D:phrygian', progression: 'i', room: STONE, dropout: 3,
+    drums:   { ...hands, template: 'halftime', density: .3, variation: .2, space: .7, brightness: saw.range(.5, .2).slow(8) },
+    bass:    { ...groundII, notes: '0 ~ ~ ~ ~ 4 ~ ~', level: .9 },
+    melody:  { ...zither, notes: L0, density: .5, space: .8, brightness: saw.range(.5, .3).slow(8) },
+    pad:     { ...pedal, density: .3 },
+    pad2:    { ...choir, density: .4, brightness: saw.range(.4, .2).slow(8) },
+    perc:    { ...gong, rhythm: 'x...............', level: .25 },
+    fx:      { impact: 'gong:3', level: .3 },
+  }),
+  section('hold', 8, { role: 'develop', key: 'D:phrygian', progression: 'i', room: STONE, sweep: 4,
+    melody:  { ...bowed, notes: '0@16', density: .5, brightness: .4 },
+    pad:     { ...pedal, density: .2, brightness: .15 },
+    pad2:    { ...choir, density: .3, brightness: .25, level: .12 },
+  }),
+  section('ash', 16, { role: 'develop', key: 'D:phrygian', progression: 'i', room: STONE,
+    melody:  { ...glass, notes: L0, density: .5, level: 1.2 },
+    melody2: { ...kalimba, notes: L0, density: .5, space: .8, level: .6, brightness: .35 },
+    pad:     { ...pedal, density: .2, brightness: .15, level: .25 },
+    pad2:    { ...glasses, density: .3, level: .7 },
+  }),
+
+  // ---- III air (D dorian): the whole line, first on a harp, then in every voice; then alone ----
+  section('light', 16, { role: 'develop', key: 'D:dorian', progression: 'i', room: AIR,
+    bass:    { ...groundIII, notes: '0 ~ ~ ~ ~ 4 ~ ~', level: .7, duck: undefined },
+    melody:  { ...harp, notes: L3, density: .5, brightness: .55 },
+    pad:     { ...organ, density: .3, brightness: .4 },
+    pad2:    { ...glasses, density: .3 },
+    perc:    { ...tree, level: .8 },
+  }),
+  section('gather', 12, { role: 'develop', key: 'D:dorian', progression: 'i IV', room: AIR,
+    drums:   { ...hands, template: WALK, density: .5, variation: .2, brightness: .55 },
+    bass:    groundIII,
+    melody:  { ...harp, notes: L3, density: .5, brightness: .55 },
+    melody2: { ...high, notes: L3, density: .5 },
+    melody3: { ...kalimba, notes: L3, density: .5, level: .8 },
+    pad:     { ...organ, density: .35, brightness: .45 },
+    pad2:    { ...choirIII, density: .4 },
+    perc:    slit,
+    perc2:   hbells,
+    perc3:   tree,
+  }),
+  section('join', 12, { role: 'develop', key: 'D:dorian', progression: 'i IV i VII', room: AIR,
+    drums:   { ...hands, template: TREAD, density: .65, variation: .3, brightness: .55, width: .6 },
+    bass:    groundIII,
+    melody:  { ...harp, notes: L3, density: .5, brightness: .6 },
+    melody2: { ...high, notes: L3, density: .5 },
+    melody3: { ...kalimba, notes: L3, density: .5, level: .8 },
+    melody4: { ...chimes, notes: L3, density: .5 },
+    melody5: { ...deep, density: .5 },
+    pad:     { ...organ, density: .4, brightness: .5 },
+    pad2:    { ...choirIII, density: .45 },
+    perc:    slit,
+    perc2:   hbells,
+    perc3:   { ...anvil, level: .15 },
+  }),
+  section('rise', 8, { role: 'develop', key: 'D:dorian', progression: 'i IV i VII', room: AIR,
+    drums:   { ...skins, template: 'halftime', density: .6, variation: .3 },
+    drums2:  { ...hands, template: STORM, density: .6, variation: .4, level: .12, brightness: .55 },
+    bass:    { ...groundIII, weight: .7 },
+    melody:  { ...harp, notes: L3, density: .5, brightness: .6 },
+    melody2: { ...high, notes: L3, density: .5 },
+    melody3: { ...chimes, notes: L3, density: .5 },
+    melody4: { ...deep, density: .5, level: .6 },
+    pad:     { ...organ, density: .4, brightness: saw.range(.45, .65).slow(8) },
+    pad2:    { ...choirIII, density: .45, brightness: saw.range(.4, .6).slow(8) },
+    perc:    { ...swell, rhythm: '................|................|................|x...............', level: .6 },
+    perc2:   hbells,
+    fx:      { riser: 4, level: .5 },
+  }),
+  section('whole', 16, { role: 'climax', key: 'D:dorian', progression: 'i III VII IV', room: AIR,
+    drums:   { ...skins, template: TREAD, density: .8, variation: .4, width: .6 },
+    drums2:  { ...hands, template: STORM, density: .75, variation: .45, level: .15, brightness: .6, width: .6 },
+    bass:    { ...groundIII, weight: .7, brightness: .6 },
+    melody:  { ...harp, notes: L3, density: .5, brightness: .65 },
+    melody2: { ...high, notes: L3, density: .5 },
+    melody3: { ...kalimba, notes: L3, density: .5, brightness: .6 },
+    melody4: { ...chimes, notes: L3, density: .5 },
+    melody5: { ...deep, density: .5, level: .6 },
+    melody6: { ...bells, density: .5 },
+    pad:     { ...organ, density: .45, brightness: .55 },
+    pad2:    { ...choirIII, density: .45, brightness: .55 },
+    perc:    slit,
+    perc2:   hbells,
+    perc3:   gong,
+    perc4:   tree,
+    fx:      { impact: 'gong:3', level: .3 },
+  }),
+  section('again', 8, { role: 'release', key: 'D:dorian', progression: 'i III VII IV', room: AIR,
+    drums:   { ...skins, template: 'halftime', density: .5, variation: .3, space: .7 },
+    bass:    { ...groundIII, weight: .65 },
+    melody:  { ...harp, notes: L3, density: .5, brightness: .6 },
+    melody2: { ...high, notes: L3, density: .5, level: 1 },
+    melody3: { ...kalimba, notes: L3, density: .5, level: .8 },
+    melody4: { ...deep, density: .5, level: .45 },
+    pad:     { ...organ, density: .4, brightness: .5 },
+    pad2:    { ...choirIII, density: .4, brightness: .45 },
+    perc:    hbells,
+    perc2:   tree,
+  }),
+  section('after', 8, { role: 'release', key: 'D:dorian', progression: 'i', room: AIR, sweep: 4,
+    bass:    { ...groundIII, notes: '0 ~ ~ ~ ~ 4 ~ ~', level: .7, duck: undefined },
+    melody:  { ...harp, notes: L3, density: .5, space: .75 },
+    melody2: { ...kalimba, notes: L3, density: .5, level: .8, space: .7 },
+    pad:     { ...organ, density: .35, brightness: .4 },
+    pad2:    { ...glasses, density: .3 },
+  }),
+  section('alone', 16, { role: 'release', key: 'D:dorian', progression: 'i',
+    melody:  { ...kalimba, notes: L3, density: .5, space: .5, level: 1.8 },
+    pad:     { ...didge, density: .2, level: 1.5, brightness: .25 },
+  }),
+  section('dust2', 16, { role: 'release', key: 'D:dorian', progression: 'i',
+    melody:  { ...kalimba, notes: L0, density: .5, space: .6, brightness: saw.range(.5, .3).slow(16), level: 1.4 },
+    pad:     { ...didge, density: .2, level: 1.5, brightness: saw.range(.25, .1).slow(16) },
+  }),
+])
