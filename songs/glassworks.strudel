@@ -18,7 +18,7 @@ const wide = { sound: 'sawtooth', patch: 'wide', articulation: .15, space: .7, w
 const deep = { sound: 'square', patch: 'reese', register: .25, weight: .7, articulation: .55, brightness: .4, space: .4 };
 
 song({ cps: .5, key: 'A:minor', seed: 21, kit: 'RolandTR909', room: { size: 1.2, fade: .3, damping: 7000 },
-  visual: { composition: 'overlay', worlds: ['tunnel', 'ink', 'orrery'] } }, [ // the stage: tunnel with ink over it, its opacity the section's energy, and the orrery in a round portal from the turn
+  visual: { composition: 'overlay', worlds: ['tunnel', 'ink'] } }, [ // the stage: tunnel with ink breathing over it every eight bars, higher in the louder sections
 
   // a pad breathing on its own: brightness wobbles once every four bars, the room swells up and back over the section
   section('arrive', 8, { role: 'establish', progression: 'i@2 VI/1 VII',

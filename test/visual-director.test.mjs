@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
-import { createDirector, scenesOf, rolesOf, sceneAt, breathAt, circleRect, FULL, PRESETS } from '../web/visual/director.mjs';
+import { createDirector, scenesOf, rolesOf, sceneAt, breathAt, FULL, PRESETS } from '../web/visual/director.mjs';
 import { WORLDS, worldOf, withPick } from '../web/visual/stage.mjs';
 import { createPerformance } from '../web/visual/host.mjs';
 import { streamOf, renderFrames } from '../web/visual/export.mjs';
@@ -130,26 +130,21 @@ test('parts: a layer with a part list is handed only those events', async () => 
   assert.equal(p.state.children.b.events, melody); assert.ok(p.state.children.a.events > melody);
 });
 
-test('the overlay preset reads the arc: a base, a breathing second world whose peak follows the energy, and a portal that irises open at the first developing section; deterministic', async () => {
+test('the overlay preset reads the arc: a base and a breathing second world whose peak follows the energy; deterministic', async () => {
   const g = await ready;
-  const pat = song(g, { composition: 'overlay', worlds: ['tunnel', 'ink', 'orrery'] }), score = composeVisual(pat.strudel);
-  assert.deepEqual(score.composition, { preset: 'overlay', worlds: ['tunnel', 'ink', 'orrery'] });
+  const pat = song(g, { composition: 'overlay', worlds: ['tunnel', 'ink'] }), score = composeVisual(pat.strudel);
+  assert.deepEqual(score.composition, { preset: 'overlay', worlds: ['tunnel', 'ink'] });
   assert.equal(score.world, 'tunnel', "the primary is the score's world");
   const sc = scenesOf(score, prng(7));
   assert.deepEqual(sc.map((s) => s.from), [0, 1, 2, 3]);
-  assert.deepEqual(sc.map((s) => s.layers.map((l) => l.world)), [['tunnel', 'ink'], ['tunnel', 'ink', 'orrery'], ['tunnel', 'ink', 'orrery'], ['tunnel', 'ink', 'orrery']]);
-  assert.deepEqual(sc.map((s) => s.transition.type), ['cut', 'iris', 'crossfade', 'crossfade']);
+  assert.ok(sc.every((s) => s.layers.map((l) => l.world).join() === 'tunnel,ink'));
+  assert.deepEqual(sc.map((s) => s.transition.type), ['cut', 'crossfade', 'crossfade', 'crossfade']);
   for (const s of sc) { assert.equal(s.layers[1].breathe, 8); assert.deepEqual(s.layers[1].rect, FULL); assert.equal(s.layers[1].blend, 'source-over'); }
   const op = sc.map((s) => s.layers[1].opacity); assert.ok(op[2] > op[0] && op[2] <= 0.95 && op[0] >= 0.45, "the second world's peak follows the energy: the drop over the intro");
-  assert.equal(sc[1].layers[2].mask, 'circle'); assert.ok(Math.abs(sc[1].layers[2].rect[2] * 16 / 9 - sc[1].layers[2].rect[3]) < 1e-3, 'the portal is round');
   assert.deepEqual(scenesOf(score, prng(8)), sc, 'nothing in it is random');
-  const c = circleRect(0.5, 0.5, 0.4); assert.ok(Math.abs(c[2] * 16 / 9 - c[3]) < 1e-3, 'square in pixels'); assert.equal(c[3], 0.4);
-  // two worlds: no portal
-  const two = scenesOf(composeVisual(song(g, { composition: 'overlay', worlds: ['tunnel', 'ink'] }).strudel), prng(7));
-  assert.ok(two.every((s) => s.layers.length === 2));
   // a composition with no worlds written: the score's world first, then the selection's next-best
   const s4 = composeVisual(song(g, { composition: 'overlay' }).strudel);
-  assert.equal(s4.composition.worlds.length, 3); assert.equal(s4.composition.worlds[0], s4.world); assert.equal(new Set(s4.composition.worlds).size, 3);
+  assert.equal(s4.composition.worlds.length, 2); assert.equal(s4.composition.worlds[0], s4.world); assert.equal(new Set(s4.composition.worlds).size, 2);
   assert.deepEqual(compositionOf('single', 'ink', { tunnel: .9 }), { preset: 'single', worlds: ['ink'] });
   assert.deepEqual(rolesOf({ sections: [{ name: 'a' }, { name: 'b' }, { name: 'c' }], peak: 'b' }), ['establish', 'climax', 'release']);
   assert.equal(scenesOf(composeVisual(song(g, 'ink').strudel), prng(1)).length, 1, 'a single world: one scene');
@@ -176,18 +171,17 @@ test('the header: composition and worlds are validated, and the check describes 
   assert.throws(() => g.song({ visual: { worlds: ['tunnel'] } }, []), /goes with a composition/);
   assert.throws(() => g.song({ visual: { layout: 'x' } }, []), /not layout/);
   const { describeVisual } = await import('../lib/visual.mjs');
-  const d = describeVisual(composeVisual(song(g, { composition: 'overlay', worlds: ['tunnel', 'ink', 'orrery'] }).strudel));
-  assert.ok(d.some((c) => c === 'overlay: tunnel + ink + orrery'), d.join(' · '));
+  const d = describeVisual(composeVisual(song(g, { composition: 'overlay', worlds: ['tunnel', 'ink'] }).strudel));
+  assert.ok(d.some((c) => c === 'overlay: tunnel + ink'), d.join(' · '));
 });
 
 test('through the exporter: a composed song renders every frame on a stub context, deterministically, drawing children into their targets and compositing them', async () => {
-  const g = await ready, pat = song(g, { composition: 'overlay', worlds: ['tunnel', 'ink', 'orrery'] }), score = composeVisual(pat.strudel), stream = streamOf(pat), seconds = pat.strudel.total / score.cps;
+  const g = await ready, pat = song(g, { composition: 'overlay', worlds: ['tunnel', 'ink'] }), score = composeVisual(pat.strudel), stream = streamOf(pat), seconds = pat.strudel.total / score.cps;
   const once = async () => { const { createCanvas, made } = canvasStub(), ctx = ctxStub(); const r = await renderFrames({ world: worldOf(score, { createCanvas }), score, stream, seconds, title: { name: 't', line: '' }, ctx, w: 640, h: 360, yieldEvery: 1000 }); return { r, ctx, made }; };
   const a = await once(), b = await once();
   assert.equal(a.r.perf.state.scene, 3, 'the tail holds the last scene');
   assert.equal(JSON.stringify(a.r.perf.state), JSON.stringify(b.r.perf.state), 'the same frames twice');
-  assert.equal(a.made.length, 3, 'a target per world');
+  assert.equal(a.made.length, 2, 'a target per world');
   assert.ok(a.ctx.calls.drawImage >= a.r.frames, 'every frame composites at least the primary');
-  assert.ok(a.ctx.calls.clip > a.r.frames, 'the portal is clipped');
   const ink = a.r.perf.state.children.ink; assert.ok(ink.marks.length > 20, 'ink painted the whole song while overlaid');
 });

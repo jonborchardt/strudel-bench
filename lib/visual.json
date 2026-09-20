@@ -29,7 +29,7 @@
   },
   "compositions": {
     "single": { "count": 1, "about": "one world full-frame: the stage as it always was" },
-    "overlay": { "count": 3, "about": "the primary full; the second world breathing in and out over it every eight bars, up to a peak the section's energy sets; the third in a circle portal from the first developing section" }
+    "overlay": { "count": 2, "about": "the primary full; the second world breathing in and out over it every eight bars, up to a peak the section's energy sets" }
   },
   "worlds": {
     "tunnel": { "slots": { "impulse": 1, "ground": 1, "line": 1, "counter": 1, "field": 1, "transition": 1 } },
