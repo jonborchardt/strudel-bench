@@ -76,16 +76,23 @@ interest. Do these, in this order, on every new song and whenever a song is call
    `pluck`, `reese`, `hollow`, `glass`, `breath`, `wide`, `sub`; `npm run check` fails on a wrong one.
    **A name says nothing about what its variants are.** `didgeridoo` is a bark at index 0 and a sustained
    note at `:8`; `sus_cymbal:0` is bowed; the Dirt `space` samples are sub-second blips. The single-song check prints a
-   `sounds` block naming the file behind every `sound:index` it heard (pitched instruments show their sampled range):
-   read it before calling anything a drone, bed, pad or bass, and pick the index whose file name says `Sus`, `sustain`
-   or `hit` as the part needs. Anything under the song in a plain-Strudel `stack()` is not a part: mute, solo and pin
+   `sounds` block naming the file behind every `sound:index` it heard (pitched instruments show their sampled range)
+   **with its length and loudness** (`4.5 s, rms -33 dB, peak -15 dB`, from `samples/packs/<pack>.meta.json`, built by
+   `node scripts/samplemeta.mjs` after a pack download): read it before calling anything a drone, bed, pad or bass,
+   and pick the index whose file name says `Sus`, `sustain` or `hit` as the part needs. **Read the rms before setting a
+   level.** The packs span 50 dB (vcsl: harmonica -13, mridangam -20, kalimba -33, harp -40, marimba -58) and `level`
+   tops out at +6 dB, so a quiet sample cannot be raised into a mix: pick a louder take or instrument. vcsl's `:0` take
+   of a percussion sound is usually its pp layer (`anvil:0` -60, `anvil:8` -22; `brakedrum:3`, `agogo:2`, `slitdrum:2`,
+   `framedrum:8` are the v3 hits). The lint says which parts are inaudible on paper. **Read the seconds before building
+   a kit**: a drum hit at the baseline articulation (.5) carries no clip and plays its file to the end, so a kit of 11 s
+   timpani, bass drum and cymbal takes at four beats a bar is ~30 voices; `articulation` above .5 cuts it to the hit. Anything under the song in a plain-Strudel `stack()` is not a part: mute, solo and pin
    drop it, so a sound that survives those is in the layers and one that vanishes is in the textures. Melodic: `piano`, `kalimba`, `marimba`, `vibraphone`, `glockenspiel`, `folkharp`, `harp`,
    `clavisynth`, `fmpiano`, `steinway`, `organ_8inch`, `casio`, `supersaw`. Bass: `square` or `sawtooth`.
    Keep at most one raw sawtooth layer; two saws in the same octave is mud.
    Beyond the loaded packs, `reference/sample-banks.md` lists the community `github:` banks and the two
    steps that make one usable here (an entry in `lib/packs.json`, then `npm run samples -- <pack>`).
-3. **Counter-line in the climax.** `melody2: { notes: '~ 7 ~ ~ 5 ~ ~ ~', sound: 'glockenspiel', register: .8,
-   level: .5, follow: true }` is a second melody layer (any `<layer><digit>` key builds that layer again). Sparse,
+3. **Counter-line in the climax.** `melody2: { notes: '~ 7 ~ ~ 5 ~ ~ ~', sound: 'handchimes', register: .8,
+   level: .8, follow: true }` (not `glockenspiel`: its samples are -51 dBFS and it vanished in arrival and demo) is a second melody layer (any `<layer><digit>` key builds that layer again). Sparse,
    an octave up or down, on the beats the hook leaves empty. That is the one place "more instruments" helps.
 4. **Contrast per section**, already the system's strength: drums `template` per section, `variation` rising
    toward the end, `fill`/`riser`/`impact` at the boundaries, pad `arp` in one section only, `dropout`/`sweep`
@@ -181,9 +188,13 @@ strongest claim.
   drops hits (arrival's threshold at ~49, machine's chorus3 at ~46). The count is hits sounding at once over the whole
   pattern in the section's window, a `stack()` of textures around the song included (`n outside the parts`), and a
   hit with a distortion, shape or coarse worklet counts one more per effect, so an aggressive song is loud in this
-  count long before it is loud in parts. Fixes in order: `width` under .8 on any pad or kit at .8+ (jux plays a
-  doubled copy of every voice), `aggression`/`weight` at .5 on the part with the most hits (no worklet per hit), a
-  shorter release (`articulation` up), fewer chord tones (pad `density` down), one pad fewer. A distorted part also
+  count long before it is loud in parts. A sample hit with no `clip` (a drum voice or a pad at its baseline
+  articulation, an fx impact) is counted for its file's length, not the hap's, from the pack meta files. Fixes in
+  order: `width` under .8 on any pad or kit at .8+ (jux plays a doubled copy of every voice), `aggression`/`weight`
+  at .5 on the part with the most hits (no worklet per hit), `articulation` above .5 on a kit or pad of long samples
+  (clips each hit to its step), a shorter release (`articulation` up), fewer chord tones (pad `density` down), one
+  pad fewer. The count is a model: when a section still scratches, trace it (a headless page, pinned and playing,
+  `browser.startTracing` on the webaudio category; the render callback's mean over 2.67 ms is the thread's share). A distorted part also
   ignores its `level` for peaks: superdough distorts after the gain and the output saturates at full scale, so the
   mix lint's "no headroom" on such a part is fixed by less distortion, not by level.
 - A song edit needs `npm run check` only. The moment the fix reaches `lib/`, `scripts/` or `web/`, run `npm test`

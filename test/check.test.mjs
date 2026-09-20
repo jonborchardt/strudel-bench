@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { checkFile, checkCode, missingPackOnly, formLetters } from '../scripts/check.mjs';
+import { isUnlisted } from '../server.mjs';
 
 const tmp = (name, code) => {
   const f = path.join(import.meta.dirname, name);
@@ -142,6 +143,9 @@ test('every song in songs/ checks clean, except one whose local-only pack is not
     if (missingPackOnly(r)) continue;
     assert.deepEqual(r.problems, [], f);
     assert.ok(r.events.length > 0, `${f}: silent`);
+    // a listed song must play in real time: no section past the lint's voice bound, counted with sample lengths (a hidden
+    // twin such as a premix may sit over it; it is kept as the before of a mixing pass, not played)
+    if (!isUnlisted(fs.readFileSync(path.join(dir, f), 'utf8'))) for (const s of r.sections ?? []) assert.ok(s.voices <= 40, `${f} ${s.name}: ~${s.voices} voices at once; the audio thread cannot render that in real time (strata's whole traced at 110% busy at ~50)`);
   }
 });
 
@@ -155,4 +159,18 @@ test('a song can name a pack definition: the events carry the pack sound, and th
     fs.writeFileSync(f, `song({}, [ section('a', 1, { sample: { sound: 'thud-half' } }) ])`);
     assert.match((await checkFile(f, 4, packs)).problems[0], /sound "thud" is in local pack "mine"/);
   } finally { fs.rmSync(f); }
+});
+
+test('sample meta: the sounds block carries seconds/rms/peak, and an unclipped sample hit is counted for its file length', async () => {
+  const song = (extra) => checkCode(`song({ cps: .5, key: 'C:minor', seed: 1, kit: 'RolandTR909' }, [section('a', 4, { raw: { pattern: s('timpani:5').struct('x ~ ~ ~')${extra} } })])`, 'm.strudel');
+  const [full, cut] = await Promise.all([song(''), song('.clip(1)')]);
+  const t = full.sounds.find((u) => u.name === 'timpani' && u.n === 5);
+  assert.ok(t.seconds > 10 && t.rms < -20 && t.peak < -5, JSON.stringify(t)); // an 11 s take, quiet
+  assert.equal(full.sections[0].layers.raw.sounds[0].seconds, t.seconds);
+  // one hit a bar of an 11 s file at 2 s a bar sounds for ~5.5 bars: the file, not the quarter-bar hap, is the load
+  assert.ok(full.sections[0].layers.raw.voices > 4 && cut.sections[0].layers.raw.voices < 1, `full ${full.sections[0].layers.raw.voices} vs clipped ${cut.sections[0].layers.raw.voices}`);
+  const piano = await checkCode(`song({ cps: .5, key: 'C:minor', seed: 1, kit: 'RolandTR909' }, [section('a', 1, { melody: { sound: 'kalimba', notes: '0' } })])`, 'p.strudel');
+  const k = piano.sections[0].layers.melody;
+  assert.ok(k.sounds[0].rms < -25 && k.sounds[0].seconds > 2, JSON.stringify(k.sounds)); // a pitched instrument: the median of its files
+  assert.equal(k.minNote, 60);
 });

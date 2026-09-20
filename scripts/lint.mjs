@@ -20,7 +20,18 @@ const COMPRESSOR_HITS = 16; // superdough builds a DynamicsCompressorNode per hi
 // (half of it distortion worklets) ran the thread at 60-70% with the slowest callbacks over their deadline, scratching.
 // ponytail: one machine's number; retune from more traces.
 const VOICES = 40;
+// static audibility, before any render: a part's loudest sample (rms dBFS from the pack meta files) times its level, against the
+// section's loudest part. The sample packs span 50 dB (vcsl's harmonica at -13, its marimba at -58) and `level` tops out at +6 dB,
+// so a quiet take cannot be raised into a mix; strata's marimba doubling measured 54 dB under the mix at level 1.6.
+const INAUDIBLE_DB = -36;
+// midi G#0, 26 Hz: a fundamental under it is felt on a subwoofer and heard nowhere else. A synth bass at C1 (33 Hz) is a normal
+// sub and passes; bass register .3 is octave 1 and weight over .7 drops another octave, which put strata's sampled organ pedal at D0
+const LOWEST_NOTE = 20;
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const loudness = (x) => { // a part's static loudness in dB: its loudest measured sample times its level; null when nothing it plays is measured
+  const rms = Math.max(...(x.sounds ?? []).map((u) => u.rms).filter(Number.isFinite), -Infinity);
+  return Number.isFinite(rms) ? rms + 20 * Math.log10(typeof x.attrs.level === 'number' ? x.attrs.level : 1) : null;
+};
 
 /** Findings for one checkFile result: [{ level: 'error' | 'warn', section?, text }]. A plain-Strudel file has no sections and no findings. */
 export function lint({ sections, problems = [] }) {
@@ -44,6 +55,15 @@ export function lint({ sections, problems = [] }) {
       if (typeof x.attrs.level === 'number' && (x.attrs.level < 0 || x.attrs.level > 2)) warn(s.name, `${l}.level is ${x.attrs.level}: 0..2 is the useful range (1 = as built)`);
       // superdough builds a DynamicsCompressorNode per hit, not per part: on a dense kit that is dozens of live nodes a bar on the audio thread
       if (x.attrs.compressor !== undefined && x.onsetsPerCycle > COMPRESSOR_HITS) warn(s.name, `${l}.compressor is applied per hit (${x.onsetsPerCycle} a bar, each its own compressor node): keep it off dense parts, lower level instead`);
+    }
+    const loud = Object.entries(s.layers).map(([l, x]) => [l, loudness(x)]).filter(([, d]) => d !== null), top = Math.max(...loud.map(([, d]) => d));
+    for (const [l, d] of loud) {
+      if (d - top >= INAUDIBLE_DB) continue;
+      const u = s.layers[l].sounds.reduce((a, b) => (Number.isFinite(b.rms) && (!a || b.rms > a.rms) ? b : a), null);
+      warn(s.name, `${l} plays ${u.name}:${u.n} (rms ${u.rms} dBFS) at level ${s.layers[l].attrs.level ?? 1}: about ${Math.round(top - d)} dB under the loudest part before any render; a louder take or instrument (level tops out at 2)`);
+    }
+    for (const [l, x] of Object.entries(s.layers)) {
+      if (Number.isFinite(x.minNote) && x.minNote < LOWEST_NOTE) warn(s.name, `${l} reaches midi ${x.minNote} (${Math.round(440 * 2 ** ((x.minNote - 69) / 12))} Hz): a fundamental under 26 Hz is felt on a subwoofer, not heard; register up, or weight at .7 or under (over it drops an octave)`);
     }
     if (s.voices > VOICES) {
       const heavy = Object.entries(s.layers).sort((a, b) => b[1].voices - a[1].voices).slice(0, 3).map(([l, x]) => `${l} ${x.voices}`).concat(s.outside ? [`${s.outside} outside the parts`] : []).join(', ');
