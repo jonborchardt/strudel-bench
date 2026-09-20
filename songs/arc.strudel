@@ -15,7 +15,8 @@ const bed  = { position: -.25, duck: 'drums', duckDepth: .15, duckAttack: .2 };
 
 // second pass: the room is a generated plate (samples/user/rooms, 1.8 s, 15 ms pre-delay) instead of superdough's synthetic tail; the hook is
 // humanized (a seeded, phrase-correlated feel); depth by the closer/farther words (brightness, space and weight together), not level alone.
-song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909', packs: ['rooms'], room: { ir: 'plate', size: 1.8, damping: 6500 } }, [
+song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909', packs: ['rooms'], room: { ir: 'plate', size: 1.8, damping: 6500 },
+  visual: { composition: 'mosaic-climax', worlds: ['tunnel', 'ink', 'loom', 'orrery'] } }, [ // the stage: tunnel throughout, ink over it from the verse, loom and orrery as insets at the drop, the outro on ink's sheet
   section('intro', 8, { role: 'establish', sweep: 2,
     drums: { density: .3, space: .8, brightness: .1, drive: .1, articulation: .2, level: .5 },
     pad:   { ...bed, space: 1, articulation: 0, brightness: 0, drive: .1, register: .3, level: .6 },

@@ -60,6 +60,7 @@ export const SCHEMA = {
     role: { type: 'enum', values: ROLES, title: "the section's role in the arc" },
     visual: { type: 'enum', values: Object.keys(VISUAL.worlds), title: 'the world the stage plays for this song (or { world, seed }); unwritten, the score picks one by mood and seed' },
     world: { type: 'enum', values: Object.keys(VISUAL.worlds), title: 'the world, inside visual: { world, seed }' },
+    composition: { type: 'enum', values: Object.keys(VISUAL.compositions), title: "the director's preset, inside visual: { composition, worlds }: how several worlds share the stage over the song" },
     dropout: int(0, 'bars of silence (all but fx) before the section ends'),
     sweep: int(0, 'bars of low-pass sweep down (all but fx) before the section ends'),
     kit: { type: 'enum', values: () => host.kits(), title: 'drum machine bank' },
