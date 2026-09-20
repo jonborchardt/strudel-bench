@@ -651,22 +651,31 @@
   });
   // the video: the audio from the offline render (with the tail), the world from the same score and stream the stage would play, frame by
   // frame at 30 fps through WebCodecs (web/visual/export.mjs); never a recording of the page. Shared by the button and the server's job.
-  async function makeVideo({ code, name, progress }) {
+  // `out`: where the file goes (see exportVideo): the save dialog's file, the server, or memory
+  async function makeVideo({ code, name, pick, out, progress }) {
     progress('checking codecs');
-    const pick = await pickCodecs();
+    pick ??= await pickCodecs();
     const song = await evalCode(ready, code);
     if (!song) throw new Error('source does not evaluate (see the error under it)');
     const score = stageScore(song), stream = streamOf(song), seconds = (song.strudel ? song.strudel.total : 8) / (song.strudel?.meta.cps ?? 0.5);
     const audio = await renderSong({ song, code, tail: TAIL, progress: (i, n) => progress(`audio ${Math.round((i / n) * 100)}%`) });
-    return exportVideo({ pick, audio, world: worldOf(score), score, stream, title: titleOf(name, code), seconds, progress: (k, n) => progress(`frames ${Math.round((k / n) * 100)}%`) });
+    return exportVideo({ pick, audio, world: worldOf(score), score, stream, title: titleOf(name, code), seconds, out, progress: (k, n) => progress(`frames ${Math.round((k / n) * 100)}%`) });
   }
   $('video').onclick = () => exporting(async () => {
     if (playing) await stop(); // the render replaces the audio context
     await strudel.getAudioContext().resume();
-    const { blob, ext, seconds } = await makeVideo({ code: code.text, name: $('song').value, progress: (s) => xstate('busy', `video: ${esc(s)}`) });
-    const name = `${base()}.${ext}`;
-    download(blob, name);
-    xstate('done', `&#10003; ${esc(name)} <small>${seconds.toFixed(1)} s · ${(blob.size / 1e6).toFixed(0)} MB</small>`, await keep(blob, name));
+    xstate('busy', 'video: checking codecs…');
+    const pick = await pickCodecs(), name = `${base()}.${pick.ext}`;
+    // written to disk as it is muxed where the browser has the save dialog (Chrome, Edge; this click is the gesture it needs): a long
+    // song at 1080p is several hundred MB, more than a tab can hold. Elsewhere the file is built in memory and downloaded.
+    let out = { kind: 'memory' };
+    if (window.showSaveFilePicker) {
+      try { out = { kind: 'file', handle: await window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'video', accept: { [pick.ext === 'mp4' ? 'video/mp4' : 'video/webm']: [`.${pick.ext}`] } }] }) }; }
+      catch (e) { if (e.name === 'AbortError') return xstate('', ''); throw e; } // cancelled: nothing to do
+    }
+    const { blob, seconds, bytes } = await makeVideo({ code: code.text, name: $('song').value, pick, out, progress: (s) => xstate('busy', `video: ${esc(s)}`) });
+    if (blob) download(blob, name);
+    xstate('done', `&#10003; ${esc(out.kind === 'file' ? out.handle.name : name)} <small>${seconds.toFixed(1)} s · ${(bytes / 1e6).toFixed(0)} MB</small>`, blob ? await keep(blob, name) : 'saved where you chose');
   });
   const expanded = async () => { // the expanded pane's text, re-expanded now so a fresh edit is not missed
     const gen = await expandCode(ready, code.text);
@@ -1534,10 +1543,12 @@
     if (playing) await stop(); // the render replaces the audio context
     try {
       const code = await (await fetch(`songs/${song}`)).text();
-      if (video) { // scripts/video.mjs: the whole song as a video into renders/
-        const { blob, ext, seconds } = await makeVideo({ code, name: song, progress: (s) => status(`video ${name}: ${s}`) });
-        const out = await (await fetch(`renders/${name}.${ext}`, { method: 'PUT', body: blob })).text();
-        return status(`rendered ${out} (${seconds.toFixed(1)} s, ${(blob.size / 1e6).toFixed(0)} MB)`);
+      if (video) { // scripts/video.mjs: the whole song as a video into renders/, streamed to the server in placed chunks as it is muxed
+        const pick = await pickCodecs(), file = `renders/${name}.${pick.ext}`;
+        const write = async (bytes, at, first) => { const r = await fetch(`${file}?at=${at}${first ? '&new' : ''}`, { method: 'PUT', body: bytes }); if (!r.ok) throw new Error(`the server refused a chunk: ${await r.text()}`); };
+        const { seconds, bytes } = await makeVideo({ code, name: song, pick, out: { kind: 'stream', write }, progress: (s) => status(`video ${name}: ${s}`) });
+        const out = await (await fetch(`${file}?done`, { method: 'PUT' })).text(); // the job's waiter resolves here
+        return status(`rendered ${out} (${seconds.toFixed(1)} s, ${(bytes / 1e6).toFixed(0)} MB)`);
       }
       const buf = await renderSong({ code, cycles, section, layer, progress: (i, n) => status(`rendering ${name} ${Math.round((i / n) * 100)}%`) });
       const out = await (await fetch(`renders/${name}.wav${mp3 ? '?mp3' : ''}`, { method: 'PUT', body: toWav(buf) })).text();

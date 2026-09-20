@@ -100,36 +100,55 @@ export async function pickCodecs(width = WIDTH, height = HEIGHT, fps = FPS) {
   throw new Error('this browser cannot encode video (WebCodecs with H.264 or VP9, and AAC or Opus)');
 }
 
-/** The rendered song at 48 kHz stereo with `lead` seconds of silence before it, through an OfflineAudioContext. */
-async function resample(buffer, lead) {
-  const ctx = new OfflineAudioContext(2, Math.ceil((lead + buffer.duration) * RATE), RATE);
-  const src = ctx.createBufferSource(); src.buffer = buffer; src.connect(ctx.destination); src.start(lead);
+/** The rendered song at 48 kHz stereo, through an OfflineAudioContext; the render itself when it already is (no second copy of a long song). */
+async function at48k(buffer) {
+  if (buffer.sampleRate === RATE) return buffer;
+  const ctx = new OfflineAudioContext(2, Math.ceil(buffer.duration * RATE), RATE);
+  const src = ctx.createBufferSource(); src.buffer = buffer; src.connect(ctx.destination); src.start(0);
   return ctx.startRendering();
 }
 
 /**
- * The whole video: the frames from renderFrames through a VideoEncoder, the audio through an AudioEncoder, both into
- * one muxer in memory. `audio` is the offline render of the song (its tail included); `seconds` the song's own length.
- * Resolves to { blob, ext, frames, seconds }. ponytail: the file is built in memory (a 15-minute 1080p song is several
- * hundred MB); stream it to a FileSystemWritableFileStream target when that bites.
+ * Where the file goes: `{ kind: 'memory' }` (a Blob at the end; a long song at 1080p is several hundred MB and may
+ * not fit a tab), `{ kind: 'file', handle }` (a FileSystemFileHandle from the save dialog: written as it is muxed),
+ * or `{ kind: 'stream', write(bytes, position) }` (chunks to a writer that can place them, in order: the server).
  */
-export async function exportVideo({ pick, audio, world, score, stream, title, seconds, fps = FPS, width = WIDTH, height = HEIGHT, lead = LEAD, tail = TAIL, progress = () => {} }) {
+async function muxTarget(mod, out, ext) {
+  if (out.kind === 'file') { const writable = await out.handle.createWritable(); return { target: new mod.FileSystemWritableFileStreamTarget(writable), close: () => writable.close() }; }
+  if (out.kind === 'stream') {
+    let chain = Promise.resolve(), bytes = 0, first = true;
+    const target = new mod.StreamTarget({ chunked: true, chunkSize: 8 * 2 ** 20, onData: (data, position) => { const copy = data.slice(), start = first; first = false; bytes = Math.max(bytes, position + copy.byteLength); chain = chain.then(() => out.write(copy, position, start)); } }); // start: the first chunk of the file, so a writer can begin it afresh; later chunks may land before earlier bytes (the muxer patching sizes)
+    return { target, close: () => chain, size: () => bytes };
+  }
+  const target = new mod.ArrayBufferTarget();
+  return { target, close: () => {}, blob: () => new Blob([target.buffer], { type: ext === 'mp4' ? 'video/mp4' : 'video/webm' }) };
+}
+
+/**
+ * The whole video: the frames from renderFrames through a VideoEncoder, the audio through an AudioEncoder, both into
+ * one muxer writing to `out` (see muxTarget). `audio` is the offline render of the song (its tail included); `seconds`
+ * the song's own length. Resolves to { blob (memory only), ext, frames, seconds, bytes }.
+ */
+export async function exportVideo({ pick, audio, world, score, stream, title, seconds, out = { kind: 'memory' }, fps = FPS, width = WIDTH, height = HEIGHT, lead = LEAD, tail = TAIL, progress = () => {} }) {
   pick ??= await pickCodecs(width, height, fps);
-  const { Muxer, ArrayBufferTarget } = await import(pick.ext === 'mp4' ? 'mp4-muxer' : 'webm-muxer');
-  const target = new ArrayBufferTarget();
-  const muxer = new Muxer({ target, video: { codec: pick.mux.video, width, height, frameRate: fps }, audio: { codec: pick.mux.audio, sampleRate: RATE, numberOfChannels: 2 }, ...(pick.ext === 'mp4' ? { fastStart: 'in-memory' } : {}) });
+  const mod = await import(pick.ext === 'mp4' ? 'mp4-muxer' : 'webm-muxer');
+  const sink = await muxTarget(mod, out, pick.ext);
+  // an MP4 written to memory puts its index first; one written out as it goes seeks back at the end to patch sizes (both sinks place bytes)
+  const muxer = new mod.Muxer({ target: sink.target, video: { codec: pick.mux.video, width, height, frameRate: fps }, audio: { codec: pick.mux.audio, sampleRate: RATE, numberOfChannels: 2 }, ...(pick.ext === 'mp4' ? { fastStart: out.kind === 'memory' ? 'in-memory' : false } : {}) });
   let failed = null;
   const venc = new VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: (e) => { failed = e; } });
   venc.configure({ codec: pick.video, width, height, bitrate: 10_000_000, framerate: fps, ...(pick.avc ? { avc: pick.avc } : {}) });
   const aenc = new AudioEncoder({ output: (chunk, meta) => muxer.addAudioChunk(chunk, meta), error: (e) => { failed = e; } });
   aenc.configure({ codec: pick.audio, sampleRate: RATE, numberOfChannels: 2, bitrate: 192_000 });
-  // the audio first, in 100 ms pieces, planar float
-  const pcm = await resample(audio, lead), L = pcm.getChannelData(0), R = pcm.getChannelData(1), piece = RATE / 10;
+  // the audio first: the lead as silence, then the render in 100 ms pieces of planar float, straight from its channels
+  const pcm = await at48k(audio), L = pcm.getChannelData(0), R = pcm.getChannelData(1), piece = RATE / 10, leadFrames = Math.round(lead * RATE);
+  const feed = (n, data, frame) => { const ad = new AudioData({ format: 'f32-planar', sampleRate: RATE, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round((frame / RATE) * 1e6), data }); aenc.encode(ad); ad.close(); };
+  for (let i = 0; i < leadFrames; i += piece) { const n = Math.min(piece, leadFrames - i); feed(n, new Float32Array(2 * n), i); }
   for (let i = 0; i < pcm.length; i += piece) {
     const n = Math.min(piece, pcm.length - i), data = new Float32Array(2 * n);
     data.set(L.subarray(i, i + n), 0); data.set(R.subarray(i, i + n), n);
-    const ad = new AudioData({ format: 'f32-planar', sampleRate: RATE, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round((i / RATE) * 1e6), data });
-    aenc.encode(ad); ad.close();
+    feed(n, data, leadFrames + i);
+    if (aenc.encodeQueueSize > 50) await new Promise((r) => setTimeout(r, 4));
   }
   const canvas = new OffscreenCanvas(width, height), ctx = canvas.getContext('2d');
   const { frames } = await renderFrames({ world, score, stream, seconds, title, ctx, w: width, h: height, fps, lead, tail, progress,
@@ -142,5 +161,7 @@ export async function exportVideo({ pick, audio, world, score, stream, title, se
   await venc.flush(); await aenc.flush();
   if (failed) throw failed;
   muxer.finalize(); venc.close(); aenc.close();
-  return { blob: new Blob([target.buffer], { type: pick.ext === 'mp4' ? 'video/mp4' : 'video/webm' }), ext: pick.ext, frames, seconds };
+  await sink.close();
+  const blob = sink.blob?.();
+  return { blob, ext: pick.ext, frames, seconds, bytes: blob ? blob.size : sink.size?.() ?? 0 };
 }

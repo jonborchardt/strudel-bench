@@ -172,7 +172,15 @@ export function createServer() {
       const chunks = [];
       for await (const c of req) chunks.push(c);
       const file = path.join(RENDERS, name);
-      fs.writeFileSync(file, Buffer.concat(chunks));
+      // a video job streams its file: `?at=<byte>` places one chunk (`&new` on the first: the file starts afresh; the muxer seeks back to patch sizes at the end), `?done` says the file is whole
+      if (searchParams.has('at')) {
+        const at = Number(searchParams.get('at'));
+        if (!(Number.isInteger(at) && at >= 0)) return send(res, 400, 'bad chunk position');
+        const fd = fs.openSync(file, searchParams.has('new') || !fs.existsSync(file) ? 'w' : 'r+');
+        try { fs.writeSync(fd, Buffer.concat(chunks), 0, undefined, at); } finally { fs.closeSync(fd); }
+        return send(res, 200, path.relative(ROOT, file));
+      }
+      if (!searchParams.has('done')) fs.writeFileSync(file, Buffer.concat(chunks));
       const out = searchParams.has('mp3') && name.endsWith('.wav') ? await wavToMp3Async(file) : file;
       const key = /\.(mp4|webm)$/.test(name) ? name.replace(/\.(mp4|webm)$/, '.wav') : name; // a video job waits under the wav key: the extension is the page's choice
       const w = waiters.get(key);
