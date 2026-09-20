@@ -379,11 +379,13 @@
   // (latency, web/boot.mjs) ahead of what is sounding, so the visual cycle is now() minus latency in cycles; events themselves fire at
   // their targetTime on the audio clock. A pinned section's clock is its own bars: toSong puts it in song cycles like the transport
   let repl = null; ready.then((r) => { repl = r; });
-  const stage = mountStage($('stagebox'), $('stage'), { debug: new URLSearchParams(location.search).has('vdebug'), clock: () => {
+  const vdebug = new URLSearchParams(location.search).get('vdebug'); // ?vdebug draws the overlay; ?vdebug=drums (bass, melody, pad, ...) also solos that kind's events
+  const stage = mountStage($('stagebox'), $('stage'), { debug: vdebug !== null, solo: vdebug || null, clock: () => {
     const n = repl ? repl.scheduler.now() - repl.scheduler.latency * repl.scheduler.cps : 0, total = Number($('pos').max);
     return { now: strudel.getAudioContext().currentTime, cycle: loop ? toSong(n) : sections.length && total > 0 ? ((n % total) + total) % total : Math.max(0, n) };
   } });
   $('fullscreen').onclick = () => stage.fullscreen();
+  globalThis.strudelBench.stage = stage; // for headless checks: the running performance's state and clock
   const stageScore = (pat) => (pat?.strudel ? composeVisual(pat.strudel, { onsets: onsetsOf(pat.strudel, 2) }) : fallbackScore(0.5)); // two bars per section: enough for the energy, cheap on a 300-bar song
   // the master scope: analyser 1 (superdough's, fed by the live pattern) drawn each frame while playing, with the peak
   // held a second and read in dBFS, red at clipping; the first sign of a mix with no headroom without a render

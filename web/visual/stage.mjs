@@ -13,7 +13,7 @@ const WORLDS = { tunnel };
  * `tap(layer, kind)` (the per-part trigger callback), `start`/`pause`/`stop`, `reset` (a discontinuity: seek, pin),
  * `fullscreen`, and `debug`.
  */
-export function mountStage(box, canvas, { clock, debug = false }) {
+export function mountStage(box, canvas, { clock, debug = false, solo = null }) { // solo: a layer kind (drums, bass, melody, pad, ...): only its events reach the world, for tuning one job at a time
   const ctx = canvas.getContext('2d');
   let perf = null, score = null, identity = '', running = false, fired = 0;
   const lastAt = {}; // part -> audio time of its last event, for the overlay's "active" list
@@ -34,7 +34,7 @@ export function mountStage(box, canvas, { clock, debug = false }) {
   }
   function overlay(c) {
     const cl = perf.clock, active = Object.entries(lastAt).filter(([, t]) => c.now - t < 0.4).map(([l]) => l);
-    const lines = [`world: ${WORLDS[score.world] ? score.world : `tunnel (${score.world} not built)`} (${score.mood})`, `section: ${cl?.section ?? '-'}  bar ${cl ? cl.bar + 1 : '-'}`, `cycle: ${c.cycle.toFixed(2)}`, `events this frame: ${fired}`, `energy: ${cl ? cl.energy.toFixed(2) : '-'}${cl?.riser ? `  riser ${cl.riser.toFixed(1)}` : ''}${cl?.dropout ? '  dropout' : ''}`, `active: ${active.join(' ') || '-'}`];
+    const lines = [`world: ${WORLDS[score.world] ? score.world : `tunnel (${score.world} not built)`} (${score.mood})${solo ? `  solo: ${solo}` : ''}`, `section: ${cl?.section ?? '-'}  bar ${cl ? cl.bar + 1 : '-'}`, `cycle: ${c.cycle.toFixed(2)}`, `events this frame: ${fired}`, `energy: ${cl ? cl.energy.toFixed(2) : '-'}${cl?.riser ? `  riser ${cl.riser.toFixed(1)}` : ''}${cl?.dropout ? '  dropout' : ''}`, `active: ${active.join(' ') || '-'}`];
     ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.font = `${Math.round(canvas.height / 40)}px ui-monospace, monospace`; ctx.textBaseline = 'top';
     ctx.fillStyle = 'rgba(0 0 0 / .55)'; ctx.fillRect(0, 0, canvas.height * 0.42, lines.length * canvas.height / 32 + 8);
     ctx.fillStyle = '#9f9'; lines.forEach((l, i) => ctx.fillText(l, 6, 6 + i * canvas.height / 32));
@@ -51,8 +51,10 @@ export function mountStage(box, canvas, { clock, debug = false }) {
   }
   const stage = {
     debug,
+    get perf() { return perf; }, // for headless checks
+    get score() { return score; },
     setScore,
-    tap: (layer, kind) => (hap, now, cps, t) => { if (!perf) return; perf.push(eventOf(hap, layer, kind, t)); if (layer) lastAt[layer] = t; },
+    tap: (layer, kind) => (hap, now, cps, t) => { if (!perf) return; const e = eventOf(hap, layer, kind, t); if (solo && e.kind !== solo) return; perf.push(e); if (layer) lastAt[layer] = t; },
     start() { if (!perf) setScore(fallbackScore()); perf.rebase(); if (!running) { running = true; requestAnimationFrame(frame); } },
     pause() { running = false; perf?.flush(); },
     stop() { running = false; perf?.reset(); idle(); },

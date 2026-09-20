@@ -72,7 +72,12 @@ test('every cast job reaches the state: pulse rings, impact shock, grain, the ba
   // the clock alone: a boundary flashes, the riser tail speeds the wall, the dropout tail darkens
   const p = fresh(); const s = st(p);
   tunnel.step(s, STEP, [], clockOf(score, 0)); tunnel.step(s, STEP, [], clockOf(score, 2, clockOf(score, 1.9)));
-  assert.ok(s.flash > 0.9, 'the boundary flashes');
+  assert.ok(s.flash > 0.8, 'the boundary flashes (a climax: the full flash, less one step of decay)');
+  const fx = fresh().state;
+  tunnel.step(fx, STEP, [{ ...base, layer: 'fx', kind: 'fx', role: 'hit', dur: .125 }], clockOf(score, 0));
+  assert.equal(fx.flash, 0, 'a riser slice is not a flash');
+  tunnel.step(fx, STEP, [{ ...base, layer: 'fx', kind: 'fx', role: 'pulse', dur: 2 }], clockOf(score, 0));
+  assert.ok(fx.flash > 0.6, 'the impact is');
   const z0 = fresh().state.rings[3].z;
   const calm = fresh().state, rising = fresh().state;
   tunnel.step(calm, STEP, [], clockOf(score, 0)); tunnel.step(rising, STEP, [], clockOf(score, 1.5)); // intro's riser is its last bar
