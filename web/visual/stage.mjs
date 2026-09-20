@@ -20,11 +20,13 @@ export const worldOf = (score) => WORLDS[score.world] ?? tunnel;
  * instant (the scheduler's position minus its lookahead, in song cycles even when a section is pinned). Returns the
  * stage: `setScore` (composed at every play; the same identity keeps the world's state, a new one starts it over),
  * `tap(layer, kind)` (the per-part trigger callback), `start`/`pause`/`stop`, `reset` (a discontinuity: seek, pin),
- * `fullscreen`, and `debug`.
+ * `setWorld(name | null)` (the page's pick over the score's, a view setting never written to the song; `world` says
+ * which is playing), `fullscreen`, and `debug`.
  */
 export function mountStage(box, canvas, { clock, debug = false, solo = null }) { // solo: a layer kind (drums, bass, melody, pad, ...): only its events reach the world, for tuning one job at a time
   const ctx = canvas.getContext('2d');
-  let perf = null, score = null, identity = '', running = false, fired = 0;
+  let perf = null, score = null, identity = '', running = false, fired = 0, override = null; // override: a world picked on the page, over the score's, never written to the song
+  const worldName = (sc) => (override && WORLDS[override] ? override : WORLDS[sc.world] ? sc.world : 'tunnel');
   const lastAt = {}; // part -> audio time of its last event, for the overlay's "active" list
   const size = () => {
     const dpr = Math.min(2, window.devicePixelRatio || 1), r = box.getBoundingClientRect();
@@ -35,15 +37,19 @@ export function mountStage(box, canvas, { clock, debug = false, solo = null }) {
   size();
   const idle = () => { size(); ctx.clearRect(0, 0, canvas.width, canvas.height); perf?.draw(ctx, canvas.width, canvas.height); };
   function setScore(next) {
-    const id = JSON.stringify([next.world, next.seed, next.palette]);
+    const id = JSON.stringify([worldName(next), next.seed, next.palette]);
     if (perf && id === identity) perf.setScore(next);
-    else perf = createPerformance(worldOf(next), next, { w: 16, h: 9 });
+    else perf = createPerformance(WORLDS[worldName(next)], next, { w: 16, h: 9 });
     score = next; identity = id;
     if (!running) idle();
   }
+  function setWorld(name) { // null: the score's own pick again; a change starts the chosen world from now, the song playing on
+    override = name && WORLDS[name] ? name : null;
+    if (score) { const id = JSON.stringify([worldName(score), score.seed, score.palette]); if (id !== identity) { perf = createPerformance(WORLDS[worldName(score)], score, { w: 16, h: 9 }); identity = id; if (!running) idle(); } }
+  }
   function overlay(c) {
     const cl = perf.clock, active = Object.entries(lastAt).filter(([, t]) => c.now - t < 0.4).map(([l]) => l);
-    const lines = [`world: ${WORLDS[score.world] ? score.world : `tunnel (${score.world} not built)`} (${score.mood})${solo ? `  solo: ${solo}` : ''}`, `section: ${cl?.section ?? '-'}  bar ${cl ? cl.bar + 1 : '-'}`, `cycle: ${c.cycle.toFixed(2)}`, `events this frame: ${fired}`, `energy: ${cl ? cl.energy.toFixed(2) : '-'}${cl?.riser ? `  riser ${cl.riser.toFixed(1)}` : ''}${cl?.dropout ? '  dropout' : ''}`, `active: ${active.join(' ') || '-'}`];
+    const lines = [`world: ${worldName(score)}${override ? ` (picked; the song's is ${score.world})` : WORLDS[score.world] ? '' : ` (${score.world} not built)`} (${score.mood})${solo ? `  solo: ${solo}` : ''}`, `section: ${cl?.section ?? '-'}  bar ${cl ? cl.bar + 1 : '-'}`, `cycle: ${c.cycle.toFixed(2)}`, `events this frame: ${fired}`, `energy: ${cl ? cl.energy.toFixed(2) : '-'}${cl?.riser ? `  riser ${cl.riser.toFixed(1)}` : ''}${cl?.dropout ? '  dropout' : ''}`, `active: ${active.join(' ') || '-'}`];
     ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.font = `${Math.round(canvas.height / 40)}px ui-monospace, monospace`; ctx.textBaseline = 'top';
     ctx.fillStyle = 'rgba(0 0 0 / .55)'; ctx.fillRect(0, 0, canvas.height * 0.42, lines.length * canvas.height / 32 + 8);
     ctx.fillStyle = '#9f9'; lines.forEach((l, i) => ctx.fillText(l, 6, 6 + i * canvas.height / 32));
@@ -62,7 +68,8 @@ export function mountStage(box, canvas, { clock, debug = false, solo = null }) {
     debug,
     get perf() { return perf; }, // for headless checks
     get score() { return score; },
-    setScore,
+    get world() { return score ? worldName(score) : null; }, // the world actually playing: the page's pick, else the score's
+    setScore, setWorld,
     tap: (layer, kind) => (hap, now, cps, t) => { if (!perf) return; const e = eventOf(hap, layer, kind, t); if (solo && e.kind !== solo) return; perf.push(e); if (layer) lastAt[layer] = t; },
     start() { if (!perf) setScore(fallbackScore()); perf.rebase(); if (!running) { running = true; requestAnimationFrame(frame); } },
     pause() { running = false; perf?.flush(); },
