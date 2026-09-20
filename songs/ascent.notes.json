@@ -1,0 +1,56 @@
+{
+  "prompt": "the evolution of humans from monkeys to astronauts: six eras at one tempo, the instruments, motif, harmony and room evolving, an uneasy AI peak with the motif inverted",
+  "requests": [
+    {
+      "date": "2026-09-20",
+      "ask": "make a new song mapping evolution from sticks and stones to lasers and AI; instruments, melody and progress evolving; forge drums too loud and annoying; electric melody too similar to my other songs; orbit clips; the orbit pad breaks playback",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "kit",
+          "why": "hall>plate>room>capsule rooms move from a cave to a spacecraft, one 108 bpm pulse throughout since density does the work"
+        },
+        {
+          "section": "stone",
+          "layer": "melody",
+          "why": "notes 0 ~ 2 ~ 4@2 the three-note motif on ocarina in a hall; the same three notes return under orbit"
+        },
+        {
+          "section": "forge",
+          "layer": "drums",
+          "why": "level .8>.35 a hammer grid instead of house: metal on the off-beats only, the sixteenth clank was the annoyance"
+        },
+        {
+          "section": "forge",
+          "layer": "melody",
+          "why": "pipeorgan_loud>harmonica the organ measured 38 dB under the mix; the harmonica sits at the front"
+        },
+        {
+          "section": "electric",
+          "layer": "melody",
+          "why": "notes rewritten off the beat with a fall through the sixth and the leading tone home, so the hook is not the demo's shape"
+        },
+        {
+          "section": "orbit",
+          "layer": "drums",
+          "why": "drive .8>.6 the clipping: distortion saturates after the level, so drive came down and the level only trimmed"
+        },
+        {
+          "section": "orbit",
+          "layer": "pad",
+          "why": "patch wide dropped, width .8>.6, articulation .2>.45 supersaw already has unison; the wide patch times jux times a long release broke real-time playback"
+        },
+        {
+          "section": "orbit",
+          "layer": "melody",
+          "why": "notes the inversion of the electric line (d -> 7-d) on wt_digital, level 1.3 so the machine leads"
+        },
+        {
+          "section": "orbit",
+          "layer": "perc",
+          "why": "numbers 1..8 one per bar the AI counting the bars"
+        }
+      ]
+    }
+  ]
+}
