@@ -3,8 +3,9 @@
 // Everything musical is in host.mjs and the world; this file is the only one that touches the DOM.
 import { createPerformance, eventOf, fallbackScore } from './host.mjs';
 import tunnel from './tunnel.mjs';
+import ink from './ink.mjs';
 
-const WORLDS = { tunnel };
+const WORLDS = { tunnel, ink };
 
 /**
  * `clock()` is the page's: `{ now }` on the audio clock in seconds and `{ cycle }`, the song cycle sounding at that
