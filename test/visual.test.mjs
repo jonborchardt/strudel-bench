@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import { AXIS_NAMES } from '../lib/axes.mjs';
 import { OVERLAYS } from '../lib/vocab.mjs';
-import { POLICY, classifyHap, onsetsOf, meanAxes, moodOf, worldFor, castOf, composeVisual } from '../lib/visual.mjs';
+import { POLICY, classifyHap, onsetsOf, meanAxes, moodOf, worldFor, castOf, composeVisual, describeVisual } from '../lib/visual.mjs';
 
 test('visual policy is well-formed data: every mood names existing worlds, every kind list ends in grain, every palette entry reads an axis', () => {
   for (const [mood, worlds] of Object.entries(POLICY.moods)) {
@@ -205,4 +205,20 @@ test('castOf: slots by kind in first-appearance order, capacities per world, ove
   const timp = castOf(g.song({}, [g.section('a', 1, { drums: { sounds: { bd: 'timpani' } } })]).strudel, Object.keys(POLICY.worlds)[0]);
   assert.deepEqual(Object.keys(timp.drums.voices), ['bd', 'sd', 'hh'], 'a voice keeps its name whatever sample plays it');
   assert.equal(timp.drums.voices.bd, POLICY.voices.bd);
+});
+
+test("describeVisual: the world with its mood and temperature, each part's slot (drum voices with roles), and where the peak is against the climax", async () => {
+  const g = await ready;
+  const score = composeVisual(arcSong(g)), d = describeVisual(score);
+  assert.equal(d[0], `${score.world} (${score.mood}, ${score.palette.temperature})`);
+  for (const [name, c] of Object.entries(score.cast)) {
+    const voices = c.voices ? ` (${Object.entries(c.voices).map(([v, r]) => `${v} ${r}`).join(', ')})` : '';
+    assert.ok(d.includes(`${name} → ${c.slot}${voices}`), `${name}: ${d.join(' | ')}`);
+  }
+  assert.equal(d.length, 2 + Object.keys(score.cast).length, 'one clause per part, between the world and the peak');
+  assert.equal(d.at(-1), 'peak drop (climax)');
+  const mk = (peak, climax) => ({ world: 'ink', mood: 'sad', palette: { temperature: 'cool' }, cast: {}, peak, climax });
+  assert.deepEqual(describeVisual(mk('build', 'drop')), ['ink (sad, cool)', 'peak build; climax drop'], 'a diagnostic, not a lint');
+  assert.deepEqual(describeVisual(mk('drop', null)), ['ink (sad, cool)', 'peak drop; no climax']);
+  assert.deepEqual(describeVisual(mk(null, null)), ['ink (sad, cool)'], 'no sections: nothing to say');
 });
