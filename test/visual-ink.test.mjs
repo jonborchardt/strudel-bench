@@ -74,27 +74,41 @@ test('every job leaves its mark: a kick dab, an impact splatter, hat specks, a b
   assert.ok(one([{ ...base, layer: null, kind: 'pitched', note: 60 }]).marks.length === 1, 'a pitched hap with no part still draws');
 });
 
-test('marks dry by simulation time; a new sheet when the song starts over; draw paints the paper only on a fresh sheet or a new size, then only what is wet', async () => {
+test('marks dry by simulation time; a new sheet when the song starts over; draw repaints the whole sheet every frame (the paper, the future\'s dashes, every mark), so a kick\'s ripple and a fold can move what was painted', async () => {
   const g = await ready;
   const score = composeVisual(song(g)), p = createPerformance(ink, score);
   let now = 0; const to = (t) => { for (; now < t; now = Math.min(t, now + 0.1)) p.advance(now, now * .5); p.advance(t, t * .5); now = t; }; // a real clock: an advance replays at most half a second
   p.push({ t: .1, cycle: 0, dur: .25, layer: 'drums', kind: 'drums', voice: 'bd', role: 'pulse', gain: 1, velocity: 1, pan: .5, cutoff: null, room: 0, note: null });
   to(.2);
   assert.equal(p.state.marks[0].dry, false);
+  assert.equal(p.state.waves.length, 1, 'the kick ripples the sheet');
+  const c0 = ctxStub(); p.draw(c0, 640, 360);
+  assert.equal(c0.calls.createRadialGradient, 1, 'a wet dab bleeds: a gradient');
   to(4);
   assert.equal(p.state.marks[0].dry, true);
   const c1 = ctxStub(); p.draw(c1, 640, 360);
-  assert.equal(c1.calls.fillRect, 1, 'a fresh sheet: the paper, and the dry dab once');
-  assert.equal(c1.calls.fill, 1);
+  assert.equal(c1.calls.fillRect, 1, 'the paper'); assert.equal(c1.calls.fill, 1, 'the dab, flat once dry');
+  assert.equal(c1.calls.createRadialGradient ?? 0, 0);
+  assert.ok(c1.calls.stroke > 20, 'the future is a field of dashes');
   const c2 = ctxStub(); to(4.05); p.draw(c2, 640, 360);
-  assert.equal(c2.calls.fillRect ?? 0, 0, 'the same sheet: nothing dry is repainted');
-  assert.equal(c2.calls.fill ?? 0, 0);
-  const c3 = ctxStub(); p.draw(c3, 1280, 720);
-  assert.equal(c3.calls.fillRect, 1, 'a new size: the paper and every mark again');
+  assert.equal(c2.calls.fillRect, 1, 'the next frame paints it all again'); assert.equal(c2.calls.fill, 1);
   assert.equal(p.state.sheet, 0);
   to(9); p.advance(9.1, 0.05); // the song wrapped
-  assert.equal(p.state.sheet, 1); assert.deepEqual(p.state.marks, []);
+  assert.equal(p.state.sheet, 1); assert.deepEqual(p.state.marks, []); assert.deepEqual(p.state.folds, []);
   const c4 = ctxStub(); p.draw(c4, 1280, 720); assert.equal(c4.calls.fillRect, 1, 'a new sheet is paper again');
+});
+
+test('the sheet deforms what was painted before: a boundary creases it, a climax buckles it, a drip keeps running', async () => {
+  const g = await ready;
+  const score = composeVisual(song(g)), st = createPerformance(ink, score).state;
+  ink.step(st, STEP, [], clockOf(score, 0.5));
+  ink.step(st, STEP, [{ t: 0, cycle: 0, dur: .25, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact', gain: 1.2, velocity: 1, pan: .5, cutoff: null, room: 0, note: null }], clockOf(score, 0.5));
+  assert.ok(st.marks.some((m) => m.drip > 0), 'a hard impact drips');
+  ink.step(st, STEP, [], clockOf(score, 2, clockOf(score, 1.95))); // into the climax
+  assert.equal(st.folds.length, 1); assert.equal(st.buckles.length, 1);
+  assert.ok(st.folds[0].at > st.marks[0].at, 'the crease is after the marks it moves');
+  for (let i = 0; i < 120; i++) ink.step(st, STEP, [], clockOf(score, 2.5));
+  assert.ok(Math.abs(st.folds[0].amp) > 0.005 && st.buckles[0].amp > 0.005, 'both have grown');
 });
 
 test('a plain pattern (no song) paints on the fallback score', async () => {

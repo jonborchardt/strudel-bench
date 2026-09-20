@@ -4,8 +4,8 @@
 // render can drive a world exactly as the live page does.
 // A world is { name, init(score, rng, size) -> state, step(state, dt, events, clock), draw(state, ctx, w, h) }.
 // The canvas persists between draws: the host never clears it while a performance runs, so a world paints over its
-// last frame (tunnel fades it a little for trails, ink paints only what is new and keeps everything); a fresh state's
-// first draw, and a draw at a new size, must paint the whole frame itself. State is plain data and randomness comes
+// last frame (tunnel fades it a little for trails; ink and sediment repaint their whole sheet from state); a fresh
+// state's first draw, and a draw at a new size, must paint the whole frame itself. State is plain data and randomness comes
 // only from the injected rng (or a generator kept in the state), so the same score and stream give the same state.
 import { classifyHap } from '../../lib/visual.mjs';
 import { prng } from '../../lib/random.mjs';

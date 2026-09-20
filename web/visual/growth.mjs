@@ -7,12 +7,15 @@
 // cutoff the light of the sky). A section's role is the growth phase (establish: roots and trunk, slow; develop:
 // branching; climax: blossoms open at every tip; release: leaves fall); a boundary turns the light; a riser hurries the
 // growth; a dropout stills the wind. Thickness follows the pipe model: every new segment thickens its ancestors, so the
-// trunk carries the canopy's weight. Deterministic: randomness only from the state's own generator (kit.mjs); the sway
-// is applied at draw time from the simulation clock, so the wood itself never moves.
+// trunk carries the canopy's weight. The ground fills in as the song goes: every bar seeds undergrowth (grass tufts,
+// ferns, a bush) that grows up over a few bars and sways with the rest, a bass note fattens a bush, and the wind shows
+// itself as streaks crossing the sky (more with the pad's level) that blow leaves off the canopy when it is strong.
+// Deterministic: randomness only from the state's own generator (kit.mjs); the sway is applied at draw time from the
+// simulation clock, so the wood itself never moves.
 import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf } from './kit.mjs';
 
 const TAU = Math.PI * 2;
-const MAX_SEG = 1400, MAX_LEAF = 500, MAX_BLOOM = 240, MAX_ROOT = 80, GROUND = 0.88;
+const MAX_SEG = 1400, MAX_LEAF = 500, MAX_BLOOM = 240, MAX_ROOT = 80, MAX_UNDER = 220, GROUND = 0.88;
 const DEFAULT_SLOT = { drums: 'impulse', pitched: 'line', hit: 'grain', bass: 'ground', melody: 'line', pad: 'field', perc: 'grain', sample: 'impulse', fx: 'transition' };
 const PHASE = {
   establish: { grow: 0.6, fork: 0.15, bloom: 0, fall: 0, roots: 1 },
@@ -39,6 +42,7 @@ export default {
       segs: [{ x: aspect / 2, y: GROUND, a: -Math.PI / 2, l: 0.05, d: 0, p: -1, th: 1, tip: true, hot: 0 }], // the wood: base point, angle, length, depth, parent, thickness, a living tip?
       roots: [{ x: aspect / 2, y: GROUND, a: Math.PI / 2, l: 0.03, p: -1 }],
       leaves: [], blooms: [], falling: [], sap: [],
+      under: [], gusts: [], lastBar: null, // the undergrowth { kind: 'grass' | 'fern' | 'bush', x, h, hue, born, lean }; the wind's streaks { x, y, vx, life, span, len }
       light: { x: aspect / 2, y: 0.25, tx: aspect / 2, ty: 0.25, hot: 0 },
       bassNote: 36, melNote: 48,
       wind: { level: 0, tint: 0.5 },
@@ -61,9 +65,21 @@ export default {
     for (const sp of s.sap) { sp.d += dt * 6 * s.motion; sp.hot = decay(sp.hot, 1.2, dt); } s.sap = s.sap.filter((sp) => sp.hot > 0.05);
     for (const sg of s.segs) sg.hot = decay(sg.hot, 3, dt);
     for (const b of s.blooms) b.r = ease(b.r, b.rTo, 2, dt);
-    for (const f of s.falling) { f.vy += 0.3 * dt; f.vx = ease(f.vx, Math.sin(s.t * 1.3 + f.y * 5) * 0.15 * (0.3 + s.wind.level), 1, dt); f.x += f.vx * dt; f.y += f.vy * dt; f.rot += dt * 2; f.life -= dt; }
+    for (const f of s.falling) { f.vy += 0.3 * dt; f.vx = ease(f.vx, Math.sin(s.t * 1.3 + f.y * 5) * 0.15 * (0.3 + s.wind.level) + 0.3 * s.wind.level * s.motion, 1, dt); f.x += f.vx * dt; f.y += f.vy * dt; f.rot += dt * 2; f.life -= dt; } // a falling leaf is carried the wind's way
     s.falling = s.falling.filter((f) => f.life > 0 && f.y < GROUND + 0.02);
-    if (s.phase.fall > 0.3 && s.leaves.length > 40 && rand(s) < s.phase.fall * dt * 4) { const i = Math.floor(rand(s) * s.leaves.length), lf = s.leaves.splice(i, 1)[0], [x, y] = endOf(s, lf.seg, lf.at); s.falling.push({ x, y, vx: 0, vy: 0, rot: rand(s) * TAU, r: lf.r, life: 6 }); } // a release: leaves let go
+    const letGo = () => { const i = Math.floor(rand(s) * s.leaves.length), lf = s.leaves.splice(i, 1)[0], [x, y] = endOf(s, lf.seg, lf.at); s.falling.push({ x, y, vx: 0, vy: 0, rot: rand(s) * TAU, r: lf.r, life: 6 }); };
+    if (s.phase.fall > 0.3 && s.leaves.length > 40 && rand(s) < s.phase.fall * dt * 4) letGo(); // a release: leaves let go
+    if (s.wind.level > 0.55 && s.leaves.length > 60 && rand(s) < (s.wind.level - 0.5) * dt * 5 * (1 - s.dark)) letGo(); // a strong wind blows leaves off
+    // the wind's streaks: born at the left, crossing the sky, more and faster with the pad
+    for (const gu of s.gusts) { gu.x += gu.vx * dt; gu.life -= dt; } s.gusts = s.gusts.filter((gu) => gu.life > 0 && gu.x < s.aspect + 0.2);
+    if (s.gusts.length < 40 && rand(s) < dt * (1.5 + 12 * s.wind.level) * (1 - s.dark)) s.gusts.push({ x: -0.15, y: 0.05 + rand(s) * (GROUND - 0.15), vx: (0.35 + 0.7 * s.wind.level) * s.motion, life: 6, span: 6, len: 0.04 + rand(s) * 0.08 });
+    // the undergrowth: every bar seeds a little, nearer the trunk than not; it grows up over a few bars
+    const bar = clock.index >= 0 ? clock.index * 1e4 + clock.bar : Math.floor(clock.cycle);
+    if (s.lastBar !== null && bar !== s.lastBar && s.under.length < MAX_UNDER) {
+      const n = 1 + Math.floor(rand(s) * 2 + s.energy);
+      for (let i = 0; i < n && s.under.length < MAX_UNDER; i++) { const u = rand(s), kind = u < 0.6 ? 'grass' : u < 0.85 ? 'fern' : 'bush'; s.under.push({ kind, x: clamp(s.aspect / 2 + (rand(s) - 0.5) * (rand(s) < 0.5 ? 0.5 : 1.9) * s.aspect, 0.02, s.aspect - 0.02), h: (kind === 'bush' ? 0.03 : kind === 'fern' ? 0.05 : 0.035) * (0.7 + 0.6 * rand(s)) * s.spread, hue: s.leaf + s.hueShift + (rand(s) - 0.5) * 30, born: s.t, lean: (rand(s) - 0.5) * 0.6 }); }
+    }
+    s.lastBar = bar;
     const tipEnd = (sg) => [sg.x + Math.cos(sg.a) * sg.l, sg.y + Math.sin(sg.a) * sg.l];
     const thicken = (i) => { for (let k = s.segs[i].p; k >= 0; k = s.segs[k].p) s.segs[k].th += 0.12; };
     const grow = (sg, i, g, turn) => { // a new segment from this tip, bent a little toward the light and by the turn asked, shorter with depth; a tip at the top of the frame stops
@@ -94,6 +110,7 @@ export default {
         if (e.note !== null) s.bassNote = e.note;
         s.trunk = Math.min(1.5, s.trunk + 0.6 * g); s.segs[0].th += 0.2 * g;
         s.sap.push({ d: 0, hot: 1 });
+        const bushes = s.under.filter((u) => u.kind === 'bush'); if (bushes.length) { const bu = bushes[Math.floor(rand(s) * bushes.length)]; bu.h = Math.min(0.09, bu.h + 0.004 * g); } // a bush fattens
         if (s.roots.length < MAX_ROOT && rand(s) < s.phase.roots) { const parent = Math.floor(rand(s) * s.roots.length), r = s.roots[parent], x = r.x + Math.cos(r.a) * r.l, y = r.y + Math.sin(r.a) * r.l; s.roots.push({ x, y, a: clamp(r.a + (rand(s) - 0.5) * 1.2, 0.4, Math.PI - 0.4), l: 0.02 + 0.03 * rand(s), p: parent }); }
       } else if (slot === 'line' || slot === 'counter') { // the light the tips bend toward
         if (e.note === null) continue;
@@ -120,6 +137,30 @@ export default {
     // the light: where the tips bend toward
     if (s.light.hot > 0.02) { const g = ctx.createRadialGradient(X(s.light.x), Y(s.light.y), 0, X(s.light.x), Y(s.light.y), R(0.25)); g.addColorStop(0, hsla(s.bloom + s.hueShift, 70, 75, 0.25 * s.light.hot * lit)); g.addColorStop(1, hsla(s.bloom, 70, 75, 0)); ctx.fillStyle = g; ctx.fillRect(0, 0, w, Y(GROUND)); }
     ctx.lineCap = 'round';
+    // the wind: faint streaks crossing the sky, undulating as they go
+    ctx.lineWidth = Math.max(1, R(0.0012));
+    for (const gu of s.gusts) {
+      const f = Math.sin(Math.PI * clamp(gu.life / gu.span)), y = gu.y + Math.sin(gu.x * 6 + s.t * 2) * 0.01;
+      ctx.strokeStyle = hsla(pal.field + s.hueShift, 30, 80, (0.08 + 0.18 * s.wind.level) * f * lit);
+      ctx.beginPath(); ctx.moveTo(X(gu.x - gu.len), Y(y + Math.sin((gu.x - gu.len) * 6 + s.t * 2) * 0.01 - Math.sin(gu.x * 6 + s.t * 2) * 0.01)); ctx.lineTo(X(gu.x), Y(y)); ctx.stroke();
+    }
+    // the undergrowth at the ground, grown up over a few bars and swaying with the wind: grass as a few blades, a fern as a stem with leaflets, a bush as a mound of round leaves
+    for (const u of s.under) {
+      const up = Math.min(1, (s.t - u.born) / 8) * u.h, bx = X(u.x), by = Y(GROUND), lean = u.lean + Math.sin(s.t * 1.1 * s.motion + u.x * 5) * 0.25 * (0.3 + s.wind.level) * (1 - s.dark);
+      if (u.kind === 'grass') {
+        ctx.strokeStyle = hsla(u.hue, 50, 38, 0.9 * lit); ctx.lineWidth = Math.max(1, R(0.0015));
+        for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(bx + k * R(0.004), by); ctx.quadraticCurveTo(bx + k * R(0.006) + lean * R(up) * 0.5, by - R(up) * 0.6, bx + (k * 0.5 + lean * 1.4) * R(up) * 0.6 + k * R(0.006), by - R(up)); ctx.stroke(); }
+      } else if (u.kind === 'fern') {
+        const tx = bx + lean * R(up) * 0.8, ty = by - R(up);
+        ctx.strokeStyle = hsla(u.hue, 45, 35, 0.9 * lit); ctx.lineWidth = Math.max(1, R(0.0015));
+        ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo(bx + lean * R(up) * 0.2, by - R(up) * 0.6, tx, ty); ctx.stroke();
+        ctx.fillStyle = hsla(u.hue, 50, 40, 0.85 * lit);
+        for (let k = 1; k <= 5; k++) { const f = k / 6, px = lerp(bx, tx, f), py = lerp(by, ty, f), lr = R(up) * 0.16 * (1 - f * 0.6); for (const side of [-1, 1]) { ctx.beginPath(); ctx.ellipse(px + side * lr, py, lr, lr * 0.35, side * 0.5, 0, TAU); ctx.fill(); } }
+      } else {
+        ctx.fillStyle = hsla(u.hue, 45, 32, 0.9 * lit);
+        for (let k = 0; k < 7; k++) { const a = (k / 7) * Math.PI, rr = R(up) * (0.7 + 0.3 * Math.sin(k * 2.3)); ctx.beginPath(); ctx.arc(bx + Math.cos(a) * rr * 0.9 + lean * R(up) * 0.4 * Math.sin(a), by - Math.sin(a) * rr * 0.8, R(up) * 0.45, 0, TAU); ctx.fill(); }
+      }
+    }
     // the roots, still, under the ground
     ctx.strokeStyle = hsla(s.wood, 30, 28, 0.8); ctx.lineWidth = Math.max(1, R(0.004) * s.weight);
     for (const r of s.roots) { ctx.beginPath(); ctx.moveTo(X(r.x), Y(r.y)); ctx.lineTo(X(r.x + Math.cos(r.a) * r.l), Y(r.y + Math.sin(r.a) * r.l)); ctx.stroke(); }

@@ -75,6 +75,28 @@ test('every job is a force: a kick shoves the population outward, an impact spli
   assert.ok(st.home.tx !== home.tx || st.home.ty !== home.ty, 'a boundary moves home');
 });
 
+test('visitors come in and leave: an impact sends a hawk, a bass note a seed, a pad chord a thermal; each crosses and is gone by the end of its span; a hawk pushes the agents away, a seed draws them', async () => {
+  const g = await ready;
+  const score = composeVisual(song(g));
+  const one = (st, evs) => { swarm.step(st, STEP, evs, clockOf(score, 0.1)); return st; };
+  const fresh = () => { const st = createPerformance(swarm, score).state; for (let i = 0; i < 60; i++) one(st, []); return st; };
+  const kinds = (st) => st.visitors.map((v) => v.kind);
+  const st = one(fresh(), [{ ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }, { ...base, layer: 'bass', kind: 'bass', note: 36 }, { ...base, layer: 'pad', kind: 'pad', note: 60, dur: 1 }]);
+  assert.deepEqual(kinds(st).sort(), ['hawk', 'seed', 'thermal']);
+  assert.ok(st.visitors.every((v) => Math.hypot(v.x - st.home.x, v.y - st.home.y) > 0.5), 'they start away from home');
+  for (let i = 0; i < 60 * 15; i++) one(st, []);
+  assert.deepEqual(kinds(st), [], 'all gone');
+  const near = (st, v) => st.ax.reduce((n, x, i) => n + (Math.hypot(x - v.x, st.ay[i] - v.y) < 0.25 ? 1 : 0), 0);
+  const hawk = { kind: 'hawk', x: 0, y: 0, vx: 0, vy: 0, r: 0.03, life: 9, span: 9, w: 1, hue: 0, through: false };
+  const hawked = fresh(), quiet = fresh(); hawked.visitors.push({ ...hawk, x: hawked.home.x, y: hawked.home.y });
+  for (let i = 0; i < 60; i++) { one(hawked, []); one(quiet, []); } // the same steps without it: the flock is still settling on home either way
+  assert.ok(near(hawked, hawked.visitors[0]) < near(quiet, hawked.visitors[0]), 'the agents flee the hawk');
+  const fed = fresh(), still = fresh(), seed = { kind: 'seed', x: fed.home.x + 0.3, y: fed.home.y, vx: 0, vy: 0, r: 0.02, life: 30, span: 30, w: 1, hue: 0, through: false }; fed.visitors.push(seed);
+  for (let i = 0; i < 90; i++) { one(fed, []); one(still, []); }
+  assert.ok(near(fed, seed) > near(still, seed) && seed.r < 0.02, 'the agents gather on the seed and eat it');
+  const c = ctxStub(); swarm.draw(st, c, 640, 360); swarm.draw(hawked, c, 640, 360); swarm.draw(fed, c, 640, 360);
+});
+
 test('harmony is the relation between groups: a leader consonant with the bass draws the other group, a dissonant one pushes it', async () => {
   const g = await ready;
   const score = composeVisual(song(g));

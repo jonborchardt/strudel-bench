@@ -4,7 +4,9 @@
 // a node routed to a central bus by a bent trace, as on a schematic; a hit lights its node and sends a pulse down the
 // route to the bus. A kick rings the bus (a ring expanding across the field), an impact discharges an arc between two
 // nodes, hats tick along the routes. Each line part is a probe swept across the field once per bar, its pitch the
-// height, leaving a phosphor trail that fades over a few bars; the ticks near a probe turn toward it. The pad is a
+// height, leaving a phosphor trail that fades over a few bars; the ticks near a probe turn toward it, a ring passing
+// turns them radial, and each tick rides the carrier's wave so the field flows (a slow swell keeps it moving when the
+// bass is silent, and the whole field streams leftward at the tempo). The pad is a
 // contour field around its node: isolines breathing outward, their spacing the cutoff, their number the level. A
 // section's role is the instrument's mode (establish: a few routes live, a slack field; climax: every route live, the
 // field coherent, the sweep bright; release: dim and slow); a boundary re-routes the topology (the nodes move to new
@@ -13,7 +15,7 @@
 import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf, fadeFrame } from './kit.mjs';
 
 const TAU = Math.PI * 2;
-const GX = 44, GY = 24; // the field's ticks
+const GX = 50, GY = 28; // the field's ticks
 const BUS = { x: 0.5, y: 0.52 };
 const DEFAULT_SLOT = { drums: 'impulse', pitched: 'line', hit: 'grain', bass: 'ground', melody: 'line', pad: 'field', perc: 'grain', sample: 'impulse', fx: 'transition' };
 // the instrument's mode per section role: how much of the field shows, how coherent it is, route brightness, the sweep's glow, the frame's persistence
@@ -118,19 +120,22 @@ export default {
     ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = hsla(hue, 30, 40, s.grid); ctx.lineWidth = 1;
     for (let i = 1; i < 16; i++) { ctx.beginPath(); ctx.moveTo(X(i / 16), 0); ctx.lineTo(X(i / 16), h); ctx.stroke(); }
     for (let i = 1; i < 9; i++) { ctx.beginPath(); ctx.moveTo(0, Y(i / 9)); ctx.lineTo(w, Y(i / 9)); ctx.stroke(); }
-    // the field: a tick per cell, turned by the carrier (a wave along x at the bass note's wavelength, moving at the tempo), pulled toward a live probe, incoherent by the mode
-    const c = s.carrier, probes = Object.values(s.probes).filter((p) => p.hot > 0.05), amp = c.amp * lit;
+    // the field: a tick per cell, turned by the carrier (a wave along x at the bass note's wavelength, moving at the tempo) and carried along it (each tick rides the wave a little, so the field flows, not just turns), pulled toward a live probe, turned radial and lit where a ring passes, incoherent by the mode; with no carrier a slow swell keeps it moving, and the whole field streams leftward at the tempo
+    const c = s.carrier, probes = Object.values(s.probes).filter((p) => p.hot > 0.05), amp = c.amp * lit, rings = s.rings.filter((r) => r.hot > 0.05);
     ctx.globalCompositeOperation = 'source-over'; // the ticks are crisp, never a glow that piles up on the persisting frame
-    const len = R(0.013) * s.weight, jit = (1 - mode.cohere) * 0.9 + s.jitter * 0.3;
+    const len = R(0.009) * s.weight, jit = (1 - mode.cohere) * 0.9 + s.jitter * 0.3, idle = 1 - clamp(amp), stream = ((s.t * 0.02 * s.cps * s.beats * s.motion * (1 - s.dark)) % (1 / GX));
     for (let i = 0; i < GX; i++) for (let k = 0; k < GY; k++) {
-      const x = (i + 0.5) / GX, y = (k + 0.5) / GY;
-      let a = Math.sin(x * c.k * TAU - c.phase + y * 1.7) * amp * 1.1 + Math.sin(i * 12.9898 + k * 78.233) * jit; // a stable pseudo-random turn per cell, no generator
-      let pull = 0;
+      const x0 = (i + 0.5) / GX - stream, y0 = (k + 0.5) / GY, ph = x0 * c.k * TAU - c.phase + y0 * 1.7;
+      const swell = Math.sin(x0 * 2.6 + s.t * 0.35 * s.motion + y0 * 1.9) * Math.cos(y0 * 3.1 - s.t * 0.22 * s.motion) * 0.7 * idle * (1 - s.dark);
+      let a = Math.sin(ph) * amp * 1.1 + swell + Math.sin(i * 12.9898 + k * 78.233) * jit; // a stable pseudo-random turn per cell, no generator
+      const x = x0 + Math.cos(ph) * 0.004 * amp * (h / w) + Math.sin(x0 * 4 + s.t * 0.3 * s.motion) * 0.003 * idle * (h / w), y = y0 + Math.sin(ph) * 0.003 * amp + Math.cos(y0 * 5 + s.t * 0.25 * s.motion) * 0.002 * idle; // the tick rides the wave
+      let pull = 0, ringed = 0;
       for (const p of probes) { const d = Math.hypot((x - s.barPhase) * (w / h), y - p.y); if (d < 0.18) { const f = (1 - d / 0.18) * p.hot; a = lerp(a, Math.atan2(p.y - y, (s.barPhase - x) * (w / h)), f); pull = Math.max(pull, f); } }
-      const bright = clamp((0.2 + 0.45 * Math.abs(amp) * mode.field + 0.6 * pull) * lit, 0, 0.75);
+      for (const r of rings) { const dr = Math.abs(Math.hypot((x - BUS.x) * (w / h) / 0.75, y - BUS.y) - r.r); if (dr < 0.05) { const f = (1 - dr / 0.05) * r.hot; a = lerp(a, Math.atan2(y - BUS.y, (x - BUS.x) * (w / h)), f * 0.8); ringed = Math.max(ringed, f); } }
+      const bright = clamp((0.1 + 0.08 * idle * mode.field + 0.28 * Math.abs(amp) * mode.field + 0.6 * pull + 0.5 * ringed) * lit, 0, 0.6); // the field stays under the routes and probes drawn over it
       if (bright < 0.03) continue;
-      const cx = X(x), cy = Y(y), dx = Math.cos(a) * len * (0.6 + Math.abs(amp)), dy = Math.sin(a) * len * (0.6 + Math.abs(amp));
-      ctx.strokeStyle = hsla(hue + 40 * pull, pal.sat, lerp(45, 75, bright), bright); ctx.lineWidth = Math.max(1, R(0.0016) * s.weight);
+      const cx = X(x), cy = Y(y), reach = len * (0.55 + 0.6 * clamp(Math.abs(amp), 0, 1.2) + 0.3 * ringed), dx = Math.cos(a) * reach, dy = Math.sin(a) * reach; // never longer than its cell: a field, not a weave
+      ctx.strokeStyle = hsla(hue + 40 * pull + 20 * ringed, pal.sat, lerp(45, 78, bright), bright); ctx.lineWidth = Math.max(1, R(0.0016) * s.weight);
       ctx.beginPath(); ctx.moveTo(cx - dx, cy - dy); ctx.lineTo(cx + dx, cy + dy); ctx.stroke();
     }
     // the contours: isolines around the pad's node, breathing outward, spacing the cutoff, count the level

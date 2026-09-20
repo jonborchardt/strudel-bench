@@ -37,6 +37,7 @@ test('growth is importable in Node and draws on a stub context with no randomnes
     const ctx = ctxStub(), p = run(song(g), 8, ctx);
     assert.equal(composeVisual(song(g)).world, 'growth');
     assert.ok(p.state.segs.length > 20, 'wood grew'); assert.ok(p.state.leaves.length > 0, 'leaves'); assert.ok(p.state.blooms.length > 0, 'the climax blossomed');
+    assert.ok(p.state.under.length >= 4 && p.state.under.length <= 220, 'undergrowth came in bar by bar'); assert.ok(p.state.gusts.length > 0, 'the wind shows');
     assert.ok(ctx.calls.stroke > 100);
   } finally { for (const u of undo) u(); }
 });
@@ -91,6 +92,11 @@ test('the phases: no blossoms while establishing, blossoms in the climax, leaves
   for (let i = 0; i < 60; i++) growth.step(r, STEP, [kick, { ...base, layer: 'drums', kind: 'drums', voice: 'hh', role: 'grain' }, { ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }], clockOf(rel, 0.5));
   for (let i = 0; i < 600; i++) growth.step(r, STEP, [{ ...base, layer: 'drums', kind: 'drums', voice: 'hh', role: 'grain' }], clockOf(rel, 0.5));
   assert.ok(r.falling.length > 0 || r.leaves.length <= 40, 'leaves fall in a release');
+  const windy = createPerformance(growth, score).state;
+  for (let i = 0; i < 60; i++) growth.step(windy, STEP, [kick, { ...base, layer: 'drums', kind: 'drums', voice: 'hh', role: 'grain' }, { ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }], clockOf(score, 0.5));
+  for (let i = 0; i < 600; i++) growth.step(windy, STEP, [{ ...base, layer: 'drums', kind: 'drums', voice: 'hh', role: 'grain' }, ...(i % 30 === 0 ? [{ ...base, layer: 'pad', kind: 'pad', note: 60, dur: 1, gain: 1.5 }] : [])], clockOf(score, 0.5));
+  assert.ok(windy.falling.length > 0 || windy.leaves.length < 60, 'a strong wind blows leaves off, outside any release');
+  assert.ok(windy.gusts.length > 5, 'and streaks the sky');
 });
 
 test('a plain pattern (no song) runs on the fallback score', async () => {

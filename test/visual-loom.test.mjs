@@ -37,6 +37,8 @@ test('loom is importable in Node and draws on a stub context with no randomness 
     assert.equal(composeVisual(song(g)).world, 'loom');
     assert.ok(p.state.rows.length > 5, 'rows woven');
     assert.ok(ctx.calls.fillRect > 500, 'the cloth\'s cells');
+    assert.ok(p.state.roll > 0.05 && p.state.belt > 1 && p.state.lint.length > 0, 'the cloth winds on, the belt runs, lint flies');
+    assert.ok(ctx.calls.setLineDash > 10, 'the belt is dashed');
   } finally { for (const u of undo) u(); }
 });
 
