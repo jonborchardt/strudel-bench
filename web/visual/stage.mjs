@@ -5,8 +5,9 @@ import { createPerformance, eventOf, fallbackScore } from './host.mjs';
 import tunnel from './tunnel.mjs';
 import ink from './ink.mjs';
 import sediment from './sediment.mjs';
+import signal from './signal.mjs';
 
-export const WORLDS = { tunnel, ink, sediment };
+export const WORLDS = { tunnel, ink, sediment, signal };
 /** The world a score names, tunnel when it names one that is not built. */
 export const worldOf = (score) => WORLDS[score.world] ?? tunnel;
 
