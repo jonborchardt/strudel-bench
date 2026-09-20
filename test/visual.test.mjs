@@ -154,6 +154,19 @@ test("mood: the overlay the song leans toward, neutral at the baseline; the worl
   assert.equal(moodOf(meanAxes(g.song({}, [g.section('a', 1, { drums: { brightness: .52 } })]).strudel)), 'neutral', 'a lean under the threshold is no mood');
 });
 
+test("a song's visual key names its world, over the mood's pool; an unknown one is refused by song()", async () => {
+  const g = await ready;
+  for (const world of Object.keys(POLICY.worlds)) assert.equal(composeVisual(g.song({ visual: world }, [g.section('a', 1, { drums: {} })]).strudel).world, world);
+  assert.throws(() => g.song({ visual: 'nope' }, []), /visual must name a world: tunnel, ink/);
+  assert.equal(composeVisual(g.song({ seed: 5 }, [g.section('a', 1, { drums: {} })]).strudel).world, worldFor('neutral', 5), 'unwritten: the pool');
+  const obj = composeVisual(g.song({ seed: 5, visual: { world: 'ink', seed: 12 } }, [g.section('a', 1, { drums: {} })]).strudel);
+  assert.deepEqual([obj.world, obj.seed], ['ink', 12], 'the object form: its own seed for the look, the song keeps its own for the lines');
+  assert.equal(composeVisual(g.song({ seed: 5, visual: { seed: 12 } }, [g.section('a', 1, { drums: {} })]).strudel).world, worldFor('neutral', 12), 'a seed alone still picks from the pool, by that seed');
+  assert.throws(() => g.song({ visual: { world: 'ink', colour: 'red' } }, []), /visual takes world and seed, not colour/);
+  assert.throws(() => g.song({ visual: { seed: 'x' } }, []), /visual.seed must be a number/);
+  assert.throws(() => g.song({ visual: ['ink'] }, []), /visual must be a world name or/);
+});
+
 test("worldFor: seeds reach every world of a pool, a seed always picks the same one, a mood with no row takes neutral's", () => {
   const policy = { moods: { neutral: ['a', 'b', 'c'], sad: ['d'] } };
   const picks = new Set(Array.from({ length: 32 }, (_, i) => worldFor('neutral', i + 1, policy)));

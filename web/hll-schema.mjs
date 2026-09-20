@@ -26,6 +26,7 @@ import { ARP_ORDERS, DRUM_ORDER } from '../lib/layers.mjs';
 import { SYNTHS, PATCHES } from '../lib/packs.mjs';
 import { HARMONY } from '../lib/vocab.mjs';
 import { FLATS, NUMERALS } from '../lib/harmony.mjs';
+import VISUAL from '../lib/visual.json' with { type: 'json' };
 
 /** Lists only the host knows: the page fills these once the packs are loaded; Node keeps the synths and no kits. */
 export const host = { sounds: () => SYNTHS, kits: () => [] };
@@ -57,6 +58,8 @@ export const SCHEMA = {
     key: { type: 'enum', values: () => ROOTS.flatMap((r) => HARMONY.modes.map((m) => `${r}:${m}`)), list: 'keys', title: 'root and mode' },
     progression: { type: 'tokens', values: CHORDS, sep: ' ', title: 'one chord per bar, roman numerals over the key; [a b] shares a bar' },
     role: { type: 'enum', values: ROLES, title: "the section's role in the arc" },
+    visual: { type: 'enum', values: Object.keys(VISUAL.worlds), title: 'the world the stage plays for this song (or { world, seed }); unwritten, the score picks one by mood and seed' },
+    world: { type: 'enum', values: Object.keys(VISUAL.worlds), title: 'the world, inside visual: { world, seed }' },
     dropout: int(0, 'bars of silence (all but fx) before the section ends'),
     sweep: int(0, 'bars of low-pass sweep down (all but fx) before the section ends'),
     kit: { type: 'enum', values: () => host.kits(), title: 'drum machine bank' },
