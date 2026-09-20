@@ -66,7 +66,7 @@ export function mountStage(box, canvas, { clock, debug = false, solo = null }) {
   }
   function overlay(c) {
     const cl = perf.clock, active = Object.entries(lastAt).filter(([, t]) => c.now - t < 0.4).map(([l]) => l);
-    const st = perf.state, scene = st?.scenes ? `  scene ${st.scene + 1}/${st.scenes.length}: ${st.order.map((id) => `${id}${st.layers[id]?.leaving ? '↓' : ''}`).join(' ')}${st.trans ? ` ${st.trans.type} ${Math.round((st.trans.t / st.trans.dur) * 100)}%` : ''}` : '';
+    const st = perf.state, scene = st?.children ? `  breath ${(st.breath * st.peak).toFixed(2)}` : '';
     const lines = [`world: ${label(score)}${override ? ` (picked; the song's is ${score.world})` : WORLDS[score.world] ? '' : ` (${score.world} not built)`} (${score.mood})${solo ? `  solo: ${solo}` : ''}${scene}`, `section: ${cl?.section ?? '-'}  bar ${cl ? cl.bar + 1 : '-'}`, `cycle: ${c.cycle.toFixed(2)}`, `events this frame: ${fired}`, `energy: ${cl ? cl.energy.toFixed(2) : '-'}${cl?.riser ? `  riser ${cl.riser.toFixed(1)}` : ''}${cl?.dropout ? '  dropout' : ''}`, `active: ${active.join(' ') || '-'}`];
     ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.font = `${Math.round(canvas.height / 40)}px ui-monospace, monospace`; ctx.textBaseline = 'top';
     ctx.fillStyle = 'rgba(0 0 0 / .55)'; ctx.fillRect(0, 0, canvas.height * 0.42, lines.length * canvas.height / 32 + 8);
