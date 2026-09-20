@@ -29,6 +29,7 @@
     "tunnel": { "slots": { "impulse": 1, "ground": 1, "line": 1, "counter": 1, "field": 1, "transition": 1 } },
     "ink":    { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
     "sediment": { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
-    "signal":   { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } }
+    "signal":   { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "swarm":    { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } }
   }
 }
