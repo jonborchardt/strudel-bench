@@ -72,8 +72,12 @@ test('createPerformance: fixed steps from wall time, events delivered on the ste
   assert.ok(p.state.steps <= 6 + MAX_CATCHUP / STEP + 1, 'a stall is capped');
   const ctx = {}; p.draw(ctx, 4, 3); assert.equal(ctx.drawn, p.state.steps);
   p.rebase(); const before = p.state.steps; p.advance(100, 6.55); assert.equal(p.state.steps, before, 'after a rebase the gap is not simulated');
+  p.push({ t: 100.01, layer: 'stale' }); p.flush(); p.advance(100.1, 6.6); assert.ok(!p.state.events.includes('stale'), 'a flush drops what was queued ahead');
   p.reset();
   assert.deepEqual([p.state.steps, p.state.events, p.pending, p.state.seed], [0, [], 0, first], 'reset is a fresh init from the same seed');
+  p.setScore({ ...score, total: 8, sections: [{ name: 'only', at: 0, until: 8, bars: 8, energy: 1, riser: 0, dropout: 0 }] });
+  p.advance(200, 1); p.advance(200.1, 1.05);
+  assert.equal(p.clock.section, 'only', 'the clock reads the new score; the state was kept');
 });
 
 test('createPerformance is deterministic: the same score and event stream give the same state; a different seed does not', () => {

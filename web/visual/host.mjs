@@ -72,8 +72,10 @@ export function createPerformance(world, score, size = { w: 16, h: 9 }) {
     get clock() { return clock; },
     get pending() { return queue.length; },
     push(ev) { queue.push(ev); },
+    flush() { queue.length = 0; }, // on a pause: the scheduler re-queries from the paused cycle on resume, so what was queued ahead would sound twice
     rebase() { last = null; },
     reset: init,
+    setScore(next) { score = next; }, // a re-evaluation with the same identity: the sections may have moved, the world keeps its state
     advance(now, cycle) {
       if (last === null) last = now;
       acc += Math.min(Math.max(0, now - last), MAX_CATCHUP); last = now;

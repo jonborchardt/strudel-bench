@@ -91,7 +91,7 @@ export default {
 
   draw(s, ctx, w, h) {
     const { pal } = s, lit = 1 - 0.75 * s.dark;
-    const cx = w / 2 + s.cam.x * h * 0.06, cy = h / 2 + s.cam.y * h * 0.06;
+    const cx = w / 2 + s.cam.x * h * 0.22, cy = h / 2 + s.cam.y * h * 0.22; // an impact's shock: a few percent of the height at its peak
     const R = h * 0.115 * s.radius * (1 + 0.09 * s.pulse) * (1 - 0.28 * s.riser); // the wall's radius at depth 1 (screen radius is R / z)
     const hue = pal.hue + s.hueShift;
     fadeFrame(ctx, w, h, pal.bg, s.trail + 0.25 * s.riser);
@@ -99,9 +99,9 @@ export default {
     // the field: fog at the vanishing point, its brightness the pad's cutoff, gone in a dropout
     if (s.fog > 0.01) {
       const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 3.2);
-      grad.addColorStop(0, hsla(pal.field + s.hueShift, pal.sat, lerp(22, 62, s.fogTint), 0.55 * s.fog * lit));
+      grad.addColorStop(0, hsla(pal.field + s.hueShift, pal.sat, lerp(22, 62, s.fogTint), 0.4 * s.fog * lit));
       grad.addColorStop(1, hsla(pal.field + s.hueShift, pal.sat, 20, 0));
-      ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h); // not additive: the trail keeps most of the last frame, and an additive fog would saturate
     }
     // the wall, far to near: the rings, dented by the last impact, wobbling by the song's jitter, lit by the bass
     const shape = (z) => (a) => (R / z) * (1 + s.wobble * Math.sin(3 * a + s.phase + s.t * 0.7) + 0.22 * s.dent * Math.cos(2 * a + s.dentPhase));
@@ -118,9 +118,9 @@ export default {
     // grain: short radial ticks on the wall
     ctx.globalCompositeOperation = 'lighter';
     for (const g of s.grain) {
-      const rr = R / g.z, len = h * 0.012 * (1 - g.z) * (0.5 + g.w), a = g.a + s.rot;
+      const rr = R / g.z, len = h * 0.03 * (1 - g.z) * (0.5 + g.w), a = g.a + s.rot;
       ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * rr * s.sx, cy + Math.sin(a) * rr * s.sy); ctx.lineTo(cx + Math.cos(a) * (rr + len) * s.sx, cy + Math.sin(a) * (rr + len) * s.sy);
-      ctx.lineWidth = h * 0.0018; ctx.strokeStyle = hsla(hue + 30, pal.sat, 80, 0.7 * (g.life / 0.28) * lit); ctx.stroke();
+      ctx.lineWidth = h * 0.003; ctx.strokeStyle = hsla(hue + 30, pal.sat, 85, 0.8 * (g.life / 0.28) * lit); ctx.stroke();
     }
     // the ribbons: each line part as a glowing path on the wall, thin and bright over wide and faint; they survive a dropout
     for (const pts of Object.values(s.ribbons)) {

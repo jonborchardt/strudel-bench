@@ -42,6 +42,9 @@
     <span class="where" id="where">&mdash;</span>
   </section>
 
+  <!-- stage: the song's visual performance (web/visual/): a world composed from the song's score at every play, driven by the parts as they sound; the box fullscreens as a whole -->
+  <section class="card rack stage" aria-label="stage"><div class="stagebox" id="stagebox"><canvas id="stage"></canvas><button id="fullscreen" title="fullscreen (esc leaves)">&#x26F6;</button></div></section>
+
   <!-- mix: the arrangement strip over one section (the playhead's, or the pinned one) as layers x axes; knobs and word pills edit the source -->
   <details class="card rack" id="mix" open hidden>
     <summary><h2>Mix</h2><small>&middot; the song, the shown section, one slider per axis the layer adapts</small><span class="grow"></span><button class="undo" title="undo (ctrl+z)" disabled>&#8630;</button><button class="redo" title="redo (ctrl+shift+z)" disabled>&#8631;</button><button id="ab" title="hear the song as it was before the last change, at the same place; press again for the current one. Any edit returns to the current one." disabled>A/B</button><button id="measure" title="render this section and each part alone; levels in dB next to level (nothing is written)">measure</button><span class="xstate" id="mstate" role="status" aria-live="polite" hidden></span></summary>
@@ -150,6 +153,9 @@
   import { TEMPLATES, fit, gridToMini, parseTemplate } from './lib/grid.mjs';
   import { analyze } from './lib/analyze.mjs';
   import { DESCRIPTORS, OVERLAYS, HARMONY, MODIFIERS, COMPARATIVE } from './lib/vocab.mjs';
+  import { composeVisual, onsetsOf } from './lib/visual.mjs';
+  import { mountStage } from './web/visual/stage.mjs';
+  import { fallbackScore } from './web/visual/host.mjs';
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
   $('nav').innerHTML = nav('Compose');
@@ -355,15 +361,30 @@
   const solo = new Set(), muted = new Set();
   let ab = false, abPat = null;
   const passes = (l) => (solo.size ? solo.has(l) : !muted.has(l));
+  // every part the scheduler plays carries the stage's tap (onTrigger with dominant false: superdough still sounds it), so the
+  // stage sees each hap with its part's name at the moment it is scheduled, and no pattern is queried twice for it
   function audible(pat) { // the pinned section alone, or the song, with only the parts that pass solo/mute
-    const filt = (s) => { const ps = Object.entries(s.layers).filter(([l]) => passes(l)).map(([, x]) => x.pattern); return ps.length ? strudel.stack(...ps) : strudel.silence; };
-    if (!pat.strudel || (!pinned && !solo.size && !muted.size)) return pat; // a plain strudel file has no sections
+    const tapped = (l, p) => p.onTrigger(stage.tap(l, layerBase(l)), false);
+    const filt = (s) => { const ps = Object.entries(s.layers).filter(([l]) => passes(l)).map(([l, x]) => tapped(l, x.pattern)); return ps.length ? strudel.stack(...ps) : strudel.silence; };
+    // a plain strudel file (no sections), or a wrapper around a song (textures stacked outside it, songs/machine.strudel) played as
+    // written: one tap on the whole, the parts read from each hap's value, and nothing fires twice
+    if (!pat.strudel || (pat.strudel.pattern !== pat && !pinned && !solo.size && !muted.size)) return pat.onTrigger(stage.tap(null, null), false);
     const secs = pat.strudel.sections;
     if (pinned) { const s = secs.find((x) => x.name === pinned); return s ? filt(s) : strudel.silence; } // no such section (A/B before a rename): silence, not a guess
     return arrange(secs, pat.strudel.total, filt); // song()'s own arrangement, with the parts that pass
   }
   async function setLive() { if (playing && songPat) (await ready).scheduler.setPattern(audible(ab && abPat ? abPat : songPat).analyze(1)); } // analyze: every hap feeds analyser 1, the scope
   globalThis.strudelBench = { live: async () => (await ready).scheduler.pattern, source: () => code.text }; // for headless checks: what the scheduler holds right now, and the source as edited
+  // the stage (web/visual/stage.mjs): the world plays from the same clock as the ear. The scheduler's now() runs its lookahead
+  // (latency, web/boot.mjs) ahead of what is sounding, so the visual cycle is now() minus latency in cycles; events themselves fire at
+  // their targetTime on the audio clock. A pinned section's clock is its own bars: toSong puts it in song cycles like the transport
+  let repl = null; ready.then((r) => { repl = r; });
+  const stage = mountStage($('stagebox'), $('stage'), { debug: new URLSearchParams(location.search).has('vdebug'), clock: () => {
+    const n = repl ? repl.scheduler.now() - repl.scheduler.latency * repl.scheduler.cps : 0, total = Number($('pos').max);
+    return { now: strudel.getAudioContext().currentTime, cycle: loop ? toSong(n) : sections.length && total > 0 ? ((n % total) + total) % total : Math.max(0, n) };
+  } });
+  $('fullscreen').onclick = () => stage.fullscreen();
+  const stageScore = (pat) => (pat?.strudel ? composeVisual(pat.strudel, { onsets: onsetsOf(pat.strudel, 2) }) : fallbackScore(0.5)); // two bars per section: enough for the energy, cheap on a 300-bar song
   // the master scope: analyser 1 (superdough's, fed by the live pattern) drawn each frame while playing, with the peak
   // held a second and read in dBFS, red at clipping; the first sign of a mix with no headroom without a render
   const scopeEl = $('scope'), sctx = scopeEl.getContext('2d');
@@ -401,17 +422,20 @@
   };
   function seek(c) { // scrub: the clock jumps while playing; paused or stopped, Play/Resume starts here
     if (playing) ready.then((r) => r.scheduler.setCycle(loop ? toLocal(c) : c)); else paused = c;
+    stage.reset(); // a jump: the world starts over at the new position
     showPosition(c);
     syncTransport();
   }
   async function pinTo(s) {
     pinned = s.name; loop = s; mixSection = s.name;
+    stage.reset();
     if (playing) await applyPin(s.offset); else paused = s.offset;
     showPosition(s.offset); stripRender(); mixRender(); syncTransport();
   }
   async function unpin() {
     const at = playing ? toSong((await ready).scheduler.now()) : paused ?? loop.offset;
     pinned = null; loop = null;
+    stage.reset();
     if (playing) await applyPin(at);
     showPosition(at); stripRender(); mixRender();
   }
@@ -493,6 +517,9 @@
     const pat = await playCode(ready, src);
     songPat = pat; evaluated = src; playing = true;
     setSections(pat);
+    stage.setScore(stageScore(pat)); // the score of this evaluation; Play from stopped starts the world over, a resume or an Update keeps it
+    if (!wasPlaying && paused == null) stage.reset();
+    stage.start();
     if (!wasPlaying && paused == null && loop) paused = loop.offset; // Play from stopped starts at the pin
     if (loop) setcps(loop.cps); // the pinned section loops on its own, at its own tempo
     await setLive(); // the pinned section, solo/mute, A/B
@@ -504,6 +531,7 @@
   async function stop() {
     if (playing) strudel.hush();
     playing = false; paused = null; evaluated = null;
+    stage.stop();
     setSections(await evalCode(ready, code.text).catch(() => null)); // the transport shows the source again, from the top
     syncTransport();
   }
@@ -512,6 +540,7 @@
     const n = (await ready).scheduler.now();
     paused = loop ? toSong(n) : n % Number($('pos').max || 1);
     strudel.hush(); playing = false;
+    stage.pause();
     syncTransport();
   }
   const toggle = () => (playing ? pause() : play());

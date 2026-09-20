@@ -88,6 +88,13 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 
 /* arrangement strip (top of the mix card): a block per section, flex-grown by its span, one thin row per layer shaded by
    density; the playing one is outlined, the pinned one is amber; the ops (pin, move, duplicate) show on the selected one */
+/* the stage: the song's visual performance, a 16:9 box under the transport, no taller than half the window; the box fullscreens as a whole so the button stays over the canvas */
+.stage { padding: .4rem; }
+.stagebox { position: relative; width: min(100%, calc(46vh * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; background: #05060a; border-radius: 6px; overflow: hidden; }
+.stagebox canvas { display: block; width: 100%; height: 100%; }
+.stagebox #fullscreen { position: absolute; top: .4rem; right: .4rem; padding: .2rem .5rem; opacity: .45; background: #0009; color: #fff; border-color: #fff5; }
+.stagebox:hover #fullscreen, .stagebox #fullscreen:focus-visible { opacity: 1; }
+.stagebox:fullscreen { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; background: #000; }
 .rack .strip { display: flex; gap: 3px; margin-bottom: .6rem; overflow-x: auto; padding-bottom: 2px; } /* many sections scroll the strip, not the page; the page keeps the active block in view */
 .rack .panel.song { margin: 0 0 .6rem; } /* the song header pane sits above the strip */
 .knobs b { display: flex; align-items: center; gap: .2rem; }
