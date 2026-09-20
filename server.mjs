@@ -2,7 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { wavToMp3 } from './scripts/mp3.mjs';
+import { wavToMp3Async } from './scripts/mp3.mjs';
 import { DEF_KEYS } from './lib/packs.mjs';
 
 const ROOT = import.meta.dirname;
@@ -173,7 +173,7 @@ export function createServer() {
       for await (const c of req) chunks.push(c);
       const file = path.join(RENDERS, name);
       fs.writeFileSync(file, Buffer.concat(chunks));
-      const out = searchParams.has('mp3') && name.endsWith('.wav') ? wavToMp3(file) : file;
+      const out = searchParams.has('mp3') && name.endsWith('.wav') ? await wavToMp3Async(file) : file;
       const w = waiters.get(name);
       if (w) { waiters.delete(name); clearTimeout(w.timer); w.resolve(); }
       return send(res, 200, path.relative(ROOT, out));

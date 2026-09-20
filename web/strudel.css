@@ -26,7 +26,7 @@ code { font: var(--mono); }
 .top .narrow { display: none; flex-basis: 100%; padding: .2rem .5rem; border-radius: 4px; background: #7a3b00; color: #fff; font-size: .85rem; }
 @media (max-width: 60rem) { .top { flex-wrap: wrap; } .top .narrow { display: block; } }
 
-main { max-width: 84rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; display: grid; gap: 1rem; }
+main { max-width: 84rem; margin: 0 auto; padding: 1rem 1.25rem 4rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; } /* minmax(0, ...): a wide arrangement strip scrolls inside its card instead of widening the page */
 /* site footer: author line, links, copyright; same width as main */
 footer.site { max-width: 84rem; margin: 0 auto; padding: 1.5rem 1.25rem 2.5rem; border-top: 1px solid var(--line); font-size: .85rem; display: grid; gap: .4rem; }
 footer.site p { margin: 0; }
@@ -87,8 +87,8 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .transport kbd { margin-left: auto; font-size: .8rem; }
 
 /* arrangement strip (top of the mix card): a block per section, flex-grown by its span, one thin row per layer shaded by
-   density; the playing one is outlined, the pinned one is amber; the ops (pin, move, duplicate) show on hover */
-.rack .strip { display: flex; gap: 3px; margin-bottom: .6rem; }
+   density; the playing one is outlined, the pinned one is amber; the ops (pin, move, duplicate) show on the selected one */
+.rack .strip { display: flex; gap: 3px; margin-bottom: .6rem; overflow-x: auto; padding-bottom: 2px; } /* many sections scroll the strip, not the page; the page keeps the active block in view */
 .rack .panel.song { margin: 0 0 .6rem; } /* the song header pane sits above the strip */
 .knobs b { display: flex; align-items: center; gap: .2rem; }
 .knobs b button { border: 0; background: none; padding: 0 .2rem; color: var(--muted); line-height: 1; opacity: .5; }
@@ -99,8 +99,8 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .strip .blk.on { border-color: var(--accent); box-shadow: inset 0 1px 0 #48484e, 0 0 0 1px var(--accent), 0 0 8px #2f6fed88; color: #fff; }
 .strip .blk.on, .strip .blk.pin { min-width: 222px; } /* the selected section gets the room; the rest shrink toward their minimum */
 .strip .blk.pin { border-color: #e8a040; box-shadow: inset 0 1px 0 #48484e, 0 0 0 1px #e8a040; }
-.strip .ops { position: absolute; top: .1rem; right: .15rem; display: inline-flex; gap: 0; background: inherit; border-radius: 3px; opacity: .45; }
-.strip .blk:hover .ops, .strip .blk.pin .ops { opacity: 1; }
+.strip .ops { position: absolute; top: .1rem; right: .15rem; display: none; gap: 0; background: inherit; border-radius: 3px; }
+.strip .blk.on .ops, .strip .blk.pin .ops { display: inline-flex; } /* only the selected (or pinned) block shows its actions */
 .strip .ops button { padding: 0 .2rem; font-size: .7rem; line-height: 1.4; border: 0; background: transparent; color: #9a9aa2; }
 .strip .ops button:hover:not(:disabled) { color: #fff; }
 .strip .blk.pin [data-op=pin] { color: #e8a040; }
@@ -127,6 +127,13 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 #ticks i { position: absolute; top: 21px; width: 2px; height: 5px; margin-left: -1px; border-radius: 1px; background: #9a9aa2; }
 /* the whole mix card is the plugin chassis: a lighter dark shell, the strip and knob panels sit inset in it, controls go dark */
 .rack { color: #ddd; background: linear-gradient(#3a3a3f, #2e2e33); border-color: #111; box-shadow: inset 0 1px 0 #55555c, 0 2px 6px rgba(0, 0, 0, .35); }
+/* scrollbars inside the rack (strip, knobs, editors) match the dark panel: a thin machined thumb in a dark groove */
+.rack * { scrollbar-width: thin; scrollbar-color: #5a5a62 #1a1a1d; }
+.rack ::-webkit-scrollbar { width: 8px; height: 8px; }
+.rack ::-webkit-scrollbar-track { background: #1a1a1d; border-radius: 4px; box-shadow: inset 0 1px 2px #000; }
+.rack ::-webkit-scrollbar-thumb { background: linear-gradient(#66666e, #4e4e56); border: 1px solid #111; border-radius: 4px; box-shadow: inset 0 1px 0 #8a8a92; }
+.rack ::-webkit-scrollbar-thumb:hover { background: linear-gradient(#7a7a82, #5e5e66); }
+.rack ::-webkit-scrollbar-corner { background: #1a1a1d; }
 .rack h2 { font-size: .85rem; letter-spacing: .1em; text-transform: uppercase; color: #fff; }
 .rack small, .rack .muted, .rack .vt th { color: #9a9aa2; }
 .rack button { background: #1e1e22; border-color: #111; color: #ddd; box-shadow: inset 0 1px 0 #3c3c42, 0 1px 0 #48484e; }
@@ -199,7 +206,7 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .matrow input.snd { width: 7.5rem; }
 .matrow label.voice input.snd { width: 5.5rem; }
 .matrow input.snd.wide { width: 15rem; font-family: ui-monospace, monospace; }
-.matrow input.snd.num { width: 3.2rem; }
+.matrow input.snd.num { width: 4.8rem; } /* the digits, the spin buttons and the play button on the right all share it */
 .matrow button.pick, .rack .cm-hll-ctl button.pick, .rack .cm-hll-ctl input[type=number] { font: inherit; font-size: .85rem; padding: .15rem .4rem; border: 1px solid #111; border-radius: 4px; background: #1e1e22; color: #eee; box-shadow: inset 0 1px 0 #3c3c42, 0 1px 0 #48484e; min-width: 4rem; text-align: left; }
 .matrow button.pick i, .rack .cm-hll-ctl button.pick i { color: #77777f; }
 /* the editors' inline widgets (web/cm-widgets.mjs): the pick button (a kit shows its icon), a spinner, a toggle for booleans, the chord row. Dark in the rack, the page's light controls in the source pane */
@@ -419,6 +426,9 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 /* the transition out of a block: riser bars and the next section's hit, two small picks on the block's last line */
 .strip .blk .tr { display: flex; gap: .2rem; margin-top: 3px; }
 .strip .blk .tr button { flex: 1 1 0; min-width: 0; padding: 0 .3rem; font-size: .62rem; line-height: 1.5; border: 1px solid #111; border-radius: 3px; background: #1e1e22; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: inset 0 1px 0 #3c3c42; }
+.strip .blk .tr button svg { vertical-align: -2px; }
+.strip .blk .tr .w { display: none; } /* the word next to the icon only on the selected (or pinned) block; the icon alone elsewhere */
+.strip .blk.on .tr .w, .strip .blk.pin .tr .w { display: inline; }
 .strip .blk .tr button i { display: inline; height: auto; background: none; box-shadow: none; color: #77777f; font-style: normal; } /* a placeholder, not a density bar */
 .strip .blk .tr button:hover { color: #fff; border-color: #444; }
 

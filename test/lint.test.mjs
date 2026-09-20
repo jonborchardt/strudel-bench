@@ -68,3 +68,21 @@ test('lint runs over a real song and only warns', async () => {
   const out = lint(await checkFile(path.resolve(import.meta.dirname, '..', 'songs', 'demo.strudel')));
   assert.ok(out.every((x) => x.level === 'warn'), JSON.stringify(out));
 });
+
+test('lint: static audibility from the sample meta, and a sub-audible lowest note', () => {
+  const P = (attrs, sounds, minNote = Infinity) => ({ attrs, onsetsPerCycle: 2, voices: 1, sounds, minNote });
+  const out = lint({ sections: [{ name: 'drop', role: 'climax', energy: 20, voices: 10, layers: {
+    drums: P({}, [{ name: 'bd', n: 0, rms: -12 }, { name: 'hh', n: 0, rms: -30 }]),
+    melody: P({ notes: '0', level: 1.6 }, [{ name: 'marimba', n: 0, rms: -58 }], 62), // -54 on paper: 42 under the kit
+    melody2: P({ notes: '0', level: .5 }, [{ name: 'kalimba', n: 0, rms: -33 }], 62), // -39: 27 under, fine
+    pad: P({}, [{ name: 'sawtooth', n: 0 }]), // a synth: unmeasured, never compared
+    bass: P({ notes: '0' }, [{ name: 'pipeorgan_loud_pedal', n: 0, rms: -21 }], 14), // D0
+  } }] }).map((x) => x.text);
+  assert.ok(out.some((t) => /^melody plays marimba:0 \(rms -58 dBFS\) at level 1\.6: about 42 dB under the loudest part/.test(t)), out);
+  assert.ok(!out.some((t) => /^melody2 plays/.test(t)), 'kalimba at .5 is 27 dB under: heard');
+  assert.ok(!out.some((t) => /^pad plays/.test(t)), 'a synth has no meta and is not judged');
+  assert.ok(out.some((t) => /^bass reaches midi 14 \(18 Hz\)/.test(t)), out);
+  assert.ok(!out.some((t) => /^melody reaches/.test(t)), 'D4 is a note');
+  const sub = lint({ sections: [{ name: 'a', role: 'climax', energy: 2, voices: 1, layers: { bass: P({ notes: '0' }, [{ name: 'sawtooth', n: 0 }], 24) } }] });
+  assert.ok(!sub.some((x) => /reaches midi/.test(x.text)), 'C1 (33 Hz) is a normal synth sub');
+});

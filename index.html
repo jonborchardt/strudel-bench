@@ -200,7 +200,12 @@
     sourceChanged();
   });
 
-  async function loadList(want = decodeURIComponent(location.hash.slice(1))) {
+  const hashParts = () => location.hash.slice(1).split(/\/(.*)/, 2).map(decodeURIComponent); // `#<song>/<section>`: a song name never has a slash
+  function syncHash() { // the shown section rides on the hash, so the link in the bar deep-links to it; replace, not push, so a click is not a history step
+    const h = `#${$('song').value}${mixSection ? `/${mixSection}` : ''}`;
+    if (decodeURIComponent(location.hash) !== h) history.replaceState(null, '', h);
+  }
+  async function loadList(want = hashParts()[0]) {
     let shared = null; // #s=...: a song carried by the link itself
     if (location.hash.startsWith('#s=')) { try { shared = await shareDecode(location.hash.slice(3)); } catch { status('that link does not decode'); } }
     if (shared && !NAME.test(shared.name)) shared.name = 'shared.strudel'; // never land a link's text under another song's name (Save would write it there)
@@ -302,10 +307,16 @@
       const a = s.layers[l]?.attrs, d = typeof a?.density === 'number' ? a.density : .5;
       return `<i style="opacity:${a ? ((.3 + .7 * d) * Math.min(1, a.level ?? 1)).toFixed(2) : 0}" title="${l}${a ? `: density ${d}` : ' (silent)'}"></i>`;
     }).join('')}${transition(s, sections[i + 1])}${fade(s)}</div>`).join('');
+    stripFollow($('strip').querySelector('.blk.on'));
+  }
+  function stripFollow(b) { // keep the active block inside the strip's own scroll (its scrollLeft, never scrollIntoView: that would move the page)
+    if (!b) return;
+    const st = $('strip'), r = b.getBoundingClientRect(), R = st.getBoundingClientRect();
+    if (r.left < R.left) st.scrollLeft += r.left - R.left; else if (r.right > R.right) st.scrollLeft += r.right - R.right;
   }
   // dropout/sweep: bars of silence, or filter sweep to silence, at the tail of section `s` (lib/song.mjs); 0 = none
   function fade(s) {
-    const box = (f, what) => `<button data-fld="${f}" title="${f}: bars of ${what} at the end of ${esc(s.name)}">${s[f] ? `${f} ${s[f]}` : `<i>${f}</i>`}</button>`;
+    const box = (f, what) => `<button data-fld="${f}" title="${f}: bars of ${what} at the end of ${esc(s.name)}">${s[f] ? `${ICON[f]}<span class="w"> ${f}</span> ${s[f]}` : `<i>${ICON[f]}<span class="w"> ${f}</span></i>`}</button>`;
     return `<span class="tr" title="the tail of ${esc(s.name)}">${box('dropout', 'silence')}${box('sweep', 'filter sweep to silence')}</span>`;
   }
   function fadePick(btn, s) { // a bar count from the same list the riser offers, capped by the section's length
@@ -318,7 +329,7 @@
     if (!next) return '';
     const riser = s.layers.fx?.attrs.riser, impact = next.layers.fx?.attrs.impact;
     const r = riser === true ? 4 : riser || 0, im = impact === true ? 'bd' : impact || '';
-    return `<span class="tr" title="into ${esc(next.name)}"><button data-tr="riser" title="riser: bars of sweep at the end of ${esc(s.name)}">${r ? `riser ${r}` : '<i>riser</i>'}</button><button data-tr="impact" title="impact: a hit on the first beat of ${esc(next.name)}">${im ? `hit ${esc(im)}` : '<i>hit</i>'}</button></span>`;
+    return `<span class="tr" title="into ${esc(next.name)}"><button data-tr="riser" title="riser: bars of sweep at the end of ${esc(s.name)}">${r ? `${ICON.riser}<span class="w"> riser</span> ${r}` : `<i>${ICON.riser}<span class="w"> riser</span></i>`}</button><button data-tr="impact" title="impact: a hit on the first beat of ${esc(next.name)}">${im ? `${ICON.hit}<span class="w"> hit</span> ${esc(im)}` : `<i>${ICON.hit}<span class="w"> hit</span></i>`}</button></span>`;
   }
   const withFx = (src, section) => (locate(src).sections.find((x) => x.name === section)?.layers.fx ? src : addLayer(src, section, 'fx').src); // the fx part carries transitions; make one if the section has none
   function transitionPick(btn, s, next) {
@@ -524,7 +535,7 @@
     $('where').textContent = `${s.name} · bar ${bar}/${s.cycles} · ${c.toFixed(1)}/${$('pos').max}${chordAt(s, bar - 1)}`;
     const ph = s.name === mixSection ? ((c - s.offset) / s.span).toFixed(4) : '-1'; // the event strips' playhead, when the shown section is the one sounding
     if (ph !== lastPh) $('knobs').style.setProperty('--ph', (lastPh = ph)); // an unchanged custom property still costs a style pass over every strip
-    for (const b of $('strip').children) b.classList.toggle('on', sections[b.dataset.i] === s);
+    for (const b of $('strip').children) { const was = b.classList.contains('on'); if (b.classList.toggle('on', sections[b.dataset.i] === s) && !was) stripFollow(b); }
     // the mix card follows the playhead unless pinned, but never mid-gesture: a knob or waveform drag that spans a
     // section change must commit into the section it started in, so the card catches up on the tick after the release
     if (!pinned && mixSection !== s.name && !knobDrag && !waveDragging()) { mixSection = s.name; mixRender(); }
@@ -625,7 +636,7 @@
     window.open(url, '_blank');
   });
   $('song').onchange = () => {
-    if (code.text !== loaded && !confirm('Discard unsaved edits?')) { $('song').value = decodeURIComponent(location.hash.slice(1)); return; }
+    if (code.text !== loaded && !confirm('Discard unsaved edits?')) { $('song').value = hashParts()[0]; return; }
     loadSong();
   };
 
@@ -695,8 +706,12 @@
     pending.length = 0;
     await fetch(`songs/${notesFile($('song').value)}`, { method: 'PUT', body: JSON.stringify(meta, null, 1) });
   }
-  // the knob row's buttons: 12 px glyphs, coloured by the button's currentColor (mute amber, solo blue when on)
+  // the knob row's buttons and the strip's transition picks: 12 px glyphs, coloured by the button's currentColor (mute amber, solo blue when on)
   const ICON = {
+    riser: '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M2 13h12V3z" fill="currentColor" /></svg>', // a wedge rising into the next section
+    hit: '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 1l1.8 4.6 4.7.4-3.7 3.2 1.1 4.8L8 11.5 4.1 14l1.1-4.8L1.5 6l4.7-.4z" fill="currentColor" /></svg>', // a burst on the downbeat
+    dropout: '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M2 8h3M11 8h3" stroke="currentColor" stroke-width="2" /><path d="M7 5h2v6H7z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="1.5 1.5" /></svg>', // a line with a gap
+    sweep: '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M2 3v10h12z" fill="currentColor" /></svg>', // a wedge falling to silence
     mute: '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor" /><path d="M11 6l3 4M14 6l-3 4" stroke="currentColor" stroke-width="1.6" fill="none" /></svg>',
     solo: '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3 10V8a5 5 0 0 1 10 0v2" stroke="currentColor" stroke-width="1.6" fill="none" /><rect x="2" y="9" width="3" height="5" rx="1" fill="currentColor" /><rect x="11" y="9" width="3" height="5" rx="1" fill="currentColor" /></svg>',
     rm: '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3 4h10M6 4V2.5h4V4M4.5 4l.7 9h5.6l.7-9" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linejoin="round" /></svg>',
@@ -766,7 +781,7 @@
     const typing = secPane.typing(); // the section pane is being edited: keep its section by position (its name may be mid-edit) and leave its text alone
     const s = typing ? m.sections.find((x) => x.node.start === secPane.start) : m.sections.find((x) => x.name === (pinned ?? mixSection)) ?? m.sections[0];
     if (!s) return;
-    mixSection = s.name;
+    mixSection = s.name; syncHash();
     if (!typing) secPane.show(s.node);
     $('songsrc').hidden = !m.song; // a song() header to show (its keys sit before every section, so its span holds still while a section is typed in)
     if (m.song && !songPane.typing()) songPane.show(m.song);
@@ -1517,7 +1532,10 @@
     // captures it), so closing it would freeze playback until a reload. It is silent (stopped) while we render.
     const live = strudel.getAudioContext();
     if (live.state === 'running') await strudel.initAudio(); // finish its worklet load before superdough switches contexts
-    const rate = 44100;
+    // the live context's rate, never a fixed 44100: superdough caches every decoded buffer by URL at the rate of the context
+    // that first loaded it, and a ConvolverNode refuses a buffer at another rate. After a live play (48 kHz on most machines)
+    // a 44.1 kHz render threw on every hit carrying a room impulse and dropped the hit whole: the mp3 lost most of the song.
+    const rate = live.sampleRate;
     const ctx = new OfflineAudioContext(2, Math.ceil((end - begin) / cps * rate), rate);
     strudel.setAudioContext(ctx);
     strudel.resetGlobalEffects();
@@ -1564,16 +1582,17 @@
     return new Blob([v], { type: 'audio/wav' });
   }
 
-  // `?play=1` and `?section=<name>` are for embedding this page in another one: a post links to a song
-  // and the iframe starts on it, already playing, at the section the surrounding text is about. They are
-  // query parameters, not hash ones, because loadSong() rewrites the hash to the song's name.
+  // `#<song>/<section>` opens on that section, as a click on its block would (the hash follows the shown
+  // section). `?play=1` and `?section=<name>` are for embedding this page in another one: a post links to a
+  // song and the iframe starts on it, already playing, pinned to the section the surrounding text is about.
+  const linkedSection = hashParts()[1]; // before loadSong() rewrites the hash
   async function openParams() {
     const p = new URLSearchParams(location.search);
-    const want = p.get('section');
+    const want = p.get('section') ?? linkedSection;
     if (want) {
       if (!sections.length) setSections(await evalCode(ready, code.text).catch(() => null)); // loadSong's own evaluation may not have landed yet
       const s = sections.find((x) => x.name === want);
-      if (s) await pinTo(s); else status(`no section called "${want}" in this song`);
+      if (!s) status(`no section called "${want}" in this song`); else if (p.has('section')) await pinTo(s); else seek(s.offset);
     }
     if (!p.has('play')) return;
     // The context needs user activation; an iframe the reader opened by clicking usually has it. A blocked

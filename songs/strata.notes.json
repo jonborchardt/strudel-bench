@@ -1,0 +1,143 @@
+{
+  "prompt": "a 17-minute ritual epic: a memory (the refrain) rebuilt across three movements in D aeolian, phrygian and dorian, ending where it began",
+  "requests": [
+    {
+      "date": "2026-09-20",
+      "ask": "make a 15-20 minute epic with a refrain that connects throughout, 2-3 distinct movements, deep immersive bold sound, lots of instruments and emotion; brainstormed to: ritual/earth palette, a melodic motif plus a bass ostinato as the refrain, movements by palette and mode, a memory being rebuilt (notes fill in, range opens), one locked tempo, climax at the end of movement III then a coda, full mix pass",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "kit",
+          "why": "mridangam strokes as the kit voices, level .16: the samples are normalized to full scale and were the mix at .8"
+        },
+        {
+          "section": "whole",
+          "layer": "drums",
+          "why": "level .3: the timpani kit measured 2.6 dB under the mix against the harp at 12; now 5 under, the line's voices 10..15"
+        },
+        {
+          "section": "whole",
+          "layer": "melody2",
+          "why": "marimba>balafon: the marimba's soft samples measured 54 dB under the mix at level 1.6; the balafon of movement I an octave up carries the doubling"
+        },
+        {
+          "section": "stone",
+          "layer": "melody",
+          "why": "dantranh>dantranh_tremolo: the plain zither take is 18 dB quieter than the tremolo and vanished under the organ"
+        },
+        {
+          "section": "song",
+          "layer": "bass",
+          "why": "register .3>.4 weight <.7: the layer's octave-down put the organ pedal ground at D0"
+        },
+        {
+          "section": "stone",
+          "layer": "perc",
+          "why": "anvil:0>anvil:8 level .1: the :0 takes of anvil, agogo and brake drum are the pp layers (-60 dBFS); the v3 takes at low level instead"
+        },
+        {
+          "section": "whole",
+          "layer": "pad2",
+          "why": "choir level .18 register .7: the harmonica is the loudest sample here (-13 dBFS rms) and sat over the hook at .5"
+        },
+        {
+          "section": "dust",
+          "layer": "melody",
+          "why": "level 2: the opening is one kalimba and a didgeridoo at -39 dBFS, 16 dB under the climax, on purpose"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-20",
+      "ask": "whole cut out immediately in the UI: hitting limits",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "drums",
+          "why": "skins articulation .5>.65: at the baseline a drum hit has no clip and superdough plays the sample to its end; the timpani, bass drum and cymbal takes run 11 s each, four beats a bar stacked ~30 real voices the check cannot see, and the audio thread traced at 110% busy in whole (879 of 1809 callbacks over 10 ms); cut to the hit: 42%, none late"
+        },
+        {
+          "section": "whole",
+          "layer": "drums2",
+          "why": "STORM .75>TREAD .6, strain.drums STORM .8>.65: the mridangam storm thinned in the two sections that run it rather than cut short everywhere; strain 54%>38%"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-20",
+      "ask": "wood 16 long, ground 20 long, light 12 long, alone 12 long with more didge, dust2 10 long with more didge; between fade and stone and between shatter and hold don't go completely quiet (keep the drone / the quiet organ pedal, half the fade); the start of whole still crackles",
+      "changes": [
+        {
+          "section": "wood",
+          "from": 24,
+          "to": 16,
+          "why": "shorter procession"
+        },
+        {
+          "section": "ground",
+          "why": "20 shorter"
+        },
+        {
+          "section": "ground",
+          "layer": "pad2",
+          "axis": "brightness",
+          "why": "slow(24)>slow(20) the ramp spans the shortened section"
+        },
+        {
+          "section": "fade",
+          "from": 16,
+          "to": 15,
+          "why": "and drone 1: the dropout masked every part, so the didge alone is its own one-bar section instead of two bars of silence into stone"
+        },
+        {
+          "section": "shatter",
+          "from": 8,
+          "to": 6,
+          "why": "and pedal 2: the quiet organ pedal alone for two bars into hold instead of three bars of dropout silence"
+        },
+        {
+          "section": "light",
+          "from": 16,
+          "to": 12,
+          "why": "shorter"
+        },
+        {
+          "section": "alone",
+          "from": 16,
+          "to": 12,
+          "why": "shorter"
+        },
+        {
+          "section": "alone",
+          "layer": "pad",
+          "axis": "level",
+          "from": 1.5,
+          "to": 2,
+          "why": "more didge under the last full line"
+        },
+        {
+          "section": "dust2",
+          "from": 16,
+          "to": 10,
+          "why": "shorter coda"
+        },
+        {
+          "section": "dust2",
+          "layer": "pad",
+          "axis": "level",
+          "from": 1.5,
+          "to": 2,
+          "why": "more didge in the coda"
+        },
+        {
+          "section": "song",
+          "layer": "skins",
+          "axis": "weight",
+          "from": 0.8,
+          "to": 0.5,
+          "why": "a shape worklet on every timpani-kit hit peaked the audio thread at 70% on whole's downbeat (traced), 51-58% at .5; gain folded into level .3>.34"
+        }
+      ]
+    }
+  ]
+}

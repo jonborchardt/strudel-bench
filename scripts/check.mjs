@@ -15,10 +15,17 @@ const { miniAllStrings } = await import('@strudel/mini');
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const PACKS = path.join(ROOT, 'samples', 'packs');
+const USER = path.join(ROOT, 'samples', 'user');
 const WORKLETS = ['coarse', 'crush', 'shape', 'distort']; // superdough builds an AudioWorkletNode per hit for each of these
 // the audio thread's load from one hit: it lives for its length (in cycles at `cps`) plus its release, as a chain of ~8 audio
-// nodes; each worklet effect on it is a JavaScript processor run every quantum and counts as one voice more
-const load = (h, cycles, cps) => (1 + WORKLETS.filter((k) => h.value[k] !== undefined).length) * (cycles + (h.value.release ?? 0) * cps);
+// nodes; each worklet effect on it is a JavaScript processor run every quantum and counts as one voice more. A sample hit
+// with no `clip` plays its file to the end (superdough), so its length is the file's, not the hap's: strata's timpani kit at
+// four beats a bar stacked ~30 of its 11 s takes while the hap lengths said 6, and the audio thread traced at 110%.
+const load = (h, cycles, cps, meta) => {
+  const v = h.value, worklets = WORKLETS.filter((k) => v[k] !== undefined).length;
+  const file = v.clip === undefined && meta?.seconds ? meta.seconds * (typeof v.end === 'number' ? v.end - (v.begin ?? 0) : 1) / Math.max(Math.abs(v.speed ?? 1), 1e-3) : 0;
+  return (1 + worklets) * (Math.max(cycles, file * cps) + (v.release ?? 0) * cps);
+};
 
 let scopeReady;
 export const ensureScope = () => (scopeReady ??= (async () => {
@@ -50,6 +57,19 @@ function builtinSounds() {
   return known;
 }
 const packFiles = new Map(); // sound -> its map entry (a list of variant files, or {note: file} for a pitched instrument)
+let fileMeta = new Map(); // file (as the map entry spells it) -> { seconds, rms, peak } from the packs' meta files (scripts/samplemeta.mjs)
+
+/** The measured samples: every <pack>.meta.json in samples/packs plus meta.json in each local pack. Absent files just leave a sound unmeasured. */
+function loadMeta(packs) {
+  fileMeta = new Map();
+  const files = fs.existsSync(PACKS) ? fs.readdirSync(PACKS).filter((f) => f.endsWith('.meta.json')).map((f) => path.join(PACKS, f)) : [];
+  for (const p of Object.keys(packs)) files.push(path.join(USER, p, 'meta.json'));
+  for (const f of files) {
+    if (!fs.existsSync(f)) continue;
+    for (const [k, v] of Object.entries(JSON.parse(fs.readFileSync(f, 'utf8')))) fileMeta.set(k, v);
+  }
+}
+const median = (xs) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : undefined; };
 
 /**
  * What a sound name actually plays: the variant file for `name:n` (index 0 when no n), or the sampled range of a pitched
@@ -62,6 +82,17 @@ export function soundFile(name, n = 0, packs = {}) {
   if (Array.isArray(entry)) return `${base(entry[n % entry.length])} (${entry.length} variant${entry.length === 1 ? '' : 's'})`;
   const notes = Object.keys(entry);
   return `pitched, ${notes.length} samples ${notes[0]}..${notes.at(-1)}`;
+}
+/**
+ * How long and how loud that is: { seconds, rms, peak } of the variant file, or the median over a pitched instrument's
+ * files (superdough picks the file nearest the note; the takes of one instrument are alike). Undefined when unmeasured.
+ */
+export function soundMeta(name, n = 0, packs = {}) {
+  const entry = packFiles.get(name) ?? Object.values(packs).map((p) => p.sounds?.[name]).find(Boolean);
+  if (!entry) return undefined;
+  if (Array.isArray(entry)) return fileMeta.get(entry[n % entry.length]);
+  const ms = Object.values(entry).map((f) => fileMeta.get(f)).filter(Boolean);
+  return ms.length ? { seconds: median(ms.map((m) => m.seconds)), rms: median(ms.map((m) => m.rms)), peak: median(ms.map((m) => m.peak)) } : undefined;
 }
 /** sound -> pack for the local packs, so a sound can be traced to the pack a song must declare. */
 const localSounds = (packs) => new Map(Object.entries(packs).flatMap(([p, { sounds }]) => Object.keys(sounds).map((s) => [s, p])));
@@ -91,6 +122,14 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   cycles = pattern.strudel?.total ?? cycles;
   const known = builtinSounds();
   const local = localSounds(packs);
+  loadMeta(packs);
+  // the sound a hap plays as superdough resolves it (the bank-prefixed name when the kit has it, else the bare name) and its take
+  const soundOf = (v) => {
+    if (typeof v !== 'object' || v === null || v.s === undefined) return null;
+    const bare = String(v.s).split(':')[0].split(',')[0].trim();
+    return { name: v.bank && known.has(`${v.bank}_${bare}`) ? `${v.bank}_${bare}` : bare, n: v.n ?? +(String(v.s).split(':')[1] ?? 0) };
+  };
+  const metaOf = (h) => { const u = soundOf(h.value); return u && soundMeta(u.name, u.n, packs); };
   // a bad sample definition in a pack the song declares, and a definition of that pack another pack's name took
   for (const p of declared)
     for (const bad of [...(packs[p].problems ?? []), ...SAMPLE_PROBLEMS.filter((b) => b.startsWith(`samples/user/${p}/`))]) problems.push(`${path.basename(file)}: ${bad}`);
@@ -115,7 +154,7 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
       else if (!declared.includes(pack)) undeclared.set(bare, pack);
     }
   }
-  const sounds = [...used.values()].map((u) => ({ ...u, file: soundFile(u.name, u.n, packs) })).filter((u) => u.file);
+  const sounds = [...used.values()].map((u) => ({ ...u, file: soundFile(u.name, u.n, packs), ...soundMeta(u.name, u.n, packs) })).filter((u) => u.file);
   for (const u of unknown) problems.push(`${path.basename(file)}: unknown sound "${u}"`);
   for (const [s, p] of undeclared) problems.push(`${path.basename(file)}: sound "${s}" is in local pack "${p}" which the song does not declare: add packs: ['${p}']`);
   let sections;
@@ -124,15 +163,21 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
       return {
         name: s.name, cycles: s.cycles, offset: s.offset, span: s.span, role: s.role, grid: s.grid, cps: s.cps,
         harmony: `${s.key}  ${s.progression} → ${chordNames(s.key, parseProgression(s.progression))}`,
-        layers: Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, {
-          attrs: Object.fromEntries(Object.entries(l.attrs).map(([a, v]) => [a,
-            typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean' ? v
-            : v && typeof v === 'object' && typeof v.queryArc !== 'function' ? JSON.stringify(v) : 'signal'])),
-          onsetsPerCycle: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).length / s.cycles).toFixed(2),
-          // voices sounding at once, on average (`load`: the audio thread's load; a section near 50 crackled on a laptop, see lint)
-          voices: +(l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset()).reduce((n, h) => n + load(h, h.duration.valueOf(), s.cps), 0) / s.cycles).toFixed(1),
-          words: describeAxes(l.attrs), // the axis values read back as vocabulary words
-        }])),
+        layers: Object.fromEntries(Object.entries(s.layers).map(([k, l]) => {
+          const lh = l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset());
+          return [k, {
+            attrs: Object.fromEntries(Object.entries(l.attrs).map(([a, v]) => [a,
+              typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean' ? v
+              : v && typeof v === 'object' && typeof v.queryArc !== 'function' ? JSON.stringify(v) : 'signal'])),
+            onsetsPerCycle: +(lh.length / s.cycles).toFixed(2),
+            // voices sounding at once, on average (`load`: the audio thread's load; a section near 50 crackled on a laptop, see lint)
+            voices: +(lh.reduce((n, h) => n + load(h, h.duration.valueOf(), s.cps, metaOf(h)), 0) / s.cycles).toFixed(1),
+            // what the part plays, measured (seconds, rms, peak from the meta files), and its lowest note: the lint's static audibility
+            sounds: [...new Map(lh.map((h) => soundOf(h.value)).filter(Boolean).map((u) => [`${u.name}:${u.n}`, { ...u, ...soundMeta(u.name, u.n, packs) }])).values()],
+            minNote: lh.reduce((m, h) => (typeof h.value.note === 'number' && h.value.note < m ? h.value.note : m), Infinity),
+            words: describeAxes(l.attrs), // the axis values read back as vocabulary words
+          }];
+        })),
       };
     });
     // form: a section's energy is its onsets per cycle summed over its parts, each scaled by its level; the arc line prints them
@@ -142,7 +187,7 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
       // the whole pattern over the section's window too, so a stack() of textures around the song() (songs/machine.strudel)
       // is counted: machine's chorus3 read 22 from its parts alone and scratched, ~46 with its textures and distortion counted
       const whole = haps.filter((h) => h.whole.begin.valueOf() >= sct.offset && h.whole.begin.valueOf() < sct.offset + sct.span)
-        .reduce((n, h) => n + load(h, h.duration.valueOf() * sct.cycles / sct.span, sct.cps), 0) / sct.cycles;
+        .reduce((n, h) => n + load(h, h.duration.valueOf() * sct.cycles / sct.span, sct.cps, metaOf(h)), 0) / sct.cycles;
       sct.outside = +Math.max(0, whole - parts).toFixed(0); // voices outside the parts (a stack around the song)
       sct.voices = +(parts + sct.outside).toFixed(0);
     }
@@ -188,7 +233,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (files.length === 1) console.log(r.events.join('\n'));
     if (files.length === 1 && r.sounds?.length) { // which file each sample name plays: a name says nothing about its variants
       console.log('  sounds');
-      for (const u of r.sounds) console.log(`    ${`${u.name}:${u.n}`.padEnd(24)} ${u.file}`);
+      for (const u of r.sounds) console.log(`    ${`${u.name}:${u.n}`.padEnd(24)} ${u.file}${u.seconds !== undefined ? `  ${u.seconds} s, rms ${u.rms} dB, peak ${u.peak} dB` : ''}`);
     }
     for (const sct of r.sections ?? []) {
       console.log(`  [${sct.offset}-${sct.offset + sct.span}) ${sct.name}${sct.role ? ' (' + sct.role + ')' : ''}  ~${sct.voices} voices at once${sct.outside ? ` (${sct.outside} outside the parts)` : ''}`);
