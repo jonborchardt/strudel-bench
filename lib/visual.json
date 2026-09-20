@@ -1,5 +1,5 @@
 {
-  "_about": "Aesthetic policy for lib/visual.mjs, not architecture: every table here may be replaced. moodThreshold: how far (in axis units) a song's mean axes must lean along an overlay's direction before it has that mood; an overlay vector is ~.3-.5 long. selection: how a song with no `visual` header picks its world, deliberately fuzzy: each world's row is a base score plus weights over the song's features (every axis by name as its mean lean in -1..1, and tempo, sections, repetition, complexity, melody, pad from featuresOf), the scores go through a softmax at `temperature` (higher: more even odds), and the song's seed samples from the odds, so a world that fits moderately can still win and the same song always gets the same world. temperature: key mode -> a palette word. palette: visual property -> the axis whose song-wide mean it reads. voices: drum voice -> its role in any world. kinds: layer kind -> the slots it may take, in order; grain is unbounded and every list ends there. worlds: slot capacities per world, and traits for the director (web/visual/director.mjs): cumulative (the world keeps history, so it is never restarted mid-song), motion (high ones are dimmed past two at full strength), minTile (the smallest height fraction it reads at), minAspect (loom keeps its flywheel), overlay (the blend it overlays with: screen on a dark ground, multiply on a light one, byLuminance for ink's own rule; absent: never an overlay), overlayMax (an opacity cap as an overlay), finalFrame (its last frame is a picture, so a release may end on it). compositions: the director's presets, count the worlds each takes when the song lists none (filled from the selection's odds).",
+  "_about": "Aesthetic policy for lib/visual.mjs, not architecture: every table here may be replaced. moodThreshold: how far (in axis units) a song's mean axes must lean along an overlay's direction before it has that mood; an overlay vector is ~.3-.5 long. selection: how a song with no `visual` header picks its world, deliberately fuzzy: each world's row is a base score plus weights over the song's features (every axis by name as its mean lean in -1..1, and tempo, sections, repetition, complexity, melody, pad from featuresOf), the scores go through a softmax at `temperature` (higher: more even odds), and the song's seed samples from the odds, so a world that fits moderately can still win and the same song always gets the same world. temperature: key mode -> a palette word. palette: visual property -> the axis whose song-wide mean it reads. voices: drum voice -> its role in any world. kinds: layer kind -> the slots it may take, in order; grain is unbounded and every list ends there. worlds: slot capacities per world. compositions: the director's presets, count the worlds each takes when the song lists none (filled from the selection's odds).",
   "moodThreshold": 0.15,
   "selection": {
     "temperature": 0.5,
@@ -29,17 +29,16 @@
   },
   "compositions": {
     "single": { "count": 1, "about": "one world full-frame: the stage as it always was" },
-    "overlay": { "count": 3, "about": "the primary full; the second world a transparent overlay whose opacity follows the section's energy; the third a circle portal from the first developing section" },
-    "mosaic-climax": { "count": 4, "about": "the primary full throughout; develop adds the second world over it; the climax adds the rest as insets of one seeded mosaic the primary bleeds through; the release collapses back, or to a listed world that makes a final frame" }
+    "overlay": { "count": 3, "about": "the primary full; the second world breathing in and out over it every eight bars, up to a peak the section's energy sets; the third in a circle portal from the first developing section" }
   },
   "worlds": {
-    "tunnel": { "slots": { "impulse": 1, "ground": 1, "line": 1, "counter": 1, "field": 1, "transition": 1 }, "traits": { "motion": "high", "minTile": 0.2, "overlay": "screen" } },
-    "ink":    { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 }, "traits": { "cumulative": true, "motion": "low", "minTile": 0.3, "overlay": "byLuminance", "finalFrame": true } },
-    "sediment": { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 }, "traits": { "cumulative": true, "motion": "low", "minTile": 0.4, "finalFrame": true } },
-    "signal":   { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 }, "traits": { "motion": "high", "minTile": 0.4, "overlay": "screen", "overlayMax": 0.35 } },
-    "swarm":    { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 }, "traits": { "motion": "high", "minTile": 0.25, "overlay": "screen" } },
-    "orrery":   { "slots": { "impulse": 2, "ground": 1, "line": 3, "counter": 3, "field": 1, "transition": 1 }, "traits": { "motion": "medium", "minTile": 0.2, "overlay": "screen" } },
-    "loom":     { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 }, "traits": { "motion": "medium", "minTile": 0.45, "minAspect": 1.3 } },
-    "growth":   { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 }, "traits": { "cumulative": true, "motion": "low", "minTile": 0.35, "finalFrame": true } }
+    "tunnel": { "slots": { "impulse": 1, "ground": 1, "line": 1, "counter": 1, "field": 1, "transition": 1 } },
+    "ink":    { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "sediment": { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "signal":   { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "swarm":    { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "orrery":   { "slots": { "impulse": 2, "ground": 1, "line": 3, "counter": 3, "field": 1, "transition": 1 } },
+    "loom":     { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "growth":   { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } }
   }
 }

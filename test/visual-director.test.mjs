@@ -1,17 +1,17 @@
 // web/visual/director.mjs: a world that composes worlds. What the architecture must honour: a one-layer director is
 // the bare world; every child is stepped whether shown or not (a cumulative world hidden for a scene keeps the history);
-// scenes change on the section boundary and a transition lands its rects and opacities in its bars; the mosaic is bounded
-// and seeded; the presets read the arc; a single-world score never gets a director. The look is judged live.
+// scenes change on the section boundary and a transition lands its rects and opacities in its bars; a breathing layer
+// fades in and out from the song's own cycle; the overlay preset reads the arc; a single-world score never gets a
+// director. The look is judged live.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
-import { createDirector, scenesOf, mosaic, placeInsets, budget, rolesOf, sceneAt, inset, circleRect, FULL, PRESETS } from '../web/visual/director.mjs';
+import { createDirector, scenesOf, rolesOf, sceneAt, breathAt, circleRect, FULL, PRESETS } from '../web/visual/director.mjs';
 import { WORLDS, worldOf, withPick } from '../web/visual/stage.mjs';
-import { createPerformance, clockOf, STEP } from '../web/visual/host.mjs';
+import { createPerformance } from '../web/visual/host.mjs';
 import { streamOf, renderFrames } from '../web/visual/export.mjs';
 import { composeVisual, compositionOf } from '../lib/visual.mjs';
 import { prng } from '../lib/random.mjs';
-import ink from '../web/visual/ink.mjs';
 import tunnel from '../web/visual/tunnel.mjs';
 
 const song = (g, visual) => g.song({ cps: .5, key: 'C:minor', seed: 3, ...(visual ? { visual } : {}) }, [
@@ -52,7 +52,7 @@ test('every child is stepped whether shown or not: a cumulative world hidden for
   const g = await ready, pat = song(g), score = composeVisual(pat.strudel), seconds = pat.strudel.total / score.cps;
   const scenes = [
     { from: 0, layers: [{ world: 'tunnel', rect: FULL }] }, // ink hidden through intro and verse
-    { from: 2, transition: { type: 'crossfade', bars: 1 }, layers: [{ world: 'tunnel', rect: FULL }, { world: 'ink', rect: FULL, opacity: .5, blend: 'screen' }] },
+    { from: 2, transition: { type: 'crossfade', bars: 1 }, layers: [{ world: 'tunnel', rect: FULL }, { world: 'ink', rect: FULL, opacity: .5 }] },
     { from: 3, transition: { type: 'crossfade', bars: 1 }, layers: [{ world: 'tunnel', rect: FULL }] }, // and hidden again
   ];
   const d = createDirector(WORLDS, { createCanvas: canvasStub().createCanvas, scenes });
@@ -105,6 +105,22 @@ test('scenes change on the section boundary and a transition lands in its bars: 
   assert.equal(sceneAt(scenes, -1), 0); assert.equal(sceneAt(scenes, 7), 2);
 });
 
+test('a breathing layer fades in and out from the song\'s cycle: nothing at the start of every period, full half way, the same offline as live', async () => {
+  const g = await ready, pat = song(g), score = composeVisual(pat.strudel);
+  const W = { a: counter('a'), b: counter('b') };
+  const d = createDirector(W, { createCanvas: canvasStub().createCanvas, scenes: [{ from: 0, layers: [{ world: 'a', rect: FULL }, { world: 'b', rect: FULL, opacity: 0.8, breathe: 4 }] }] });
+  const p = createPerformance(d, score, { w: 16, h: 9 });
+  let now = 0; const at = (cycle) => { const end = cycle / score.cps; while (now < end) { now = Math.min(end, now + 1 / 30); p.advance(now, now * score.cps); } return p.state.layers.b; };
+  assert.ok(at(0.02).breath < 0.01, 'quiet at the start');
+  assert.ok(Math.abs(at(2).breath - 1) < 0.01, 'full at half the period');
+  assert.ok(at(4).breath < 0.01, 'gone again at the period');
+  assert.ok(Math.abs(at(5).breath - 0.5) < 0.02);
+  assert.ok(Math.abs(breathAt(1, 4) - 0.5) < 1e-9); assert.ok(Math.abs(breathAt(2, 4) - 1) < 1e-9);
+  // drawn at opacity × breath: at the period's start b is not drawn at all
+  at(8.0); const c1 = ctxStub(); p.draw(c1, 640, 360); assert.equal(p.state.children.b.draws, 0, 'b not drawn while its breath is out');
+  at(10); const c2 = ctxStub(); p.draw(c2, 640, 360); assert.equal(p.state.children.b.draws, 1, 'drawn at full breath');
+});
+
 test('parts: a layer with a part list is handed only those events', async () => {
   const g = await ready, pat = song(g), score = composeVisual(pat.strudel);
   const W = { a: counter('a'), b: counter('b') };
@@ -114,60 +130,29 @@ test('parts: a layer with a part list is handed only those events', async () => 
   assert.equal(p.state.children.b.events, melody); assert.ok(p.state.children.a.events > melody);
 });
 
-test('mosaic: 2 to 5 tiles that tile the frame, none tiny or extreme, the largest first, the same seed the same tiles', () => {
-  for (let seed = 1; seed <= 24; seed++) for (let n = 2; n <= 5; n++) {
-    const tiles = mosaic(n, prng(seed));
-    assert.equal(tiles.length, n, `seed ${seed} n ${n}`);
-    assert.ok(Math.abs(tiles.reduce((s, t) => s + t[2] * t[3], 0) - 1) < 1e-3, 'they tile the frame');
-    for (const t of tiles) { assert.ok(t[2] * t[3] >= 0.12 - 1e-3, `no tile under 12%: ${t}`); const a = (t[2] * 16) / (t[3] * 9); assert.ok(a >= 0.6 - 1e-3 && a <= 2.4 + 1e-3, `aspect ${a}`); }
-    for (let i = 1; i < n; i++) assert.ok(tiles[i - 1][2] * tiles[i - 1][3] >= tiles[i][2] * tiles[i][3]);
-    for (const a of tiles) for (const b of tiles) if (a !== b) assert.ok(a[0] + a[2] <= b[0] + 1e-3 || b[0] + b[2] <= a[0] + 1e-3 || a[1] + a[3] <= b[1] + 1e-3 || b[1] + b[3] <= a[1] + 1e-3, 'no overlap');
-    assert.deepEqual(mosaic(n, prng(seed)), tiles);
-  }
-  assert.notDeepEqual(mosaic(4, prng(1)), mosaic(4, prng(2)), 'another seed, another mosaic');
-  const r = inset([0, 0, 0.5, 0.5]); assert.ok(r[0] > 0 && r[1] > 0 && r[2] < 0.5 && r[3] < 0.5); assert.ok(Math.abs(r[0] * 16 / 9 - r[1]) < 1e-3, 'the gutter is square in pixels');
-  const c = circleRect(0.5, 0.5, 0.4); assert.ok(Math.abs(c[2] * 16 / 9 - c[3]) < 1e-3, 'square in pixels'); assert.equal(c[3], 0.4);
-});
-
-test('placeInsets and budget: a world is placed only in a tile it reads at, loom keeps a wide one, past two high-motion worlds the rest dim, an overlay is capped', () => {
-  const tiles = [[0, 0, 0.5, 1], [0.5, 0, 0.3, 0.5], [0.5, 0.5, 0.5, 0.3], [0.8, 0, 0.2, 0.5]]; // aspects .89, 1.07, 2.96, .71
-  const placed = placeInsets(tiles, ['loom', 'sediment', 'orrery', 'ink']);
-  assert.deepEqual(placed.map((p) => p.world), ['sediment', 'orrery', 'ink'], 'loom needs aspect 1.3 and .45 high, no tile has both; sediment takes the tall one, orrery the next, ink the .3-high one, nothing fits the sliver');
-  assert.deepEqual(placeInsets([[0, 0, 1, 0.5]], ['loom']).map((p) => p.world), ['loom']);
-  const three = budget([{ world: 'tunnel', rect: FULL, opacity: 1, blend: 'source-over' }, { world: 'swarm', rect: FULL, opacity: 1, blend: 'screen' }, { world: 'signal', rect: [0, 0, 0.5, 0.5], opacity: 1, blend: 'source-over' }, { world: 'swarm', rect: [0.5, 0.5, 0.5, 0.5], opacity: 1, blend: 'source-over' }]);
-  assert.deepEqual(three.map((l) => l.opacity), [1, 1, 0.6, 0.6]);
-  assert.equal(budget([{ world: 'signal', rect: FULL, opacity: 0.6, blend: 'screen' }])[0].opacity, 0.35, "signal's overlay cap");
-});
-
-test('presets read the arc: mosaic-climax is one world, then two, then a bleed mosaic at the climax, then one again; overlay is a base, a following overlay and a portal that irises open; deterministic', async () => {
+test('the overlay preset reads the arc: a base, a breathing second world whose peak follows the energy, and a portal that irises open at the first developing section; deterministic', async () => {
   const g = await ready;
-  const pat = song(g, { composition: 'mosaic-climax', worlds: ['tunnel', 'ink', 'loom', 'orrery'] }), score = composeVisual(pat.strudel);
-  assert.deepEqual(score.composition, { preset: 'mosaic-climax', worlds: ['tunnel', 'ink', 'loom', 'orrery'] });
-  assert.equal(score.world, 'tunnel', 'the primary is the score\'s world');
+  const pat = song(g, { composition: 'overlay', worlds: ['tunnel', 'ink', 'orrery'] }), score = composeVisual(pat.strudel);
+  assert.deepEqual(score.composition, { preset: 'overlay', worlds: ['tunnel', 'ink', 'orrery'] });
+  assert.equal(score.world, 'tunnel', "the primary is the score's world");
   const sc = scenesOf(score, prng(7));
   assert.deepEqual(sc.map((s) => s.from), [0, 1, 2, 3]);
-  assert.deepEqual(sc.map((s) => s.layers.map((l) => l.world)), [['tunnel'], ['tunnel', 'ink'], ['tunnel', 'ink', 'loom', 'orrery'], ['ink']], 'ink overlays through develop and the climax; the release ends on ink, the listed world that makes a final frame');
-  assert.deepEqual(sc.map((s) => s.transition.type), ['cut', 'crossfade', 'mosaic-in', 'mosaic-out']);
-  assert.equal(sc[1].layers[1].blend, score.palette.luminance >= 0.5 ? 'multiply' : 'screen', "ink overlays by its own paper rule: light paper multiplies, a dark sheet screens"); assert.ok(sc[1].layers[1].opacity > 0 && sc[1].layers[1].opacity < 1);
-  assert.deepEqual(sc[2].layers[0].rect, FULL, 'the primary stays full under the mosaic');
-  for (const l of sc[2].layers.slice(2)) { assert.ok(l.rect[2] < 1 && l.rect[3] < 1 && l.rect[0] >= 0, 'an inset'); assert.equal(l.mask, 'rounded'); }
-  assert.ok(sc[2].layers.find((l) => l.world === 'loom').rect[2] * 16 / (sc[2].layers.find((l) => l.world === 'loom').rect[3] * 9) >= 1.3, 'loom in a wide tile');
-  assert.deepEqual(scenesOf(score, prng(7)), sc); assert.notDeepEqual(scenesOf(score, prng(8)).map((s) => s.layers.map((l) => l.rect)), sc.map((s) => s.layers.map((l) => l.rect)));
-  // no final-frame world listed: the release collapses to the primary
-  const pat2 = song(g, { composition: 'mosaic-climax', worlds: ['tunnel', 'swarm', 'orrery', 'signal'] }), sc2 = scenesOf(composeVisual(pat2.strudel), prng(7));
-  assert.deepEqual(sc2.map((s) => s.layers.map((l) => l.world)), [['tunnel'], ['tunnel', 'swarm'], ['tunnel', 'swarm', 'orrery', 'signal'], ['tunnel']]);
-  assert.equal(sc2[3].transition.type, 'mosaic-out');
-  // overlay
-  const pat3 = song(g, { composition: 'overlay', worlds: ['tunnel', 'ink', 'orrery'] }), sc3 = scenesOf(composeVisual(pat3.strudel), prng(7));
-  assert.deepEqual(sc3.map((s) => s.layers.map((l) => l.world)), [['tunnel', 'ink'], ['tunnel', 'ink', 'orrery'], ['tunnel', 'ink', 'orrery'], ['tunnel', 'ink', 'orrery']]);
-  assert.deepEqual(sc3.map((s) => s.transition.type), ['cut', 'iris', 'crossfade', 'crossfade']);
-  assert.equal(sc3[1].layers[2].mask, 'circle'); assert.ok(Math.abs(sc3[1].layers[2].rect[2] * 16 / 9 - sc3[1].layers[2].rect[3]) < 1e-3, 'the portal is round');
-  const op = sc3.map((s) => s.layers[1].opacity); assert.ok(op[2] > op[0], "the overlay's opacity follows the energy: the drop over the intro");
+  assert.deepEqual(sc.map((s) => s.layers.map((l) => l.world)), [['tunnel', 'ink'], ['tunnel', 'ink', 'orrery'], ['tunnel', 'ink', 'orrery'], ['tunnel', 'ink', 'orrery']]);
+  assert.deepEqual(sc.map((s) => s.transition.type), ['cut', 'iris', 'crossfade', 'crossfade']);
+  for (const s of sc) { assert.equal(s.layers[1].breathe, 8); assert.deepEqual(s.layers[1].rect, FULL); assert.equal(s.layers[1].blend, 'source-over'); }
+  const op = sc.map((s) => s.layers[1].opacity); assert.ok(op[2] > op[0] && op[2] <= 0.95 && op[0] >= 0.45, "the second world's peak follows the energy: the drop over the intro");
+  assert.equal(sc[1].layers[2].mask, 'circle'); assert.ok(Math.abs(sc[1].layers[2].rect[2] * 16 / 9 - sc[1].layers[2].rect[3]) < 1e-3, 'the portal is round');
+  assert.deepEqual(scenesOf(score, prng(8)), sc, 'nothing in it is random');
+  const c = circleRect(0.5, 0.5, 0.4); assert.ok(Math.abs(c[2] * 16 / 9 - c[3]) < 1e-3, 'square in pixels'); assert.equal(c[3], 0.4);
+  // two worlds: no portal
+  const two = scenesOf(composeVisual(song(g, { composition: 'overlay', worlds: ['tunnel', 'ink'] }).strudel), prng(7));
+  assert.ok(two.every((s) => s.layers.length === 2));
   // a composition with no worlds written: the score's world first, then the selection's next-best
-  const pat4 = song(g, { composition: 'overlay' }), s4 = composeVisual(pat4.strudel);
+  const s4 = composeVisual(song(g, { composition: 'overlay' }).strudel);
   assert.equal(s4.composition.worlds.length, 3); assert.equal(s4.composition.worlds[0], s4.world); assert.equal(new Set(s4.composition.worlds).size, 3);
   assert.deepEqual(compositionOf('single', 'ink', { tunnel: .9 }), { preset: 'single', worlds: ['ink'] });
   assert.deepEqual(rolesOf({ sections: [{ name: 'a' }, { name: 'b' }, { name: 'c' }], peak: 'b' }), ['establish', 'climax', 'release']);
+  assert.equal(scenesOf(composeVisual(song(g, 'ink').strudel), prng(1)).length, 1, 'a single world: one scene');
 });
 
 test('worldOf: a single-world score gets the bare world, a composed one the director; withPick is the view override', async () => {
@@ -179,14 +164,14 @@ test('worldOf: a single-world score gets the bare world, a composed one the dire
   assert.equal(worldOf(composed, { createCanvas: canvasStub().createCanvas }).name, 'director');
   assert.equal(worldOf(composeVisual(song(g, { composition: 'overlay', worlds: ['tunnel'] }).strudel)), WORLDS.tunnel, 'one world listed: bare');
   assert.equal(withPick(composed, 'loom').composition, undefined); assert.equal(withPick(composed, 'loom').world, 'loom');
-  assert.deepEqual(withPick(plain, 'mosaic-climax').composition.preset, 'mosaic-climax'); assert.equal(withPick(plain, 'mosaic-climax').composition.worlds[0], 'ink');
+  assert.deepEqual(withPick(plain, 'overlay').composition.preset, 'overlay'); assert.equal(withPick(plain, 'overlay').composition.worlds[0], 'ink');
   assert.equal(withPick(plain, null), plain); assert.equal(withPick(plain, 'nope'), plain);
-  assert.ok(PRESETS.includes('single') && PRESETS.includes('overlay') && PRESETS.includes('mosaic-climax'));
+  assert.deepEqual(PRESETS, ['single', 'overlay']);
 });
 
 test('the header: composition and worlds are validated, and the check describes them', async () => {
   const g = await ready;
-  assert.throws(() => g.song({ visual: { composition: 'grid' } }, []), /composition must be one of/);
+  assert.throws(() => g.song({ visual: { composition: 'mosaic-climax' } }, []), /composition must be one of/);
   assert.throws(() => g.song({ visual: { composition: 'overlay', worlds: ['tunnel', 'nope'] } }, []), /worlds must list worlds/);
   assert.throws(() => g.song({ visual: { worlds: ['tunnel'] } }, []), /goes with a composition/);
   assert.throws(() => g.song({ visual: { layout: 'x' } }, []), /not layout/);
@@ -196,13 +181,13 @@ test('the header: composition and worlds are validated, and the check describes 
 });
 
 test('through the exporter: a composed song renders every frame on a stub context, deterministically, drawing children into their targets and compositing them', async () => {
-  const g = await ready, pat = song(g, { composition: 'mosaic-climax', worlds: ['tunnel', 'ink', 'orrery', 'swarm'] }), score = composeVisual(pat.strudel), stream = streamOf(pat), seconds = pat.strudel.total / score.cps;
+  const g = await ready, pat = song(g, { composition: 'overlay', worlds: ['tunnel', 'ink', 'orrery'] }), score = composeVisual(pat.strudel), stream = streamOf(pat), seconds = pat.strudel.total / score.cps;
   const once = async () => { const { createCanvas, made } = canvasStub(), ctx = ctxStub(); const r = await renderFrames({ world: worldOf(score, { createCanvas }), score, stream, seconds, title: { name: 't', line: '' }, ctx, w: 640, h: 360, yieldEvery: 1000 }); return { r, ctx, made }; };
   const a = await once(), b = await once();
   assert.equal(a.r.perf.state.scene, 3, 'the tail holds the last scene');
   assert.equal(JSON.stringify(a.r.perf.state), JSON.stringify(b.r.perf.state), 'the same frames twice');
-  assert.equal(a.made.length, 4, 'a target per world');
+  assert.equal(a.made.length, 3, 'a target per world');
   assert.ok(a.ctx.calls.drawImage >= a.r.frames, 'every frame composites at least the primary');
-  assert.ok(a.ctx.calls.clip > a.r.frames, 'insets are clipped');
+  assert.ok(a.ctx.calls.clip > a.r.frames, 'the portal is clipped');
   const ink = a.r.perf.state.children.ink; assert.ok(ink.marks.length > 20, 'ink painted the whole song while overlaid');
 });
