@@ -1517,7 +1517,10 @@
     // captures it), so closing it would freeze playback until a reload. It is silent (stopped) while we render.
     const live = strudel.getAudioContext();
     if (live.state === 'running') await strudel.initAudio(); // finish its worklet load before superdough switches contexts
-    const rate = 44100;
+    // the live context's rate, never a fixed 44100: superdough caches every decoded buffer by URL at the rate of the context
+    // that first loaded it, and a ConvolverNode refuses a buffer at another rate. After a live play (48 kHz on most machines)
+    // a 44.1 kHz render threw on every hit carrying a room impulse and dropped the hit whole: the mp3 lost most of the song.
+    const rate = live.sampleRate;
     const ctx = new OfflineAudioContext(2, Math.ceil((end - begin) / cps * rate), rate);
     strudel.setAudioContext(ctx);
     strudel.resetGlobalEffects();
