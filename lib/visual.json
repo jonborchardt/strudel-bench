@@ -1,0 +1,32 @@
+{
+  "_about": "Aesthetic policy for lib/visual.mjs, not architecture: every table here may be replaced. moods: an overlay word (lib/overlays.json) or neutral -> the worlds it may pick from (the song's seed chooses). temperature: key mode -> a palette word. palette: visual property -> the axis whose song-wide mean it reads. voices: drum voice -> its role in any world. kinds: layer kind -> the slots it may take, in order; grain is unbounded and every list ends there. worlds: slot capacities per world.",
+  "moodThreshold": 0.35,
+  "moods": {
+    "neutral":   ["tunnel", "ink"],
+    "sad":       ["ink"],
+    "happy":     ["ink", "tunnel"],
+    "ominous":   ["tunnel"],
+    "euphoric":  ["tunnel"],
+    "hypnotic":  ["tunnel"],
+    "chaotic":   ["tunnel", "ink"],
+    "playful":   ["ink"],
+    "cinematic": ["ink", "tunnel"]
+  },
+  "temperature": { "major": "warm", "minor": "cool", "dorian": "cool", "phrygian": "dim", "lydian": "pale", "mixolydian": "warm", "default": "cool" },
+  "palette": { "luminance": "brightness", "mass": "weight", "edge": "aggression", "jitter": "organicness", "persistence": "space", "spread": "width", "motion": "drive" },
+  "voices": { "bd": "pulse", "sd": "impact", "cp": "impact", "rim": "impact", "hh": "grain", "oh": "grain" },
+  "kinds": {
+    "drums":  ["impulse", "grain"],
+    "bass":   ["ground", "grain"],
+    "melody": ["line", "counter", "grain"],
+    "pad":    ["field", "grain"],
+    "fx":     ["transition", "grain"],
+    "perc":   ["grain"],
+    "sample": ["impulse", "grain"],
+    "raw":    ["grain"]
+  },
+  "worlds": {
+    "tunnel": { "slots": { "impulse": 1, "ground": 1, "line": 1, "counter": 1, "field": 1, "transition": 1 } },
+    "ink":    { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } }
+  }
+}
