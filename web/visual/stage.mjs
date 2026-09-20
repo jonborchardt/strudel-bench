@@ -9,8 +9,9 @@ import signal from './signal.mjs';
 import swarm from './swarm.mjs';
 import orrery from './orrery.mjs';
 import loom from './loom.mjs';
+import growth from './growth.mjs';
 
-export const WORLDS = { tunnel, ink, sediment, signal, swarm, orrery, loom };
+export const WORLDS = { tunnel, ink, sediment, signal, swarm, orrery, loom, growth };
 /** The world a score names, tunnel when it names one that is not built. */
 export const worldOf = (score) => WORLDS[score.world] ?? tunnel;
 
