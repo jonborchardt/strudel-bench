@@ -37,8 +37,8 @@ test('loom is importable in Node and draws on a stub context with no randomness 
     assert.equal(composeVisual(song(g)).world, 'loom');
     assert.ok(p.state.rows.length > 5, 'rows woven');
     assert.ok(ctx.calls.fillRect > 500, 'the cloth\'s cells');
-    assert.ok(p.state.roll > 0.05 && p.state.belt > 1 && p.state.lint.length > 0, 'the cloth winds on, the belt runs, lint flies');
-    assert.ok(ctx.calls.setLineDash > 10, 'the belt is dashed');
+    assert.ok(p.state.lint.length > 0, 'lint flies');
+    assert.equal(p.state.shuttles.length, 12); assert.ok(p.state.thrown > 40, 'the shuttles fly often');
   } finally { for (const u of undo) u(); }
 });
 
@@ -57,7 +57,7 @@ test('every mechanism: a kick packs a row and flips the shed, an impact throws t
   const kick = one([{ ...base, layer: 'drums', kind: 'drums', voice: 'bd', role: 'pulse' }]);
   assert.equal(kick.rows.length, 1); assert.equal(kick.shedTo, 1); assert.ok(kick.beater > 0.9);
   const snare = one([{ ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }]);
-  assert.equal(snare.shuttle.side, 1); assert.equal(snare.shuttle.tx, 0.9);
+  assert.equal(snare.shuttles[0].side, 1); assert.equal(snare.shuttles[0].tx, 0.9); assert.equal(snare.lane, 1, 'the next throw takes the next shuttle');
   assert.ok(one([{ ...base, layer: 'drums', kind: 'drums', voice: 'hh', role: 'grain' }]).heddle > 0.5);
   const bass = one([{ ...base, layer: 'bass', kind: 'bass', note: 38 }]);
   assert.ok(bass.wheel.torque > 0.5); assert.equal(bass.tie, (38 % 12) % 3);

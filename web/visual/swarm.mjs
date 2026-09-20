@@ -8,8 +8,8 @@
 // (thicker with its level) and a slow curl wind, and it lights the ground under the flock, brighter with its cutoff.
 // Harmony is the relationship between groups: a leader whose note is consonant with the last bass note draws the other
 // groups toward it, a dissonant one pushes them away. The world has visitors, things that come in from an edge, cross
-// and leave, and the population deals with each: an impact sends a hawk diving through toward the flock (the agents
-// flee it), a bass note lets a seed drift in from the side its pitch class points at (the agents are drawn to it and
+// and leave, and the population deals with each: an impact sends a comet through toward the flock, a bright head
+// with a long fading tail (the agents scatter from it), a bass note lets a seed drift in from the side its pitch class points at (the agents are drawn to it and
 // eat it away), a pad chord sends a thermal across (a slow ring that lifts and spins what flies into it); each is a
 // visible object. A section's role sets the population's manner (establish: loose
 // and slow; climax: tight, fast, every group pulled together; release: drifting apart); a boundary moves the
@@ -52,7 +52,7 @@ export default {
       field: { level: 0, tint: 0.5, phase: 0 },
       manner: { ...MANNER.none }, energy: 0.5, riser: 0, wasRiser: 0, dark: 0, t: 0, section: null, hueShift: 0,
       shove: 0, split: null, // a kick's pressure wave (fades), an impact's split { group, dir, life }
-      visitors: [], // what comes in and leaves: { kind: 'hawk' | 'seed' | 'thermal', x, y, vx, vy, r, life, span, w, hue }
+      visitors: [], // what comes in and leaves: { kind: 'comet' | 'seed' | 'thermal', x, y, vx, vy, r, life, span, w, hue }
     };
     seed(s, rng);
     for (let i = 0; i < N; i++) { const a = rand(s) * TAU, r = 0.1 + rand(s) * 0.4; s.ax.push(s.home.x + Math.cos(a) * r * aspect * 0.6); s.ay.push(s.home.y + Math.sin(a) * r); s.avx.push((rand(s) - 0.5) * 0.2); s.avy.push((rand(s) - 0.5) * 0.2); s.ag.push(i % s.groups.length); }
@@ -76,9 +76,9 @@ export default {
     s.field.level = decay(s.field.level, 0.4, dt); s.field.phase += dt * 0.15 * s.motion;
     s.shove = decay(s.shove, 6, dt);
     if (s.split) { s.split.life -= dt; if (s.split.life <= 0) s.split = null; }
-    for (const v of s.visitors) { // a hawk keeps turning toward the flock's home until it has passed through, then flies on out
+    for (const v of s.visitors) { // a comet keeps bending toward the flock's home until it has passed through, then flies on out
       v.x += v.vx * dt; v.y += v.vy * dt; v.life -= dt;
-      if (v.kind === 'hawk' && !v.through) { const d = Math.hypot(s.home.x - v.x, s.home.y - v.y); if (d < 0.12) v.through = true; else { const sp = Math.hypot(v.vx, v.vy); v.vx = ease(v.vx, ((s.home.x - v.x) / d) * sp, 1.5, dt); v.vy = ease(v.vy, ((s.home.y - v.y) / d) * sp, 1.5, dt); } }
+      if (v.kind === 'comet' && !v.through) { const d = Math.hypot(s.home.x - v.x, s.home.y - v.y); if (d < 0.12) v.through = true; else { const sp = Math.hypot(v.vx, v.vy); v.vx = ease(v.vx, ((s.home.x - v.x) / d) * sp, 1.5, dt); v.vy = ease(v.vy, ((s.home.y - v.y) / d) * sp, 1.5, dt); } }
     }
     s.visitors = s.visitors.filter((v) => v.life > 0 && v.r > 0.002 && v.x > -0.3 && v.x < s.aspect + 0.3 && v.y > -0.3 && v.y < 1.3);
     const enter = (kind, a, speed, r, span, w = 1) => { // a visitor from the edge in direction a from home, aimed across it
@@ -97,7 +97,7 @@ export default {
       const slot = s.slotOf[e.layer] ?? DEFAULT_SLOT[e.kind] ?? 'grain', g = clamp(e.gain * e.velocity, 0, 1.5);
       if (slot === 'impulse') {
         if (e.role === 'pulse') s.shove = Math.max(s.shove, g);
-        else if (e.role === 'impact') { s.split = { group: Math.floor(rand(s) * s.groups.length), dir: rand(s) * TAU, life: 0.25, w: g }; if (!s.visitors.some((v) => v.kind === 'hawk' && v.life > 1)) enter('hawk', rand(s) * TAU, 0.7 + 0.5 * g, 0.03, 4, g); } // one hawk at a time
+        else if (e.role === 'impact') { s.split = { group: Math.floor(rand(s) * s.groups.length), dir: rand(s) * TAU, life: 0.25, w: g }; if (!s.visitors.some((v) => v.kind === 'comet' && v.life > 1)) enter('comet', rand(s) * TAU, 0.7 + 0.5 * g, 0.03, 4, g); } // one comet at a time
         else if (e.role === 'grain') for (let i = 0; i < N; i++) { s.avx[i] += (rand(s) - 0.5) * 0.12 * g * s.jitter; s.avy[i] += (rand(s) - 0.5) * 0.12 * g * s.jitter; }
         else s.shove = Math.max(s.shove, 0.4 * g);
       } else if (slot === 'ground') {
@@ -151,10 +151,10 @@ export default {
       const [wx, wy] = wind(x, y); fx += wx * 0.6 * s.field.level; fy += wy * 0.6 * s.field.level;
       if (s.shove > 0.01) { const ddx = x - s.home.x, ddy = y - s.home.y, d = Math.hypot(ddx, ddy) + 0.02; fx += (ddx / d) * 1.3 * s.shove / (1 + d * 4); fy += (ddy / d) * 1.3 * s.shove / (1 + d * 4); }
       if (s.split) { const sign = gi === s.split.group ? 1 : -0.4; fx += Math.cos(s.split.dir) * 2.5 * s.split.w * sign; fy += Math.sin(s.split.dir) * 2.5 * s.split.w * sign; }
-      // the visitors: flee a hawk, feed on a seed (and wear it away), ride a thermal
+      // the visitors: scatter from a comet, feed on a seed (and wear it away), ride a thermal
       for (const v of s.visitors) {
         const ddx = x - v.x, ddy = y - v.y, d = Math.hypot(ddx, ddy) + 0.01;
-        if (v.kind === 'hawk') { if (d < 0.25) { const f = (1 - d / 0.25) * 2.5 * v.w; fx += (ddx / d) * f; fy += (ddy / d) * f; } }
+        if (v.kind === 'comet') { if (d < 0.25) { const f = (1 - d / 0.25) * 2.5 * v.w; fx += (ddx / d) * f; fy += (ddy / d) * f; } }
         else if (v.kind === 'seed') { if (d < 0.4) { fx -= (ddx / d) * 0.9 * v.w * (1 - d / 0.4); fy -= (ddy / d) * 0.9 * v.w * (1 - d / 0.4); } if (d < 0.05) v.r -= 0.0001 * dt; }
         else if (d < v.r) { const f = 1 - d / v.r; fy -= 0.5 * f * v.w; fx += (-ddy / d) * 0.6 * f; fy += (ddx / d) * 0.6 * f; }
       }
@@ -189,14 +189,24 @@ export default {
       ctx.strokeStyle = hsla(gh, pal.sat, lerp(48, 70, clamp(v / 0.6)), clamp(0.16 + 0.28 * v) * glow); ctx.lineWidth = Math.max(1, R(0.0024) * s.weight);
       ctx.beginPath(); ctx.moveTo(x - ux * len, y - uy * len); ctx.lineTo(x, y); ctx.stroke();
     }
-    // the visitors: a hawk a dark wedge along its flight with a thin lit edge, a seed a warm pulsing glow, a thermal a ring of turning dashes with a faint lift inside
+    // the visitors: a comet a bright head with a long tail fading behind its flight and sparks shed along it, a seed a warm pulsing glow, a thermal a ring of turning dashes with a faint lift inside
     for (const v of s.visitors) {
       const f = Math.sin(Math.PI * clamp(v.life / v.span)) ** 0.5, x = X(v.x), y = Y(v.y);
-      if (v.kind === 'hawk') {
-        const a = Math.atan2(v.vy, v.vx), L = R(0.07) * (0.7 + 0.5 * v.w), W = R(0.028);
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = hsla(s.bg[0], 40, 2, 0.95 * f); ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * L, y + Math.sin(a) * L); ctx.lineTo(x + Math.cos(a + 2.6) * W, y + Math.sin(a + 2.6) * W); ctx.lineTo(x - Math.cos(a) * L * 0.25, y - Math.sin(a) * L * 0.25); ctx.lineTo(x + Math.cos(a - 2.6) * W, y + Math.sin(a - 2.6) * W); ctx.closePath(); ctx.fill();
-        ctx.strokeStyle = hsla(hue + 180, 60, 80, 0.6 * f); ctx.lineWidth = Math.max(1, R(0.0015)); ctx.stroke();
+      if (v.kind === 'comet') {
+        const sp = Math.hypot(v.vx, v.vy) || 1e-6, ux = v.vx / sp, uy = v.vy / sp, L = R(0.16 + 0.12 * v.w) * clamp(sp / 0.8, 0.5, 1.5), ch = hue + 190;
+        ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+        for (let k = 0; k < 10; k++) { // the tail: tapered segments, dimmer and thinner away from the head
+          const t0 = k / 10, t1 = (k + 1) / 10, wobble = Math.sin(s.t * 9 + k * 1.3) * R(0.004) * t1;
+          ctx.strokeStyle = hsla(ch, 70, 75, 0.5 * (1 - t0) ** 1.5 * f * lit); ctx.lineWidth = Math.max(1, R(0.014) * (1 - t0) * (0.6 + 0.4 * v.w));
+          ctx.beginPath(); ctx.moveTo(x - ux * L * t0 - uy * wobble, y - uy * L * t0 + ux * wobble); ctx.lineTo(x - ux * L * t1 - uy * wobble, y - uy * L * t1 + ux * wobble); ctx.stroke();
+        }
+        for (let k = 0; k < 7; k++) { // sparks shed along the tail, from a stable hash so draw stays pure
+          const hx = Math.sin(k * 12.9898 + Math.floor(s.t * 6) * 78.233) * 43758.5453, u = hx - Math.floor(hx), t = 0.2 + 0.8 * u, off = ((u * 13) % 1 - 0.5) * R(0.03) * t;
+          ctx.fillStyle = hsla(ch + 30, 80, 88, 0.7 * (1 - t) * f * lit); ctx.fillRect(x - ux * L * t - uy * off - 1, y - uy * L * t + ux * off - 1, 2, 2);
+        }
+        const hr = R(0.014 + 0.008 * v.w), g = ctx.createRadialGradient(x, y, 0, x, y, hr * 3);
+        g.addColorStop(0, hsla(ch + 20, 40, 96, 0.95 * f * lit)); g.addColorStop(0.25, hsla(ch, 80, 75, 0.5 * f * lit)); g.addColorStop(1, hsla(ch, 80, 65, 0));
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, hr * 3, 0, TAU); ctx.fill();
       } else if (v.kind === 'seed') {
         ctx.globalCompositeOperation = 'lighter';
         const rr = R(v.r) * (1.5 + 0.3 * Math.sin(s.t * 6)), g = ctx.createRadialGradient(x, y, 0, x, y, rr * 2.5);

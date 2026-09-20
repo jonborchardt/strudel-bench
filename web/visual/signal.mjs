@@ -132,10 +132,10 @@ export default {
       let pull = 0, ringed = 0;
       for (const p of probes) { const d = Math.hypot((x - s.barPhase) * (w / h), y - p.y); if (d < 0.18) { const f = (1 - d / 0.18) * p.hot; a = lerp(a, Math.atan2(p.y - y, (s.barPhase - x) * (w / h)), f); pull = Math.max(pull, f); } }
       for (const r of rings) { const dr = Math.abs(Math.hypot((x - BUS.x) * (w / h) / 0.75, y - BUS.y) - r.r); if (dr < 0.05) { const f = (1 - dr / 0.05) * r.hot; a = lerp(a, Math.atan2(y - BUS.y, (x - BUS.x) * (w / h)), f * 0.8); ringed = Math.max(ringed, f); } }
-      const bright = clamp((0.1 + 0.08 * idle * mode.field + 0.28 * Math.abs(amp) * mode.field + 0.6 * pull + 0.5 * ringed) * lit, 0, 0.6); // the field stays under the routes and probes drawn over it
+      const bright = clamp((0.05 + 0.05 * idle * mode.field + 0.18 * Math.abs(amp) * mode.field + 0.5 * pull + 0.4 * ringed) * lit, 0, 0.42); // the field stays well under the routes and probes drawn over it
       if (bright < 0.03) continue;
       const cx = X(x), cy = Y(y), reach = len * (0.55 + 0.6 * clamp(Math.abs(amp), 0, 1.2) + 0.3 * ringed), dx = Math.cos(a) * reach, dy = Math.sin(a) * reach; // never longer than its cell: a field, not a weave
-      ctx.strokeStyle = hsla(hue + 40 * pull + 20 * ringed, pal.sat, lerp(45, 78, bright), bright); ctx.lineWidth = Math.max(1, R(0.0016) * s.weight);
+      ctx.strokeStyle = hsla(hue + 40 * pull + 20 * ringed, pal.sat, lerp(38, 68, bright), bright); ctx.lineWidth = Math.max(1, R(0.0016) * s.weight);
       ctx.beginPath(); ctx.moveTo(cx - dx, cy - dy); ctx.lineTo(cx + dx, cy + dy); ctx.stroke();
     }
     // the contours: isolines around the pad's node, breathing outward, spacing the cutoff, count the level

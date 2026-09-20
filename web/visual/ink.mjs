@@ -1,5 +1,6 @@
-// ink: the song paints one sheet, and the last frame is the painting. Time runs left to right: each section is a
-// band as wide as its share of the song, and inside it a moment is an x. Drums are marks (a kick a heavy dab low on
+// ink: the song paints one sheet, and the last frame is the painting. Time runs from the centre outward to both
+// edges, the painting mirrored about the middle: each section is a band as wide as its share of the half-sheet, and
+// inside it a moment is an x. Drums are marks (a kick a heavy dab low on
 // the sheet, an impact a splatter with a streak, hats and percussion specks up high), the bass lays broad strokes
 // along the bottom the length of its notes, each line part is a continuous calligraphic stroke (pitch is height,
 // pressure is velocity, a rest longer than a bar lifts the brush), the pad bleeds a wash of pigment into the band.
@@ -9,9 +10,10 @@
 // then dry into the sheet. And the sheet is alive while the song plays: a kick ripples the paper (the marks near it
 // heave), an impact jolts it, a boundary's fold creases the sheet so what was painted before it shifts a little, a
 // climax buckles everything painted before it, a drip keeps running, and every dry mark goes on bleeding, slowly,
-// into the paper, so the painting softens as it ages. The unpainted future is not bare: a field of graphite dashes
-// drifts toward the wet edge, dense where the coming section is loud, and the brush glows where each line part
-// last touched. Nothing is ever undone: the deformation lives in state and is applied at draw time to what was there
+// into the paper, so the painting softens as it ages. The unpainted future is not bare: the paper is damp there,
+// and the pigment to come is already moving in it, soft blooms drifting toward the wet edge, wide wisps of wash
+// flowing across each coming band, fine dust, all more and larger where the coming section is loud and in its
+// hue; and the brush glows where each line part last touched. Nothing is ever undone: the deformation lives in state and is applied at draw time to what was there
 // when it happened, so draw repaints the whole sheet every frame from cheap primitives (a dry dab is a flat disc).
 // Deterministic: randomness only from the state's own seeded generator (kit.mjs); draw never touches the state.
 import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf } from './kit.mjs';
@@ -23,7 +25,7 @@ const DEFAULT_SLOT = { drums: 'impulse', pitched: 'line', hit: 'grain', bass: 'g
 const PRESS = { establish: { size: 0.8, alpha: 0.75, bleed: 1.1 }, develop: { size: 1, alpha: 1, bleed: 1 }, climax: { size: 1.45, alpha: 1.3, bleed: 0.8 }, release: { size: 0.9, alpha: 0.7, bleed: 1.6 }, none: { size: 1, alpha: 1, bleed: 1 } };
 const FALLBACK_BARS = 16; // a pattern with no sections paints this many cycles per sheet
 const BUCKLE_MAX = 0.05; // the buckles together never move a mark more than this (in height)
-const DASH = 0.03; // the future's dash grid, a cell in height units
+const BLOOM = 0.11; // the future's grid of pigment blooms, a cell in height units
 
 export default {
   name: 'ink',
@@ -37,11 +39,11 @@ export default {
       ink: light ? lerp(26, 40, p.luminance) : lerp(60, 72, p.luminance), // the inks' lightness
       sat: pal.sat, grain: lerp(0, 1, p.jitter), spread: lerp(0.6, 1.4, p.spread), weight: lerp(0.7, 1.5, p.mass), bleed: lerp(0.6, 1.8, p.persistence), motion: lerp(0.6, 1.4, p.motion),
       cps: score.cps, total: score.total,
-      bands: score.sections.map((x) => ({ x0: MARGIN + ((1 - 2 * MARGIN) * x.at) / score.total, x1: MARGIN + ((1 - 2 * MARGIN) * x.until) / score.total, at: x.at, until: x.until, role: x.role ?? 'none', energy: x.energy ?? 0.5 })),
+      bands: score.sections.map((x) => ({ x0: 0.5 + ((0.5 - MARGIN) * x.at) / score.total, x1: 0.5 + ((0.5 - MARGIN) * x.until) / score.total, at: x.at, until: x.until, role: x.role ?? 'none', energy: x.energy ?? 0.5 })), // laid out from the centre to the right edge; draw mirrors it to the left
       slotOf: Object.fromEntries(Object.entries(score.cast).map(([n, c]) => [n, c.slot])),
       t: 0, sheet: 0, lastCycle: null, marks: [], pens: {}, // pens: line part -> { x, y, cycle, hot } where its brush last touched
       waves: [], folds: [], buckles: [], // the sheet alive: ripples from hits { x, amp, k, life, speed, age }; creases { x, at, amp, ampTo }; a climax's buckle { amp, ampTo, k, phase, since }
-      press: { ...PRESS.none }, hueShift: 0, riser: 0, dark: 0, section: null, washAt: -1, x: MARGIN, energy: 0.5,
+      press: { ...PRESS.none }, hueShift: 0, riser: 0, dark: 0, section: null, washAt: -1, x: 0.5, energy: 0.5,
     };
     seed(s, rng);
     return s;
@@ -71,9 +73,9 @@ export default {
     for (const wv of s.waves) wv.age += dt; s.waves = s.waves.filter((wv) => wv.age < wv.life);
     for (const pen of Object.values(s.pens)) pen.hot = decay(pen.hot ?? 0, 2.5, dt);
     // where on the sheet this moment is
-    const x = band ? lerp(band.x0, band.x1, (clock.cycle - band.at) / (band.until - band.at)) : MARGIN + ((clock.cycle % FALLBACK_BARS) / FALLBACK_BARS) * (1 - 2 * MARGIN);
+    const x = band ? lerp(band.x0, band.x1, (clock.cycle - band.at) / (band.until - band.at)) : 0.5 + ((clock.cycle % FALLBACK_BARS) / FALLBACK_BARS) * (0.5 - MARGIN);
     s.x = x;
-    const bandW = band ? band.x1 - band.x0 : 1 - 2 * MARGIN, perCycle = band ? bandW / (band.until - band.at) : (1 - 2 * MARGIN) / FALLBACK_BARS;
+    const bandW = band ? band.x1 - band.x0 : 0.5 - MARGIN, perCycle = band ? bandW / (band.until - band.at) : (0.5 - MARGIN) / FALLBACK_BARS;
     const hue = s.pal.hue + s.hueShift, drag = s.riser * 0.05; // a riser drags the marks toward the edge
     const mark = (m) => { s.marks.push({ hue, light: s.ink, dry: false, born: s.t, at: clock.cycle, ...m, r: (m.r ?? 0) * s.press.size, alpha: (m.alpha ?? 0.5) * s.press.alpha, bleed: (m.bleed ?? 0.5) * s.press.bleed * s.bleed }); };
     const wave = (amp, k, life, speed) => { s.waves.push({ x, amp, k, life, speed, age: 0 }); if (s.waves.length > 12) s.waves.shift(); };
@@ -118,7 +120,7 @@ export default {
 
   draw(s, ctx, w, h) {
     // ponytail: the whole sheet every frame (a fold moves history); dry dabs are flat discs, only wet ones get a gradient. Cache the settled marks to a layer when a long song's export drags.
-    const X = (x) => x * w, Y = (y) => y * h, R = (r) => r * h;
+    let sgn = 1; const X = (x) => (sgn > 0 ? x : 1 - x) * w, Y = (y) => y * h, R = (r) => r * h; // the painting is laid out from the centre rightward and painted twice, the second time mirrored to the left, so it grows from the centre toward both edges
     // the sheet's motion on any mark: ripples from the hits (fading with age and distance), the creases and buckles that came after it was painted
     const dy = (x, y, at) => {
       let d = 0;
@@ -130,23 +132,51 @@ export default {
     };
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = hsla(...s.paper); ctx.fillRect(0, 0, w, h);
-    // the future: graphite dashes drifting toward the wet edge, denser where the coming section is loud, turning with a slow wave, fading as they reach the brush
+    for (sgn of [1, -1]) {
+    ctx.globalCompositeOperation = s.light ? 'multiply' : 'screen';
+    // the future: the paper is damp there, and the pigment to come is already moving in it: soft blooms drifting toward the wet edge (more and larger where the coming section is loud, in that section's hue, breathing), wide soft wisps of wash flowing across each coming band, and a drift of fine pigment dust; all of it dissolves as it reaches the brush
     {
-      const gl = s.light ? 35 : 75, cols = Math.ceil((1 / DASH) * (w / h)), rows = Math.ceil(1 / DASH), drift = (s.t * 0.04 * s.motion) % DASH;
-      ctx.lineCap = 'round'; ctx.lineWidth = Math.max(1, R(0.0012));
-      for (let i = 0; i <= cols; i++) for (let k = 0; k < rows; k++) {
+      const light = s.light ? s.ink + 34 : s.ink - 14, hueOf = (bi) => s.pal.field + (bi >= 0 ? ((bi * 37) % 50) - 25 : 0), fut = s.bands.map((b, i) => [b, i]).filter(([b]) => b.x1 > s.x + 0.02);
+      const bandAt = (x) => { const bi = s.bands.findIndex((b) => x >= b.x0 && x < b.x1); return [bi, s.bands[bi] ? s.bands[bi].energy : s.energy]; };
+      const cols = Math.ceil((1 / BLOOM) * (w / h)), rows = Math.ceil(1 / BLOOM), drift = (s.t * 0.015 * s.motion) % BLOOM;
+      for (let i = 0; i <= cols; i++) for (let k = 0; k < rows; k++) { // the blooms
         const hx = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453, u = hx - Math.floor(hx); // a stable hand per cell, no generator
-        const x = ((i + u) * DASH - drift) * (h / w), y = (k + 0.5 + (u * 7 % 1 - 0.5) * 0.6) * DASH;
-        if (x <= s.x + 0.01 || x > 1 - MARGIN || y < TOP || y > BOTTOM) continue;
-        const band = s.bands.find((b) => x >= b.x0 && x < b.x1), energy = band ? band.energy : s.energy;
-        if (u > 0.25 + 0.7 * energy) continue; // the density: the section's energy
-        const near = clamp((x - s.x) / 0.08), a = Math.sin(y * 5 + x * 3 + s.t * 0.5 * s.motion) * 0.5 + (u - 0.5) * 0.4;
-        const len = R(0.008 + 0.01 * energy), dx = Math.cos(a) * len, dyy = Math.sin(a) * len;
-        ctx.strokeStyle = hsla(s.pal.hue, 10, gl, (0.16 + 0.24 * energy) * near * (1 - 0.6 * s.dark));
-        ctx.beginPath(); ctx.moveTo(X(x) - dx, Y(y) - dyy); ctx.lineTo(X(x) + dx, Y(y) + dyy); ctx.stroke();
+        const x = ((i + u) * BLOOM + drift) * (h / w), y = (k + 0.5 + ((u * 7) % 1 - 0.5) * 0.9) * BLOOM; // drifting outward, toward the edge
+        if (x <= s.x + 0.02 || x > 1 - MARGIN || y < TOP || y > BOTTOM) continue;
+        const [bi, energy] = bandAt(x);
+        if (u > 0.4 + 0.6 * energy) continue; // the density: the section's energy
+        const near = clamp((x - s.x) / 0.12), pulse = 0.55 + 0.45 * Math.sin(s.t * 0.5 * s.motion + u * TAU + k * 0.7);
+        const r = R(0.04 + 0.07 * energy) * (0.7 + 0.3 * pulse) * s.spread, hue = hueOf(bi) + (u - 0.5) * 20;
+        const a = (0.09 + 0.16 * energy) * near * pulse * (1 - 0.6 * s.dark), cx = X(x), cy = Y(y);
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, hsla(hue, s.sat * 0.8, light, a)); g.addColorStop(1, hsla(hue, s.sat * 0.8, light, 0));
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
+      }
+      ctx.lineCap = 'round';
+      for (const [b, bi] of fut) { // the wisps: a few wide soft strokes of wash per coming band, each undulating and flowing toward the wet edge at its own pace
+        const x0 = Math.max(b.x0, s.x + 0.02), n = 2 + Math.round(3 * b.energy), hue = hueOf(bi);
+        for (let k = 0; k < n; k++) {
+          const ph = (k * 0.618 + bi * 0.37) % 1, y = TOP + 0.08 + (BOTTOM - TOP - 0.16) * ((ph + 0.13 * Math.sin(s.t * 0.11 * s.motion + k + bi)) % 1), flow = (s.t * (0.01 + 0.012 * ph) * s.motion) % 0.2;
+          ctx.strokeStyle = hsla(hue + 15 * (ph - 0.5), s.sat * 0.7, light, (0.05 + 0.08 * b.energy) * (1 - 0.6 * s.dark)); ctx.lineWidth = R(0.018 + 0.02 * b.energy) * s.spread;
+          ctx.beginPath();
+          for (let i = 0; i <= 24; i++) {
+            const x = lerp(x0, b.x1, i / 24), near = clamp((x - s.x) / 0.12), yy = y + Math.sin(x * 9 + flow * 30 + k * 2 - s.t * 0.4 * s.motion) * 0.05 * near + Math.sin(x * 23 + s.t * 0.9) * 0.01;
+            i ? ctx.lineTo(X(x), Y(yy)) : ctx.moveTo(X(x), Y(yy));
+          }
+          ctx.stroke();
+        }
+      }
+      const D = 0.022, dcols = Math.ceil((1 / D) * (w / h)), drows = Math.ceil(1 / D), ddrift = (s.t * 0.03 * s.motion) % D, dl = s.light ? s.ink + 20 : s.ink; // the dust
+      for (let i = 0; i <= dcols; i++) for (let k = 0; k < drows; k++) {
+        const hx = Math.sin(i * 39.3467 + k * 11.135) * 43758.5453, u = hx - Math.floor(hx);
+        const x = ((i + u) * D + ddrift) * (h / w), y = (k + 0.5 + ((u * 11) % 1 - 0.5) * 0.9) * D + Math.sin(s.t * 0.7 + i) * 0.004;
+        if (x <= s.x + 0.02 || x > 1 - MARGIN || y < TOP || y > BOTTOM) continue;
+        const [bi, energy] = bandAt(x);
+        if (u > 0.25 + 0.5 * energy) continue;
+        const near = clamp((x - s.x) / 0.1), r = Math.max(1, R(0.0012 + 0.0018 * u));
+        ctx.fillStyle = hsla(hueOf(bi) + 20, s.sat * 0.6, dl, (0.2 + 0.3 * energy) * near * (0.5 + 0.5 * Math.sin(s.t * 2 + u * TAU)) * (1 - 0.6 * s.dark));
+        ctx.fillRect(X(x) - r / 2, Y(y) - r / 2, r, r);
       }
     }
-    ctx.globalCompositeOperation = s.light ? 'multiply' : 'screen';
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     for (const m of s.marks) {
       const age = s.t - m.born, wet = clamp(age / m.bleed), settle = 1 - Math.exp(-Math.max(0, age - m.bleed) / 60); // the slow bleed: a dry mark keeps spreading into the paper and thins as it does
@@ -178,6 +208,7 @@ export default {
       const px = X(pen.x), py = Y(dy(pen.x, pen.y, Infinity)), rr = R(0.008 + 0.012 * pen.hot);
       const g = ctx.createRadialGradient(px, py, 0, px, py, rr); g.addColorStop(0, hsla(pen.hue, 80, s.light ? 45 : 85, 0.6 * pen.hot)); g.addColorStop(1, hsla(pen.hue, 80, 70, 0));
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill();
+    }
     }
     if (s.dark > 0.02) { ctx.fillStyle = hsla(...s.paper, 0.15 * s.dark); ctx.fillRect(0, 0, w, h); } // a dropout: the sheet breathes, faintly veiled
   },
