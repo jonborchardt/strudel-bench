@@ -1,6 +1,6 @@
 {
-  "_about": "Aesthetic policy for lib/visual.mjs, not architecture: every table here may be replaced. moods: an overlay word (lib/overlays.json) or neutral -> the worlds it may pick from (the song's seed chooses). temperature: key mode -> a palette word. palette: visual property -> the axis whose song-wide mean it reads. voices: drum voice -> its role in any world. kinds: layer kind -> the slots it may take, in order; grain is unbounded and every list ends there. worlds: slot capacities per world.",
-  "moodThreshold": 0.35,
+  "_about": "Aesthetic policy for lib/visual.mjs, not architecture: every table here may be replaced. moodThreshold: how far (in axis units) a song's mean axes must lean along an overlay's direction before it has that mood; an overlay vector is ~.3-.5 long. moods: an overlay word (lib/overlays.json) or neutral -> the worlds it may pick from (the song's seed chooses). temperature: key mode -> a palette word. palette: visual property -> the axis whose song-wide mean it reads. voices: drum voice -> its role in any world. kinds: layer kind -> the slots it may take, in order; grain is unbounded and every list ends there. worlds: slot capacities per world.",
+  "moodThreshold": 0.15,
   "moods": {
     "neutral":   ["tunnel", "ink"],
     "sad":       ["ink"],
