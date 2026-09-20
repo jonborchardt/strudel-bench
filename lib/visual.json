@@ -1,16 +1,15 @@
 {
-  "_about": "Aesthetic policy for lib/visual.mjs, not architecture: every table here may be replaced. moodThreshold: how far (in axis units) a song's mean axes must lean along an overlay's direction before it has that mood; an overlay vector is ~.3-.5 long. moods: an overlay word (lib/overlays.json) or neutral -> the worlds it may pick from (the song's seed chooses; a song's own `visual` header key overrides). Every pool is tunnel for now: ink is chosen per song with visual: 'ink'. temperature: key mode -> a palette word. palette: visual property -> the axis whose song-wide mean it reads. voices: drum voice -> its role in any world. kinds: layer kind -> the slots it may take, in order; grain is unbounded and every list ends there. worlds: slot capacities per world.",
+  "_about": "Aesthetic policy for lib/visual.mjs, not architecture: every table here may be replaced. moodThreshold: how far (in axis units) a song's mean axes must lean along an overlay's direction before it has that mood; an overlay vector is ~.3-.5 long. selection: how a song with no `visual` header picks its world, deliberately fuzzy: each world's row is a base score plus weights over the song's features (every axis by name as its mean lean in -1..1, and tempo, sections, repetition, complexity, melody, pad from featuresOf), the scores go through a softmax at `temperature` (higher: more even odds), and the song's seed samples from the odds, so a world that fits moderately can still win and the same song always gets the same world. temperature: key mode -> a palette word. palette: visual property -> the axis whose song-wide mean it reads. voices: drum voice -> its role in any world. kinds: layer kind -> the slots it may take, in order; grain is unbounded and every list ends there. worlds: slot capacities per world.",
   "moodThreshold": 0.15,
-  "moods": {
-    "neutral":   ["tunnel"],
-    "sad":       ["tunnel"],
-    "happy":     ["tunnel"],
-    "ominous":   ["tunnel"],
-    "euphoric":  ["tunnel"],
-    "hypnotic":  ["tunnel"],
-    "chaotic":   ["tunnel"],
-    "playful":   ["tunnel"],
-    "cinematic": ["tunnel"]
+  "selection": {
+    "temperature": 0.5,
+    "worlds": {
+      "tunnel":   { "base": 0.8,  "drive": 0.5, "density": 0.3, "tempo": 0.4, "repetition": 0.3, "weight": 0.2 },
+      "ink":      { "base": -0.9, "organicness": 0.5, "space": 0.4, "melody": 0.3, "density": -0.3, "aggression": -0.3, "tempo": -0.3 },
+      "sediment": { "base": 0.3,  "weight": 0.5, "sections": 0.5, "space": 0.3, "tempo": -0.3, "organicness": 0.2 },
+      "signal":   { "base": 0.1,  "brightness": 0.3, "complexity": 0.4, "organicness": -0.5, "melody": 0.2, "drive": 0.2 },
+      "swarm":    { "base": 0.2,  "organicness": 0.5, "melody": 0.4, "width": 0.3, "pad": 0.3, "aggression": -0.2 }
+    }
   },
   "temperature": { "major": "warm", "minor": "cool", "dorian": "cool", "phrygian": "dim", "lydian": "pale", "mixolydian": "warm", "default": "cool" },
   "palette": { "luminance": "brightness", "mass": "weight", "edge": "aggression", "jitter": "organicness", "persistence": "space", "spread": "width", "motion": "drive" },

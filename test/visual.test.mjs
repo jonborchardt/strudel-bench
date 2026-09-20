@@ -1,20 +1,22 @@
 // lib/visual.mjs: the visual score. Strict about architecture and invariants (determinism, plain data, legal slots, a
-// chosen world belongs to its policy pool, the score's shape); loose about the aesthetic policy itself (which mood gets
+// chosen world has a selection row, the score's shape); loose about the aesthetic policy itself (which features favour
 // which world, what a mode is called), which lib/visual.json is meant to change freely.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import { AXIS_NAMES } from '../lib/axes.mjs';
 import { OVERLAYS } from '../lib/vocab.mjs';
-import { POLICY, classifyHap, onsetsOf, meanAxes, moodOf, worldFor, castOf, composeVisual, describeVisual } from '../lib/visual.mjs';
+import { POLICY, classifyHap, onsetsOf, meanAxes, moodOf, featuresOf, worldOdds, worldFor, castOf, composeVisual, describeVisual } from '../lib/visual.mjs';
 
-test('visual policy is well-formed data: every mood names existing worlds, every kind list ends in grain, every palette entry reads an axis', () => {
-  for (const [mood, worlds] of Object.entries(POLICY.moods)) {
-    assert.ok(mood === 'neutral' || OVERLAYS[mood], `mood "${mood}" is not an overlay word`);
-    assert.ok(worlds.length, `mood "${mood}" names no world`);
-    for (const w of worlds) assert.ok(POLICY.worlds[w], `mood "${mood}" names unknown world "${w}"`);
+const FEATURES = [...AXIS_NAMES, 'tempo', 'sections', 'repetition', 'complexity', 'melody', 'pad'];
+
+test('visual policy is well-formed data: every selection row is a built world weighing known features, every kind list ends in grain, every palette entry reads an axis', () => {
+  assert.ok(POLICY.selection.temperature > 0);
+  for (const [w, row] of Object.entries(POLICY.selection.worlds)) {
+    assert.ok(POLICY.worlds[w], `selection names unknown world "${w}"`);
+    for (const [k, v] of Object.entries(row)) assert.ok((k === 'base' || FEATURES.includes(k)) && typeof v === 'number', `selection.${w}.${k}: a number over a known feature`);
   }
-  assert.ok(POLICY.moods.neutral, 'a neutral row is the fallback');
+  for (const w of Object.keys(POLICY.worlds)) assert.ok(POLICY.selection.worlds[w], `world "${w}" has no selection row, so nothing ever picks it`);
   for (const [kind, slots] of Object.entries(POLICY.kinds)) assert.equal(slots.at(-1), 'grain', `kinds.${kind} must end in grain`);
   for (const [name, axis] of Object.entries(POLICY.palette)) assert.ok(AXIS_NAMES.includes(axis), `palette.${name} reads unknown axis "${axis}"`);
   assert.ok(POLICY.temperature.default);
@@ -104,7 +106,7 @@ test('composeVisual is deterministic plain data, with or without onsets handed i
   const a = composeVisual(ir), b = composeVisual(ir, { onsets: onsetsOf(ir) }), c = composeVisual(arcSong(g));
   assert.deepEqual(a, b); assert.deepEqual(a, c);
   assert.deepEqual(JSON.parse(JSON.stringify(a)), a, 'no patterns, closures or NaN inside');
-  assert.deepEqual(Object.keys(a), ['seed', 'mood', 'world', 'palette', 'cps', 'total', 'meter', 'key', 'cast', 'sections', 'peak', 'climax'], "the score's shape");
+  assert.deepEqual(Object.keys(a), ['seed', 'mood', 'world', 'odds', 'features', 'palette', 'cps', 'total', 'meter', 'key', 'cast', 'sections', 'peak', 'climax'], "the score's shape");
 });
 
 test('the score reads the song: meta, sections in song cycles, chords per bar, transitions, parts', async () => {
@@ -141,40 +143,52 @@ test('energy is normalised to the loudest section; peak and climax are named sep
   assert.equal(silent.sections[0].energy, 0, 'no onsets anywhere: 0, not NaN');
 });
 
-test("mood: the overlay the song leans toward, neutral at the baseline; the world always belongs to the mood's policy pool", async () => {
+test("mood: the overlay the song leans toward, neutral at the baseline; the world is always a built one with a selection row", async () => {
   const g = await ready;
   const om = Object.fromEntries(Object.entries(OVERLAYS.ominous).map(([a, d]) => [a, r3(.5 + d)])); // the overlay applied to the baseline
   const ominous = composeVisual(g.song({}, [g.section('a', 4, { drums: om, bass: om, pad: om })]).strudel);
   assert.equal(ominous.mood, 'ominous');
-  assert.ok((POLICY.moods.ominous ?? POLICY.moods.neutral).includes(ominous.world));
+  assert.ok(POLICY.selection.worlds[ominous.world]);
   const flat = composeVisual(g.song({}, [g.section('a', 4, { drums: {}, bass: {} })]).strudel);
   assert.equal(flat.mood, 'neutral');
-  assert.ok(POLICY.moods.neutral.includes(flat.world));
+  assert.ok(POLICY.selection.worlds[flat.world]);
   assert.equal(moodOf(meanAxes(g.song({}, []).strudel)), 'neutral', 'no parts: the baseline');
   assert.equal(moodOf(meanAxes(g.song({}, [g.section('a', 1, { drums: { brightness: .52 } })]).strudel)), 'neutral', 'a lean under the threshold is no mood');
 });
 
-test("a song's visual key names its world, over the mood's pool; an unknown one is refused by song()", async () => {
+test("a song's visual key names its world, over the selection; an unknown one is refused by song()", async () => {
   const g = await ready;
   for (const world of Object.keys(POLICY.worlds)) assert.equal(composeVisual(g.song({ visual: world }, [g.section('a', 1, { drums: {} })]).strudel).world, world);
   assert.throws(() => g.song({ visual: 'nope' }, []), /visual must name a world: tunnel, ink/);
-  assert.equal(composeVisual(g.song({ seed: 5 }, [g.section('a', 1, { drums: {} })]).strudel).world, worldFor('neutral', 5), 'unwritten: the pool');
+  const plain = composeVisual(g.song({ seed: 5 }, [g.section('a', 1, { drums: {} })]).strudel);
+  assert.equal(plain.world, worldFor(plain.odds, 5), 'unwritten: the seed draws from the odds');
   const obj = composeVisual(g.song({ seed: 5, visual: { world: 'ink', seed: 12 } }, [g.section('a', 1, { drums: {} })]).strudel);
   assert.deepEqual([obj.world, obj.seed], ['ink', 12], 'the object form: its own seed for the look, the song keeps its own for the lines');
-  assert.equal(composeVisual(g.song({ seed: 5, visual: { seed: 12 } }, [g.section('a', 1, { drums: {} })]).strudel).world, worldFor('neutral', 12), 'a seed alone still picks from the pool, by that seed');
+  assert.equal(composeVisual(g.song({ seed: 5, visual: { seed: 12 } }, [g.section('a', 1, { drums: {} })]).strudel).world, worldFor(plain.odds, 12), 'a seed alone still draws from the odds, by that seed');
   assert.throws(() => g.song({ visual: { world: 'ink', colour: 'red' } }, []), /visual takes world and seed, not colour/);
   assert.throws(() => g.song({ visual: { seed: 'x' } }, []), /visual.seed must be a number/);
   assert.throws(() => g.song({ visual: ['ink'] }, []), /visual must be a world name or/);
 });
 
-test("worldFor: seeds reach every world of a pool, a seed always picks the same one, a mood with no row takes neutral's", () => {
-  const policy = { moods: { neutral: ['a', 'b', 'c'], sad: ['d'] } };
-  const picks = new Set(Array.from({ length: 32 }, (_, i) => worldFor('neutral', i + 1, policy)));
+test('selection: features in -1..1 from the song; odds are a softmax the weights move and the temperature flattens; the seed draws so every world with odds is reached and the same seed draws the same', async () => {
+  const g = await ready;
+  const ir = g.song({ cps: .85 }, [g.section('a', 2, { drums: { density: .9 }, melody: { notes: '0 2' } }), g.section('b', 2, { drums: { density: .9 }, melody: { notes: '0 2' } }), g.section('c', 2, { bass: {} })]).strudel;
+  const f = featuresOf(ir);
+  for (const k of FEATURES) assert.ok(typeof f[k] === 'number' && f[k] >= -1 && f[k] <= 1, `${k} in -1..1`);
+  assert.ok(f.density > 0 && f.tempo === 1 && f.melody === 1 && f.pad === -1, 'dense, fast, a melody, no pad');
+  assert.ok(f.repetition > -1, 'b repeats a');
+  assert.equal(featuresOf(g.song({}, []).strudel).repetition, -1, 'no sections: nothing repeats');
+  const policy = { selection: { temperature: .3, worlds: { a: { base: 0 }, b: { base: 0, melody: 1 }, c: { base: 0 } } } };
+  const even = worldOdds({ melody: 0 }, policy), leaning = worldOdds({ melody: 1 }, policy);
+  assert.ok(Math.abs(even.a - 1 / 3) < 1e-9 && Math.abs(even.b - even.c) < 1e-9);
+  assert.ok(leaning.b > 0.9 && leaning.a < 0.05, 'a weight over a feature the song has moves the odds');
+  assert.ok(worldOdds({ melody: 1 }, { selection: { ...policy.selection, temperature: 3 } }).b < 0.6, 'a hotter temperature flattens them');
+  const picks = new Set(Array.from({ length: 64 }, (_, i) => worldFor(even, i + 1)));
   assert.deepEqual([...picks].sort(), ['a', 'b', 'c']);
-  assert.equal(worldFor('neutral', 5, policy), worldFor('neutral', 5, policy));
-  assert.equal(worldFor('sad', 9, policy), 'd');
-  assert.ok(['a', 'b', 'c'].includes(worldFor('no-such-mood', 1, policy)));
-  for (const m of Object.keys(POLICY.moods)) for (const seed of [1, 2, 3]) assert.ok(POLICY.moods[m].includes(worldFor(m, seed)), `${m}/${seed} picks inside its pool`);
+  assert.equal(worldFor(even, 5), worldFor(even, 5));
+  assert.equal(worldFor(leaning, 5), 'b', 'the strong favourite nearly always');
+  const odds = worldOdds(f);
+  assert.ok(Math.abs(Object.values(odds).reduce((x, y) => x + y, 0) - 1) < 1e-9 && Object.keys(odds).every((w) => POLICY.worlds[w]));
 });
 
 test('meanAxes weights by bars and skips signals; the palette is the means renamed by policy plus a temperature the policy names', async () => {
@@ -228,7 +242,8 @@ test("describeVisual: the world with its mood and temperature, each part's slot 
     const voices = c.voices ? ` (${Object.entries(c.voices).map(([v, r]) => `${v} ${r}`).join(', ')})` : '';
     assert.ok(d.includes(`${name} → ${c.slot}${voices}`), `${name}: ${d.join(' | ')}`);
   }
-  assert.equal(d.length, 2 + Object.keys(score.cast).length, 'one clause per part, between the world and the peak');
+  assert.match(d[1], /^odds \w+ \d+%, \w+ \d+%, \w+ \d+%$/, 'the selection\'s top three');
+  assert.equal(d.length, 3 + Object.keys(score.cast).length, 'one clause per part, between the odds and the peak');
   assert.equal(d.at(-1), 'peak drop (climax)');
   const mk = (peak, climax) => ({ world: 'ink', mood: 'sad', palette: { temperature: 'cool' }, cast: {}, peak, climax });
   assert.deepEqual(describeVisual(mk('build', 'drop')), ['ink (sad, cool)', 'peak build; climax drop'], 'a diagnostic, not a lint');
