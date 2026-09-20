@@ -17,7 +17,10 @@
 // Levels are set from that table and then checked with `npm run measure -- songs/strata.strudel whole` (and strain,
 // carry, dust): the kits and the ground as the foundation 5..9 dB under the mix, the line's voices as one foreground
 // group, pads and bells behind. The grounds sit at octave 2 (register .4, weight under .7): the layer's octave-down at
-// register .3 put the organ pedal at D0, which nothing plays.
+// register .3 put the organ pedal at D0, which nothing plays. The timpani kit carries `articulation .65`: at the baseline a drum
+// hit has no clip and superdough plays the sample to its end, and timpani, bass drum and cymbal takes run 11 s each, so four
+// beats a bar stacked ~30 real voices the check cannot see (it counts hap length) and the audio thread ran at 110% in `whole`;
+// cut to the hit they cost nothing, and the mridangam storm is thinned in the two sections that run it (traced: 43% and 39%).
 // Axis values are 0..1 with 0.5 = the layer's baseline.
 
 // the memory, in four states of recovery; 16 slots over two bars (phrase 2)
@@ -66,7 +69,7 @@ const WALK = { bd: 'x.......x.......', sd: '........x.......', hh: 'x..x..x.x..x
 const TREAD = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.x.', oh: '..x.......x.....', cp: '.......x......x.' }; // everyone walking
 const STORM = { bd: 'x..x..x.x..x..x.', sd: '....x..x....x..x', hh: '.x.xx.x..x.xx.x.', oh: '..x.......x...x.', cp: '.x....x...x....x' };  // the hands blur
 const hands  = { sounds: MRID, humanize: { timingMs: 16, velocity: .14, correlation: 'bar' }, level: .16, space: .3, brightness: .5 };
-const skins  = { sounds: { bd: 'timpani:5', sd: 'framedrum:8', hh: 'cajon:8', oh: 'sus_cymbal:11', cp: 'bassdrum2:4' }, humanize: { timingMs: 15, velocity: .12, correlation: 'bar' }, level: .3, space: .6, brightness: .35, weight: .8 };
+const skins  = { sounds: { bd: 'timpani:5', sd: 'framedrum:8', hh: 'cajon:8', oh: 'sus_cymbal:11', cp: 'bassdrum2:4' }, humanize: { timingMs: 15, velocity: .12, correlation: 'bar' }, level: .3, space: .6, brightness: .35, weight: .8, articulation: .65 };
 
 // metal and stone
 const slit   = { sound: 'slitdrum:2', rhythm: '3/8', level: .5, position: -.4, space: .4 };
@@ -177,7 +180,7 @@ song({ bpm: 76, key: 'D:minor', seed: 19, kit: 'RolandTR808', packs: ['rooms'], 
     fx:      { riser: 4, level: .4 },
   }),
   section('strain', 12, { role: 'develop', key: 'D:phrygian', progression: 'i II i II', room: STONE,
-    drums:   { ...hands, template: STORM, density: .8, variation: .45, weight: .7, brightness: .55, width: .6, level: .15 },
+    drums:   { ...hands, template: STORM, density: .65, variation: .45, weight: .7, brightness: .55, width: .6, level: .15 },
     bass:    { ...groundII, weight: .7, density: .8, brightness: .4 },
     melody:  { ...zither, notes: L2, density: .55, brightness: .6, level: 1.1 },
     melody2: { ...bowed, notes: L2, density: .5, brightness: .45 },
@@ -262,7 +265,7 @@ song({ bpm: 76, key: 'D:minor', seed: 19, kit: 'RolandTR808', packs: ['rooms'], 
   }),
   section('whole', 16, { role: 'climax', key: 'D:dorian', progression: 'i III VII IV', room: AIR,
     drums:   { ...skins, template: TREAD, density: .8, variation: .4, width: .6 },
-    drums2:  { ...hands, template: STORM, density: .75, variation: .45, level: .15, brightness: .6, width: .6 },
+    drums2:  { ...hands, template: TREAD, density: .6, variation: .45, level: .15, brightness: .6, width: .6 },
     bass:    { ...groundIII, weight: .7, brightness: .6 },
     melody:  { ...harp, notes: L3, density: .5, brightness: .65 },
     melody2: { ...high, notes: L3, density: .5 },

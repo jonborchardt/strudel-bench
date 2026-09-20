@@ -46,6 +46,22 @@
           "why": "level 2: the opening is one kalimba and a didgeridoo at -39 dBFS, 16 dB under the climax, on purpose"
         }
       ]
+    },
+    {
+      "date": "2026-09-20",
+      "ask": "whole cut out immediately in the UI: hitting limits",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "drums",
+          "why": "skins articulation .5>.65: at the baseline a drum hit has no clip and superdough plays the sample to its end; the timpani, bass drum and cymbal takes run 11 s each, four beats a bar stacked ~30 real voices the check cannot see, and the audio thread traced at 110% busy in whole (879 of 1809 callbacks over 10 ms); cut to the hit: 42%, none late"
+        },
+        {
+          "section": "whole",
+          "layer": "drums2",
+          "why": "STORM .75>TREAD .6, strain.drums STORM .8>.65: the mridangam storm thinned in the two sections that run it rather than cut short everywhere; strain 54%>38%"
+        }
+      ]
     }
   ]
 }
