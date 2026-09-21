@@ -153,6 +153,51 @@
           "why": "level .5>.35 brightness .5>.75 the blips out of the kick's band (lowRatio .88>.36)"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "growth: more tree branches early on; make the default visual an overlay; forge too shrill; digital: some notes sound mis-chosen; orbit: the counting voice comes in too strong",
+      "changes": [
+        {
+          "section": "song",
+          "why": "visual: no song edit grows the early tree: the stone, bronze and forge kits play pack samples (slitdrum, conga, anvil) that the stage read as plain hits, never as the snare that branches; the tap now maps them back to their voices (lib), and growth's wood follows the song's progress instead of finishing in bronze"
+        },
+        {
+          "section": "forge",
+          "layer": "drums",
+          "axis": "brightness",
+          "from": 0.5,
+          "to": 0.25,
+          "why": "the metal kit carried the highs (3 kHz centroid, the top high-band share, 3 dB under the mix); the lpf at 4 kHz takes the shrill off the anvil and the metal hats; mix high-band share halved"
+        },
+        {
+          "section": "forge",
+          "layer": "melody",
+          "axis": "brightness",
+          "from": 0.62,
+          "to": 0.47,
+          "why": "the harmonica a little darker with it (register .6>.55 came with the word); measured alone afterwards it holds almost no high band, so the kit was the culprit"
+        },
+        {
+          "section": "forge",
+          "why": "plate damping 7000>5000 the room's top end down with the kit"
+        },
+        {
+          "section": "digital",
+          "layer": "melody",
+          "why": "notes 6@2>6 4 with follow the held sixth lands a major seventh on the III bar (E over F); the sixth now passes to the fifth, a chord tone under i and III both; the same line in electric, and its inversion in orbit, move with it"
+        },
+        {
+          "section": "digital",
+          "layer": "bass",
+          "why": "notes 3 4>2 4 the walk-up's third step was E over Bb on the VI bar; the chord's third instead"
+        },
+        {
+          "section": "orbit",
+          "layer": "perc",
+          "why": "level .8>.4 the counting voice under the machine's line, not over it"
+        }
+      ]
     }
   ]
 }

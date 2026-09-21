@@ -21,9 +21,9 @@ const num = (x, d) => (typeof x === 'number' && Number.isFinite(x) ? x : d);
  * a world reads, and its time: `t` on the audio clock (the scheduler's targetTime, when it sounds), `cycle` the
  * pattern's own position (song cycles, or a pinned section's bars).
  */
-export function eventOf(hap, layer, kind, targetTime) {
+export function eventOf(hap, layer, kind, targetTime, samples = null) {
   const v = hap.value && typeof hap.value === 'object' ? hap.value : {};
-  const c = classifyHap(hap.value);
+  const c = classifyHap(hap.value, undefined, samples);
   return {
     t: targetTime, cycle: hap.whole ? hap.whole.begin.valueOf() : hap.part.begin.valueOf(), dur: hap.duration.valueOf(),
     layer: layer ?? null, kind: kind ?? c.kind, voice: c.voice, role: c.role, note: c.note,

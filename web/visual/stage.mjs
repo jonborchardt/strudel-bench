@@ -88,7 +88,7 @@ export function mountStage(box, canvas, { clock, debug = false, solo = null }) {
     get score() { return score; },
     get world() { return score ? label(score) : null; }, // what is actually playing: the page's pick, else the score's world or composition
     setScore, setWorld,
-    tap: (layer, kind) => (hap, now, cps, t) => { if (!perf) return; const e = eventOf(hap, layer, kind, t); if (solo && e.kind !== solo) return; perf.push(e); if (layer) lastAt[layer] = t; },
+    tap: (layer, kind, samples) => (hap, now, cps, t) => { if (!perf) return; const e = eventOf(hap, layer, kind, t, samples); if (solo && e.kind !== solo) return; perf.push(e); if (layer) lastAt[layer] = t; },
     start() { if (!perf) setScore(fallbackScore()); perf.rebase(); if (!running) { running = true; requestAnimationFrame(frame); } },
     pause() { running = false; perf?.flush(); },
     stop() { running = false; perf?.reset(); idle(); },

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import { AXIS_NAMES } from '../lib/axes.mjs';
 import { OVERLAYS } from '../lib/vocab.mjs';
-import { POLICY, classifyHap, onsetsOf, meanAxes, moodOf, featuresOf, worldOdds, worldFor, castOf, composeVisual, describeVisual } from '../lib/visual.mjs';
+import { POLICY, classifyHap, onsetsOf, meanAxes, moodOf, featuresOf, worldOdds, worldFor, castOf, composeVisual, describeVisual, samplesOf } from '../lib/visual.mjs';
 
 const FEATURES = [...AXIS_NAMES, 'tempo', 'sections', 'repetition', 'complexity', 'melody', 'pad'];
 
@@ -31,6 +31,10 @@ test('classifyHap: kit voices by bare or indexed name, or in full under a known 
   assert.deepEqual(classifyHap({ s: 'RolandTR909_hh' }), drum('hh'), 'a kit voice written in full: a kit lib/kits.json knows, then the voice');
   assert.deepEqual(classifyHap({ s: 'sd:2' }), drum('sd'));
   assert.deepEqual(classifyHap({ s: 'cajon' }), { kind: 'hit', voice: null, role: 'hit', note: null });
+  assert.deepEqual(classifyHap({ s: 'slitdrum:2', bank: 'RolandTR909' }, undefined, { slitdrum: 'sd' }), drum('sd'), 'a pack sample standing in for a voice, by the drums plan map');
+  assert.deepEqual(classifyHap({ s: 'clave:2' }, undefined, { clave: 'clave' }), { kind: 'hit', voice: null, role: 'hit', note: null }, 'a written voice no policy role knows stays a hit');
+  assert.deepEqual(samplesOf({ sounds: { bd: 'framedrum:8', rim: 'clave:2', hh: ['shaker:1', 'metal:4'], oh: { bongo: 2 }, cp: '<a:1 b>' } }), { framedrum: 'bd', clave: 'rim', shaker: 'hh', metal: 'hh', bongo: 'oh', a: 'cp', b: 'cp' });
+  assert.deepEqual(samplesOf(undefined), {});
   assert.deepEqual(classifyHap({ s: 'psaltery_bow' }), { kind: 'hit', voice: null, role: 'hit', note: null });
   assert.deepEqual(classifyHap({ s: 'mystery_bd' }), { kind: 'hit', voice: null, role: 'hit', note: null }, 'a last word that is a voice under no known kit is still a sample');
   assert.deepEqual(classifyHap({ s: 'piano', note: 48 }), { kind: 'pitched', voice: null, role: null, note: 48 });
@@ -106,7 +110,7 @@ test('composeVisual is deterministic plain data, with or without onsets handed i
   const a = composeVisual(ir), b = composeVisual(ir, { onsets: onsetsOf(ir) }), c = composeVisual(arcSong(g));
   assert.deepEqual(a, b); assert.deepEqual(a, c);
   assert.deepEqual(JSON.parse(JSON.stringify(a)), a, 'no patterns, closures or NaN inside');
-  assert.deepEqual(Object.keys(a), ['seed', 'mood', 'world', 'odds', 'features', 'palette', 'cps', 'total', 'meter', 'key', 'cast', 'sections', 'peak', 'climax'], "the score's shape");
+  assert.deepEqual(Object.keys(a), ['seed', 'mood', 'world', 'odds', 'features', 'palette', 'cps', 'total', 'meter', 'key', 'cast', 'sections', 'peak', 'climax', 'composition'], "the score's shape (composition: the policy's default preset when the song writes none)");
 });
 
 test('the score reads the song: meta, sections in song cycles, chords per bar, transitions, parts', async () => {
@@ -242,8 +246,9 @@ test("describeVisual: the world with its mood and temperature, each part's slot 
     const voices = c.voices ? ` (${Object.entries(c.voices).map(([v, r]) => `${v} ${r}`).join(', ')})` : '';
     assert.ok(d.includes(`${name} → ${c.slot}${voices}`), `${name}: ${d.join(' | ')}`);
   }
-  assert.match(d[1], /^odds \w+ \d+%, \w+ \d+%, \w+ \d+%$/, 'the selection\'s top three');
-  assert.equal(d.length, 3 + Object.keys(score.cast).length, 'one clause per part, between the odds and the peak');
+  assert.match(d[1], /^overlay: \w+ \+ \w+$/, 'the default composition: the score\'s world with the selection\'s next-best over it');
+  assert.match(d[2], /^odds \w+ \d+%, \w+ \d+%, \w+ \d+%$/, 'the selection\'s top three');
+  assert.equal(d.length, 4 + Object.keys(score.cast).length, 'one clause per part, between the odds and the peak');
   assert.equal(d.at(-1), 'peak drop (climax)');
   const mk = (peak, climax) => ({ world: 'ink', mood: 'sad', palette: { temperature: 'cool' }, cast: {}, peak, climax });
   assert.deepEqual(describeVisual(mk('build', 'drop')), ['ink (sad, cool)', 'peak build; climax drop'], 'a diagnostic, not a lint');

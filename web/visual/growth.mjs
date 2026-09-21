@@ -2,7 +2,9 @@
 // tip as the song plays, never all at once: a kick is a growth impulse (every living tip extends), an impact is a
 // branching (a share of the tips fork; the fork is symmetric when the melody is consonant with the last bass note and
 // one-sided when it is not), hats sprout leaves on the wood, the bass thickens the trunk, grows the roots down and
-// sends a pulse of sap up through the branches, each line part is the light the tips bend toward (its pitch the
+// sends a pulse of sap up through the branches (the wood may only be as complete as the song is far along: a budget of
+// segments grows with the song's cycle, so a backbeat's forks fill the early sections in proportion and the organism
+// finishes at the end, never in the second section), each line part is the light the tips bend toward (its pitch the
 // height, its pan the side), the pad is the sky and the wind (the whole organism sways, more with the pad's level, its
 // cutoff the light of the sky). A section's role is the growth phase (establish: roots and trunk, slow; develop:
 // branching; climax: blossoms open at every tip; release: leaves fall); a boundary turns the light; a riser hurries the
@@ -35,7 +37,7 @@ export default {
       pal, size: { ...size }, aspect,
       sky: [pal.hue, 25, 8], wood: pal.hue + 15, leaf: pal.field, bloom: pal.line,
       weight: lerp(0.7, 1.5, p.mass), jitter: lerp(0.15, 1, p.jitter), spread: lerp(0.8, 1.25, p.spread), motion: lerp(0.6, 1.4, p.motion),
-      cps: score.cps,
+      cps: score.cps, total: score.total,
       roles: score.sections.map((x) => x.role ?? 'none'),
       slotOf: Object.fromEntries(Object.entries(score.cast).map(([n, c]) => [n, c.slot])),
       t: 0,
@@ -46,7 +48,7 @@ export default {
       light: { x: aspect / 2, y: 0.25, tx: aspect / 2, ty: 0.25, hot: 0 },
       bassNote: 36, melNote: 48,
       wind: { level: 0, tint: 0.5 },
-      phase: { ...PHASE.none }, energy: 0.5, riser: 0, dark: 0, section: null, hueShift: 0, trunk: 0,
+      phase: { ...PHASE.none }, energy: 0.5, riser: 0, dark: 0, section: null, hueShift: 0, trunk: 0, budget: MAX_SEG,
     };
     seed(s, rng);
     return s;
@@ -54,6 +56,7 @@ export default {
 
   step(s, dt, events, clock) {
     s.t += dt;
+    s.budget = s.total > 0 ? Math.min(MAX_SEG, 60 + MAX_SEG * clamp(clock.cycle / s.total)) : MAX_SEG; // the wood the song has earned so far
     const role = clock.index >= 0 ? s.roles[clock.index] ?? 'none' : 'none', want = PHASE[role] ?? PHASE.none;
     s.energy = ease(s.energy, clock.energy, 2, dt);
     for (const k of Object.keys(want)) s.phase[k] = ease(s.phase[k], want[k], 1.2, dt);
@@ -83,7 +86,7 @@ export default {
     const tipEnd = (sg) => [sg.x + Math.cos(sg.a) * sg.l, sg.y + Math.sin(sg.a) * sg.l];
     const thicken = (i) => { for (let k = s.segs[i].p; k >= 0; k = s.segs[k].p) s.segs[k].th += 0.12; };
     const grow = (sg, i, g, turn) => { // a new segment from this tip, bent a little toward the light and by the turn asked, shorter with depth; a tip at the top of the frame stops
-      if (s.segs.length >= MAX_SEG) return null;
+      if (s.segs.length >= s.budget) return null;
       const [x, y] = tipEnd(sg), toLight = Math.atan2(L.y - y, L.x - x);
       if (y < 0.07 || x < 0.03 || x > s.aspect - 0.03) { sg.tip = false; return null; }
       let a = sg.a + turn + (rand(s) - 0.5) * 0.8 * s.jitter;

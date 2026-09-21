@@ -1,5 +1,5 @@
 {
-  "_about": "Aesthetic policy for lib/visual.mjs, not architecture: every table here may be replaced. moodThreshold: how far (in axis units) a song's mean axes must lean along an overlay's direction before it has that mood; an overlay vector is ~.3-.5 long. selection: how a song with no `visual` header picks its world, deliberately fuzzy: each world's row is a base score plus weights over the song's features (every axis by name as its mean lean in -1..1, and tempo, sections, repetition, complexity, melody, pad from featuresOf), the scores go through a softmax at `temperature` (higher: more even odds), and the song's seed samples from the odds, so a world that fits moderately can still win and the same song always gets the same world. temperature: key mode -> a palette word. palette: visual property -> the axis whose song-wide mean it reads. voices: drum voice -> its role in any world. kinds: layer kind -> the slots it may take, in order; grain is unbounded and every list ends there. worlds: slot capacities per world. compositions: the director's presets, count the worlds each takes when the song lists none (filled from the selection's odds).",
+  "_about": "Aesthetic policy for lib/visual.mjs, not architecture: every table here may be replaced. moodThreshold: how far (in axis units) a song's mean axes must lean along an overlay's direction before it has that mood; an overlay vector is ~.3-.5 long. selection: how a song with no `visual` header picks its world, deliberately fuzzy: each world's row is a base score plus weights over the song's features (every axis by name as its mean lean in -1..1, and tempo, sections, repetition, complexity, melody, pad from featuresOf), the scores go through a softmax at `temperature` (higher: more even odds), and the song's seed samples from the odds, so a world that fits moderately can still win and the same song always gets the same world. temperature: key mode -> a palette word. palette: visual property -> the axis whose song-wide mean it reads. voices: drum voice -> its role in any world. kinds: layer kind -> the slots it may take, in order; grain is unbounded and every list ends there. worlds: slot capacities per world. compositions: the director's presets, count the worlds each takes when the song lists none (filled from the selection's odds). defaultComposition: the preset a song with no `visual.composition` plays (single for the bare world).",
   "moodThreshold": 0.15,
   "selection": {
     "temperature": 0.5,
@@ -27,6 +27,7 @@
     "sample": ["impulse", "grain"],
     "raw":    ["grain"]
   },
+  "defaultComposition": "overlay",
   "compositions": {
     "single": { "count": 1, "about": "one world full-frame: the stage as it always was" },
     "overlay": { "count": 2, "about": "the primary full; the second world breathing in and out over it every eight bars, up to a peak the section's energy sets" }

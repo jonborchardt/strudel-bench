@@ -68,8 +68,9 @@ test('the breath: nothing at the start of every period, full half way, from the 
 
 test('worldOf: a single-world score gets the bare world, a composed one the director; withPick is the view override; the score carries the composition', async () => {
   const g = await ready;
-  const plain = composeVisual(song(g, 'ink').strudel);
+  const plain = composeVisual(song(g, { world: 'ink', composition: 'single' }).strudel);
   assert.equal(worldOf(plain), WORLDS.ink, 'the very object, no wrapper');
+  assert.equal(composeVisual(song(g, 'ink').strudel).composition.preset, 'overlay', 'a world name alone: the default composition over it');
   const composed = composeVisual(song(g, { composition: 'overlay', worlds: ['tunnel', 'ink'] }).strudel);
   assert.deepEqual(composed.composition, { preset: 'overlay', worlds: ['tunnel', 'ink'] }); assert.equal(composed.world, 'tunnel', "the base is the score's world");
   assert.equal(worldOf(composed, { createCanvas: canvasStub().createCanvas }).name, 'director');

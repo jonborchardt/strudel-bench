@@ -7,6 +7,7 @@
 // (tests); the codecs do not.
 import { eventOf, createPerformance } from './host.mjs';
 import { layerBase } from '../../lib/song.mjs';
+import { samplesOf } from '../../lib/visual.mjs';
 
 export const FPS = 30, WIDTH = 1920, HEIGHT = 1080;
 export const LEAD = 1.5, TAIL = 3; // seconds of title before the song, seconds after it for the tail to ring
@@ -21,7 +22,7 @@ export function streamOf(pat, cycles = 8) {
       for (const h of l.pattern.queryArc(0, s.cycles)) {
         if (!h.hasOnset()) continue;
         const cycle = s.offset + h.whole.begin.valueOf() * scale;
-        out.push({ ...eventOf(h, name, layerBase(name), cycle / ir.meta.cps), cycle, dur: h.duration.valueOf() * scale });
+        out.push({ ...eventOf(h, name, layerBase(name), cycle / ir.meta.cps, samplesOf(l.plan)), cycle, dur: h.duration.valueOf() * scale });
       }
     }
   } else {
