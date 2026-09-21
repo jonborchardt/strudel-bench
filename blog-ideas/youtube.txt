@@ -35,13 +35,11 @@ Chapters
 13:53 After
 14:56 Dust again
 
-Play this song, and edit it, in your browser:
+Play and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. Direct link to this track:
 https://jonborchardt.github.io/strudel-bench/#strata.strudel
 
-The whole song is a few dozen lines of text. Open the link, press play, drag a slider, change a note, hear it immediately. Nothing to install.
-
-The source of this track:
-https://github.com/jonborchardt/strudel-bench/blob/main/songs/strata.strudel
+Every song here is a text file. This one is songs/strata.strudel in the repo, along with the harness that plays it:
+https://github.com/jonborchardt/strudel-bench
 
 strudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like "darker and more spacious" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, "always shippable, always improving":
 https://jonborchardt.github.io/blog/
@@ -50,8 +48,6 @@ The video is not a screen recording. It is generated from the song itself: every
 
 Built on Strudel, the JavaScript port of TidalCycles: https://strudel.cc
 Samples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/
-
-More: https://github.com/jonborchardt · https://www.youtube.com/@JonathanBorchardt
 
 TAGS
 dark ambient, ritual ambient, drone music, kalimba, timpani, generative music, live coding, strudel, tidalcycles, algorave, minimalism, modal music, dorian, phrygian, long form ambient, focus music, D minor, procedural music, creative coding, music video
@@ -83,13 +79,11 @@ Chapters
 2:33 Threshold
 3:18 After
 
-Play this song, and edit it, in your browser:
+Play and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. Direct link to this track:
 https://jonborchardt.github.io/strudel-bench/#arrival.strudel
 
-The whole song is a few dozen lines of text. Open the link, press play, drag a slider, change a note, hear it immediately. Nothing to install.
-
-The source of this track:
-https://github.com/jonborchardt/strudel-bench/blob/main/songs/arrival.strudel
+Every song here is a text file. This one is songs/arrival.strudel in the repo, along with the harness that plays it:
+https://github.com/jonborchardt/strudel-bench
 
 strudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like "darker and more spacious" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, "always shippable, always improving":
 https://jonborchardt.github.io/blog/
@@ -98,8 +92,6 @@ The video is not a screen recording. It is generated from the song itself: every
 
 Built on Strudel, the JavaScript port of TidalCycles: https://strudel.cc
 Samples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/
-
-More: https://github.com/jonborchardt · https://www.youtube.com/@JonathanBorchardt
 
 TAGS
 orchestral, cinematic music, film score, first contact, sci fi music, epic music, D minor, tubular bells, handchimes, harp, piano, generative music, live coding, strudel, tidalcycles, creative coding, soundtrack, trailer music, procedural music, music video
@@ -131,13 +123,11 @@ Chapters
 1:44 Chorus 3
 2:00 Burnout
 
-Play this song, and edit it, in your browser:
+Play and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. Direct link to this track:
 https://jonborchardt.github.io/strudel-bench/#machine.strudel
 
-The whole song is a few dozen lines of text. Open the link, press play, drag a slider, change a note, hear it immediately. Nothing to install.
-
-The source of this track:
-https://github.com/jonborchardt/strudel-bench/blob/main/songs/machine.strudel
+Every song here is a text file. This one is songs/machine.strudel in the repo, along with the harness that plays it:
+https://github.com/jonborchardt/strudel-bench
 
 strudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like "darker and more spacious" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, "always shippable, always improving":
 https://jonborchardt.github.io/blog/
@@ -146,8 +136,6 @@ The video is not a screen recording. It is generated from the song itself: every
 
 Built on Strudel, the JavaScript port of TidalCycles: https://strudel.cc
 Samples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/
-
-More: https://github.com/jonborchardt · https://www.youtube.com/@JonathanBorchardt
 
 TAGS
 industrial rock, industrial music, instrumental metal, heavy electronic, distortion, E minor, one chord, noise rock, machine music, generative music, live coding, strudel, tidalcycles, algorave, creative coding, procedural music, dark electronic, music video
@@ -178,13 +166,11 @@ Chapters
 2:22 Digital
 2:57 Orbit — the motif inverted
 
-Play this song, and edit it, in your browser:
+Play and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. Direct link to this track:
 https://jonborchardt.github.io/strudel-bench/#ascent.strudel
 
-The whole song is a few dozen lines of text. Open the link, press play, drag a slider, change a note, hear it immediately. Nothing to install.
-
-The source of this track:
-https://github.com/jonborchardt/strudel-bench/blob/main/songs/ascent.strudel
+Every song here is a text file. This one is songs/ascent.strudel in the repo, along with the harness that plays it:
+https://github.com/jonborchardt/strudel-bench
 
 strudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like "darker and more spacious" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, "always shippable, always improving":
 https://jonborchardt.github.io/blog/
@@ -193,8 +179,6 @@ The video is not a screen recording. It is generated from the song itself: every
 
 Built on Strudel, the JavaScript port of TidalCycles: https://strudel.cc
 Samples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/
-
-More: https://github.com/jonborchardt · https://www.youtube.com/@JonathanBorchardt
 
 TAGS
 instrumental, concept album, motif development, minimalism, evolving music, ocarina, timpani, phrygian, D minor, generative music, live coding, strudel, tidalcycles, algorave, electronic music, creative coding, procedural music, sci fi music, music video
@@ -233,13 +217,11 @@ Chapters
 3:08 Coda, both players
 3:23 Outro
 
-Play this song, and edit it, in your browser:
+Play and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. Direct link to this track:
 https://jonborchardt.github.io/strudel-bench/#duel.strudel
 
-The whole song is a few dozen lines of text. Open the link, press play, drag a slider, change a note, hear it immediately. Nothing to install.
-
-The source of this track:
-https://github.com/jonborchardt/strudel-bench/blob/main/songs/duel.strudel
+Every song here is a text file. This one is songs/duel.strudel in the repo, along with the harness that plays it:
+https://github.com/jonborchardt/strudel-bench
 
 strudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like "darker and more spacious" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, "always shippable, always improving":
 https://jonborchardt.github.io/blog/
@@ -248,8 +230,6 @@ The video is not a screen recording. It is generated from the song itself: every
 
 Built on Strudel, the JavaScript port of TidalCycles: https://strudel.cc
 Samples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/
-
-More: https://github.com/jonborchardt · https://www.youtube.com/@JonathanBorchardt
 
 TAGS
 acoustic guitar, guitar duel, trading solos, fingerstyle guitar, steel string guitar, acoustic instrumental, guitar solo, folk instrumental, dorian, cajon, generative music, live coding, strudel, tidalcycles, creative coding, procedural music, guitar duet, music video
@@ -282,13 +262,11 @@ Chapters
 1:52 Drop 2
 2:21 Outro
 
-Play this song, and edit it, in your browser:
+Play and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. Direct link to this track:
 https://jonborchardt.github.io/strudel-bench/#neon.strudel
 
-The whole song is a few dozen lines of text. Open the link, press play, drag a slider, change a note, hear it immediately. Nothing to install.
-
-The source of this track:
-https://github.com/jonborchardt/strudel-bench/blob/main/songs/neon.strudel
+Every song here is a text file. This one is songs/neon.strudel in the repo, along with the harness that plays it:
+https://github.com/jonborchardt/strudel-bench
 
 strudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like "darker and more spacious" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, "always shippable, always improving":
 https://jonborchardt.github.io/blog/
@@ -297,8 +275,6 @@ The video is not a screen recording. It is generated from the song itself: every
 
 Built on Strudel, the JavaScript port of TidalCycles: https://strudel.cc
 Samples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/
-
-More: https://github.com/jonborchardt · https://www.youtube.com/@JonathanBorchardt
 
 TAGS
 deep house, old school rave, breakbeat, amen break, acid bass, hardcore rave, new wave, 90s rave, oberheim dmx, 909, dorian, dance music, generative music, live coding, strudel, tidalcycles, algorave, electronic music, creative coding, music video
@@ -311,6 +287,11 @@ HASHTAGS
 WHAT ELSE TO FILL IN
 ================================================================================
 
+Links clip, and that is YouTube, not you. YouTube shows only about the first 41 characters of a link and appends "...". The link still works when clicked; only the visible text is cut. That is why every link above has a line before it saying where it goes, so the cut text costs the reader nothing. The site address is also written out as plain words in the first sentence, where it cannot be clipped.
+
+If you want links that display in full, the address itself has to get shorter. "https://jonborchardt.github.io/strudel-bench/" is already 45 characters before the song name. Two ways out: a short custom domain, or a repo named jonborchardt.github.io (a GitHub user site, which you do not have yet, since the blog is a project page) holding one-line redirect pages at /s/<song>. That gives "https://jonborchardt.github.io/s/strata" at 39 characters, which displays whole. Ask and I will write the redirect files.
+
+Do not paste the YouTube channel URL into a description. YouTube swallows it and renders a channel chip, which is why the last line came out as "/ @jonathanborchardt". The channel is already linked under the video, so the line is gone.
 Playlist. Put all six in one, something like "strudel-bench: songs written as text". Playlists are indexed separately and carry viewers from one track to the next.
 
 Thumbnail. A still from the video's own world, with the song name in large type. They read as a set if the type and its position stay identical across all six.
