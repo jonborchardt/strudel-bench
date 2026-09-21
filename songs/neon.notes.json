@@ -139,6 +139,22 @@
           "why": "the hook carried over at level 1.2 with space ramp(.4,.8) and brightness ramp(.6,.3), farther each bar"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "verse to build needs a transition",
+      "changes": [
+        {
+          "section": "verse",
+          "layer": "fx",
+          "why": "riser 2 a two-bar riser out of the verse"
+        },
+        {
+          "section": "build",
+          "layer": "fx",
+          "why": "impact the 909 arrives on a hit"
+        }
+      ]
     }
   ]
 }
