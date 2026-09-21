@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { checkFile, checkCode, missingPackOnly, formLetters } from '../scripts/check.mjs';
+import { describeVisual } from '../lib/visual.mjs';
 import { isUnlisted } from '../server.mjs';
 
 const tmp = (name, code) => {
@@ -173,4 +174,18 @@ test('sample meta: the sounds block carries seconds/rms/peak, and an unclipped s
   const k = piano.sections[0].layers.melody;
   assert.ok(k.sounds[0].rms < -25 && k.sounds[0].seconds > 2, JSON.stringify(k.sounds)); // a pitched instrument: the median of its files
   assert.equal(k.minNote, 60);
+});
+
+test('song() files carry a visual score the check describes; a plain file has none', async () => {
+  const r = await checkFile(path.resolve(import.meta.dirname, '..', 'songs', 'demo.strudel'));
+  assert.equal(typeof r.visual.world, 'string');
+  assert.deepEqual(r.visual.sections.map((s) => s.name), ['intro', 'verse', 'drop']);
+  assert.equal(r.visual.climax, 'drop');
+  assert.equal(r.visual.peak, 'drop'); // the arc line of `npm run check -- songs/demo.strudel` shows drop as the loudest section
+  assert.deepEqual(Object.fromEntries(r.visual.sections.map((s) => [s.name, s.parts.drums.onsets])), Object.fromEntries(r.sections.map((s) => [s.name, s.layers.drums.onsetsPerCycle])), "the score reads the check's own onset counts");
+  const d = describeVisual(r.visual);
+  assert.ok(d.some((l) => /^drums → \w+ \(bd \w+/.test(l)), d.join(' | '));
+  assert.equal(d.at(-1), 'peak drop (climax)');
+  const f = tmp('_t_plainvisual.strudel', 's("bd sd")');
+  try { assert.equal((await checkFile(f)).visual, undefined); } finally { fs.rmSync(f); }
 });

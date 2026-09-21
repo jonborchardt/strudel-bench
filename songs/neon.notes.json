@@ -1,0 +1,160 @@
+{
+  "prompt": "an upbeat rave for dancing, new wave mixed with old school, for the rave visual; then deeper, heavier and more interesting without slower, sad or dark; with an Aphex Twin / Amon Tobin side",
+  "requests": [
+    {
+      "date": "2026-09-21",
+      "ask": "make a new song: upbeat, rave, new wave mixed with old school, works with the rave visual; she loves Aphex Twin and Amon Tobin; the first pass was bubblegum and meaningless: deeper, more interesting, heavier, not slower, sad or dark",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "key",
+          "why": "A:minor>A:dorian the raised sixth is the deep colour, not the sad one"
+        },
+        {
+          "section": "song",
+          "layer": "progression",
+          "why": "pop changes>i7 IV7 vamps and IV7 VII in the break: sevenths that hold instead of resolving"
+        },
+        {
+          "section": "verse",
+          "layer": "bass",
+          "why": "square pluck>sawtooth reese, weight .65>.8, register .35>.25, in a 3+3+2 octave pump: heavier without slower"
+        },
+        {
+          "section": "verse",
+          "layer": "melody",
+          "why": "casio:1>wt_digital:0 hollow, the hook rewritten with off-beat entries and a leap to the fifth and the dorian sixth"
+        },
+        {
+          "section": "drop",
+          "layer": "sample",
+          "why": "brk amen chopped in 16 under the 909, re-cut every bar in the twist: the Amon Tobin side"
+        },
+        {
+          "section": "drop",
+          "layer": "bass",
+          "why": "acid square pluck, brightness wobble(.35,.8), weight .85, aggression .65: the acid line"
+        },
+        {
+          "section": "drop",
+          "layer": "melody2",
+          "why": "handchimes>square hollow low counter-stab: the chimes were the bubblegum"
+        },
+        {
+          "section": "verse",
+          "layer": "drums",
+          "axis": "level",
+          "from": 0.7,
+          "to": 0.35,
+          "why": "the DMX owned the mix, the hook sat 13 dB under it (measure)"
+        },
+        {
+          "section": "verse",
+          "layer": "melody",
+          "axis": "level",
+          "from": 0.4,
+          "to": 1.6,
+          "why": "the hook to the foreground, -9.5 dB under the mix (measure)"
+        },
+        {
+          "section": "drop",
+          "layer": "drums",
+          "axis": "level",
+          "from": 0.6,
+          "to": 0.4,
+          "why": "the 909 was 1 dB under the mix (measure)"
+        },
+        {
+          "section": "drop",
+          "layer": "melody",
+          "axis": "level",
+          "from": 0.9,
+          "to": 1.3,
+          "why": "the hoover to the foreground, -8.9 dB (measure)"
+        },
+        {
+          "section": "drop",
+          "layer": "pad",
+          "axis": "level",
+          "from": 0.6,
+          "to": 1,
+          "why": "the piano stabs were 24 dB under (measure)"
+        },
+        {
+          "section": "drop",
+          "layer": "perc",
+          "axis": "level",
+          "from": 0.4,
+          "to": 0.6,
+          "why": "clap up with a compressor, crest 25 (measure)"
+        },
+        {
+          "section": "twist",
+          "layer": "bass",
+          "axis": "level",
+          "from": 0.65,
+          "to": 0.4,
+          "why": "the acid was over the mix alone (measure)"
+        },
+        {
+          "section": "twist",
+          "layer": "melody",
+          "axis": "level",
+          "from": 0.35,
+          "to": 1.8,
+          "why": "the glass lead was 30 dB under (measure)"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "verse is 2 measures too long; drop2 to outro too abrupt; better transition into the twist and a bit less chaos in it",
+      "changes": [
+        {
+          "section": "verse",
+          "from": 16,
+          "to": 14,
+          "why": "bars"
+        },
+        {
+          "section": "drop",
+          "why": "sweep 2 and fx.riser 2 the filter closes under a riser into the twist"
+        },
+        {
+          "section": "twist",
+          "layer": "fx",
+          "why": "impact the twist opens on a hit"
+        },
+        {
+          "section": "twist",
+          "why": "RECUT the triplet-stutter and backwards bars replaced by a straight bar and a late stutter; drums.variation .6>.4, melody.variation .7>.4, perc simpler"
+        },
+        {
+          "section": "drop2",
+          "why": "sweep 2 the filter closes over its last two bars"
+        },
+        {
+          "section": "outro",
+          "layer": "melody",
+          "why": "the hook carried over at level 1.2 with space ramp(.4,.8) and brightness ramp(.6,.3), farther each bar"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "verse to build needs a transition",
+      "changes": [
+        {
+          "section": "verse",
+          "layer": "fx",
+          "why": "riser 2 a two-bar riser out of the verse"
+        },
+        {
+          "section": "build",
+          "layer": "fx",
+          "why": "impact the 909 arrives on a hit"
+        }
+      ]
+    }
+  ]
+}

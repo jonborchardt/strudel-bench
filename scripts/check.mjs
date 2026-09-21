@@ -7,8 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { userPacks } from '../server.mjs';
 import './esm-fix.mjs'; // must run before the strudel imports below are resolved, hence dynamic imports
 import { parseProgression, chordNames } from '../lib/harmony.mjs';
-import { packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS } from '../lib/packs.mjs';
+import { GM_SOUNDS, packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS } from '../lib/packs.mjs';
 import { describeAxes } from '../lib/vocab.mjs';
+import { composeVisual, describeVisual } from '../lib/visual.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
 const { transpiler } = await import('@strudel/transpiler');
 const { miniAllStrings } = await import('@strudel/mini');
@@ -22,7 +23,11 @@ const WORKLETS = ['coarse', 'crush', 'shape', 'distort']; // superdough builds a
 // with no `clip` plays its file to the end (superdough), so its length is the file's, not the hap's: strata's timpani kit at
 // four beats a bar stacked ~30 of its 11 s takes while the hap lengths said 6, and the audio thread traced at 110%.
 const load = (h, cycles, cps, meta) => {
-  const v = h.value, worklets = WORKLETS.filter((k) => v[k] !== undefined).length;
+  const v = h.value, s = String(v.s ?? '').split(':')[0];
+  // the synth worklets too: a supersaw is one processor running `unison` (5) detuned voices, a wavetable (wt_*) one processor
+  // per note, and a `compressor` is a DynamicsCompressorNode per hit; neon's drop2 read 15 with these uncounted and traced
+  // 65% busy with dropouts, machine's chorus3 read 33 by the same model and traced 43%
+  const worklets = WORKLETS.filter((k) => v[k] !== undefined).length + (s === 'supersaw' ? Math.max(1, v.unison ?? 5) - 1 : 0) + (s.startsWith('wt_') ? 1 : 0) + (v.compressor !== undefined ? 1 : 0);
   const file = v.clip === undefined && meta?.seconds ? meta.seconds * (typeof v.end === 'number' ? v.end - (v.begin ?? 0) : 1) / Math.max(Math.abs(v.speed ?? 1), 1e-3) : 0;
   return (1 + worklets) * (Math.max(cycles, file * cps) + (v.release ?? 0) * cps);
 };
@@ -48,7 +53,7 @@ export async function effectiveOf(code) {
 
 /** Built-in sounds: the synths plus every downloaded/CDN pack map in samples/packs. */
 function builtinSounds() {
-  const known = new Set(SYNTHS);
+  const known = new Set([...SYNTHS, ...GM_SOUNDS]);
   if (fs.existsSync(PACKS)) {
     for (const f of fs.readdirSync(PACKS).filter((f) => f.endsWith('.json') && f !== 'packs.json' && !f.includes('alias'))) {
       for (const [k, v] of Object.entries(JSON.parse(fs.readFileSync(path.join(PACKS, f), 'utf8')))) if (k !== '_base') { known.add(k); packFiles.set(k, v); }
@@ -157,7 +162,7 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   const sounds = [...used.values()].map((u) => ({ ...u, file: soundFile(u.name, u.n, packs), ...soundMeta(u.name, u.n, packs) })).filter((u) => u.file);
   for (const u of unknown) problems.push(`${path.basename(file)}: unknown sound "${u}"`);
   for (const [s, p] of undeclared) problems.push(`${path.basename(file)}: sound "${s}" is in local pack "${p}" which the song does not declare: add packs: ['${p}']`);
-  let sections;
+  let sections, visual;
   if (pattern.strudel) {
     sections = pattern.strudel.sections.map((s) => {
       return {
@@ -192,8 +197,10 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
       sct.voices = +(parts + sct.outside).toFixed(0);
     }
     formLetters(sections).forEach((f, i) => { sections[i].form = f; });
+    // the visual score (lib/visual.mjs): what a renderer composes from, fed the onset counts above so nothing is queried twice
+    visual = composeVisual(pattern.strudel, { onsets: Object.fromEntries(sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, l.onsetsPerCycle]))])) });
   }
-  return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps };
+  return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps, visual };
 }
 
 /**
@@ -247,6 +254,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       const max = Math.max(...r.sections.map((s) => s.energy), 1e-9), bar = '▁▂▃▄▅▆▇█';
       console.log(`  arc: ${r.sections.map((s) => `${s.name} ${s.energy} ${bar[Math.round((s.energy / max) * 7)]} ${s.form}`).join(' · ')}`);
     }
+    if (r.visual) console.log(`  visual: ${describeVisual(r.visual).join(' · ')}`); // the composition a renderer would draw: world, each part's slot, the peak against the climax
     for (const p of r.problems) console.error('  ' + p);
     if (!r.ok) bad++;
   }

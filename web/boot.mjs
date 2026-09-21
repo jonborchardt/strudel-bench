@@ -2,6 +2,7 @@
 // the scope, and strudel's own error log routed to the caller. Both index.html and examples.html start here.
 import { dump } from '../lib/dump.mjs';
 import { packKind, registerSamples } from '../lib/packs.mjs';
+import { registerSoundfonts } from './soundfonts.mjs';
 
 /** The local packs this environment has (samples/user/packs.json): `{ name: { sounds, deploy, license } }`; on GitHub Pages only the deployed ones. */
 export const localPacks = {};
@@ -21,6 +22,7 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
         fetch('samples/user/packs.json').then((r) => (r.ok ? r.json() : {})).then((idx) => Object.assign(localPacks, idx)),
       ]);
       registerSamples(localPacks); // the packs' named sample definitions, so a part naming one resolves here as it does in the checker
+      registerSoundfonts(); // gm_* (the guitars, basses, winds strudel.cc has), streamed on first use
       if (packs.includes('tidal-drum-machines')) strudel.aliasBank(local ? 'samples/packs/tidal-drum-machines-alias.json' : cdn.alias);
       await import('../lib/index.mjs');
       const user = Object.entries(localPacks).map(([n, p]) => `${n} (${packKind(p)})`);
@@ -41,10 +43,31 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
     // math in the pattern engine), so dense sections went silent under load. 0.3 s buys that slack at the price of an edit,
     // a knob or a section jump reaching the ears 0.3 s later.
     r.scheduler.latency = 0.3;
-    const P = Object.getPrototypeOf(strudel.getSuperdoughAudioController()), duck = P.duck;
+    const C = strudel.getSuperdoughAudioController(), P = Object.getPrototypeOf(C), duck = P.duck;
     if (!P.ducksOnDemand) { P.ducksOnDemand = true; P.duck = function (targets, ...rest) { for (const t of [targets].flat()) this.getOrbit(t, [0, 1]); return duck.call(this, targets, ...rest); }; }
+    // The master wall: superdough sums every orbit into one gain straight into the destination, so a downbeat of
+    // full-scale 909 samples clips the output. `limit` puts a soft clip between them, on this output and on every one
+    // superdough builds later (the offline render context rebuilds the controller), so a render measures what is heard.
+    const O = Object.getPrototypeOf(C.output), init = O.initializeAudio;
+    if (!O.limited) { O.limited = true; O.initializeAudio = function () { init.call(this); limit(this); }; limit(C.output); }
   });
   return ready;
+}
+
+/** Soft clip in the last `1 - knee` of the scale: identity below the knee, a tanh above it, never past ±1. */
+export function softClipCurve(n = 8193, knee = 0.8) {
+  const c = new Float32Array(n), w = 1 - knee;
+  for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1, a = Math.abs(x); c[i] = Math.sign(x) * (a <= knee ? a : knee + w * Math.tanh((a - knee) / w)); }
+  return c;
+}
+
+/** Re-route a SuperdoughOutput's last gain through a soft clip on its context. */
+function limit(output) {
+  const ac = output.audioContext, wall = new WaveShaperNode(ac, { curve: softClipCurve(), oversample: '4x' });
+  output.destinationGain.disconnect();
+  output.destinationGain.connect(wall);
+  wall.connect(ac.destination);
+  output.limiter = wall;
 }
 
 /** Evaluate and start playing `code`; song() files carry their tempo in metadata, bare layer patterns get the default. */

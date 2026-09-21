@@ -1,0 +1,112 @@
+// neon: an upbeat one for dancing, deep rather than sweet. A dorian, so the minor has its raised sixth (the deep
+// house colour, not the sad one), and the harmony sits on seventh-chord vamps that hold rather than pop changes that
+// resolve. New wave verses (an Oberheim DMX, a reese pumping the octave in a 3+3+2, a wavetable hook that enters off
+// the beat and leaps) open into old-school rave drops (a 909 on breaks, an amen chopped Amon Tobin-style under it,
+// an acid bass whose filter wobbles, minor-seventh piano stabs, a hoover on the octave), with a twist before the break
+// where the amen is re-cut every bar and the lead glitches, for the Aphex side of the house. 132 bpm and never slower.
+// Axis values are 0..1 with 0.5 = the layer's baseline.
+
+const FEEL = { timingMs: 8, velocity: .08, correlation: 'phrase' };
+const HOOK = '0 ~ ~ 4 ~ 5 4 ~ 7 ~ ~ 5 ~ 4@2 ~';                  // the hook: root, a leap to the fifth, the dorian sixth, the octave, held on the fifth: a question
+const HOOK2 = '0 ~ ~ 4 ~ 5 4 ~ 2 ~ ~ 1 ~ 0@2 ~';                 // its answer: the same climb, then down through the second, home
+const RAVE = '7 ~ 7 5 ~ 4 ~ ~ 7 ~ 5 ~ 4 2 ~ ~';                  // the hoover: the octave hammered, a fall that stops on the third
+const RAVE2 = '7 ~ 7 5 ~ 4 ~ ~ 5 ~ 7 ~ 5 4 ~ ~';                 // the hoover asks: back up to the octave, down to the fifth
+const GLITCH = '7 ~ 7 5 ~ 7 ~ 4 ~ 3 ~ 2 ~ 0 ~ ~';                // the twist's lead: the octave stuttered, then a straight fall
+const PUMP = '0 0 7 0 0 7 0 7';                                  // the new wave bass: the octave in a 3+3+2
+const ACID = '0 0 7 0 3 0 7 4';                                  // the acid line: the root hammered, the octave and the fourth popping out
+const ACID2 = '0 7 0 3 0 7 5 4';                                 // the second drop's acid: the sixth in it now
+const CHOP = '0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15';            // the amen as recorded (two bars, sixteen cuts)
+const RUSH = '[0 1 2 3 4 5 6 7 [8 9 10 11] [12 13 14 15] 0 1 2 3]';  // a bar that rushes its second half and restarts
+const RECUT = '<[0 1 2 3 4 5 [6 6] 7 8 9 10 11 12 13 14 15] [' + CHOP + '] ' + RUSH + ' [0 1 2 3 4 5 6 7 8 9 10 11 [12 12] 13 14 15]>'; // four bars of the amen: one stutter, straight, the rush, one stutter late
+
+const ROOM = { ir: 'room', size: .9 };
+const PLATE = { ir: 'plate', size: 1.8, damping: 7000 };
+
+const reese = { sound: 'sawtooth', patch: 'reese', register: .25, weight: .8, articulation: .65, brightness: .45, aggression: .55, space: .3, duck: 'drums', duckDepth: .3, duckAttack: .15 };
+const acid = { sound: 'square', patch: 'pluck', register: .25, weight: .85, articulation: .75, brightness: wobble(.35, .8), aggression: .65, space: .3, duck: 'drums', duckDepth: .35, duckAttack: .15 };
+const amen = { sound: 'brk', bars: 2, slices: 16, stretch: true, brightness: .55, space: .35, position: -.15 };
+const lead = { sound: 'wt_digital:0', patch: 'hollow', notes: HOOK, phrase: 2, density: .6, articulation: .75, register: .55, space: .4, brightness: .6, aggression: .55, follow: true, velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: FEEL };
+const hoover = { sound: 'supersaw', patch: 'wide', notes: RAVE, phrase: 2, density: .65, articulation: .6, register: .6, space: .35, brightness: .7, aggression: .6, width: .6, follow: true, velocity: '1 .9 1 .9 .95 1 .9 1' };
+const stabs = { sound: 'piano', density: .7, articulation: .85, register: .5, weight: .6, brightness: .65, space: .5, width: .5, position: .25, duck: 'drums', duckDepth: .2, duckAttack: .2 };
+const arp = { sound: 'square', patch: 'wide', arp: 'up', density: .6, articulation: .6, register: .5, brightness: .55, space: .55, width: .7, position: -.25, duck: 'drums', duckDepth: .15, duckAttack: .2 };
+const answer = { sound: 'square', patch: 'hollow', register: .4, articulation: .7, space: .5, brightness: .55, position: -.35, follow: true }; // a low counter-stab in the holes the hoover leaves
+
+song({ bpm: 132, key: 'A:dorian', seed: 7, kit: 'OberheimDMX', packs: ['rooms'], visual: 'rave' }, [
+
+  // the reese holds the root under the arpeggio, then the DMX walks in
+  section('intro', 8, { role: 'establish', progression: 'i7', room: ROOM,
+    drums:  { template: 'minimal', density: .5, articulation: .6, level: .5 },
+    bass:   { ...reese, notes: '0@3 ~', density: .75, articulation: .35, level: .6, brightness: ramp(.3, .5) },
+    pad:    { ...arp, brightness: ramp(.4, .6) },
+    fx:     { riser: 2, level: .4 },
+  }),
+
+  // new wave: the octave pumped in threes, the hook off the beat, a cracking snare on two and four, a 5-in-16 on metal
+  section('verse', 14, { role: 'develop', progression: 'i7@2 IV7@2', room: ROOM,
+    drums:  { template: 'house', density: .65, drive: .75, weight: .65, articulation: .65, level: .35 },
+    bass:   { ...reese, notes: PUMP, density: .8, level: .7 },
+    melody: { ...lead, level: 1.6 },
+    pad:    { ...arp, level: .5 },
+    perc:   { sound: 'metal:4', rhythm: '5/16', level: .3, position: .4, space: .4, articulation: .7 },
+    fx:     { riser: 2, level: .5 },
+  }),
+
+  // the 909 takes over, the piano starts stabbing sevenths, the sweep closes into the drop
+  section('build', 8, { role: 'develop', progression: 'i7 VII IV7 VII', kit: 'RolandTR909', room: ROOM, sweep: 2,
+    drums:  { template: 'house', density: .8, drive: .8, weight: .65, articulation: .7, variation: .3, level: .45 },
+    bass:   { ...reese, notes: '0 ~ 0 7 ~ 4 3 ~', density: .8, level: .6 },
+    melody: { ...lead, notes: HOOK2, level: 1.6 },
+    pad:    { ...stabs, level: .5 },
+    fx:     { impact: true, riser: 4, level: .6 },
+  }),
+
+  // old school: the amen chopped under the 909, the acid bass, the hoover, the stabs, a low stab answering
+  section('drop', 16, { role: 'climax', progression: 'i7 IV7 i7 VII', kit: 'RolandTR909', room: PLATE, sweep: 2,
+    drums:  { template: 'breaks', density: .85, drive: .8, weight: .65, articulation: .7, variation: .35, level: .4 },
+    sample: { ...amen, pattern: CHOP, level: .5 },
+    bass:   { ...acid, notes: ACID, density: .8, level: .6 },
+    melody: { ...hoover, level: 1.3 },
+    melody2: { ...answer, notes: '~ ~ 0 ~ ~ ~ 3 ~', level: .6 },
+    pad:    { ...stabs, level: 1 },
+    perc:   { sound: 'clap:2', rhythm: '....x.......x...', level: .6, position: -.3, space: .5, compressor: { threshold: -18, ratio: 3 } },
+    fx:     { impact: true, riser: 2, level: .4 },
+  }),
+
+  // the twist: the amen re-cut every bar, the acid bass alone under it, the lead glitching through a wavetable; it opens on an impact after the drop's sweep
+  section('twist', 8, { role: 'develop', progression: 'i7@2 III VII', kit: 'RolandTR909', room: ROOM,
+    drums:  { template: 'halftime', density: .55, drive: .7, weight: .65, articulation: .7, variation: .4, level: .4 },
+    sample: { ...amen, pattern: RECUT, level: .6, brightness: .65 },
+    bass:   { ...acid, notes: ACID, density: .8, level: .4, brightness: wobble(.3, .9), aggression: .7 },
+    melody: { sound: 'wt_digital:2', patch: 'glass', notes: GLITCH, phrase: 2, density: .7, variation: .4, articulation: .85, register: .7, space: .6, brightness: .75, width: .7, follow: true, level: 1.8 },
+    perc:   { sound: 'casio:2', rhythm: 'x.x..x.x..x.x...', density: .5, variation: .3, level: .3, position: .45, space: .3 },
+    fx:     { impact: true, riser: 2, level: .5 },
+  }),
+
+  // the lights go down: away from home on the four and the seven, the piano and the hook alone, the crowd waits
+  section('break', 8, { role: 'release', progression: 'IV7@2 VII@2', room: PLATE, dropout: 1,
+    drums:  { template: 'halftime', density: .4, articulation: .6, level: .5 },
+    melody: { ...lead, notes: HOOK, level: 1.6, space: .6 },
+    pad:    { ...stabs, level: .55, articulation: .5, space: .65 },
+    fx:     { riser: 4, level: .7 },
+  }),
+
+  // both hooks at once: the wavetable answers the hoover an octave up, the fills come every four
+  section('drop2', 16, { role: 'climax', progression: 'i7 IV7 i7 VII', kit: 'RolandTR909', room: PLATE, sweep: 2,
+    drums:  { template: 'breaks', density: .9, drive: .85, weight: .7, articulation: .7, variation: .5, level: .4, fill: true },
+    sample: { ...amen, pattern: '<[' + CHOP + '] ' + RUSH + '>', level: .55 },
+    bass:   { ...acid, notes: ACID2, density: .8, level: .6, brightness: wobble(.4, .85) },
+    melody: { ...hoover, notes: RAVE2, level: 1.3 },
+    melody2: { ...lead, notes: HOOK2, register: .7, level: .9, position: .35, space: .5 },
+    pad:    { ...stabs, level: 1 },
+    perc:   { sound: 'clap:2', rhythm: '....x.......x...', level: .6, position: -.3, space: .5, compressor: { threshold: -18, ratio: 3 } },
+    fx:     { impact: true, level: .4 },
+  }),
+
+  // out on the reese and the arpeggio and the DMX, the way it came in; the hook stays on, farther each bar, so the drop does not just stop
+  section('outro', 8, { role: 'release', progression: 'i7@2 IV7@2', kit: 'OberheimDMX', room: ROOM,
+    drums:  { template: 'house', density: .55, drive: .6, articulation: .65, level: .45 },
+    bass:   { ...reese, notes: PUMP, density: .8, level: .6 },
+    melody: { ...lead, notes: HOOK2, level: 1.2, space: ramp(.4, .8), brightness: ramp(.6, .3) },
+    pad:    { ...arp, level: .5, brightness: ramp(.6, .35) },
+  }),
+])

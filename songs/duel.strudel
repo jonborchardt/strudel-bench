@@ -1,0 +1,172 @@
+﻿// duel: porch with a second guitar, two players on steel-string guitars. Player one (gm_acoustic_guitar_steel, the first
+// font) is tight and bright, close-miked and dry, legato, accents on the beat, left of centre; player two (the same GM name,
+// preset :5, the LK steel: a different sampled guitar) is looser, warmer, roomier, punchier in the attack, accents off the
+// beat, right of centre. Player one picks the chords and plays the solos as in porch; player two plays alongside in the
+// intro, verse, break, pickup and outro, and answers every solo with its own in the b sections: solo → solob, ... The last
+// pair ends the duel together, player one on the coda's line a third up, player two pulsing and holding under it. In the first, fourth and fifth exchanges the players step on
+// each other: the next one starts under the last bar or two, and the first hangs over into the answer.
+// The picking and the bass are raw parts (plain note().s()) so nothing puts a synth filter or attack on a plucked string.
+const played = { timingMs: 12, velocity: .1, correlation: 'phrase' };
+const kit = { bd: 'cajon:2', sd: 'cajon:6', hh: 'shaker_small:6', oh: 'shaker_large:0' };
+const GROOVE = { bd: 'x.......x.x.....', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.x.', oh: '..............x.' };
+const HALF = { bd: 'x.........x.....', sd: '........x.......', hh: 'x..x..x...x..x..' };
+const quiet = { sounds: kit, template: GROOVE, articulation: .6, humanize: { ...played, correlation: 'bar' } };
+const G = 'gm_acoustic_guitar_steel', G2 = 'gm_acoustic_guitar_steel:5';
+// fingerpicking, one bar per chord: the bass string, then thumb and fingers across the shape
+const pick = (chords) => ({ pattern: note('<' + chords + '>').s(G).clip(1.4), level: .32, position: -.12, brightness: .42, space: .6, humanize: { ...played, correlation: 'bar' } });
+const Em = '[e3 b3 e4 g4 b3 g4 e4 b3]', A = '[a2 e3 a3 cs4 e4 cs4 a3 e3]', D = '[d3 a3 d4 fs4 a4 fs4 d4 a3]', C = '[c3 g3 c4 e4 g4 e4 c4 g3]';
+const bass = (line) => ({ pattern: note('<' + line + '>').s('gm_acoustic_bass').clip(1.2), level: .3, space: .35, humanize: { ...played, correlation: 'bar' } });
+const WALK = '[e2 ~ e2 b2] [a1 ~ a1 e2] [c2 ~ c2 g2] [d2 ~ d2 a2]', PUSH = '[e2 e2 e2 b2] [a1 a1 a1 e2] [c2 c2 c2 g2] [d2 d2 d2 a2]';
+const DRIVE = '[e2 e2 e2 e2 e2 e2 b2 b2] [a1 a1 a1 a1 a1 a1 e2 e2] [c2 c2 c2 c2 c2 c2 g2 g2] [d2 d2 d2 d2 d2 d2 a2 a2]';
+const ARP = '[e2 g2 b2 e3 d3 b2 g2 e2] [a1 cs2 e2 a2 g2 e2 cs2 a1] [c2 e2 g2 c3 b2 g2 e2 c2] [d2 fs2 a2 d3 [c3 b2] a2 fs2 d2]';
+// player one: tight (8 ms), bright, dry, legato, on the beat, left
+const lead = { sound: G, register: .5, brightness: .85, level: 1.7, space: .35, position: -.3, articulation: .45, humanize: { timingMs: 8, velocity: .08, correlation: 'phrase' } };
+// player two: loose (22 ms, per bar), warm, roomier, a punchier attack, off the beat, right; the LK font is ~5 dB quieter than the first, hence the postgain
+const second = { sound: G2, register: .5, brightness: .6, level: 1.7, postgain: 1.8, space: .55, position: .35, articulation: .65, humanize: { timingMs: 22, velocity: .18, correlation: 'bar' } };
+const V2 = '.75 1 .8 .95 .75 1 .8 .9'; // player two leans on the offbeats
+const LIFT = 'i IV bVI VII';
+// the coda's line (solo6), and the same line a third above for player one in the finale
+const CODA = '[[0 2 4 0] [2 4 0 2] [4 0 2 4] [7 6 4 2]] [[4,6]@3 [2,4]@2 [0,2]@3 ~ [4,6] [2,4]@2 [4,6]@2 [6,8]@2] [[0 2 4 ~] [2 4 5 ~] [4 5 7 9] [11 9 7 5]] [[9 7 5 4] [2 1 ~ 1] [1@3 2] [4 8@3]]';
+const CODA3 = '[[2 4 6 2] [4 6 2 4] [6 2 4 6] [9 8 6 4]] [[6,8]@3 [4,6]@2 [2,4]@3 ~ [6,8] [4,6]@2 [6,8]@2 [8,10]@2] [[2 4 6 ~] [4 6 7 ~] [6 7 9 11] [13 11 9 7]] [[11 9 7 6] [4 3 ~ 3] [3@3 4] [6 10@3]]';
+// player two under it in the finale: the hemiola's accents alone (a 3-against-4 pulse on the root), the 3+2+3 bar as single notes, held chord tones under the sequence, the same landing
+const CODA2 = '[[0 ~ ~ 0] [~ ~ 0 ~] [~ 0 ~ ~] [7 6 4 2]] [4@3 2@2 0@3 ~ 4 2@2 4@2 6@2] [0@3 ~ 4@3 ~] [[~ 7 ~ 4] [2 1 ~ 1] 1 8]';
+
+song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8', visual: { composition: 'overlay', worlds: ['ink', 'signal'] }, packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
+  section('intro', 4, { role: 'establish', progression: 'i IV i VII',
+    raw:    pick([Em, A, Em, D].join(' ')),
+    // player two picks chord tones between player one's, an octave up
+    melody2: { ...second, follow: true, level: 1.2, velocity: '.8 .9 .85 .9', notes: '~ ~ 4 ~ ~ 7 ~ 4' },
+  }),
+  section('verse', 8, { role: 'develop', progression: 'i IV i VII',
+    drums:  { ...quiet, density: .55, level: .28 },
+    raw:    bass('[e2 ~ e2 b2] [a1 ~ a1 e2] [e2 ~ e2 b2] [d2 ~ d2 a2]'),
+    raw2:   pick([Em, A, Em, D].join(' ')),
+    melody: { ...lead, phrase: 2, follow: true, velocity: '.85 1 .9 1 .8 1 .9 .95', notes: '0 ~ 2 3 4@2 ~ 3 2 0 ~ 6 4@2 2 0' },
+    // the hook a third above, under player one
+    melody2: { ...second, phrase: 2, follow: true, level: .8, velocity: '.85 1 .9 1 .8 1 .9 .95', notes: '2 ~ 4 5 6@2 ~ 5 4 2 ~ 8 6@2 4 2' },
+  }),
+  section('solo', 8, { role: 'develop', progression: LIFT,
+    drums:  { ...quiet, density: .6, level: .3, variation: .2 },
+    raw:    bass(WALK),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // one eight-bar line: bar per bracket, runs as inner brackets, degrees past 7 climb the next octave (7 and 14 are the root)
+    melody: { ...lead, phrase: 8, velocity: '.9 1 .85 1 .9 1 .95 1',
+              notes: '[0 2 4 [5 4] 7@2 ~ 4] [6 4 [3 2] 0@2 ~ [0 2] 3] [4 [4 5] 7 [7 9] 11@2 [9 7] 4] [[7 6 5 4] [3 2 0 2] 3@2 4 ~ ~] [[0 2 3 4] [5 7 9 11] 12@3 [11 9]] [[11 9 7 9] 11@2 [12 11 9 7] ~ 7@2] [[7 9 7 5] [4 5 4 2] [0 2 4 7] [9 7 4 2]] [0@3 ~ 7 0@2]' },
+    // player two steps in under the last bar with a run down to its first note
+    melody2: { ...second, phrase: 8, velocity: V2, notes: '~ ~ ~ ~ ~ ~ ~ [~ ~ [4 5 7 9] [11 9 7 5]]' },
+  }),
+  section('solob', 8, { role: 'develop', progression: LIFT,
+    drums:  { ...quiet, density: .6, level: .3, variation: .25 },
+    raw:    bass(WALK),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // player two answers: the opening cell turned over, a dip under the root, and it ends on the fifth, a question
+    melody2: { ...second, phrase: 8, velocity: V2,
+              notes: '[7 5 4 [3 4] 0@2 ~ 4] [2 4 [5 6] 7@2 ~ [7 6] 5] [4 [4 3] 2 [2 0] -1@2 [0 2] 4] [[0 2 3 4] [5 4 3 2] 4@2 3 ~ ~] [[7 6 5 4] [3 2 0 2] 4@3 [5 7]] [[9 7 5 7] 9@2 [11 9 7 5] ~ 4@2] [[4 2 4 5] [7 5 7 9] [11 9 7 4] [5 4 2 0]] [4@3 ~ 7 4@2]' },
+    // player one does not stop at the bar line: one more bar over player two's start
+    melody: { ...lead, phrase: 8, velocity: '.9 1 .85 1 .9 1 .95 1', notes: '[0@2 [0 2 4 7] 9@2 [7 4] ~ ~] ~ ~ ~ ~ ~ ~ ~' },
+  }),
+  section('solo2', 8, { role: 'develop', progression: LIFT,
+    drums:  { ...quiet, density: .7, level: .32, variation: .35 },
+    raw:    bass(PUSH),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // the answer: sixteenths from the top, a pedal-point lick on the root, a run to the top note and home
+    melody: { ...lead, phrase: 8, brightness: .85, velocity: '.9 1 .9 1 .95 1 .95 1',
+              notes: '[[7 9 11 12] [11 9 7 5] [7 9 11 12] [14 12 11 9]] [11@2 [12 11] 9 [7 9 7 5] 4@2] [[4 5 7 9] [11 12 14 12] 11@2 [9 7 5 4]] [7@3 [5 7] 9 [7 5 4 2] 0@2] [[0 2 0 2] [3 4 3 4] [5 7 5 7] [9 11 9 11]] [[12 11 12 14] 14@2 ~ [12 11 9 7] 4] [[7 4 7 9] [7 4 7 11] [7 4 7 12] [7 4 7 14]] [14@2 [12 11] 9 7 [4 2] 0@2]' },
+  }),
+  section('solo2b', 8, { role: 'develop', progression: LIFT,
+    drums:  { ...quiet, density: .7, level: .32, variation: .35 },
+    raw:    bass(PUSH),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // player two answers lower and off the beat, then climbs through the chord shapes and a rising pedal lick
+    melody2: { ...second, phrase: 8, brightness: .75, velocity: V2,
+              notes: '[[0 ~ 0 2] [4 ~ 4 5] [7 ~ 7 9] [11 9 7 5]] [4@2 [5 4] 2 [0 2 0 -1] 0@2] [[0 2 4 7] [9 7 4 2] [0 2 4 7] [9 11 12 14]] [12@3 [11 9] 7 [5 4 2 0] ~ ~] [[7 7 9 7] [5 5 7 5] [4 4 5 4] [2 2 4 2]] [[0 4 7 11] 12@2 ~ [11 9 7 5] 4@2] [[9 7 9 11] [9 7 9 12] [9 7 9 14] [12 11 9 7]] [7@2 [5 4] 2 0@3 ~]' },
+  }),
+  section('break', 4, { role: 'breakdown', progression: 'i IV i VII',
+    raw:    bass('[e2 ~ ~ ~] [a1 ~ ~ ~] [e2 ~ ~ ~] [d2 ~ ~ b2]'),
+    raw2:   pick([Em, A, Em, D].join(' ')),
+    // the hook at half speed, both guitars in thirds, a breath before the third pair
+    melody: { ...lead, phrase: 4, follow: true, level: 1.3, velocity: '.8 .9 .85 .9', notes: '0@2 ~ 2 3@2 ~ 4 3@2 2 0@2 ~ ~ 4' },
+    melody2: { ...second, phrase: 4, follow: true, level: .9, velocity: '.8 .9 .85 .9', notes: '2@2 ~ 4 5@2 ~ 6 5@2 4 2@2 ~ ~ 6' },
+  }),
+  section('solo3', 8, { role: 'develop', progression: LIFT,
+    drums:  { ...quiet, template: HALF, density: .55, level: .28, variation: .15 },
+    raw:    bass(WALK),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // the third breathes: rests, held notes and double-stops over a halftime kit, then a pair of runs to hand off
+    melody: { ...lead, phrase: 8, brightness: .75, velocity: '.85 1 .8 1 .85 1 .9 .95',
+              notes: '[~ 0 [2 3] 4@2 ~ [4 5] 4] [[3 2] 0@2 ~ ~ [0 2] 3@2] [[4,7]@2 ~ [4 5 7] [7,9]@2 ~ 7] [[9 7 5] 4@2 [3 2] 0@3 ~] [~ [7 9] 11@2 [9 7] [9 11] 12@2] [[11 12 11 9] 7@2 ~ [7 9 7 5] 4@2] [[5 4 2 0] [2 4 5 7] [5 4 2 0] [2 4 5 7]] [[9 7] 4@2 [2 0] ~ 0@3]' },
+  }),
+  section('solo3b', 8, { role: 'develop', progression: LIFT,
+    drums:  { ...quiet, template: HALF, density: .55, level: .28, variation: .2 },
+    raw:    bass(WALK),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // player two answers in kind: double-stops held across the beat, a dip under the root, one run and a held root
+    melody2: { ...second, phrase: 8, brightness: .65, velocity: V2,
+              notes: '[~ [0,4]@2 ~ [2,5] [3,7]@2 ~] [[4,7]@3 ~ [2,5] [0,4]@2 ~] [~ 7 [9 7] 5@2 ~ [4 2] 4] [[2 0] -1@2 ~ 0@3 ~] [~ [4 5] 7@2 [9 7] [9 11] 9@2] [[7,11]@2 ~ [5,9]@2 [4,7]@2 ~] [[0 2 4 5] [7 9 11 12] [11 9 7 5] [4 2 0 2]] [[4 2] 0@3 ~ 7@2 ~]' },
+  }),
+  section('solo4', 8, { role: 'develop', progression: LIFT,
+    drums:  { ...quiet, density: .7, level: .32, variation: .4 },
+    raw:    bass(PUSH),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // the fourth climbs: sweeps across the chord shapes, a pedal lick that reaches higher each beat, a run that hands off
+    melody: { ...lead, phrase: 8, brightness: .85, velocity: '.9 1 .9 1 .95 1 .95 1',
+              notes: '[[7 9 11 12] [14 12 11 9] [7 9 11 12] [14 12 11 9]] [[11 12 11 9] [11 12 11 9] 12@2 [14 12 11 9]] [[7 11 14 11] [7 11 14 11] [9 12 14 12] [9 12 14 12]] [[14 12 11 9] [7 5 4 2] 0@2 [0 2 4 5]] [[7 9 7 9] [9 11 9 11] [11 12 11 12] [12 14 12 14]] [14@2 [12 14] 12 [11 12 11 9] 7@2] [[7 4 7 9] [7 4 7 11] [9 5 9 12] [9 5 9 14]] [[12 11 9 7] [5 4 2 0] 0@2 ~ ~]' },
+    // player two comes in under the hand-off, its own sweeps a bar early
+    melody2: { ...second, phrase: 8, brightness: .75, velocity: V2, notes: '~ ~ ~ ~ ~ ~ ~ [~ [12 11 9 7] [9 7 5 4] [12 11 9 7]]' },
+  }),
+  section('solo4b', 8, { role: 'develop', progression: LIFT,
+    drums:  { ...quiet, density: .7, level: .32, variation: .4 },
+    raw:    bass(PUSH),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // player two answers the climb by falling: sweeps down the shapes, a pedal lick on the fifth, and it hands back under the root
+    melody2: { ...second, phrase: 8, brightness: .75, velocity: V2,
+              notes: '[[12 11 9 7] [9 7 5 4] [12 11 9 7] [9 7 5 4]] [[5 4 2 0] [5 4 2 0] 4@2 [7 5 4 2]] [[4 7 11 7] [4 7 11 7] [5 9 12 9] [5 9 12 9]] [[12 11 9 7] [5 4 2 0] 4@2 [4 5 7 9]] [[4 5 4 5] [7 9 7 9] [11 12 11 12] [14 12 11 9]] [7@2 [9 7] 5 [4 5 4 2] 0@2] [[4 0 4 7] [4 0 4 9] [5 2 5 11] [5 2 5 12]] [[11 9 7 5] [4 2 0 -1] 0@2 ~ ~]' },
+    // player one carries the pedal lick a bar over the answer
+    melody: { ...lead, phrase: 8, brightness: .85, velocity: '.9 1 .9 1 .95 1 .95 1', notes: '[[7 4 7 9] [7 4 7 11] 12@2 [14 12] 11@2] ~ ~ ~ ~ ~ ~ ~' },
+  }),
+  section('pickup', 2, { role: 'breakdown', progression: 'i i',
+    // two bars of the two guitars alone: the pickup run in thirds, player two a third below
+    melody: { ...lead, phrase: 2, brightness: .85, level: 1.9, velocity: '.9 1 .95 1', notes: '[~ ~ [0 2 4 5] [7 9 11 12]] [14@3 ~ [12 11 9 7] 4@2]' },
+    melody2: { ...second, phrase: 2, level: 1.2, velocity: '.9 1 .95 1', notes: '[~ ~ [-2 0 2 3] [5 7 9 11]] [12@3 ~ [11 9 7 5] 2@2]' },
+  }),
+  section('solo5', 8, { role: 'develop', progression: LIFT,
+    drums:  { ...quiet, density: .85, level: .36, variation: .5 },
+    raw:    bass(DRIVE),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // the fifth goes for it: sixteenths and sextuplets top to bottom, sweeps, tremolo picking up the scale, the high root held
+    melody: { ...lead, phrase: 8, brightness: .9, level: 1.9, velocity: '.95 1 .95 1 1 1 1 1',
+              notes: '[[9 11 12 14] [12 11 9 7] [9 11 12 14] [12 11 9 7]] [[7 9 11 12 14 12] [11 9 7 5 4 2] [4 5 7 9 11 12] [11 9 7 5 4 2]] [[0 4 7 12] [0 4 7 12] [2 5 9 14] [2 5 9 14]] [[14 12 11 9] [11 9 7 5] [7 5 4 2] [4 2 0 2]] [[7 7 7 7] [9 9 9 9] [11 11 11 11] [12 12 12 12]] [[14 14 14 14] [14 14 14 14] [12 14 12 11] [12 14 12 11]] [[7 9 11 12 14 12] [11 9 7 5 4 2] [7 9 11 12 14 12] [11 9 7 5 4 2]] [[12 11 12 14] 14@4 ~ 7@2]' },
+    // player two barges in two bars early, under the tremolo and the held root
+    melody2: { ...second, phrase: 8, brightness: .8, velocity: V2, notes: '~ ~ ~ ~ ~ ~ [~ ~ [7 9 11 12] [14 12 11 9]] [[7 9 11 12] [14 12 11 9] [7 9 11 12] [14 12 11 9]]' },
+  }),
+  section('solo5b', 8, { role: 'develop', progression: LIFT,
+    drums:  { ...quiet, density: .85, level: .36, variation: .5 },
+    raw:    bass(DRIVE),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // player two goes for it too, a third under player one's shapes: sextuplets, sweeps, tremolo up the scale, its high note held
+    melody2: { ...second, phrase: 8, brightness: .8, level: 1.9, velocity: V2,
+              notes: '[[7 9 11 12] [14 12 11 9] [7 9 11 12] [14 12 11 9]] [[12 11 9 7 5 4] [2 4 5 7 9 11] [12 11 9 7 5 4] [2 4 5 7 9 11]] [[0 4 7 11] [0 4 7 11] [2 5 9 12] [2 5 9 12]] [[12 11 9 7] [9 7 5 4] [5 4 2 0] [2 0 2 4]] [[5 5 5 5] [7 7 7 7] [9 9 9 9] [11 11 11 11]] [[12 12 12 12] [12 12 12 12] [11 12 11 9] [11 12 11 9]] [[4 5 7 9 11 12] [11 9 7 5 4 2] [4 5 7 9 11 12] [11 9 7 5 4 2]] [[11 9 11 12] 12@4 ~ 7@2]' },
+    // player one refuses to stop: the high root, tremolo then held, two bars over player two's answer
+    melody: { ...lead, phrase: 8, brightness: .9, velocity: '.95 1 .95 1 1 1 1 1', notes: '[[14 14 14 14] [14 14 14 14] [14 14 14 14] [12 14 12 11]] [14@4 ~ ~ ~ ~] ~ ~ ~ ~ ~ ~' },
+  }),
+  section('solo6', 4, { role: 'develop', progression: LIFT,
+    drums:  { ...quiet, density: .8, level: .36, variation: .45 },
+    raw:    bass(ARP),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // the coda's line on player one: the hook's cell as a hemiola, thirds in 3+2+3, a sequence up each chord, the root landed early
+    melody: { ...lead, phrase: 4, follow: true, brightness: .85, level: 1.9, velocity: '.95 1 .9 1', notes: CODA },
+  }),
+  section('solo6b', 4, { role: 'climax', progression: LIFT,
+    drums:  { ...quiet, density: .85, level: .36, variation: .5, fill: 2 },
+    raw:    bass(ARP),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // the duel ends together: player one takes the coda's line a third above, player two the pulse and the held tones under it
+    melody2: { ...second, phrase: 4, follow: true, level: 1.9, velocity: '.95 1 .9 1', notes: CODA2 },
+    melody:  { ...lead, phrase: 4, follow: true, brightness: .9, level: 1.9, velocity: '.95 1 .9 1', notes: CODA3 },
+  }),
+  section('outro', 4, { role: 'release', progression: 'i IV i i',
+    raw:    bass('[e2 ~ ~ ~] [a1 ~ ~ ~] [e2 ~ ~ ~] [e2 ~ ~ ~]'),
+    raw2:   pick([Em, A, Em, '[e3 b3 e4 g4 b4@4]'].join(' ')),
+    melody2: { ...second, follow: true, level: 1.2, velocity: '.8 .9 .85 .9', notes: '<[~ ~ 4 ~ ~ 7 ~ 4] [~ ~ 4 ~ ~ 7 ~ 4] [~ ~ 4 ~ ~ 7 ~ 4] [7@8]>' },
+  }),
+])

@@ -1,0 +1,47 @@
+{
+  "_about": "Aesthetic policy for lib/visual.mjs, not architecture: every table here may be replaced. moodThreshold: how far (in axis units) a song's mean axes must lean along an overlay's direction before it has that mood; an overlay vector is ~.3-.5 long. selection: how a song with no `visual` header picks its world, deliberately fuzzy: each world's row is a base score plus weights over the song's features (every axis by name as its mean lean in -1..1, and tempo, sections, repetition, complexity, melody, pad from featuresOf), the scores go through a softmax at `temperature` (higher: more even odds), and the song's seed samples from the odds, so a world that fits moderately can still win and the same song always gets the same world. temperature: key mode -> a palette word. palette: visual property -> the axis whose song-wide mean it reads. voices: drum voice -> its role in any world. kinds: layer kind -> the slots it may take, in order; grain is unbounded and every list ends there. worlds: slot capacities per world. compositions: the director's presets, count the worlds each takes when the song lists none (filled from the selection's odds). defaultComposition: the preset a song with no `visual.composition` plays (single for the bare world).",
+  "moodThreshold": 0.15,
+  "selection": {
+    "temperature": 0.5,
+    "worlds": {
+      "tunnel":   { "base": 0.8,  "drive": 0.5, "density": 0.3, "tempo": 0.4, "repetition": 0.3, "weight": 0.2 },
+      "ink":      { "base": -0.9, "organicness": 0.5, "space": 0.4, "melody": 0.3, "density": -0.3, "aggression": -0.3, "tempo": -0.3 },
+      "sediment": { "base": 0.3,  "weight": 0.5, "sections": 0.5, "space": 0.3, "tempo": -0.3, "organicness": 0.2 },
+      "signal":   { "base": 0.1,  "brightness": 0.3, "complexity": 0.4, "organicness": -0.5, "melody": 0.2, "drive": 0.2 },
+      "swarm":    { "base": 0.2,  "organicness": 0.5, "melody": 0.4, "width": 0.3, "pad": 0.3, "aggression": -0.2 },
+      "orrery":   { "base": 0.2,  "space": 0.5, "melody": 0.5, "pad": 0.3, "tempo": -0.2, "density": -0.3, "brightness": -0.2 },
+      "loom":     { "base": 0.1,  "drive": 0.4, "repetition": 0.4, "complexity": 0.3, "aggression": 0.2, "organicness": -0.3, "space": -0.3 },
+      "growth":   { "base": 0.1,  "organicness": 0.6, "sections": 0.3, "pad": 0.3, "tempo": -0.3, "aggression": -0.4, "brightness": 0.2 },
+      "rave":     { "base": 0.0,  "drive": 0.5, "tempo": 0.5, "density": 0.4, "brightness": 0.3, "aggression": 0.2, "space": -0.3, "organicness": -0.3 }
+    }
+  },
+  "temperature": { "major": "warm", "minor": "cool", "dorian": "cool", "phrygian": "dim", "lydian": "pale", "mixolydian": "warm", "default": "cool" },
+  "palette": { "luminance": "brightness", "mass": "weight", "edge": "aggression", "jitter": "organicness", "persistence": "space", "spread": "width", "motion": "drive" },
+  "voices": { "bd": "pulse", "sd": "impact", "cp": "impact", "rim": "impact", "hh": "grain", "oh": "grain" },
+  "kinds": {
+    "drums":  ["impulse", "grain"],
+    "bass":   ["ground", "grain"],
+    "melody": ["line", "counter", "grain"],
+    "pad":    ["field", "grain"],
+    "fx":     ["transition", "grain"],
+    "perc":   ["grain"],
+    "sample": ["impulse", "grain"],
+    "raw":    ["grain"]
+  },
+  "defaultComposition": "overlay",
+  "compositions": {
+    "single": { "count": 1, "about": "one world full-frame: the stage as it always was" },
+    "overlay": { "count": 2, "about": "the primary full; the second world breathing in and out over it every eight bars, up to a peak the section's energy sets" }
+  },
+  "worlds": {
+    "tunnel": { "slots": { "impulse": 1, "ground": 1, "line": 1, "counter": 1, "field": 1, "transition": 1 } },
+    "ink":    { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "sediment": { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "signal":   { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "swarm":    { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "orrery":   { "slots": { "impulse": 2, "ground": 1, "line": 3, "counter": 3, "field": 1, "transition": 1 } },
+    "loom":     { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "growth":   { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "rave":     { "slots": { "impulse": 2, "ground": 1, "line": 3, "counter": 3, "field": 1, "transition": 1 } }
+  }
+}

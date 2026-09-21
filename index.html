@@ -24,6 +24,7 @@
     <span class="group" id="exports" aria-label="export">
       <span class="lbl">Export</span>
       <button id="export" title="render the source offline in this browser and download <song>.mp3 (stops playback)">MP3</button>
+      <button id="video" title="the song as a 1080p30 video: the audio rendered offline, the stage's world run frame by frame from the same score, a title and a tail; MP4 when this browser encodes H.264 and AAC, else WebM (stops playback)">Video</button>
       <button id="dump" title="download the expanded Strudel as <song>.strudel.txt, ready to paste into the strudel.cc REPL">Strudel</button>
       <button id="open" title="open the expanded Strudel in the strudel.cc REPL">REPL &#8599;</button>
       <button id="share" title="copy a link that carries this song (name and source, as edited here): anyone with it opens it in this page, unsaved">Link</button>
@@ -41,6 +42,9 @@
     <canvas id="scope" width="320" height="42" title="the mix as it plays and its peak in dBFS (red: clipping)"></canvas>
     <span class="where" id="where">&mdash;</span>
   </section>
+
+  <!-- stage: the song's visual performance (web/visual/): a world composed from the song's score at every play, driven by the parts as they sound; the box fullscreens as a whole -->
+  <section class="card rack stage" aria-label="stage"><div class="stagebox" id="stagebox"><canvas id="stage"></canvas><select id="world" title="the world the stage plays: auto is the song's own pick (its visual header, else the selection), a name plays that world alone, overlay composes two (the director: the second world breathing over the first); a pick here is a view setting, never written to the song and not what the video exports. [ and ] step through them"></select><button id="fullscreen" title="fullscreen (esc leaves)">&#x26F6;</button></div></section>
 
   <!-- mix: the arrangement strip over one section (the playhead's, or the pinned one) as layers x axes; knobs and word pills edit the source -->
   <details class="card rack" id="mix" open hidden>
@@ -112,6 +116,8 @@
 <footer class="site" id="foot"></footer>
 <script type="importmap">{ "imports": {
   "acorn": "./node_modules/acorn/dist/acorn.mjs",
+  "mp4-muxer": "./node_modules/mp4-muxer/build/mp4-muxer.mjs",
+  "webm-muxer": "./node_modules/webm-muxer/build/webm-muxer.mjs",
   "@codemirror/state": "./node_modules/@codemirror/state/dist/index.js",
   "@codemirror/view": "./node_modules/@codemirror/view/dist/index.js",
   "@codemirror/language": "./node_modules/@codemirror/language/dist/index.js",
@@ -150,6 +156,10 @@
   import { TEMPLATES, fit, gridToMini, parseTemplate } from './lib/grid.mjs';
   import { analyze } from './lib/analyze.mjs';
   import { DESCRIPTORS, OVERLAYS, HARMONY, MODIFIERS, COMPARATIVE } from './lib/vocab.mjs';
+  import { composeVisual, onsetsOf, samplesOf } from './lib/visual.mjs';
+  import { mountStage, worldOf, WORLDS, PRESETS } from './web/visual/stage.mjs';
+  import { fallbackScore } from './web/visual/host.mjs';
+  import { streamOf, titleOf, exportVideo, pickCodecs, TAIL } from './web/visual/export.mjs';
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
   $('nav').innerHTML = nav('Compose');
@@ -355,15 +365,38 @@
   const solo = new Set(), muted = new Set();
   let ab = false, abPat = null;
   const passes = (l) => (solo.size ? solo.has(l) : !muted.has(l));
+  // every part the scheduler plays carries the stage's tap (onTrigger with dominant false: superdough still sounds it), so the
+  // stage sees each hap with its part's name at the moment it is scheduled, and no pattern is queried twice for it
   function audible(pat) { // the pinned section alone, or the song, with only the parts that pass solo/mute
-    const filt = (s) => { const ps = Object.entries(s.layers).filter(([l]) => passes(l)).map(([, x]) => x.pattern); return ps.length ? strudel.stack(...ps) : strudel.silence; };
-    if (!pat.strudel || (!pinned && !solo.size && !muted.size)) return pat; // a plain strudel file has no sections
+    const tapped = (l, x) => x.pattern.onTrigger(stage.tap(l, layerBase(l), samplesOf(x.plan)), false); // x: the layer entry, whose plan (not the built pattern's) names each voice's sample
+    const filt = (s) => { const ps = Object.entries(s.layers).filter(([l]) => passes(l)).map(([l, x]) => tapped(l, x)); return ps.length ? strudel.stack(...ps) : strudel.silence; };
+    // a plain strudel file (no sections), or a wrapper around a song (textures stacked outside it, songs/machine.strudel) played as
+    // written: one tap on the whole, the parts read from each hap's value, and nothing fires twice
+    if (!pat.strudel || (pat.strudel.pattern !== pat && !pinned && !solo.size && !muted.size)) return pat.onTrigger(stage.tap(null, null), false);
     const secs = pat.strudel.sections;
     if (pinned) { const s = secs.find((x) => x.name === pinned); return s ? filt(s) : strudel.silence; } // no such section (A/B before a rename): silence, not a guess
     return arrange(secs, pat.strudel.total, filt); // song()'s own arrangement, with the parts that pass
   }
   async function setLive() { if (playing && songPat) (await ready).scheduler.setPattern(audible(ab && abPat ? abPat : songPat).analyze(1)); } // analyze: every hap feeds analyser 1, the scope
-  globalThis.strudelBench = { live: async () => (await ready).scheduler.pattern, source: () => code.text }; // for headless checks: what the scheduler holds right now, and the source as edited
+  globalThis.strudelBench = { live: async () => (await ready).scheduler.pattern, source: () => code.text, evalCode: (src) => evalCode(ready, src) }; // for headless checks: what the scheduler holds right now, the source as edited, and a scheduler-free evaluation of any source
+  // the stage (web/visual/stage.mjs): the world plays from the same clock as the ear. The scheduler's now() runs its lookahead
+  // (latency, web/boot.mjs) ahead of what is sounding, so the visual cycle is now() minus latency in cycles; events themselves fire at
+  // their targetTime on the audio clock. A pinned section's clock is its own bars: toSong puts it in song cycles like the transport
+  let repl = null; ready.then((r) => { repl = r; });
+  const vdebug = new URLSearchParams(location.search).get('vdebug'); // ?vdebug draws the overlay; ?vdebug=drums (bass, melody, pad, ...) also solos that kind's events
+  const stage = mountStage($('stagebox'), $('stage'), { debug: vdebug !== null, solo: vdebug || null, clock: () => {
+    const n = repl ? repl.scheduler.now() - repl.scheduler.latency * repl.scheduler.cps : 0, total = Number($('pos').max);
+    return { now: strudel.getAudioContext().currentTime, cycle: loop ? toSong(n) : sections.length && total > 0 ? ((n % total) + total) % total : Math.max(0, n) };
+  } });
+  $('fullscreen').onclick = () => stage.fullscreen();
+  // the world picker over the stage: auto (the song's own pick, named once a score exists), any built world alone, or a composition preset (the director,
+  // web/visual/director.mjs, over the song's world and the selection's next-best); a view setting, never written to the song and not what the video exports
+  $('world').replaceChildren(...['auto', ...Object.keys(WORLDS), ...PRESETS].map((w) => Object.assign(document.createElement('option'), { value: w, textContent: w })));
+  $('world').onchange = () => { stage.setWorld($('world').value === 'auto' ? null : $('world').value); $('world').blur(); };
+  const worldLabel = () => { const c = stage.score?.composition; $('world').options[0].textContent = stage.score ? `auto · ${c && c.worlds.length > 1 ? `${c.preset}: ${c.worlds.join(' + ')}` : stage.score.world}` : 'auto'; };
+  const stepWorld = (by) => { const o = $('world'), n = o.options.length; o.selectedIndex = (o.selectedIndex + by + n) % n; o.onchange(); };
+  globalThis.strudelBench.stage = stage; // for headless checks: the running performance's state and clock
+  const stageScore = (pat) => (pat?.strudel ? composeVisual(pat.strudel, { onsets: onsetsOf(pat.strudel, 2) }) : fallbackScore(0.5)); // two bars per section: enough for the energy, cheap on a 300-bar song
   // the master scope: analyser 1 (superdough's, fed by the live pattern) drawn each frame while playing, with the peak
   // held a second and read in dBFS, red at clipping; the first sign of a mix with no headroom without a render
   const scopeEl = $('scope'), sctx = scopeEl.getContext('2d');
@@ -401,17 +434,20 @@
   };
   function seek(c) { // scrub: the clock jumps while playing; paused or stopped, Play/Resume starts here
     if (playing) ready.then((r) => r.scheduler.setCycle(loop ? toLocal(c) : c)); else paused = c;
+    stage.reset(); // a jump: the world starts over at the new position
     showPosition(c);
     syncTransport();
   }
   async function pinTo(s) {
     pinned = s.name; loop = s; mixSection = s.name;
+    stage.reset();
     if (playing) await applyPin(s.offset); else paused = s.offset;
     showPosition(s.offset); stripRender(); mixRender(); syncTransport();
   }
   async function unpin() {
     const at = playing ? toSong((await ready).scheduler.now()) : paused ?? loop.offset;
     pinned = null; loop = null;
+    stage.reset();
     if (playing) await applyPin(at);
     showPosition(at); stripRender(); mixRender();
   }
@@ -479,6 +515,7 @@
   document.addEventListener('keydown', (e) => {
     const typing = e.target.closest?.('input, textarea, select, button, summary, a, [contenteditable], .cm-editor'); // where space already means something
     if (e.code === 'Space' && !typing) { e.preventDefault(); return toggle(); }
+    if ((e.key === '[' || e.key === ']') && !e.target.closest?.('input, textarea, select, [contenteditable], .cm-editor') && !(e.ctrlKey || e.metaKey || e.altKey)) { e.preventDefault(); return stepWorld(e.key === ']' ? 1 : -1); } // step the stage's world (a focused button does not mind these keys)
     if (!(e.ctrlKey || e.metaKey)) return;
     const k = e.key.toLowerCase();
     if (k === 's') { e.preventDefault(); if (!$('save').disabled) save(); return; }
@@ -490,9 +527,16 @@
     $('err').textContent = '';
     const wasPlaying = playing;
     const src = code.text;
+    // the worklet module (distort, shape, supersaw, ...) loads on the first click; the scheduler used to start before it landed,
+    // so the first hits carrying one threw "not defined in AudioWorkletGlobalScope" in the trigger and were dropped (4 hits on
+    // every first Play, traced 2026-09-20). initAudio resolves once the module is in; after the first time it is a no-op.
+    await strudel.initAudio();
     const pat = await playCode(ready, src);
     songPat = pat; evaluated = src; playing = true;
     setSections(pat);
+    stage.setScore(stageScore(pat)); worldLabel(); // the score of this evaluation; Play from stopped starts the world over, a resume or an Update keeps it
+    if (!wasPlaying && paused == null) stage.reset();
+    stage.start();
     if (!wasPlaying && paused == null && loop) paused = loop.offset; // Play from stopped starts at the pin
     if (loop) setcps(loop.cps); // the pinned section loops on its own, at its own tempo
     await setLive(); // the pinned section, solo/mute, A/B
@@ -504,6 +548,7 @@
   async function stop() {
     if (playing) strudel.hush();
     playing = false; paused = null; evaluated = null;
+    stage.stop();
     setSections(await evalCode(ready, code.text).catch(() => null)); // the transport shows the source again, from the top
     syncTransport();
   }
@@ -512,6 +557,7 @@
     const n = (await ready).scheduler.now();
     paused = loop ? toSong(n) : n % Number($('pos').max || 1);
     strudel.hush(); playing = false;
+    stage.pause();
     syncTransport();
   }
   const toggle = () => (playing ? pause() : play());
@@ -613,6 +659,34 @@
     const blob = new Blob([encodeMp3(frames(buf), buf.sampleRate)], { type: 'audio/mpeg' });
     download(blob, name);
     xstate('done', `&#10003; ${esc(name)} <small>${buf.duration.toFixed(1)} s</small>`, await keep(blob, name));
+  });
+  // the video: the audio from the offline render (with the tail), the world from the same score and stream the stage would play, frame by
+  // frame at 30 fps through WebCodecs (web/visual/export.mjs); never a recording of the page. Shared by the button and the server's job.
+  // `out`: where the file goes (see exportVideo): the save dialog's file, the server, or memory
+  async function makeVideo({ code, name, pick, out, progress }) {
+    progress('checking codecs');
+    pick ??= await pickCodecs();
+    const song = await evalCode(ready, code);
+    if (!song) throw new Error('source does not evaluate (see the error under it)');
+    const score = stageScore(song), stream = streamOf(song), seconds = (song.strudel ? song.strudel.total : 8) / (song.strudel?.meta.cps ?? 0.5);
+    const audio = await renderSong({ song, code, tail: TAIL, progress: (i, n) => progress(`audio ${Math.round((i / n) * 100)}%`) });
+    return exportVideo({ pick, audio, world: worldOf(score), score, stream, title: titleOf(name, code), seconds, out, progress: (k, n) => progress(`frames ${Math.round((k / n) * 100)}%`) });
+  }
+  $('video').onclick = () => exporting(async () => {
+    if (playing) await stop(); // the render replaces the audio context
+    await strudel.getAudioContext().resume();
+    xstate('busy', 'video: checking codecs…');
+    const pick = await pickCodecs(), name = `${base()}.${pick.ext}`;
+    // written to disk as it is muxed where the browser has the save dialog (Chrome, Edge; this click is the gesture it needs): a long
+    // song at 1080p is several hundred MB, more than a tab can hold. Elsewhere the file is built in memory and downloaded.
+    let out = { kind: 'memory' };
+    if (window.showSaveFilePicker) {
+      try { out = { kind: 'file', handle: await window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'video', accept: { [pick.ext === 'mp4' ? 'video/mp4' : 'video/webm']: [`.${pick.ext}`] } }] }) }; }
+      catch (e) { if (e.name === 'AbortError') return xstate('', ''); throw e; } // cancelled: nothing to do
+    }
+    const { blob, seconds, bytes } = await makeVideo({ code: code.text, name: $('song').value, pick, out, progress: (s) => xstate('busy', `video: ${esc(s)}`) });
+    if (blob) download(blob, name);
+    xstate('done', `&#10003; ${esc(out.kind === 'file' ? out.handle.name : name)} <small>${seconds.toFixed(1)} s · ${(bytes / 1e6).toFixed(0)} MB</small>`, blob ? await keep(blob, name) : 'saved where you chose');
   });
   const expanded = async () => { // the expanded pane's text, re-expanded now so a fresh edit is not missed
     const gen = await expandCode(ready, code.text);
@@ -1474,12 +1548,19 @@
   };
 
   // a render job from scripts/render.mjs (over SSE): the saved file, as wav into renders/, errors reported back
-  async function renderToServer({ song, cycles, section, layer, name, mp3 }) {
+  async function renderToServer({ song, cycles, section, layer, name, mp3, video }) {
     const fail = (message) => fetch('render-error', { method: 'POST', body: JSON.stringify({ name, message }) });
     status(`rendering ${name}…`);
     if (playing) await stop(); // the render replaces the audio context
     try {
       const code = await (await fetch(`songs/${song}`)).text();
+      if (video) { // scripts/video.mjs: the whole song as a video into renders/, streamed to the server in placed chunks as it is muxed
+        const pick = await pickCodecs(), file = `renders/${name}.${pick.ext}`;
+        const write = async (bytes, at, first) => { const r = await fetch(`${file}?at=${at}${first ? '&new' : ''}`, { method: 'PUT', body: bytes }); if (!r.ok) throw new Error(`the server refused a chunk: ${await r.text()}`); };
+        const { seconds, bytes } = await makeVideo({ code, name: song, pick, out: { kind: 'stream', write }, progress: (s) => status(`video ${name}: ${s}`) });
+        const out = await (await fetch(`${file}?done`, { method: 'PUT' })).text(); // the job's waiter resolves here
+        return status(`rendered ${out} (${seconds.toFixed(1)} s, ${(bytes / 1e6).toFixed(0)} MB)`);
+      }
       const buf = await renderSong({ code, cycles, section, layer, progress: (i, n) => status(`rendering ${name} ${Math.round((i / n) * 100)}%`) });
       const out = await (await fetch(`renders/${name}.wav${mp3 ? '?mp3' : ''}`, { method: 'PUT', body: toWav(buf) })).text();
       status(`rendered ${out} (${buf.duration.toFixed(1)} s)`);
@@ -1491,7 +1572,7 @@
     }
   }
   /** Evaluate `code` and render it (or `cycles` of one `section` or `layer`) offline; resolves to an AudioBuffer. */
-  async function renderSong({ code, song, cycles, section, layer, progress }) { // `song`: an already evaluated pattern (measure renders one section many ways from one evaluation)
+  async function renderSong({ code, song, cycles, section, layer, progress, tail = 0 }) { // `song`: an already evaluated pattern (measure renders one section many ways from one evaluation); `tail`: seconds after the last cycle for the reverb to ring (the video)
     await ready;
     song ??= await strudel.evaluate(code, false);
     if (!song) throw new Error('source does not evaluate (see the error under it)'); // evaluate logs syntax errors instead of throwing
@@ -1510,7 +1591,7 @@
         pat = src.pattern; cps = s.cps; begin = 0; end = cycles ?? s.cycles; // layer patterns run in section-local bar time
       } else { begin = s.offset; end = s.offset + (cycles ?? s.cycles) * s.span / s.cycles; }
     }
-    return renderOffline(pat, cps, begin, end, progress);
+    return renderOffline(pat, cps, begin, end, progress, tail);
   }
 
   // Offline render, one cycle at a time. strudel.renderPatternAudio builds every event's node chain up front and
@@ -1527,7 +1608,7 @@
   // already discarded (reset orbits, finished offline context), and nothing else is affected: keep it out of the console.
   window.addEventListener('beforeunload', (e) => { if (code.text !== loaded) { e.preventDefault(); e.returnValue = ''; } }); // unsaved edits: the browser asks before leaving
   window.addEventListener('error', (e) => { if (/belonging to a different audio context/.test(e.message)) e.preventDefault(); });
-  async function renderOffline(pat, cps, begin, end, progress = () => {}) {
+  async function renderOffline(pat, cps, begin, end, progress = () => {}, tail = 0) {
     // the live context stays open: the scheduler's clock is bound to it for the life of the page (webaudioRepl
     // captures it), so closing it would freeze playback until a reload. It is silent (stopped) while we render.
     const live = strudel.getAudioContext();
@@ -1536,7 +1617,7 @@
     // that first loaded it, and a ConvolverNode refuses a buffer at another rate. After a live play (48 kHz on most machines)
     // a 44.1 kHz render threw on every hit carrying a room impulse and dropped the hit whole: the mp3 lost most of the song.
     const rate = live.sampleRate;
-    const ctx = new OfflineAudioContext(2, Math.ceil((end - begin) / cps * rate), rate);
+    const ctx = new OfflineAudioContext(2, Math.ceil(((end - begin) / cps + tail) * rate), rate);
     strudel.setAudioContext(ctx);
     strudel.resetGlobalEffects();
     strudel.setSuperdoughAudioController(null); // rebuilt lazily on the offline context

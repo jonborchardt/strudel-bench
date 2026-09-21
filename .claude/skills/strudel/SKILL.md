@@ -40,7 +40,7 @@ axes, what each does per layer, and the descriptor words.
 ## Material
 
 Descriptors never touch material. To change a sound, level, fill, arp or meter, edit the literal by hand
-(`sound`, `notes`, `level`, `sounds`, `template`, `rhythm`, `fill` (`true`/`false` or a bar count `n`; the integer
+(`sound`, `notes`, `level`, `postgain` (the gain after a part's distortion, the only level a saturated part answers to), `sounds`, `template`, `rhythm`, `fill` (`true`/`false` or a bar count `n`; the integer
 form replaces the automatic climax-end roll rather than adding to it), `arp`, `follow`,
 `phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`, `begin`, `end`, `bars`, `slices`, `pattern`, `stretch`, `transpose`,
 `patch`, `duck`, `duckDepth`, `duckAttack`, `position` (-1..1, where the part sits), `velocity` (a mini string of
@@ -65,8 +65,12 @@ and slice count, each keeping its own region. A line of different takes is one p
 Those words mean the notes and the sounds, and no axis fixes them. Adding more layers at once adds mass, not
 interest. Do these, in this order, on every new song and whenever a song is called flat:
 
-1. **Write the hooks.** Every melody and every bass that carries the song gets `notes:` in mini-notation, never the
-   seeded line. Scale degrees 0..7 (7 = the octave), `~` rests, `@2` holds, single quotes (`notes: '0 2 3@2 ~ 4 3 2 0'`)
+1. **Write every note.** Every melody, every bass, every solo, the picking and the counter-lines get `notes:` in
+   mini-notation (or a raw `note('...')` part), never the seeded line. The user's standing preference (porch and duel,
+   2026-09-20): a song where every note is a hand-written phrase with a shape (start on the root, one leap, a hold, a
+   rest, land somewhere) is what they call good; the generator's lines never have that shape, so a generated line is
+   a scaffold to replace before reporting, not a part. Endeavour to write more, not less: twelve solo lines, a hook,
+   the picking and the bass in one song is the bar, not the ceiling. Scale degrees 0..7 (7 = the octave), `~` rests, `@2` holds, single quotes (`notes: '0 2 3@2 ~ 4 3 2 0'`)
    so the check table prints the line. Rules for a line that reads as a phrase: start on the root, move mostly by
    step with one leap, hold at least one note, rest at least once, end on the root (or on the fifth/seventh for a
    question the next phrase answers). `phrase: 2` with 16 slots gives a question and an answer. `follow: true`
@@ -88,6 +92,12 @@ interest. Do these, in this order, on every new song and whenever a song is call
    timpani, bass drum and cymbal takes at four beats a bar is ~30 voices; `articulation` above .5 cuts it to the hit. Anything under the song in a plain-Strudel `stack()` is not a part: mute, solo and pin
    drop it, so a sound that survives those is in the layers and one that vanishes is in the textures. Melodic: `piano`, `kalimba`, `marimba`, `vibraphone`, `glockenspiel`, `folkharp`, `harp`,
    `clavisynth`, `fmpiano`, `steinway`, `organ_8inch`, `casio`, `supersaw`. Bass: `square` or `sawtooth`.
+   **Guitars, and any acoustic band instrument, are the GM soundfonts** (`gm_acoustic_guitar_steel`, `gm_acoustic_guitar_nylon`,
+   `gm_electric_guitar_clean`, `gm_overdriven_guitar`, `gm_distortion_guitar`, `gm_acoustic_bass`, winds, strings; the
+   names are `GM_SOUNDS` in `lib/packs.mjs`), streamed on first use, no rms/seconds meta. For a plucked or bowed part
+   that must sound played, prefer a `raw: { pattern: note('...').s('gm_...') }` part over the pad or bass layer: those
+   layers put a synth attack and a filter envelope on every hit, which is what makes an acoustic song read as electronic
+   (`songs/porch.strudel`).
    Keep at most one raw sawtooth layer; two saws in the same octave is mud.
    Beyond the loaded packs, `reference/sample-banks.md` lists the community `github:` banks and the two
    steps that make one usable here (an entry in `lib/packs.json`, then `npm run samples -- <pack>`).
@@ -135,7 +145,8 @@ under 300 Hz, mid 300..3000, high above): shared band energy times time together
    its rms): superdough builds one compressor node per hit, so on a dense kit it is dozens of live nodes a bar and
    playback drops out (the check lint says so above 16 hits a bar). The lint's "no headroom" (a real share of
    samples at full scale) is a level problem; its "transients touch full scale" (a few kick attacks, under 0.01% of
-   samples) is not fixed by level either, and needs the master limiter that is not built. Say so, do not chase it.
+   samples) is not fixed by level either: the page's output soft clip (`limit` in `web/boot.mjs`, identity to 0.8 and a
+   tanh wall at 1, on the live context and every offline render) rounds those off. Say so, do not chase it.
    Reverb is per orbit and parts wanting the same reverb share one (`orbitKey`), so a song `room` with a `size` is
    one convolver for the whole section; without it, keep pads at a shared `space` value rather than one each.
 2. **Collisions, arrangement first.** Fix a masking pair in this order and stop at the first that works: fewer notes
@@ -193,10 +204,16 @@ strongest claim.
   order: `width` under .8 on any pad or kit at .8+ (jux plays a doubled copy of every voice), `aggression`/`weight`
   at .5 on the part with the most hits (no worklet per hit), `articulation` above .5 on a kit or pad of long samples
   (clips each hit to its step), a shorter release (`articulation` up), fewer chord tones (pad `density` down), one
-  pad fewer. The count is a model: when a section still scratches, trace it (a headless page, pinned and playing,
-  `browser.startTracing` on the webaudio category; the render callback's mean over 2.67 ms is the thread's share). A distorted part also
-  ignores its `level` for peaks: superdough distorts after the gain and the output saturates at full scale, so the
-  mix lint's "no headroom" on such a part is fixed by less distortion, not by level.
+  pad fewer. The count is a model, and an average: when a section cracks, scratches or drops hits, trace it:
+  `npm run trace -- songs/x.strudel <section>` (a headless page, pinned and playing; prints the audio thread's busy
+  share, late quanta, dropouts and any trigger errors; runs vary 5-10 points, so compare variants in interleaved
+  pairs). Under 45% is safe on a laptop, 65% cracks. The layers never write a `distort`/`shape` under .1
+  (`WORKLET_MIN`), so a kit at weight .65 or a part at aggression .55 costs no worklet: grit under that is free to
+  write and free to remove. A `supersaw` note is its `unison` voices (5 in the `wide` patch), a `wt_*` note and a
+  `compressor` one more each; a `duck` gives the part a private orbit and its own convolver (4-7 points per section). A distorted part also
+  ignores its `level` for peaks: superdough distorts after the gain and the distortion outputs tanh clamped to full
+  scale, so the mix lint's "no headroom" on such a part, or a whole song running into the output wall, is fixed by
+  `postgain` (the gain after the distortion, `songs/machine.strudel`: kit .4, bass .5) or less distortion, never by level.
 - A song edit needs `npm run check` only. The moment the fix reaches `lib/`, `scripts/` or `web/`, run `npm test`
   and fix what it turns red before reporting — including the golden fixtures, which are read (did only the
   fixtures you expected move?) and never blind-regenerated.

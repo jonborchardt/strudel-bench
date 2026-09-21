@@ -212,4 +212,7 @@ test('mix material: position shifts every hap\'s pan together; velocity, humaniz
   const d = song({ cps: .5 }, [section('a', 1, { drums: {}, bass: { duck: 'drums', duckAttack: .3 }, pad: { duck: 'drums' } })]).strudel.sections[0];
   assert.deepEqual(at(d, 'drums').duckattack, [.3, .1], 'an attack per target once any part sets one; the default is superdough\'s');
   assert.equal(at(plain, 'drums').duckattack, undefined);
+  const pg = song({ cps: .5 }, [section('a', 1, { drums: { aggression: .9, postgain: .4 } })]).strudel.sections[0];
+  assert.equal(at(pg, 'drums').postgain, .4, 'postgain is the gain after the distortion, the one a saturated part answers to');
+  assert.throws(() => song({ cps: .5 }, [section('a', 1, { drums: { postgain: 3 } })]), /postgain must be a number in 0..2/);
 });

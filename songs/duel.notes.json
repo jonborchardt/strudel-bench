@@ -1,0 +1,104 @@
+{
+  "prompt": "porch with a second, nylon guitar: alongside the steel in the ensemble sections, dueling it solo for solo, together at the end",
+  "requests": [
+    {
+      "date": "2026-09-21",
+      "ask": "a new copy of porch, keep porch as is; add a second guitar of a different quality that plays alongside the first in intro, verse, break, pickup, outro, and plays its own solo on solob, solo2b ... solo6b, like dueling guitars",
+      "changes": [
+        {
+          "section": "song",
+          "why": "second guitar gm_acoustic_guitar_nylon as melody2: darker (brightness .7), a little wetter, position .3 against the picking at -.35, humanize 15 ms"
+        },
+        {
+          "section": "intro/outro",
+          "layer": "melody2",
+          "why": "chord tones between the steel's picking, an octave up; the outro's last bar a held root"
+        },
+        {
+          "section": "verse/break",
+          "layer": "melody2",
+          "why": "the hook a third above the steel"
+        },
+        {
+          "section": "pickup",
+          "layer": "melody2",
+          "why": "the run a third below the steel"
+        },
+        {
+          "section": "solob",
+          "axis": "solo5b",
+          "why": "the nylon's answers: the opening cell turned over and a question on the fifth; lower and off the beat then climbing; double-stops held across the beat; the climb answered by a fall; the fifth in kind a third under the steel's shapes"
+        },
+        {
+          "section": "solo6b",
+          "why": "the climax, the duel ending together: the nylon on the coda's line, the steel the same line a third above, a two-bar fill"
+        },
+        {
+          "section": "song",
+          "why": "measured solo, solob and solo6b: the nylon sits 2.8 dB under its mix like the steel's 2.7, the finale's two guitars within a dB; nothing to change"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "make them both acoustic steel, in two places in the room, with enough character to tell two players apart; and have some solos step on each other, the next starting as the other finishes",
+      "changes": [
+        {
+          "section": "song",
+          "why": "player two on gm_acoustic_guitar_steel:5, the LK steel font: a different sampled guitar under the same GM name"
+        },
+        {
+          "section": "song",
+          "why": "player one: brightness .85, space .35, position -.3, articulation .45 (legato), humanize 8 ms / .08 per phrase, accents on the beat"
+        },
+        {
+          "section": "song",
+          "why": "player two: brightness .6, space .55, position .35, articulation .65 (a punchier attack), humanize 22 ms / .18 per bar, accents off the beat (V2 '.75 1 .8 .95 ...')"
+        },
+        {
+          "section": "raw2",
+          "layer": "position",
+          "why": "-.35>-.12: the picking just left of centre so the two players have the sides"
+        },
+        {
+          "section": "solo/solob,",
+          "why": "solo4/solo4b, solo5/solo5b the overlaps: player two enters under the last bar (two bars in the fifth) with a run into its first note, player one hangs a bar (two, the high root tremolo then held, in the fifth) over the answer"
+        },
+        {
+          "section": "song",
+          "why": "player two postgain 1.8: the LK font measured 5 dB under the first (8 dB under the mix where player one sits 3); level tops at 2, postgain is superdough's last gain; after it both players sit 3-4 dB under their mixes"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "in solo6b the notes get too silly: player two's coda part; player one's coda3 is fine",
+      "changes": [
+        {
+          "section": "solo6b",
+          "layer": "melody2",
+          "why": "CODA>CODA2: player two no longer doubles the coda line under player one's thirds (the hemiola ran in parallel thirds and the double-stop bar stacked four notes); it plays the hemiola's accents as a 3-against-4 pulse on the root, the 3+2+3 bar as single notes, held chord tones under the rising sequence, and the same landing on the root"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "finish the mixing pass: measure the sections not yet measured",
+      "changes": [
+        {
+          "section": "song",
+          "why": "measured intro, verse, break, pickup, solo2b, solo3b, solo4b: all mix-lint clean; the two guitars' masking in verse, break and pickup (.3 in every band) is the harmonized hook itself, the same rhythm in thirds, not a collision"
+        },
+        {
+          "section": "verse",
+          "layer": "melody2",
+          "why": "level 1.2>.8, break.melody2 1.1>.9, pickup.melody2 1.6>1.2: the harmony sat within a dB of the lead; now 4 dB under in the verse, 2.4 in the pickup"
+        },
+        {
+          "section": "pickup",
+          "why": "the mix lint's 'melody dominates' stands: two guitars alone and the lead is most of what is heard, which is the point of the pickup"
+        }
+      ]
+    }
+  ]
+}

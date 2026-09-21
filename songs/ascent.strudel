@@ -1,0 +1,94 @@
+// ascent: the same three notes carried from a cave to orbit. Six eras at one tempo (108 bpm): the instruments,
+// the harmony, the room and the density evolve, the pulse never does. One motif, 0 2 4, grows a note or a leap
+// per era, gets a second phrase in the electric age, and in orbit the machine plays it upside down (7 5 3 ...) over
+// the ocarina still whispering it the right way up. The climax is uneasy on purpose: phrygian, the flat second
+// against the tonic, a counting voice ticking off the bars. Rooms go hall (cave) -> plate (bells) -> small room
+// (a capsule). Axis values are 0..1 with 0.5 = the layer's baseline.
+// Mixed by the measure table, orbit first: the 909's samples peak at full scale, so its level came down (drums `drive`
+// is placement, not distortion), the wavetable lead came up to the foreground, the impact down.
+
+// the motif, era by era
+const M1 = '0 ~ 2 ~ 4@2 ~ ~';                                   // three notes and a held top: a call
+const M2 = '0 2 4@2 ~ 4 2 0';                                    // five, up and back down
+const M3 = '0 2 4 ~ 7@2 4 ~ 0 2 4 ~ 5@2 ~ ~';                    // the octave leap, a second phrase that stops short
+const M4 = '~ 0 2 4 ~ 7 6 4 ~ 4 2 ~ 1 0@2 ~';                    // off the beat: the climb, a fall through the sixth to the fifth (a chord tone under i and III both; held, the sixth was a major seventh over III), the leading tone home
+const MI = '~ 7 5 3 ~ 0 1 3 ~ 3 5 ~ 6 7@2 ~';                    // the machine's inversion of M4 (each degree mirrored, d -> 7 - d)
+const FEEL = { timingMs: 14, velocity: .12, correlation: 'phrase' };
+const FEEL_BAR = { timingMs: 12, velocity: .1, correlation: 'bar' };
+
+// the kits: skins and wood, then hands, then metal, then machines
+const SKINS = { bd: 'framedrum:8', sd: 'slitdrum:2', hh: 'woodblock:5', oh: 'shaker_large:0', cp: 'clave:2' };
+const HANDS = { bd: 'framedrum:7', sd: 'conga:2', hh: 'shaker_small:11', oh: 'bongo:4', cp: 'clave:2' };
+const METAL = { bd: 'bassdrum1:2', sd: 'brakedrum:3', hh: 'metal:1', oh: 'brakedrum:8', cp: 'brakedrum:11' }; // the hammer is the brake drum (2.3 kHz); every anvil take centres above 5 kHz with 90% of its energy up there, so the anvil is a perc far back, not the snare
+const HAMMER = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: '..x...x...x...x.', oh: '..............x.', cp: '............x...' }; // a forge, not a club: the metal on the off-beats only
+
+const CAVE = { ir: 'hall', size: 3.2, damping: 3500 };
+const PLATE = { ir: 'plate', size: 1.8, damping: 5000 };
+const ROOM = { ir: 'room', size: .9 };
+const CAPSULE = { ir: 'room', size: .5 };
+
+const reese = { sound: 'square', patch: 'reese', register: .3, weight: .7, articulation: .55, brightness: .4, space: .35, duck: 'drums', duckDepth: .35, duckAttack: .15 };
+const wide = { sound: 'sawtooth', patch: 'wide', articulation: .15, space: .6, width: .7, brightness: .4, duck: 'drums', duckDepth: .15, duckAttack: .25 };
+
+song({ bpm: 108, key: 'D:minor', seed: 11, kit: 'RolandTR909', packs: ['rooms'], visual: { composition: 'overlay', worlds: ['growth', 'swarm'] } }, [
+
+  // I stone: skins, a slit log, a drone, three notes on a clay flute, in a cave
+  section('stone', 16, { role: 'establish', progression: 'i', room: CAVE,
+    drums:  { sounds: SKINS, template: 'minimal', density: .45, humanize: FEEL_BAR, articulation: .6, level: .8, space: .6, brightness: .35 },
+    melody: { sound: 'ocarina', notes: M1, density: .4, articulation: .6, register: .55, space: .75, humanize: FEEL, velocity: '.9 1 .85 1', level: .4 },
+    pad:    { sound: 'didgeridoo:4', density: .2, articulation: .05, register: .3, brightness: .25, space: .8, level: .4 },
+  }),
+
+  // II bronze: hands on skins, a plucked zither under the flute, the harmony starts to move
+  section('bronze', 16, { role: 'develop', progression: 'i VII i VII', room: CAVE,
+    drums:  { sounds: HANDS, template: 'house', density: .5, humanize: FEEL_BAR, articulation: .6, level: .8, space: .55, brightness: .4 },
+    bass:   { sound: 'psaltery_pluck', notes: '0 ~ 0 4', density: .75, register: .35, articulation: .6, level: 1.8, space: .5 },
+    melody: { sound: 'recorder_tenor_sus', notes: M2, density: .5, articulation: .6, register: .6, space: .7, humanize: FEEL, velocity: '.9 1 .85 1 .9 1 .8 .95', follow: true, level: .9 },
+    pad:    { sound: 'didgeridoo:4', density: .25, articulation: .05, register: .3, brightness: .3, space: .75, level: .35 },
+    perc:   { sound: 'woodblock:5', rhythm: '..x...x...x.x...', level: .35, position: .4, space: .5, humanize: FEEL_BAR, compressor: { threshold: -18, ratio: 3 } },
+  }),
+
+  // III forge: a hammer on an anvil, a brake drum, a sawtooth under it all, a harmonica takes the tune and leaps the octave over the organ
+  section('forge', 16, { role: 'develop', progression: 'i VI i VII', room: PLATE,
+    drums:  { sounds: METAL, template: HAMMER, density: .5, articulation: .65, level: .35, space: .5, brightness: .3, variation: .2, compressor: { threshold: -18, ratio: 3 } },
+    bass:   { sound: 'sawtooth', notes: '0 ~ 0 7 ~ 4 3 ~', density: .8, register: .3, weight: .65, level: .7, articulation: .55, brightness: .4, space: .35, duck: 'drums', duckDepth: .3, duckAttack: .15 },
+    melody: { sound: 'harmonica', notes: M3, phrase: 2, density: .55, articulation: .6, register: .55, space: .42, brightness: .47, follow: true, velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: FEEL, level: 1.2 },
+    pad:    { sound: 'pipeorgan_loud', density: .35, articulation: .05, register: .4, brightness: .35, space: .65, width: .6, level: 1.6 },
+    perc:   { sound: 'anvil:8', rhythm: '....x.......x...', level: .12, brightness: .3, position: .4, space: .6 }, // the anvil's clang, with the hammer but far behind it and under a 6 kHz lpf
+    fx:     { riser: 2, level: .4 },
+  }),
+
+  // IV electric: an 808 in half time, a reese, a clavinet with the whole sixteen off the beat, the first counter-line, the pad starts to arpeggiate
+  section('electric', 16, { role: 'develop', progression: 'i VI III VII', kit: 'RolandTR808', room: ROOM,
+    drums:  { template: 'halftime', density: .7, groove: .65, articulation: .6, level: .7, brightness: .5, variation: .25 },
+    bass:   { ...reese, notes: '0 ~ 0 7 ~ 4 3 ~', density: .8, level: .4 },
+    melody: { sound: 'clavisynth', notes: M4, phrase: 2, density: .6, articulation: .65, register: .6, space: .32, brightness: .72, follow: true, velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: FEEL, level: 2 },
+    melody2: { sound: 'fmpiano', notes: '~ ~ 7 ~ ~ 5 ~ ~', register: .8, level: 1.4, space: .65, position: .35, articulation: .6, follow: true },
+    pad:    { ...wide, density: .5, arp: 'up', brightness: .45, level: .3, width: .6, articulation: .35, position: -.2 },
+    perc:   { sound: 'cowbell:12', rhythm: '..x.....x...x.x.', level: .35, position: -.35, space: .4 },
+  }),
+
+  // V digital: a 909, a wavetable lead, a supersaw sky, sixteenths in the hats, the filter sweeps shut into orbit
+  section('digital', 16, { role: 'develop', progression: 'i VI III VII', kit: 'RolandTR909', room: CAPSULE, sweep: 2,
+    drums:  { template: 'breaks', density: .75, drive: .55, articulation: .65, level: .3, brightness: .6, variation: .35 },
+    bass:   { ...reese, notes: '0 7 0 4 0 7 2 4', density: .8, brightness: .5, level: .5 },
+    melody: { sound: 'wt_digital:2', notes: M4, phrase: 2, density: .65, articulation: .7, register: .65, space: .45, brightness: .65, follow: true, velocity: '.85 1 .9 1 .8 1 .9 .95', level: 1.4 },
+    melody2: { sound: 'fmpiano', notes: '~ 7 ~ ~ 5 ~ 4 ~', register: .8, level: 1.6, space: .6, position: .35, articulation: .6, follow: true },
+    pad:    { sound: 'supersaw', density: .5, articulation: .4, space: .55, width: .6, brightness: ramp(.4, .7), level: .25, position: -.25, duck: 'drums', duckDepth: .2, duckAttack: .25 },
+    perc:   { sound: 'casio:1', rhythm: 'x.x.x.x.x.x.x.x.', density: .6, level: .15, position: .4, space: .3 },
+    fx:     { riser: 4, level: .6 },
+  }),
+
+  // VI orbit: the uneasy peak. Phrygian, the flat second leaning on the tonic; the machine plays the motif upside down
+  // and counts the bars aloud, the ocarina from the cave still under it the right way up
+  section('orbit', 20, { role: 'climax', key: 'D:phrygian', progression: 'i II i II', kit: 'RolandTR909', room: CAPSULE,
+    drums:  { template: 'breaks', density: .9, drive: .6, articulation: .7, level: .32, brightness: .65, variation: .45, weight: .5 },
+    bass:   { ...reese, notes: '0 7 0 4 0 7 3 4', density: .8, aggression: .55, brightness: .55, level: .5 },
+    melody: { sound: 'wt_digital:2', notes: MI, phrase: 2, density: .7, articulation: .7, register: .7, space: .45, brightness: .75, width: .6, follow: true, velocity: '1 .9 1 .85 1 .9 1 .95', level: 1.3 },
+    melody2: { sound: 'ocarina', notes: '0 ~ 2 ~ 4@2 ~ ~', density: .4, articulation: .6, register: .5, space: .85, level: .45, position: -.4, humanize: FEEL, brightness: .35 },
+    pad:    { sound: 'supersaw', density: .5, arp: 'up', articulation: .45, space: .68, width: .6, brightness: .43, level: .45, duck: 'drums', duckDepth: .3, duckAttack: .25, weight: .42 },
+    perc:   { sound: '<numbers:1 numbers:2 numbers:3 numbers:4 numbers:5 numbers:6 numbers:7 numbers:8>', rhythm: 'x...............', level: .4, position: .3, space: .3 },
+    perc2:  { sound: 'space:5', rhythm: '..x...x...x.x...', level: .35, position: -.3, space: .4, brightness: .75 },
+    fx:     { impact: 'space:16', level: .15 },
+  }),
+])

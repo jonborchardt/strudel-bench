@@ -1,0 +1,153 @@
+{
+  "prompt": "acoustic sketch: guitar, quiet drums, a real guitar solo; short, unmixed",
+  "requests": [
+    {
+      "date": "2026-09-21",
+      "ask": "make a new short acoustic song: guitar and quiet drums, get something simple up, do not mix yet, but an amazing guitar solo",
+      "changes": [
+        {
+          "section": "song",
+          "why": "strumstick stands for the guitar (no guitar in the packs), folkharp for the low end, cajon and shakers as the kit"
+        },
+        {
+          "section": "solo",
+          "layer": "melody",
+          "why": "phrase 8, one written eight-bar line with 16th runs and degrees past the octave, register .5 so the high runs stay inside the strumstick's sampled range"
+        },
+        {
+          "section": "solo",
+          "why": "bVI instead of VI: dorian's VI is C#dim, the lift wanted is C"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "not even close: no guitar anywhere? and it sounds electronic, not acoustic; the solo melody is the closest, keep it and give me more",
+      "changes": [
+        {
+          "section": "song",
+          "why": "gm_acoustic_guitar_steel for every guitar and gm_acoustic_bass under it: the GM soundfonts are the only guitars Strudel has, wired in with web/soundfonts.mjs"
+        },
+        {
+          "section": "song",
+          "why": "the picking and the bass are raw note().s() parts: the pad layer put a 120 ms attack and a filter on every pluck and the bass layer a filter envelope, which is what read as electronic"
+        },
+        {
+          "section": "solo2",
+          "why": "a second eight-bar line answering the first (kept verbatim), sixteenths from the top and a pedal-point lick, the climax"
+        },
+        {
+          "section": "song",
+          "why": "drums on a written grid (kick 1 and the and-of-3, snare 2 and 4, shaker eighths) instead of the house template"
+        },
+        {
+          "section": "solo",
+          "layer": "raw",
+          "why": "gain .8>.4 and lead level 1>1.4: the bass sat 8 dB over the soloist in the render; a sanity level, the mixing pass is still to come"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "so good: visual ink; three more solos with breaks, the last really going for it as the climax; then a final mix",
+      "changes": [
+        {
+          "section": "song",
+          "why": "visual ink"
+        },
+        {
+          "section": "song",
+          "why": "five solos: solo and solo2 trade, break (the hook at half speed, no drums), solo3 breathes over a halftime kit with rests and double-stops, solo4 climbs in sweeps and a rising pedal lick, pickup (two bars of guitar alone), solo5 the climax: sixteenths and sextuplets, tremolo picking up the scale, the high root held; melody2 counter-line in solo2, solo4 and solo5"
+        },
+        {
+          "section": "song",
+          "why": "room ir room size .9 with packs rooms: one small box for the whole band, every part's space a send"
+        },
+        {
+          "section": "raw2",
+          "layer": "level",
+          "from": 0.55,
+          "to": 0.32,
+          "why": "raw2.position 0>-.35 raw2.brightness .5>.42 raw2.space .5>.6: the picking sat at the lead's level in the measure, dead centre and masking it in the mid band (.28); off to the left, darker and farther"
+        },
+        {
+          "section": "raw",
+          "layer": "level",
+          "from": 0.4,
+          "to": 0.3,
+          "why": "raw.space .5>.35: the bass as foundation, 7 dB under the mix, dry"
+        },
+        {
+          "section": "melody",
+          "layer": "level",
+          "from": 1.4,
+          "to": 1.7,
+          "why": "(solo5 1.9) melody.space .5>.4: the lead as the foreground, closest and driest, 3 dB under the mix"
+        },
+        {
+          "section": "melody2",
+          "layer": "level",
+          "from": 0.6,
+          "to": 1.8,
+          "why": "(solo5 2) melody2.position 0>.35 melody2.compressor -18/3: it measured 32 dB under the mix, inaudible; the compressor for its crest of 25, off to the right against the picking"
+        },
+        {
+          "section": "drums",
+          "layer": "level",
+          "from": 0.6,
+          "to": 0.28,
+          "why": "(solo5 .75>.36): quiet drums, 9 dB under the mix in the climax where they were the loudest part"
+        },
+        {
+          "section": "song",
+          "why": "duck ruled out: the kick-under-bass masking measured .09, nothing to duck"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "I don't like melody2, it makes a horrible ping sound",
+      "changes": [
+        {
+          "section": "solo2/solo4/solo5",
+          "layer": "melody2",
+          "why": "cut: the steel guitar two octaves up through a compressor and the room read as a ping; the solos carry the climax alone"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "a solo6 that is short but super complex; the main visual ink, the secondary signal",
+      "changes": [
+        {
+          "section": "solo6",
+          "why": "four bars as the climax: every beat a different subdivision (eight-note runs, a 3-against-8 cross-rhythm, quintuplets, septuplets, triplet double-stops, sextuplet octave skips, a dip below the root, two twelve-note runs into the high root), the bass arpeggiating each chord in eighths, the kit at .9 with a two-bar fill; solo5 back to develop"
+        },
+        {
+          "section": "song",
+          "why": "visual overlay ink + signal"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "solo6 is too silly: musical and complex, not silly",
+      "changes": [
+        {
+          "section": "solo6",
+          "layer": "melody",
+          "why": "rewritten: the odd subdivisions (quintuplets, septuplets, the 3-against-8 polymeter, the sub-root runs) out; instead the hook's three-note cell shifted across the sixteenth grid as a hemiola, the line harmonized in thirds with 3+2+3 groupings, a sequence rising through each chord tone, and a descent landing the key's root early over the D, all with follow so the same cells re-harmonize with every chord"
+        },
+        {
+          "section": "solo6",
+          "layer": "drums",
+          "why": "density .9>.8 variation .6>.45"
+        },
+        {
+          "section": "solo5",
+          "why": "climax again, solo6 the coda: the lint said the fifth is the peak, and it is the one that goes for it"
+        }
+      ]
+    }
+  ]
+}

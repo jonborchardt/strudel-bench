@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { OVERLAYS, HARMONY } from '../lib/vocab.mjs';
 import { fmt } from '../lib/resolve.mjs';
 import { progressionFor } from '../lib/harmony.mjs';
-import { prng } from '../lib/layers.mjs';
+import { prng, pick as pickBy } from '../lib/random.mjs';
 
 // per mood: the mode, the verse progression and the climax progression (words from lib/harmony.json), a tempo.
 // A mood is an overlay word (lib/overlays.json) with a row here; MOODS lists the ones that have both.
@@ -38,7 +38,7 @@ const SHARES = ARC.reduce((n, s) => n + s.share, 0); // 16
 export function generate(seed = 1, { mood = 'euphoric', bars = 64 } = {}) {
   if (!MOODS.includes(mood)) throw new Error(`unknown mood "${mood}" (one of ${MOODS.join(', ')})`);
   const rnd = prng(seed); // the song's own generator
-  const pick = (a) => a[Math.floor(rnd() * 2 ** 16) % a.length]; // middle bits: the LCG's top bits barely move between neighbouring seeds, so seeds 1..30 would all pick the same root
+  const pick = (a) => pickBy(rnd, a); // middle bits: the LCG's top bits barely move between neighbouring seeds, so seeds 1..30 would all pick the same root
   const feel = FEEL[mood], vec = OVERLAYS[mood];
   const unit = Math.max(1, Math.round(bars / SHARES)); // bars per share: 64 bars -> 4, so intro (share 2) is 8 bars
   const key = `${pick(ROOTS)}:${feel.mode}`, kit = pick(KITS);
