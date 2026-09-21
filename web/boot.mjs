@@ -2,6 +2,7 @@
 // the scope, and strudel's own error log routed to the caller. Both index.html and examples.html start here.
 import { dump } from '../lib/dump.mjs';
 import { packKind, registerSamples } from '../lib/packs.mjs';
+import { registerSoundfonts } from './soundfonts.mjs';
 
 /** The local packs this environment has (samples/user/packs.json): `{ name: { sounds, deploy, license } }`; on GitHub Pages only the deployed ones. */
 export const localPacks = {};
@@ -21,6 +22,7 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
         fetch('samples/user/packs.json').then((r) => (r.ok ? r.json() : {})).then((idx) => Object.assign(localPacks, idx)),
       ]);
       registerSamples(localPacks); // the packs' named sample definitions, so a part naming one resolves here as it does in the checker
+      registerSoundfonts(); // gm_* (the guitars, basses, winds strudel.cc has), streamed on first use
       if (packs.includes('tidal-drum-machines')) strudel.aliasBank(local ? 'samples/packs/tidal-drum-machines-alias.json' : cdn.alias);
       await import('../lib/index.mjs');
       const user = Object.entries(localPacks).map(([n, p]) => `${n} (${packKind(p)})`);

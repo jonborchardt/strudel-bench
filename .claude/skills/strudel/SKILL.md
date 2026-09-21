@@ -88,6 +88,12 @@ interest. Do these, in this order, on every new song and whenever a song is call
    timpani, bass drum and cymbal takes at four beats a bar is ~30 voices; `articulation` above .5 cuts it to the hit. Anything under the song in a plain-Strudel `stack()` is not a part: mute, solo and pin
    drop it, so a sound that survives those is in the layers and one that vanishes is in the textures. Melodic: `piano`, `kalimba`, `marimba`, `vibraphone`, `glockenspiel`, `folkharp`, `harp`,
    `clavisynth`, `fmpiano`, `steinway`, `organ_8inch`, `casio`, `supersaw`. Bass: `square` or `sawtooth`.
+   **Guitars, and any acoustic band instrument, are the GM soundfonts** (`gm_acoustic_guitar_steel`, `gm_acoustic_guitar_nylon`,
+   `gm_electric_guitar_clean`, `gm_overdriven_guitar`, `gm_distortion_guitar`, `gm_acoustic_bass`, winds, strings; the
+   names are `GM_SOUNDS` in `lib/packs.mjs`), streamed on first use, no rms/seconds meta. For a plucked or bowed part
+   that must sound played, prefer a `raw: { pattern: note('...').s('gm_...') }` part over the pad or bass layer: those
+   layers put a synth attack and a filter envelope on every hit, which is what makes an acoustic song read as electronic
+   (`songs/porch.strudel`).
    Keep at most one raw sawtooth layer; two saws in the same octave is mud.
    Beyond the loaded packs, `reference/sample-banks.md` lists the community `github:` banks and the two
    steps that make one usable here (an entry in `lib/packs.json`, then `npm run samples -- <pack>`).

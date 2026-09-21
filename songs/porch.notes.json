@@ -19,6 +19,33 @@
           "why": "bVI instead of VI: dorian's VI is C#dim, the lift wanted is C"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "not even close: no guitar anywhere? and it sounds electronic, not acoustic; the solo melody is the closest, keep it and give me more",
+      "changes": [
+        {
+          "section": "song",
+          "why": "gm_acoustic_guitar_steel for every guitar and gm_acoustic_bass under it: the GM soundfonts are the only guitars Strudel has, wired in with web/soundfonts.mjs"
+        },
+        {
+          "section": "song",
+          "why": "the picking and the bass are raw note().s() parts: the pad layer put a 120 ms attack and a filter on every pluck and the bass layer a filter envelope, which is what read as electronic"
+        },
+        {
+          "section": "solo2",
+          "why": "a second eight-bar line answering the first (kept verbatim), sixteenths from the top and a pedal-point lick, the climax"
+        },
+        {
+          "section": "song",
+          "why": "drums on a written grid (kick 1 and the and-of-3, snare 2 and 4, shaker eighths) instead of the house template"
+        },
+        {
+          "section": "solo",
+          "layer": "raw",
+          "why": "gain .8>.4 and lead level 1>1.4: the bass sat 8 dB over the soloist in the render; a sanity level, the mixing pass is still to come"
+        }
+      ]
     }
   ]
 }

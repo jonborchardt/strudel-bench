@@ -1,33 +1,45 @@
-// porch: an acoustic sketch. strumstick (the packs' only plucked string) for the guitars, folkharp under it,
-// cajon and shakers for the quiet drums. Short, unmixed: the solo in 'solo' is the point.
+﻿// porch: an acoustic guitar piece. Steel-string guitar (gm_acoustic_guitar_steel) picks the chords and plays the solo,
+// an acoustic bass under it, cajon and shakers for the quiet drums. The solo is the point: two eight-bar lines.
+// The guitars and the bass are raw parts (plain note().s()) so nothing puts a synth filter or attack on a plucked string.
 const played = { timingMs: 12, velocity: .1, correlation: 'phrase' };
-const kit = { bd: 'cajon:2', sd: 'cajon:6', hh: 'shaker_small:6', oh: 'shaker_large:0', cp: 'framedrum:3' };
-const strum = { sound: 'strumstick', arp: 'up', articulation: .6, brightness: .55, space: .55, width: .6, humanize: { ...played, correlation: 'bar' } };
-const low = { sound: 'folkharp', register: .3, weight: .55, articulation: .7 };
+const kit = { bd: 'cajon:2', sd: 'cajon:6', hh: 'shaker_small:6', oh: 'shaker_large:0' };
+const quiet = { sounds: kit, template: { bd: 'x.......x.x.....', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.x.' }, articulation: .6, humanize: { ...played, correlation: 'bar' } };
+const G = 'gm_acoustic_guitar_steel';
+// fingerpicking, one bar per chord: the bass string, then thumb and fingers across the shape
+const pick = (chords) => ({ pattern: note('<' + chords + '>').s(G).clip(1.4).gain(.55).pan(.42), humanize: { ...played, correlation: 'bar' } });
+const Em = '[e3 b3 e4 g4 b3 g4 e4 b3]', A = '[a2 e3 a3 cs4 e4 cs4 a3 e3]', D = '[d3 a3 d4 fs4 a4 fs4 d4 a3]', C = '[c3 g3 c4 e4 g4 e4 c4 g3]';
+const bass = (line) => ({ pattern: note('<' + line + '>').s('gm_acoustic_bass').clip(1.2).gain(.4), humanize: { ...played, correlation: 'bar' } });
+const lead = { sound: G, register: .5, brightness: .8, level: 1.4, humanize: played };
 
 song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8' }, [
   section('intro', 4, { role: 'establish', progression: 'i IV i VII',
-    pad:    { ...strum, density: .45 },
+    raw:    pick([Em, A, Em, D].join(' ')),
   }),
   section('verse', 8, { role: 'develop', progression: 'i IV i VII',
-    drums:  { sounds: kit, template: 'house', density: .55, articulation: .6, level: .7, humanize: { ...played, correlation: 'bar' } },
-    bass:   { ...low, density: .75, notes: '0 ~ 0 4' },
-    melody: { sound: 'strumstick', phrase: 2, follow: true, register: .5, humanize: played, velocity: '.85 1 .9 1 .8 1 .9 .95',
-              notes: '0 ~ 2 3 4@2 ~ 3 2 0 ~ 6 4@2 2 0' },
-    pad:    { ...strum, density: .5 },
-    fx:     { riser: 1 },
+    drums:  { ...quiet, density: .55, level: .6 },
+    raw:    bass('[e2 ~ e2 b2] [a1 ~ a1 e2] [e2 ~ e2 b2] [d2 ~ d2 a2]'),
+    raw2:   pick([Em, A, Em, D].join(' ')),
+    melody: { ...lead, phrase: 2, follow: true, velocity: '.85 1 .9 1 .8 1 .9 .95', notes: '0 ~ 2 3 4@2 ~ 3 2 0 ~ 6 4@2 2 0' },
   }),
-  section('solo', 8, { role: 'climax', progression: 'i IV bVI VII',
-    drums:  { sounds: kit, template: 'house', density: .7, articulation: .6, level: .75, variation: .3, humanize: { ...played, correlation: 'bar' } },
-    bass:   { ...low, density: .8, notes: '0 ~ 0 7 ~ 4 3 ~' },
+  section('solo', 8, { role: 'develop', progression: 'i IV bVI VII',
+    drums:  { ...quiet, density: .6, level: .65, variation: .2 },
+    raw:    bass('[e2 ~ e2 b2] [a1 ~ a1 e2] [c2 ~ c2 g2] [d2 ~ d2 a2]'),
+    raw2:   pick([Em, A, C, D].join(' ')),
     // one eight-bar line: bar per bracket, runs as inner brackets, degrees past 7 climb the next octave
-    melody: { sound: 'strumstick', phrase: 8, register: .5, brightness: .65, humanize: played, velocity: '.9 1 .85 1 .9 1 .95 1',
+    melody: { ...lead, phrase: 8, velocity: '.9 1 .85 1 .9 1 .95 1',
               notes: '[0 2 4 [5 4] 7@2 ~ 4] [6 4 [3 2] 0@2 ~ [0 2] 3] [4 [4 5] 7 [7 9] 11@2 [9 7] 4] [[7 6 5 4] [3 2 0 2] 3@2 4 ~ ~] [[0 2 3 4] [5 7 9 11] 12@3 [11 9]] [[11 9 7 9] 11@2 [12 11 9 7] ~ 7@2] [[7 9 7 5] [4 5 4 2] [0 2 4 7] [9 7 4 2]] [0@3 ~ 7 0@2]' },
-    melody2: { notes: '~ 7 ~ ~ 5 ~ 4 ~', sound: 'folkharp', register: .8, level: .7, follow: true, space: .65, width: .7 },
-    pad:    { ...strum, density: .55, brightness: .6 },
+  }),
+  section('solo2', 8, { role: 'climax', progression: 'i IV bVI VII',
+    drums:  { ...quiet, density: .7, level: .7, variation: .35 },
+    raw:    bass('[e2 e2 e2 b2] [a1 a1 a1 e2] [c2 c2 c2 g2] [d2 d2 d2 a2]'),
+    raw2:   pick([Em, A, C, D].join(' ')),
+    // the answer: sixteenths from the top, a pedal-point lick on the root, a run to the top note and home
+    melody: { ...lead, phrase: 8, brightness: .85, velocity: '.9 1 .9 1 .95 1 .95 1',
+              notes: '[[7 9 11 12] [11 9 7 5] [7 9 11 12] [14 12 11 9]] [11@2 [12 11] 9 [7 9 7 5] 4@2] [[4 5 7 9] [11 12 14 12] 11@2 [9 7 5 4]] [7@3 [5 7] 9 [7 5 4 2] 0@2] [[0 2 0 2] [3 4 3 4] [5 7 5 7] [9 11 9 11]] [[12 11 12 14] 14@2 ~ [12 11 9 7] 4] [[7 4 7 9] [7 4 7 11] [7 4 7 12] [7 4 7 14]] [14@2 [12 11] 9 7 [4 2] 0@2]' },
+    melody2: { notes: '~ 7 ~ ~ 5 ~ 4 ~', sound: G, register: .8, level: .6, follow: true, space: .6, width: .6 },
   }),
   section('outro', 4, { role: 'release', progression: 'i IV i i',
-    bass:   { ...low, density: .4, notes: '0 ~' },
-    pad:    { ...strum, density: .45, space: .65 },
+    raw:    bass('[e2 ~ ~ ~] [a1 ~ ~ ~] [e2 ~ ~ ~] [e2 ~ ~ ~]'),
+    raw2:   pick([Em, A, Em, '[e3 b3 e4 g4 b4@4]'].join(' ')),
   }),
 ])

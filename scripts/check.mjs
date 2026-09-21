@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { userPacks } from '../server.mjs';
 import './esm-fix.mjs'; // must run before the strudel imports below are resolved, hence dynamic imports
 import { parseProgression, chordNames } from '../lib/harmony.mjs';
-import { packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS } from '../lib/packs.mjs';
+import { GM_SOUNDS, packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS } from '../lib/packs.mjs';
 import { describeAxes } from '../lib/vocab.mjs';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
@@ -53,7 +53,7 @@ export async function effectiveOf(code) {
 
 /** Built-in sounds: the synths plus every downloaded/CDN pack map in samples/packs. */
 function builtinSounds() {
-  const known = new Set(SYNTHS);
+  const known = new Set([...SYNTHS, ...GM_SOUNDS]);
   if (fs.existsSync(PACKS)) {
     for (const f of fs.readdirSync(PACKS).filter((f) => f.endsWith('.json') && f !== 'packs.json' && !f.includes('alias'))) {
       for (const [k, v] of Object.entries(JSON.parse(fs.readFileSync(path.join(PACKS, f), 'utf8')))) if (k !== '_base') { known.add(k); packFiles.set(k, v); }

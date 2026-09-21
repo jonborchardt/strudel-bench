@@ -84,4 +84,4 @@ README.md carries the rules, the axis table, the phase order and the harmony con
 
 ## Deliberate deferrals
 
-The expanded Strudel pane is still a `pre`; `@strudel/codemirror`'s pattern highlighting is not wired in (both editors are `web/cm-editor.mjs`, the JavaScript language only). GM soundfont instruments (`gm_*`) still stream from GitHub. Harmony does not model voice leading or chord symbols. Design spec and plan: `docs/superpowers/`.
+The expanded Strudel pane is still a `pre`; `@strudel/codemirror`'s pattern highlighting is not wired in (both editors are `web/cm-editor.mjs`, the JavaScript language only). GM soundfont instruments (`gm_*`: `web/soundfonts.mjs` registers them at boot from `@strudel/soundfonts`' name list, `GM_SOUNDS` in `lib/packs.mjs` for the check) stream from GitHub on first use, so the first hit of a font is late or dropped and no meta (seconds/rms) exists for them. Harmony does not model voice leading or chord symbols. Design spec and plan: `docs/superpowers/`.
