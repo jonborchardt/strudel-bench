@@ -132,6 +132,71 @@
           "why": "textures: drone postgain .5, stabs/grind/scream .6, bursts/squeals/breaths .7; the drone alone was a continuous saturated saw"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "machine still bad, way better but not close to good",
+      "changes": [
+        {
+          "section": "*",
+          "layer": "bass",
+          "why": "weight .95>.7 the bass sat an octave under its register at midi 16 (21 Hz): a rumble whose distortion harmonics were all anyone heard"
+        },
+        {
+          "section": "*",
+          "layer": "bass",
+          "why": "register .15>.4 E2, out from under the kick's fundamental"
+        },
+        {
+          "section": "*",
+          "layer": "bass",
+          "why": "notes: written lines ('0 0 7 0' in the choruses, '0 ~ 0 0' elsewhere) instead of the seeded line"
+        },
+        {
+          "section": "*",
+          "layer": "bass",
+          "why": "aggression 1>.75 less of the distort .7 + shape .5 wall on the bass"
+        },
+        {
+          "section": "song",
+          "layer": "melody",
+          "why": "sound sawtooth>square three raw saws in one section were mud; the bass keeps the saw"
+        },
+        {
+          "section": "song",
+          "layer": "pad",
+          "why": "sound sawtooth>triangle same, and a softer grit under the distortion"
+        },
+        {
+          "section": "*",
+          "layer": "pad",
+          "why": "weight 1>.7 no low voicing: a distorted low chord at E2 was mud under the bass"
+        },
+        {
+          "section": "*",
+          "layer": "pad",
+          "why": "aggression 1>.8 less distortion on the chord"
+        },
+        {
+          "section": "chorus*",
+          "layer": "drums",
+          "why": "aggression .9>.75 distort .48 on 16th hats was fizz; weight 1>.85 less shape"
+        },
+        {
+          "section": "song",
+          "layer": "melody",
+          "why": "postgain .8>.5 the melody had become the mix (2.4 dB under it)"
+        },
+        {
+          "section": "song",
+          "layer": "bass",
+          "why": "duckDepth .3>.5 kick under bass: the duck is the fix the low-band lint asks for"
+        },
+        {
+          "section": "song",
+          "why": "textures: stabs and grind lose .coarse() (a worklet this page's bundle never defines: they had been silent) and distort .6/.5; drone .75>.5, scream .9>.6, squeals .7>.5"
+        }
+      ]
     }
   ],
   "prompt": "Filthy mechanical industrial rock at 120 BPM on one E minor chord, corroding textures stacked outside the axes"
