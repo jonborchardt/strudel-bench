@@ -15,7 +15,6 @@ const bass = (line) => ({ pattern: note('<' + line + '>').s('gm_acoustic_bass').
 const WALK = '[e2 ~ e2 b2] [a1 ~ a1 e2] [c2 ~ c2 g2] [d2 ~ d2 a2]', PUSH = '[e2 e2 e2 b2] [a1 a1 a1 e2] [c2 c2 c2 g2] [d2 d2 d2 a2]';
 const DRIVE = '[e2 e2 e2 e2 e2 e2 b2 b2] [a1 a1 a1 a1 a1 a1 e2 e2] [c2 c2 c2 c2 c2 c2 g2 g2] [d2 d2 d2 d2 d2 d2 a2 a2]';
 const lead = { sound: G, register: .5, brightness: .8, level: 1.7, space: .4, humanize: played };
-const counter = { sound: G, register: .8, level: 1.8, follow: true, space: .7, width: .6, position: .35, compressor: { threshold: -18, ratio: 3 } };
 const LIFT = 'i IV bVI VII';
 
 song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8', visual: 'ink', packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
@@ -43,7 +42,6 @@ song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8', visual: 'ink', pack
     // the answer: sixteenths from the top, a pedal-point lick on the root, a run to the top note and home
     melody: { ...lead, phrase: 8, brightness: .85, velocity: '.9 1 .9 1 .95 1 .95 1',
               notes: '[[7 9 11 12] [11 9 7 5] [7 9 11 12] [14 12 11 9]] [11@2 [12 11] 9 [7 9 7 5] 4@2] [[4 5 7 9] [11 12 14 12] 11@2 [9 7 5 4]] [7@3 [5 7] 9 [7 5 4 2] 0@2] [[0 2 0 2] [3 4 3 4] [5 7 5 7] [9 11 9 11]] [[12 11 12 14] 14@2 ~ [12 11 9 7] 4] [[7 4 7 9] [7 4 7 11] [7 4 7 12] [7 4 7 14]] [14@2 [12 11] 9 7 [4 2] 0@2]' },
-    melody2: { ...counter, notes: '~ 7 ~ ~ 5 ~ 4 ~' },
   }),
   section('break', 4, { role: 'breakdown', progression: 'i IV i VII',
     raw:    bass('[e2 ~ ~ ~] [a1 ~ ~ ~] [e2 ~ ~ ~] [d2 ~ ~ b2]'),
@@ -66,7 +64,6 @@ song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8', visual: 'ink', pack
     // the fourth climbs: sweeps across the chord shapes, a pedal lick that reaches higher each beat, a run that hands off
     melody: { ...lead, phrase: 8, brightness: .85, velocity: '.9 1 .9 1 .95 1 .95 1',
               notes: '[[7 9 11 12] [14 12 11 9] [7 9 11 12] [14 12 11 9]] [[11 12 11 9] [11 12 11 9] 12@2 [14 12 11 9]] [[7 11 14 11] [7 11 14 11] [9 12 14 12] [9 12 14 12]] [[14 12 11 9] [7 5 4 2] 0@2 [0 2 4 5]] [[7 9 7 9] [9 11 9 11] [11 12 11 12] [12 14 12 14]] [14@2 [12 14] 12 [11 12 11 9] 7@2] [[7 4 7 9] [7 4 7 11] [9 5 9 12] [9 5 9 14]] [[12 11 9 7] [5 4 2 0] 0@2 ~ ~]' },
-    melody2: { ...counter, notes: '~ 7 ~ ~ 5 ~ 4 ~' },
   }),
   section('pickup', 2, { role: 'breakdown', progression: 'i i',
     // two bars of guitar alone: the pickup run into the last solo
@@ -79,7 +76,6 @@ song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8', visual: 'ink', pack
     // the fifth goes for it: sixteenths and sextuplets top to bottom, sweeps, tremolo picking up the scale, the high root held
     melody: { ...lead, phrase: 8, brightness: .9, level: 1.9, velocity: '.95 1 .95 1 1 1 1 1',
               notes: '[[9 11 12 14] [12 11 9 7] [9 11 12 14] [12 11 9 7]] [[7 9 11 12 14 12] [11 9 7 5 4 2] [4 5 7 9 11 12] [11 9 7 5 4 2]] [[0 4 7 12] [0 4 7 12] [2 5 9 14] [2 5 9 14]] [[14 12 11 9] [11 9 7 5] [7 5 4 2] [4 2 0 2]] [[7 7 7 7] [9 9 9 9] [11 11 11 11] [12 12 12 12]] [[14 14 14 14] [14 14 14 14] [12 14 12 11] [12 14 12 11]] [[7 9 11 12 14 12] [11 9 7 5 4 2] [7 9 11 12 14 12] [11 9 7 5 4 2]] [[12 11 12 14] 14@4 ~ 7@2]' },
-    melody2: { ...counter, notes: '~ 7 ~ 9 5 ~ 4 ~', level: 2 },
   }),
   section('outro', 4, { role: 'release', progression: 'i IV i i',
     raw:    bass('[e2 ~ ~ ~] [a1 ~ ~ ~] [e2 ~ ~ ~] [e2 ~ ~ ~]'),

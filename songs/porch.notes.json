@@ -103,6 +103,17 @@
           "why": "duck ruled out: the kick-under-bass masking measured .09, nothing to duck"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "I don't like melody2, it makes a horrible ping sound",
+      "changes": [
+        {
+          "section": "solo2/solo4/solo5",
+          "layer": "melody2",
+          "why": "cut: the steel guitar two octaves up through a compressor and the room read as a ping; the solos carry the climax alone"
+        }
+      ]
     }
   ]
 }
