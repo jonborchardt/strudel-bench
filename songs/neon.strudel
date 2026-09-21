@@ -17,7 +17,7 @@ const ACID = '0 0 7 0 3 0 7 4';                                  // the acid lin
 const ACID2 = '0 7 0 3 0 7 5 4';                                 // the second drop's acid: the sixth in it now
 const CHOP = '0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15';            // the amen as recorded (two bars, sixteen cuts)
 const RUSH = '[0 1 2 3 4 5 6 7 [8 9 10 11] [12 13 14 15] 0 1 2 3]';  // a bar that rushes its second half and restarts
-const RECUT = '<[0 1 2 3 4 5 [6 6] 7 8 9 [10 10] 11 12 13 14 15] [0 1 [2 2] 3 4 [5 5 5] 6 7 8 9 10 11 [12 12] 13 [14 15]] ' + RUSH + ' [15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0]>'; // four re-cuts of the amen: a stutter, a triplet stutter, a rush, backwards
+const RECUT = '<[0 1 2 3 4 5 [6 6] 7 8 9 10 11 12 13 14 15] [' + CHOP + '] ' + RUSH + ' [0 1 2 3 4 5 6 7 8 9 10 11 [12 12] 13 14 15]>'; // four bars of the amen: one stutter, straight, the rush, one stutter late
 
 const ROOM = { ir: 'room', size: .9 };
 const PLATE = { ir: 'plate', size: 1.8, damping: 7000 };
@@ -42,7 +42,7 @@ song({ bpm: 132, key: 'A:dorian', seed: 7, kit: 'OberheimDMX', packs: ['rooms'],
   }),
 
   // new wave: the octave pumped in threes, the hook off the beat, a cracking snare on two and four, a 5-in-16 on metal
-  section('verse', 16, { role: 'develop', progression: 'i7@2 IV7@2', room: ROOM,
+  section('verse', 14, { role: 'develop', progression: 'i7@2 IV7@2', room: ROOM,
     drums:  { template: 'house', density: .65, drive: .75, weight: .65, articulation: .65, level: .35 },
     bass:   { ...reese, notes: PUMP, density: .8, level: .7 },
     melody: { ...lead, level: 1.6 },
@@ -60,7 +60,7 @@ song({ bpm: 132, key: 'A:dorian', seed: 7, kit: 'OberheimDMX', packs: ['rooms'],
   }),
 
   // old school: the amen chopped under the 909, the acid bass, the hoover, the stabs, a low stab answering
-  section('drop', 16, { role: 'climax', progression: 'i7 IV7 i7 VII', kit: 'RolandTR909', room: PLATE,
+  section('drop', 16, { role: 'climax', progression: 'i7 IV7 i7 VII', kit: 'RolandTR909', room: PLATE, sweep: 2,
     drums:  { template: 'breaks', density: .85, drive: .8, weight: .65, articulation: .7, variation: .35, level: .4 },
     sample: { ...amen, pattern: CHOP, level: .5 },
     bass:   { ...acid, notes: ACID, density: .8, level: .6 },
@@ -68,17 +68,17 @@ song({ bpm: 132, key: 'A:dorian', seed: 7, kit: 'OberheimDMX', packs: ['rooms'],
     melody2: { ...answer, notes: '~ ~ 0 ~ ~ ~ 3 ~', level: .6 },
     pad:    { ...stabs, level: 1 },
     perc:   { sound: 'clap:2', rhythm: '....x.......x...', level: .6, position: -.3, space: .5, compressor: { threshold: -18, ratio: 3 } },
-    fx:     { impact: true, level: .4 },
+    fx:     { impact: true, riser: 2, level: .4 },
   }),
 
-  // the twist: the amen re-cut every bar, the acid bass alone under it, the lead glitching through a wavetable
+  // the twist: the amen re-cut every bar, the acid bass alone under it, the lead glitching through a wavetable; it opens on an impact after the drop's sweep
   section('twist', 8, { role: 'develop', progression: 'i7@2 III VII', kit: 'RolandTR909', room: ROOM,
-    drums:  { template: 'halftime', density: .55, drive: .7, weight: .65, articulation: .7, variation: .6, level: .4 },
+    drums:  { template: 'halftime', density: .55, drive: .7, weight: .65, articulation: .7, variation: .4, level: .4 },
     sample: { ...amen, pattern: RECUT, level: .6, brightness: .65 },
     bass:   { ...acid, notes: ACID, density: .8, level: .4, brightness: wobble(.3, .9), aggression: .7 },
-    melody: { sound: 'wt_digital:2', patch: 'glass', notes: GLITCH, phrase: 2, density: .75, variation: .7, articulation: .85, register: .7, space: .6, brightness: .75, width: .7, follow: true, level: 1.8 },
-    perc:   { sound: 'casio:2', rhythm: 'x.x..x.x..x.xx..', density: .6, variation: .5, level: .3, position: .45, space: .3 },
-    fx:     { riser: 2, level: .5 },
+    melody: { sound: 'wt_digital:2', patch: 'glass', notes: GLITCH, phrase: 2, density: .7, variation: .4, articulation: .85, register: .7, space: .6, brightness: .75, width: .7, follow: true, level: 1.8 },
+    perc:   { sound: 'casio:2', rhythm: 'x.x..x.x..x.x...', density: .5, variation: .3, level: .3, position: .45, space: .3 },
+    fx:     { impact: true, riser: 2, level: .5 },
   }),
 
   // the lights go down: away from home on the four and the seven, the piano and the hook alone, the crowd waits
@@ -90,7 +90,7 @@ song({ bpm: 132, key: 'A:dorian', seed: 7, kit: 'OberheimDMX', packs: ['rooms'],
   }),
 
   // both hooks at once: the wavetable answers the hoover an octave up, the fills come every four
-  section('drop2', 16, { role: 'climax', progression: 'i7 IV7 i7 VII', kit: 'RolandTR909', room: PLATE,
+  section('drop2', 16, { role: 'climax', progression: 'i7 IV7 i7 VII', kit: 'RolandTR909', room: PLATE, sweep: 2,
     drums:  { template: 'breaks', density: .9, drive: .85, weight: .7, articulation: .7, variation: .5, level: .4, fill: true },
     sample: { ...amen, pattern: '<[' + CHOP + '] ' + RUSH + '>', level: .55 },
     bass:   { ...acid, notes: ACID2, density: .8, level: .6, brightness: wobble(.4, .85) },
@@ -101,10 +101,11 @@ song({ bpm: 132, key: 'A:dorian', seed: 7, kit: 'OberheimDMX', packs: ['rooms'],
     fx:     { impact: true, level: .4 },
   }),
 
-  // out on the reese and the arpeggio and the DMX, the way it came in
+  // out on the reese and the arpeggio and the DMX, the way it came in; the hook stays on, farther each bar, so the drop does not just stop
   section('outro', 8, { role: 'release', progression: 'i7@2 IV7@2', kit: 'OberheimDMX', room: ROOM,
     drums:  { template: 'house', density: .55, drive: .6, articulation: .65, level: .45 },
     bass:   { ...reese, notes: PUMP, density: .8, level: .6 },
+    melody: { ...lead, notes: HOOK2, level: 1.2, space: ramp(.4, .8), brightness: ramp(.6, .3) },
     pad:    { ...arp, level: .5, brightness: ramp(.6, .35) },
   }),
 ])

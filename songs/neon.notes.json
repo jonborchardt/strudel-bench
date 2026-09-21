@@ -105,6 +105,40 @@
           "why": "the glass lead was 30 dB under (measure)"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "verse is 2 measures too long; drop2 to outro too abrupt; better transition into the twist and a bit less chaos in it",
+      "changes": [
+        {
+          "section": "verse",
+          "from": 16,
+          "to": 14,
+          "why": "bars"
+        },
+        {
+          "section": "drop",
+          "why": "sweep 2 and fx.riser 2 the filter closes under a riser into the twist"
+        },
+        {
+          "section": "twist",
+          "layer": "fx",
+          "why": "impact the twist opens on a hit"
+        },
+        {
+          "section": "twist",
+          "why": "RECUT the triplet-stutter and backwards bars replaced by a straight bar and a late stutter; drums.variation .6>.4, melody.variation .7>.4, perc simpler"
+        },
+        {
+          "section": "drop2",
+          "why": "sweep 2 the filter closes over its last two bars"
+        },
+        {
+          "section": "outro",
+          "layer": "melody",
+          "why": "the hook carried over at level 1.2 with space ramp(.4,.8) and brightness ramp(.6,.3), farther each bar"
+        }
+      ]
     }
   ]
 }
