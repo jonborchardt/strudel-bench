@@ -128,6 +128,26 @@
           "why": "visual overlay ink + signal"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "solo6 is too silly: musical and complex, not silly",
+      "changes": [
+        {
+          "section": "solo6",
+          "layer": "melody",
+          "why": "rewritten: the odd subdivisions (quintuplets, septuplets, the 3-against-8 polymeter, the sub-root runs) out; instead the hook's three-note cell shifted across the sixteenth grid as a hemiola, the line harmonized in thirds with 3+2+3 groupings, a sequence rising through each chord tone, and a descent landing the key's root early over the D, all with follow so the same cells re-harmonize with every chord"
+        },
+        {
+          "section": "solo6",
+          "layer": "drums",
+          "why": "density .9>.8 variation .6>.45"
+        },
+        {
+          "section": "solo5",
+          "why": "climax again, solo6 the coda: the lint said the fifth is the peak, and it is the one that goes for it"
+        }
+      ]
     }
   ]
 }
