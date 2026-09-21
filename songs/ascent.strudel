@@ -19,7 +19,7 @@ const FEEL_BAR = { timingMs: 12, velocity: .1, correlation: 'bar' };
 // the kits: skins and wood, then hands, then metal, then machines
 const SKINS = { bd: 'framedrum:8', sd: 'slitdrum:2', hh: 'woodblock:5', oh: 'shaker_large:0', cp: 'clave:2' };
 const HANDS = { bd: 'framedrum:7', sd: 'conga:2', hh: 'shaker_small:11', oh: 'bongo:4', cp: 'clave:2' };
-const METAL = { bd: 'bassdrum1:2', sd: 'anvil:8', hh: 'metal:4', oh: 'brakedrum:3', cp: 'anvil:5' };
+const METAL = { bd: 'bassdrum1:2', sd: 'brakedrum:3', hh: 'metal:1', oh: 'brakedrum:8', cp: 'brakedrum:11' }; // the hammer is the brake drum (2.3 kHz); every anvil take centres above 5 kHz with 90% of its energy up there, so the anvil is a perc far back, not the snare
 const HAMMER = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: '..x...x...x...x.', oh: '..............x.', cp: '............x...' }; // a forge, not a club: the metal on the off-beats only
 
 const CAVE = { ir: 'hall', size: 3.2, damping: 3500 };
@@ -30,7 +30,7 @@ const CAPSULE = { ir: 'room', size: .5 };
 const reese = { sound: 'square', patch: 'reese', register: .3, weight: .7, articulation: .55, brightness: .4, space: .35, duck: 'drums', duckDepth: .35, duckAttack: .15 };
 const wide = { sound: 'sawtooth', patch: 'wide', articulation: .15, space: .6, width: .7, brightness: .4, duck: 'drums', duckDepth: .15, duckAttack: .25 };
 
-song({ bpm: 108, key: 'D:minor', seed: 11, kit: 'RolandTR909', packs: ['rooms'], visual: 'growth' }, [
+song({ bpm: 108, key: 'D:minor', seed: 11, kit: 'RolandTR909', packs: ['rooms'], visual: { composition: 'overlay', worlds: ['growth', 'swarm'] } }, [
 
   // I stone: skins, a slit log, a drone, three notes on a clay flute, in a cave
   section('stone', 16, { role: 'establish', progression: 'i', room: CAVE,
@@ -50,11 +50,11 @@ song({ bpm: 108, key: 'D:minor', seed: 11, kit: 'RolandTR909', packs: ['rooms'],
 
   // III forge: a hammer on an anvil, a brake drum, a sawtooth under it all, a harmonica takes the tune and leaps the octave over the organ
   section('forge', 16, { role: 'develop', progression: 'i VI i VII', room: PLATE,
-    drums:  { sounds: METAL, template: HAMMER, density: .5, articulation: .65, level: .35, space: .5, brightness: .25, variation: .2, compressor: { threshold: -18, ratio: 3 } },
+    drums:  { sounds: METAL, template: HAMMER, density: .5, articulation: .65, level: .35, space: .5, brightness: .3, variation: .2, compressor: { threshold: -18, ratio: 3 } },
     bass:   { sound: 'sawtooth', notes: '0 ~ 0 7 ~ 4 3 ~', density: .8, register: .3, weight: .65, level: .7, articulation: .55, brightness: .4, space: .35, duck: 'drums', duckDepth: .3, duckAttack: .15 },
     melody: { sound: 'harmonica', notes: M3, phrase: 2, density: .55, articulation: .6, register: .55, space: .42, brightness: .47, follow: true, velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: FEEL, level: 1.2 },
     pad:    { sound: 'pipeorgan_loud', density: .35, articulation: .05, register: .4, brightness: .35, space: .65, width: .6, level: 1.6 },
-    perc:   { sound: 'brakedrum:3', rhythm: '....x.......x...', level: .3, position: .4, space: .6 },
+    perc:   { sound: 'anvil:8', rhythm: '....x.......x...', level: .12, brightness: .3, position: .4, space: .6 }, // the anvil's clang, with the hammer but far behind it and under a 6 kHz lpf
     fx:     { riser: 2, level: .4 },
   }),
 

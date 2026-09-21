@@ -368,8 +368,8 @@
   // every part the scheduler plays carries the stage's tap (onTrigger with dominant false: superdough still sounds it), so the
   // stage sees each hap with its part's name at the moment it is scheduled, and no pattern is queried twice for it
   function audible(pat) { // the pinned section alone, or the song, with only the parts that pass solo/mute
-    const tapped = (l, p) => p.onTrigger(stage.tap(l, layerBase(l), samplesOf(p.plan)), false);
-    const filt = (s) => { const ps = Object.entries(s.layers).filter(([l]) => passes(l)).map(([l, x]) => tapped(l, x.pattern)); return ps.length ? strudel.stack(...ps) : strudel.silence; };
+    const tapped = (l, x) => x.pattern.onTrigger(stage.tap(l, layerBase(l), samplesOf(x.plan)), false); // x: the layer entry, whose plan (not the built pattern's) names each voice's sample
+    const filt = (s) => { const ps = Object.entries(s.layers).filter(([l]) => passes(l)).map(([l, x]) => tapped(l, x)); return ps.length ? strudel.stack(...ps) : strudel.silence; };
     // a plain strudel file (no sections), or a wrapper around a song (textures stacked outside it, songs/machine.strudel) played as
     // written: one tap on the whole, the parts read from each hap's value, and nothing fires twice
     if (!pat.strudel || (pat.strudel.pattern !== pat && !pinned && !solo.size && !muted.size)) return pat.onTrigger(stage.tap(null, null), false);

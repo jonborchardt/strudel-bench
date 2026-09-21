@@ -198,6 +198,40 @@
           "why": "level .8>.4 the counting voice under the machine's line, not over it"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "the forge shrillness is the drums; more branches early in growth",
+      "changes": [
+        {
+          "section": "forge",
+          "layer": "drums",
+          "why": "sounds anvil:8>brakedrum:3 as the snare, hh metal:4>metal:1, oh brakedrum:3>brakedrum:8 every anvil take centres above 5 kHz with 90% of its energy in the high band (measured from the files); the brake drum hammer is 2.3 kHz; the mix's high-band share went .131>.023, the kit's .271>.044"
+        },
+        {
+          "section": "forge",
+          "layer": "drums",
+          "axis": "brightness",
+          "from": 0.25,
+          "to": 0.3,
+          "why": "the kit is dark by material now, the lpf back to 5.5 kHz"
+        },
+        {
+          "section": "forge",
+          "layer": "perc",
+          "why": "sound brakedrum:3>anvil:8 level .3>.12 brightness .3 the anvil's clang kept with the hammer but 22 dB under the mix, not as the snare"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "the tree still does not branch early; choose a different secondary visual",
+      "changes": [
+        {
+          "section": "song",
+          "why": "visual: growth + swarm written as the composition (the default overlay had picked orrery); the page's tap now reads the drums plan from the layer entry, so the live stage sees the slit drum and the conga as impacts like the export did"
+        }
+      ]
     }
   ]
 }

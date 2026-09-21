@@ -3,7 +3,8 @@
 // branching (a share of the tips fork; the fork is symmetric when the melody is consonant with the last bass note and
 // one-sided when it is not), hats sprout leaves on the wood, the bass thickens the trunk, grows the roots down and
 // sends a pulse of sap up through the branches (the wood may only be as complete as the song is far along: a budget of
-// segments grows with the song's cycle, so a backbeat's forks fill the early sections in proportion and the organism
+// segments grows with the song's cycle, a third of it kept for forks and every impact forking at least one tip, so a
+// backbeat's forks fill the early sections in proportion and the organism
 // finishes at the end, never in the second section), each line part is the light the tips bend toward (its pitch the
 // height, its pan the side), the pad is the sky and the wind (the whole organism sways, more with the pad's level, its
 // cutoff the light of the sky). A section's role is the growth phase (establish: roots and trunk, slow; develop:
@@ -20,7 +21,7 @@ const TAU = Math.PI * 2;
 const MAX_SEG = 1400, MAX_LEAF = 500, MAX_BLOOM = 240, MAX_ROOT = 80, MAX_UNDER = 220, GROUND = 0.88;
 const DEFAULT_SLOT = { drums: 'impulse', pitched: 'line', hit: 'grain', bass: 'ground', melody: 'line', pad: 'field', perc: 'grain', sample: 'impulse', fx: 'transition' };
 const PHASE = {
-  establish: { grow: 0.6, fork: 0.15, bloom: 0, fall: 0, roots: 1 },
+  establish: { grow: 0.6, fork: 0.3, bloom: 0, fall: 0, roots: 1 },
   develop: { grow: 1, fork: 0.35, bloom: 0, fall: 0, roots: 0.4 },
   climax: { grow: 1.2, fork: 0.5, bloom: 1, fall: 0, roots: 0.2 },
   release: { grow: 0.4, fork: 0.1, bloom: 0.2, fall: 1, roots: 0.3 },
@@ -85,8 +86,8 @@ export default {
     s.lastBar = bar;
     const tipEnd = (sg) => [sg.x + Math.cos(sg.a) * sg.l, sg.y + Math.sin(sg.a) * sg.l];
     const thicken = (i) => { for (let k = s.segs[i].p; k >= 0; k = s.segs[k].p) s.segs[k].th += 0.12; };
-    const grow = (sg, i, g, turn) => { // a new segment from this tip, bent a little toward the light and by the turn asked, shorter with depth; a tip at the top of the frame stops
-      if (s.segs.length >= s.budget) return null;
+    const grow = (sg, i, g, turn, fork = false) => { // a new segment from this tip, bent a little toward the light and by the turn asked, shorter with depth; a tip at the top of the frame stops
+      if (s.segs.length >= (fork ? s.budget : s.budget * 0.7)) return null; // extension may spend two thirds of the budget; the rest is kept for forks, so the backbeat always has wood to branch
       const [x, y] = tipEnd(sg), toLight = Math.atan2(L.y - y, L.x - x);
       if (y < 0.07 || x < 0.03 || x > s.aspect - 0.03) { sg.tip = false; return null; }
       let a = sg.a + turn + (rand(s) - 0.5) * 0.8 * s.jitter;
@@ -105,7 +106,9 @@ export default {
           if (s.phase.bloom > 0.3) for (const [sg] of tips) if (s.blooms.length < MAX_BLOOM && rand(s) < 0.2 * s.phase.bloom) { const [x, y] = tipEnd(sg); s.blooms.push({ x, y, r: 0, rTo: (0.005 + 0.007 * g) * s.spread, hue: s.bloom + s.hueShift + (rand(s) - 0.5) * 30 }); }
         } else if (e.role === 'impact') { // a branching: a share of the tips fork; symmetric when consonant, one-sided when not
           const tips = s.segs.map((sg, i) => [sg, i]).filter(([sg]) => sg.tip), iv = ((s.melNote - s.bassNote) % 12 + 12) % 12, sym = CONSONANT.has(iv);
-          for (const [sg, i] of tips) if (rand(s) < s.phase.fork * (0.5 + 0.5 * g)) { const spread = 0.35 + rand(s) * 0.4; const c = grow(sg, i, g, sym ? -spread : -spread * 0.2); if (c) { sg.tip = true; const c2 = grow(sg, i, g, sym ? spread : spread * 1.3); if (!c2) sg.tip = false; } }
+          const fork = ([sg, i]) => { const spread = 0.35 + rand(s) * 0.4; const c = grow(sg, i, g, sym ? -spread : -spread * 0.2, true); if (c) { sg.tip = true; const c2 = grow(sg, i, g, sym ? spread : spread * 1.3, true); if (!c2) sg.tip = false; } return !!c; };
+          let forked = false; for (const t of tips) if (rand(s) < s.phase.fork * (0.5 + 0.5 * g)) forked = fork(t) || forked;
+          if (!forked && tips.length) fork(tips[Math.floor(rand(s) * tips.length)]); // every impact branches somewhere, so a sapling with one tip still forks on the first backbeat
         } else if (e.role === 'grain') { // leaves on the wood, out on the younger branches
           if (s.leaves.length < MAX_LEAF && s.segs.length > 3) { const i = 1 + Math.floor(rand(s) * (s.segs.length - 1)); if (s.segs[i].d >= 2) s.leaves.push({ seg: i, at: rand(s), side: rand(s) < 0.5 ? -1 : 1, r: (0.006 + 0.006 * g) * s.spread, hue: s.leaf + s.hueShift + (rand(s) - 0.5) * 20 }); }
         } else { const tips = s.segs.map((sg, i) => [sg, i]).filter(([sg]) => sg.tip); for (const [sg, i] of tips) if (rand(s) < 0.2 * g) grow(sg, i, g, 0); }
