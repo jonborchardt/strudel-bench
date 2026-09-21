@@ -65,8 +65,12 @@ and slice count, each keeping its own region. A line of different takes is one p
 Those words mean the notes and the sounds, and no axis fixes them. Adding more layers at once adds mass, not
 interest. Do these, in this order, on every new song and whenever a song is called flat:
 
-1. **Write the hooks.** Every melody and every bass that carries the song gets `notes:` in mini-notation, never the
-   seeded line. Scale degrees 0..7 (7 = the octave), `~` rests, `@2` holds, single quotes (`notes: '0 2 3@2 ~ 4 3 2 0'`)
+1. **Write every note.** Every melody, every bass, every solo, the picking and the counter-lines get `notes:` in
+   mini-notation (or a raw `note('...')` part), never the seeded line. The user's standing preference (porch and duel,
+   2026-09-20): a song where every note is a hand-written phrase with a shape (start on the root, one leap, a hold, a
+   rest, land somewhere) is what they call good; the generator's lines never have that shape, so a generated line is
+   a scaffold to replace before reporting, not a part. Endeavour to write more, not less: twelve solo lines, a hook,
+   the picking and the bass in one song is the bar, not the ceiling. Scale degrees 0..7 (7 = the octave), `~` rests, `@2` holds, single quotes (`notes: '0 2 3@2 ~ 4 3 2 0'`)
    so the check table prints the line. Rules for a line that reads as a phrase: start on the root, move mostly by
    step with one leap, hold at least one note, rest at least once, end on the root (or on the fifth/seventh for a
    question the next phrase answers). `phrase: 2` with 16 slots gives a question and an answer. `follow: true`
