@@ -1,0 +1,24 @@
+{
+  "prompt": "acoustic sketch: guitar, quiet drums, a real guitar solo; short, unmixed",
+  "requests": [
+    {
+      "date": "2026-09-21",
+      "ask": "make a new short acoustic song: guitar and quiet drums, get something simple up, do not mix yet, but an amazing guitar solo",
+      "changes": [
+        {
+          "section": "song",
+          "why": "strumstick stands for the guitar (no guitar in the packs), folkharp for the low end, cajon and shakers as the kit"
+        },
+        {
+          "section": "solo",
+          "layer": "melody",
+          "why": "phrase 8, one written eight-bar line with 16th runs and degrees past the octave, register .5 so the high runs stay inside the strumstick's sampled range"
+        },
+        {
+          "section": "solo",
+          "why": "bVI instead of VI: dorian's VI is C#dim, the lift wanted is C"
+        }
+      ]
+    }
+  ]
+}

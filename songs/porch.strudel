@@ -1,0 +1,33 @@
+// porch: an acoustic sketch. strumstick (the packs' only plucked string) for the guitars, folkharp under it,
+// cajon and shakers for the quiet drums. Short, unmixed: the solo in 'solo' is the point.
+const played = { timingMs: 12, velocity: .1, correlation: 'phrase' };
+const kit = { bd: 'cajon:2', sd: 'cajon:6', hh: 'shaker_small:6', oh: 'shaker_large:0', cp: 'framedrum:3' };
+const strum = { sound: 'strumstick', arp: 'up', articulation: .6, brightness: .55, space: .55, width: .6, humanize: { ...played, correlation: 'bar' } };
+const low = { sound: 'folkharp', register: .3, weight: .55, articulation: .7 };
+
+song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8' }, [
+  section('intro', 4, { role: 'establish', progression: 'i IV i VII',
+    pad:    { ...strum, density: .45 },
+  }),
+  section('verse', 8, { role: 'develop', progression: 'i IV i VII',
+    drums:  { sounds: kit, template: 'house', density: .55, articulation: .6, level: .7, humanize: { ...played, correlation: 'bar' } },
+    bass:   { ...low, density: .75, notes: '0 ~ 0 4' },
+    melody: { sound: 'strumstick', phrase: 2, follow: true, register: .5, humanize: played, velocity: '.85 1 .9 1 .8 1 .9 .95',
+              notes: '0 ~ 2 3 4@2 ~ 3 2 0 ~ 6 4@2 2 0' },
+    pad:    { ...strum, density: .5 },
+    fx:     { riser: 1 },
+  }),
+  section('solo', 8, { role: 'climax', progression: 'i IV bVI VII',
+    drums:  { sounds: kit, template: 'house', density: .7, articulation: .6, level: .75, variation: .3, humanize: { ...played, correlation: 'bar' } },
+    bass:   { ...low, density: .8, notes: '0 ~ 0 7 ~ 4 3 ~' },
+    // one eight-bar line: bar per bracket, runs as inner brackets, degrees past 7 climb the next octave
+    melody: { sound: 'strumstick', phrase: 8, register: .5, brightness: .65, humanize: played, velocity: '.9 1 .85 1 .9 1 .95 1',
+              notes: '[0 2 4 [5 4] 7@2 ~ 4] [6 4 [3 2] 0@2 ~ [0 2] 3] [4 [4 5] 7 [7 9] 11@2 [9 7] 4] [[7 6 5 4] [3 2 0 2] 3@2 4 ~ ~] [[0 2 3 4] [5 7 9 11] 12@3 [11 9]] [[11 9 7 9] 11@2 [12 11 9 7] ~ 7@2] [[7 9 7 5] [4 5 4 2] [0 2 4 7] [9 7 4 2]] [0@3 ~ 7 0@2]' },
+    melody2: { notes: '~ 7 ~ ~ 5 ~ 4 ~', sound: 'folkharp', register: .8, level: .7, follow: true, space: .65, width: .7 },
+    pad:    { ...strum, density: .55, brightness: .6 },
+  }),
+  section('outro', 4, { role: 'release', progression: 'i IV i i',
+    bass:   { ...low, density: .4, notes: '0 ~' },
+    pad:    { ...strum, density: .45, space: .65 },
+  }),
+])
