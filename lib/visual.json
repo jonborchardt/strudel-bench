@@ -11,7 +11,8 @@
       "swarm":    { "base": 0.2,  "organicness": 0.5, "melody": 0.4, "width": 0.3, "pad": 0.3, "aggression": -0.2 },
       "orrery":   { "base": 0.2,  "space": 0.5, "melody": 0.5, "pad": 0.3, "tempo": -0.2, "density": -0.3, "brightness": -0.2 },
       "loom":     { "base": 0.1,  "drive": 0.4, "repetition": 0.4, "complexity": 0.3, "aggression": 0.2, "organicness": -0.3, "space": -0.3 },
-      "growth":   { "base": 0.1,  "organicness": 0.6, "sections": 0.3, "pad": 0.3, "tempo": -0.3, "aggression": -0.4, "brightness": 0.2 }
+      "growth":   { "base": 0.1,  "organicness": 0.6, "sections": 0.3, "pad": 0.3, "tempo": -0.3, "aggression": -0.4, "brightness": 0.2 },
+      "rave":     { "base": 0.0,  "drive": 0.5, "tempo": 0.5, "density": 0.4, "brightness": 0.3, "aggression": 0.2, "space": -0.3, "organicness": -0.3 }
     }
   },
   "temperature": { "major": "warm", "minor": "cool", "dorian": "cool", "phrygian": "dim", "lydian": "pale", "mixolydian": "warm", "default": "cool" },
@@ -40,6 +41,7 @@
     "swarm":    { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
     "orrery":   { "slots": { "impulse": 2, "ground": 1, "line": 3, "counter": 3, "field": 1, "transition": 1 } },
     "loom":     { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
-    "growth":   { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } }
+    "growth":   { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
+    "rave":     { "slots": { "impulse": 2, "ground": 1, "line": 3, "counter": 3, "field": 1, "transition": 1 } }
   }
 }

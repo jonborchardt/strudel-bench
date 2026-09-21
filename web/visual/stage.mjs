@@ -12,8 +12,9 @@ import swarm from './swarm.mjs';
 import orrery from './orrery.mjs';
 import loom from './loom.mjs';
 import growth from './growth.mjs';
+import rave from './rave.mjs';
 
-export const WORLDS = { tunnel, ink, sediment, signal, swarm, orrery, loom, growth };
+export const WORLDS = { tunnel, ink, sediment, signal, swarm, orrery, loom, growth, rave };
 export { PRESETS };
 /** What the score plays: its world, bare (tunnel when it names one that is not built), or the director when it composes two or more worlds. The bare path is exactly the stage before the director existed. */
 export const worldOf = (score, opts = {}) => {
