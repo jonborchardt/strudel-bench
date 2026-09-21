@@ -166,6 +166,7 @@ Rhythm has one written grammar everywhere it appears: `x` hit, `X` accent, `o` g
 |---|---|---|---|
 | bass, melody, pad, fx | `sound` | any local synth or sample name | replaces the default (sawtooth; white noise for fx). Drums take `sounds` instead |
 | any layer | `level` | number, 1 = untouched | gain multiplier, applied after every axis |
+| any layer | `postgain` | number 0..2, 1 = untouched | superdough's last gain, after `distort`/`shape` (whose output is tanh clamped to full scale whatever the gain before them): the only level a distorted part answers to, so a saturated kit or bass comes down with it, never with `level` |
 | any layer | `duck` | another part's name in the section | that part's hits sidechain this part's bus (superdough's own duck), dipping and recovering it |
 | any layer | `duckDepth` | number 0..1, default .5 | how deep the duck goes; only meaningful with `duck` set |
 | any layer | `duckAttack` | seconds, default .1 | how long the duck takes to recover; only meaningful with `duck` set |
