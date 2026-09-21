@@ -114,6 +114,20 @@
           "why": "cut: the steel guitar two octaves up through a compressor and the room read as a ping; the solos carry the climax alone"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "a solo6 that is short but super complex; the main visual ink, the secondary signal",
+      "changes": [
+        {
+          "section": "solo6",
+          "why": "four bars as the climax: every beat a different subdivision (eight-note runs, a 3-against-8 cross-rhythm, quintuplets, septuplets, triplet double-stops, sextuplet octave skips, a dip below the root, two twelve-note runs into the high root), the bass arpeggiating each chord in eighths, the kit at .9 with a two-bar fill; solo5 back to develop"
+        },
+        {
+          "section": "song",
+          "why": "visual overlay ink + signal"
+        }
+      ]
     }
   ]
 }
