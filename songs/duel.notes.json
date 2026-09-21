@@ -1,0 +1,43 @@
+{
+  "prompt": "porch with a second, nylon guitar: alongside the steel in the ensemble sections, dueling it solo for solo, together at the end",
+  "requests": [
+    {
+      "date": "2026-09-21",
+      "ask": "a new copy of porch, keep porch as is; add a second guitar of a different quality that plays alongside the first in intro, verse, break, pickup, outro, and plays its own solo on solob, solo2b ... solo6b, like dueling guitars",
+      "changes": [
+        {
+          "section": "song",
+          "why": "second guitar gm_acoustic_guitar_nylon as melody2: darker (brightness .7), a little wetter, position .3 against the picking at -.35, humanize 15 ms"
+        },
+        {
+          "section": "intro/outro",
+          "layer": "melody2",
+          "why": "chord tones between the steel's picking, an octave up; the outro's last bar a held root"
+        },
+        {
+          "section": "verse/break",
+          "layer": "melody2",
+          "why": "the hook a third above the steel"
+        },
+        {
+          "section": "pickup",
+          "layer": "melody2",
+          "why": "the run a third below the steel"
+        },
+        {
+          "section": "solob",
+          "axis": "solo5b",
+          "why": "the nylon's answers: the opening cell turned over and a question on the fifth; lower and off the beat then climbing; double-stops held across the beat; the climb answered by a fall; the fifth in kind a third under the steel's shapes"
+        },
+        {
+          "section": "solo6b",
+          "why": "the climax, the duel ending together: the nylon on the coda's line, the steel the same line a third above, a two-bar fill"
+        },
+        {
+          "section": "song",
+          "why": "measured solo, solob and solo6b: the nylon sits 2.8 dB under its mix like the steel's 2.7, the finale's two guitars within a dB; nothing to change"
+        }
+      ]
+    }
+  ]
+}
