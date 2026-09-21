@@ -38,6 +38,37 @@
           "why": "measured solo, solob and solo6b: the nylon sits 2.8 dB under its mix like the steel's 2.7, the finale's two guitars within a dB; nothing to change"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "make them both acoustic steel, in two places in the room, with enough character to tell two players apart; and have some solos step on each other, the next starting as the other finishes",
+      "changes": [
+        {
+          "section": "song",
+          "why": "player two on gm_acoustic_guitar_steel:5, the LK steel font: a different sampled guitar under the same GM name"
+        },
+        {
+          "section": "song",
+          "why": "player one: brightness .85, space .35, position -.3, articulation .45 (legato), humanize 8 ms / .08 per phrase, accents on the beat"
+        },
+        {
+          "section": "song",
+          "why": "player two: brightness .6, space .55, position .35, articulation .65 (a punchier attack), humanize 22 ms / .18 per bar, accents off the beat (V2 '.75 1 .8 .95 ...')"
+        },
+        {
+          "section": "raw2",
+          "layer": "position",
+          "why": "-.35>-.12: the picking just left of centre so the two players have the sides"
+        },
+        {
+          "section": "solo/solob,",
+          "why": "solo4/solo4b, solo5/solo5b the overlaps: player two enters under the last bar (two bars in the fifth) with a run into its first note, player one hangs a bar (two, the high root tremolo then held, in the fifth) over the answer"
+        },
+        {
+          "section": "song",
+          "why": "player two postgain 1.8: the LK font measured 5 dB under the first (8 dB under the mix where player one sits 3); level tops at 2, postgain is superdough's last gain; after it both players sit 3-4 dB under their mixes"
+        }
+      ]
     }
   ]
 }
