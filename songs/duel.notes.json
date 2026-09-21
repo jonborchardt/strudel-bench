@@ -80,6 +80,25 @@
           "why": "CODA>CODA2: player two no longer doubles the coda line under player one's thirds (the hemiola ran in parallel thirds and the double-stop bar stacked four notes); it plays the hemiola's accents as a 3-against-4 pulse on the root, the 3+2+3 bar as single notes, held chord tones under the rising sequence, and the same landing on the root"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "finish the mixing pass: measure the sections not yet measured",
+      "changes": [
+        {
+          "section": "song",
+          "why": "measured intro, verse, break, pickup, solo2b, solo3b, solo4b: all mix-lint clean; the two guitars' masking in verse, break and pickup (.3 in every band) is the harmonized hook itself, the same rhythm in thirds, not a collision"
+        },
+        {
+          "section": "verse",
+          "layer": "melody2",
+          "why": "level 1.2>.8, break.melody2 1.1>.9, pickup.melody2 1.6>1.2: the harmony sat within a dB of the lead; now 4 dB under in the verse, 2.4 in the pickup"
+        },
+        {
+          "section": "pickup",
+          "why": "the mix lint's 'melody dominates' stands: two guitars alone and the lead is most of what is heard, which is the point of the pickup"
+        }
+      ]
     }
   ]
 }
