@@ -69,6 +69,17 @@
           "why": "player two postgain 1.8: the LK font measured 5 dB under the first (8 dB under the mix where player one sits 3); level tops at 2, postgain is superdough's last gain; after it both players sit 3-4 dB under their mixes"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "in solo6b the notes get too silly: player two's coda part; player one's coda3 is fine",
+      "changes": [
+        {
+          "section": "solo6b",
+          "layer": "melody2",
+          "why": "CODA>CODA2: player two no longer doubles the coda line under player one's thirds (the hemiola ran in parallel thirds and the double-stop bar stacked four notes); it plays the hemiola's accents as a 3-against-4 pulse on the root, the 3+2+3 bar as single notes, held chord tones under the rising sequence, and the same landing on the root"
+        }
+      ]
     }
   ]
 }

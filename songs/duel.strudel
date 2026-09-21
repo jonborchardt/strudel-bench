@@ -3,7 +3,7 @@
 // preset :5, the LK steel: a different sampled guitar) is looser, warmer, roomier, punchier in the attack, accents off the
 // beat, right of centre. Player one picks the chords and plays the solos as in porch; player two plays alongside in the
 // intro, verse, break, pickup and outro, and answers every solo with its own in the b sections: solo → solob, ... The last
-// pair ends the duel together, both on the coda's line in thirds. In the first, fourth and fifth exchanges the players step on
+// pair ends the duel together, player one on the coda's line a third up, player two pulsing and holding under it. In the first, fourth and fifth exchanges the players step on
 // each other: the next one starts under the last bar or two, and the first hangs over into the answer.
 // The picking and the bass are raw parts (plain note().s()) so nothing puts a synth filter or attack on a plucked string.
 const played = { timingMs: 12, velocity: .1, correlation: 'phrase' };
@@ -28,6 +28,8 @@ const LIFT = 'i IV bVI VII';
 // the coda's line (solo6), and the same line a third above for player one in the finale
 const CODA = '[[0 2 4 0] [2 4 0 2] [4 0 2 4] [7 6 4 2]] [[4,6]@3 [2,4]@2 [0,2]@3 ~ [4,6] [2,4]@2 [4,6]@2 [6,8]@2] [[0 2 4 ~] [2 4 5 ~] [4 5 7 9] [11 9 7 5]] [[9 7 5 4] [2 1 ~ 1] [1@3 2] [4 8@3]]';
 const CODA3 = '[[2 4 6 2] [4 6 2 4] [6 2 4 6] [9 8 6 4]] [[6,8]@3 [4,6]@2 [2,4]@3 ~ [6,8] [4,6]@2 [6,8]@2 [8,10]@2] [[2 4 6 ~] [4 6 7 ~] [6 7 9 11] [13 11 9 7]] [[11 9 7 6] [4 3 ~ 3] [3@3 4] [6 10@3]]';
+// player two under it in the finale: the hemiola's accents alone (a 3-against-4 pulse on the root), the 3+2+3 bar as single notes, held chord tones under the sequence, the same landing
+const CODA2 = '[[0 ~ ~ 0] [~ ~ 0 ~] [~ 0 ~ ~] [7 6 4 2]] [4@3 2@2 0@3 ~ 4 2@2 4@2 6@2] [0@3 ~ 4@3 ~] [[~ 7 ~ 4] [2 1 ~ 1] 1 8]';
 
 song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8', visual: { composition: 'overlay', worlds: ['ink', 'signal'] }, packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
   section('intro', 4, { role: 'establish', progression: 'i IV i VII',
@@ -158,8 +160,8 @@ song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8', visual: { compositi
     drums:  { ...quiet, density: .85, level: .36, variation: .5, fill: 2 },
     raw:    bass(ARP),
     raw2:   pick([Em, A, C, D].join(' ')),
-    // the duel ends together: player two takes the coda's line, player one the same line a third above
-    melody2: { ...second, phrase: 4, follow: true, level: 1.9, velocity: '.95 1 .9 1', notes: CODA },
+    // the duel ends together: player one takes the coda's line a third above, player two the pulse and the held tones under it
+    melody2: { ...second, phrase: 4, follow: true, level: 1.9, velocity: '.95 1 .9 1', notes: CODA2 },
     melody:  { ...lead, phrase: 4, follow: true, brightness: .9, level: 1.9, velocity: '.95 1 .9 1', notes: CODA3 },
   }),
   section('outro', 4, { role: 'release', progression: 'i IV i i',
