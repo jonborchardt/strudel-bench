@@ -194,8 +194,13 @@ strongest claim.
   order: `width` under .8 on any pad or kit at .8+ (jux plays a doubled copy of every voice), `aggression`/`weight`
   at .5 on the part with the most hits (no worklet per hit), `articulation` above .5 on a kit or pad of long samples
   (clips each hit to its step), a shorter release (`articulation` up), fewer chord tones (pad `density` down), one
-  pad fewer. The count is a model: when a section still scratches, trace it (a headless page, pinned and playing,
-  `browser.startTracing` on the webaudio category; the render callback's mean over 2.67 ms is the thread's share). A distorted part also
+  pad fewer. The count is a model, and an average: when a section cracks, scratches or drops hits, trace it:
+  `npm run trace -- songs/x.strudel <section>` (a headless page, pinned and playing; prints the audio thread's busy
+  share, late quanta, dropouts and any trigger errors; runs vary 5-10 points, so compare variants in interleaved
+  pairs). Under 45% is safe on a laptop, 65% cracks. The layers never write a `distort`/`shape` under .1
+  (`WORKLET_MIN`), so a kit at weight .65 or a part at aggression .55 costs no worklet: grit under that is free to
+  write and free to remove. A `supersaw` note is its `unison` voices (5 in the `wide` patch), a `wt_*` note and a
+  `compressor` one more each; a `duck` gives the part a private orbit and its own convolver (4-7 points per section). A distorted part also
   ignores its `level` for peaks: superdough distorts after the gain and the distortion outputs tanh clamped to full
   scale, so the mix lint's "no headroom" on such a part, or a whole song running into the output wall, is fixed by
   `postgain` (the gain after the distortion, `songs/machine.strudel`: kit .4, bass .5) or less distortion, never by level.

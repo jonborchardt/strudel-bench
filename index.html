@@ -527,6 +527,10 @@
     $('err').textContent = '';
     const wasPlaying = playing;
     const src = code.text;
+    // the worklet module (distort, shape, supersaw, ...) loads on the first click; the scheduler used to start before it landed,
+    // so the first hits carrying one threw "not defined in AudioWorkletGlobalScope" in the trigger and were dropped (4 hits on
+    // every first Play, traced 2026-09-20). initAudio resolves once the module is in; after the first time it is a no-op.
+    await strudel.initAudio();
     const pat = await playCode(ready, src);
     songPat = pat; evaluated = src; playing = true;
     setSections(pat);

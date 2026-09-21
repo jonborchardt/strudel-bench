@@ -197,6 +197,27 @@
           "why": "textures: stabs and grind lose .coarse() (a worklet this page's bundle never defines: they had been silent) and distort .6/.5; drone .75>.5, scream .9>.6, squeals .7>.5"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "parts of chorus3 still break (2 spots)",
+      "changes": [
+        {
+          "section": "chorus*",
+          "layer": "pad",
+          "why": "aggression .8>.5 the pad was 16 of chorus3's 47 nodes a step: eight overlapping chord tones each with a distortion worklet; no worklet on the busiest part"
+        },
+        {
+          "section": "chorus*",
+          "layer": "pad",
+          "why": "density .9>.7 fewer chord tones sounding at once; articulation .2>.4 a shorter release so chords do not pile up"
+        },
+        {
+          "section": "*",
+          "layer": "drums",
+          "why": "weight .85>.5 no shape worklet on every kit hit; the gain it gave was x1.08"
+        }
+      ]
     }
   ],
   "prompt": "Filthy mechanical industrial rock at 120 BPM on one E minor chord, corroding textures stacked outside the axes"

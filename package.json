@@ -23,6 +23,7 @@
     "lint": "node scripts/lint.mjs",
     "measure": "node scripts/measure.mjs",
     "headless": "node scripts/headless.mjs",
+    "trace": "node scripts/trace.mjs",
     "form": "node gen/form.mjs",
     "ir": "node scripts/ir.mjs"
   },
