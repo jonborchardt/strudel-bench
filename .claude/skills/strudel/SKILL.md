@@ -40,7 +40,7 @@ axes, what each does per layer, and the descriptor words.
 ## Material
 
 Descriptors never touch material. To change a sound, level, fill, arp or meter, edit the literal by hand
-(`sound`, `notes`, `level`, `sounds`, `template`, `rhythm`, `fill` (`true`/`false` or a bar count `n`; the integer
+(`sound`, `notes`, `level`, `postgain` (the gain after a part's distortion, the only level a saturated part answers to), `sounds`, `template`, `rhythm`, `fill` (`true`/`false` or a bar count `n`; the integer
 form replaces the automatic climax-end roll rather than adding to it), `arp`, `follow`,
 `phrase`, `riser`, `impact`, `kit`, `meter`, `bpm`, `begin`, `end`, `bars`, `slices`, `pattern`, `stretch`, `transpose`,
 `patch`, `duck`, `duckDepth`, `duckAttack`, `position` (-1..1, where the part sits), `velocity` (a mini string of
@@ -196,8 +196,9 @@ strongest claim.
   (clips each hit to its step), a shorter release (`articulation` up), fewer chord tones (pad `density` down), one
   pad fewer. The count is a model: when a section still scratches, trace it (a headless page, pinned and playing,
   `browser.startTracing` on the webaudio category; the render callback's mean over 2.67 ms is the thread's share). A distorted part also
-  ignores its `level` for peaks: superdough distorts after the gain and the output saturates at full scale, so the
-  mix lint's "no headroom" on such a part is fixed by less distortion, not by level.
+  ignores its `level` for peaks: superdough distorts after the gain and the distortion outputs tanh clamped to full
+  scale, so the mix lint's "no headroom" on such a part, or a whole song running into the output wall, is fixed by
+  `postgain` (the gain after the distortion, `songs/machine.strudel`: kit .4, bass .5) or less distortion, never by level.
 - A song edit needs `npm run check` only. The moment the fix reaches `lib/`, `scripts/` or `web/`, run `npm test`
   and fix what it turns red before reporting — including the golden fixtures, which are read (did only the
   fixtures you expected move?) and never blind-regenerated.

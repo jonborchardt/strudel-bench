@@ -102,6 +102,36 @@
           "why": "this section ran ~46 voices at once with worklets and textures counted (the check read 22 before it counted them), the audio thread at 60-70% with the slowest callbacks over their deadline; now ~28, measured 48-57% busy"
         }
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "ask": "machine seems to clip: run it through the mix to keep it from clipping",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "drums",
+          "why": "postgain 1>.4 the kit distorts (aggression) and superdough's distortion outputs tanh clamped to full scale whatever level fed it; postgain is the gain after it, so the kit's peak finally moves"
+        },
+        {
+          "section": "song",
+          "layer": "bass",
+          "why": "postgain 1>.5 same: the bass distorts and shapes, level never moved its peak"
+        },
+        {
+          "section": "song",
+          "layer": "pad",
+          "why": "postgain 1>.6 the sub pad distorts too; down with the rest"
+        },
+        {
+          "section": "song",
+          "layer": "melody",
+          "why": "postgain 1>.8 a smaller cut keeps the hook foreground as the rest comes down"
+        },
+        {
+          "section": "song",
+          "why": "textures: drone postgain .5, stabs/grind/scream .6, bursts/squeals/breaths .7; the drone alone was a continuous saturated saw"
+        }
+      ]
     }
   ],
   "prompt": "Filthy mechanical industrial rock at 120 BPM on one E minor chord, corroding textures stacked outside the axes"
