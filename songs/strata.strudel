@@ -87,7 +87,8 @@ const ROOM = { ir: 'room', size: .9 };
 const STONE = { ir: 'hall', size: 3.2, damping: 3000 };
 const AIR = { ir: 'hall', size: 3.2, damping: 7000 };
 
-song({ bpm: 76, key: 'D:minor', seed: 19, kit: 'RolandTR808', packs: ['rooms'], room: ROOM }, [
+song({ bpm: 76, key: 'D:minor', seed: 19, kit: 'RolandTR808', packs: ['rooms'], room: ROOM,
+  visual: { composition: 'overlay' } }, [ // the stage: the score's own pick with its runner-up breathing over it every eight bars
   // ---- I wood (D aeolian): the fragment, a hand drum, a walk ----
   section('dust', 8, { role: 'establish', progression: 'i',
     melody: { ...kalimba, notes: L0, density: .5, space: .6, level: 2 },
