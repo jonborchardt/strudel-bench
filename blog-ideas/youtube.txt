@@ -1,4 +1,4 @@
-YOUTUBE DETAILS — six songs, ready to paste.
+YOUTUBE DETAILS — seven songs, ready to paste.
 
 Each block below has TITLE, DESCRIPTION, TAGS and HASHTAGS. Everything between the DESCRIPTION line and the next
 divider is one paste: the blurb is already appended, with the song name filled in. Paragraphs are single long lines
@@ -217,8 +217,7 @@ Chapters
 3:08 Coda, both players
 3:23 Outro
 
-Play and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. Direct link to this track:
-https://jonborchardt.github.io/strudel-bench/#duel.strudel
+Play and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. 
 
 Every song here is a text file. This one is songs/duel.strudel in the repo, along with the harness that plays it:
 https://github.com/jonborchardt/strudel-bench
@@ -284,6 +283,54 @@ HASHTAGS
 
 
 ================================================================================
+7. BLACK-ICE
+================================================================================
+
+TITLE
+black-ice — dark 90s club techno for a 1995 hacker movie, 132 BPM
+
+DESCRIPTION
+Mid-90s club techno: dark, hypnotic and mechanical, 132 BPM in A minor, written for the soundtrack of a 1995 cyberpunk hacker movie that never existed. A 909 groove, a rolling analog bass, a resonant five-note sequence, and the air and voices of Nine Inch Nails recordings.
+
+Six ideas, and nothing new after the first minute. The kick, the bass ostinato, the motif, a high glass sequence, the air and the voice are arranged rather than added to: filters open and close over whole sections, parts drop out and return, the drums thin and come back. The motif never follows the one chord change (A minor to F to G), so it stays a machine while the bass moves under it. The air is sampled: held strings and a drone from Demon Seed, a dub echo and three wordless screams from Ghosts 38, each fading in under the parts rather than over them.
+
+Written as text, mixed by measurement, rendered in the browser.
+
+Chapters
+0:00 Kick and hat
+0:15 The bass arrives
+0:29 The groove whole
+0:44 The first voice
+0:58 Break — no kick
+1:13 Payoff
+1:56 Variation
+2:11 Second break
+2:40 Peak — everything at once
+3:24 Out
+
+Play and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install.
+
+Every song here is a text file. This one is songs/black-ice.strudel in the repo, along with the harness that plays it:
+https://github.com/jonborchardt/strudel-bench
+
+strudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like "darker and more spacious" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, "always shippable, always improving":
+https://jonborchardt.github.io/blog/
+
+The video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.
+
+Built on Strudel, the JavaScript port of TidalCycles: https://strudel.cc
+Samples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/
+The strings, drone, echo and voices are sampled from Nine Inch Nails' multitracks of Demon Seed (The Slip) and 38 Ghosts (Ghosts I-IV), released under CC BY-NC-SA 3.0, and this track is shared under the same license:
+https://creativecommons.org/licenses/by-nc-sa/3.0/
+
+TAGS
+techno, 90s techno, progressive house, dark techno, hypnotic techno, cyberpunk, hacker movie, soundtrack, 909, analog synth, club music, A minor, nine inch nails, ghosts i-iv, sampling, generative music, live coding, strudel, tidalcycles, algorave, creative coding, music video
+
+HASHTAGS
+#techno #cyberpunk #livecoding
+
+
+================================================================================
 WHAT ELSE TO FILL IN
 ================================================================================
 
@@ -292,16 +339,19 @@ Links clip, and that is YouTube, not you. YouTube shows only about the first 41 
 If you want links that display in full, the address itself has to get shorter. "https://jonborchardt.github.io/strudel-bench/" is already 45 characters before the song name. Two ways out: a short custom domain, or a repo named jonborchardt.github.io (a GitHub user site, which you do not have yet, since the blog is a project page) holding one-line redirect pages at /s/<song>. That gives "https://jonborchardt.github.io/s/strata" at 39 characters, which displays whole. Ask and I will write the redirect files.
 
 Do not paste the YouTube channel URL into a description. YouTube swallows it and renders a channel chip, which is why the last line came out as "/ @jonathanborchardt". The channel is already linked under the video, so the line is gone.
-Playlist. Put all six in one, something like "strudel-bench: songs written as text". Playlists are indexed separately and carry viewers from one track to the next.
+Playlist. Put all seven in one, something like "strudel-bench: songs written as text". Playlists are indexed separately and carry viewers from one track to the next.
 
-Thumbnail. A still from the video's own world, with the song name in large type. They read as a set if the type and its position stay identical across all six.
+Thumbnail. A still from the video's own world, with the song name in large type. They read as a set if the type and its position stay identical across all seven.
 
 Pinned comment. One line plus the play-it-yourself link. The description link sits below the fold; a pinned comment does not.
 
 Category and license. Music. Standard YouTube license is the safer default: the samples are not yours to relicense, and the credit line in the description covers them.
 
+black-ice is different on two counts. Its Nine Inch Nails samples are CC BY-NC-SA 3.0: keep the attribution line in the description, and do not monetize that video, since NonCommercial rules out ads on it. And it is not on the site yet: its pack (samples/user/black-ice-cuts) says deploy: false, so the Pages build leaves the song out, which is why its description has no direct link. Set deploy to true in that pack.json (the license allows it, and the attribution file ships with it), then add the link line back:
+https://jonborchardt.github.io/strudel-bench/#black-ice.strudel
+
 End screen. Last 10 seconds, pointing at the next song and the playlist. Every one of these ends quietly, which leaves room for it.
 
-Shorts. Each song has one obvious 30-second moment: strata's whole at 12:37, arrival's threshold at 2:33, machine's chorus 3 at 1:44, ascent's orbit at 2:57, duel's fifth exchange at 2:53, neon's second drop at 1:52. A vertical crop of the generated video with the same title works as a trailer for the full track.
+Shorts. Each song has one obvious 30-second moment: strata's whole at 12:37, arrival's threshold at 2:33, machine's chorus 3 at 1:44, ascent's orbit at 2:57, duel's fifth exchange at 2:53, neon's second drop at 1:52, black-ice's peak at 2:40. A vertical crop of the generated video with the same title works as a trailer for the full track.
 
-Consistent naming. Lowercase song name, a dash, then the hook. It makes the channel read as one body of work rather than six unrelated uploads.
+Consistent naming. Lowercase song name, a dash, then the hook. It makes the channel read as one body of work rather than seven unrelated uploads.

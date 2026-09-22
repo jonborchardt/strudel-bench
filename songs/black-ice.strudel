@@ -126,7 +126,7 @@ song({ cps: 132 / 240, key: 'A:minor', seed: 95, kit: 'RolandTR909', packs: ['bl
     sample: drone,
     raw:    { ...V, pattern: cries("<0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1>") },
   }),
-  // 1:57 variation: clap and open hat out, the motif an octave up with notes missing, the voice chopped throughout
+  // 1:56 variation: clap and open hat out, the motif an octave up with notes missing, the voice chopped throughout
   section('variation', 8, { role: 'develop', progression: 'i',
     drums:  { ...kick, density: .5 },
     perc:   hats,
@@ -140,7 +140,7 @@ song({ cps: 132 / 240, key: 'A:minor', seed: 95, kit: 'RolandTR909', packs: ['bl
     // stereo field, two bars each
     raw2:   { ...V, level: .35, pattern: chop("<1 0>").lpf(sine.range(700, 2200).slow(2)).pan(sine.range(.15, .85).slow(2)) },
   }),
-  // 2:12 the second break: pad, strings, the "ah" a fifth up, a fragment of the motif; the kick comes back through a
+  // 2:11 the second break: pad, strings, the "ah" a fifth up, a fragment of the motif; the kick comes back through a
   // closed filter and the tick builds, the "ah" backwards again into the peak
   section('break2', 16, { role: 'release', progression: 'i',
     drums:  { ...kick, density: .5, brightness: ramp(.02, .45), level: .25 },   // measured as the loudest part of the break at .45
@@ -152,7 +152,7 @@ song({ cps: 132 / 240, key: 'A:minor', seed: 95, kit: 'RolandTR909', packs: ['bl
     raw3:   { level: .6, space: .5, pattern: swell("<0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0>") },
     fx:     { riser: 4 },
   }),
-  // 2:41 the peak: every object running at once, nothing new; the voice at the ends of phrases
+  // 2:40 the peak: every object running at once, nothing new; the voice at the ends of phrases
   section('peak', 24, { role: 'climax', progression: 'i@4 VI@2 VII@2',
     drums:  { ...kick, density: .9, variation: .3 },
     perc:   hats,
