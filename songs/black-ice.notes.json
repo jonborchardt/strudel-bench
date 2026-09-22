@@ -1,0 +1,222 @@
+{
+  "prompt": "radio-quality mid-90s techno / progressive house, 132 bpm A minor, ~5:49, six objects arranged by filter, mute and density; NIN atmosphere and wordless vocals from the sound store as colour, never the lead",
+  "requests": [
+    {
+      "date": "2026-09-22",
+      "ask": "more ambient NIN sounds, vocals sparingly and always accompanied, not the main attraction; a 1994-96 club techno track from six core objects",
+      "changes": [
+        {
+          "section": "song",
+          "why": "packs black-ice-cuts: Demon Seed strings (A3) and E drone, Ghosts 38 dub echo, three wordless Ghosts 38 vocal takes; loops written as bars 3 and 6 since both source songs are 6/4 at 132"
+        },
+        {
+          "section": "song",
+          "why": "melody motif '0 ~ ~ 7 ~ ~ 4 ~ ~ 2 ~ ~ 7 ~ 4 ~' five notes on a dotted-eighth grid, never following the chords; the filter ramps and wobbles over 16-bar sections"
+        },
+        {
+          "section": "song",
+          "why": "bass notes two-bar rolling ostinato resting on every kick, root and fifth with an octave pop, ducked under the kick"
+        },
+        {
+          "section": "peak",
+          "why": "mix kit .55>.4, bass .6>.75, motif .5>.85, glass .35>.9/1, drone 1.4>1, echo .55>.4, strings .6>.4, pad .4>.35: measure had the kit 1.6 dB under the mix, the motif 16 down, the glass 27.6 down, the air masking itself; now kit -2.9, bass -7.2, motif -10, glass -18, air -15..-18"
+        },
+        {
+          "section": "break",
+          "why": "voice ah level 1.1>.55, swell 1>.6, tick .35>.15: the held ah measured 4.4 dB under the mix, the loudest thing in the break; now the motif and strings carry it at -5.5 and the voice sits at -7.9 under them"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "make the first 5 sections half as long",
+      "changes": [
+        {
+          "section": "intro,bassline,groove,first-voice,break",
+          "why": "cycles 16>8: the build to the payoff halved, 1:13 instead of 2:25; the song is now 152 bars, about 4:36"
+        },
+        {
+          "section": "first-voice",
+          "why": "voice: breath moved to the end of bar 4, the ah to bar 5 (were bars 8 and 9 of 16)"
+        },
+        {
+          "section": "break",
+          "why": "voice: breath to bar 4, the reversed ah swell to bar 5 so it still ends into the payoff (were bars 8 and 13 of 16)"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "make all 4 outs 2 bars each",
+      "changes": [
+        {
+          "section": "out1,out2,out3,out4",
+          "why": "cycles 8>2: the reduction takes 8 bars instead of 32; the song is now 128 bars, about 3:53"
+        },
+        {
+          "section": "out4",
+          "why": "sweep 4>2: the closing filter sweep spans the whole two-bar section"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "raw and raw2 (the screams) need to be way less abrupt, maybe longer, start quiet",
+      "changes": [
+        {
+          "section": "song",
+          "why": "voice: the three Ghosts 38 takes are screams, not breaths; every one now fades in instead of starting hard"
+        },
+        {
+          "section": "song",
+          "why": "raw cry: attack .7 s, speed .5 (about 1.4 s, an octave down), lpf 3 kHz, echo feedback .45>.55, moved to beat 3 so it rises into the next bar; level 1.1>.8"
+        },
+        {
+          "section": "song",
+          "why": "raw2 held cry: attack 1.5 s, clip 3 and release 2.5 s so it swells in and fades out over its whole length instead of cutting"
+        },
+        {
+          "section": "variation",
+          "why": "raw2 chop: slices attack .08 release .3, lpf 2.5 kHz, level .9>.6"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "first-voice remove raw keep raw2",
+      "changes": [
+        {
+          "section": "first-voice",
+          "why": "raw removed: the short cry is gone from the first vocal section; the held cry on bar five is its only voice"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "break remove raw3",
+      "changes": [
+        {
+          "section": "break",
+          "why": "raw3 removed: no reversed swell into the payoff; the riser alone leads into it"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "variation raw2 needs to be quieter or wobble or something",
+      "changes": [
+        {
+          "section": "variation",
+          "why": "raw2 chop level .6>.35, lpf sine 700..2200 Hz over two bars, pan sine .15..85 over two bars: quieter and moving instead of stabbing in one place"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "peak raw needs quieter or something",
+      "changes": [
+        {
+          "section": "peak",
+          "why": "raw cry level .8>.45, twice instead of three times (bars 8 and 24), lpf sine 800..2400 Hz over four bars: under the parts instead of over them"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "drums mess up 2 s in; bass quietly at the end of the intro; break remove raw; variation raw2 throughout",
+      "changes": [
+        {
+          "section": "song",
+          "why": "perc2 rim rhythm .xxx>.x.x (e and a only), timing drift 6>3 ms: its middle sixteenth sat on the hat's offbeat and flammed against it as the rim faded in, about bar two (the trace showed no dropouts, 9% busy)"
+        },
+        {
+          "section": "intro",
+          "why": "bass added: level .45, brightness ramp 0>.22, so the line is heard only toward the end of the intro"
+        },
+        {
+          "section": "break",
+          "why": "raw removed: no short cry in the first break"
+        },
+        {
+          "section": "variation",
+          "why": "raw2 chop through all sixteen bars instead of bars seven and eight"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "variation raw2 less often",
+      "changes": [
+        {
+          "section": "variation",
+          "why": "raw2 chop every other bar instead of every bar: 2.5 hits a bar on average instead of 5"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "make variation 8 bars",
+      "changes": [
+        {
+          "section": "variation",
+          "why": "cycles 16>8, its cry moved from bar 16 to bar 8 so it still closes the section; the song is now 120 bars, about 3:38"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "out 1 2 3 4 is too much, just have 2 of them, make it sound right",
+      "changes": [
+        {
+          "section": "out1",
+          "axis": "out4",
+          "why": "(2 bars each) > out1, out2 (4 bars each): out1 keeps the groove, bass and motif with the motif's filter closing .55>.08, the open hat and drone gone; out2 is kick, hats and rim with the bass closing .3>0 and a two-bar sweep to the end; still 8 bars, 120 in all"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "do a final mix; visuals loom with an occasional overlay (rave, not signal); keep the pack to what the song uses",
+      "changes": [
+        {
+          "section": "intro",
+          "why": "raw noise gain .035>.45: measured 46.7 dB under the mix, now 23.7"
+        },
+        {
+          "section": "intro",
+          "why": "perc2 rim level .4>.25: it sat above the hats"
+        },
+        {
+          "section": "break",
+          "why": "raw2 level .55>.35: the held cry measured level with the motif and strings (-6 dB), now -9.3 under them"
+        },
+        {
+          "section": "break2",
+          "why": "drums level .45>.25: the filtered kick was the loudest part of the break (-1.7), now -4 and the strings, pad and motif carry it"
+        },
+        {
+          "section": "song",
+          "why": "visual overlay loom + rave: loom full frame, rave breathing in every eight bars, strongest in the loud sections"
+        },
+        {
+          "section": "song",
+          "why": "mix whole render: rms .126 (-18 dBFS), peak .972 on kick transients, no clipped samples; every section's mix lint clean"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "ask": "make the overlay less often; commit when done",
+      "changes": [
+        {
+          "section": "song",
+          "why": "visual every 32 (new visual.every in lib/song.mjs, lib/visual.mjs and web/visual/director.mjs): rave visits over loom for eight bars once every thirty-two (intro, first break, variation, the start of the peak) instead of every eight"
+        },
+        {
+          "section": "song",
+          "why": "room size 1.1>.9: the room impulse is 0.9 s, so a longer size asked for a tail it does not have (test/check caught it)"
+        }
+      ]
+    }
+  ]
+}

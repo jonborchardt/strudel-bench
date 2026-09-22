@@ -1,0 +1,25 @@
+{
+ "deploy": false,
+ "license": "CC-BY-NC-SA-3.0",
+ "source": "Nine Inch Nails - Ghosts I-IV, The Slip multitracks (38 Ghosts, Demon Seed), https://www.nin.com/; cut by strudle-pack",
+ "samples": {
+  "demon_seed_strings_l2_003": {
+   "bars": 2
+  },
+  "demon_seed_tone_l4_001": {
+   "bars": 4
+  },
+  "38_ghosts_space_echo_lo_l4_001": {
+   "bars": 4
+  },
+  "38_ghosts_tr_vox3_hit_002": {
+   "bars": 0.266
+  },
+  "38_ghosts_tr_vox2_hit_001": {
+   "bars": 2.099
+  },
+  "38_ghosts_tr_vox1_hit_001": {
+   "bars": 0.599
+  }
+ }
+}

@@ -61,6 +61,7 @@ export const SCHEMA = {
     visual: { type: 'enum', values: Object.keys(VISUAL.worlds), title: 'the world the stage plays for this song (or { world, seed }); unwritten, the score picks one by mood and seed' },
     world: { type: 'enum', values: Object.keys(VISUAL.worlds), title: 'the world, inside visual: { world, seed }' },
     composition: { type: 'enum', values: Object.keys(VISUAL.compositions), title: "the director's preset, inside visual: { composition, worlds }: how several worlds share the stage over the song" },
+    every: { type: 'number', min: 8, max: 64, step: 8, title: "bars between the second world's visits, inside visual: { composition, worlds, every }; unwritten, every eight" },
     dropout: int(0, 'bars of silence (all but fx) before the section ends'),
     sweep: int(0, 'bars of low-pass sweep down (all but fx) before the section ends'),
     kit: { type: 'enum', values: () => host.kits(), title: 'drum machine bank' },
