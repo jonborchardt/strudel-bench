@@ -39,7 +39,10 @@
 // guitar, bass, vibraphone and pad still stand on their own.
 //
 // The fragments are one to four words each. None is used to say a sentence: they are syllables placed for
-// pitch and attack, the way the chopped part treats them openly.
+// pitch and attack.
+//
+// Under them runs the mumble (the `raw5` part of each section): the same voice repeating what it just said,
+// quietly, off the beat, in the bars the lead leaves empty. One const, MUMBLE, removes all of it.
 
 // clip n of the record, in order. 0 is a bar with no voice.
 const P = (n) => 'lights_in_the_sky_voc_ph_' + String(n).padStart(3, '0');
@@ -93,11 +96,50 @@ const slot = (x, f) => (Array.isArray(x) ? '[' + f(x[0], .75) + '@3 ' + f(x[1], 
   : f(x, 1));
 const one = (n) => (n ? P(n) : '~');
 const lvl = (n) => GAIN[n] || 1;
-const clp = (n, frac) => (n ? +Math.max(.05, (SECS[n] - fade(n)) / (frac * BARSEC)).toFixed(3) : 1);
+const clp = (n, frac, sp = 1) => (n ? +Math.max(.05, (SECS[n] / sp - fade(n)) / (frac * BARSEC)).toFixed(3) : 1);
 const rel = (n) => (n ? fade(n) : .1);
 const seq = (ns, f) => '<' + ns.map((x) => slot(x, f)).join(' ') + '>';
 const voice = (...ns) => s(seq(ns, one)).gain(seq(ns, lvl)).clip(seq(ns, clp)).release(seq(ns, rel))
   .attack(.01);
+
+// Each section's lead sequence, named so the mumble under it can be derived from the same list.
+const LEAD = {
+  open:   [0, 0, 0, -1, 0, 0, [2, 3], 0],
+  verse1: [0, 0, 0, 0, 4, 0, 0, [5, 6], 0, 0, 0, 0, 7, 0, 8, 9],
+  lift:   [10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 0, 0, 0, 0, 15, 0],
+  verse2: [16, 0, 17, 0, 0, 18, 0, 0, 0, 0, 19, 0, 0, [20, 21], 0, 0],
+  flood:  [22, 0, 0, [23, 24], 0, [25, 26], 0, 0, 0, [27, 28], 0, 29, 0, 30, 31, 32],
+  out:    [0, 33, 0, 0, 0, 33, 0, 0],
+};
+
+// ---- the mumble: the same voice muttering to itself in the bars the lead leaves empty ----
+//
+// MUMBLE false silences every one of them in a single edit and the song stands as it did. Each is its own
+// part (`mumble` in the section, a raw layer), so the page's mute button also takes one section's off alone.
+//
+// What it plays is never a new clip: in every empty bar it repeats whatever last sounded, said again under
+// the breath. Because it is derived from the lead's own sequence it cannot introduce a fragment the lead has
+// not reached yet, so the record's order survives adding it. It sits off the downbeat, alternating halfway
+// and three quarters through the bar, a shade lower and slower than the voice said it, and under a low-pass,
+// so it reads as muttering rather than a second statement of the line.
+const MUMBLE = true;
+const MSPEED = .88;                     // about three semitones down, and that much longer
+const under = (ns) => {
+  let last = 0;
+  return ns.map((x) => {
+    const lead = Array.isArray(x) ? x[1] : Math.abs(x);
+    if (lead) { last = lead; return 0; }
+    return last;
+  });
+};
+const mslot = (n, i, f) => (n ? (i % 2 ? '[~ ~ ~ ' + f(n, .25) + ']' : '[~ ' + f(n, .5) + ']') : '~');
+const mseq = (ns, f) => '<' + under(ns).map((n, i) => mslot(n, i, f)).join(' ') + '>';
+const mumble = (name, level = 1) => ({ level, space: .6, width: .45, position: -.22, brightness: .25,
+  pattern: !MUMBLE ? silence : s(mseq(LEAD[name], one))
+    .gain(mseq(LEAD[name], (n) => +(GAIN[n] * .3).toFixed(2)))
+    .clip(mseq(LEAD[name], (n, frac) => clp(n, frac, MSPEED)))
+    .release(mseq(LEAD[name], rel))
+    .speed(MSPEED).lpf(900).attack(.05) });
 // one of the wordless chunks, fired on the bar it falls on and left to run its 4.4 s (two bars here) out
 const wordless = (sound, mask, gain) => ({ level: 1, space: .55, width: .5, position: -.2,
   pattern: s(sound).mask(mask).gain(gain).attack(.05).release(1) });
@@ -123,9 +165,13 @@ const pick = (lvl = .8) => ({ level: lvl, space: .5, width: .55, position: -.28,
                 '[ab2 eb3 ab3 c4 eb3 ab3 c4 eb4] [bb2 f3 bb3 d4 f3 bb3 d4 f4]>')
     .s('gm_electric_guitar_clean').gain(.8) });
 
-// 4 the hook: a vibraphone over the top, question and answer across sixteen slots, moving with the chords
-const hook = { sound: 'vibraphone', register: .72, level: .9, follow: true, phrase: 2, space: .55, width: .5,
-  articulation: .5, brightness: .55, position: .18,
+// 4 the hook: a vibraphone over the top, question and answer across sixteen slots, moving with the chords.
+// It measured 9.6 dB under the mix in hold with a 1830 Hz centroid and nothing above 3 kHz: not bright in the
+// top, but sitting right in the upper mids where a vibraphone reads as piercing. Down an octave-ish
+// (register .72 -> .62, which is where verse2 already had it and verse2 never sounded shrill), darker, quieter,
+// and a little further back.
+const hook = { sound: 'vibraphone', register: .62, level: .65, follow: true, phrase: 2, space: .62, width: .5,
+  articulation: .5, brightness: .4, position: .18,
   notes: '0 ~ 2 4 ~ ~ 7 ~ ~ ~ 6 ~ 4 ~ 2 ~',
   velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };
 // the counter-line for the climax only: an octave up, on the beats the hook leaves empty
@@ -153,7 +199,8 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad:    { ...air, level: .5 },
     raw:    pick(.65),
     raw2:   bed,
-    raw3:   { ...V, level: 1, pattern: voice(0, 0, 0, -1, 0, 0, [2, 3], 0) },
+    raw3:   { ...V, level: 1, pattern: voice(...LEAD.open) },
+    raw5:   mumble('open', .7),
   }),
 
   // 0:17 verse 1, the record's first cluster: two fragments at the top, then the long hole, then two more.
@@ -164,7 +211,8 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad,
     raw:    pick(.8),
     raw2:   bed,
-    raw3:   { ...V, pattern: voice(0, 0, 0, 0, 4, 0, 0, [5, 6], 0, 0, 0, 0, 7, 0, 8, 9) },
+    raw3:   { ...V, pattern: voice(...LEAD.verse1) },
+    raw5:   mumble('verse1', 1),
   }),
 
   // 0:52 the hole in verse 1, kept as a section: no voice at all, the kit fills out and the hook arrives
@@ -188,7 +236,8 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad:    { ...pad, level: .5, brightness: .38 },
     raw:    pick(),
     raw2:   bed,
-    raw3:   { ...V, pattern: voice(10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 0, 0, 0, 0, 15, 0) },
+    raw3:   { ...V, pattern: voice(...LEAD.lift) },
+    raw5:   mumble('lift', 1),
     raw4:   wordless(W1, '<0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0>', 1.25),
   }),
 
@@ -197,11 +246,12 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   section('verse2', 16, { role: 'release', progression: 'i@2 VI VII', sweep: 2,
     drums:  { ...kit, density: .4, level: .55 },
     bass:   { ...bass, level: .7 },
-    melody: { ...hook, level: .6, register: .62 },
+    melody: { ...hook, level: .55 },
     pad,
     raw:    pick(.7),
     raw2:   bed,
-    raw3:   { ...V, level: 1.1, pattern: voice(16, 0, 17, 0, 0, 18, 0, 0, 0, 0, 19, 0, 0, [20, 21], 0, 0) },
+    raw3:   { ...V, level: 1.1, pattern: voice(...LEAD.verse2) },
+    raw5:   mumble('verse2', 1),
     raw4:   wordless(W2, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 4.5),   // the only voice in the hole, and wordless
     fx:     { riser: 4 },
   }),
@@ -218,7 +268,8 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad:    { ...pad, level: .45 },
     raw:    pick(.7),
     raw2:   bed,
-    raw3:   { ...VF, pattern: voice(22, 0, 0, [23, 24], 0, [25, 26], 0, 0, 0, [27, 28], 0, 29, 0, 30, 31, 32) },
+    raw3:   { ...VF, pattern: voice(...LEAD.flood) },
+    raw5:   mumble('flood', 1.1),
     // the chop: one 2.5 s fragment cut into eight equal pieces, each fitted to its step
     raw4:   wordless(W3, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 1.95),
     fx:     { impact: true, level: .55 },
@@ -231,6 +282,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     melody: { ...hook, level: .45, notes: '0 ~ ~ ~ ~ ~ 4 ~ ~ ~ ~ ~ 0 ~ ~ ~' },
     raw:    pick(.5),
     raw2:   bed,
-    raw3:   { ...V, level: 1.1, pattern: voice(0, 33, 0, 0, 0, 33, 0, 0) },
+    raw3:   { ...V, level: 1.1, pattern: voice(...LEAD.out) },
+    raw5:   mumble('out', .8),
   }),
 ])

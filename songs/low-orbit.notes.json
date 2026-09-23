@@ -191,6 +191,33 @@
           "why": "the first word is a pickup on the last beat of the bar before, written as a negative slot"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "melody on hold and lift and flood is too loud or shrill; then: increase the vocal density, he kind of sounds like he is mumbling so lean into that, mumble more to himself; make new parts we can easily turn off",
+      "changes": [
+        {
+          "section": "song",
+          "why": "hook register .72>.62 level .9>.65 brightness .55>.4 space .55>.62: it measured 9.6 dB under the mix in hold with an 1830 Hz centroid and nothing above 3 kHz, so it was not bright but sitting in the upper mids where a vibraphone pierces. verse2 already had it at .62 and was never the shrill one"
+        },
+        {
+          "section": "hold",
+          "layer": "melody",
+          "why": "and lift.melody and flood.melody now 12.5 and 14.2 and 15.0 dB under the mix, centroid 1066 Hz, depth about .6"
+        },
+        {
+          "section": "song",
+          "why": "added a mumble part per section (raw5): in every bar the lead leaves empty it repeats whatever last sounded, off the beat, three semitones down, under a 900 Hz low-pass"
+        },
+        {
+          "section": "song",
+          "why": "the mumble is derived from the lead's own sequence so it can only say something the lead has already reached: 0 inversions still, all 33 ascending; vocal events 37 to 79"
+        },
+        {
+          "section": "song",
+          "why": "MUMBLE = false at the top removes every mumble part in one edit, and each section's is its own part so the page's mute takes one off alone"
+        }
+      ]
     }
   ]
 }
