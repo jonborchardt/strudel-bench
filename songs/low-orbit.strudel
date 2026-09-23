@@ -172,6 +172,9 @@ const wordless = (sound, mask, gain) => ({ level: 1, space: .55, width: .5, posi
   pattern: s(sound).mask(mask).gain(gain).attack(.05).release(1) });
 
 // 1 the ground: kick on one, a rim backbeat on three, the whole kit half-time at 110
+// Every section writes its own `level` on the drums line; .75 here is only the fallback.
+// The song runs the kit about a tenth of where it started: .1 in hold, lift and flood, a little under in
+// the verses. The arc is carried by the templates (kit / kitFull / kitPeak) and density, not by level.
 const kit = { level: .75, articulation: .7, weight: .5, brightness: .45, space: .35, organicness: 0, groove: .5,
   template: { bd: 'x.......x.......', sd: '........x.......' } };
 const kitFull = { ...kit, template: { bd: 'x.....x.x.......', sd: '........x.......', hh: '..x...x...x...x.' } };
@@ -244,7 +247,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   // 0:17 verse 1, the record's first cluster: two fragments at the top, then the long hole, then two more.
   // bass and a half-time kick under it; no hook yet
   section('verse1', 16, { role: 'develop', progression: 'i@2 VI VII',
-    drums:  { ...kit, density: .4, level: .6 },
+    drums:  { ...kit, density: .4, level: .08 },
     bass:   { ...bass, level: .7, brightness: ramp(.22, .32) },
     pad,
     raw:    pick(.8),
@@ -255,7 +258,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
 
   // 0:52 the hole in verse 1, kept as a section: no voice at all, the kit fills out and the hook arrives
   section('hold', 8, { role: 'develop', progression: 'i@2 VI VII',
-    drums:  { ...kitFull, density: .7, level: .22 },        // the same halving lift got
+    drums:  { ...kitFull, density: .7, level: .1 },
     bass,
     melody: hook,
     pad,
@@ -267,7 +270,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
 
   // 1:09 the chorus shape: a fragment every other bar and a fifth higher than the verse ones
   section('lift', 16, { role: 'develop', progression: 'i@2 VI VII',
-    drums:  { ...kitFull, variation: .2, level: .28 },      // the kit was ~45% of the mix energy here
+    drums:  { ...kitFull, variation: .2, level: .1 },
     perc:   shaker,
     perc2:  { sound: 'LinnDrum_oh', rhythm: '......x.......x.', level: .3, articulation: .75, position: -.2, brightness: .55 },
     bass,
@@ -283,7 +286,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   // 1:44 verse 2: two fragments at the top, then the record's eight-bar silence, then one lead-in.
   // the kit drops to the half-time skeleton for the hole and the last two bars sweep shut
   section('verse2', 16, { role: 'release', progression: 'i@2 VI VII', sweep: 2,
-    drums:  { ...kit, density: .4, level: .55 },
+    drums:  { ...kit, density: .4, level: .075 },
     bass:   { ...bass, level: .7 },
     melody: { ...hook, level: .55 },
     pad,
@@ -299,7 +302,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   // a fragment nearly every bar, the counter-line above the hook, and one fragment chopped into eight and
   // played as an instrument so its syllables stop being words
   section('flood', 16, { role: 'climax', progression: 'i@2 VI VII',
-    drums:  { ...kitPeak, variation: .3, level: .23, fill: 2 },  // likewise, and it is the climax
+    drums:  { ...kitPeak, variation: .3, level: .1, fill: 2 },
     perc:   shaker,
     bass:   { ...bass, brightness: .38, level: .85 },
     melody: hook,

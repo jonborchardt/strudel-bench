@@ -356,6 +356,28 @@
           "why": "level .48>.22, the same halving lift got: kit against the mix -4.5>-9.0 dB, against the bass +1.0>-3.5, against the conversation bed +8.9>+4.4"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "i want to be clear, i think it works if the drums sound level is x0.1; im not sure what you are changing",
+      "changes": [
+        {
+          "section": "song",
+          "why": "the only thing changed in any of these kit passes is one number per section: the level on that section's drums line. Templates, density, variation and samples are untouched"
+        },
+        {
+          "section": "song",
+          "why": "drums level now verse1 .08, hold .1, lift .1, verse2 .075, flood .1, from .6 / .6 / .75 / .55 / .62 originally"
+        },
+        {
+          "section": "song",
+          "why": "the verses scale with the rest: left where they were, a verse kick would be six times the amplitude of a chorus kick and the verses would be the drummiest thing in the song"
+        },
+        {
+          "section": "song",
+          "why": "kit against the mix is now -19.1 in verse1, -15.9 in lift, -13.1 in flood; against the bass -14.0 / -10.4 / -8.1; the arc still rises into the climax because it is carried by the templates and density, not level"
+        }
+      ]
     }
   ]
 }
