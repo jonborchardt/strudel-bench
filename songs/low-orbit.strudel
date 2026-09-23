@@ -1,16 +1,19 @@
 // low-orbit: C minor at 110, about 3:20. A new song built around one borrowed voice.
 //
 // The voice is every one of the 33 sung fragments of Nine Inch Nails' "Lights in the Sky" (The Slip
-// multitracks, CC BY-NC-SA 3.0, cut by strudle-pack into samples/user/low-orbit-cuts), plus three
-// bar-exact chunks of the same vocal stem used as sustained texture. Nothing else is borrowed: no piano,
-// no flute, no ambience from that record. Every note under the voice is written here.
+// multitracks, CC BY-NC-SA 3.0, cut by strudle-pack into samples/user/low-orbit-cuts), plus six bar-exact
+// chunks of the same vocal stem: three held as sustained texture, and three that carry wordless voice the
+// transcript missed, placed in the gaps they fall in. Nothing else is borrowed: no piano, no flute, no
+// ambience from that record. Every note under the voice is written here.
 //
 // ORDER. The fragments are numbered by where they fall on the record, and none is ever heard before one
 // with a lower number. Repeats only echo forward inside the cluster they belong to, so a listener walks
 // the record's vocal in its own sequence:
-//   open   1 2 3                   verse1  4 5 6 | 7 8 9 | 7 8 9
-//   hold   (the held stem chunk)   lift    10 11 12 13 14 15 | 12 13 14 15
-//   verse2 16 17 18 | 19 20 21     flood   22..32 | 29 30 31 32        out  32 33 | 33
+//   open   1 [2 3]                    verse1  4 [5 6] 7 8 9
+//   hold   (the held stem chunk)      lift    10 11 12 13 14 15
+//   verse2 16 17 18 | 19 [20 21]      flood   22 [23 24] [25 26] [27 28] 29 30 31 32     out  33 | 33
+// A [pair] shares one bar. Nothing is echoed any more: each fragment is heard once, where the record puts
+// it, because an echo was the thing that made the spacing arbitrary.
 //
 // SPACING, read off the stems' markers and the phrase times:
 //   source (55 bpm, 4/4)        vocal phrases        what it does here
@@ -23,9 +26,11 @@
 //   Chorus 2  bars 42..49+      12, continuous,      flood: a fragment nearly every bar, plus one of them
 //                               spilling past 'End'  chopped into eight and played as an instrument
 //                                                    out: the one past the End marker, with its tail
-// hold is the only section with no fragments in it: it is the six-bar hole inside the record's first verse,
-// and it carries the sustained four-bar chunk of the vocal stem instead, so there is still a voice there,
-// a held one rather than words. Each chorus has its own chunk held under its fragments.
+// hold is the only section with no fragments in it. It is the record's run-up into its first chorus: 11.3 s
+// pass between the last verse fragment and the first chorus one. It carries the sustained four-bar chunk of
+// the vocal stem instead, so there is still a voice there, a held one rather than words; each chorus has its
+// own chunk held under its fragments. (The record's long verse hole, the 28 s between fragments 3 and 4, is
+// the empty run at the top of verse1, compressed to five bars.)
 //
 // So the order and the spacing are the record's; the tempo is doubled (110 = 55 felt in half-time), the key
 // is the fragments' own C minor, and the song underneath is not that song. Mute every voice part and the
@@ -38,6 +43,13 @@
 const P = (n) => 'lights_in_the_sky_voc_ph_' + String(n).padStart(3, '0');
 const L2A = 'lights_in_the_sky_voc_l2_001', L2B = 'lights_in_the_sky_voc_l2_002';
 const L4 = 'lights_in_the_sky_voc_l4_001';
+// Three one-bar chunks of the stem that carry voice no transcript caught: the phrase clips cover only 19%
+// of the stem's 231 s, and the activity detector found sound in three places whisper wrote nothing for.
+// They are wordless, and each falls inside a gap the fragments leave -- including the one at 148.4 s, which
+// is in the middle of the 34 s stretch I had been treating as the record's silence. It is not silent there.
+const W1 = 'lights_in_the_sky_voc_l1_003';   // 100.4 s, between fragments 14 and 15
+const W2 = 'lights_in_the_sky_voc_l1_004';   // 148.4 s, inside the long verse-2 gap
+const W3 = 'lights_in_the_sky_voc_l1_006';   // 192.0 s, between fragments 26 and 27
 
 // The clips come off the stem 17 dB apart: -28.5 dB rms for the loudest chorus fragment, -46 for the
 // quietest one-word verse one. A single part level cannot fix that (and tops out at +6 dB), so each clip
@@ -50,14 +62,29 @@ const GAIN = { 1: 4.2, 2: 4, 3: 12.6, 4: 2.15, 5: 4, 6: 12.55, 7: 4.25, 8: 12.7,
                22: 2.25, 23: 1.7, 24: 3, 25: 2.4, 26: 3.05, 27: 3.95, 28: 6, 29: 2, 30: 1.8,
                31: 3, 32: 2.95, 33: 5.9 };
 
-// one fragment per bar. The gain sequence runs in parallel with the same <> structure, so slot n of one is
-// slot n of the other. (single quotes and a join on purpose: Strudel's transpiler turns double quotes and
-// backticks into mini-notation before the interpolation happens)
-const voice = (...ns) => s('<' + ns.map((n) => (n ? P(n) : '~')).join(' ') + '>')
-  .gain('<' + ns.map((n) => GAIN[n] || 1).join(' ') + '>')
+// One slot is one bar. A slot is a clip number, 0 for a bar with no voice, or [n, m] for two clips sharing
+// a bar: m lands three quarters of the way through, 1.64 s behind n.
+//
+// That pair form exists because six of the 33 fragments are the tail of the one before them -- the
+// transcriber split a single sung line in two and they overlap by 0.2 s on the record. Their real gaps are
+// 1.08 to 1.94 s, all shorter than one bar here (2.18 s), so giving each its own bar pulled one line apart
+// into two events. [n, m] puts them back inside a bar. The wide gaps are the other half of the same
+// problem, and they are written as counts of empty slots at the record's own scale.
+//
+// The gain sequence runs in parallel with the same structure, so slot n of one is slot n of the other.
+// (single quotes and a join on purpose: Strudel's transpiler turns double quotes and backticks into
+// mini-notation before the interpolation happens)
+const slot = (x, f) => (Array.isArray(x) ? '[' + f(x[0]) + '@3 ' + f(x[1]) + ']' : f(x));
+const one = (n) => (n ? P(n) : '~');
+const lvl = (n) => GAIN[n] || 1;
+const voice = (...ns) => s('<' + ns.map((x) => slot(x, one)).join(' ') + '>')
+  .gain('<' + ns.map((x) => slot(x, lvl)).join(' ') + '>')
   .attack(.01).release(1.2);
 // a bar-exact chunk of the vocal stem held under the fragments: four of the record's bars are eight here
 const held = (sound, bars, level, position = 0) => ({ sound, bars, level, position, space: .6, width: .6, brightness: .45 });
+// one of the wordless chunks, fired on the bar it falls on and left to run its 4.4 s (two bars here) out
+const wordless = (sound, mask, gain) => ({ level: 1, space: .55, width: .5, position: -.2,
+  pattern: s(sound).mask(mask).gain(gain).attack(.05).release(1) });
 
 // 1 the ground: kick on one, a rim backbeat on three, the whole kit half-time at 110
 const kit = { level: .75, articulation: .7, weight: .5, brightness: .45, space: .35, organicness: 0, groove: .5,
@@ -110,7 +137,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad:    { ...air, level: .5 },
     raw:    pick(.65),
     raw2:   bed,
-    raw3:   { ...V, level: 1, pattern: voice(0, 0, 0, 0, 1, 2, 3, 0) },
+    raw3:   { ...V, level: 1, pattern: voice(0, 0, 0, 0, 1, 0, [2, 3], 0) },
   }),
 
   // 0:17 verse 1, the record's first cluster: two fragments at the top, then the long hole, then two more.
@@ -121,7 +148,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad,
     raw:    pick(.8),
     raw2:   bed,
-    raw3:   { ...V, pattern: voice(0, 0, 0, 0, 0, 4, 5, 6, 0, 7, 8, 9, 0, 7, 8, 9) },
+    raw3:   { ...V, pattern: voice(0, 0, 0, 0, 4, 0, 0, [5, 6], 0, 0, 0, 0, 7, 0, 8, 9) },
   }),
 
   // 0:52 the hole in verse 1, kept as a section: no voice at all, the kit fills out and the hook arrives
@@ -146,8 +173,9 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad:    { ...pad, level: .5, brightness: .38 },
     raw:    pick(),
     raw2:   bed,
-    raw3:   { ...V, pattern: voice(10, 0, 11, 0, 12, 13, 0, 14, 0, 15, 0, 12, 13, 0, 14, 15) },
+    raw3:   { ...V, pattern: voice(10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 0, 0, 0, 0, 15, 0) },
     sample: held(L2A, 4, .9, -.35),   // the chorus-1 stem held under its own fragments, off to the left
+    raw4:   wordless(W1, '<0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0>', 1.25),
   }),
 
   // 1:44 verse 2: two fragments at the top, then the record's eight-bar silence, then one lead-in.
@@ -159,7 +187,8 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad,
     raw:    pick(.7),
     raw2:   bed,
-    raw3:   { ...V, level: 1.1, pattern: voice(16, 17, 0, 18, 0, 0, 0, 0, 0, 0, 0, 19, 0, 20, 21, 0) },
+    raw3:   { ...V, level: 1.1, pattern: voice(16, 0, 17, 0, 0, 18, 0, 0, 0, 0, 19, 0, 0, [20, 21], 0, 0) },
+    raw4:   wordless(W2, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 3),   // the only voice in the hole, and wordless
     fx:     { riser: 4 },
   }),
 
@@ -175,7 +204,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad:    { ...pad, level: .45 },
     raw:    pick(.7),
     raw2:   bed,
-    raw3:   { ...VF, pattern: voice(22, 23, 24, 25, 26, 0, 27, 28, 29, 30, 31, 32, 29, 30, 31, 32) },
+    raw3:   { ...VF, pattern: voice(22, 0, 0, [23, 24], 0, [25, 26], 0, 0, 0, [27, 28], 0, 29, 0, 30, 31, 32) },
     // the chop: one 2.5 s fragment cut into eight equal pieces, each fitted to its step
     // the chop is clip 15, the record's longest fragment, first heard whole back in `lift`: chopping one the
     // listener already knows is a callback, and it keeps the order rule (a chop of a chorus-2 clip would have
@@ -183,6 +212,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     sample: { sound: P(15), bars: 1, slices: 8, pattern: '0 ~ 3 ~ 0 5 ~ 7', stretch: true,
               level: 2, space: .5, position: .42, brightness: .6 },
     sample2: held(L2B, 4, .9, -.35),  // the chorus-2 stem held left, opposite the chop
+    raw4:   wordless(W3, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 1.95),
     fx:     { impact: true, level: .55 },
   }),
 
@@ -193,6 +223,6 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     melody: { ...hook, level: .45, notes: '0 ~ ~ ~ ~ ~ 4 ~ ~ ~ ~ ~ 0 ~ ~ ~' },
     raw:    pick(.5),
     raw2:   bed,
-    raw3:   { ...V, level: 1.1, pattern: voice(0, 32, 33, 0, 0, 0, 33, 0) },
+    raw3:   { ...V, level: 1.1, pattern: voice(0, 33, 0, 0, 0, 33, 0, 0) },
   }),
 ])

@@ -3,6 +3,15 @@
  "license": "CC-BY-NC-SA-3.0",
  "source": "Nine Inch Nails - The Slip multitracks (Lights in the Sky), https://www.nin.com/; cut by strudel-pack",
  "samples": {
+  "lights_in_the_sky_voc_l1_003": {
+   "bars": 1
+  },
+  "lights_in_the_sky_voc_l1_004": {
+   "bars": 1
+  },
+  "lights_in_the_sky_voc_l1_006": {
+   "bars": 1
+  },
   "lights_in_the_sky_voc_l2_001": {
    "bars": 2
   },

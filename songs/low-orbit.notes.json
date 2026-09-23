@@ -85,6 +85,58 @@
           "why": "and flood.sample2 the held stem chunks panned -0.35, left, opposite the chop (the mix lint called three parts at centre a flat stage)"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "whats going on when you do 456,789... you smoosh them together?",
+      "changes": [
+        {
+          "section": "song",
+          "why": "the opposite was happening: every fragment had its own bar, 2.18 s apart, always. Six of the 33 clips are the tail of the one before (the transcriber split one sung line in two, they overlap 0.2 s on the record) with real gaps of 1.08-1.94 s, so a whole bar between them pulled one line into two events"
+        },
+        {
+          "section": "song",
+          "why": "a slot may now be [n, m], two clips sharing a bar with m 1.64 s behind n: pairs 2-3, 5-6, 20-21, 23-24, 25-26, 27-28"
+        },
+        {
+          "section": "song",
+          "why": "every placement rewritten at the record's own scale instead of one-per-bar; most consecutive gaps now land within 15 percent of the source, the exceptions being the two long silences (28 s and 35 s) compressed to about 11 s each to fit a three-minute song"
+        },
+        {
+          "section": "song",
+          "why": "all echoes dropped: each fragment is heard once, where the record puts it. The echoes were what made the spacing arbitrary in the first place"
+        },
+        {
+          "section": "lift",
+          "layer": "raw3",
+          "why": "fragment 15 moved from bar 13 to bar 15: it ends 0.1 s before fragment 16 begins on the record, and three empty bars after it stretched that seam to 8.7 s (now 4.4)"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "does this help you in any way understand the vocal clips? [waveform of the whole voc stem]",
+      "changes": [
+        {
+          "section": "song",
+          "why": "the stem waveform prompted a coverage check: the 33 phrase clips account for only 19 percent of the stem's 231 s, and the activity detector finds voice in three windows the transcript is empty for (100.4 s, 148.4 s, 192.0 s)"
+        },
+        {
+          "section": "verse2",
+          "layer": "raw4",
+          "why": "the chunk at 148.4 s sits in the middle of the 34 s stretch treated here as the record's silence; it is not silent there, so that chunk is now the voice in the hole, wordless"
+        },
+        {
+          "section": "lift",
+          "layer": "raw4",
+          "why": "the chunk at 100.4 s placed in the gap between fragments 14 and 15"
+        },
+        {
+          "section": "flood",
+          "layer": "raw4",
+          "why": "the chunk at 192.0 s placed in the gap between fragments 26 and 27"
+        }
+      ]
     }
   ]
 }
