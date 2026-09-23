@@ -78,6 +78,32 @@
           "why": "violin level 1.4>1.9 and flute 1.1>.9 - the tune measured 2 dB under its own counter-line"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "add a deep organ bass rumble / how do we get rumble without clipping?",
+      "changes": [
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "the rumble is now a stack of two sounds in one raw part: the sawtooth at d1 under a 160 Hz lowpass (measured alone centroid 68 Hz, 95% under 300) plus a vcsl pipe organ pedal on the same root under a 300 Hz lowpass for body. The organ alone was tried as a replacement and measured centroid 254 Hz with 34% under 300 and dropped the mix lowRatio .47>.29: a pedal pipe is low-mid colour, not bottom. Stacked, mix lowRatio .47>.55 and centroid 495>368 Hz"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "one raw part holding both, not two: every raw part gets a private orbit and an orbit is a convolver of the 3.2 s hall"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "compressor threshold -18 ratio 3 attack .02 release .3 on the pair, and level 1.1>.62 - at 1.1 the part measured -1.3 dB under the mix and the mix peaked .952 against the output wall; at .62 it is -2.9 dB, peak .812, clip 0.000, and the trace stays at 34% busy with no dropouts"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "clip 1.04 and release .7 on the organ because the vcsl pedal files are 12.7 s and an unclipped hit plays to the end, stacking four pedal notes on every bar"
+        }
+      ]
     }
   ]
 }

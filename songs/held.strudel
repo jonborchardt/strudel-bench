@@ -1,16 +1,27 @@
-// held: a slow chamber piece in D dorian at 65 bpm. Deep low end in three stages (a sawtooth sub down at d1 under an
-// arco contrabass under the cello), piano, violin and flute over it, and a string bed that opens in the climax.
+// held: a slow chamber piece in D dorian at 65 bpm. Deep low end in three stages (a sawtooth and a pipe organ pedal
+// together at d1, an arco contrabass at d2, the cello over them), piano, violin and flute, and a string bed in the climax.
 // The cello, violin, flute, contrabass and strings are real layers, so they have knobs, a sound pick and a notes box in
 // the mixer and they all share one reverb bus. Only the sub and the piano are raw, because both have to hold a note the
 // layers cannot: seven raw parts meant seven convolvers of a 3.2 s hall and the climax traced 59% busy with dropouts.
 const played = { timingMs: 14, velocity: .08, correlation: 'phrase' };
 const swelled = { timingMs: 22, velocity: .06, correlation: 'bar' };
-// the rumble: a sawtooth on the chord root in octave 1 (d1 is 37 Hz) held the whole bar, lowpassed to 160 Hz so the
-// fundamental and the first three harmonics (37, 73, 110, 147 Hz) come through and nothing above them does. A sine down
-// there is felt by a subwoofer and heard by nothing else; the harmonics are what a speaker actually rumbles with.
+// the rumble is two sounds in one part, an octave apart in the spectrum, so they reinforce instead of masking:
+//  - a sawtooth on the chord root at d1 (37 Hz) under a 160 Hz lowpass, which is the fundamental and its first three
+//    harmonics and nothing else. Measured alone: centroid 68 Hz, 95% of its energy under 300 Hz. This is the rumble.
+//  - a real pipe organ pedal division on the same root under a 300 Hz lowpass, for the body a filtered oscillator has
+//    none of. Measured alone at 450 Hz it came out centroid 254 Hz with only 34% under 300: a vcsl pedal pipe lives in
+//    the low mids, so it is the colour, never the bottom. Its files are 12.7 s, hence clip and release: unclipped it
+//    plays to the end and stacks four pedal notes on every bar.
+// A compressor holds the pair's peaks so the level can come up without the mix touching the output wall.
 // It is a raw part because the bass layer's hap is one grid step (0.24 s here) and a drone has to hold the bar.
 const SUB = 'd1 g1 c1 f1 d1 g1 c1 f1';
-const sub = (line, o = {}) => ({ pattern: note('<' + line + '>').s('sawtooth').lpf(160).clip(1.02), level: .85, space: .35, humanize: swelled, ...o });
+const sub = (line, o = {}) => ({
+  pattern: stack(
+    note('<' + line + '>').s('sawtooth').lpf(160).clip(1.02),
+    note('<' + line + '>').s('pipeorgan_loud_pedal').lpf(300).clip(1.04).release(.7).gain(.55),
+  ),
+  level: .62, space: .35, compressor: { threshold: -18, ratio: 3, attack: .02, release: .3 }, humanize: swelled, ...o,
+});
 // arco contrabass an octave over the sub, the attack a sawtooth has none of: a pad at one tone is the chord root held
 // with a 1.7 s release, which is what arco means, and unlike the bass layer it sustains
 const bass = { sound: 'gm_contrabass', density: .25, register: .3, weight: .8, brightness: .5, articulation: .1, space: .45, width: .5, level: 1.1, humanize: swelled };
