@@ -12,7 +12,9 @@ const swelled = { timingMs: 22, velocity: .06, correlation: 'bar' };
 //    none of. Measured alone at 450 Hz it came out centroid 254 Hz with only 34% under 300: a vcsl pedal pipe lives in
 //    the low mids, so it is the colour, never the bottom. Its files are 12.7 s, hence clip and release: unclipped it
 //    plays to the end and stacks four pedal notes on every bar.
-// A compressor holds the pair's peaks so the level can come up without the mix touching the output wall.
+// A compressor holds the pair's peaks so the level can come up without the mix touching the output wall, and the part
+// is bone dry (space 0): the raw space cell is piece(0, .5, .95), not a no-op under .5, and a 3.2 s hall on a 37 Hz drone
+// smears it into a wash with no edge to feel. Everything above the cello carries the room instead.
 // It is a raw part because the bass layer's hap is one grid step (0.24 s here) and a drone has to hold the bar.
 const SUB = 'd1 g1 c1 f1 d1 g1 c1 f1';
 const sub = (line, o = {}) => ({
@@ -20,11 +22,19 @@ const sub = (line, o = {}) => ({
     note('<' + line + '>').s('sawtooth').lpf(160).clip(1.02),
     note('<' + line + '>').s('pipeorgan_loud_pedal').lpf(300).clip(1.04).release(.7).gain(.55),
   ),
-  level: .62, space: .35, compressor: { threshold: -18, ratio: 3, attack: .02, release: .3 }, humanize: swelled, ...o,
+  level: .62, space: 0, compressor: { threshold: -18, ratio: 3, attack: .02, release: .3 }, humanize: swelled, ...o,
 });
-// arco contrabass an octave over the sub, the attack a sawtooth has none of: a pad at one tone is the chord root held
-// with a 1.7 s release, which is what arco means, and unlike the bass layer it sustains
-const bass = { sound: 'gm_contrabass', density: .25, register: .3, weight: .8, brightness: .5, articulation: .1, space: .45, width: .5, level: 1.1, humanize: swelled };
+// arco contrabass an octave over the sub, the attack a sawtooth has none of: a pad at one tone is the chord root held,
+// and unlike the bass layer it sustains. articulation .6, not .1: at .1 the pad's attack is .51 s, so every low note faded
+// in over half a second and nothing in the bottom of the song ever marked a beat. Nearly dry for the same reason.
+const bass = { sound: 'gm_contrabass', density: .25, register: .3, weight: .8, brightness: .5, articulation: .6, space: .12, width: .5, level: 1.1, humanize: swelled };
+// the thing you feel. Everything else in the bottom sustains, and a drone is heard as air, never as bass: what the body
+// reads as bass is a fast envelope at 50-100 Hz. This is the bass layer, whose hap is one grid step (0.24 s) - useless
+// for the drone, exactly a pizzicato - playing the chord root at d2 dry and short under the held arco note.
+// level 2 and weight .65 (not .8: over .7 the cell drops it an octave onto the drone), articulation .6 rather than .8 so
+// the note is not clipped to 0.12 s, and a compressor because it measured crest 15.2 - a spike with no body, 24 dB under
+// the mix. That is the one place the skill wants a compressor: a sparse part whose peaks run far over its own average.
+const pizz = { sound: 'gm_contrabass', notes: '0', density: .2, register: .5, weight: .65, brightness: .55, articulation: .6, space: 0, level: 2, compressor: { threshold: -20, ratio: 4, attack: .005, release: .25 }, humanize: swelled };
 // the cello is the voice of the low end, not a root machine: a written line in octave 3, negative degrees reaching under it
 const cello = { sound: 'gm_cello', register: .2, brightness: .55, articulation: .15, space: .5, level: 1.3, position: -.15, humanize: played };
 const violin = { sound: 'gm_violin', register: .5, brightness: .6, articulation: .15, space: .45, level: 1.5, position: .25, humanize: played };
@@ -42,43 +52,47 @@ const WARM = 'i IV VII III';
 song({ cps: .27, key: 'D:dorian', seed: 7, packs: ['rooms'], room: { ir: 'hall', size: 3.2, damping: 4500 } }, [
 
   section('open', 8, { role: 'establish', progression: WARM,
-    raw:    sub(SUB),
-    pad:    bass,
+    raw:    { ...sub(SUB) },
+    pad:    { ...bass },
+    bass:   { ...pizz },
     // the cello states the tune the violin will take over: down a step, a rest low, a held sixth, home
     melody: { ...cello, phrase: 8, notes: '[0@3 -1] -2 [1@2 3@2] [2@3 -3] [0@2 2@2] [3@3 2] 1 [-1@2 -3@2]' },
-    raw2:   G(PIANO + ' ' + PIANO),
+    raw2:   { ...G(PIANO + ' ' + PIANO) },
   }),
 
   section('lift', 8, { role: 'develop', progression: WARM,
-    raw:    sub(SUB),
-    pad:    bass,
+    raw:    { ...sub(SUB) },
+    pad:    { ...bass },
+    bass:   { ...pizz },
     melody: { ...cello, phrase: 8, notes: '[0@2 1@2] [-2@3 0] [1@4] [2@2 -1@2] [-3@3 0] [3@2 -2@2] [1@3 3] [-3@4]' },
     // the violin takes the tune: root, step up, a held fourth, a leap to the octave, and home
     melody2: { ...violin, phrase: 8, velocity: '.8 .95 .85 1 .9 1 .85 .9',
                notes: '[0@2 1 2] [3@3 ~] [1@2 3 4] 2 [4@2 ~ 7] [7@3 6] [4@2 3 2] [1@2 0@2]' },
     // the flute answers only in the bars the violin leaves open
     melody3: { ...flute, phrase: 8, notes: '~ [~@2 0@2] ~ [~@2 -1 -3] ~ [~@3 -3] ~ [2@2 1@2]' },
-    raw2:   G(PIANO2 + ' ' + PIANO2),
+    raw2:   { ...G(PIANO2 + ' ' + PIANO2) },
   }),
 
   section('hold', 8, { role: 'climax', progression: WARM,
-    raw:    sub(SUB),
-    pad:    bass,
+    raw:    { ...sub(SUB) },
+    pad:    { ...bass },
+    bass:   { ...pizz },
     melody: { ...cello, phrase: 8, level: 1.4, notes: '[0@2 2@2] [3@3 0] [1@2 -1@2] [2@4] [4@2 2@2] [3@3 -2] [-1@2 1@2] [0@4]' },
     // the tune an octave up, wider intervals, the top note held over the chord change
     melody2: { ...violin, phrase: 8, level: 1.9, velocity: '.9 1 .95 1 1 1 .95 .9',
                notes: '[7@2 9@2] [10@3 7] [8@2 10@2] [9@4] [11@3 10] [7@2 9@2] [8@2 6@2] [7@4]' },
     // the flute sits a third under the violin, then goes above it
     melody3: { ...flute, phrase: 8, level: .9, notes: '[-3@4] [-2@3 ~] [-1@2 1@2] [-3@4] [~@2 6@2] [5@3 4] [3@2 ~@2] [4@2 7@2]' },
-    pad2:   strings,
-    raw2:   G(PIANO3 + ' ' + PIANO3),
+    pad2:   { ...strings },
+    raw2:   { ...G(PIANO3 + ' ' + PIANO3) },
   }),
 
   section('rest', 4, { role: 'release', progression: 'i III VII i',
-    raw:    sub('d1 f1 c1 d1'),
-    pad:    bass,
+    raw:    { ...sub('d1 f1 c1 d1') },
+    pad:    { ...bass },
+    bass:   { ...pizz },
     // the cello has the last word: the opening phrase, slower, ending on the root
     melody: { ...cello, phrase: 4, notes: '[0@3 -1] [-3@4] [1@2 3@2] [0@4]' },
-    raw2:   G('[d2 [a2,d3,f3]@3] [f2 [c3,f3,a3]@3] [c2 [g2,c3,e3]@3] [d2 [a2,d3,f3,d4]@3]'),
+    raw2:   { ...G('[d2 [a2,d3,f3]@3] [f2 [c3,f3,a3]@3] [c2 [g2,c3,e3]@3] [d2 [a2,d3,f3,d4]@3]') },
   }),
 ])

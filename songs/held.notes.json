@@ -104,6 +104,36 @@
           "why": "clip 1.04 and release .7 on the organ because the vcsl pedal files are 12.7 s and an unclipped hit plays to the end, stacking four pedal notes on every bar"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "in the ui i only see melody in section 1 but i hear raw, pad, melody, raw2 - is the ui filtering or breaking? / the song sounds nice but i cannot feel any bass - is that a limitation of strudel?",
+      "changes": [
+        {
+          "section": "open",
+          "why": "every layer value is an object literal now ({ ...sub(SUB) } rather than sub(SUB), { ...bass } rather than bass): locate() in lib/resolve.mjs skips any section property whose value is not an ObjectExpression, so a call or a bare identifier is invisible to the Mix card. Only melody was written as a literal, which is why only melody was listed. Audio is unchanged; the check tables before and after are identical"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "space .35>0 - the raw space cell is piece(0, .5, .95), not a no-op under .5, so the 37-110 Hz drone was sitting in a 35% send to the 3.2 s hall and smearing into a wash with no edge"
+        },
+        {
+          "section": "open",
+          "layer": "pad",
+          "why": "articulation .1>.6 - at .1 the pad attack is .51 s, so every contrabass note faded in over half a second and nothing in the bottom of the song marked a beat; its tail measured .63>.36"
+        },
+        {
+          "section": "open",
+          "layer": "bass",
+          "why": "a new pizzicato contrabass on the downbeat, dry and short: what the body reads as bass is a fast envelope at 50-100 Hz, and every other low part sustains (crest 3.5-4). The bass layer's one-grid-step hap is useless for a drone and exactly a pizzicato"
+        },
+        {
+          "section": "open",
+          "layer": "bass",
+          "why": "level 1.3>2, weight .65, articulation .8>.6 and a compressor (threshold -20, ratio 4): it first measured crest 15.2 at -23.9 dB under the mix, a spike with no body. Now -12.6 dB, crest 10.9, depth .47, the closest part in the mix"
+        }
+      ]
     }
   ]
 }
