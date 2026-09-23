@@ -86,6 +86,22 @@
           "why": "visual combo, single"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "bass solo is better but the walk up in progression sounds lazy",
+      "changes": [
+        {
+          "section": "turn",
+          "layer": "bass",
+          "why": "the hand-off bars climbed by step (0 2 4 5 6 7), which is a scale with rests in it. Rewritten around the song's cell: fourths, thirds and chord tones, ending on the flat second leaning into the solo"
+        },
+        {
+          "section": "strip",
+          "layer": "bass",
+          "why": "solo bars 2, 3, 4 and 6 the same fix - bar 4 now zig-zags up in fourths to reach 9 instead of walking, and bar 6 descends in alternating fourths instead of running down the scale. Over turn and strip the bass is 2 stepwise intervals against 60 leaps"
+        }
+      ]
     }
   ]
 }

@@ -35,11 +35,11 @@ const OPEN = 'xxxxxxxxxxxxxxxxxxxxxx';
 //                   |. . . . .|. . . . .|. . . . .|. . .   group heads at slots 0, 6, 12, 18
 const BSOLO = [
   '[0 ~ ~ ~ ~ ~ 3 ~ ~ ~ ~ ~ 0 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // the cell, alone, all the space in the world
-  '[~ ~ 0 ~ 1 ~ 2 ~ ~ ~ 3 ~ ~ ~ 2 ~ ~ ~ 0 ~ ~ ~]',   // an answer that starts late and leans across the groups
-  '[~ ~ ~ 4 ~ ~ ~ ~ 3 ~ ~ ~ ~ 2 ~ ~ ~ 4 ~ ~ 5 ~]',   // every note off the group head: the bar floats
-  '[0 ~ 2 ~ 4 ~ 5 6 7 ~ ~ ~ 9 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // a climb that accelerates into sixteenths and stops dead
+  '[~ ~ 0 ~ 4 ~ 2 ~ ~ ~ 6 ~ ~ ~ 3 ~ ~ ~ 0 ~ ~ ~]',   // an answer that starts late and moves in fourths, not steps
+  '[~ ~ ~ 4 ~ ~ ~ ~ 1 ~ ~ ~ ~ 5 ~ ~ ~ 2 ~ ~ 6 ~]',   // every note off the group head, every interval a leap
+  '[0 ~ 4 ~ 2 ~ 6 ~ 4 ~ 7 ~ 9 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // climbs by zig-zagging fourths and lands on 9, then stops dead
   '[6 ~ ~ ~ ~ ~ 9 ~ ~ ~ ~ ~ ~ ~ 7 ~ ~ ~ ~ ~ ~ ~]',   // the cell again, up at the top of the instrument
-  '[7 6 5 4 3 2 1 ~ 0 ~ ~ ~ 4 3 2 1 0 ~ ~ ~ ~ ~]',   // the fast bar: two descending runs, the busiest point
+  '[7 4 6 3 5 2 4 ~ 0 ~ ~ ~ 6 3 5 2 4 ~ ~ ~ ~ ~]',   // the fast bar: descending in alternating fourths, not a scale
   '[0 ~ 3 ~ ~ ~ 1 ~ 4 ~ ~ ~ 2 ~ 5 ~ ~ ~ 3 ~ 6 ~]',   // the cell double-timed and sequenced, one per group
   '[4 ~ ~ ~ ~ ~ 2 ~ ~ ~ ~ ~ 0 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // three notes down to the root, and out
 ];
@@ -52,9 +52,9 @@ const BASS_SOLO = '<' + BSOLO.join(' ') + '>';
 // stops. Same group-head line as the rest of the song in bar one, a run into the solo by bar four.
 const HANDOFF = '<' + [
   '[0 ~ ~ ~ ~ ~ 4 ~ ~ ~ ~ ~ 7 ~ ~ ~ ~ ~ 4 ~ ~ ~]',   // as it has played all song
-  '[0 ~ ~ ~ ~ ~ 4 ~ ~ ~ 5 ~ 7 ~ ~ ~ ~ ~ 6 ~ 4 ~]',   // one more note per group
-  '[0 ~ 2 ~ 4 ~ 5 ~ ~ ~ 6 ~ 7 ~ ~ ~ 6 ~ 5 ~ 4 ~]',   // filling in
-  '[0 ~ ~ ~ 2 ~ 4 ~ 5 ~ 6 ~ 7 ~ 6 ~ 5 ~ 4 ~ 2 ~]',   // a run that does not stop at the bar line
+  '[0 ~ ~ ~ ~ ~ 4 ~ ~ ~ 2 ~ 7 ~ ~ ~ ~ ~ 4 ~ 6 ~]',   // one extra note per group, and it is a chord tone, not a step
+  '[0 ~ 4 ~ ~ ~ 2 ~ 6 ~ ~ ~ 4 ~ 7 ~ ~ ~ 5 ~ 2 ~]',   // filling in by fourths and thirds - an arpeggio, not a scale
+  '[0 ~ 3 ~ ~ ~ 4 ~ 7 ~ ~ ~ 6 ~ 2 ~ ~ ~ 5 ~ 1 ~]',   // wide leaps, ending on the flat second leaning into the solo
 ].join(' ') + '>';
 const bass = { sound: 'gm_acoustic_bass', rhythm: WALK, notes: '0 4 7 4 6', register: .4, articulation: .7,
                brightness: .5, space: .25, level: 1.6, humanize: { timingMs: 10, velocity: .1, correlation: 'bar' } };
