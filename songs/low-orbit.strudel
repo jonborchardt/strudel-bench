@@ -197,9 +197,18 @@ const pick = (lvl = .8) => ({ level: lvl, space: .5, width: .55, position: -.28,
 // top, but sitting right in the upper mids where a vibraphone reads as piercing. Down an octave-ish
 // (register .72 -> .62, which is where verse2 already had it and verse2 never sounded shrill), darker, quieter,
 // and a little further back.
-const hook = { sound: 'vibraphone', register: .62, level: .65, follow: true, phrase: 2, space: .62, width: .5,
-  articulation: .5, brightness: .4, position: .18,
-  notes: '0 ~ 2 4 ~ ~ 7 ~ ~ ~ 6 ~ 4 ~ 2 ~',
+// Axis tuning was not going to reach this. The events said the line ran midi 60..72 -- C4 up to C5 -- at
+// 3.5 notes a cycle with a delay on it: a metallic mallet running constantly in the top octave reads as
+// shrill whatever its level or cutoff, and its centroid (1066 Hz, nothing above 3 kHz) never showed it.
+// So the line itself changes: four notes instead of seven with air between them, each hit clipped shorter so
+// it stops ringing into the next, and the whole thing an octave down.
+// `register` is a three-way step, not a dial -- melodyOctave in lib/layers.mjs is octave 3 below 1/3, 4 up to
+// 2/3, 5 above -- so .72 -> .62 moved it one octave and .62 -> .5 moved it nothing at all. .3 is octave 3.
+// Level back up to .8: the octave drop, the shorter clip and the thinner line together took it to 24.2 dB
+// under the mix in lift, which is the bottom of background for a part that is supposed to be the hook.
+const hook = { sound: 'vibraphone', register: .3, level: .8, follow: true, phrase: 2, space: .62, width: .5,
+  articulation: .65, brightness: .4, position: .18,
+  notes: '0 ~ ~ ~ 4 ~ ~ ~ ~ ~ 2 ~ ~ ~ 0 ~',
   velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };
 // the counter-line for the climax only: an octave up, on the beats the hook leaves empty
 const counter = { sound: 'handchimes', register: .88, level: 1.2, follow: true, space: .7, width: .65, position: -.4,
