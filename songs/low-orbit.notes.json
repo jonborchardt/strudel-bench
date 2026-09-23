@@ -218,6 +218,33 @@
           "why": "MUMBLE = false at the top removes every mumble part in one edit, and each section's is its own part so the page's mute takes one off alone"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "we dont need that const, we will just do agentically. the mumbles i have seen them but dont really hear them, and i didnt mean a specific mumble, i meant just more and more of the things he is saying on that section",
+      "changes": [
+        {
+          "section": "song",
+          "why": "removed the MUMBLE const: parts come out by editing them out"
+        },
+        {
+          "section": "song",
+          "why": "the second vocal part was built as a separate effect (three semitones down, 900 Hz low-pass, gains at 30 percent) and measured 22.7 dB under the mix against the lead's 11.3: visible in the event stream, not in the room"
+        },
+        {
+          "section": "song",
+          "why": "it is now the same clips at the same makeup gains, no filter and no pitch shift, cycling through every fragment the section has already sounded"
+        },
+        {
+          "section": "song",
+          "why": "every other empty bar takes two fragments rather than one; vocal events 37 to 79 to 98"
+        },
+        {
+          "section": "verse1",
+          "layer": "raw5",
+          "why": "measures 13.8 dB under the mix against the lead's 11.4, centroid 369 Hz against 404: the same voice at nearly the same level"
+        }
+      ]
     }
   ]
 }

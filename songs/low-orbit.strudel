@@ -41,8 +41,8 @@
 // The fragments are one to four words each. None is used to say a sentence: they are syllables placed for
 // pitch and attack.
 //
-// Under them runs the mumble (the `raw5` part of each section): the same voice repeating what it just said,
-// quietly, off the beat, in the bars the lead leaves empty. One const, MUMBLE, removes all of it.
+// Under them runs a second voice part per section (`raw5`): in the bars the lead leaves empty, more of what
+// this section has already said, cycling through it. Same clips, same treatment, off the beat.
 
 // clip n of the record, in order. 0 is a bar with no voice.
 const P = (n) => 'lights_in_the_sky_voc_ph_' + String(n).padStart(3, '0');
@@ -112,34 +112,42 @@ const LEAD = {
   out:    [0, 33, 0, 0, 0, 33, 0, 0],
 };
 
-// ---- the mumble: the same voice muttering to itself in the bars the lead leaves empty ----
+// ---- more of what he is already saying ----
 //
-// MUMBLE false silences every one of them in a single edit and the song stands as it did. Each is its own
-// part (`mumble` in the section, a raw layer), so the page's mute button also takes one section's off alone.
+// In every bar the lead leaves empty, another of the fragments this section has already sounded, cycling
+// through them so it is not the same word twice running and there is more to draw on as the section goes
+// on. It only ever picks from what has already been heard here, so the record's order is untouched.
 //
-// What it plays is never a new clip: in every empty bar it repeats whatever last sounded, said again under
-// the breath. Because it is derived from the lead's own sequence it cannot introduce a fragment the lead has
-// not reached yet, so the record's order survives adding it. It sits off the downbeat, alternating halfway
-// and three quarters through the bar, a shade lower and slower than the voice said it, and under a low-pass,
-// so it reads as muttering rather than a second statement of the line.
-const MUMBLE = true;
-const MSPEED = .88;                     // about three semitones down, and that much longer
-const under = (ns) => {
-  let last = 0;
+// This is not a separate effect: same clips, same makeup gains, no filter and no pitch shift. It sits off
+// the beat (beat 2, 3 or 4 in turn) and a little left of the lead, which is what keeps the two apart -- it
+// is meant to be heard, not sensed.
+// Every other empty bar takes two fragments rather than one, so he is talking over himself as the section
+// fills up rather than dropping one word a bar.
+const said = (ns) => {
+  const seen = [];
+  let k = 0;
+  const note = (n) => { if (n && !seen.includes(n)) seen.push(n); };
+  const next = () => seen[k++ % seen.length];
+  let empty = 0;
   return ns.map((x) => {
-    const lead = Array.isArray(x) ? x[1] : Math.abs(x);
-    if (lead) { last = lead; return 0; }
-    return last;
+    if (Array.isArray(x)) { x.forEach(note); return 0; }
+    const lead = Math.abs(x);
+    if (lead) { note(lead); return 0; }
+    if (!seen.length) return 0;
+    return empty++ % 2 ? [next(), next()] : next();
   });
 };
-const mslot = (n, i, f) => (n ? (i % 2 ? '[~ ~ ~ ' + f(n, .25) + ']' : '[~ ' + f(n, .5) + ']') : '~');
-const mseq = (ns, f) => '<' + under(ns).map((n, i) => mslot(n, i, f)).join(' ') + '>';
-const mumble = (name, level = 1) => ({ level, space: .6, width: .45, position: -.22, brightness: .25,
-  pattern: !MUMBLE ? silence : s(mseq(LEAD[name], one))
-    .gain(mseq(LEAD[name], (n) => +(GAIN[n] * .3).toFixed(2)))
-    .clip(mseq(LEAD[name], (n, frac) => clp(n, frac, MSPEED)))
-    .release(mseq(LEAD[name], rel))
-    .speed(MSPEED).lpf(900).attack(.05) });
+const POS = ['[~ X ~ ~]', '[~ ~ X ~]', '[~ ~ ~ X]'];
+const fslot = (n, i, f) => (!n ? '~'
+  : Array.isArray(n) ? '[~ ' + f(n[0], .25) + ' ~ ' + f(n[1], .25) + ']'
+  : POS[i % 3].replace('X', f(n, .25)));
+const fseq = (ns, f) => '<' + said(ns).map((n, i) => fslot(n, i, f)).join(' ') + '>';
+const more = (name, level = 1.15) => ({ level, space: .5, width: .4, position: -.22,
+  pattern: s(fseq(LEAD[name], one))
+    .gain(fseq(LEAD[name], (n) => GAIN[n]))
+    .clip(fseq(LEAD[name], clp))
+    .release(fseq(LEAD[name], rel))
+    .attack(.02) });
 // one of the wordless chunks, fired on the bar it falls on and left to run its 4.4 s (two bars here) out
 const wordless = (sound, mask, gain) => ({ level: 1, space: .55, width: .5, position: -.2,
   pattern: s(sound).mask(mask).gain(gain).attack(.05).release(1) });
@@ -200,7 +208,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(.65),
     raw2:   bed,
     raw3:   { ...V, level: 1, pattern: voice(...LEAD.open) },
-    raw5:   mumble('open', .7),
+    raw5:   more('open', .7),
   }),
 
   // 0:17 verse 1, the record's first cluster: two fragments at the top, then the long hole, then two more.
@@ -212,7 +220,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(.8),
     raw2:   bed,
     raw3:   { ...V, pattern: voice(...LEAD.verse1) },
-    raw5:   mumble('verse1', 1),
+    raw5:   more('verse1', 1),
   }),
 
   // 0:52 the hole in verse 1, kept as a section: no voice at all, the kit fills out and the hook arrives
@@ -237,7 +245,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(),
     raw2:   bed,
     raw3:   { ...V, pattern: voice(...LEAD.lift) },
-    raw5:   mumble('lift', 1),
+    raw5:   more('lift', 1),
     raw4:   wordless(W1, '<0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0>', 1.25),
   }),
 
@@ -251,7 +259,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(.7),
     raw2:   bed,
     raw3:   { ...V, level: 1.1, pattern: voice(...LEAD.verse2) },
-    raw5:   mumble('verse2', 1),
+    raw5:   more('verse2', 1),
     raw4:   wordless(W2, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 4.5),   // the only voice in the hole, and wordless
     fx:     { riser: 4 },
   }),
@@ -269,7 +277,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(.7),
     raw2:   bed,
     raw3:   { ...VF, pattern: voice(...LEAD.flood) },
-    raw5:   mumble('flood', 1.1),
+    raw5:   more('flood', 1.1),
     // the chop: one 2.5 s fragment cut into eight equal pieces, each fitted to its step
     raw4:   wordless(W3, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 1.95),
     fx:     { impact: true, level: .55 },
@@ -283,6 +291,6 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(.5),
     raw2:   bed,
     raw3:   { ...V, level: 1.1, pattern: voice(...LEAD.out) },
-    raw5:   mumble('out', .8),
+    raw5:   more('out', .8),
   }),
 ])
