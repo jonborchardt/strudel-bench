@@ -22,7 +22,8 @@ const sub = (line, o = {}) => ({
     note('<' + line + '>').s('sine').clip(1.02),
     note('<' + line + '>').sub(note(12)).s('pipeorgan_loud_pedal').lpf(300).clip(1.04).release(.7).gain(.55),
   ),
-  level: .62, space: 0, compressor: { threshold: -18, ratio: 3, attack: .02, release: .3 }, humanize: swelled, ...o,
+  level: .34, space: 0, duck: 'bass', duckDepth: .3, duckAttack: .01,
+  compressor: { threshold: -18, ratio: 3, attack: .02, release: .3 }, humanize: swelled, ...o,
 });
 // arco contrabass an octave over the sub, the attack a sawtooth has none of: a pad at one tone is the chord root held,
 // and unlike the bass layer it sustains. articulation .6, not .1: at .1 the pad's attack is .51 s, so every low note faded
@@ -37,8 +38,8 @@ const bass = { sound: 'gm_contrabass', density: .25, register: .3, weight: .8, b
 const pizz = { sound: 'gm_contrabass', notes: '0', density: .2, register: .5, weight: .65, brightness: .55, articulation: .6, space: 0, level: 2, compressor: { threshold: -20, ratio: 4, attack: .005, release: .25 }, humanize: swelled };
 // the cello is the voice of the low end, not a root machine: a written line in octave 3, negative degrees reaching under it
 const cello = { sound: 'gm_cello', register: .2, brightness: .55, articulation: .15, space: .5, level: 1.3, position: -.15, humanize: played };
-const violin = { sound: 'gm_violin', register: .5, brightness: .6, articulation: .15, space: .45, level: 1.5, position: .25, humanize: played };
-const flute = { sound: 'gm_flute', register: .8, brightness: .55, articulation: .2, space: .6, level: 1, position: .35, humanize: played };
+const violin = { sound: 'gm_violin', register: .5, brightness: .6, articulation: .15, space: .45, level: 1.9, position: .25, humanize: played };
+const flute = { sound: 'gm_flute', register: .8, brightness: .55, articulation: .2, space: .5, level: 1.4, position: .35, humanize: played };
 // the string bed only opens in the climax: low voicing, slow swell, wide. This is the part that does the holding.
 const strings = { sound: 'gm_string_ensemble_1', register: .3, density: .75, brightness: .45, articulation: .1, space: .6, width: .7, level: .8, humanize: swelled };
 
@@ -52,12 +53,12 @@ const WARM = 'i IV VII III';
 song({ cps: .27, key: 'D:dorian', seed: 7, visual: { world: 'swarm', composition: 'single' }, packs: ['rooms'], room: { ir: 'hall', size: 3.2, damping: 4500 } }, [
 
   section('open', 8, { role: 'establish', progression: WARM,
-    raw:    { ...sub(SUB) },
-    pad:    { ...bass },
-    bass:   { ...pizz },
+    raw:    { ...sub(SUB, { level: .24 }) },
+    pad:    { ...bass, level: .8 },
+    bass:   { ...pizz, level: 1.6 },
     // the cello states the tune the violin will take over: down a step, a rest low, a held sixth, home
     melody: { ...cello, phrase: 8, notes: '[0@3 -1] -2 [1@2 3@2] [2@3 -3] [0@2 2@2] [3@3 2] 1 [-1@2 -3@2]' },
-    raw2:   { ...G(PIANO + ' ' + PIANO) },
+    raw2:   { ...G(PIANO + ' ' + PIANO, { level: .45 }) },
   }),
 
   section('lift', 8, { role: 'develop', progression: WARM,
@@ -88,11 +89,11 @@ song({ cps: .27, key: 'D:dorian', seed: 7, visual: { world: 'swarm', composition
   }),
 
   section('rest', 4, { role: 'release', progression: 'i III VII i',
-    raw:    { ...sub('d2 f2 c2 d2') },
-    pad:    { ...bass },
-    bass:   { ...pizz },
+    raw:    { ...sub('d2 f2 c2 d2', { level: .24 }) },
+    pad:    { ...bass, level: .8 },
+    bass:   { ...pizz, level: 1.6 },
     // the cello has the last word: the opening phrase, slower, ending on the root
     melody: { ...cello, phrase: 4, notes: '[0@3 -1] [-3@4] [1@2 3@2] [0@4]' },
-    raw2:   { ...G('[d2 [a2,d3,f3]@3] [f2 [c3,f3,a3]@3] [c2 [g2,c3,e3]@3] [d2 [a2,d3,f3,d4]@3]') },
+    raw2:   { ...G('[d2 [a2,d3,f3]@3] [f2 [c3,f3,a3]@3] [c2 [g2,c3,e3]@3] [d2 [a2,d3,f3,d4]@3]', { level: .45 }) },
   }),
 ])

@@ -160,6 +160,39 @@
           "why": "visual { world: 'swarm', composition: 'single' } - the song named no world, so the score picked swarm by its features and lib/visual.json's defaultComposition put orrery breathing over it every eight bars. Pinning the world and setting composition single gives the bare world full-frame; the check's visual line reads 'single: swarm' instead of 'overlay: swarm + orrery'"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "do the final mix",
+      "changes": [
+        {
+          "section": "song",
+          "why": "pass 1 hierarchy: the sub measured -1.3 to -2.0 dB under the mix in all four sections, so it WAS the mix and open/rest read centroid 138/131 Hz with lowRatio .79 - pure boom. level .62>.34 and the foundation now sits -3.3 to -4.8"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "pass 2 collisions: the sub ducks the pizzicato (duck 'bass', duckDepth .3, duckAttack .01) so the transient punches through the drone instead of fighting it; arrangement had already put the three low parts an octave apart each (100/193/270-314 Hz), which is why the remaining masking pairs are left alone"
+        },
+        {
+          "section": "lift",
+          "layer": "melody3",
+          "why": "the flute measured -18.0 dB, barely present under the violin it is supposed to answer: level 1>1.4 and space .6>.5, which also drops the melody cell's delay send (space over .5 writes room AND delay). Now -12.8. Its tail reads .93 because the line rests for half its bars, not because it is wet"
+        },
+        {
+          "section": "lift",
+          "layer": "melody2",
+          "why": "the tune measured level with the cello and the piano at -12.0: violin level 1.5>1.9, now -7.6 and the clear foreground"
+        },
+        {
+          "section": "open",
+          "why": "pass 5 contrast across sections: the mix measured -17.0/-15.9/-15.7/-16.9, a 1.3 dB arc, because the foundation and piano play identically everywhere. open and rest drop their sub to .24, contrabass to .8, pizzicato to 1.6 and piano to .45, giving -19.1/-15.9/-15.7/-19.1, a 3.4 dB arc with centroid 192/326/456/183"
+        },
+        {
+          "section": "song",
+          "why": "ruled out by name: no organicness anywhere (every part is humanized), compressor only on the pizzicato since it is the one part over crest 9 (11.0; piano 7.8, flute 6.3), depth set by hand on the spread layers rather than by resolve, which refuses them on the CLI"
+        }
+      ]
     }
   ]
 }
