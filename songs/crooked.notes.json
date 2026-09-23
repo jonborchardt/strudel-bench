@@ -37,6 +37,55 @@
           "why": "sixteen bars of written solo, phrased 3+3+3+2 in every bar, from the root out to the ninth and home; the concept cannot carry the song, the writing has to"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "the melody is a bit too sharp, and random walking around.. is that just jazz? / in strip let the bass have sustain / let the bass go for a walk / the bass walk is boring and too straight, do something interesting, a solo for the bass / strip is too sudden / set the visual to combo",
+      "changes": [
+        {
+          "section": "head",
+          "layer": "melody",
+          "why": "it was not jazz, it was scales. Measured the old lines: 122 notes of solo whose most-repeated three-note shape was 'up a step, down a step', 8 times - no motif at all. Everything melodic is now built on one cell, '0 ~ 3' (a note, a rest, a leap up a fourth), which fills one group of the 3+3+3+2 exactly, transposed, inverted, filled in and fragmented"
+        },
+        {
+          "section": "build",
+          "layer": "melody",
+          "why": "the old climax was 57% leaps across a two-octave range (degrees 0..12), an arpeggio scramble rather than a line; it now reaches 9 and the lift comes from density and level"
+        },
+        {
+          "section": "head",
+          "layer": "melody",
+          "why": "sound gm_clarinet>sax and register .5>.25 - the clarinet soundfont measured centroid 1401 Hz and read sharp, and vcsl samples the sax A#1..G#4 (midi 34..68), so at octave 4 the head reached E5 = 76 and was resampled eight semitones above the top sample. At octave 3 the whole line sits at midi 52..67, inside the recording"
+        },
+        {
+          "section": "strip",
+          "layer": "bass",
+          "why": "a written bass solo, not a walk: the first try was '0 1 2 4 5 6 7 6 5 4 2', a scale up and back down, which is the same mistake the sax line had. Eight bars on the full 22-sixteenth grid, the rhythm carried by the rests, 3 to 13 notes a bar"
+        },
+        {
+          "section": "strip",
+          "layer": "bass",
+          "why": "articulation .7>.2 for sustain: the bass layer's hap is one grid step (~0.1 s at this tempo) so the articulation cell is the only thing that lets an upright ring - clip .98 plus a .22 s release"
+        },
+        {
+          "section": "strip",
+          "layer": "bass",
+          "why": "the eight bars are wrapped in <> so one plays per cycle; the bass layer has no phrase material the way melody does, so '[bar] [bar] ...' squeezed all eight into one bar and every bar came out identical"
+        },
+        {
+          "section": "turn",
+          "why": "a new four-bar section between solo and strip, because the bass solo arrived with the sax, piano and vibes all vanishing on one downbeat. The sax lays out, the rhythm section carries on, the bass gets busier each bar (4, 6, 9, 10 notes) and is already soloing when the piano stops. The arc taper is now 32.1 > 24.7 > 13.6"
+        },
+        {
+          "section": "build",
+          "layer": "melody",
+          "why": "level 1.45>2 and brightness .45>.52, piano .45>.28, drums .5>.42, vibes 1.1>.85 - dropping the sax an octave into its sampled range also dropped it to -11.6 dB, the quietest melodic part, under its own counter-line; now -8.2 and leading"
+        },
+        {
+          "section": "song",
+          "why": "visual combo, single"
+        }
+      ]
     }
   ]
 }

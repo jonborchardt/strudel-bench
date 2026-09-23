@@ -27,11 +27,45 @@ const drums  = { sounds: kit, template: BEAT, articulation: .6, density: .5, bri
 
 // the bass lands on the four group heads and takes the last short group as a pickup into the next bar
 const WALK = 'x.....x.....x.....x.x.';
+// in `strip` the bass takes a solo. A walk was the first try and it was the same mistake as the old sax line -
+// `0 1 2 4 5 6 7 6 5 4 2` is a scale up and back down, which is even, predictable and says nothing.
+// A solo needs rhythm, not just pitch, so the grid opens to all 22 sixteenths and the LINE carries the rhythm
+// through its rests: eight different bars, each one a different rhythmic idea, built on the same cell as the head.
+const OPEN = 'xxxxxxxxxxxxxxxxxxxxxx';
+//                   |. . . . .|. . . . .|. . . . .|. . .   group heads at slots 0, 6, 12, 18
+const BSOLO = [
+  '[0 ~ ~ ~ ~ ~ 3 ~ ~ ~ ~ ~ 0 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // the cell, alone, all the space in the world
+  '[~ ~ 0 ~ 1 ~ 2 ~ ~ ~ 3 ~ ~ ~ 2 ~ ~ ~ 0 ~ ~ ~]',   // an answer that starts late and leans across the groups
+  '[~ ~ ~ 4 ~ ~ ~ ~ 3 ~ ~ ~ ~ 2 ~ ~ ~ 4 ~ ~ 5 ~]',   // every note off the group head: the bar floats
+  '[0 ~ 2 ~ 4 ~ 5 6 7 ~ ~ ~ 9 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // a climb that accelerates into sixteenths and stops dead
+  '[6 ~ ~ ~ ~ ~ 9 ~ ~ ~ ~ ~ ~ ~ 7 ~ ~ ~ ~ ~ ~ ~]',   // the cell again, up at the top of the instrument
+  '[7 6 5 4 3 2 1 ~ 0 ~ ~ ~ 4 3 2 1 0 ~ ~ ~ ~ ~]',   // the fast bar: two descending runs, the busiest point
+  '[0 ~ 3 ~ ~ ~ 1 ~ 4 ~ ~ ~ 2 ~ 5 ~ ~ ~ 3 ~ 6 ~]',   // the cell double-timed and sequenced, one per group
+  '[4 ~ ~ ~ ~ ~ 2 ~ ~ ~ ~ ~ 0 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // three notes down to the root, and out
+];
+// wrapped in <> so one bar plays per cycle. The bass layer has no `phrase` material the way melody does, so a plain
+// '[bar] [bar] ...' would squeeze all eight bars into a single bar - which is exactly what the first version did.
+const BASS_SOLO = '<' + BSOLO.join(' ') + '>';
+
+// four bars that hand the bass its solo instead of dropping everyone at once. The sax lays out at the top of these,
+// the rhythm section keeps playing, and the bass gets busier each bar until it is already soloing when the piano
+// stops. Same group-head line as the rest of the song in bar one, a run into the solo by bar four.
+const HANDOFF = '<' + [
+  '[0 ~ ~ ~ ~ ~ 4 ~ ~ ~ ~ ~ 7 ~ ~ ~ ~ ~ 4 ~ ~ ~]',   // as it has played all song
+  '[0 ~ ~ ~ ~ ~ 4 ~ ~ ~ 5 ~ 7 ~ ~ ~ ~ ~ 6 ~ 4 ~]',   // one more note per group
+  '[0 ~ 2 ~ 4 ~ 5 ~ ~ ~ 6 ~ 7 ~ ~ ~ 6 ~ 5 ~ 4 ~]',   // filling in
+  '[0 ~ ~ ~ 2 ~ 4 ~ 5 ~ 6 ~ 7 ~ 6 ~ 5 ~ 4 ~ 2 ~]',   // a run that does not stop at the bar line
+].join(' ') + '>';
 const bass = { sound: 'gm_acoustic_bass', rhythm: WALK, notes: '0 4 7 4 6', register: .4, articulation: .7,
                brightness: .5, space: .25, level: 1.6, humanize: { timingMs: 10, velocity: .1, correlation: 'bar' } };
 
-// clarinet: the Balkan voice over the jazz changes
-const reed = { sound: 'gm_clarinet', register: .5, brightness: .6, articulation: .35, space: .5, level: 1.3,
+// a real sampled sax, not the GM clarinet it started as: the clarinet soundfont measured centroid 1401 Hz and read
+// as sharp, and vcsl's sax is an actual recording (23 pitched samples, rms -24.4). brightness .45, not .6, for the
+// same reason - the melody cell sets the character now, so the tone does not have to cut.
+// register .25 (octave 3), not .5: vcsl samples the sax A#1..G#4 (midi 34..68), and at octave 4 the head reached E5
+// = 76, eight semitones above the top sample and resampled upward, which is thin and squeaky. At octave 3 the whole
+// line, degrees 0..9, lands at midi 52..67 - inside the recorded range, every note an actual sax note.
+const reed = { sound: 'sax', register: .25, brightness: .52, articulation: .35, space: .5, level: 1.9,
                position: .2, humanize: { timingMs: 11, velocity: .1, correlation: 'phrase' } };
 
 // piano comping: stabs at the END of each group, so the piano pushes against the grouping the drums state
@@ -43,61 +77,70 @@ const comp = (o = {}) => ({ pattern: note('<' + CHORDS.map(stab).join(' ') + '>'
                             humanize: { timingMs: 12, velocity: .12, correlation: 'bar' }, ...o });
 
 // E phrygian: 0=E 1=F(the flat second) 2=G 3=A 4=B 5=C 6=D 7=E'
-// the head: four bars that climb through the flat second and come home, phrased in 3+3+3+2 the whole way
+//
+// THE CELL: `0 ~ 3` - a note, a rest, a leap up a fourth. Three slots, so it fills one group of the 3+3+3+2 exactly.
+// Everything melodic in this song is that shape transposed, inverted, filled in or fragmented. The first version of
+// this song had no cell at all: 122 notes of solo whose most-repeated three-note shape was "up a step, down a step",
+// appearing 8 times. That is a scale, not a tune, and it is what "random walking around" means. A head is one idea
+// you recognise coming back.
 const HEAD = [
-  '[[0 1 2]@3 [3 ~ 2]@3 [1 ~ 0]@3 [~ ~]@2]',
-  '[[4 ~ 3]@3 [2 1 2]@3 [3 ~ ~]@3 [2 1]@2]',
-  '[[0 1 2]@3 [3 4 5]@3 [4 ~ 3]@3 [2 ~]@2]',
-  '[[7 ~ 5]@3 [4 3 2]@3 [1 ~ 0]@3 [~ ~]@2]',
+  '[[0 ~ 3]@3 [1 ~ 4]@3 [2 ~ 5]@3 [4 3]@2]',   // the cell, three times, each a step higher
+  '[[7 ~ 4]@3 [6 ~ 3]@3 [5 ~ 2]@3 [1 0]@2]',   // the same shape inverted and falling: the answer
+  '[[0 ~ 3]@3 [1 ~ 4]@3 [3 ~ 6]@3 [5 4]@2]',   // as bar one, but the third leap reaches further
+  '[[2 ~ ~]@3 [1 ~ ~]@3 [0 ~ ~]@3 [~ ~]@2]',   // held notes down to the root: the cell stops, the tune lands
 ].join(' ');
 
-// sixteen bars of written solo: near the root, out to the ninth, home. Every bar keeps the 3+3+3+2 phrasing.
+// sixteen bars of solo that develop the cell rather than run up and down the scale. Range stays inside 0..7 - one
+// octave - because the old line's two-octave sweep was most of why it read as sharp.
 const SOLO = [
-  '[[0 ~ 1]@3 [2 ~ ~]@3 [1 ~ 0]@3 [~ ~]@2]',
-  '[[2 3 4]@3 [~ 3 2]@3 [1 ~ ~]@3 [0 ~]@2]',
-  '[[0 1 2]@3 [3 4 5]@3 [6 ~ 5]@3 [4 3]@2]',
-  '[[2 ~ 1]@3 [0 ~ ~]@3 [~ 0 1]@3 [2 3]@2]',
-  '[[4 5 6]@3 [7 ~ 6]@3 [5 ~ 4]@3 [3 ~]@2]',
-  '[[2 1 0]@3 [1 2 3]@3 [4 ~ ~]@3 [~ ~]@2]',
-  '[[5 ~ 4]@3 [3 2 1]@3 [2 ~ 3]@3 [4 5]@2]',
-  '[[6 7 6]@3 [5 ~ 4]@3 [3 ~ 2]@3 [1 0]@2]',
-  '[[0 ~ ~]@3 [~ 0 1]@3 [2 3 4]@3 [5 ~]@2]',
-  '[[7 ~ 8]@3 [9 ~ 8]@3 [7 ~ 5]@3 [4 ~]@2]',
-  '[[3 4 5]@3 [4 3 2]@3 [1 ~ 0]@3 [~ 2]@2]',
-  '[[4 ~ 6]@3 [7 ~ ~]@3 [7 6 5]@3 [4 3]@2]',
-  '[[2 ~ 1]@3 [0 1 2]@3 [3 4 5]@3 [6 7]@2]',
-  '[[9 ~ ~]@3 [~ 8 7]@3 [6 5 4]@3 [3 2]@2]',
-  '[[1 ~ 2]@3 [3 ~ 4]@3 [5 ~ 4]@3 [3 2]@2]',
-  '[[1 ~ 0]@3 [~ ~ ~]@3 [0 ~ ~]@3 [~ ~]@2]',
+  '[[0 ~ 3]@3 [~ ~ ~]@3 [0 ~ 3]@3 [2 1]@2]',   // state it, and leave a whole group of silence after it
+  '[[0 ~ 3]@3 [1 ~ 4]@3 [2 ~ ~]@3 [~ ~]@2]',   // sequence it up, then stop early
+  '[[2 ~ 5]@3 [3 ~ 6]@3 [4 ~ 7]@3 [6 5]@2]',   // the same sequence from higher up
+  '[[4 ~ 1]@3 [3 ~ 0]@3 [2 ~ ~]@3 [1 0]@2]',   // inverted: the leap goes down now
+  '[[0 ~ 3]@3 [0 ~ 4]@3 [0 ~ 5]@3 [4 3]@2]',   // root held as a pedal, the leap widening off it
+  '[[0 ~ 6]@3 [0 ~ 7]@3 [6 ~ 5]@3 [4 ~]@2]',   // widened to a seventh, then walks back down
+  '[[3 ~ 0]@3 [4 ~ 1]@3 [5 ~ 2]@3 [3 4]@2]',   // the inversion sequenced upward
+  '[[5 ~ 2]@3 [4 ~ 1]@3 [3 ~ 0]@3 [~ ~]@2]',   // and back down, ending on air
+  '[[0 ~ 3]@3 [2 ~ 5]@3 [4 ~ 7]@3 [6 5]@2]',   // the cell moving in thirds instead of steps
+  '[[7 ~ 4]@3 [6 ~ 3]@3 [5 ~ 2]@3 [4 3]@2]',   // the head answer quoted back mid-solo
+  '[[0 3 0]@3 [1 4 1]@3 [2 5 2]@3 [3 2]@2]',   // the rest filled in: the cell becomes three notes
+  '[[4 7 4]@3 [3 6 3]@3 [2 5 2]@3 [1 0]@2]',   // filled-in and descending, the busiest bar
+  '[[0 ~ 3]@3 [~ ~ ~]@3 [2 ~ 5]@3 [~ ~]@2]',   // back to air: the solo breathes before it lands
+  '[[4 ~ 7]@3 [~ ~ ~]@3 [6 ~ 3]@3 [~ ~]@2]',
+  '[[2 ~ 5]@3 [1 ~ 4]@3 [0 ~ 3]@3 [2 1]@2]',   // the sequence descending, home
+  '[[0 ~ ~]@3 [~ ~ ~]@3 [0 ~ ~]@3 [~ ~]@2]',   // two long roots, nothing else
 ].join(' ');
 
-// the climax line sits an octave up and drives: the short group is never a rest any more
+// the climax: the same cell a fourth higher, filled in and driving. It reaches 9, not 12 - the old climax was 57%
+// leaps across two octaves, which is an arpeggio scramble, and it is what "too sharp" was pointing at. The lift comes
+// from density and level now, not from pitch.
 const RIDE = [
-  '[[7 ~ 6]@3 [5 ~ 7]@3 [9 ~ 8]@3 [7 ~]@2]',
-  '[[6 5 4]@3 [5 6 7]@3 [8 ~ ~]@3 [7 6]@2]',
-  '[[5 ~ 7]@3 [9 ~ 11]@3 [12 ~ 11]@3 [9 ~]@2]',
-  '[[8 7 6]@3 [5 4 3]@3 [4 ~ 5]@3 [6 7]@2]',
-  '[[9 ~ 8]@3 [7 ~ 9]@3 [11 ~ 10]@3 [9 ~]@2]',
-  '[[8 7 6]@3 [7 8 9]@3 [10 ~ ~]@3 [9 8]@2]',
-  '[[7 ~ 9]@3 [11 12 11]@3 [9 ~ 7]@3 [5 ~]@2]',
-  '[[4 ~ 3]@3 [2 ~ 1]@3 [0 ~ ~]@3 [~ ~]@2]',
+  '[[4 ~ 7]@3 [5 ~ 8]@3 [6 ~ 9]@3 [8 7]@2]',   // the head's rising sequence, up a fourth
+  '[[9 ~ 6]@3 [8 ~ 5]@3 [7 ~ 4]@3 [5 6]@2]',   // its inversion, falling
+  '[[4 7 4]@3 [5 8 5]@3 [6 9 6]@3 [7 8]@2]',   // filled in: three notes a group, the busiest it gets
+  '[[9 ~ ~]@3 [8 ~ 7]@3 [6 ~ 5]@3 [4 3]@2]',   // a held top note, then a walk off it
+  '[[2 ~ 5]@3 [3 ~ 6]@3 [4 ~ 7]@3 [6 5]@2]',   // the sequence again from lower, rebuilding
+  '[[7 ~ 4]@3 [6 ~ 3]@3 [5 ~ 2]@3 [3 4]@2]',
+  '[[4 7 4]@3 [6 9 6]@3 [7 ~ 8]@3 [9 ~]@2]',   // filled in and climbing to the highest note of the song
+  '[[7 ~ 4]@3 [3 ~ 2]@3 [0 ~ ~]@3 [~ ~]@2]',   // one last leap down, and home
 ].join(' ');
 
-// a vibraphone answers in the holes the clarinet leaves, one or two notes a bar: the jazz side of the band
+// the vibraphone answers in the groups the sax leaves empty, and it answers with the cell: one statement a bar,
+// so the shape is coming at you from two instruments at once in the climax
 const ANSWER = [
-  '[[~ ~ 0]@3 [~ ~ ~]@3 [4 ~ ~]@3 [~ ~]@2]',
-  '[[~ ~ ~]@3 [2 ~ ~]@3 [~ ~ 1]@3 [0 ~]@2]',
-  '[[~ ~ 4]@3 [~ ~ ~]@3 [5 ~ ~]@3 [~ ~]@2]',
-  '[[~ ~ ~]@3 [3 ~ ~]@3 [~ ~ 2]@3 [1 ~]@2]',
-  '[[~ ~ 7]@3 [~ ~ ~]@3 [6 ~ ~]@3 [~ ~]@2]',
-  '[[~ ~ ~]@3 [5 ~ ~]@3 [~ ~ 4]@3 [3 ~]@2]',
-  '[[~ ~ 2]@3 [~ ~ ~]@3 [4 ~ ~]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [0 ~ 3]@3 [~ ~ ~]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [~ ~ ~]@3 [1 ~ 4]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [2 ~ 5]@3 [~ ~ ~]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [~ ~ ~]@3 [0 ~ 3]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [4 ~ 7]@3 [~ ~ ~]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [~ ~ ~]@3 [3 ~ 6]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [2 ~ 5]@3 [~ ~ ~]@3 [~ ~]@2]',
   '[[0 ~ ~]@3 [~ ~ ~]@3 [~ ~ ~]@3 [~ ~]@2]',
 ].join(' ');
 
 const CHANGES = 'i7 II i7 vii7'; // Em7 F Em7 Dm7 - in phrygian the second degree is ALREADY flat, so II is F major; bII would flatten it again to Fb
 
-song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { composition: 'single' },
+song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'combo', composition: 'single' },
        packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
 
   section('head', 8, { role: 'establish', progression: CHANGES,
@@ -111,22 +154,33 @@ song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { compositio
     drums:  { ...drums, density: .55, variation: .2 },
     bass:   { ...bass },
     raw:    { ...comp() },
-    melody: { ...reed, phrase: 16, level: 1.45, notes: SOLO, velocity: '.85 1 .9 1 .95 1 .9 .95' },
+    melody: { ...reed, phrase: 16, level: 2, notes: SOLO, velocity: '.85 1 .9 1 .95 1 .9 .95' },
   }),
 
-  // the metre naked: bass and darbuka alone, so the eleven is finally countable
+  // the hand-off: the sax has stopped, the piano and darbuka carry on, and the bass walks itself into its own solo.
+  // Without these four bars the bass solo arrived on a downbeat with three instruments vanishing at once.
+  section('turn', 4, { role: 'develop', progression: CHANGES,
+    drums:  { ...drums, density: .5, level: .4 },
+    bass:   { ...bass, rhythm: OPEN, notes: HANDOFF, level: 1.7, articulation: .3 },
+    raw:    { ...comp({ level: .3 }) },
+  }),
+
+  // the bass solo, with the darbuka thinned to almost nothing behind it: the metre naked, and the eleven finally
+  // countable. articulation .2, not .7: the bass layer's hap is one grid step (a 22nd of a bar, ~0.1 s), so the
+  // articulation cell is the only thing that lets an upright ring - clip ~0.98 plus a 0.22 s release, which gives
+  // the held notes a real decay without smearing the sixteenth runs in bars 4 and 6 together.
   section('strip', 8, { role: 'breakdown', progression: CHANGES,
-    drums:  { ...drums, template: THIN, density: .45, level: .45 },
-    bass:   { ...bass, level: 1.7 },
+    drums:  { ...drums, template: THIN, density: .4, level: .38 },
+    bass:   { ...bass, rhythm: OPEN, notes: BASS_SOLO, level: 1.8, articulation: .2 },
   }),
 
   section('build', 16, { role: 'climax', progression: CHANGES,
-    drums:  { ...drums, density: .65, variation: .35, level: .5 },
+    drums:  { ...drums, density: .65, variation: .35, level: .42 },
     bass:   { ...bass, notes: '0 4 7 6 [7 2]', level: 1.7 },
-    raw:    { ...comp({ level: .45 }) },
-    melody:  { ...reed, phrase: 8, level: 1.6, notes: RIDE, velocity: '.95 1 1 1 .95 1 1 .95' },
+    raw:    { ...comp({ level: .28 }) },
+    melody:  { ...reed, phrase: 8, level: 2, notes: RIDE, velocity: '.95 1 1 1 .95 1 1 .95' },
     melody2: { sound: 'vibraphone', register: .5, phrase: 8, notes: ANSWER, brightness: .65,
-               articulation: .3, space: .55, level: 1.1, position: -.15,
+               articulation: .3, space: .55, level: .85, position: -.15,
                humanize: { timingMs: 9, velocity: .1, correlation: 'phrase' } },
   }),
 
