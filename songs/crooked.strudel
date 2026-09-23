@@ -214,7 +214,7 @@ song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'co
   // sat wrong. (I, not I7: the grammar has no maj7, and I7 gives C7 - a Bb that is in neither key.)
   section('bridge', 8, { role: 'develop', meter: '4/4', bpm: 145, key: 'C:major', progression: 'I vi7 ii7 iii7',
     drums:  { ...drums, template: SQUARE, density: .5, level: .4 },
-    bass:   { ...bass, rhythm: FOURS, notes: BRIDGE_BASS, level: 1.1, articulation: .15 },
+    bass:   { ...bass, rhythm: FOURS, notes: BRIDGE_BASS, level: .95, articulation: .15 },
     // depth: the bridge measured all four parts at one distance. The piano goes farther (darker and wetter) and the
     // sax comes closer (brighter and drier) - the closer/farther descriptors written by hand on spread layers.
     raw:    { ...bridgeComp({ space: .68, brightness: .38 }) },
@@ -240,15 +240,15 @@ song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'co
   }),
 
   section('build', 16, { role: 'climax', progression: CHANGES,
-    drums:  { ...drums, density: .65, variation: .35, level: .48 },
-    bass:   { ...bass, notes: '0 4 7 6 [7 2]', level: 1.7 },
-    raw:    { ...comp({ level: .36 }) },
+    drums:  { ...drums, density: .65, variation: .35, level: .4 },
+    bass:   { ...bass, notes: '0 4 7 6 [7 2]', level: 1.25 },
+    raw:    { ...comp({ level: .45 }) },
     melody:  { ...reed, phrase: 8, level: 2, postgain: 1.6, notes: RIDE, velocity: '.95 1 1 1 .95 1 1 .95' },
-    melody2: { ...vibes, phrase: 8, notes: ANSWER, level: 1.05 },
+    melody2: { ...vibes, phrase: 8, notes: ANSWER, level: 1.3 },
   }),
 
   section('out', 8, { role: 'release', progression: CHANGES,
-    drums:  { ...drums, density: .45, level: .38 },
+    drums:  { ...drums, density: .45, level: .32 },
     bass:   { ...bass },
     raw:    { ...comp() },
     melody: { ...reed, phrase: 4, notes: HEAD, level: 1.7, velocity: '.9 1 .85 .9' },

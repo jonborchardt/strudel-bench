@@ -204,6 +204,31 @@
           "why": "comping piano level .38>.3, it measured -5.4 in out, above the lead"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "when done, do mix again",
+      "changes": [
+        {
+          "section": "build",
+          "layer": "melody",
+          "why": "the mix lint was clean on all seven sections, but it does not check that the lead leads: the sax sat under the rhythm section in the climax (-6.6 against drums -5.4 and bass -5.3). The sax is at its cap there (level 2 plus postgain 1.6) so the room came from underneath"
+        },
+        {
+          "section": "build",
+          "layer": "drums",
+          "why": "level .48>.4 and build.bass 1.7>1.25, with the piano .36>.45 and the vibraphone 1.05>1.3 taking up the slack so the section keeps its level and stays the peak; the sax now reads -6.2 and leads"
+        },
+        {
+          "section": "bridge",
+          "layer": "bass",
+          "why": "level 1.1>.95 and out.drums .38>.32, both for the same reason - the lead was second by a fraction of a dB"
+        },
+        {
+          "section": "song",
+          "why": "three of those level changes were silent no-ops: I applied them with a string replace against a literal I assumed was in the file, and the climax bass was 1.7 rather than the 1.45 I thought I had set, so three successive edits matched nothing. It surfaced only because the re-measure came back byte-identical. Every level in the file was verified afterwards"
+        }
+      ]
     }
   ]
 }
