@@ -298,6 +298,30 @@
           "why": "melody now 19.3 / 20.1 / 20.0 / 20.8 dB under the mix in hold / lift / verse2 / flood, centroid 708 Hz, against 9.6 to 12.4 dB and 1830 Hz originally; masking with the guitar it now shares a range with measures 0.06 in the mids"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "verse1 raw5 needs to be slightly louder; i dont like how you fully removed the shrill melody, its all gone now; sounds good in flood now and hold; hold, lift and flood drums part needs to be 80% of its value or intensity",
+      "changes": [
+        {
+          "section": "song",
+          "why": "hook the octave was the fix and the rest was over-correction: the written line and articulation are back exactly as they were, register stays .3, level .8>1. hold/lift/flood melody now 13.6 / 14.4 / 15.0 dB under the mix at 702 Hz, against 9.6 / 11.3 / 12.4 when it was shrill and 19.3 / 20.1 / 20.8 when it was gone"
+        },
+        {
+          "section": "verse1",
+          "layer": "raw5",
+          "why": "level .25>.35: 19.6 dB under the mix to 16.7, against that section's lead at 11.3"
+        },
+        {
+          "section": "hold",
+          "layer": "drums",
+          "why": "level .6>.48, lift.drums level .75>.6 (the kit's own, inherited through kitFull), flood.drums level .62>.5: 80 percent each"
+        },
+        {
+          "section": "song",
+          "why": "all three read transients touch full scale afterwards at 0.001 to 0.002 percent of samples, the soft clip's category rather than a level problem"
+        }
+      ]
     }
   ]
 }

@@ -200,15 +200,15 @@ const pick = (lvl = .8) => ({ level: lvl, space: .5, width: .55, position: -.28,
 // Axis tuning was not going to reach this. The events said the line ran midi 60..72 -- C4 up to C5 -- at
 // 3.5 notes a cycle with a delay on it: a metallic mallet running constantly in the top octave reads as
 // shrill whatever its level or cutoff, and its centroid (1066 Hz, nothing above 3 kHz) never showed it.
-// So the line itself changes: four notes instead of seven with air between them, each hit clipped shorter so
-// it stops ringing into the next, and the whole thing an octave down.
+// The fix is the octave and nothing else. Thinning the line to four notes and clipping each hit shorter on
+// top of it took the part from shrill to absent (24.2 dB under the mix, then 20.1 after a level nudge), which
+// was over-correcting: the pitch was the problem, the hook was not.
 // `register` is a three-way step, not a dial -- melodyOctave in lib/layers.mjs is octave 3 below 1/3, 4 up to
 // 2/3, 5 above -- so .72 -> .62 moved it one octave and .62 -> .5 moved it nothing at all. .3 is octave 3.
-// Level back up to .8: the octave drop, the shorter clip and the thinner line together took it to 24.2 dB
-// under the mix in lift, which is the bottom of background for a part that is supposed to be the hook.
-const hook = { sound: 'vibraphone', register: .3, level: .8, follow: true, phrase: 2, space: .62, width: .5,
-  articulation: .65, brightness: .4, position: .18,
-  notes: '0 ~ ~ ~ 4 ~ ~ ~ ~ ~ 2 ~ ~ ~ 0 ~',
+// So the written line and its ring are back as they were and level carries the balance instead.
+const hook = { sound: 'vibraphone', register: .3, level: 1, follow: true, phrase: 2, space: .62, width: .5,
+  articulation: .5, brightness: .4, position: .18,
+  notes: '0 ~ 2 4 ~ ~ 7 ~ ~ ~ 6 ~ 4 ~ 2 ~',
   velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };
 // the counter-line for the climax only: an octave up, on the beats the hook leaves empty
 const counter = { sound: 'handchimes', register: .88, level: 1.2, follow: true, space: .7, width: .65, position: -.4,
@@ -248,12 +248,12 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(.8),
     raw2:   bed,
     raw3:   { ...V, pattern: voice(...LEAD.verse1) },
-    raw5:   more('verse1'),
+    raw5:   more('verse1', .35),   // measured 19.6 dB under the mix here against the lead's 11.3: a touch forward
   }),
 
   // 0:52 the hole in verse 1, kept as a section: no voice at all, the kit fills out and the hook arrives
   section('hold', 8, { role: 'develop', progression: 'i@2 VI VII',
-    drums:  { ...kitFull, density: .7, level: .6 },
+    drums:  { ...kitFull, density: .7, level: .48 },        // 80% of .6
     bass,
     melody: hook,
     pad,
@@ -265,7 +265,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
 
   // 1:09 the chorus shape: a fragment every other bar and a fifth higher than the verse ones
   section('lift', 16, { role: 'develop', progression: 'i@2 VI VII',
-    drums:  { ...kitFull, variation: .2 },
+    drums:  { ...kitFull, variation: .2, level: .6 },       // 80% of the kit's own .75
     perc:   shaker,
     perc2:  { sound: 'LinnDrum_oh', rhythm: '......x.......x.', level: .3, articulation: .75, position: -.2, brightness: .55 },
     bass,
@@ -297,7 +297,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   // a fragment nearly every bar, the counter-line above the hook, and one fragment chopped into eight and
   // played as an instrument so its syllables stop being words
   section('flood', 16, { role: 'climax', progression: 'i@2 VI VII',
-    drums:  { ...kitPeak, variation: .3, level: .62, fill: 2 },
+    drums:  { ...kitPeak, variation: .3, level: .5, fill: 2 },   // 80% of .62
     perc:   shaker,
     bass:   { ...bass, brightness: .38, level: .85 },
     melody: hook,
