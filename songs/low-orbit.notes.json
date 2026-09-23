@@ -137,6 +137,33 @@
           "why": "the chunk at 192.0 s placed in the gap between fragments 26 and 27"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "do you think you are using all the vocals you know of in the right order?",
+      "changes": [
+        {
+          "section": "song",
+          "why": "audited all 44 clips of the vocal stem against their position here: the answer on order was no. Two inversions, both from the held chunks, which were sample parts and so looped from the top of their section"
+        },
+        {
+          "section": "hold",
+          "why": "removed the four-bar held chunk: its window is 87.3 s, inside the first chorus, so it played chorus material before any chorus fragment and contained three of them bodily"
+        },
+        {
+          "section": "lift",
+          "why": "and flood removed the two-bar held chunks: each is a window already covered by fragments played here, so placing them in order would have doubled those fragments a second apart"
+        },
+        {
+          "section": "verse2",
+          "layer": "raw4",
+          "why": "gain 3 to 4.5: it measured 20.2 dB under the mix as the only voice in that stretch, which is background for a part with nothing beside it"
+        },
+        {
+          "section": "song",
+          "why": "five stem chunks stay unused on purpose, each a bar containing a phrase already played; the pack is re-exported to the 36 clips the song plays"
+        }
+      ]
     }
   ]
 }
