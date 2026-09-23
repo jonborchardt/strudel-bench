@@ -102,6 +102,38 @@
           "why": "solo bars 2, 3, 4 and 6 the same fix - bar 4 now zig-zags up in fourths to reach 9 instead of walking, and bar 6 descends in alternating fourths instead of running down the scale. Over turn and strip the bass is 2 stepwise intervals against 60 leaps"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "i dont love this song, is it that i just dont like jazz or is it not good? / bridge sounds out of place / this sounds too forced (the alternating-fourths bar) / bass should have more sustain",
+      "changes": [
+        {
+          "section": "bridge",
+          "why": "a new section in C major and 4/4: the harmony never moved in 60 bars and the metre never let up. C major is E phrygian's own pitch collection with the tonic moved, so no new note enters; 4/4 at bpm 145 is the same .207 s eighth as 11/8 at bpm 290, so the pulse is identical and only the grouping changes"
+        },
+        {
+          "section": "bridge",
+          "why": "progression I vi7 ii7 iii7, ending on Em7 - iii7 in C major and the tonic of E phrygian at once, the pivot that hands the song back. It ended on V7, leaving a G7 hanging before a jump to Em7, which is most of why it sat wrong"
+        },
+        {
+          "section": "bridge",
+          "why": "the 4/4 kit was bd on 1+3 and sd on 2+4, a rock backbeat played on a darbuka, which sounded like a different and cheaper band; now a hand-drum pattern with teks off the beat"
+        },
+        {
+          "section": "head",
+          "why": "no piano and the kit at its bones, so the solo is an arrival: head and solo had carried the same arc letter for 24 bars, nearly half the song. The arc went from A A B C D A to A B B' C D E B'"
+        },
+        {
+          "section": "strip",
+          "layer": "bass",
+          "why": "the alternating-fourths bars were as mechanical as the scales they replaced - 7 4 6 3 5 2 4 is a pattern, not a phrase. Rewritten with mixed motion, each bar its own gesture: 27% stepwise, 44% mid-leap, 29% wide"
+        },
+        {
+          "section": "head",
+          "layer": "bass",
+          "why": "articulation .7>.15 (and 0 in the solo) for sustain: at .7 the cell gave clip .5 and a .07 s release, about .12 s of sound. Now ~.41 s, which is the bass layer's ceiling - its hap is one grid step and the cell caps clip at 1.1"
+        }
+      ]
     }
   ]
 }

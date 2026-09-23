@@ -35,11 +35,11 @@ const OPEN = 'xxxxxxxxxxxxxxxxxxxxxx';
 //                   |. . . . .|. . . . .|. . . . .|. . .   group heads at slots 0, 6, 12, 18
 const BSOLO = [
   '[0 ~ ~ ~ ~ ~ 3 ~ ~ ~ ~ ~ 0 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // the cell, alone, all the space in the world
-  '[~ ~ 0 ~ 4 ~ 2 ~ ~ ~ 6 ~ ~ ~ 3 ~ ~ ~ 0 ~ ~ ~]',   // an answer that starts late and moves in fourths, not steps
-  '[~ ~ ~ 4 ~ ~ ~ ~ 1 ~ ~ ~ ~ 5 ~ ~ ~ 2 ~ ~ 6 ~]',   // every note off the group head, every interval a leap
-  '[0 ~ 4 ~ 2 ~ 6 ~ 4 ~ 7 ~ 9 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // climbs by zig-zagging fourths and lands on 9, then stops dead
+  '[~ ~ 0 ~ ~ ~ 5 ~ 4 ~ 3 ~ ~ ~ 2 ~ ~ ~ 0 ~ ~ ~]',   // starts late: one big leap up, then walks down off it
+  '[~ ~ ~ 4 ~ ~ ~ ~ 3 ~ ~ ~ ~ 7 ~ ~ ~ 6 ~ ~ 4 ~]',   // hovers on a step, jumps a fourth, falls back - off the beat throughout
+  '[0 ~ 4 ~ 3 ~ ~ ~ 5 ~ 6 ~ 9 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // leap, step back, two steps up, leap to 9 - and stops dead
   '[6 ~ ~ ~ ~ ~ 9 ~ ~ ~ ~ ~ ~ ~ 7 ~ ~ ~ ~ ~ ~ ~]',   // the cell again, up at the top of the instrument
-  '[7 4 6 3 5 2 4 ~ 0 ~ ~ ~ 6 3 5 2 4 ~ ~ ~ ~ ~]',   // the fast bar: descending in alternating fourths, not a scale
+  '[7 ~ 6 5 3 ~ 4 ~ 0 ~ ~ ~ 5 4 2 ~ 3 ~ ~ ~ ~ ~]',   // the fast bar: a fall that kicks back up twice, mixed steps and skips
   '[0 ~ 3 ~ ~ ~ 1 ~ 4 ~ ~ ~ 2 ~ 5 ~ ~ ~ 3 ~ 6 ~]',   // the cell double-timed and sequenced, one per group
   '[4 ~ ~ ~ ~ ~ 2 ~ ~ ~ ~ ~ 0 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // three notes down to the root, and out
 ];
@@ -53,10 +53,12 @@ const BASS_SOLO = '<' + BSOLO.join(' ') + '>';
 const HANDOFF = '<' + [
   '[0 ~ ~ ~ ~ ~ 4 ~ ~ ~ ~ ~ 7 ~ ~ ~ ~ ~ 4 ~ ~ ~]',   // as it has played all song
   '[0 ~ ~ ~ ~ ~ 4 ~ ~ ~ 2 ~ 7 ~ ~ ~ ~ ~ 4 ~ 6 ~]',   // one extra note per group, and it is a chord tone, not a step
-  '[0 ~ 4 ~ ~ ~ 2 ~ 6 ~ ~ ~ 4 ~ 7 ~ ~ ~ 5 ~ 2 ~]',   // filling in by fourths and thirds - an arpeggio, not a scale
-  '[0 ~ 3 ~ ~ ~ 4 ~ 7 ~ ~ ~ 6 ~ 2 ~ ~ ~ 5 ~ 1 ~]',   // wide leaps, ending on the flat second leaning into the solo
+  '[0 ~ 2 ~ ~ ~ 6 ~ 5 ~ ~ ~ 4 ~ 7 ~ ~ ~ 5 ~ 3 ~]',   // a step, a leap, a step off it - filling in without a formula
+  '[0 ~ ~ ~ 3 ~ 2 ~ 6 ~ 5 ~ 7 ~ ~ ~ 4 ~ 2 ~ 1 ~]',   // a phrase that falls to the flat second, leaning into the solo
 ].join(' ') + '>';
-const bass = { sound: 'gm_acoustic_bass', rhythm: WALK, notes: '0 4 7 4 6', register: .4, articulation: .7,
+// articulation .15, not .7: at .7 the cell gives clip .5 and a .07 s release, about .12 s of sound - a pluck.
+// At .15 it is clip 1.04 and a .24 s release, which is an upright ringing into the gap the way one actually does.
+const bass = { sound: 'gm_acoustic_bass', rhythm: WALK, notes: '0 4 7 4 6', register: .4, articulation: .15,
                brightness: .5, space: .25, level: 1.6, humanize: { timingMs: 10, velocity: .1, correlation: 'bar' } };
 
 // a real sampled sax, not the GM clarinet it started as: the clarinet soundfont measured centroid 1401 Hz and read
@@ -140,14 +142,45 @@ const ANSWER = [
 
 const CHANGES = 'i7 II i7 vii7'; // Em7 F Em7 Dm7 - in phrygian the second degree is ALREADY flat, so II is F major; bII would flatten it again to Fb
 
+// ---- the bridge: the only place the song leaves E phrygian, and the only place it leaves 11/8 ----
+// C major is E phrygian's own pitch collection with the tonic moved, so not one new note enters - it simply turns
+// the light on, and the return to E phrygian afterwards reads as going back into the dark.
+// The metre becomes 4/4 but the PULSE does not change: 11/8 at bpm 290 is an eighth of 0.207 s, and 4/4 at bpm 145
+// is the same 0.207 s eighth. Same heartbeat, regrouped square. That is what makes the 11 feel like home on return.
+// a hand-drum 4/4, not a rock backbeat: kick on 1, 3 and 4 and teks off the beat, so it is still the same darbuka
+// player. bd on 1+3 with sd on 2+4 made the bridge sound like a different and cheaper band.
+const SQUARE = { bd: 'x.......x...x...', sd: '..x...x...x...x.', hh: 'x.x.x.x.x.x.x.x.', oh: '................' };
+const FOURS  = 'x...x...x...x...';   // and here a walking bass is idiomatic rather than lazy - but still by chord tone
+const BRIDGE_BASS = '0 4 2 6';       // root, fifth, third, seventh: an arpeggio, not a scale
+// eight bars of warm tune, the same cell (a note, a rest, a leap of a fourth) opened out into major
+// the piano's voicings are literal note names, so they cannot follow a key change: the bridge needs its own, and its
+// own comping rhythm, since `stab` places chords by the 3+3+3+2 groups that do not exist in 4/4
+const C = '[c3,e3,g3,b3]', Am = '[a2,c3,e3,g3]', Dm7 = '[d3,f3,a3,c4]', G7 = '[g2,b2,d3,f3]';
+const stab4 = (c) => '[~ ~ ' + c + ' ~ ~ ' + c + ' ~ ~]';   // off the beat, twice a bar
+const bridgeComp = (o = {}) => ({ pattern: note('<' + [C, Am, Dm7, G7].map(stab4).join(' ') + '>').s('piano').clip(1.3),
+                                  level: .32, position: -.3, space: .5,
+                                  humanize: { timingMs: 12, velocity: .12, correlation: 'bar' }, ...o });
+const BRIDGE = [
+  '[0 ~ 3 ~ 2 ~ ~ ~]',
+  '[4 ~ 7 ~ 6 ~ 4 ~]',
+  '[5 ~ 2 ~ 3 ~ ~ ~]',
+  '[1 ~ 4 ~ 2 ~ 0 ~]',
+  '[0 ~ 3 ~ 4 ~ ~ ~]',
+  '[5 ~ 8 ~ 7 ~ 5 ~]',
+  '[4 ~ 1 ~ 2 ~ 3 ~]',
+  '[0 ~ ~ ~ ~ ~ ~ ~]',
+].join(' ');
+
 song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'combo', composition: 'single' },
        packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
 
+  // the head states the tune with no piano and the kit down to its bones, so the solo's full band is an arrival
+  // instead of a repeat. Before this, head and solo carried the same arc letter: 24 bars, nearly half the song,
+  // with the same parts at the same density and nothing structural happening.
   section('head', 8, { role: 'establish', progression: CHANGES,
-    drums:  { ...drums },
-    bass:   { ...bass },
-    raw:    { ...comp() },
-    melody: { ...reed, phrase: 4, notes: HEAD, velocity: '.9 1 .85 1' },
+    drums:  { ...drums, template: THIN, density: .4, level: .3 },
+    bass:   { ...bass, level: 1.4 },
+    melody: { ...reed, phrase: 4, level: 1.6, notes: HEAD, velocity: '.9 1 .85 1' },
   }),
 
   section('solo', 16, { role: 'develop', progression: CHANGES,
@@ -157,11 +190,23 @@ song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'co
     melody: { ...reed, phrase: 16, level: 2, notes: SOLO, velocity: '.85 1 .9 1 .95 1 .9 .95' },
   }),
 
+  // the bridge: C major and 4/4 at the same eighth-note pulse. The only key change and the only metre change in the
+  // song, and the reason the 11 feels like home when `turn` drops back into it.
+  // progression ends on Em7, which is iii7 in C major and the tonic of E phrygian at the same time: the pivot chord
+  // that hands the song back. Ending on V7 left a G7 hanging and then jumped to Em7, which is most of why the bridge
+  // sat wrong. (I, not I7: the grammar has no maj7, and I7 gives C7 - a Bb that is in neither key.)
+  section('bridge', 8, { role: 'develop', meter: '4/4', bpm: 145, key: 'C:major', progression: 'I vi7 ii7 iii7',
+    drums:  { ...drums, template: SQUARE, density: .5, level: .4 },
+    bass:   { ...bass, rhythm: FOURS, notes: BRIDGE_BASS, level: 1.5, articulation: .15 },
+    raw:    { ...bridgeComp() },
+    melody: { ...reed, phrase: 8, level: 1.8, notes: BRIDGE, velocity: '.85 1 .9 1 .9 1 .95 .9' },
+  }),
+
   // the hand-off: the sax has stopped, the piano and darbuka carry on, and the bass walks itself into its own solo.
   // Without these four bars the bass solo arrived on a downbeat with three instruments vanishing at once.
   section('turn', 4, { role: 'develop', progression: CHANGES,
     drums:  { ...drums, density: .5, level: .4 },
-    bass:   { ...bass, rhythm: OPEN, notes: HANDOFF, level: 1.7, articulation: .3 },
+    bass:   { ...bass, rhythm: OPEN, notes: HANDOFF, level: 1.7, articulation: .15 },
     raw:    { ...comp({ level: .3 }) },
   }),
 
@@ -171,7 +216,7 @@ song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'co
   // the held notes a real decay without smearing the sixteenth runs in bars 4 and 6 together.
   section('strip', 8, { role: 'breakdown', progression: CHANGES,
     drums:  { ...drums, template: THIN, density: .4, level: .38 },
-    bass:   { ...bass, rhythm: OPEN, notes: BASS_SOLO, level: 1.8, articulation: .2 },
+    bass:   { ...bass, rhythm: OPEN, notes: BASS_SOLO, level: 1.8, articulation: 0 },
   }),
 
   section('build', 16, { role: 'climax', progression: CHANGES,
