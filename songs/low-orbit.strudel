@@ -255,7 +255,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
 
   // 0:52 the hole in verse 1, kept as a section: no voice at all, the kit fills out and the hook arrives
   section('hold', 8, { role: 'develop', progression: 'i@2 VI VII',
-    drums:  { ...kitFull, density: .7, level: .48 },        // 80% of .6
+    drums:  { ...kitFull, density: .7, level: .22 },        // the same halving lift got
     bass,
     melody: hook,
     pad,
