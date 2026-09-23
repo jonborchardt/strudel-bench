@@ -3,14 +3,38 @@
  "license": "CC-BY-NC-SA-3.0",
  "source": "Nine Inch Nails - The Slip multitracks (Lights in the Sky), https://www.nin.com/; cut by strudel-pack",
  "samples": {
+  "lights_in_the_sky_voc_l2_001": {
+   "bars": 2
+  },
+  "lights_in_the_sky_voc_l2_002": {
+   "bars": 2
+  },
+  "lights_in_the_sky_voc_l4_001": {
+   "bars": 4
+  },
   "lights_in_the_sky_voc_ph_001": {
    "bars": 0.568
+  },
+  "lights_in_the_sky_voc_ph_002": {
+   "bars": 0.445
+  },
+  "lights_in_the_sky_voc_ph_003": {
+   "bars": 0.16
   },
   "lights_in_the_sky_voc_ph_004": {
    "bars": 0.11
   },
+  "lights_in_the_sky_voc_ph_005": {
+   "bars": 0.321
+  },
+  "lights_in_the_sky_voc_ph_006": {
+   "bars": 0.17
+  },
   "lights_in_the_sky_voc_ph_007": {
    "bars": 0.655
+  },
+  "lights_in_the_sky_voc_ph_008": {
+   "bars": 0.165
   },
   "lights_in_the_sky_voc_ph_009": {
    "bars": 0.348
@@ -21,11 +45,20 @@
   "lights_in_the_sky_voc_ph_011": {
    "bars": 0.124
   },
+  "lights_in_the_sky_voc_ph_012": {
+   "bars": 0.252
+  },
   "lights_in_the_sky_voc_ph_013": {
    "bars": 0.506
   },
+  "lights_in_the_sky_voc_ph_014": {
+   "bars": 0.39
+  },
   "lights_in_the_sky_voc_ph_015": {
    "bars": 0.763
+  },
+  "lights_in_the_sky_voc_ph_016": {
+   "bars": 0.243
   },
   "lights_in_the_sky_voc_ph_017": {
    "bars": 0.348
@@ -33,14 +66,35 @@
   "lights_in_the_sky_voc_ph_018": {
    "bars": 0.266
   },
+  "lights_in_the_sky_voc_ph_019": {
+   "bars": 0.128
+  },
+  "lights_in_the_sky_voc_ph_020": {
+   "bars": 0.348
+  },
+  "lights_in_the_sky_voc_ph_021": {
+   "bars": 0.193
+  },
   "lights_in_the_sky_voc_ph_022": {
    "bars": 0.275
   },
   "lights_in_the_sky_voc_ph_023": {
    "bars": 0.165
   },
+  "lights_in_the_sky_voc_ph_024": {
+   "bars": 0.202
+  },
   "lights_in_the_sky_voc_ph_025": {
    "bars": 0.307
+  },
+  "lights_in_the_sky_voc_ph_026": {
+   "bars": 0.225
+  },
+  "lights_in_the_sky_voc_ph_027": {
+   "bars": 0.49
+  },
+  "lights_in_the_sky_voc_ph_028": {
+   "bars": 0.193
   },
   "lights_in_the_sky_voc_ph_029": {
    "bars": 0.348
@@ -48,8 +102,14 @@
   "lights_in_the_sky_voc_ph_030": {
    "bars": 0.578
   },
+  "lights_in_the_sky_voc_ph_031": {
+   "bars": 0.27
+  },
   "lights_in_the_sky_voc_ph_032": {
    "bars": 0.206
+  },
+  "lights_in_the_sky_voc_ph_033": {
+   "bars": 0.211
   }
  }
 }
