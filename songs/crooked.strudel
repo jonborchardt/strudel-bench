@@ -1,0 +1,139 @@
+// crooked: jazz in 11/8, grouped 3+3+3+2, so every bar is cut off a beat early. It grooves and it limps.
+// Not a jazz quartet playing an odd metre - a Balkan band playing jazz changes: clarinet lead, upright bass,
+// piano comping, darbuka instead of a kit. E phrygian, whose flat second is both the Balkan cadence and a
+// legitimate jazz colour, with sevenths on every chord.
+//
+// No `groove` anywhere, on purpose. The swing axis is `swingBy(x, 4)` (lib/layers.mjs), which splits the *cycle*
+// into four slices: in 11/8 that is 2.75 eighths per slice and lands on nothing. Modern odd-metre jazz is played
+// straight anyway - the 3+3+3+2 grouping is the lilt, not the swing.
+//
+// Everything is written on an eleven-eighth grid. A bar of melody is four groups carrying their own weight,
+// [a b c]@3 [d e f]@3 [g h i]@3 [j k]@2, which is how the grouping stays audible in the line and not just the kit.
+// The drum and bass grids are 22 characters (11/8 -> 22 steps, parseMeter in lib/song.mjs), with the group heads
+// at steps 0, 6, 12 and 18.
+
+// darbuka, whose own sample loudness is already the right balance: the doum is the loud low hit (rms -16.5 dB),
+// the tek a slap 15 dB under it, the ka a light finger tap 21 dB under it. A frame drum takes the accents.
+const kit = { bd: 'darbuka:3', sd: 'darbuka:6', hh: 'darbuka:14', oh: 'framedrum:7' };
+//                 0     6     12    18          <- the group heads: 3 + 3 + 3 + 2
+const DOUM   = 'X.....x.....X.....x...';
+const TEK    = '....x.....x.....x...x.';
+const KA     = 'x.x.x.x.x.x.x.x.x.x.x.';   // the eighth pulse, all eleven of them
+const ACCENT = '..................x...';   // the frame drum marks the short group only
+const BEAT   = { bd: DOUM, sd: TEK, hh: KA, oh: ACCENT };
+const THIN   = { bd: DOUM, sd: '....x.....x...........', hh: 'x...x...x...x...x...x.', oh: '......................' };
+const drums  = { sounds: kit, template: BEAT, articulation: .6, density: .5, brightness: .55, level: .42, space: .35,
+                 humanize: { timingMs: 8, velocity: .12, correlation: 'bar' } };
+
+// the bass lands on the four group heads and takes the last short group as a pickup into the next bar
+const WALK = 'x.....x.....x.....x.x.';
+const bass = { sound: 'gm_acoustic_bass', rhythm: WALK, notes: '0 4 7 4 6', register: .4, articulation: .7,
+               brightness: .5, space: .25, level: 1.6, humanize: { timingMs: 10, velocity: .1, correlation: 'bar' } };
+
+// clarinet: the Balkan voice over the jazz changes
+const reed = { sound: 'gm_clarinet', register: .5, brightness: .6, articulation: .35, space: .5, level: 1.3,
+               position: .2, humanize: { timingMs: 11, velocity: .1, correlation: 'phrase' } };
+
+// piano comping: stabs at the END of each group, so the piano pushes against the grouping the drums state
+const Em = '[e3,g3,b3,d4]', F = '[f3,a3,c4,e4]', Dm = '[d3,f3,a3,c4]';
+const stab = (c) => '[[~ ~ ' + c + ']@3 [~ ~ ' + c + ']@3 [~ ~ ' + c + ']@3 [~ ' + c + ']@2]'; // no backticks: the transpiler reads a template literal as mini-notation
+const CHORDS = [Em, F, Em, Dm];
+const comp = (o = {}) => ({ pattern: note('<' + CHORDS.map(stab).join(' ') + '>').s('piano').clip(1.3),
+                            level: .38, position: -.3, space: .5,
+                            humanize: { timingMs: 12, velocity: .12, correlation: 'bar' }, ...o });
+
+// E phrygian: 0=E 1=F(the flat second) 2=G 3=A 4=B 5=C 6=D 7=E'
+// the head: four bars that climb through the flat second and come home, phrased in 3+3+3+2 the whole way
+const HEAD = [
+  '[[0 1 2]@3 [3 ~ 2]@3 [1 ~ 0]@3 [~ ~]@2]',
+  '[[4 ~ 3]@3 [2 1 2]@3 [3 ~ ~]@3 [2 1]@2]',
+  '[[0 1 2]@3 [3 4 5]@3 [4 ~ 3]@3 [2 ~]@2]',
+  '[[7 ~ 5]@3 [4 3 2]@3 [1 ~ 0]@3 [~ ~]@2]',
+].join(' ');
+
+// sixteen bars of written solo: near the root, out to the ninth, home. Every bar keeps the 3+3+3+2 phrasing.
+const SOLO = [
+  '[[0 ~ 1]@3 [2 ~ ~]@3 [1 ~ 0]@3 [~ ~]@2]',
+  '[[2 3 4]@3 [~ 3 2]@3 [1 ~ ~]@3 [0 ~]@2]',
+  '[[0 1 2]@3 [3 4 5]@3 [6 ~ 5]@3 [4 3]@2]',
+  '[[2 ~ 1]@3 [0 ~ ~]@3 [~ 0 1]@3 [2 3]@2]',
+  '[[4 5 6]@3 [7 ~ 6]@3 [5 ~ 4]@3 [3 ~]@2]',
+  '[[2 1 0]@3 [1 2 3]@3 [4 ~ ~]@3 [~ ~]@2]',
+  '[[5 ~ 4]@3 [3 2 1]@3 [2 ~ 3]@3 [4 5]@2]',
+  '[[6 7 6]@3 [5 ~ 4]@3 [3 ~ 2]@3 [1 0]@2]',
+  '[[0 ~ ~]@3 [~ 0 1]@3 [2 3 4]@3 [5 ~]@2]',
+  '[[7 ~ 8]@3 [9 ~ 8]@3 [7 ~ 5]@3 [4 ~]@2]',
+  '[[3 4 5]@3 [4 3 2]@3 [1 ~ 0]@3 [~ 2]@2]',
+  '[[4 ~ 6]@3 [7 ~ ~]@3 [7 6 5]@3 [4 3]@2]',
+  '[[2 ~ 1]@3 [0 1 2]@3 [3 4 5]@3 [6 7]@2]',
+  '[[9 ~ ~]@3 [~ 8 7]@3 [6 5 4]@3 [3 2]@2]',
+  '[[1 ~ 2]@3 [3 ~ 4]@3 [5 ~ 4]@3 [3 2]@2]',
+  '[[1 ~ 0]@3 [~ ~ ~]@3 [0 ~ ~]@3 [~ ~]@2]',
+].join(' ');
+
+// the climax line sits an octave up and drives: the short group is never a rest any more
+const RIDE = [
+  '[[7 ~ 6]@3 [5 ~ 7]@3 [9 ~ 8]@3 [7 ~]@2]',
+  '[[6 5 4]@3 [5 6 7]@3 [8 ~ ~]@3 [7 6]@2]',
+  '[[5 ~ 7]@3 [9 ~ 11]@3 [12 ~ 11]@3 [9 ~]@2]',
+  '[[8 7 6]@3 [5 4 3]@3 [4 ~ 5]@3 [6 7]@2]',
+  '[[9 ~ 8]@3 [7 ~ 9]@3 [11 ~ 10]@3 [9 ~]@2]',
+  '[[8 7 6]@3 [7 8 9]@3 [10 ~ ~]@3 [9 8]@2]',
+  '[[7 ~ 9]@3 [11 12 11]@3 [9 ~ 7]@3 [5 ~]@2]',
+  '[[4 ~ 3]@3 [2 ~ 1]@3 [0 ~ ~]@3 [~ ~]@2]',
+].join(' ');
+
+// a vibraphone answers in the holes the clarinet leaves, one or two notes a bar: the jazz side of the band
+const ANSWER = [
+  '[[~ ~ 0]@3 [~ ~ ~]@3 [4 ~ ~]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [2 ~ ~]@3 [~ ~ 1]@3 [0 ~]@2]',
+  '[[~ ~ 4]@3 [~ ~ ~]@3 [5 ~ ~]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [3 ~ ~]@3 [~ ~ 2]@3 [1 ~]@2]',
+  '[[~ ~ 7]@3 [~ ~ ~]@3 [6 ~ ~]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [5 ~ ~]@3 [~ ~ 4]@3 [3 ~]@2]',
+  '[[~ ~ 2]@3 [~ ~ ~]@3 [4 ~ ~]@3 [~ ~]@2]',
+  '[[0 ~ ~]@3 [~ ~ ~]@3 [~ ~ ~]@3 [~ ~]@2]',
+].join(' ');
+
+const CHANGES = 'i7 II i7 vii7'; // Em7 F Em7 Dm7 - in phrygian the second degree is ALREADY flat, so II is F major; bII would flatten it again to Fb
+
+song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { composition: 'single' },
+       packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
+
+  section('head', 8, { role: 'establish', progression: CHANGES,
+    drums:  { ...drums },
+    bass:   { ...bass },
+    raw:    { ...comp() },
+    melody: { ...reed, phrase: 4, notes: HEAD, velocity: '.9 1 .85 1' },
+  }),
+
+  section('solo', 16, { role: 'develop', progression: CHANGES,
+    drums:  { ...drums, density: .55, variation: .2 },
+    bass:   { ...bass },
+    raw:    { ...comp() },
+    melody: { ...reed, phrase: 16, level: 1.45, notes: SOLO, velocity: '.85 1 .9 1 .95 1 .9 .95' },
+  }),
+
+  // the metre naked: bass and darbuka alone, so the eleven is finally countable
+  section('strip', 8, { role: 'breakdown', progression: CHANGES,
+    drums:  { ...drums, template: THIN, density: .45, level: .45 },
+    bass:   { ...bass, level: 1.7 },
+  }),
+
+  section('build', 16, { role: 'climax', progression: CHANGES,
+    drums:  { ...drums, density: .65, variation: .35, level: .5 },
+    bass:   { ...bass, notes: '0 4 7 6 [7 2]', level: 1.7 },
+    raw:    { ...comp({ level: .45 }) },
+    melody:  { ...reed, phrase: 8, level: 1.6, notes: RIDE, velocity: '.95 1 1 1 .95 1 1 .95' },
+    melody2: { sound: 'vibraphone', register: .5, phrase: 8, notes: ANSWER, brightness: .65,
+               articulation: .3, space: .55, level: 1.1, position: -.15,
+               humanize: { timingMs: 9, velocity: .1, correlation: 'phrase' } },
+  }),
+
+  section('out', 8, { role: 'release', progression: CHANGES,
+    drums:  { ...drums, density: .45, level: .38 },
+    bass:   { ...bass },
+    raw:    { ...comp() },
+    melody: { ...reed, phrase: 4, notes: HEAD, level: 1.2, velocity: '.9 1 .85 .9' },
+  }),
+])

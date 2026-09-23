@@ -1,0 +1,42 @@
+{
+  "prompt": "jazz, but deliberately not standard jazz: 11/8 grouped 3+3+3+2, a Balkan band playing jazz changes",
+  "requests": [
+    {
+      "date": "2026-09-23",
+      "ask": "lets make jazz.. but i dont want some standard jazz.. i want to do something unique. odd meter, a meter jazz doesn't use - 11/8",
+      "changes": [
+        {
+          "section": "song",
+          "why": "meter 11/8, the first song in the repo to set meter at all (parseMeter gives 22 steps a bar, pulse 2). Grouped 3+3+3+2 so three long groups are followed by a short one and every bar is cut off a beat early"
+        },
+        {
+          "section": "song",
+          "why": "no groove anywhere on purpose: the swing axis is swingBy(x, 4), which splits the CYCLE into four slices, and in 11/8 that is 2.75 eighths per slice and lands on nothing. Modern odd-metre jazz is played straight and the grouping is the lilt"
+        },
+        {
+          "section": "song",
+          "why": "key E:phrygian with i7 II i7 vii7 (Em7 F Em7 Dm7). Written as bII first, which gave E: in phrygian the second degree is already flat, so II is F major and bII flattens it again to Fb"
+        },
+        {
+          "section": "song",
+          "why": "the instruments are what keep it off Brubeck's turf: gm_clarinet lead, gm_acoustic_bass, piano comping and a darbuka instead of a kit. The darbuka's own sample loudness is already the right balance, doum -16.5 dB, tek -31.1, ka -37.5"
+        },
+        {
+          "section": "head",
+          "layer": "raw",
+          "why": "the piano stabs land at the END of each group so the comping pushes against the grouping the darbuka states"
+        },
+        {
+          "section": "head",
+          "layer": "drums",
+          "why": "level .9>.42 and build 1>.5 - the darbuka measured -2.7 dB under the mix at peak .881, dominating; now -5.9 with the clarinet leading at -5.0"
+        },
+        {
+          "section": "solo",
+          "layer": "melody",
+          "why": "sixteen bars of written solo, phrased 3+3+3+2 in every bar, from the root out to the ninth and home; the concept cannot carry the song, the writing has to"
+        }
+      ]
+    }
+  ]
+}
