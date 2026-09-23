@@ -36,7 +36,7 @@
 //
 // So the order and the spacing are the record's; the tempo is doubled (110 = 55 felt in half-time), the key
 // is the fragments' own C minor, and the song underneath is not that song. Mute every voice part and the
-// guitar, bass, vibraphone and pad still stand on their own.
+// guitar, bass, piano and pad still stand on their own.
 //
 // The fragments are one to four words each. None is used to say a sentence: they are syllables placed for
 // pitch and attack.
@@ -192,9 +192,9 @@ const pick = (lvl = .8) => ({ level: lvl, space: .5, width: .55, position: -.28,
                 '[ab2 eb3 ab3 c4 eb3 ab3 c4 eb4] [bb2 f3 bb3 d4 f3 bb3 d4 f4]>')
     .s('gm_electric_guitar_clean').gain(.8) });
 
-// 4 the hook: a vibraphone over the top, question and answer across sixteen slots, moving with the chords.
+// 4 the hook: a piano over the top, question and answer across sixteen slots, moving with the chords.
 // It measured 9.6 dB under the mix in hold with a 1830 Hz centroid and nothing above 3 kHz: not bright in the
-// top, but sitting right in the upper mids where a vibraphone reads as piercing. Down an octave-ish
+// top, but sitting right in the upper mids where a mallet reads as piercing. Down an octave-ish
 // (register .72 -> .62, which is where verse2 already had it and verse2 never sounded shrill), darker, quieter,
 // and a little further back.
 // Axis tuning was not going to reach this. The events said the line ran midi 60..72 -- C4 up to C5 -- at
@@ -205,8 +205,10 @@ const pick = (lvl = .8) => ({ level: lvl, space: .5, width: .55, position: -.28,
 // was over-correcting: the pitch was the problem, the hook was not.
 // `register` is a three-way step, not a dial -- melodyOctave in lib/layers.mjs is octave 3 below 1/3, 4 up to
 // 2/3, 5 above -- so .72 -> .62 moved it one octave and .62 -> .5 moved it nothing at all. .3 is octave 3.
-// So the written line and its ring are back as they were and level carries the balance instead.
-const hook = { sound: 'vibraphone', register: .3, level: 1, follow: true, phrase: 2, space: .62, width: .5,
+// So the written line and its ring are back as they were and level carries the balance instead. The piano
+// samples are louder than the vibraphone ones were, so the same level put it at 11.2 dB under the mix where
+// the vibraphone had sat at 14.4 and sounded right; .72 puts it back.
+const hook = { sound: 'piano', register: .3, level: .72, follow: true, phrase: 2, space: .62, width: .5,
   articulation: .5, brightness: .4, position: .18,
   notes: '0 ~ 2 4 ~ ~ 7 ~ ~ ~ 6 ~ 4 ~ 2 ~',
   velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };
@@ -220,7 +222,7 @@ const pad = { ...air, duck: 'drums', duckDepth: .15, duckAttack: .25 };   // the
 // measured against the pad it sat right on top of it in the mids (masking 0.70), so it lives above the pad
 // as air rather than as body, and off to the right of centre
 const bed = { level: 1, width: .6, position: .32,
-  pattern: s('pink').clip(1).lpf(sine.range(1800, 6000).slow(24)).hpf(1500).gain(.55) };
+  pattern: s('pink').clip(1).lpf(sine.range(1800, 6000).slow(24)).hpf(1500).gain(.28) };
 
 const V = { level: 1.2, space: .4, width: .35 };        // the voice: dry and close, it brings its own room
 const VF = { level: 1.4, space: .3, width: .3 };
@@ -265,7 +267,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
 
   // 1:09 the chorus shape: a fragment every other bar and a fifth higher than the verse ones
   section('lift', 16, { role: 'develop', progression: 'i@2 VI VII',
-    drums:  { ...kitFull, variation: .2, level: .6 },       // 80% of the kit's own .75
+    drums:  { ...kitFull, variation: .2, level: .28 },      // the kit was ~45% of the mix energy here
     perc:   shaker,
     perc2:  { sound: 'LinnDrum_oh', rhythm: '......x.......x.', level: .3, articulation: .75, position: -.2, brightness: .55 },
     bass,
@@ -297,7 +299,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   // a fragment nearly every bar, the counter-line above the hook, and one fragment chopped into eight and
   // played as an instrument so its syllables stop being words
   section('flood', 16, { role: 'climax', progression: 'i@2 VI VII',
-    drums:  { ...kitPeak, variation: .3, level: .5, fill: 2 },   // 80% of .62
+    drums:  { ...kitPeak, variation: .3, level: .23, fill: 2 },  // likewise, and it is the climax
     perc:   shaker,
     bass:   { ...bass, brightness: .38, level: .85 },
     melody: hook,

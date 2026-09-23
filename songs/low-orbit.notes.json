@@ -322,6 +322,29 @@
           "why": "all three read transients touch full scale afterwards at 0.001 to 0.002 percent of samples, the soft clip's category rather than a level problem"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "lift and flood kit is way too loud, like nothing changed; also make raw2 half as loud, too much fuzz; change vibraphones to pianos",
+      "changes": [
+        {
+          "section": "lift",
+          "layer": "drums",
+          "why": "level .6>.28 and flood.drums .5>.23: 80 percent was only -1.9 dB and the kit carried about 45 percent of the mix energy, so lowering it lowered the mix with it and the ratio moved 1.7 dB. Halving is -6 dB and moves the ratio about 4"
+        },
+        {
+          "section": "song",
+          "why": "kit against the mix went -3.5>-7.8 in lift and -2.7>-6.7 in flood; against the lead vocal, which does not move, +8.2>+1.6 and +7.0>-0.1"
+        },
+        {
+          "section": "song",
+          "why": "hook sound vibraphone>piano; level 1>.72 because the piano samples are louder and the same level put it at 11.2 dB under the mix where the vibraphone sat at 14.4 and sounded right. Now 13.9 in lift and 14.1 in flood, centroid 702>399 Hz"
+        },
+        {
+          "section": "song",
+          "why": "bed gain .55>.28, half as asked; it lands 30 dB under the mix, which the mix lint calls inaudible"
+        }
+      ]
     }
   ]
 }
