@@ -164,6 +164,33 @@
           "why": "five stem chunks stay unused on purpose, each a bar containing a phrase already played; the pack is re-exported to the 36 clips the song plays"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "open raw3 first sound should be a beat earlier; verse1 raw3 first sound bad, second is 2 sounds and sounds bad, last cropped oddly; lift raw3 first 3 bad; verse2 raw3 4th bad; flood and out raw3 all bad - like unwanted trimming/looping on raw3",
+      "changes": [
+        {
+          "section": "song",
+          "why": "every fragment now gates itself: note-off before its own buffer ends with a release of the same length, so the hard edge where the transcriber cut it becomes a fade. Nothing closed the gate before, so short clips stopped dead with seconds of open gate after them"
+        },
+        {
+          "section": "song",
+          "why": "the fade is a third of the clip up to .3 s, not fixed: a fixed fade was two thirds of a half-second syllable"
+        },
+        {
+          "section": "song",
+          "why": "makeup gain capped at 6: normalising the four quietest clips wanted 12-15x, which lifts the stem noise floor 22 dB with the voice. Final gains top out at 8.4 not 15.2, and the part still measures 11.2 dB under the mix in verse1"
+        },
+        {
+          "section": "flood",
+          "why": "removed the chopped part: it fired 0.27 s grains of one clip 80 times in the section, the loudest thing there, and was the looping that was heard"
+        },
+        {
+          "section": "open",
+          "layer": "raw3",
+          "why": "the first word is a pickup on the last beat of the bar before, written as a negative slot"
+        }
+      ]
     }
   ]
 }

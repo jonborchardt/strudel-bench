@@ -26,9 +26,8 @@
 //                               and a fifth higher   fifth (verse fragments 117..132 Hz, chorus 147..178)
 //   Verse 2   bars 26..41       6, front-loaded,     verse2: three at the top, the record's eight-bar
 //                               then an 8-bar hole   silence kept whole, then the three that lead in
-//   Chorus 2  bars 42..49+      12, continuous,      flood: a fragment nearly every bar, plus one of them
-//                               spilling past 'End'  chopped into eight and played as an instrument
-//                                                    out: the one past the End marker, with its tail
+//   Chorus 2  bars 42..49+      12, continuous,      flood: a fragment nearly every bar
+//                               spilling past 'End'  out: the one past the End marker, with its tail
 // hold has no voice at all, and that is not a choice: it is the record's run-up into its first chorus, the
 // 11.3 s between the last verse fragment and the first chorus one, and the stem holds nothing in that window
 // -- no phrase, no detected activity. Anything put there would have to come from somewhere else on the
@@ -53,15 +52,20 @@ const W2 = 'lights_in_the_sky_voc_l1_004';   // 148.4 s, inside the long verse-2
 const W3 = 'lights_in_the_sky_voc_l1_006';   // 192.0 s, between fragments 26 and 27
 
 // The clips come off the stem 17 dB apart: -28.5 dB rms for the loudest chorus fragment, -46 for the
-// quietest one-word verse one. A single part level cannot fix that (and tops out at +6 dB), so each clip
-// carries its own makeup gain, computed from its rms to land every fragment at -24 dB rms. Clip 5 is the
-// exception, capped at 4: its 23 dB crest would otherwise peak at 0.95. After this the loudest peak is
-// 0.70, so nothing reaches the output wall.
-const GAIN = { 1: 4.2, 2: 4, 3: 12.6, 4: 2.15, 5: 4, 6: 12.55, 7: 4.25, 8: 12.7, 9: 5.15,
-               10: 1.7, 11: 1.75, 12: 2.55, 13: 3.4, 14: 1.85, 15: 3,
-               16: 6.4, 17: 2.65, 18: 5.2, 19: 6.8, 20: 6.65, 21: 11.5,
-               22: 2.25, 23: 1.7, 24: 3, 25: 2.4, 26: 3.05, 27: 3.95, 28: 6, 29: 2, 30: 1.8,
-               31: 3, 32: 2.95, 33: 5.9 };
+// quietest one-word verse one, so each carries its own makeup gain toward a common -24 dB rms.
+//
+// That gain is capped at 6 (+15.6 dB). Normalising the quietest four honestly wanted 12 to 15x, which lifts
+// the stem's own noise floor and room bleed by 22 dB along with the voice: those fragments arrived with an
+// audible swell of hiss around the word. They now sit lower than the rest, which is the right trade.
+// Clip 5 is set by hand at 4: its 23 dB crest would peak at 0.95 if normalised by rms.
+const GAIN = { 1: 4.2, 2: 4.02, 3: 6.0, 4: 2.15, 5: 4.0, 6: 6.0, 7: 4.25, 8: 6.0, 9: 5.13,
+               10: 1.71, 11: 1.75, 12: 2.53, 13: 3.39, 14: 1.83, 15: 3.01, 16: 6.0, 17: 2.63, 18: 5.18,
+               19: 6.0, 20: 6.0, 21: 6.0, 22: 2.24, 23: 1.68, 24: 3.0, 25: 2.41, 26: 3.07, 27: 3.96,
+               28: 6.0, 29: 1.99, 30: 1.79, 31: 2.99, 32: 2.93, 33: 5.91 };
+const SECS = { 1: 2.48, 2: 1.94, 3: 0.7, 4: 0.48, 5: 1.4, 6: 0.74, 7: 2.86, 8: 0.72, 9: 1.52,
+               10: 0.7, 11: 0.54, 12: 1.1, 13: 2.21, 14: 1.7, 15: 3.33, 16: 1.06, 17: 1.52, 18: 1.16,
+               19: 0.56, 20: 1.52, 21: 0.84, 22: 1.2, 23: 0.72, 24: 0.88, 25: 1.34, 26: 0.98, 27: 2.14,
+               28: 0.84, 29: 1.52, 30: 2.52, 31: 1.18, 32: 0.9, 33: 0.92 };   // each clip's own length in seconds
 
 // One slot is one bar. A slot is a clip number, 0 for a bar with no voice, or [n, m] for two clips sharing
 // a bar: m lands three quarters of the way through, 1.64 s behind n.
@@ -75,12 +79,25 @@ const GAIN = { 1: 4.2, 2: 4, 3: 12.6, 4: 2.15, 5: 4, 6: 12.55, 7: 4.25, 8: 12.7,
 // The gain sequence runs in parallel with the same structure, so slot n of one is slot n of the other.
 // (single quotes and a join on purpose: Strudel's transpiler turns double quotes and backticks into
 // mini-notation before the interpolation happens)
-const slot = (x, f) => (Array.isArray(x) ? '[' + f(x[0]) + '@3 ' + f(x[1]) + ']' : f(x));
+// Every clip is cut 200 ms after its last word (the transcriber's post-roll), which lands mid-decay: played
+// as-is the buffer stops dead and the note reads as chopped. So each one gates itself -- note-off FADE
+// seconds before its own buffer ends, with a release of the same length, which turns that hard edge into a
+// fade. `clip` multiplies the hap's length, and a hap is a whole bar alone but three quarters or one quarter
+// inside a pair, so the fraction has to come from the slot shape.
+// The fade is a third of the clip, up to .3 s: a fixed fade would be most of a half-second syllable and
+// almost none of a three-second line.
+const BARSEC = 240 / 110;
+const fade = (n) => Math.min(.3, SECS[n] * .33);
+const slot = (x, f) => (Array.isArray(x) ? '[' + f(x[0], .75) + '@3 ' + f(x[1], .25) + ']'
+  : x < 0 ? '[~ ~ ~ ' + f(-x, .25) + ']'   // a negative slot is a pickup: the clip on the last beat of the bar
+  : f(x, 1));
 const one = (n) => (n ? P(n) : '~');
 const lvl = (n) => GAIN[n] || 1;
-const voice = (...ns) => s('<' + ns.map((x) => slot(x, one)).join(' ') + '>')
-  .gain('<' + ns.map((x) => slot(x, lvl)).join(' ') + '>')
-  .attack(.01).release(1.2);
+const clp = (n, frac) => (n ? +Math.max(.05, (SECS[n] - fade(n)) / (frac * BARSEC)).toFixed(3) : 1);
+const rel = (n) => (n ? fade(n) : .1);
+const seq = (ns, f) => '<' + ns.map((x) => slot(x, f)).join(' ') + '>';
+const voice = (...ns) => s(seq(ns, one)).gain(seq(ns, lvl)).clip(seq(ns, clp)).release(seq(ns, rel))
+  .attack(.01);
 // one of the wordless chunks, fired on the bar it falls on and left to run its 4.4 s (two bars here) out
 const wordless = (sound, mask, gain) => ({ level: 1, space: .55, width: .5, position: -.2,
   pattern: s(sound).mask(mask).gain(gain).attack(.05).release(1) });
@@ -136,7 +153,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad:    { ...air, level: .5 },
     raw:    pick(.65),
     raw2:   bed,
-    raw3:   { ...V, level: 1, pattern: voice(0, 0, 0, 0, 1, 0, [2, 3], 0) },
+    raw3:   { ...V, level: 1, pattern: voice(0, 0, 0, -1, 0, 0, [2, 3], 0) },
   }),
 
   // 0:17 verse 1, the record's first cluster: two fragments at the top, then the long hole, then two more.
@@ -203,11 +220,6 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw2:   bed,
     raw3:   { ...VF, pattern: voice(22, 0, 0, [23, 24], 0, [25, 26], 0, 0, 0, [27, 28], 0, 29, 0, 30, 31, 32) },
     // the chop: one 2.5 s fragment cut into eight equal pieces, each fitted to its step
-    // the chop is clip 15, the record's longest fragment, first heard whole back in `lift`: chopping one the
-    // listener already knows is a callback, and it keeps the order rule (a chop of a chorus-2 clip would have
-    // sounded here at bar 1, before the sequence reached it)
-    sample: { sound: P(15), bars: 1, slices: 8, pattern: '0 ~ 3 ~ 0 5 ~ 7', stretch: true,
-              level: 2, space: .5, position: .42, brightness: .6 },
     raw4:   wordless(W3, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 1.95),
     fx:     { impact: true, level: .55 },
   }),
