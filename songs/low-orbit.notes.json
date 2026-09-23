@@ -378,6 +378,26 @@
           "why": "kit against the mix is now -19.1 in verse1, -15.9 in lift, -13.1 in flood; against the bass -14.0 / -10.4 / -8.1; the arc still rises into the climax because it is carried by the templates and density, not level"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "on verse1 and verse2 make perc 0.1; on lift make perc2 = 0.1; you can vary them like 10% for a nice feel, or not",
+      "changes": [
+        {
+          "section": "lift",
+          "layer": "perc2",
+          "why": "level .3>.1: the open hat measured 12.3 dB under the mix against a kit at 15.9, louder than the kit under it; now 20.5"
+        },
+        {
+          "section": "verse1",
+          "layer": "perc",
+          "why": "and verse2.perc the verses had no perc part at all, so the shaker was added to both at .24 and .22, a tenth apart"
+        },
+        {
+          "section": "song",
+          "why": "level multiplies a sample's own loudness, so .1 is not the same amount on every part: .1 on the 808 shaker measured 32.3 and 33.6 dB under the mix, which the lint calls inaudible, where .1 on the LinnDrum kit is a quiet kit. .24 and .22 put the shakers at 24.6 and 25.8"
+        }
+      ]
     }
   ]
 }

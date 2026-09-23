@@ -248,6 +248,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   // bass and a half-time kick under it; no hook yet
   section('verse1', 16, { role: 'develop', progression: 'i@2 VI VII',
     drums:  { ...kit, density: .4, level: .08 },
+    perc:   { ...shaker, level: .24 },   // .1 measured 32 dB under: this sample is much quieter than the kit's
     bass:   { ...bass, level: .7, brightness: ramp(.22, .32) },
     pad,
     raw:    pick(.8),
@@ -272,7 +273,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   section('lift', 16, { role: 'develop', progression: 'i@2 VI VII',
     drums:  { ...kitFull, variation: .2, level: .1 },
     perc:   shaker,
-    perc2:  { sound: 'LinnDrum_oh', rhythm: '......x.......x.', level: .3, articulation: .75, position: -.2, brightness: .55 },
+    perc2:  { sound: 'LinnDrum_oh', rhythm: '......x.......x.', level: .1, articulation: .75, position: -.2, brightness: .55 },
     bass,
     melody: hook,
     pad:    { ...pad, level: .5, brightness: .38 },
@@ -287,6 +288,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   // the kit drops to the half-time skeleton for the hole and the last two bars sweep shut
   section('verse2', 16, { role: 'release', progression: 'i@2 VI VII', sweep: 2,
     drums:  { ...kit, density: .4, level: .075 },
+    perc:   { ...shaker, level: .22 },   // the two verses a tenth apart rather than identical
     bass:   { ...bass, level: .7 },
     melody: { ...hook, level: .55 },
     pad,
