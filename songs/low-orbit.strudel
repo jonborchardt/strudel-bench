@@ -109,45 +109,64 @@ const LEAD = {
   lift:   [10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 0, 0, 0, 0, 15, 0],
   verse2: [16, 0, 17, 0, 0, 18, 0, 0, 0, 0, 19, 0, 0, [20, 21], 0, 0],
   flood:  [22, 0, 0, [23, 24], 0, [25, 26], 0, 0, 0, [27, 28], 0, 29, 0, 30, 31, 32],
+  hold:   [0, 0, 0, 0, 0, 0, 0, 0],          // no fragments of its own: it carries verse1's
   out:    [0, 33, 0, 0, 0, 33, 0, 0],
 };
 
-// ---- more of what he is already saying ----
+// ---- the room: a conversation going on that you cannot quite make out ----
 //
-// In every bar the lead leaves empty, another of the fragments this section has already sounded, cycling
-// through them so it is not the same word twice running and there is more to draw on as the section goes
-// on. It only ever picks from what has already been heard here, so the record's order is untouched.
+// Every bar is four quarter-note slots. An empty one takes three fragments, on beats 2, 3 and 4; a bar the
+// lead is already in takes one, clear of where the lead's own hit sits. The slots are .545 s apart and a
+// fragment runs from half a second to three and a third, so they run into each other by design: at any
+// moment two or three are sounding at once.
 //
-// This is not a separate effect: same clips, same makeup gains, no filter and no pitch shift. It sits off
-// the beat (beat 2, 3 or 4 in turn) and a little left of the lead, which is what keeps the two apart -- it
-// is meant to be heard, not sensed.
-// Every other empty bar takes two fragments rather than one, so he is talking over himself as the section
-// fills up rather than dropping one word a bar.
-const said = (ns) => {
-  const seen = [];
+// That overlap is what makes it unintelligible rather than quiet. Voices masking each other stop resolving
+// into words while staying plainly present, which is the thing a low-pass at 900 Hz and a 22 dB drop failed
+// to do. Each slot also takes one of four speeds and one of four pans in turn, so it reads as a few people
+// across a room rather than one mouth doubling itself, and a gentle low-pass takes the consonants off.
+//
+// It only ever picks from what this section has already sounded (`carry` hands a section the previous one's
+// material, which is how `hold` can talk when the stem itself is silent there), so the record's order is
+// untouched by any amount of it.
+const clipsIn = (ns) => {
+  const out = [];
+  ns.forEach((x) => (Array.isArray(x) ? x : [Math.abs(x)]).forEach((n) => { if (n && !out.includes(n)) out.push(n); }));
+  return out;
+};
+const said = (ns, carry = []) => {
+  const seen = [...carry];
   let k = 0;
   const note = (n) => { if (n && !seen.includes(n)) seen.push(n); };
   const next = () => seen[k++ % seen.length];
-  let empty = 0;
   return ns.map((x) => {
-    if (Array.isArray(x)) { x.forEach(note); return 0; }
-    const lead = Math.abs(x);
-    if (lead) { note(lead); return 0; }
-    if (!seen.length) return 0;
-    return empty++ % 2 ? [next(), next()] : next();
+    const pair = Array.isArray(x);
+    if (pair) x.forEach(note); else note(Math.abs(x));
+    if (!seen.length) return [];                                  // nothing said here yet, nothing to say again
+    if (!pair && x === 0) return [0, next(), next(), next()];
+    return pair || x < 0 ? [0, next(), 0, 0] : [0, 0, next(), 0]; // clear of the lead's own hit
   });
 };
-const POS = ['[~ X ~ ~]', '[~ ~ X ~]', '[~ ~ ~ X]'];
-const fslot = (n, i, f) => (!n ? '~'
-  : Array.isArray(n) ? '[~ ' + f(n[0], .25) + ' ~ ' + f(n[1], .25) + ']'
-  : POS[i % 3].replace('X', f(n, .25)));
-const fseq = (ns, f) => '<' + said(ns).map((n, i) => fslot(n, i, f)).join(' ') + '>';
-const more = (name, level = 1.15) => ({ level, space: .5, width: .4, position: -.22,
-  pattern: s(fseq(LEAD[name], one))
-    .gain(fseq(LEAD[name], (n) => GAIN[n]))
-    .clip(fseq(LEAD[name], clp))
-    .release(fseq(LEAD[name], rel))
-    .attack(.02) });
+const SPEEDS = [.94, 1, 1.06, .97], PANS = [.3, .7, .42, .78];
+const fseq = (ns, carry, f) => {
+  let i = 0;
+  return '<' + said(ns, carry).map((row) => (row.length
+    ? '[' + row.map((n) => (n ? f(n, .25, i++) : '~')).join(' ') + ']'
+    : '~')).join(' ') + '>';
+};
+// .25, not .75: with three fragments a bar overlapping, the density carried it to 10.4 dB under the mix in
+// verse1 against the lead's 11.6 -- in front of the voice it is supposed to sit behind. It wants to be
+// roughly 8 dB under the lead, present the whole time and never the thing you are listening to.
+const more = (name, level = .25, carry = []) => {
+  const q = (f) => fseq(LEAD[name], carry, f);
+  return { level, space: .62,
+    pattern: s(q(one))
+      .gain(q((n) => GAIN[n]))
+      .clip(q((n, fr, i) => clp(n, fr, SPEEDS[i % 4])))
+      .release(q(rel))
+      .speed(q((n, fr, i) => SPEEDS[i % 4]))
+      .pan(q((n, fr, i) => PANS[i % 4]))
+      .lpf(2800).attack(.03) };
+};
 // one of the wordless chunks, fired on the bar it falls on and left to run its 4.4 s (two bars here) out
 const wordless = (sound, mask, gain) => ({ level: 1, space: .55, width: .5, position: -.2,
   pattern: s(sound).mask(mask).gain(gain).attack(.05).release(1) });
@@ -208,7 +227,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(.65),
     raw2:   bed,
     raw3:   { ...V, level: 1, pattern: voice(...LEAD.open) },
-    raw5:   more('open', .7),
+    raw5:   more('open'),
   }),
 
   // 0:17 verse 1, the record's first cluster: two fragments at the top, then the long hole, then two more.
@@ -220,7 +239,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(.8),
     raw2:   bed,
     raw3:   { ...V, pattern: voice(...LEAD.verse1) },
-    raw5:   more('verse1', 1),
+    raw5:   more('verse1'),
   }),
 
   // 0:52 the hole in verse 1, kept as a section: no voice at all, the kit fills out and the hook arrives
@@ -230,6 +249,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     melody: hook,
     pad,
     raw:    pick(),
+    raw5:   more('hold', .25, clipsIn(LEAD.verse1)),
     raw2:   bed,
     fx:     { riser: 3 },
   }),
@@ -245,7 +265,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(),
     raw2:   bed,
     raw3:   { ...V, pattern: voice(...LEAD.lift) },
-    raw5:   more('lift', 1),
+    raw5:   more('lift'),
     raw4:   wordless(W1, '<0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0>', 1.25),
   }),
 
@@ -259,7 +279,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(.7),
     raw2:   bed,
     raw3:   { ...V, level: 1.1, pattern: voice(...LEAD.verse2) },
-    raw5:   more('verse2', 1),
+    raw5:   more('verse2'),
     raw4:   wordless(W2, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 4.5),   // the only voice in the hole, and wordless
     fx:     { riser: 4 },
   }),
@@ -277,7 +297,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(.7),
     raw2:   bed,
     raw3:   { ...VF, pattern: voice(...LEAD.flood) },
-    raw5:   more('flood', 1.1),
+    raw5:   more('flood'),
     // the chop: one 2.5 s fragment cut into eight equal pieces, each fitted to its step
     raw4:   wordless(W3, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 1.95),
     fx:     { impact: true, level: .55 },
@@ -291,6 +311,6 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw:    pick(.5),
     raw2:   bed,
     raw3:   { ...V, level: 1.1, pattern: voice(...LEAD.out) },
-    raw5:   more('out', .8),
+    raw5:   more('out'),
   }),
 ])

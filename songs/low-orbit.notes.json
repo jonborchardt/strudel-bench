@@ -245,6 +245,33 @@
           "why": "measures 13.8 dB under the mix against the lead's 11.4, centroid 369 Hz against 404: the same voice at nearly the same level"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "more more overlap raw5; i want an almost constant mumble, like a conversation i cannot quite hear",
+      "changes": [
+        {
+          "section": "song",
+          "why": "every bar is four quarter-note slots: an empty one takes three fragments on beats 2, 3 and 4, a lead bar takes one clear of the lead's own hit. Slots are .545 s apart and fragments run .5 to 3.3 s, so two or three sound at once"
+        },
+        {
+          "section": "song",
+          "why": "the overlap is what makes it unintelligible rather than quiet: voices masking each other stop resolving into words while staying present, which the 900 Hz low-pass and 22 dB drop failed to do"
+        },
+        {
+          "section": "song",
+          "why": "each slot takes one of four speeds and one of four pans in turn, under a 2.8 kHz low-pass, so it reads as a few people across a room rather than one mouth"
+        },
+        {
+          "section": "hold",
+          "layer": "raw5",
+          "why": "hold carries verse1's clips forward so it can talk where the stem is empty; replaying only what has already sounded keeps the order safe"
+        },
+        {
+          "section": "song",
+          "why": "level .75>.25: at .75 the density measured it 10.4 dB under the mix against the lead's 11.6, in front of the voice it sits behind; at .25 it is 19.6 under, 8.3 under the lead, depth .86"
+        }
+      ]
     }
   ]
 }
