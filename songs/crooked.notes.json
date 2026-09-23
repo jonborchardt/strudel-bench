@@ -134,6 +134,40 @@
           "why": "articulation .7>.15 (and 0 in the solo) for sustain: at .7 the cell gave clip .5 and a .07 s release, about .12 s of sound. Now ~.41 s, which is the bass layer's ceiling - its hap is one grid step and the cell caps clip at 1.1"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "ok, when ready, do a final mix",
+      "changes": [
+        {
+          "section": "head",
+          "layer": "bass",
+          "why": "pass 1 hierarchy: the bass measured -1.8 to -4.9 dB under the mix in all seven sections, louder than the sax lead everywhere. Level 1.6>1.15 with the section overrides down in proportion, except strip where it is the soloist. The sax now leads at -5.5 in solo"
+        },
+        {
+          "section": "bridge",
+          "layer": "raw",
+          "why": "pass 3 depth: the bridge read all four parts at one distance. The piano goes farther (space .5>.68, brightness .52>.38) and the sax closer (space .35, brightness .62); they now spread .70 / .46 / .37 and the piano's tail goes .00>.95"
+        },
+        {
+          "section": "build",
+          "why": "pass 5 arc: the climax measured -19.3 against the solo's -19.0, a climax quieter than its own verse. Solo drums .42>.36 and build drums .42>.48, piano .28>.36, vibes .85>1.05, giving a 2.1 dB arc with build the peak"
+        },
+        {
+          "section": "build",
+          "layer": "melody",
+          "why": "postgain 1.5 - raising the climax buried the lead at -9.7 and level caps at 2, so postgain is the only control left; the sax reads -6.3 and is the loudest melodic part in the section"
+        },
+        {
+          "section": "out",
+          "layer": "melody",
+          "why": "level 1.2>1.7 - the sax measured -10.1 restating the head, its quietest anywhere"
+        },
+        {
+          "section": "song",
+          "why": "all seven sections lint clean on the mix: no headroom, inaudible, dominant, flat-stage or depth-contrast warnings. Peak .737, clip 0.000, climax traces 17% busy with no dropouts"
+        }
+      ]
     }
   ]
 }

@@ -59,7 +59,7 @@ const HANDOFF = '<' + [
 // articulation .15, not .7: at .7 the cell gives clip .5 and a .07 s release, about .12 s of sound - a pluck.
 // At .15 it is clip 1.04 and a .24 s release, which is an upright ringing into the gap the way one actually does.
 const bass = { sound: 'gm_acoustic_bass', rhythm: WALK, notes: '0 4 7 4 6', register: .4, articulation: .15,
-               brightness: .5, space: .25, level: 1.6, humanize: { timingMs: 10, velocity: .1, correlation: 'bar' } };
+               brightness: .5, space: .25, level: 1.15, humanize: { timingMs: 10, velocity: .1, correlation: 'bar' } };
 
 // a real sampled sax, not the GM clarinet it started as: the clarinet soundfont measured centroid 1401 Hz and read
 // as sharp, and vcsl's sax is an actual recording (23 pitched samples, rms -24.4). brightness .45, not .6, for the
@@ -179,12 +179,12 @@ song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'co
   // with the same parts at the same density and nothing structural happening.
   section('head', 8, { role: 'establish', progression: CHANGES,
     drums:  { ...drums, template: THIN, density: .4, level: .3 },
-    bass:   { ...bass, level: 1.4 },
+    bass:   { ...bass, level: 1 },
     melody: { ...reed, phrase: 4, level: 1.6, notes: HEAD, velocity: '.9 1 .85 1' },
   }),
 
   section('solo', 16, { role: 'develop', progression: CHANGES,
-    drums:  { ...drums, density: .55, variation: .2 },
+    drums:  { ...drums, density: .55, variation: .2, level: .36 },
     bass:   { ...bass },
     raw:    { ...comp() },
     melody: { ...reed, phrase: 16, level: 2, notes: SOLO, velocity: '.85 1 .9 1 .95 1 .9 .95' },
@@ -197,16 +197,18 @@ song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'co
   // sat wrong. (I, not I7: the grammar has no maj7, and I7 gives C7 - a Bb that is in neither key.)
   section('bridge', 8, { role: 'develop', meter: '4/4', bpm: 145, key: 'C:major', progression: 'I vi7 ii7 iii7',
     drums:  { ...drums, template: SQUARE, density: .5, level: .4 },
-    bass:   { ...bass, rhythm: FOURS, notes: BRIDGE_BASS, level: 1.5, articulation: .15 },
-    raw:    { ...bridgeComp() },
-    melody: { ...reed, phrase: 8, level: 1.8, notes: BRIDGE, velocity: '.85 1 .9 1 .9 1 .95 .9' },
+    bass:   { ...bass, rhythm: FOURS, notes: BRIDGE_BASS, level: 1.1, articulation: .15 },
+    // depth: the bridge measured all four parts at one distance. The piano goes farther (darker and wetter) and the
+    // sax comes closer (brighter and drier) - the closer/farther descriptors written by hand on spread layers.
+    raw:    { ...bridgeComp({ space: .68, brightness: .38 }) },
+    melody: { ...reed, phrase: 8, level: 1.8, space: .35, brightness: .62, notes: BRIDGE, velocity: '.85 1 .9 1 .9 1 .95 .9' },
   }),
 
   // the hand-off: the sax has stopped, the piano and darbuka carry on, and the bass walks itself into its own solo.
   // Without these four bars the bass solo arrived on a downbeat with three instruments vanishing at once.
   section('turn', 4, { role: 'develop', progression: CHANGES,
     drums:  { ...drums, density: .5, level: .4 },
-    bass:   { ...bass, rhythm: OPEN, notes: HANDOFF, level: 1.7, articulation: .15 },
+    bass:   { ...bass, rhythm: OPEN, notes: HANDOFF, level: 1.25, articulation: .15 },
     raw:    { ...comp({ level: .3 }) },
   }),
 
@@ -216,16 +218,16 @@ song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'co
   // the held notes a real decay without smearing the sixteenth runs in bars 4 and 6 together.
   section('strip', 8, { role: 'breakdown', progression: CHANGES,
     drums:  { ...drums, template: THIN, density: .4, level: .38 },
-    bass:   { ...bass, rhythm: OPEN, notes: BASS_SOLO, level: 1.8, articulation: 0 },
+    bass:   { ...bass, rhythm: OPEN, notes: BASS_SOLO, level: 1.55, articulation: 0 },
   }),
 
   section('build', 16, { role: 'climax', progression: CHANGES,
-    drums:  { ...drums, density: .65, variation: .35, level: .42 },
+    drums:  { ...drums, density: .65, variation: .35, level: .48 },
     bass:   { ...bass, notes: '0 4 7 6 [7 2]', level: 1.7 },
-    raw:    { ...comp({ level: .28 }) },
-    melody:  { ...reed, phrase: 8, level: 2, notes: RIDE, velocity: '.95 1 1 1 .95 1 1 .95' },
+    raw:    { ...comp({ level: .36 }) },
+    melody:  { ...reed, phrase: 8, level: 2, postgain: 1.5, notes: RIDE, velocity: '.95 1 1 1 .95 1 1 .95' },
     melody2: { sound: 'vibraphone', register: .5, phrase: 8, notes: ANSWER, brightness: .65,
-               articulation: .3, space: .55, level: .85, position: -.15,
+               articulation: .3, space: .55, level: 1.05, position: -.15,
                humanize: { timingMs: 9, velocity: .1, correlation: 'phrase' } },
   }),
 
@@ -233,6 +235,6 @@ song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'co
     drums:  { ...drums, density: .45, level: .38 },
     bass:   { ...bass },
     raw:    { ...comp() },
-    melody: { ...reed, phrase: 4, notes: HEAD, level: 1.2, velocity: '.9 1 .85 .9' },
+    melody: { ...reed, phrase: 4, notes: HEAD, level: 1.7, velocity: '.9 1 .85 .9' },
   }),
 ])
