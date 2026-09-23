@@ -150,6 +150,16 @@
           "why": "the pipe organ pedal stays an octave under the sine (.sub(note(12))) for body, and the shape(.45) is gone: a saturated wave was solving a problem the octave had already caused"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "make the visual swarm by itself",
+      "changes": [
+        {
+          "section": "song",
+          "why": "visual { world: 'swarm', composition: 'single' } - the song named no world, so the score picked swarm by its features and lib/visual.json's defaultComposition put orrery breathing over it every eight bars. Pinning the world and setting composition single gives the bare world full-frame; the check's visual line reads 'single: swarm' instead of 'overlay: swarm + orrery'"
+        }
+      ]
     }
   ]
 }

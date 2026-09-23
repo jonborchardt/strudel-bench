@@ -49,7 +49,7 @@ const PIANO2 = '[d2 [a2,d3,f3]@2 a3] [g2 [d3,g3,b3]@2 d4] [c2 [g2,c3,e3]@2 g3] [
 const PIANO3 = '[d2 [a2,d3,f3]@2 [a3,d4]] [g2 [d3,g3,b3]@2 [b3,d4]] [c2 [g2,c3,e3]@2 [e4,g4]] [f2 [c3,f3,a3]@2 [a3,f4]]';
 const WARM = 'i IV VII III';
 
-song({ cps: .27, key: 'D:dorian', seed: 7, packs: ['rooms'], room: { ir: 'hall', size: 3.2, damping: 4500 } }, [
+song({ cps: .27, key: 'D:dorian', seed: 7, visual: { world: 'swarm', composition: 'single' }, packs: ['rooms'], room: { ir: 'hall', size: 3.2, damping: 4500 } }, [
 
   section('open', 8, { role: 'establish', progression: WARM,
     raw:    { ...sub(SUB) },
