@@ -1,0 +1,58 @@
+{
+  "prompt": "a new song: deep rich bass, very real, cello, flute, violin, piano, music you feel held by; the existing songs are too tinny, small and lo-fi",
+  "requests": [
+    {
+      "date": "2026-09-23",
+      "ask": "i want a new song. deep rich base. very real. chello, flute, violine, poiano. i want to feel held by the music. our songs are too tinny, too small, too lo-fi. just a few sections so we can nail down a feel",
+      "changes": [
+        {
+          "section": "song",
+          "why": "every part is raw (plain note().s()) so no synth attack or filter envelope lands on a bowed string or a struck piano: the layers are what made the older songs read as electronic"
+        },
+        {
+          "section": "song",
+          "why": "cps .27 (65 bpm) in D:dorian, warm minor with the raised sixth, so IV and VII come out major (Dm G C F)"
+        },
+        {
+          "section": "song",
+          "why": "room ir hall, size 3.2, damping 4500: one 3.2 s hall over every part, the thing that makes a small song big"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "sine sub on the chord root at d1-f1, level .5, space .3 - the deep the older songs had none of, felt rather than heard (measures lowRatio 1.00)"
+        },
+        {
+          "section": "open",
+          "layer": "raw2",
+          "why": "arco gm_contrabass on the root an octave over the sub, level .75, the attack a sine cannot give"
+        },
+        {
+          "section": "open",
+          "layer": "raw3",
+          "why": "gm_cello a written tenor line, level .85, position -.15 - the voice of the low end, never just roots"
+        },
+        {
+          "section": "open",
+          "layer": "raw4",
+          "why": "the real sampled piano pack, left hand then the chord held under a 1.7 clip (pedal), position -.25"
+        },
+        {
+          "section": "lift",
+          "layer": "raw5",
+          "why": "gm_violin takes the tune: root, step up, a held fourth, a leap to the octave, home; velocity shapes the phrase"
+        },
+        {
+          "section": "lift",
+          "layer": "raw6",
+          "why": "gm_flute answers only in the bars the violin leaves open, space .7"
+        },
+        {
+          "section": "hold",
+          "layer": "raw7",
+          "why": "gm_string_ensemble_1 opens underneath at width .8, space .85 - the part that does the holding, climax only"
+        }
+      ]
+    }
+  ]
+}
