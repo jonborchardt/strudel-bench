@@ -53,6 +53,31 @@
           "why": "gm_string_ensemble_1 opens underneath at width .8, space .85 - the part that does the holding, climax only"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "i dont see parts listed. i dont see materials. hold cracks, and there is no deep bass rumble",
+      "changes": [
+        {
+          "section": "hold",
+          "why": "raw parts have no materials in the mixer (matsRender shows only 'pattern expr') and orbitKey gives every raw part a private orbit: seven raw parts built seven convolvers of the 3.2 s hall and the climax traced 59% busy with a dropout. Cello, violin and flute are melody layers now, the contrabass and the string bed are pads: three orbits instead of seven, 33% busy, no dropouts, and every part has knobs, a sound pick and a notes box"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "the sub was a 37 Hz sine with nothing above it, so only a subwoofer could hear it. Now a sawtooth at d1 lowpassed to 160 Hz: the fundamental plus 73, 110 and 147 Hz, which is what a speaker rumbles with. Measures centroid 68 Hz and -5.4 dB under the mix; the mix centroid fell 675>449 Hz"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "the sub stays a raw part because the bass layer's hap is one grid step (0.24 s here) so its note could not hold the bar"
+        },
+        {
+          "section": "hold",
+          "layer": "melody2",
+          "why": "violin level 1.4>1.9 and flute 1.1>.9 - the tune measured 2 dB under its own counter-line"
+        }
+      ]
     }
   ]
 }
