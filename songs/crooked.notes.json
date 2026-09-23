@@ -168,6 +168,42 @@
           "why": "all seven sections lint clean on the mix: no headroom, inaudible, dominant, flat-stage or depth-contrast warnings. Peak .737, clip 0.000, climax traces 17% busy with no dropouts"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "the sax sounds more like a sax on a keyboard than a real sax, every note is the same length, there is no life or breath to it / the vibraphone should be in the song a bit more in other places but pretty quiet, they come in unexpectedly",
+      "changes": [
+        {
+          "section": "head",
+          "layer": "melody",
+          "why": "humanize.length .4, which I had never used: it scales the clip by a seeded curve correlated over four bars. Every note had been clip .89 from articulation .35, identical, with velocity moving only the loudness. Clips now run .61 .64 .78 .78 .74 .84 .93 .98 in a wave"
+        },
+        {
+          "section": "head",
+          "layer": "melody",
+          "why": "sound is now a weighted mix of sax, sax_vib and sax_stacc, picked per hit: vcsl samples all three across A#1..G#4, exactly where this line sits, and their own loudness is the right balance (-24.4, -28.9, -30.2 dB) because a tongued note is quieter and a vibrato note is a softer held one. Part crest 4.9>6.2"
+        },
+        {
+          "section": "head",
+          "layer": "melody",
+          "why": "timingMs 11>16 and velocity .1>.14, and postgain 1.35 (1.6 in the climax) because two of the three samples are quieter and the lead lost 1.2 dB; the sax now leads every section, -4.4 in solo"
+        },
+        {
+          "section": "solo",
+          "layer": "melody2",
+          "why": "the vibraphone only existed in the climax and arrived from nowhere. It plays in the solo, bridge and outro too at -17.3, -19.1 and -14.9 against -11.1 in the climax: present enough to be familiar, quiet enough not to be a part you listen to"
+        },
+        {
+          "section": "bridge",
+          "layer": "melody2",
+          "why": "its own line, since the bridge is 4/4 with eight slots a bar rather than eleven"
+        },
+        {
+          "section": "solo",
+          "layer": "raw",
+          "why": "comping piano level .38>.3, it measured -5.4 in out, above the lead"
+        }
+      ]
     }
   ]
 }
