@@ -398,6 +398,22 @@
           "why": "level multiplies a sample's own loudness, so .1 is not the same amount on every part: .1 on the 808 shaker measured 32.3 and 33.6 dB under the mix, which the lint calls inaudible, where .1 on the LinnDrum kit is a quiet kit. .24 and .22 put the shakers at 24.6 and 25.8"
         }
       ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "that was a bad note, i meant on verse1 and verse2 make drums 0.1 not perc",
+      "changes": [
+        {
+          "section": "verse1",
+          "layer": "perc",
+          "why": "and verse2.perc removed: the shakers went in on a misread and were never asked for"
+        },
+        {
+          "section": "verse1",
+          "layer": "drums",
+          "why": "level .08>.1 and verse2.drums .075>.09, the two a touch apart; the kit now runs .1 in every section but verse2, measuring 17.1 and 17.5 dB under the mix in the verses against a bass at 5"
+        }
+      ]
     }
   ]
 }

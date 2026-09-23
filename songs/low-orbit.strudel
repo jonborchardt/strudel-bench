@@ -247,8 +247,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   // 0:17 verse 1, the record's first cluster: two fragments at the top, then the long hole, then two more.
   // bass and a half-time kick under it; no hook yet
   section('verse1', 16, { role: 'develop', progression: 'i@2 VI VII',
-    drums:  { ...kit, density: .4, level: .08 },
-    perc:   { ...shaker, level: .24 },   // .1 measured 32 dB under: this sample is much quieter than the kit's
+    drums:  { ...kit, density: .4, level: .1 },
     bass:   { ...bass, level: .7, brightness: ramp(.22, .32) },
     pad,
     raw:    pick(.8),
@@ -287,8 +286,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   // 1:44 verse 2: two fragments at the top, then the record's eight-bar silence, then one lead-in.
   // the kit drops to the half-time skeleton for the hole and the last two bars sweep shut
   section('verse2', 16, { role: 'release', progression: 'i@2 VI VII', sweep: 2,
-    drums:  { ...kit, density: .4, level: .075 },
-    perc:   { ...shaker, level: .22 },   // the two verses a tenth apart rather than identical
+    drums:  { ...kit, density: .4, level: .09 },
     bass:   { ...bass, level: .7 },
     melody: { ...hook, level: .55 },
     pad,
