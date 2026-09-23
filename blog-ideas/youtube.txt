@@ -1,4 +1,4 @@
-YOUTUBE DETAILS — seven songs, ready to paste.
+YOUTUBE DETAILS — nine songs, ready to paste.
 
 Each block below has TITLE, DESCRIPTION, TAGS and HASHTAGS. Everything between the DESCRIPTION line and the next
 divider is one paste: the blurb is already appended, with the song name filled in. Paragraphs are single long lines
@@ -331,27 +331,89 @@ HASHTAGS
 
 
 ================================================================================
-WHAT ELSE TO FILL IN
+8. HELD
 ================================================================================
 
-Links clip, and that is YouTube, not you. YouTube shows only about the first 41 characters of a link and appends "...". The link still works when clicked; only the visible text is cut. That is why every link above has a line before it saying where it goes, so the cut text costs the reader nothing. The site address is also written out as plain words in the first sentence, where it cannot be clipped.
+TITLE
+held — a slow chamber piece with a low end you can feel, 65 BPM
 
-If you want links that display in full, the address itself has to get shorter. "https://jonborchardt.github.io/strudel-bench/" is already 45 characters before the song name. Two ways out: a short custom domain, or a repo named jonborchardt.github.io (a GitHub user site, which you do not have yet, since the blog is a project page) holding one-line redirect pages at /s/<song>. That gives "https://jonborchardt.github.io/s/strata" at 39 characters, which displays whole. Ask and I will write the redirect files.
+DESCRIPTION
+Modern chamber music: a slow piece in D dorian at 65 BPM for cello, violin, flute, piano, contrabass and a string bed, built around a low end deep enough to feel rather than only hear.
 
-Do not paste the YouTube channel URL into a description. YouTube swallows it and renders a channel chip, which is why the last line came out as "/ @jonathanborchardt". The channel is already linked under the video, so the line is gone.
-Playlist. Put all seven in one, something like "strudel-bench: songs written as text". Playlists are indexed separately and carry viewers from one track to the next.
+The bottom is in three stages, an octave apart each: a sine on the chord root at d2, the felt fundamental, with a pipe organ pedal an octave under it for body; an arco contrabass over that, sustaining; and a pizzicato on the downbeat, dry and short, because what the body reads as bass is a fast envelope at 65 to 100 Hz while everything else down there holds. The sine took three tries, and the lesson was that the octave matters more than the waveform: at d1, 37 Hz, a laptop or a phone cannot move air that low, and neither level nor saturation rescues it. Above the bottom the cello states the tune, the violin takes it an octave up, the flute answers only in the bars the violin leaves open, and one 3.2-second hall holds all of it.
 
-Thumbnail. A still from the video's own world, with the song name in large type. They read as a set if the type and its position stay identical across all seven.
+Four sections, mixed by measurement. D dorian for the raised sixth, so the minor comes out warm rather than sad: Dm, G, C, F.
 
-Pinned comment. One line plus the play-it-yourself link. The description link sits below the fold; a pinned comment does not.
+Chapters
+0:00 Open — the cello states the tune
+0:29 Lift — the violin takes it, the flute answers
+0:59 Hold — the string bed opens
+1:28 Rest
 
-Category and license. Music. Standard YouTube license is the safer default: the samples are not yours to relicense, and the credit line in the description covers them.
+Play and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. Direct link to this track:
+https://jonborchardt.github.io/strudel-bench/#held.strudel
 
-black-ice is different on two counts. Its Nine Inch Nails samples are CC BY-NC-SA 3.0: keep the attribution line in the description, and do not monetize that video, since NonCommercial rules out ads on it. And it is not on the site yet: its pack (samples/user/black-ice-cuts) says deploy: false, so the Pages build leaves the song out, which is why its description has no direct link. Set deploy to true in that pack.json (the license allows it, and the attribution file ships with it), then add the link line back:
-https://jonborchardt.github.io/strudel-bench/#black-ice.strudel
+Every song here is a text file. This one is songs/held.strudel in the repo, along with the harness that plays it:
+https://github.com/jonborchardt/strudel-bench
 
-End screen. Last 10 seconds, pointing at the next song and the playlist. Every one of these ends quietly, which leaves room for it.
+strudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like "darker and more spacious" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, "always shippable, always improving":
+https://jonborchardt.github.io/blog/
 
-Shorts. Each song has one obvious 30-second moment: strata's whole at 12:37, arrival's threshold at 2:33, machine's chorus 3 at 1:44, ascent's orbit at 2:57, duel's fifth exchange at 2:53, neon's second drop at 1:52, black-ice's peak at 2:40. A vertical crop of the generated video with the same title works as a trailer for the full track.
+The video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.
 
-Consistent naming. Lowercase song name, a dash, then the hook. It makes the channel read as one body of work rather than seven unrelated uploads.
+Built on Strudel, the JavaScript port of TidalCycles: https://strudel.cc
+Samples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/
+
+TAGS
+chamber music, modern classical, cello, violin, flute, piano, contrabass, string ensemble, neoclassical, slow music, calm music, dorian, D dorian, deep bass, generative music, live coding, strudel, tidalcycles, creative coding, procedural music, music video
+
+HASHTAGS
+#chambermusic #neoclassical #livecoding
+
+
+
+
+================================================================================
+9. CROOKED
+================================================================================
+
+TITLE
+crooked — jazz in 11/8, a metre jazz doesn't use | Balkan quartet, E phrygian
+
+DESCRIPTION
+Jazz in 11/8: a Balkan band playing jazz changes in E phrygian, grouped 3+3+3+2 so three long groups are followed by a short one and every bar is cut off a beat early. Sax, upright bass, piano and a darbuka where the drum kit would be.
+
+Not a jazz quartet in an odd time signature — a different band entirely. 5/4 and 7/8 are Brubeck's, so this is in 11, which almost no jazz record uses, and the instruments are the ones that play it: a darbuka's doum, tek and ka instead of ride and snare, and a sax that mixes three recorded articulations, plain, vibrato and tongued short, picked per note. Everything melodic in the song is one three-note cell — a note, a rest, a leap of a fourth — which fills one group of the 3+3+3+2 exactly, then gets transposed, inverted, filled in and fragmented. The head states it, the sixteen-bar solo develops it, and the bass quotes it back during its own solo, alone with the drum.
+
+The bridge is the only place the song leaves either the key or the metre, and it leaves both at once. C major is E phrygian's own pitch collection with the tonic moved, so not one new note enters — it simply turns the light on. The metre goes to 4/4 but the pulse does not change: 11/8 at 290 and 4/4 at 145 are the same eighth note, so only the grouping moves, which is what makes the 11 feel like home when it comes back. It ends on Em7, at once the third chord of C major and the tonic of E phrygian, and hands the song over without a seam.
+
+Seven sections, 2:30, mixed by measurement. E phrygian for the flat second, which is the Balkan cadence and a jazz colour at the same time: Em7, F, Em7, Dm7.
+
+Chapters
+0:00 Head — the tune, no piano, the kit at its bones
+0:18 Solo — the full band arrives
+0:55 Bridge — C major and 4/4, the same pulse underneath
+1:08 Turn — the sax lays out and the bass opens up
+1:17 Strip — the bass alone with the darbuka
+1:35 Build — the climax, sax and vibraphone on the same cell
+2:12 Out — the head again
+
+Play and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. Direct link to this track:
+https://jonborchardt.github.io/strudel-bench/#crooked.strudel
+
+Every song here is a text file. This one is songs/crooked.strudel in the repo, along with the harness that plays it:
+https://github.com/jonborchardt/strudel-bench
+
+strudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like "darker and more spacious" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, "always shippable, always improving":
+https://jonborchardt.github.io/blog/
+
+The video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.
+
+Built on Strudel, the JavaScript port of TidalCycles: https://strudel.cc
+Samples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/
+
+TAGS
+jazz, odd time signature, 11/8, odd meter jazz, balkan jazz, world jazz, saxophone, upright bass, darbuka, phrygian, E phrygian, modal jazz, bass solo, polymeter, instrumental jazz, generative music, live coding, strudel, tidalcycles, creative coding, procedural music, music video
+
+HASHTAGS
+#jazz #oddtime #livecoding
