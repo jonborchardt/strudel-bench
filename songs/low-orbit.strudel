@@ -1,0 +1,180 @@
+// low-orbit: C minor at 110, about 3:20. A new song built around one borrowed voice.
+//
+// The voice is sixteen sung fragments from Nine Inch Nails' "Lights in the Sky" (The Slip multitracks,
+// CC BY-NC-SA 3.0, cut by strudle-pack into samples/user/low-orbit-cuts). Nothing else is borrowed:
+// no piano, no flute, no ambience from that record. Every note under the voice is written here.
+//
+// What was copied is the *shape* of the singing, read off the stems' markers and phrase times:
+//   source (55 bpm, 4/4)        vocal phrases        what it does here
+//   Verse 1   bars  2..17       9, in 3 clusters     verse1: two fragments, a seven-bar hole, two more
+//                               with a 6-bar hole    (the hole is `hold`, an instrumental section of its own)
+//   Chorus 1  bars 18..25       6, nearly every bar  lift: a fragment every other bar, and the pitch jumps
+//                               and a fifth higher   (verse fragments sit 117..132 Hz, chorus ones 147..178)
+//   Verse 2   bars 26..41       6, front-loaded,     verse2: two at the top, an eight-bar hole, one lead-in
+//                               then an 8-bar hole
+//   Chorus 2  bars 42..49+      12, continuous,      flood: a fragment nearly every bar, plus one of them
+//                               spilling past 'End'  chopped into eight and played as an instrument
+//                                                    out: the two that overrun, alone, with their tails
+// So the order and the spacing are the record's; the tempo is doubled (110 = 55 felt in half-time), the key
+// is the fragments' own C minor, and the song underneath is not that song. Mute every `voice`/`chop` part
+// and the guitar, bass, vibraphone and pad still stand on their own.
+//
+// The fragments are one to four words each. None is used to say a sentence: they are syllables placed for
+// pitch and attack, the way the chopped part treats them openly.
+
+// the sixteen clips, named by where they sit in the source: A = verse 1, B = chorus 1, C = verse 2, D = chorus 2
+const A1 = 'lights_in_the_sky_voc_ph_001', A2 = 'lights_in_the_sky_voc_ph_004';
+const A3 = 'lights_in_the_sky_voc_ph_007', A4 = 'lights_in_the_sky_voc_ph_009';
+const B1 = 'lights_in_the_sky_voc_ph_010', B2 = 'lights_in_the_sky_voc_ph_011';
+const B3 = 'lights_in_the_sky_voc_ph_013', B4 = 'lights_in_the_sky_voc_ph_015';
+const C1 = 'lights_in_the_sky_voc_ph_017', C2 = 'lights_in_the_sky_voc_ph_018';
+const D1 = 'lights_in_the_sky_voc_ph_022', D2 = 'lights_in_the_sky_voc_ph_023';
+const D3 = 'lights_in_the_sky_voc_ph_025', D4 = 'lights_in_the_sky_voc_ph_029';
+const D5 = 'lights_in_the_sky_voc_ph_030', D6 = 'lights_in_the_sky_voc_ph_032';
+
+// The clips come off the stem at wildly different levels: -28.5 dB rms for the loudest chorus fragment,
+// -38.3 for the quietest verse one, ten decibels apart. A single part `level` cannot fix that (and tops out
+// at +6 dB), so each clip carries its own makeup gain, computed to land every fragment at -24 dB rms.
+// After it the loudest peak is 0.62, so nothing reaches the output wall.
+const G = { [A1]: 4.2, [A2]: 2.15, [A3]: 4.25, [A4]: 5.15, [B1]: 1.7, [B2]: 1.75, [B3]: 3.4, [B4]: 3,
+            [C1]: 2.65, [C2]: 5.2, [D1]: 2.25, [D2]: 1.7, [D3]: 2.4, [D4]: 2, [D5]: 1.8, [D6]: 2.95 };
+
+// one fragment per bar; '~' is a bar with no voice, which is most of the song's first half. The gain
+// sequence runs in parallel with the same <> structure, so slot n of one is slot n of the other.
+// (single quotes and a join on purpose: Strudel's transpiler turns double quotes and backticks into
+// mini-notation before the interpolation happens)
+const voice = (...bars) => s('<' + bars.join(' ') + '>')
+  .gain('<' + bars.map((b) => G[b] || 1).join(' ') + '>')
+  .attack(.01).release(1.2);
+
+// 1 the ground: kick on one, a rim backbeat on three, the whole kit half-time at 110
+const kit = { level: .75, articulation: .7, weight: .5, brightness: .45, space: .35, organicness: 0, groove: .5,
+  template: { bd: 'x.......x.......', sd: '........x.......' } };
+const kitFull = { ...kit, template: { bd: 'x.....x.x.......', sd: '........x.......', hh: '..x...x...x...x.' } };
+const kitPeak = { ...kit, template: { bd: 'x.....x.x.....x.', sd: '........x.......', hh: 'x.x.x.x.x.x.x.x.', oh: '......x.......x.' } };
+const shaker = { sound: 'RolandTR808_sh', rhythm: '..x...x...x...x.', level: .65, brightness: .6, position: .3,
+  velocity: '.8 1 .7 .9', humanize: { timingMs: 8, velocity: .12, correlation: 'bar' } };
+
+// 2 the bass: two bars, root and octave against the kick, stepping down through Ab and G to Eb and home
+const bass = { sound: 'sawtooth', patch: 'sub', level: .8, register: .5, brightness: .3, articulation: .68,
+  weight: .62, duck: 'drums', duckDepth: .35, duckAttack: .12,
+  rhythm: 'xxxxxxxxxxxxxxxx|xxxxxxxxxxxxxxxx',
+  notes: '0 ~ ~ 0 ~ ~ 7 ~ ~ 0 ~ ~ ~ ~ 6 ~ 5 ~ ~ 5 ~ ~ 4 ~ ~ 2 ~ ~ 0 ~ ~ ~' };
+
+// 3 the picking: a clean electric guitar, four bars written against the chords rather than following them,
+// so the top voice walks c-eb-g over Cm, holds the c through Ab and lets go of it on Bb
+const pick = (lvl = .8) => ({ level: lvl, space: .5, width: .55, position: -.28, brightness: .5,
+  pattern: note('<[c3 g3 c4 eb4 g3 c4 eb4 g4] [c3 g3 c4 eb4 g3 c4 g4 eb4] ' +
+                '[ab2 eb3 ab3 c4 eb3 ab3 c4 eb4] [bb2 f3 bb3 d4 f3 bb3 d4 f4]>')
+    .s('gm_electric_guitar_clean').gain(.8) });
+
+// 4 the hook: a vibraphone over the top, question and answer across sixteen slots, moving with the chords
+const hook = { sound: 'vibraphone', register: .72, level: .9, follow: true, phrase: 2, space: .55, width: .5,
+  articulation: .5, brightness: .55, position: .18,
+  notes: '0 ~ 2 4 ~ ~ 7 ~ ~ ~ 6 ~ 4 ~ 2 ~',
+  velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };
+// the counter-line for the climax only: an octave up, on the beats the hook leaves empty
+const counter = { sound: 'handchimes', register: .88, level: 1.2, follow: true, space: .7, width: .65, position: -.4,
+  notes: '~ ~ ~ 7 ~ ~ ~ ~ ~ 5 ~ ~ ~ ~ ~ 4' };
+
+// 5 the air: a wide dark pad ducked under the kick, and a filtered noise bed that never stops
+const air = { sound: 'triangle', density: .35, register: .45, brightness: .3, space: .7, width: .72, level: .4 };
+const pad = { ...air, duck: 'drums', duckDepth: .15, duckAttack: .25 };   // the ducked form, where there is a kick
+// measured against the pad it sat right on top of it in the mids (masking 0.70), so it lives above the pad
+// as air rather than as body, and off to the right of centre
+const bed = { level: 1, width: .6, position: .32,
+  pattern: s('pink').clip(1).lpf(sine.range(1800, 6000).slow(24)).hpf(1500).gain(.55) };
+
+const V = { level: 1.2, space: .4, width: .35 };        // the voice: dry and close, it brings its own room
+const VF = { level: 1.4, space: .3, width: .3 };
+
+song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-orbit-cuts', 'rooms'],
+       room: { ir: 'hall', size: 3.2, damping: 4500 },
+       visual: { composition: 'overlay', worlds: ['tunnel', 'combo'], every: 16 } }, [
+
+  // 0:00 the bed, the pad and the picking; one low fragment on the fifth bar, the way the record waits
+  // three bars before the first word
+  section('open', 8, { role: 'establish', progression: 'i@2 VI VII',
+    pad:    { ...air, level: .5 },
+    raw:    pick(.65),
+    raw2:   bed,
+    raw3:   { ...V, level: 1, pattern: voice('~', '~', '~', '~', A1, '~', '~', '~') },
+  }),
+
+  // 0:17 verse 1, the record's first cluster: two fragments at the top, then the long hole, then two more.
+  // bass and a half-time kick under it; no hook yet
+  section('verse1', 16, { role: 'develop', progression: 'i@2 VI VII',
+    drums:  { ...kit, density: .4, level: .6 },
+    bass:   { ...bass, level: .7, brightness: ramp(.22, .32) },
+    pad,
+    raw:    pick(.8),
+    raw2:   bed,
+    raw3:   { ...V, pattern: voice(A1, A2, '~', '~', '~', '~', '~', '~', '~', A3, '~', A4, '~', A2, '~', A4) },
+  }),
+
+  // 0:52 the hole in verse 1, kept as a section: no voice at all, the kit fills out and the hook arrives
+  section('hold', 8, { role: 'develop', progression: 'i@2 VI VII',
+    drums:  { ...kitFull, density: .7, level: .6 },
+    bass,
+    melody: hook,
+    pad,
+    raw:    pick(),
+    raw2:   bed,
+    fx:     { riser: 3 },
+  }),
+
+  // 1:09 the chorus shape: a fragment every other bar and a fifth higher than the verse ones
+  section('lift', 16, { role: 'develop', progression: 'i@2 VI VII',
+    drums:  { ...kitFull, variation: .2 },
+    perc:   shaker,
+    perc2:  { sound: 'LinnDrum_oh', rhythm: '......x.......x.', level: .3, articulation: .75, position: -.2, brightness: .55 },
+    bass,
+    melody: hook,
+    pad:    { ...pad, level: .5, brightness: .38 },
+    raw:    pick(),
+    raw2:   bed,
+    raw3:   { ...V, pattern: voice(B1, '~', B2, '~', B3, '~', '~', B4, B1, '~', B2, B3, '~', B4, '~', '~') },
+  }),
+
+  // 1:44 verse 2: two fragments at the top, then the record's eight-bar silence, then one lead-in.
+  // the kit drops to the half-time skeleton for the hole and the last two bars sweep shut
+  section('verse2', 16, { role: 'release', progression: 'i@2 VI VII', sweep: 2,
+    drums:  { ...kit, density: .4, level: .55 },
+    bass:   { ...bass, level: .7 },
+    melody: { ...hook, level: .6, register: .62 },
+    pad,
+    raw:    pick(.7),
+    raw2:   bed,
+    raw3:   { ...V, level: 1.1, pattern: voice(C1, '~', C2, '~', '~', '~', '~', '~', '~', '~', '~', '~', C2, '~', D1, '~') },
+    fx:     { riser: 4 },
+  }),
+
+  // 2:19 the flood: the last chorus is the densest thing on the record and this is the densest thing here.
+  // a fragment nearly every bar, the counter-line above the hook, and one fragment chopped into eight and
+  // played as an instrument so its syllables stop being words
+  section('flood', 16, { role: 'climax', progression: 'i@2 VI VII',
+    drums:  { ...kitPeak, variation: .3, level: .62, fill: 2 },
+    perc:   shaker,
+    bass:   { ...bass, brightness: .38, level: .85 },
+    melody: hook,
+    melody2: counter,
+    pad:    { ...pad, level: .45 },
+    raw:    pick(.7),
+    raw2:   bed,
+    raw3:   { ...VF, pattern: voice(D1, D2, '~', D3, D4, '~', D5, '~', D2, D3, '~', D4, D6, D2, D5, '~') },
+    // the chop: one 2.5 s fragment cut into eight equal pieces, each fitted to its step
+    sample: { sound: D5, bars: 1, slices: 8, pattern: '0 ~ 3 ~ 0 5 ~ 7', stretch: true,
+              level: 1.3, space: .5, position: .42, brightness: .6 },
+    fx:     { impact: true, level: .55 },
+  }),
+
+  // 2:54 the overrun: on the record the last phrases spill past the end marker with nothing behind them.
+  // the kit and the bass go, the pad and the bed hold, two fragments are left with their tails
+  section('out', 8, { role: 'release', progression: 'i@2 VI VII', dropout: 2,
+    pad:    { ...air, level: .55, brightness: ramp(.3, .12) },
+    melody: { ...hook, level: .45, notes: '0 ~ ~ ~ ~ ~ 4 ~ ~ ~ ~ ~ 0 ~ ~ ~' },
+    raw:    pick(.5),
+    raw2:   bed,
+    raw3:   { ...V, level: 1.1, pattern: voice('~', '~', D6, '~', '~', '~', D2, '~') },
+  }),
+])

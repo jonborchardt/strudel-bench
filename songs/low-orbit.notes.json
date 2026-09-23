@@ -1,0 +1,62 @@
+{
+  "prompt": "A new song leaning heavily on the vocals of one song: pull the Lights in the Sky vocal stems from the sound store, follow the order and spacing of its vocal sections, loop and chop freely, keep near the original tempo. Not a remake and not a remix of that record's other sounds.",
+  "requests": [
+    {
+      "date": "2026-09-23",
+      "ask": "go get the vocals from strudel-pack for lights-in-the-sky, understand the order and general spacing between each vocal section, write a new song using those vocals in the right general order, but looping and chopping is ok",
+      "changes": [
+        {
+          "section": "song",
+          "why": "borrowed 16 vocal phrase clips (voc_ph_001..032) from lights-in-the-sky into samples/user/low-orbit-cuts; nothing else from that record"
+        },
+        {
+          "section": "song",
+          "why": "cps 110/240: the source is 55 bpm, doubled so the kit can move while the pulse is the record's, felt half-time"
+        },
+        {
+          "section": "song",
+          "why": "key C:minor, read off the clips' own pitch medians (117-132 Hz in the verses, 147-178 in the choruses: Bb C D Eb F)"
+        },
+        {
+          "section": "open",
+          "layer": "raw3",
+          "why": "one low verse fragment on bar 5, the way the record waits three bars before its first word"
+        },
+        {
+          "section": "verse1",
+          "layer": "raw3",
+          "why": "the record's verse-1 shape: two fragments, a seven-bar hole, two more"
+        },
+        {
+          "section": "hold",
+          "why": "no voice at all: the six-bar hole inside the source verse kept as an instrumental section"
+        },
+        {
+          "section": "lift",
+          "layer": "raw3",
+          "why": "the chorus-1 shape, a fragment every other bar and a fifth higher than the verse ones"
+        },
+        {
+          "section": "verse2",
+          "layer": "raw3",
+          "why": "two fragments at the top, the record's eight-bar silence, one lead-in"
+        },
+        {
+          "section": "flood",
+          "layer": "raw3",
+          "why": "the chorus-2 shape, a fragment nearly every bar: the densest thing on the record and here"
+        },
+        {
+          "section": "flood",
+          "layer": "sample",
+          "why": "one 2.5 s fragment cut into eight and played as an instrument, so its syllables stop being words"
+        },
+        {
+          "section": "out",
+          "layer": "raw3",
+          "why": "the two fragments that overrun the record's End marker, alone with their tails"
+        }
+      ]
+    }
+  ]
+}
