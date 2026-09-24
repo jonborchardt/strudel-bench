@@ -245,4 +245,4 @@ The full design spec and plan live in `docs/superpowers/`, which is not versione
 
 ## License
 
-MIT, see `LICENSE`. Sample packs keep their own licenses: the Strudel CDN packs as published upstream, local packs whatever their `pack.json` declares (a sound-store pack is CC BY-NC-SA 3.0, with its `LICENSE-ASSETS.md` in the folder).
+MIT, see `LICENSE`, for the code and the author's own songs. Sample packs keep their own licenses: the Strudel CDN packs as published upstream, local packs whatever their `pack.json` declares. A sound-store pack is CC BY-NC-SA 3.0 attributed to Nine Inch Nails, with `LICENSE-ASSETS.md` and per-clip `manifest.json` in the folder and both shipped beside the audio; ShareAlike is viral, so a song declaring one of those packs is itself CC BY-NC-SA 3.0 and non-commercial, not MIT.

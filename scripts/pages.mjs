@@ -48,6 +48,10 @@ copy('lib');
 copy('songs');
 for (const s of hidden) for (const f of [s, s.replace(/\.strudel$/, '.notes.json')]) fs.rmSync(path.join(OUT, 'songs', f), { force: true });
 for (const p of Object.values(shipped)) for (const f of Object.values(p.sounds).flat()) copy(`samples/user/${f}`);
+// attribution has to travel with the clips, not stay in the repo: a pack's LICENSE-ASSETS.md and the per-clip
+// provenance it points at ship beside its audio, so a downloaded wav can be traced back to its terms
+for (const name of Object.keys(shipped)) for (const f of ['LICENSE-ASSETS.md', 'manifest.json'])
+  if (fs.existsSync(path.join(ROOT, 'samples/user', name, f))) copy(`samples/user/${name}/${f}`);
 copy('node_modules/@strudel/web/dist');
 copy('node_modules/@breezystack/lamejs/dist'); // web/mp3.mjs: the mp3 export encodes in the browser
 copy('node_modules/acorn/dist'); // lib/resolve.mjs: the mix card parses the song in the browser (index.html's import map)
