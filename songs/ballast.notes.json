@@ -1,0 +1,63 @@
+{
+  "prompt": "ballast: dub techno in Eb dorian at 122 on a borrowed Ghosts drone bed (the first guitar-free, drone-first NIN borrow after black-ice)",
+  "requests": [
+    {
+      "date": "2026-09-24",
+      "ask": "what song types have we not explored, using more NIN samples: dub techno on a borrowed drone bed",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "key",
+          "why": "Eb:dorian chosen before shopping (an unused root here, minor with the raised sixth); the two drones then found to fit it, not the other way round"
+        },
+        {
+          "section": "song",
+          "layer": "kit",
+          "why": "DoepferMS404 for its 1.02 s synth sub kick; hats and the open-hat wash borrowed from the MS-404 and KPR-77 by name"
+        },
+        {
+          "section": "song",
+          "layer": "sample",
+          "why": "2_ghosts_i_drone1_l4_003 tuned G4>Gb4 (bars 6.16): the store's 78.5 Hz was a subharmonic, a transform of the wav has everything at 392 Hz; Gb is the third the stab plays without"
+        },
+        {
+          "section": "song",
+          "layer": "sample2",
+          "why": "9_ghosts_i_drone_l4_002 tuned 129>130.8 Hz (bars 4.51): the low C bed, the dorian sixth held under Ebm7"
+        },
+        {
+          "section": "song",
+          "layer": "sample",
+          "axis": "level",
+          "from": 0.8,
+          "to": 0.18,
+          "why": "and song.sample2.level 1.3>.7: measured 6 and 13 dB under the climax mix, a lead not a bed; now 22 and 16"
+        },
+        {
+          "section": "deep",
+          "layer": "raw",
+          "axis": "level",
+          "from": 0.85,
+          "to": 1.2,
+          "why": "the stab is the hook and measured 15 dB under; now 13, foreground edge"
+        },
+        {
+          "section": "deep",
+          "layer": "melody",
+          "why": "sound fmpiano>square/hollow and deep.melody2 handchimes>square/glass: sampled voices sat 30 and 34 dB under the mix with level capped at +6, synths reach -16 and -24"
+        },
+        {
+          "section": "deep",
+          "layer": "sample2",
+          "axis": "duck",
+          "why": "drums .25: the bed and the bass shared .24 of the low band under the kick; slack keeps the flat one since it has no kick"
+        },
+        {
+          "section": "undertow",
+          "layer": "raw",
+          "why": "strike() an octave down instead of .note() over the built pattern, which had stacked four notes on every eighth (32 events a bar, the song's false peak)"
+        }
+      ]
+    }
+  ]
+}
