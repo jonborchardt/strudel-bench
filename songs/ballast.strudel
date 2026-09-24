@@ -63,7 +63,7 @@ const tom = (mask) => s('DoepferMS404_lt').struct('~ ~ ~ ~ ~ ~ ~ x').mask(mask)
 const figure = { sound: 'square', patch: 'hollow', phrase: 2, level: .75, register: .6, brightness: .42, space: .8,
   width: .55, position: .28, articulation: .55, follow: true, notes: '~ ~ 4 ~ ~ ~ ~ ~ ~ 5 ~ 4 ~ ~ ~ ~' };
 
-song({ cps: CPS, key: 'Eb:dorian', seed: 41, kit: 'DoepferMS404', packs: ['ballast-cuts', 'rooms'],
+song({ cps: CPS, key: 'Eb:dorian', seed: 41, kit: 'DoepferMS404', visual: { world: 'train', composition: 'single' }, packs: ['ballast-cuts', 'rooms'],
        room: { ir: 'hall', size: 2.4, damping: 4000 } }, [
   // 0:00 the bed alone for four bars, then the kick walks in under it
   section('tide', 16, { role: 'establish', progression: 'i7',
