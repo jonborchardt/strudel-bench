@@ -1,0 +1,99 @@
+{
+ "made": "2026-09-23",
+ "prompt": "ballast: dub techno in Eb dorian at 122 on a borrowed Ghosts drone bed (the first guitar-free, drone-first NIN borrow after black-ice)",
+ "requests": [
+  {
+   "date": "2026-09-24",
+   "ask": "what song types have we not explored, using more NIN samples: dub techno on a borrowed drone bed",
+   "changes": [
+    {
+     "section": "song",
+     "layer": "key",
+     "why": "Eb:dorian chosen before shopping (an unused root here, minor with the raised sixth); the two drones then found to fit it, not the other way round"
+    },
+    {
+     "section": "song",
+     "layer": "kit",
+     "why": "DoepferMS404 for its 1.02 s synth sub kick; hats and the open-hat wash borrowed from the MS-404 and KPR-77 by name"
+    },
+    {
+     "section": "song",
+     "layer": "sample",
+     "why": "2_ghosts_i_drone1_l4_003 tuned G4>Gb4 (bars 6.16): the store's 78.5 Hz was a subharmonic, a transform of the wav has everything at 392 Hz; Gb is the third the stab plays without"
+    },
+    {
+     "section": "song",
+     "layer": "sample2",
+     "why": "9_ghosts_i_drone_l4_002 tuned 129>130.8 Hz (bars 4.51): the low C bed, the dorian sixth held under Ebm7"
+    },
+    {
+     "section": "song",
+     "layer": "sample",
+     "axis": "level",
+     "from": 0.8,
+     "to": 0.18,
+     "why": "and song.sample2.level 1.3>.7: measured 6 and 13 dB under the climax mix, a lead not a bed; now 22 and 16"
+    },
+    {
+     "section": "deep",
+     "layer": "raw",
+     "axis": "level",
+     "from": 0.85,
+     "to": 1.2,
+     "why": "the stab is the hook and measured 15 dB under; now 13, foreground edge"
+    },
+    {
+     "section": "deep",
+     "layer": "melody",
+     "why": "sound fmpiano>square/hollow and deep.melody2 handchimes>square/glass: sampled voices sat 30 and 34 dB under the mix with level capped at +6, synths reach -16 and -24"
+    },
+    {
+     "section": "deep",
+     "layer": "sample2",
+     "axis": "duck",
+     "why": "drums .25: the bed and the bass shared .24 of the low band under the kick; slack keeps the flat one since it has no kick"
+    },
+    {
+     "section": "undertow",
+     "layer": "raw",
+     "why": "strike() an octave down instead of .note() over the built pattern, which had stacked four notes on every eighth (32 events a bar, the song's false peak)"
+    }
+   ]
+  }
+ ],
+ "youtube": {
+  "url": "https://youtu.be/Bn_OR-vWTTM",
+  "title": "ballast — dub techno on two Nine Inch Nails drones, 122 BPM",
+  "description": "Dub techno, 122 BPM in Eb dorian, four and a half minutes: one chord struck off the beat and heard four times through a dotted-eighth delay, a sub kick, a four-note bass, an open-hat wash, and under all of it two held drones sampled from Nine Inch Nails' Ghosts I-IV.\n\nThe genre's rule is that the delay is the rhythm section. The stab is an Ebm9 without its root on the and of 2 and the and of 4, and what you hear is the echo more than the strike; the breakdown takes the kick and the bass away and turns the feedback up until the echo is the only rhythm in the room. The bed is two drones held for the whole song, the third and the sixth of the chord, tuned by playback rate (the sample catalog's pitch reading for one of them was two octaves and a third off, so both were measured off the wav). One chord change in the whole song, two bars of Ab at the end of every eight in the climax. Everything else is the same Ebm7, which is the genre being honest.\n\nWritten as text, mixed by measurement, rendered in the browser.\n\nChapters\n0:00 Tide — the drones, then the kick walks in on its filter\n0:31 Offbeat — hats, the wash, the stab through a shut filter\n1:03 Hull — the sub enters, the filter opens, a tom into the echo\n2:06 Slack — the dub breakdown: no kick, no bass, feedback up\n2:37 Deep — everything at once, the one chord change\n3:40 Undertow — half-time kick, the stab an octave down\n4:12 Out — the sweep closes, the bed is last\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install.\n\nEvery song here is a text file. This one is songs/ballast.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nThe kick, hats and tom come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/\nThe two drones are sampled from Nine Inch Nails' multitracks of 2 Ghosts I and 9 Ghosts I (Ghosts I-IV, 2008), released under CC BY-NC-SA 3.0, and this track is shared under the same license: attribution to Nine Inch Nails, non-commercial, share-alike.\nhttps://creativecommons.org/licenses/by-nc-sa/3.0/\nhttps://www.nin.com/",
+  "tags": [
+   "dub techno",
+   "techno",
+   "deep techno",
+   "minimal techno",
+   "dub",
+   "basic channel",
+   "chord stab",
+   "delay",
+   "drone",
+   "ambient techno",
+   "Eb dorian",
+   "nine inch nails",
+   "ghosts i-iv",
+   "sampling",
+   "creative commons",
+   "cc by-nc-sa",
+   "generative music",
+   "live coding",
+   "strudel",
+   "tidalcycles",
+   "algorave",
+   "creative coding",
+   "music video"
+  ],
+  "hashtags": [
+   "#dubtechno",
+   "#nineinchnails",
+   "#livecoding"
+  ]
+ }
+}

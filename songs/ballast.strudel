@@ -1,0 +1,137 @@
+// ballast: dub techno in Eb dorian at 122, about 4:43. The genre's rule is that the delay is the rhythm section:
+// one chord, struck twice a bar off the beat, is heard four times because three sixteenths of feedback answer it.
+// Six objects:
+//   1 the bed      two Ghosts drones held under the whole song (samples/user/ballast-cuts, strudel-pack, CC BY-NC-SA 3.0):
+//                  the third (2 Ghosts I) and the sixth (9 Ghosts I), tuned by playback rate (`tuned` below). The
+//                  store's pitch column is a median estimate and was wrong about the first: it reads 78.5 Hz, but a
+//                  transform of the wav puts all its energy at 392 Hz (G4) with nothing at all under 300, so 78.5 was
+//                  a subharmonic. Tuned down a semitone it is Gb, the third of the chord the stab is playing without
+//                  one. The second really is a low C (129 Hz), the dorian sixth: the mode's colour, held, never played.
+//   2 the kick     a Doepfer MS-404 sub kick on every quarter, a synth hit rather than a drum machine's
+//   3 the stab     Ebm9 voiced without its root (the bed is holding it) on the and of 2 and the and of 4, through a
+//                  dotted-eighth delay at .6 feedback: the figure you hear is the echo, not the strike
+//   4 the sub      a two-bar bass in eighths, four notes and twelve rests, root fifth fourth fifth
+//   5 the wash     closed hats on the eighths, a long KPR-77 open hat on the offbeats, and a tom that exists only to
+//                  be thrown into the echo, once every eight bars
+//   6 the figure   a Rhodes-ish line in the climax, three notes over two bars, answering the stab
+// One chord change in the whole song: two bars of Ab (the dorian IV) at the end of each eight in `deep`. Everything
+// else is Ebm7, which is the genre being honest rather than the writer running out.
+const CPS = 122 / 240;
+// A held clip is tuned by how many bars it is told to stand for: more bars is slower is flatter.
+const tuned = (seconds, fromHz, toHz) => seconds * CPS * (fromHz / toHz);
+const THIRD = tuned(11.43, 392.1, 369.99);    // G4 down to Gb4, 6.16 bars: it loops across the barline on purpose
+const SIXTH = tuned(9.0, 129.0, 130.81);      // up to C3, 4.51 bars, out of phase with the third and with the song
+const D316 = 3 * 60 / 122 / 4;                // three sixteenths at 122 = .369 s, the delay everything here runs at
+const D38 = 2 * D316;                         // and the long one, for the tom
+
+// 1 the bed
+// levels set from the measure table: the two of them were 6 and 13 dB under the mix, which is a lead, not a bed
+const third = { sound: '2_ghosts_i_drone1_l4_003', bars: THIRD, level: .18, brightness: .22, space: .5, width: .4, position: -.45 };
+const sixth = { sound: '9_ghosts_i_drone_l4_002', bars: SIXTH, level: .7, brightness: .35, weight: .6, space: .6, width: .75, position: .25 };
+// the bed pumps with everything else where there is a kick to pump against; `slack` has none, so it plays flat
+const under = { ...sixth, duck: 'drums', duckDepth: .25, duckAttack: .2 };
+// 2 the kick: no snare, no clap, nothing on the backbeat. articulation .35 keeps the 1.02 s tail long enough to be sub
+const kick = { level: .5, density: .5, organicness: 0, groove: 0, articulation: .35, weight: .62, brightness: .22,
+  space: .25, template: { bd: 'x...x...x...x...' } };
+// 3 the stab: Ebm9 as Gb Bb Db F, and the same shape a fourth up for the one chord change
+const EBM9 = 'gb3,bb3,db4,f4';
+const AB9 = 'c4,eb4,g4,bb4';
+// (concatenated, not a template literal: Strudel's transpiler rewrites backticks into mini-notation before the
+// interpolation ever runs)
+const strike = (ch) => note('~ ~ ~ [' + ch + '] ~ ~ ~ [' + ch + ']');
+const stab = (pat, cut = 800, wet = .55, fb = .6) => pat.s('sawtooth')
+  .attack(.004).decay(.2).sustain(0).release(.15).lpf(cut).lpq(7)
+  .delay(wet).delaytime(D316).delayfeedback(fb).room(.35).pan(.42).gain('.5 .44');
+const HELD = strike(EBM9);
+const MOVE = cat(HELD, HELD, HELD, HELD, HELD, HELD, strike(AB9), strike(AB9));   // six bars of i, two of IV
+// 4 the sub: the root on the downbeat with the kick, then away from it: the fifth and the fourth above, so the bed's
+// low C (a sixth up from this Eb) has a moving line under it rather than a second held note
+const bass = { sound: 'sine', patch: 'sub', level: .9, register: .5, brightness: .3, articulation: .45, weight: .65,
+  duck: 'drums', duckDepth: .3, duckAttack: .12,
+  rhythm: 'xxxxxxxxxxxxxxxx|xxxxxxxxxxxxxxxx',
+  notes: '0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 4 ~ ~ ~ ~ ~ ~ ~ ~ ~ 3 ~ ~ ~ ~ ~ 4 ~ ~ ~' };
+// 5 the wash
+const hats = { sound: 'DoepferMS404_hh', rhythm: 'x.x.x.x.x.x.x.x.', level: .4, brightness: .45, position: .18,
+  velocity: '1 .6 .8 .6 .95 .6 .8 .65', humanize: { timingMs: 3, velocity: .12, correlation: 'bar' } };
+// the KPR-77 open hat is 1.5 s and sits at -11 dB rms, the loudest thing in any kit here: low level, long release
+const wash = { sound: 'KorgKPR77_oh', rhythm: '..x...x...x...x.', level: .22, articulation: .35, brightness: .38,
+  position: -.22, space: .55, width: .5 };
+// the tom is not part of the groove: one hit on the last eighth of a bar, thrown into a three-eighths delay
+const tom = (mask) => s('DoepferMS404_lt').struct('~ ~ ~ ~ ~ ~ ~ x').mask(mask)
+  .delay(.6).delaytime(D38).delayfeedback(.55).room(.5).lpf(1100).gain(.55).pan(.6);
+// 6 the figure: three notes over two bars, in the holes the stab leaves
+const figure = { sound: 'square', patch: 'hollow', phrase: 2, level: .75, register: .6, brightness: .42, space: .8,
+  width: .55, position: .28, articulation: .55, follow: true, notes: '~ ~ 4 ~ ~ ~ ~ ~ ~ 5 ~ 4 ~ ~ ~ ~' };
+
+song({ cps: CPS, key: 'Eb:dorian', seed: 41, kit: 'DoepferMS404', visual: { world: 'train', composition: 'single' }, packs: ['ballast-cuts', 'rooms'],
+       room: { ir: 'hall', size: 2.4, damping: 4000 } }, [
+  // 0:00 the bed alone for four bars, then the kick walks in under it
+  section('tide', 16, { role: 'establish', progression: 'i7',
+    sample: third,
+    sample2: under,
+    drums: { ...kick, level: .35, brightness: ramp(.08, .22) },   // the kick walks in on its filter, not its level
+  }),
+  // 0:31 the offbeats arrive: hats, the open-hat wash, and the stab through a nearly shut filter
+  section('offbeat', 16, { role: 'develop', progression: 'i7',
+    sample: third,
+    sample2: under,
+    drums: kick,
+    perc: hats,
+    perc2: wash,
+    raw: { level: .7, pattern: stab(HELD, 420, .45) },
+  }),
+  // 1:03 the sub enters and the stab's filter opens; the tom every eighth bar
+  section('hull', 32, { role: 'develop', progression: 'i7',
+    sample: third,
+    sample2: under,
+    drums: kick,
+    perc: hats,
+    perc2: wash,
+    bass,
+    raw: { level: 1.1, pattern: stab(HELD, 800) },
+    raw2: { level: .7, pattern: tom('<0 0 0 0 0 0 0 1>') },
+  }),
+  // 2:06 the dub breakdown: kick and sub out, the stab left alone with its feedback turned up until it is the only
+  // rhythm in the room, the hats halved, a riser back in
+  section('slack', 16, { role: 'release', progression: 'i7',
+    sample: third,
+    sample2: { ...sixth, level: .95 },
+    perc: { ...hats, level: .2, brightness: .3 },
+    perc2: { ...wash, level: .14 },
+    raw: { level: 1.25, pattern: stab(HELD, 1500, .72, .74) },
+    raw2: { level: .8, pattern: tom('<0 0 0 1>') },
+    fx: { riser: 4 },
+  }),
+  // 2:38 everything at once and the one chord change: two bars of Ab at the end of each eight, the figure answering
+  section('deep', 32, { role: 'climax', progression: 'i7 i7 i7 i7 i7 i7 IV IV',
+    sample: third,
+    sample2: under,
+    drums: { ...kick, level: .55 },
+    perc: hats,
+    perc2: wash,
+    bass: { ...bass, weight: .7 },
+    melody: figure,
+    melody2: { sound: 'square', patch: 'glass', phrase: 2, register: .85, brightness: .5, space: .85,
+               width: .7, position: .5, level: .8, articulation: .4, follow: true, notes: '~ ~ ~ ~ ~ ~ 7 ~ ~ ~ ~ ~ ~ ~ 5 ~' },
+    raw: { level: 1.2, pattern: stab(MOVE, 1100) },
+    raw2: { level: .7, pattern: tom('<0 0 0 1>') },
+    fx: { impact: true },
+  }),
+  // 3:41 the same room with the lights down: the kick on half its beats, the stab an octave down and dark
+  section('undertow', 16, { role: 'develop', progression: 'i7',
+    sample: third,
+    sample2: under,
+    drums: { ...kick, template: { bd: 'x.......x.......' } },
+    perc: { ...hats, level: .3 },
+    perc2: wash,
+    bass: { ...bass, level: .7 },
+    raw: { level: 1, pattern: stab(strike('gb2,bb2,db3,f3'), 600, .6, .66) },
+  }),
+  // 4:12 out the way it came in: the stab stops, the kick closes down over four bars, the bed is last
+  section('out', 16, { role: 'release', progression: 'i7', sweep: 4,
+    sample: third,
+    sample2: { ...under, level: .55 },
+    drums: { ...kick, weight: ramp(.62, .28), fill: false },
+    perc: { ...hats, level: .3, brightness: ramp(.45, 0) },
+  }),
+])
