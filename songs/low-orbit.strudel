@@ -57,14 +57,17 @@ const W3 = 'lights_in_the_sky_voc_l1_006';   // 192.0 s, between fragments 26 an
 // The clips come off the stem 17 dB apart: -28.5 dB rms for the loudest chorus fragment, -46 for the
 // quietest one-word verse one, so each carries its own makeup gain toward a common -24 dB rms.
 //
-// That gain is capped at 6 (+15.6 dB). Normalising the quietest four honestly wanted 12 to 15x, which lifts
+// That gain is capped at 4.5 (+13 dB), every entry: the first pass at this cap only lowered the ones that
+// read exactly 6, and clip 28 at 6 x the climax's 1.4 was the one moment in the whole render over the knee. Normalising the quietest four honestly wanted 12 to 15x, which lifts
 // the stem's own noise floor and room bleed by 22 dB along with the voice: those fragments arrived with an
 // audible swell of hiss around the word. They now sit lower than the rest, which is the right trade.
-// Clip 5 is set by hand at 4: its 23 dB crest would peak at 0.95 if normalised by rms.
-const GAIN = { 1: 4.2, 2: 4.02, 3: 6.0, 4: 2.15, 5: 4.0, 6: 6.0, 7: 4.25, 8: 6.0, 9: 5.13,
-               10: 1.71, 11: 1.75, 12: 2.53, 13: 3.39, 14: 1.83, 15: 3.01, 16: 6.0, 17: 2.63, 18: 5.18,
-               19: 6.0, 20: 6.0, 21: 6.0, 22: 2.24, 23: 1.68, 24: 3.0, 25: 2.41, 26: 3.07, 27: 3.96,
-               28: 6.0, 29: 1.99, 30: 1.79, 31: 2.99, 32: 2.93, 33: 5.91 };
+// Clip 5 is set by hand at 2.5: its 23 dB crest would peak at 0.95 if normalised by rms, and at 4 it was
+// still the largest single peak in the song (0.744 in verse1, the one spot that pushed the whole render past
+// the soft clip's 0.8 knee).
+const GAIN = { 1: 4.2, 2: 4.02, 3: 4.5, 4: 2.15, 5: 2.5, 6: 4.5, 7: 4.25, 8: 4.5, 9: 4.5,
+               10: 1.71, 11: 1.75, 12: 2.53, 13: 3.39, 14: 1.83, 15: 3.01, 16: 4.5, 17: 2.63, 18: 4.5,
+               19: 4.5, 20: 4.5, 21: 4.5, 22: 2.24, 23: 1.68, 24: 3, 25: 2.41, 26: 3.07, 27: 3.96,
+               28: 4.5, 29: 1.99, 30: 1.79, 31: 2.99, 32: 2.93, 33: 4.5 };
 const SECS = { 1: 2.48, 2: 1.94, 3: 0.7, 4: 0.48, 5: 1.4, 6: 0.74, 7: 2.86, 8: 0.72, 9: 1.52,
                10: 0.7, 11: 0.54, 12: 1.1, 13: 2.21, 14: 1.7, 15: 3.33, 16: 1.06, 17: 1.52, 18: 1.16,
                19: 0.56, 20: 1.52, 21: 0.84, 22: 1.2, 23: 0.72, 24: 0.88, 25: 1.34, 26: 0.98, 27: 2.14,
@@ -179,7 +182,7 @@ const kit = { level: .75, articulation: .7, weight: .5, brightness: .45, space: 
   template: { bd: 'x.......x.......', sd: '........x.......' } };
 const kitFull = { ...kit, template: { bd: 'x.....x.x.......', sd: '........x.......', hh: '..x...x...x...x.' } };
 const kitPeak = { ...kit, template: { bd: 'x.....x.x.....x.', sd: '........x.......', hh: 'x.x.x.x.x.x.x.x.', oh: '......x.......x.' } };
-const shaker = { sound: 'RolandTR808_sh', rhythm: '..x...x...x...x.', level: .65, brightness: .6, position: .3,
+const shaker = { sound: 'RolandTR808_sh', rhythm: '..x...x...x...x.', level: .4,   // peaked 0.657 at .65, the loudest thing in lift and flood brightness: .6, position: .3,
   velocity: '.8 1 .7 .9', humanize: { timingMs: 8, velocity: .12, correlation: 'bar' } };
 
 // 2 the bass: two bars, root and octave against the kick, stepping down through Ab and G to Eb and home
@@ -222,8 +225,9 @@ const counter = { sound: 'handchimes', register: .88, level: 1.2, follow: true, 
 // 5 the air: a wide dark pad ducked under the kick, and a filtered noise bed that never stops
 const air = { sound: 'triangle', density: .35, register: .45, brightness: .3, space: .7, width: .72, level: .4 };
 const pad = { ...air, duck: 'drums', duckDepth: .15, duckAttack: .25 };   // the ducked form, where there is a kick
-// measured against the pad it sat right on top of it in the mids (masking 0.70), so it lives above the pad
-// as air rather than as body, and off to the right of centre
+// The bed is defined but no section plays it any more. Halved on request it measured 30 dB under the mix,
+// which the mix lint calls inaudible, while still tripping masking warnings against the pad and the guitar:
+// nothing to hear, two things to flag. `raw2: bed,` in a section brings it back.
 const bed = { level: 1, width: .6, position: .32,
   pattern: s('pink').clip(1).lpf(sine.range(1800, 6000).slow(24)).hpf(1500).gain(.28) };
 
@@ -232,14 +236,13 @@ const VF = { level: 1.4, space: .3, width: .3 };
 
 song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-orbit-cuts', 'rooms'],
        room: { ir: 'hall', size: 3.2, damping: 4500 },
-       visual: { composition: 'overlay', worlds: ['tunnel', 'combo'], every: 16 } }, [
+       visual: { composition: 'overlay', worlds: ['orrery', 'sediment'], every: 16 } }, [
 
   // 0:00 the bed, the pad and the picking; one low fragment on the fifth bar, the way the record waits
   // three bars before the first word
   section('open', 8, { role: 'establish', progression: 'i@2 VI VII',
     pad:    { ...air, level: .5 },
     raw:    pick(.65),
-    raw2:   bed,
     raw3:   { ...V, level: 1, pattern: voice(...LEAD.open) },
     raw5:   more('open'),
   }),
@@ -251,7 +254,6 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     bass:   { ...bass, level: .7, brightness: ramp(.22, .32) },
     pad,
     raw:    pick(.8),
-    raw2:   bed,
     raw3:   { ...V, pattern: voice(...LEAD.verse1) },
     raw5:   more('verse1', .35),   // measured 19.6 dB under the mix here against the lead's 11.3: a touch forward
   }),
@@ -264,8 +266,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad,
     raw:    pick(),
     raw5:   more('hold', .25, clipsIn(LEAD.verse1)),
-    raw2:   bed,
-    fx:     { riser: 3 },
+    fx:     { riser: 3, level: .55 },
   }),
 
   // 1:09 the chorus shape: a fragment every other bar and a fifth higher than the verse ones
@@ -277,7 +278,6 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     melody: hook,
     pad:    { ...pad, level: .5, brightness: .38 },
     raw:    pick(),
-    raw2:   bed,
     raw3:   { ...V, pattern: voice(...LEAD.lift) },
     raw5:   more('lift'),
     raw4:   wordless(W1, '<0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0>', 1.25),
@@ -286,16 +286,15 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
   // 1:44 verse 2: two fragments at the top, then the record's eight-bar silence, then one lead-in.
   // the kit drops to the half-time skeleton for the hole and the last two bars sweep shut
   section('verse2', 16, { role: 'release', progression: 'i@2 VI VII', sweep: 2,
-    drums:  { ...kit, density: .4, level: .09 },
+    drums:  { ...kit, density: .4, level: 0.14 },
     bass:   { ...bass, level: .7 },
     melody: { ...hook, level: .55 },
     pad,
     raw:    pick(.7),
-    raw2:   bed,
     raw3:   { ...V, level: 1.1, pattern: voice(...LEAD.verse2) },
     raw5:   more('verse2'),
     raw4:   wordless(W2, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 4.5),   // the only voice in the hole, and wordless
-    fx:     { riser: 4 },
+    fx:     { riser: 4, level: .55 },
   }),
 
   // 2:19 the flood: the last chorus is the densest thing on the record and this is the densest thing here.
@@ -309,12 +308,11 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     melody2: counter,
     pad:    { ...pad, level: .45 },
     raw:    pick(.7),
-    raw2:   bed,
     raw3:   { ...VF, pattern: voice(...LEAD.flood) },
     raw5:   more('flood'),
     // the chop: one 2.5 s fragment cut into eight equal pieces, each fitted to its step
     raw4:   wordless(W3, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 1.95),
-    fx:     { impact: true, level: .55 },
+    fx:     { impact: true, level: .4 },   // peaked 0.501 at .55
   }),
 
   // 2:54 the overrun: on the record the last phrases spill past the end marker with nothing behind them.
@@ -323,7 +321,6 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     pad:    { ...air, level: .55, brightness: ramp(.3, .12) },
     melody: { ...hook, level: .45, notes: '0 ~ ~ ~ ~ ~ 4 ~ ~ ~ ~ ~ 0 ~ ~ ~' },
     raw:    pick(.5),
-    raw2:   bed,
     raw3:   { ...V, level: 1.1, pattern: voice(...LEAD.out) },
     raw5:   more('out'),
   }),

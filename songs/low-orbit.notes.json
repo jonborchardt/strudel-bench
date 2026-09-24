@@ -1,4 +1,5 @@
 {
+  "made": "2026-09-23",
   "prompt": "A new song leaning heavily on the vocals of one song: pull the Lights in the Sky vocal stems from the sound store, follow the order and spacing of its vocal sections, loop and chop freely, keep near the original tempo. Not a remake and not a remix of that record's other sounds.",
   "requests": [
     {
@@ -412,6 +413,59 @@
           "section": "verse1",
           "layer": "drums",
           "why": "level .08>.1 and verse2.drums .075>.09, the two a touch apart; the kit now runs .1 in every section but verse2, measuring 17.1 and 17.5 dB under the mix in the verses against a bass at 5"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-24",
+      "ask": "i altered drums and fx manually. do a final mix, im hearing some clipping and your mix will fix it. make the default visual orrery with the occasional sediment",
+      "changes": [
+        {
+          "section": "song",
+          "why": "visual orrery with sediment breathing over it every 16 bars, in place of tunnel and combo"
+        },
+        {
+          "section": "song",
+          "why": "the whole-song render peaked 0.916 with zero clipped samples: not digital clipping but the page's soft clip, identity to 0.8 and tanh above, working audibly on the peaks"
+        },
+        {
+          "section": "song",
+          "why": "compressors on the shaker and the voice were tried and reverted: measured, they raised each part's rms 1-3 dB and left the peaks, taking the whole-song peak to 0.980"
+        },
+        {
+          "section": "song",
+          "why": "shaker level .65>.4: it sat at -17 dB rms but peaked 0.657, the loudest single peak in lift and flood"
+        },
+        {
+          "section": "song",
+          "why": "makeup gain cap 6>4.5: the seven capped fragments were the voice's peaks"
+        },
+        {
+          "section": "song",
+          "why": "clip 5 gain 4>2.5: at 4 it was the largest single peak in the song, 0.744 in verse1; now 0.465"
+        },
+        {
+          "section": "flood",
+          "layer": "fx",
+          "why": "impact level .55>.4: peaked 0.501"
+        },
+        {
+          "section": "song",
+          "why": "raw2 (the noise bed) cut from every section: halved on request it measured 30 dB under the mix, inaudible by the lint, while tripping masking warnings against the pad and the guitar"
+        },
+        {
+          "section": "song",
+          "why": "section peaks now flood 0.731 lift 0.543 verse2 0.612 verse1 0.500, all under the 0.8 knee; the whole-song render 0.916>0.855"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-24",
+      "ask": "(final mix, continued)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "the 4.5 gain cap applied to every entry this time: the first pass only lowered the ones that read exactly 6, leaving 9 at 5.13, 18 at 5.18, 28 at 6 and 33 at 5.91. Clip 28 at 6 x the climax's 1.4 part level was the one moment in the whole render over the soft clip's knee, flood bar 10.80, three 10 ms blocks; now 6.3 final gain, from 8.4"
         }
       ]
     }
