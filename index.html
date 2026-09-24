@@ -90,6 +90,11 @@
     <summary><h2>Expanded Strudel</h2><small>generated &middot; read-only &middot; follows the source as you type</small><span class="grow"></span><small id="xerr" class="err"></small></summary>
     <pre id="expanded" class="gen" aria-live="polite"></pre>
   </details>
+  <!-- youtube: the metadata file's upload details as two copy-ready blocks (the title; the description ending in a TAGS section and a HASHTAGS section, so one paste fills the description box), each with a copy button; hidden when the song has none. Closed by default: it is for the upload, not the song. -->
+  <details class="card pane" id="ytpane" hidden>
+    <summary><h2>YouTube</h2><small>from the notes file &middot; copy each block into the upload form</small><span class="grow"></span><small id="yturl"></small></summary>
+    <div id="ytblocks"></div>
+  </details>
 
   <!-- feedback: pick a section, say what should change, get a request to paste to Claude -->
   <section class="panes">
@@ -137,7 +142,7 @@
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks } from './web/boot.mjs';
-  import { kitsIn, buildRequest, notesView, notesFile, verifyRows, shareEncode, shareDecode, levelRows } from './web/compose.mjs';
+  import { kitsIn, buildRequest, notesView, notesFile, youtubeView, verifyRows, shareEncode, shareDecode, levelRows } from './web/compose.mjs';
   import { packsOf, packKind, registerSamples, resolveSample, sampleDef, SAMPLES, SYNTHS, PATCHES } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
@@ -281,6 +286,13 @@
     $('prompt').textContent = view.prompt;
     const item = (n) => `<li${n.detail ? ` title="${esc(n.detail)}"` : ''}>${n.where ? `<span class="tag">${esc(n.where)}</span>` : ''}${esc(n.text)}${n.change ? ` <small>${esc(n.change)}</small>` : ''}</li>`;
     $('notes').innerHTML = view.sections.map((s) => `<li><b>${esc(s.name)}</b><ul>${s.items.map(item).join('')}</ul></li>`).join('') || '<li class="muted">no comments in this song yet</li>';
+    // youtube: the upload details from the same metadata file, a copy button per block; the card hides when there are none
+    const yt = youtubeView(meta);
+    $('ytpane').hidden = !yt;
+    if (yt) {
+      $('yturl').innerHTML = yt.url ? `<a href="${esc(yt.url)}" target="_blank" rel="noopener">${esc(yt.url)}</a>` : 'not uploaded yet';
+      $('ytblocks').innerHTML = yt.blocks.map((b) => `<div class="ytblock"><header><b>${esc(b.name)}</b><span class="grow"></span><button class="ytcopy" title="copy the ${esc(b.name)} to the clipboard">copy</button><small class="ytdone"></small></header><pre class="gen">${esc(b.text)}</pre></div>`).join('');
+    }
     $('stale').textContent = src !== loaded ? 'unsaved' : '';
     $('save').disabled = src === loaded;
     fbRender(); // the request quotes the source, so it follows edits
@@ -1536,6 +1548,11 @@
     fbRender();
   };
   $('fbcopy').onclick = async () => { await navigator.clipboard.writeText($('fbout').textContent); $('fbstatus').textContent = 'copied'; };
+  $('ytblocks').onclick = async (e) => { // one handler for every block's copy button: the block's own text, verbatim
+    const b = e.target.closest('.ytcopy'); if (!b) return;
+    await navigator.clipboard.writeText(b.closest('.ytblock').querySelector('pre').textContent);
+    b.nextElementSibling.textContent = 'copied';
+  };
 
   // reload from disk when the current song file changes (fs.watch fires twice on Windows, hence the debounce)
   let timer;

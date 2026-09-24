@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { kitsIn, sectionSource, buildRequest, sourceComments, notesView, notesFile, verifyRows, shareEncode, shareDecode, levelRows } from '../web/compose.mjs';
+import { kitsIn, sectionSource, buildRequest, sourceComments, notesView, notesFile, youtubeView, verifyRows, shareEncode, shareDecode, levelRows } from '../web/compose.mjs';
 import { parseChange, addNote } from '../scripts/note.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -60,7 +60,19 @@ test('notesView merges source comments with the metadata file, per section in so
     if (m.requests) assert.ok(view.prompt && view.requests, `${f} with requests has a prompt`);
     for (const r of m.requests ?? []) for (const c of r.changes) assert.ok(c.why && c.section, `${f}: every change says where and why`);
     if (m.youtube) assert.ok(m.youtube.title && m.youtube.description && m.youtube.tags.length, `${f}: youtube details carry a title, a description and tags`);
+    if (m.youtube) assert.ok(youtubeView(m).blocks.every((b) => b.text), `${f}: every youtube block renders non-empty`);
   }
+});
+
+test('youtubeView: the title, and the description ending in TAGS and HASHTAGS sections; null without a block', () => {
+  assert.equal(youtubeView(), null);
+  assert.equal(youtubeView({}), null);
+  const v = youtubeView({ youtube: { url: '', title: 'T', description: 'a\n\nb', tags: ['x', 'y z'], hashtags: ['#p', '#q'] } });
+  assert.equal(v.url, '');
+  assert.deepEqual(v.blocks.map((b) => b.name), ['title', 'description']);
+  assert.equal(v.blocks[0].text, 'T');
+  assert.equal(v.blocks[1].text, 'a\n\nb\n\nTAGS\nx, y z\n\nHASHTAGS\n#p #q');
+  assert.equal(youtubeView({ youtube: { title: 'T', description: 'd' } }).blocks[1].text, 'd'); // no lists: no empty sections either
 });
 
 test('scripts/note.mjs parses a change line and appends requests to the notes file', () => {

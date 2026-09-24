@@ -235,6 +235,12 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .cm-hll-ctl input[type=checkbox]:checked, .matrow input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
 .cm-hll-ctl input[type=checkbox]:checked::before, .matrow input[type=checkbox]:checked::before { left: calc(100% - .8rem); background: #fff; }
 /* quiet until pointed at: a faint outline and muted text, the full button on hover or focus */
+/* the YouTube card: a header row per block with its copy button, and a bounded pre (the description is long) */
+.ytblock { margin-top: .6rem; }
+.ytblock header { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .2rem; }
+.ytblock pre { max-height: 14rem; overflow: auto; padding: .4rem .6rem; border: 1px solid #e6e6e6; border-radius: 4px; background: #fff; }
+.ytblock .ytcopy { font: inherit; font-size: .75rem; padding: .05rem .5rem; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; }
+.ytblock .ytcopy:hover, .ytblock .ytcopy:focus-visible { border-color: var(--accent); }
 .pane .cm-hll-ctl button.pick, .pane .cm-hll-ctl input[type=number] { font: inherit; font-size: .85rem; padding: .1rem .4rem; border: 1px solid #e6e6e6; border-radius: 4px; background: transparent; color: var(--muted); min-width: 0; text-align: left; transition: border-color .12s, color .12s, background .12s; }
 .pane .cm-hll-ctl button.pick:hover, .pane .cm-hll-ctl button.pick:focus-visible, .pane .cm-hll-ctl input[type=number]:hover, .pane .cm-hll-ctl input[type=number]:focus { border-color: #bbb; background: #fff; color: var(--ink); outline: none; }
 .pane .cm-hll-ctl button.pick i { color: #aaa; }
