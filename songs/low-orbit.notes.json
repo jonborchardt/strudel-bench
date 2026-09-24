@@ -468,6 +468,25 @@
           "why": "the 4.5 gain cap applied to every entry this time: the first pass only lowered the ones that read exactly 6, leaving 9 at 5.13, 18 at 5.18, 28 at 6 and 33 at 5.91. Clip 28 at 6 x the climax's 1.4 part level was the one moment in the whole render over the soft clip's knee, flood bar 10.80, three 10 ms blocks; now 6.3 final gain, from 8.4"
         }
       ]
+    },
+    {
+      "date": "2026-09-24",
+      "ask": "it can now load (the confirming render)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "the confirming whole-song render, real this time (wav timestamp checked): the previous 0.858 at flood bar 10.80 was the pair [27, 28], 27 runs 2.14 s so it is still sounding when 28 lands three quarters through the bar and they stack. Clips 27 and 28 gain 3.96 and 4.5 to 3 each, final 4.2 in the event stream"
+        },
+        {
+          "section": "flood",
+          "layer": "fx",
+          "why": "impact level .4>.3: the downbeat measured 0.804 with it at .4"
+        },
+        {
+          "section": "song",
+          "why": "whole-song render: no 10 ms block over the soft clip's 0.8 knee, true sample peak 0.776 at lift bar 7.29, analyzer peak 0.713, clipped 0, rms -21.1 dBFS unchanged from before the pass, so nothing got quieter, only the peaks came off"
+        }
+      ]
     }
   ]
 }

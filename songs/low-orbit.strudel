@@ -66,8 +66,8 @@ const W3 = 'lights_in_the_sky_voc_l1_006';   // 192.0 s, between fragments 26 an
 // the soft clip's 0.8 knee).
 const GAIN = { 1: 4.2, 2: 4.02, 3: 4.5, 4: 2.15, 5: 2.5, 6: 4.5, 7: 4.25, 8: 4.5, 9: 4.5,
                10: 1.71, 11: 1.75, 12: 2.53, 13: 3.39, 14: 1.83, 15: 3.01, 16: 4.5, 17: 2.63, 18: 4.5,
-               19: 4.5, 20: 4.5, 21: 4.5, 22: 2.24, 23: 1.68, 24: 3, 25: 2.41, 26: 3.07, 27: 3.96,
-               28: 4.5, 29: 1.99, 30: 1.79, 31: 2.99, 32: 2.93, 33: 4.5 };
+               19: 4.5, 20: 4.5, 21: 4.5, 22: 2.24, 23: 1.68, 24: 3, 25: 2.41, 26: 3.07, 27: 3,
+               28: 3, 29: 1.99, 30: 1.79, 31: 2.99, 32: 2.93, 33: 4.5 };
 const SECS = { 1: 2.48, 2: 1.94, 3: 0.7, 4: 0.48, 5: 1.4, 6: 0.74, 7: 2.86, 8: 0.72, 9: 1.52,
                10: 0.7, 11: 0.54, 12: 1.1, 13: 2.21, 14: 1.7, 15: 3.33, 16: 1.06, 17: 1.52, 18: 1.16,
                19: 0.56, 20: 1.52, 21: 0.84, 22: 1.2, 23: 0.72, 24: 0.88, 25: 1.34, 26: 0.98, 27: 2.14,
@@ -312,7 +312,7 @@ song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-o
     raw5:   more('flood'),
     // the chop: one 2.5 s fragment cut into eight equal pieces, each fitted to its step
     raw4:   wordless(W3, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 1.95),
-    fx:     { impact: true, level: .4 },   // peaked 0.501 at .55
+    fx:     { impact: true, level: .3 },   // the downbeat measured 0.804 with it at .4
   }),
 
   // 2:54 the overrun: on the record the last phrases spill past the end marker with nothing behind them.
