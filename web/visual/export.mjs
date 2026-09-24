@@ -8,6 +8,7 @@
 import { eventOf, createPerformance } from './host.mjs';
 import { layerBase } from '../../lib/song.mjs';
 import { samplesOf } from '../../lib/visual.mjs';
+import { titleOf } from '../../lib/title.mjs'; // the title card's text: the song's name and its first comment line, shared with the song list
 
 export const FPS = 30, WIDTH = 1920, HEIGHT = 1080;
 export const LEAD = 1.5, TAIL = 3; // seconds of title before the song, seconds after it for the tail to ring
@@ -32,14 +33,6 @@ export function streamOf(pat, cycles = 8) {
   return out.sort((a, b) => a.t - b.t);
 }
 
-/** The title card's text: the song's name and its first comment line (a flag line such as `// @blog` skipped, a leading `name:` dropped). */
-export function titleOf(name, source = '') {
-  const base = name.replace(/\.strudel$/, '');
-  let line = source.split('\n').map((l) => l.trim()).find((l) => l.startsWith('//') && !/^\/\/\s*@\w+\s*$/.test(l)) ?? '';
-  line = line.replace(/^\/\/\s*/, '');
-  if (line.startsWith(`${base}:`)) line = line.slice(base.length + 1).trim();
-  return { name: base, line };
-}
 
 export const frameCount = (seconds, { fps = FPS, lead = LEAD, tail = TAIL } = {}) => Math.ceil((lead + seconds + tail) * fps);
 

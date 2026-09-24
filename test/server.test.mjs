@@ -42,7 +42,10 @@ test('userPacks: a folder per pack, inside it folders are sounds with variants a
 test('song list, read, write, and name validation', async () => {
   await withServer(async (base) => {
     const list = await (await fetch(`${base}/songs/index.json`)).json();
-    assert.ok(list.includes('demo.strudel'));
+    const demo = list.find((s) => s.name === 'demo.strudel');
+    assert.ok(demo, 'demo is listed');
+    assert.match(demo.date, /^\d{4}-\d\d-\d\d$/, 'each entry carries the date the song appeared here');
+    assert.ok(demo.note, 'and a line about what it is');
 
     const text = await (await fetch(`${base}/songs/demo.strudel`)).text();
     assert.match(text, /song\(/);
@@ -132,7 +135,7 @@ test('a // @hidden song is left out of songs/index.json but still served', async
   fs.writeFileSync(file, '// @hidden\ns("bd")\n');
   try {
     await withServer(async (base) => {
-      assert.ok(!(await (await fetch(`${base}/songs/index.json`)).json()).includes('_t_hidden.strudel'));
+      assert.ok(!(await (await fetch(`${base}/songs/index.json`)).json()).some((s) => s.name === '_t_hidden.strudel'));
       assert.equal((await fetch(`${base}/songs/_t_hidden.strudel`)).status, 200);
     });
   } finally { fs.rmSync(file); }
@@ -147,7 +150,7 @@ test('notes file lives next to its song: GET/PUT songs/<name>.notes.json, absent
       const r = await fetch(`${base}/songs/_t_x.notes.json`);
       assert.equal(r.headers.get('content-type'), 'application/json');
       assert.deepEqual(await r.json(), { prompt: 'p' });
-      assert.ok(!(await (await fetch(`${base}/songs/index.json`)).json()).includes('_t_x.notes.json'));
+      assert.ok(!(await (await fetch(`${base}/songs/index.json`)).json()).some((s) => s.name === '_t_x.notes.json'));
       const demo = await (await fetch(`${base}/songs/demo.notes.json`)).json();
       assert.ok(demo.prompt && demo.requests.length, 'demo ships with provenance');
     } finally { fs.rmSync(path.join(ROOT, 'songs', '_t_x.notes.json')); }

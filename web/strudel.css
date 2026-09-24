@@ -57,6 +57,9 @@ button.primary { background: var(--accent); color: var(--accent-ink); border-col
 button.on { background: #e6eefc; border-color: var(--accent); }
 .field { display: inline-flex; align-items: center; gap: .35rem; color: var(--muted); }
 .field select, .field button { color: var(--ink); }
+#songpick { display: inline-flex; align-items: baseline; gap: .45rem; max-width: min(26rem, 50vw); } /* the song's name with the date it was made beside it; what it is waits in the menu */
+#songpick b { font-weight: 600; }
+#songpick small { color: #9b9b9b; font-size: .78rem; }
 
 /* pick menu: a native popover pinned under its button; each entry is a name over its one-line description */
 .menu { margin: 0; padding: .25rem; border: 1px solid #bbb; border-radius: 6px; background: #fff; box-shadow: 0 6px 20px rgba(0, 0, 0, .15); max-height: 60vh; overflow-y: auto; width: 24rem; max-width: calc(100vw - 2rem); }
@@ -64,6 +67,7 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .menu button .pv { grid-row: span 2; } /* the kit row's play control: a span, since a button cannot nest one */
 .menu button[hidden] { display: none; } /* the grid rule above would otherwise beat the hidden attribute */
 .menu button img { grid-row: span 2; width: 30px; height: 30px; }
+.menu.wide { width: 34rem; }
 .menu .key { position: sticky; bottom: -.25rem; margin: .25rem -.25rem -.25rem; padding: .3rem .5rem; background: #fff; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: .1rem .55rem; font-size: .72rem; color: var(--muted); }
 .menu .key span { display: inline-flex; align-items: center; gap: .15rem; white-space: nowrap; }
 .menu .key i { font-style: normal; color: var(--line); }
@@ -88,8 +92,9 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 
 /* arrangement strip (top of the mix card): a block per section, flex-grown by its span, one thin row per layer shaded by
    density; the playing one is outlined, the pinned one is amber; the ops (pin, move, duplicate) show on the selected one */
-/* the stage: the song's visual performance, a 16:9 box under the transport, no taller than half the window; the box fullscreens as a whole so the button stays over the canvas */
-.stage { padding: .4rem; }
+/* the stage: the song's visual performance, a collapsible 16:9 box over the transport (closed by default), no taller than half the window; the box fullscreens as a whole so the button stays over the canvas */
+.stage { padding: .4rem .75rem; }
+.stage > summary h2 { font-size: 1rem; margin: 0; }
 .stagebox { position: relative; width: min(100%, calc(46vh * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; background: #05060a; border-radius: 6px; overflow: hidden; }
 .stagebox canvas { display: block; width: 100%; height: 100%; }
 .stagebox #fullscreen { position: absolute; top: .4rem; right: .4rem; padding: .2rem .5rem; opacity: .45; background: #0009; color: #fff; border-color: #fff5; }
@@ -230,6 +235,12 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .cm-hll-ctl input[type=checkbox]:checked, .matrow input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
 .cm-hll-ctl input[type=checkbox]:checked::before, .matrow input[type=checkbox]:checked::before { left: calc(100% - .8rem); background: #fff; }
 /* quiet until pointed at: a faint outline and muted text, the full button on hover or focus */
+/* the YouTube card: a header row per block with its copy button, and a bounded pre (the description is long) */
+.ytblock { margin-top: .6rem; }
+.ytblock header { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .2rem; }
+.ytblock pre { max-height: 14rem; overflow: auto; padding: .4rem .6rem; border: 1px solid #e6e6e6; border-radius: 4px; background: #fff; }
+.ytblock .ytcopy { font: inherit; font-size: .75rem; padding: .05rem .5rem; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; }
+.ytblock .ytcopy:hover, .ytblock .ytcopy:focus-visible { border-color: var(--accent); }
 .pane .cm-hll-ctl button.pick, .pane .cm-hll-ctl input[type=number] { font: inherit; font-size: .85rem; padding: .1rem .4rem; border: 1px solid #e6e6e6; border-radius: 4px; background: transparent; color: var(--muted); min-width: 0; text-align: left; transition: border-color .12s, color .12s, background .12s; }
 .pane .cm-hll-ctl button.pick:hover, .pane .cm-hll-ctl button.pick:focus-visible, .pane .cm-hll-ctl input[type=number]:hover, .pane .cm-hll-ctl input[type=number]:focus { border-color: #bbb; background: #fff; color: var(--ink); outline: none; }
 .pane .cm-hll-ctl button.pick i { color: #aaa; }
@@ -277,7 +288,9 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .pvlvl[hidden] { display: none; } /* the flex rule above would otherwise beat the hidden attribute (a menu without play buttons) */
 .menu .pvlvl output { color: var(--ink); }
 .menu .row { display: flex; align-items: center; gap: .6rem; padding: .2rem .3rem .2rem .6rem; border-radius: 4px; cursor: pointer; line-height: 1.3; }
-.menu .row span { flex: 1; }
+.menu .row span { flex: 1; min-width: 0; }
+.menu .row small { display: block; color: #9b9b9b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* the second line: lighter than the name and one line, however long the note is */
+.menu .row small.when { display: inline; margin-left: .45rem; } /* the date stays on the name's line */
 .menu .row:hover { background: #eef3fd; }
 .menu .row[aria-selected="true"] { background: #e6eefc; }
 .menu .row[hidden] { display: none; }

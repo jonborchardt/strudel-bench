@@ -1,0 +1,647 @@
+{
+ "packer": {
+  "name": "strudle-pack",
+  "version": "0.1.0"
+ },
+ "generatedAt": "2026-09-22T03:53:28+00:00",
+ "license": {
+  "license": "CC-BY-NC-SA-3.0",
+  "license_url": "https://creativecommons.org/licenses/by-nc-sa/3.0/",
+  "attribution": "Nine Inch Nails",
+  "album": "The Slip",
+  "source_url": "https://www.nin.com/"
+ },
+ "packs": [
+  {
+   "id": "38-ghosts",
+   "title": "38 Ghosts",
+   "album": "Ghosts I-IV",
+   "bpm": 132.0,
+   "beats_per_bar": 6.0,
+   "markers": [],
+   "license": "CC-BY-NC-SA-3.0",
+   "clipCount": 693,
+   "bytes": 578423302,
+   "stems": [
+    {
+     "name": "beat1",
+     "role": "other",
+     "clips": 30,
+     "kinds": {
+      "l1": 18,
+      "l2": 7,
+      "l4": 3,
+      "hit": 2
+     }
+    },
+    {
+     "name": "beat2",
+     "role": "other",
+     "clips": 138,
+     "kinds": {
+      "l1": 80,
+      "l2": 38,
+      "l4": 18,
+      "hit": 2
+     }
+    },
+    {
+     "name": "buccy",
+     "role": "other",
+     "clips": 82,
+     "kinds": {
+      "l1": 47,
+      "l2": 22,
+      "l4": 11,
+      "hit": 2
+     }
+    },
+    {
+     "name": "bwrds-gtr",
+     "role": "guitar",
+     "clips": 39,
+     "kinds": {
+      "l1": 24,
+      "l2": 10,
+      "l4": 5
+     }
+    },
+    {
+     "name": "pedal-dly1",
+     "role": "other",
+     "clips": 24,
+     "kinds": {
+      "l1": 13,
+      "l2": 5,
+      "l4": 2,
+      "hit": 4
+     }
+    },
+    {
+     "name": "pedal-dly2",
+     "role": "other",
+     "clips": 30,
+     "kinds": {
+      "l1": 16,
+      "l2": 8,
+      "l4": 4,
+      "hit": 2
+     }
+    },
+    {
+     "name": "piano",
+     "role": "keys",
+     "clips": 83,
+     "kinds": {
+      "l1": 48,
+      "l2": 23,
+      "l4": 12
+     }
+    },
+    {
+     "name": "seq-bass",
+     "role": "bass",
+     "clips": 69,
+     "kinds": {
+      "l1": 46,
+      "l2": 17,
+      "l4": 6
+     }
+    },
+    {
+     "name": "space-echo-hi",
+     "role": "other",
+     "clips": 21,
+     "kinds": {
+      "l1": 12,
+      "l2": 5,
+      "l4": 3,
+      "hit": 1
+     }
+    },
+    {
+     "name": "space-echo-lo",
+     "role": "other",
+     "clips": 42,
+     "kinds": {
+      "l1": 24,
+      "l2": 11,
+      "l4": 6,
+      "hit": 1
+     }
+    },
+    {
+     "name": "squacking",
+     "role": "other",
+     "clips": 11,
+     "kinds": {
+      "l1": 4,
+      "l2": 2,
+      "l4": 1,
+      "hit": 4
+     }
+    },
+    {
+     "name": "synth-solo",
+     "role": "synth",
+     "clips": 55,
+     "kinds": {
+      "l1": 32,
+      "l2": 15,
+      "l4": 8
+     }
+    },
+    {
+     "name": "tamb",
+     "role": "perc",
+     "clips": 55,
+     "kinds": {
+      "l1": 32,
+      "l2": 15,
+      "l4": 7,
+      "hit": 1
+     }
+    },
+    {
+     "name": "throaty-synth",
+     "role": "synth",
+     "clips": 1,
+     "kinds": {
+      "l1": 1
+     }
+    },
+    {
+     "name": "tr-vox1",
+     "role": "vocal",
+     "clips": 4,
+     "kinds": {
+      "l1": 1,
+      "hit": 3
+     }
+    },
+    {
+     "name": "tr-vox2",
+     "role": "vocal",
+     "clips": 3,
+     "kinds": {
+      "l1": 2,
+      "hit": 1
+     }
+    },
+    {
+     "name": "tr-vox3",
+     "role": "vocal",
+     "clips": 6,
+     "kinds": {
+      "l1": 3,
+      "l2": 1,
+      "hit": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "demon-seed",
+   "title": "Demon Seed",
+   "album": "The Slip",
+   "bpm": 132.0,
+   "beats_per_bar": 6.0,
+   "markers": [
+    [
+     3,
+     "Start"
+    ],
+    [
+     15,
+     "Riff 1"
+    ],
+    [
+     23,
+     "Hi tone"
+    ],
+    [
+     35,
+     "riff 2"
+    ],
+    [
+     43,
+     "gtr Add"
+    ],
+    [
+     71,
+     "Mid"
+    ],
+    [
+     87,
+     "Back in"
+    ],
+    [
+     99,
+     "There is a seed"
+    ],
+    [
+     111,
+     "End"
+    ]
+   ],
+   "license": "CC-BY-NC-SA-3.0",
+   "clipCount": 758,
+   "bytes": 572857236,
+   "stems": [
+    {
+     "name": "anasynth",
+     "role": "synth",
+     "clips": 46,
+     "kinds": {
+      "l1": 28,
+      "l2": 14,
+      "l4": 4
+     }
+    },
+    {
+     "name": "bass",
+     "role": "bass",
+     "clips": 144,
+     "kinds": {
+      "l1": 84,
+      "l2": 42,
+      "l4": 18
+     }
+    },
+    {
+     "name": "breakdown",
+     "role": "other",
+     "clips": 27,
+     "kinds": {
+      "l1": 13,
+      "l2": 7,
+      "l4": 2,
+      "hit": 5
+     }
+    },
+    {
+     "name": "bv",
+     "role": "vocal",
+     "clips": 11,
+     "kinds": {
+      "l1": 6,
+      "l2": 3,
+      "ph": 2
+     }
+    },
+    {
+     "name": "bv2",
+     "role": "vocal",
+     "clips": 36,
+     "kinds": {
+      "l1": 21,
+      "l2": 10,
+      "l4": 4,
+      "hit": 1
+     }
+    },
+    {
+     "name": "drums",
+     "role": "drums",
+     "clips": 181,
+     "kinds": {
+      "l1": 105,
+      "l2": 52,
+      "l4": 24
+     }
+    },
+    {
+     "name": "gtr",
+     "role": "guitar",
+     "clips": 113,
+     "kinds": {
+      "l1": 67,
+      "l2": 33,
+      "l4": 13
+     }
+    },
+    {
+     "name": "keys",
+     "role": "keys",
+     "clips": 9,
+     "kinds": {
+      "l1": 7,
+      "l2": 2
+     }
+    },
+    {
+     "name": "keys2",
+     "role": "keys",
+     "clips": 8,
+     "kinds": {
+      "l1": 8
+     }
+    },
+    {
+     "name": "lv",
+     "role": "vocal",
+     "clips": 132,
+     "kinds": {
+      "l1": 47,
+      "l2": 23,
+      "l4": 9,
+      "ph": 53
+     }
+    },
+    {
+     "name": "pluck-synth",
+     "role": "synth",
+     "clips": 0,
+     "kinds": {}
+    },
+    {
+     "name": "strings",
+     "role": "synth",
+     "clips": 10,
+     "kinds": {
+      "l1": 6,
+      "l2": 3,
+      "l4": 1
+     }
+    },
+    {
+     "name": "tone",
+     "role": "synth",
+     "clips": 41,
+     "kinds": {
+      "l1": 27,
+      "l2": 12,
+      "l4": 2
+     }
+    }
+   ]
+  }
+ ],
+ "clips": [
+  {
+   "pack": "demon-seed",
+   "title": "Demon Seed",
+   "album": "The Slip",
+   "bpm": 132.0,
+   "stem": "strings",
+   "role": "synth",
+   "sound": "demon_seed_strings_l2_003",
+   "kind": "l2",
+   "bars": 2,
+   "seconds": 5.454546,
+   "startBar": 107,
+   "section": "There is a seed",
+   "rmsDb": -24.42,
+   "peakDb": -10.82,
+   "transcript": null,
+   "file": "demon_seed_strings_l2_003.wav",
+   "pitchHz": 220.5,
+   "pitchRange": 3.0,
+   "wordsPerSec": null,
+   "density": 0.02,
+   "brightness": 0.6,
+   "weight": 0.05,
+   "space": 0.84,
+   "articulation": 0.29,
+   "aggression": 0.17,
+   "groove": 0.26,
+   "variation": 0.89,
+   "organicness": 0.04,
+   "width": 0.77,
+   "register": 0.68,
+   "feel": [
+    "very sparse",
+    "very light",
+    "dreamy",
+    "smooth",
+    "straight",
+    "very mechanical",
+    "wide"
+   ],
+   "moods": []
+  },
+  {
+   "pack": "demon-seed",
+   "title": "Demon Seed",
+   "album": "The Slip",
+   "bpm": 132.0,
+   "stem": "tone",
+   "role": "synth",
+   "sound": "demon_seed_tone_l4_001",
+   "kind": "l4",
+   "bars": 4,
+   "seconds": 10.909091,
+   "startBar": 25,
+   "section": "Hi tone",
+   "rmsDb": -31.77,
+   "peakDb": -21.21,
+   "transcript": null,
+   "file": "demon_seed_tone_l4_001.wav",
+   "pitchHz": 83.1,
+   "pitchRange": 0.2,
+   "wordsPerSec": null,
+   "density": 0.13,
+   "brightness": 0.7,
+   "weight": 0.33,
+   "space": 0.98,
+   "articulation": 0.24,
+   "aggression": 0.86,
+   "groove": 0.26,
+   "variation": 0.94,
+   "organicness": 0.42,
+   "width": 0.64,
+   "register": 0.31,
+   "feel": [
+    "very sparse",
+    "bright",
+    "light",
+    "very dreamy",
+    "very aggressive",
+    "straight"
+   ],
+   "moods": [
+    "cinematic"
+   ]
+  },
+  {
+   "pack": "38-ghosts",
+   "title": "38 Ghosts",
+   "album": "Ghosts I-IV",
+   "bpm": 132.0,
+   "stem": "space-echo-lo",
+   "role": "other",
+   "sound": "38_ghosts_space_echo_lo_l4_001",
+   "kind": "l4",
+   "bars": 4,
+   "seconds": 10.909091,
+   "startBar": 41,
+   "section": "",
+   "rmsDb": -22.3,
+   "peakDb": -11.26,
+   "transcript": null,
+   "file": "38_ghosts_space_echo_lo_l4_001.wav",
+   "pitchHz": null,
+   "pitchRange": null,
+   "wordsPerSec": null,
+   "density": 0.07,
+   "brightness": 0.47,
+   "weight": 0.05,
+   "space": 0.71,
+   "articulation": 0.26,
+   "aggression": 0.7,
+   "groove": 0.26,
+   "variation": 0.58,
+   "organicness": 0.32,
+   "width": 0.14,
+   "register": null,
+   "feel": [
+    "very sparse",
+    "very light",
+    "dreamy",
+    "aggressive",
+    "straight",
+    "mechanical",
+    "very narrow"
+   ],
+   "moods": [
+    "sad",
+    "ominous"
+   ]
+  },
+  {
+   "pack": "38-ghosts",
+   "title": "38 Ghosts",
+   "album": "Ghosts I-IV",
+   "bpm": 132.0,
+   "stem": "tr-vox3",
+   "role": "vocal",
+   "sound": "38_ghosts_tr_vox3_hit_002",
+   "kind": "hit",
+   "bars": 0.266,
+   "seconds": 0.724989,
+   "startBar": 79,
+   "section": "",
+   "rmsDb": -19.21,
+   "peakDb": -5.72,
+   "transcript": null,
+   "file": "38_ghosts_tr_vox3_hit_002.wav",
+   "pitchHz": null,
+   "pitchRange": null,
+   "wordsPerSec": null,
+   "density": 0.86,
+   "brightness": 0.85,
+   "weight": 0.05,
+   "space": 0.03,
+   "articulation": 0.34,
+   "aggression": 0.23,
+   "groove": 0.26,
+   "variation": 0.98,
+   "organicness": 0.5,
+   "width": 0.68,
+   "register": null,
+   "feel": [
+    "very busy",
+    "very bright",
+    "very light",
+    "very dry",
+    "smooth",
+    "straight",
+    "wide"
+   ],
+   "moods": [
+    "chaotic",
+    "happy"
+   ]
+  },
+  {
+   "pack": "38-ghosts",
+   "title": "38 Ghosts",
+   "album": "Ghosts I-IV",
+   "bpm": 132.0,
+   "stem": "tr-vox2",
+   "role": "vocal",
+   "sound": "38_ghosts_tr_vox2_hit_001",
+   "kind": "hit",
+   "bars": 2.099,
+   "seconds": 5.724989,
+   "startBar": 80,
+   "section": "",
+   "rmsDb": -17.88,
+   "peakDb": -4.54,
+   "transcript": null,
+   "file": "38_ghosts_tr_vox2_hit_001.wav",
+   "pitchHz": 225.0,
+   "pitchRange": 0.4,
+   "wordsPerSec": null,
+   "density": 0.93,
+   "brightness": 0.82,
+   "weight": 0.05,
+   "space": 0.36,
+   "articulation": 0.5,
+   "aggression": 0.14,
+   "groove": 0.26,
+   "variation": 0.78,
+   "organicness": 0.54,
+   "width": 0.77,
+   "register": 0.69,
+   "feel": [
+    "very busy",
+    "bright",
+    "very light",
+    "very smooth",
+    "straight",
+    "wide"
+   ],
+   "moods": [
+    "euphoric",
+    "happy"
+   ]
+  },
+  {
+   "pack": "38-ghosts",
+   "title": "38 Ghosts",
+   "album": "Ghosts I-IV",
+   "bpm": 132.0,
+   "stem": "tr-vox1",
+   "role": "vocal",
+   "sound": "38_ghosts_tr_vox1_hit_001",
+   "kind": "hit",
+   "bars": 0.599,
+   "seconds": 1.634989,
+   "startBar": 79,
+   "section": "",
+   "rmsDb": -20.88,
+   "peakDb": -5.0,
+   "transcript": null,
+   "file": "38_ghosts_tr_vox1_hit_001.wav",
+   "pitchHz": null,
+   "pitchRange": null,
+   "wordsPerSec": null,
+   "density": 0.77,
+   "brightness": 0.88,
+   "weight": 0.05,
+   "space": 0.03,
+   "articulation": 0.69,
+   "aggression": 0.75,
+   "groove": 0.86,
+   "variation": 0.15,
+   "organicness": 0.58,
+   "width": 0.72,
+   "register": null,
+   "feel": [
+    "busy",
+    "very bright",
+    "very light",
+    "very dry",
+    "punchy",
+    "aggressive",
+    "very swung",
+    "wide"
+   ],
+   "moods": [
+    "happy",
+    "hypnotic"
+   ]
+  }
+ ]
+}

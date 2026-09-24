@@ -116,6 +116,38 @@ interest. Do these, in this order, on every new song and whenever a song is call
 The layer baselines already carry the sound design (bass filter pluck, melody vibrato and on-beat accents, pad
 detune drift); do not re-add those per song.
 
+## Borrowing a voice or a riff (the sound store, sparingly)
+
+`E:\github2\strudle-pack` sells real recordings: NIN multitracks cut into loops, hits and sung phrases with
+transcripts. They are licensed for use and check-in here. Reach for it last, for a gap the built-in sounds cannot fill.
+Atmosphere first (Ghosts drones, held strings, echo and delay textures under written parts: `songs/black-ice.strudel`).
+A voice rarely: a breath or a wordless "ah" as an instrument every 8-16 bars, always with other parts under it,
+measured under the lead part, never the main attraction. Then a played riff or a recorded loop under the kit. Never pick the tempo, key, form or lyric to
+suit its clips; the 2026-09-21 test did, and every clip fitted on paper while the song failed.
+
+1. **Song first.** Written parts in place and `npm run check` clean. Name the gap in one sentence ("the chorus needs one
+   shouted word on beat four") and borrow for that only. The test: mute every borrowed part and the song still stands on its written parts.
+2. **Shop in the song's terms**, from the store's folder with its venv (`.venv\Scripts\python -m packer find ...`):
+   - loops (`kind=l1|l2|l4`) only at the song's bpm or a clean ratio (`bpm=122`), since anything else resamples them;
+     their `bars` are the source song's bars, so read `beats_per_bar` in the pack's `manifest.json` (six in Demon
+     Seed and Ghosts 38, where an `l2` is three 4/4 bars) and write `bars` on the sample part;
+   - phrases (`kind=ph`) and hits are tempo-free, but a phrase carries pitch: `pitchHz` near the key, held
+     (`pitchRange="<3"`) or spoken lines fit easiest, and the pitch is a median estimate, so treat it as a hint;
+   - filter by feel in this repo's words (`feel=dark moods=ominous`), then take the loudest few (`--sort rmsDb --desc`).
+3. **Words.** One line or one word repeated is a hook; lines from several songs stitched into a story is a collage.
+   Either use one line as a motif, or chop a phrase into an instrument with a `sample` part (`bars` from its
+   `pack.json`, `slices: 8`, a `pattern`, `stretch: true`), so the syllables stop being a sentence.
+4. **Export** only what plays: `.venv\Scripts\python -m packer export E:\github2\strudle\samples\user\<song>-cuts
+   <sound> ...` in one command (a re-run rewrites the JSON to the new set), and add `packs: ['<song>-cuts']` to the song.
+5. **Place it.** A phrase or hit is `raw: { pattern: s("<~ name ~ ~>"), level }`, one per bar with `<>`, and
+   `.speed(2 ** (n / 12))` moves it n semitones (and 6% shorter per semitone up). A loop is `sample: { sound: 'name' }`.
+   A riff has its own chords, so put it where the section holds its root (`progression: 'i'`), never under moving
+   chords.
+6. **Mix it.** A stem brings another record's room and compression. Run the mixing pass on it like any part: level
+   first, then `brightness`, `space` and `position`.
+7. **Record and commit.** `npm run note` names the clip, its source song and the gap it fills. Commit the clips with the
+   export's `LICENSE-ASSETS.md`, since a song must check clean on a fresh clone. The song becomes CC BY-NC-SA.
+
 ## The mixing pass: muddy, cluttered, a pile of parts
 
 Run this after the material is written, on every new song and whenever the user says a song sounds muddy,

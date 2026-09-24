@@ -15,8 +15,14 @@ export const PRESETS = Object.keys(POLICY.compositions);
 export const BREATH = 8; // bars: the second world fades in over half of it and out over the other half, so the two worlds trade places
 const PEAK = [0.45, 0.95]; // the breath's top by the section's energy: a quiet section barely shows the second world, a loud one lets it take the frame
 
-/** The breath at song cycle `c`: 0 at the start of every `bars`, 1 half way. */
-export const breathAt = (c, bars = BREATH) => 0.5 - 0.5 * Math.cos((2 * Math.PI * c) / bars);
+/**
+ * The breath at song cycle `c`: 0 at the start of every `bars`, 1 half way. With `every` longer than `bars` (the song's
+ * `visual.every`), the visit comes once per `every` bars, at their start, and the second world stays out between visits.
+ */
+export const breathAt = (c, bars = BREATH, every = bars) => {
+  const p = ((c % every) + every) % every;
+  return p < bars ? 0.5 - 0.5 * Math.cos((2 * Math.PI * p) / bars) : 0;
+};
 
 /** The director for `WORLDS` (name -> world) over a score whose composition lists the base and the second world. `createCanvas(w, h)` makes a target (OffscreenCanvas in the page; a stub in tests). The result is a world. */
 export function createDirector(WORLDS, { createCanvas = defaultCanvas } = {}) {
@@ -33,10 +39,10 @@ export function createDirector(WORLDS, { createCanvas = defaultCanvas } = {}) {
     init(score, rng, size) {
       const [base, over] = score.composition?.worlds ?? [score.world];
       for (const k of Object.keys(targets)) delete targets[k];
-      return { base, over: over ?? null, children: { base: worldOf(base).init(score, rng, size), ...(over ? { over: worldOf(over).init(score, prng((score.seed ?? 1) * 1000 + 1), size) } : {}) }, breath: 0, peak: PEAK[0] };
+      return { base, over: over ?? null, every: score.composition?.every ?? BREATH, children: { base: worldOf(base).init(score, rng, size), ...(over ? { over: worldOf(over).init(score, prng((score.seed ?? 1) * 1000 + 1), size) } : {}) }, breath: 0, peak: PEAK[0] };
     },
     step(s, dt, events, clock) {
-      s.breath = breathAt(clock.cycle);
+      s.breath = breathAt(clock.cycle, BREATH, s.every);
       s.peak = ease(s.peak, lerp(PEAK[0], PEAK[1], clock.energy), 1, dt); // the top follows the section's energy over a second or so, never a jump at the boundary
       worldOf(s.base).step(s.children.base, dt, events, clock);
       if (s.over) worldOf(s.over).step(s.children.over, dt, events, clock);

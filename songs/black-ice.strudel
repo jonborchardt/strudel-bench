@@ -1,0 +1,187 @@
+// black-ice: mid-90s club techno in A minor at 132, about 3:38. Six objects, arranged rather than added to:
+//   1 the groove   909 kick on every quarter and a restrained clap on 2 and 4 (drums), closed hats on the eighths,
+//                  open hats on the offbeats, a 16th rim tick (three perc parts, so only the hats and ticks breathe)
+//   2 the bass     a two-bar rolling ostinato, rests where the kick lands, root and fifth with an octave pop
+//   3 the motif    five notes on a dotted-eighth grid, a resonant square, never following the chords: a machine
+//   4 the glass    a sparse high sequence off to the right with delay, only in the two big sections
+//   5 the air      Demon Seed's held strings on A and its E drone, Ghosts 38's dub-echo texture, filtered noise,
+//                  a dark pad for the one chord change (Am, then F and G)
+//   6 the voice    three wordless Ghosts 38 takes (samples/user/black-ice-cuts, strudle-pack, CC BY-NC-SA 3.0), screams
+//                  more than breaths: a short cry, a held one on A, a third chopped; once every eight or sixteen bars,
+//                  every one fading in, never the lead
+// The borrowed loops count six beats to their bar (both songs are 6/4 at 132), so a store "l2" stands for three of
+// these bars and an "l4" for six: every sample part writes its own bars. The A of the strings and the "ah" is common
+// to Am, F and G, so they sit still while the bass moves.
+const CRY = '38_ghosts_tr_vox3_hit_002', AH = '38_ghosts_tr_vox2_hit_001', CHOP = '38_ghosts_tr_vox1_hit_001';
+const D316 = .341;                                   // three sixteenths at 132, the delay time of everything that echoes
+
+// 1 the groove
+const kick = { level: .4, organicness: 0, groove: 0, articulation: .75, weight: .55, brightness: .45, space: .3,
+  template: { bd: 'x...x...x...x...', sd: '..............o.', cp: '....x.......x...' } };
+const hats = { sound: 'RolandTR909_hh', rhythm: 'x.x.x.x.x.x.x.x.', level: .6, brightness: .6, position: .1,
+  velocity: '1 .7 .9 .7 1 .7 .9 .75', humanize: { timingMs: 2, velocity: .1, correlation: 'bar' } };
+const open = { sound: 'RolandTR909_oh', rhythm: '..x...x...x...x.', level: .25, articulation: .75, position: -.15, brightness: .55 };
+// the 909 rim on the e and a of each beat, the sixteenths neither kick nor hat plays (on the and it flammed against
+// the hat; the vcsl shakers sit near -45 dB rms, under any mix)
+const tick = { sound: 'RolandTR909_rim:1', rhythm: '.x.x.x.x.x.x.x.x', level: .22, brightness: .75, position: .35,
+  velocity: '0 .6 0 .8 0 .6 0 .8 0 .6 0 .8 0 .6 0 1', humanize: { timingMs: 3, velocity: .15, correlation: 'bar' } };
+// 2 the bass
+const bass = { sound: 'sawtooth', level: .75, register: .3, brightness: .32, articulation: .72, weight: .6,
+  duck: 'drums', duckDepth: .3, duckAttack: .1,
+  rhythm: 'xxxxxxxxxxxxxxxx|xxxxxxxxxxxxxxxx',
+  notes: '~ 0 0 0 ~ 0 0 7 ~ 0 0 0 ~ 4 0 6 ~ 0 0 0 ~ 0 0 7 ~ 0 0 0 ~ 7 4 ~' };
+// 3 the motif
+const motif = { sound: 'square', patch: 'pluck', level: .85, register: .55, articulation: .7, width: .3, position: .08, space: .45,
+  notes: '0 ~ ~ 7 ~ ~ 4 ~ ~ 2 ~ ~ 7 ~ 4 ~' };
+const sparse = '0 ~ ~ 7 ~ ~ ~ ~ ~ 2 ~ ~ 7 ~ ~ ~';        // the motif with notes taken out
+// 4 the glass
+const glass = { sound: 'square', patch: 'glass', level: .9, register: .85, space: .8, position: .5, width: .6,
+  notes: '~ ~ 7 ~ ~ ~ 4 ~ ~ ~ 7 ~ ~ 2 ~ ~' };
+// 5 the air
+const strings = { sound: 'demon_seed_strings_l2_003', bars: 3, level: .9, brightness: .45, space: .6, width: .7 };
+const drone = { sound: 'demon_seed_tone_l4_001', bars: 6, level: 1, brightness: .4, width: .6 };
+const echo = { sound: '38_ghosts_space_echo_lo_l4_001', bars: 6, level: .7, position: -.4, space: .6 };
+const noise = { level: 1, width: .7, pattern: s("pink").clip(1).lpf(sine.range(500, 2500).slow(16)).hpf(300).gain(.45) };   // measured 47 dB under the intro at .035, now about 24
+const air = { sound: 'triangle', density: .35, brightness: .3, space: .65, width: .75, level: .35 };   // the pad where there is no kick
+const pad = { ...air, duck: 'drums', duckDepth: .15, duckAttack: .25 };
+// 6 the voice: every fragment echoes three sixteenths behind itself and sits a hair late. They are screams, so none of
+// them starts hard: the short cry fades in over .7 s at half speed (about 1.4 s, an octave down, darker under 3 kHz),
+// with a longer echo tail;
+// the "ah" swells in over 1.5 s, holds three bars (clip 3, near its whole 5.7 s) and fades over 2.5 s instead of
+// stopping (superdough cuts a sample at the hit plus its release once a release is set, so the clip sets how long)
+const voice = (p, fb = .45) => p.delay(.35).delaytime(D316).delayfeedback(fb).late(.01);
+const cries = (mask) => voice(s(CRY).mask(mask).late(.5).speed(.5).attack(.7).lpf(3000), .55).pan(sine.slow(16).range(.25, .75));
+const ahs = (mask, speed = 1) => voice(s(AH).mask(mask).speed(speed).attack(1.5).clip(3).release(2.5), .5).lpf(1800).pan(.45);
+const swell = (mask) => s(AH).mask(mask).speed(-1).lpf(2500).gain(.8);       // the "ah" backwards, into a return
+const chop = (mask) => voice(s(CHOP).slice(8, "0 ~ 0 3 ~ 0 5 ~").attack(.08).release(.3)).mask(mask).pan(.3).hpf(400).lpf(2500);
+const V = { level: .8, space: .7 };
+const VA = { level: .55, space: .7 };        // the held "ah" is long and loud: a colour under the parts, not a line over them
+
+song({ cps: 132 / 240, key: 'A:minor', seed: 95, kit: 'RolandTR909', packs: ['black-ice-cuts', 'rooms'],
+       room: { ir: 'room', size: .9, damping: 6000 },   // the whole 0.9 s impulse: a longer size asked for a tail it does not have
+       // loom full frame; rave visits over it for eight bars once every thirty-two, strongest in the loud sections
+       visual: { composition: 'overlay', worlds: ['loom', 'rave'], every: 32 } }, [
+  // 0:00 kick and closed hat; the ticks open out of the dark, the bass line creeping in under them
+  section('intro', 8, { role: 'establish', progression: 'i',
+    drums:  { ...kick, density: .25 },
+    perc:   hats,
+    perc2:  { ...tick, brightness: ramp(.05, .6), level: .25 },
+    // the bass line already there, quiet and closed, its filter opening so it arrives at the end of the intro
+    bass:   { ...bass, level: .45, brightness: ramp(0, .22) },
+    raw:    noise,
+  }),
+  // 0:15 the bass arrives; the motif under a nearly closed filter; the drone underneath
+  section('bassline', 8, { role: 'develop', progression: 'i',
+    drums:  { ...kick, density: .5 },
+    perc:   hats,
+    perc2:  tick,
+    bass:   { ...bass, brightness: ramp(.22, .32) },
+    melody: { ...motif, brightness: ramp(.1, .25) },
+    sample: drone,
+    raw:    noise,
+  }),
+  // 0:29 the groove whole: clap and open hat in, the motif's filter opening
+  section('groove', 8, { role: 'develop', progression: 'i',
+    drums:  { ...kick, density: .9 },
+    perc:   hats,
+    perc2:  tick,
+    perc3:  open,
+    bass,
+    melody: { ...motif, brightness: ramp(.25, .5) },
+    sample: drone,
+  }),
+  // 0:44 the first voice: the held cry once, on the fifth bar; the dub echo enters from the left
+  section('first-voice', 8, { role: 'develop', progression: 'i',
+    drums:  { ...kick, density: .9 },
+    perc:   hats,
+    perc2:  tick,
+    perc3:  open,
+    bass,
+    melody: { ...motif, brightness: wobble(.45, .6, 8) },
+    sample: drone,
+    sample2: echo,
+    raw2:   { ...VA, pattern: ahs("<0 0 0 0 1 0 0 0>") },
+  }),
+  // 0:58 no kick, no bass: the motif opening all the way, the strings and the voice, the riser into the drop
+  section('break', 8, { role: 'release', progression: 'i',
+    perc:   { ...hats, level: .3, brightness: .45 },
+    perc2:  { ...tick, level: .15 },
+    melody: { ...motif, brightness: ramp(.3, .85), space: .55 },
+    sample: drone,
+    sample3: strings,
+    pad:    { ...air, level: .28, position: .3 },
+    raw2:   { ...VA, level: .35, pattern: ahs("<1 0 0 0 0 0 0 0>") },   // under the motif and strings, not level with them
+    fx:     { riser: 4 },
+  }),
+  // 1:13 the first payoff: everything back, the glass enters off to the right, the one chord change (Am, F, G)
+  section('payoff', 24, { role: 'climax', progression: 'i@4 VI@2 VII@2',
+    drums:  { ...kick, density: .9 },
+    perc:   hats,
+    perc2:  tick,
+    perc3:  open,
+    bass:   { ...bass, brightness: .38 },
+    melody: { ...motif, brightness: wobble(.5, .65, 8) },
+    melody2: glass,
+    pad,
+    sample: drone,
+    raw:    { ...V, pattern: cries("<0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1>") },
+  }),
+  // 1:56 variation: clap and open hat out, the motif an octave up with notes missing, the voice chopped throughout
+  section('variation', 8, { role: 'develop', progression: 'i',
+    drums:  { ...kick, density: .5 },
+    perc:   hats,
+    perc2:  tick,
+    bass,
+    melody: { ...motif, notes: sparse, register: .75, brightness: .5 },
+    sample: drone,
+    sample2: echo,
+    raw:    { ...V, pattern: cries("<0 0 0 0 0 0 0 1>") },
+    // the chop every other bar through the section, quiet and moving: a filter sweeping 700 Hz..2.2 kHz and a drift across the
+    // stereo field, two bars each
+    raw2:   { ...V, level: .35, pattern: chop("<1 0>").lpf(sine.range(700, 2200).slow(2)).pan(sine.range(.15, .85).slow(2)) },
+  }),
+  // 2:11 the second break: pad, strings, the "ah" a fifth up, a fragment of the motif; the kick comes back through a
+  // closed filter and the tick builds, the "ah" backwards again into the peak
+  section('break2', 16, { role: 'release', progression: 'i',
+    drums:  { ...kick, density: .5, brightness: ramp(.02, .45), level: .25 },   // measured as the loudest part of the break at .45
+    perc2:  { ...tick, brightness: ramp(.1, .75), level: .2 },
+    melody: { ...motif, notes: sparse, brightness: ramp(.2, .7) },
+    sample3: strings,
+    pad:    { ...air, level: .45 },
+    raw2:   { ...VA, pattern: ahs("<1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0>", 1.5) },
+    raw3:   { level: .6, space: .5, pattern: swell("<0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0>") },
+    fx:     { riser: 4 },
+  }),
+  // 2:40 the peak: every object running at once, nothing new; the voice at the ends of phrases
+  section('peak', 24, { role: 'climax', progression: 'i@4 VI@2 VII@2',
+    drums:  { ...kick, density: .9, variation: .3 },
+    perc:   hats,
+    perc2:  tick,
+    perc3:  open,
+    bass:   { ...bass, brightness: .42 },
+    melody: { ...motif, brightness: wobble(.55, .72, 8) },
+    melody2: { ...glass, level: 1 },
+    pad,
+    sample: drone,
+    sample2: { ...echo, level: .4 },
+    sample3: { ...strings, level: .4 },
+    // the cry twice, not three times, well under the parts, its filter drifting
+    raw:    { ...V, level: .45, pattern: cries("<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1>").lpf(sine.range(800, 2400).slow(4)) },
+    raw2:   { ...VA, pattern: ahs("<0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0>") },
+  }),
+  // 3:24 the DJ's way out, in two steps of four bars: first the air and the top go and the motif closes, then the
+  // clap goes, the bass closes to nothing and a sweep takes the kick and hats down to the last bar
+  section('out1', 4, { role: 'release', progression: 'i',
+    drums:  { ...kick, density: .9, fill: false },
+    perc:   hats,
+    perc2:  tick,
+    bass,
+    melody: { ...motif, brightness: ramp(.55, .08) },
+  }),
+  section('out2', 4, { role: 'release', progression: 'i', sweep: 2,
+    drums:  { ...kick, density: .25, fill: false },
+    perc:   hats,
+    perc2:  { ...tick, brightness: ramp(.6, .15) },
+    bass:   { ...bass, brightness: ramp(.3, 0) },
+  }),
+])

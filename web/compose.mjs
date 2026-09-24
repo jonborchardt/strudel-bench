@@ -78,6 +78,26 @@ export function notesView(src, meta = {}) {
 }
 
 /**
+ * The YouTube card's two copy-ready blocks from the metadata file's `youtube` entry: the title, and the description
+ * ending in a TAGS line over the tags comma-separated and a HASHTAGS line over the hashtags, so one paste fills the
+ * description box (YouTube reads the first three hashtags in it and shows them above the title). The JSON holds the
+ * description as one string with \n in it, which is all JSON can hold; the card is where it reads as text. Null when
+ * the song has none, so the card hides.
+ */
+export function youtubeView(meta = {}) {
+  const y = meta.youtube;
+  if (!y) return null;
+  const tags = (y.tags ?? []).join(', '), hashtags = (y.hashtags ?? []).join(' ');
+  return {
+    url: y.url ?? '',
+    blocks: [
+      { name: 'title', text: y.title ?? '' },
+      { name: 'description', text: [y.description ?? '', tags && `TAGS\n${tags}`, hashtags && `HASHTAGS\n${hashtags}`].filter(Boolean).join('\n\n') },
+    ],
+  };
+}
+
+/**
  * The Verify card's rows: for each axis the phrase asked to move, the analyzer metric that stands for it (lib/axes.mjs
  * `verify`), its value before and after, and whether it moved the way the axis's sign says. Axes verified by code
  * (drive, register) have no metric and say so.

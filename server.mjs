@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { wavToMp3Async } from './scripts/mp3.mjs';
 import { DEF_KEYS } from './lib/packs.mjs';
+import { titleOf } from './lib/title.mjs';
 
 const ROOT = import.meta.dirname;
 const SONGS = path.join(ROOT, 'songs');
@@ -23,7 +24,13 @@ const MIME = {
 export const songList = () => fs.readdirSync(SONGS).filter((f) => SONG_NAME.test(f)).sort();
 // a song with a `// @hidden` comment line stays off the song dropdown (songs/index.json) but still loads by url, checks and ships
 export const isUnlisted = (src) => /^\s*\/\/\s*@hidden\b/m.test(src);
-export const listedSongs = () => songList().filter((f) => !isUnlisted(fs.readFileSync(path.join(SONGS, f), 'utf8')));
+// the song's metadata file, `songs/<name>.notes.json` (provenance, `made`, `youtube`), or {} when there is none or it does not parse
+export const songMeta = (name) => { try { return JSON.parse(fs.readFileSync(path.join(SONGS, name.replace(/\.strudel$/, '.notes.json')), 'utf8')); } catch { return {}; } };
+// the dropdown's entries: `{ name, date, note }`: `made` from the metadata file (set when a song is created, edited by hand), and the first comment line
+export const listedSongs = () => songList().flatMap((name) => {
+  const src = fs.readFileSync(path.join(SONGS, name), 'utf8');
+  return isUnlisted(src) ? [] : [{ name, date: songMeta(name).made, note: titleOf(name, src).line }];
+});
 const isAudio = (f) => AUDIO.has(path.extname(f).toLowerCase());
 
 /**

@@ -169,7 +169,7 @@ test("a song's visual key names its world, over the selection; an unknown one is
   const obj = composeVisual(g.song({ seed: 5, visual: { world: 'ink', seed: 12 } }, [g.section('a', 1, { drums: {} })]).strudel);
   assert.deepEqual([obj.world, obj.seed], ['ink', 12], 'the object form: its own seed for the look, the song keeps its own for the lines');
   assert.equal(composeVisual(g.song({ seed: 5, visual: { seed: 12 } }, [g.section('a', 1, { drums: {} })]).strudel).world, worldFor(plain.odds, 12), 'a seed alone still draws from the odds, by that seed');
-  assert.throws(() => g.song({ visual: { world: 'ink', colour: 'red' } }, []), /visual takes world, seed, composition and worlds, not colour/);
+  assert.throws(() => g.song({ visual: { world: 'ink', colour: 'red' } }, []), /visual takes world, seed, composition, worlds and every, not colour/);
   assert.throws(() => g.song({ visual: { seed: 'x' } }, []), /visual.seed must be a number/);
   assert.throws(() => g.song({ visual: ['ink'] }, []), /visual must be a world name, /);
 });

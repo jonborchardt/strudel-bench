@@ -1,0 +1,232 @@
+{
+  "made": "2026-09-22",
+  "youtube": {
+    "url": "",
+    "title": "held — a slow chamber piece with a low end you can feel, 65 BPM",
+    "description": "Modern chamber music: a slow piece in D dorian at 65 BPM for cello, violin, flute, piano, contrabass and a string bed, built around a low end deep enough to feel rather than only hear.\n\nThe bottom is in three stages, an octave apart each: a sine on the chord root at d2, the felt fundamental, with a pipe organ pedal an octave under it for body; an arco contrabass over that, sustaining; and a pizzicato on the downbeat, dry and short, because what the body reads as bass is a fast envelope at 65 to 100 Hz while everything else down there holds. The sine took three tries, and the lesson was that the octave matters more than the waveform: at d1, 37 Hz, a laptop or a phone cannot move air that low, and neither level nor saturation rescues it. Above the bottom the cello states the tune, the violin takes it an octave up, the flute answers only in the bars the violin leaves open, and one 3.2-second hall holds all of it.\n\nFour sections, mixed by measurement. D dorian for the raised sixth, so the minor comes out warm rather than sad: Dm, G, C, F.\n\nChapters\n0:00 Open — the cello states the tune\n0:29 Lift — the violin takes it, the flute answers\n0:59 Hold — the string bed opens\n1:28 Rest\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install.\n\nEvery song here is a text file. This one is songs/held.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+    "tags": [
+      "chamber music",
+      "modern classical",
+      "cello",
+      "violin",
+      "flute",
+      "piano",
+      "contrabass",
+      "string ensemble",
+      "neoclassical",
+      "slow music",
+      "calm music",
+      "dorian",
+      "D dorian",
+      "deep bass",
+      "generative music",
+      "live coding",
+      "strudel",
+      "tidalcycles",
+      "creative coding",
+      "procedural music",
+      "music video"
+    ],
+    "hashtags": [
+      "#chambermusic",
+      "#neoclassical",
+      "#livecoding"
+    ]
+  },
+  "prompt": "a new song: deep rich bass, very real, cello, flute, violin, piano, music you feel held by; the existing songs are too tinny, small and lo-fi",
+  "requests": [
+    {
+      "date": "2026-09-23",
+      "ask": "i want a new song. deep rich base. very real. chello, flute, violine, poiano. i want to feel held by the music. our songs are too tinny, too small, too lo-fi. just a few sections so we can nail down a feel",
+      "changes": [
+        {
+          "section": "song",
+          "why": "every part is raw (plain note().s()) so no synth attack or filter envelope lands on a bowed string or a struck piano: the layers are what made the older songs read as electronic"
+        },
+        {
+          "section": "song",
+          "why": "cps .27 (65 bpm) in D:dorian, warm minor with the raised sixth, so IV and VII come out major (Dm G C F)"
+        },
+        {
+          "section": "song",
+          "why": "room ir hall, size 3.2, damping 4500: one 3.2 s hall over every part, the thing that makes a small song big"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "sine sub on the chord root at d1-f1, level .5, space .3 - the deep the older songs had none of, felt rather than heard (measures lowRatio 1.00)"
+        },
+        {
+          "section": "open",
+          "layer": "raw2",
+          "why": "arco gm_contrabass on the root an octave over the sub, level .75, the attack a sine cannot give"
+        },
+        {
+          "section": "open",
+          "layer": "raw3",
+          "why": "gm_cello a written tenor line, level .85, position -.15 - the voice of the low end, never just roots"
+        },
+        {
+          "section": "open",
+          "layer": "raw4",
+          "why": "the real sampled piano pack, left hand then the chord held under a 1.7 clip (pedal), position -.25"
+        },
+        {
+          "section": "lift",
+          "layer": "raw5",
+          "why": "gm_violin takes the tune: root, step up, a held fourth, a leap to the octave, home; velocity shapes the phrase"
+        },
+        {
+          "section": "lift",
+          "layer": "raw6",
+          "why": "gm_flute answers only in the bars the violin leaves open, space .7"
+        },
+        {
+          "section": "hold",
+          "layer": "raw7",
+          "why": "gm_string_ensemble_1 opens underneath at width .8, space .85 - the part that does the holding, climax only"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "i dont see parts listed. i dont see materials. hold cracks, and there is no deep bass rumble",
+      "changes": [
+        {
+          "section": "hold",
+          "why": "raw parts have no materials in the mixer (matsRender shows only 'pattern expr') and orbitKey gives every raw part a private orbit: seven raw parts built seven convolvers of the 3.2 s hall and the climax traced 59% busy with a dropout. Cello, violin and flute are melody layers now, the contrabass and the string bed are pads: three orbits instead of seven, 33% busy, no dropouts, and every part has knobs, a sound pick and a notes box"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "the sub was a 37 Hz sine with nothing above it, so only a subwoofer could hear it. Now a sawtooth at d1 lowpassed to 160 Hz: the fundamental plus 73, 110 and 147 Hz, which is what a speaker rumbles with. Measures centroid 68 Hz and -5.4 dB under the mix; the mix centroid fell 675>449 Hz"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "the sub stays a raw part because the bass layer's hap is one grid step (0.24 s here) so its note could not hold the bar"
+        },
+        {
+          "section": "hold",
+          "layer": "melody2",
+          "why": "violin level 1.4>1.9 and flute 1.1>.9 - the tune measured 2 dB under its own counter-line"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "add a deep organ bass rumble / how do we get rumble without clipping?",
+      "changes": [
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "the rumble is now a stack of two sounds in one raw part: the sawtooth at d1 under a 160 Hz lowpass (measured alone centroid 68 Hz, 95% under 300) plus a vcsl pipe organ pedal on the same root under a 300 Hz lowpass for body. The organ alone was tried as a replacement and measured centroid 254 Hz with 34% under 300 and dropped the mix lowRatio .47>.29: a pedal pipe is low-mid colour, not bottom. Stacked, mix lowRatio .47>.55 and centroid 495>368 Hz"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "one raw part holding both, not two: every raw part gets a private orbit and an orbit is a convolver of the 3.2 s hall"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "compressor threshold -18 ratio 3 attack .02 release .3 on the pair, and level 1.1>.62 - at 1.1 the part measured -1.3 dB under the mix and the mix peaked .952 against the output wall; at .62 it is -2.9 dB, peak .812, clip 0.000, and the trace stays at 34% busy with no dropouts"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "clip 1.04 and release .7 on the organ because the vcsl pedal files are 12.7 s and an unclipped hit plays to the end, stacking four pedal notes on every bar"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "in the ui i only see melody in section 1 but i hear raw, pad, melody, raw2 - is the ui filtering or breaking? / the song sounds nice but i cannot feel any bass - is that a limitation of strudel?",
+      "changes": [
+        {
+          "section": "open",
+          "why": "every layer value is an object literal now ({ ...sub(SUB) } rather than sub(SUB), { ...bass } rather than bass): locate() in lib/resolve.mjs skips any section property whose value is not an ObjectExpression, so a call or a bare identifier is invisible to the Mix card. Only melody was written as a literal, which is why only melody was listed. Audio is unchanged; the check tables before and after are identical"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "space .35>0 - the raw space cell is piece(0, .5, .95), not a no-op under .5, so the 37-110 Hz drone was sitting in a 35% send to the 3.2 s hall and smearing into a wash with no edge"
+        },
+        {
+          "section": "open",
+          "layer": "pad",
+          "why": "articulation .1>.6 - at .1 the pad attack is .51 s, so every contrabass note faded in over half a second and nothing in the bottom of the song marked a beat; its tail measured .63>.36"
+        },
+        {
+          "section": "open",
+          "layer": "bass",
+          "why": "a new pizzicato contrabass on the downbeat, dry and short: what the body reads as bass is a fast envelope at 50-100 Hz, and every other low part sustains (crest 3.5-4). The bass layer's one-grid-step hap is useless for a drone and exactly a pizzicato"
+        },
+        {
+          "section": "open",
+          "layer": "bass",
+          "why": "level 1.3>2, weight .65, articulation .8>.6 and a compressor (threshold -20, ratio 4): it first measured crest 15.2 at -23.9 dB under the mix, a spike with no body. Now -12.6 dB, crest 10.9, depth .47, the closest part in the mix"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "this is not a trick: note('c2').s('sine').gain(1).slow(4)",
+      "changes": [
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "the sub moves up an octave, d1>d2, and goes back to a plain sine. The user's clean 65 Hz sine at unity gain settled it: the octave mattered, not the waveform. A sine at d1 (36.7 Hz) is inaudible on a laptop, a phone or most headphones because the driver cannot move air that low, and neither level nor the shape(.45) saturation I tried rescued it. At d2/c2 (65-98 Hz) a bare sine is plainly bassy. Measured: the part's centroid 107>100 Hz with lowRatio .79>.90, and the mix lowRatio .52>.65 with centroid 377>302 Hz, the best low end of the five versions"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "the pipe organ pedal stays an octave under the sine (.sub(note(12))) for body, and the shape(.45) is gone: a saturated wave was solving a problem the octave had already caused"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "make the visual swarm by itself",
+      "changes": [
+        {
+          "section": "song",
+          "why": "visual { world: 'swarm', composition: 'single' } - the song named no world, so the score picked swarm by its features and lib/visual.json's defaultComposition put orrery breathing over it every eight bars. Pinning the world and setting composition single gives the bare world full-frame; the check's visual line reads 'single: swarm' instead of 'overlay: swarm + orrery'"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "do the final mix",
+      "changes": [
+        {
+          "section": "song",
+          "why": "pass 1 hierarchy: the sub measured -1.3 to -2.0 dB under the mix in all four sections, so it WAS the mix and open/rest read centroid 138/131 Hz with lowRatio .79 - pure boom. level .62>.34 and the foundation now sits -3.3 to -4.8"
+        },
+        {
+          "section": "open",
+          "layer": "raw",
+          "why": "pass 2 collisions: the sub ducks the pizzicato (duck 'bass', duckDepth .3, duckAttack .01) so the transient punches through the drone instead of fighting it; arrangement had already put the three low parts an octave apart each (100/193/270-314 Hz), which is why the remaining masking pairs are left alone"
+        },
+        {
+          "section": "lift",
+          "layer": "melody3",
+          "why": "the flute measured -18.0 dB, barely present under the violin it is supposed to answer: level 1>1.4 and space .6>.5, which also drops the melody cell's delay send (space over .5 writes room AND delay). Now -12.8. Its tail reads .93 because the line rests for half its bars, not because it is wet"
+        },
+        {
+          "section": "lift",
+          "layer": "melody2",
+          "why": "the tune measured level with the cello and the piano at -12.0: violin level 1.5>1.9, now -7.6 and the clear foreground"
+        },
+        {
+          "section": "open",
+          "why": "pass 5 contrast across sections: the mix measured -17.0/-15.9/-15.7/-16.9, a 1.3 dB arc, because the foundation and piano play identically everywhere. open and rest drop their sub to .24, contrabass to .8, pizzicato to 1.6 and piano to .45, giving -19.1/-15.9/-15.7/-19.1, a 3.4 dB arc with centroid 192/326/456/183"
+        },
+        {
+          "section": "song",
+          "why": "ruled out by name: no organicness anywhere (every part is humanized), compressor only on the pizzicato since it is the one part over crest 9 (11.0; piano 7.8, flute 6.3), depth set by hand on the spread layers rather than by resolve, which refuses them on the CLI"
+        }
+      ]
+    }
+  ]
+}

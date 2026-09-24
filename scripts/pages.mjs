@@ -58,7 +58,7 @@ for (const p of ['@codemirror/state', '@codemirror/view', '@codemirror/language'
 for (const f of ['style-mod/src/style-mod.js', 'w3c-keyname/index.js', 'crelt/index.js', '@marijn/find-cluster-break/src/index.js']) copy(`node_modules/${f}`);
 copy('node_modules/@strudel/web/dist/assets', 'assets'); // strudel resolves its clock SharedWorker against the page url
 const write = (rel, obj) => { fs.mkdirSync(path.dirname(path.join(OUT, rel)), { recursive: true }); fs.writeFileSync(path.join(OUT, rel), JSON.stringify(obj)); };
-write('songs/index.json', listedSongs().filter((s) => !hidden.includes(s)));
+write('songs/index.json', listedSongs().filter((s) => !hidden.includes(s.name)));
 write('samples/user/strudel.json', { ...userMap(shipped), _base: 'samples/user/' }); // relative: a project page lives under /<repo>/
 write('samples/user/packs.json', shipped);
 fs.writeFileSync(path.join(OUT, '.nojekyll'), ''); // jekyll would drop node_modules/

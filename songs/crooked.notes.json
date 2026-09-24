@@ -1,0 +1,269 @@
+{
+  "made": "2026-09-22",
+  "youtube": {
+    "url": "",
+    "title": "crooked — jazz in 11/8, a metre jazz doesn't use | Balkan quartet, E phrygian",
+    "description": "Jazz in 11/8: a Balkan band playing jazz changes in E phrygian, grouped 3+3+3+2 so three long groups are followed by a short one and every bar is cut off a beat early. Sax, upright bass, piano and a darbuka where the drum kit would be.\n\nNot a jazz quartet in an odd time signature — a different band entirely. 5/4 and 7/8 are Brubeck's, so this is in 11, which almost no jazz record uses, and the instruments are the ones that play it: a darbuka's doum, tek and ka instead of ride and snare, and a sax that mixes three recorded articulations, plain, vibrato and tongued short, picked per note. Everything melodic in the song is one three-note cell — a note, a rest, a leap of a fourth — which fills one group of the 3+3+3+2 exactly, then gets transposed, inverted, filled in and fragmented. The head states it, the sixteen-bar solo develops it, and the bass quotes it back during its own solo, alone with the drum.\n\nThe bridge is the only place the song leaves either the key or the metre, and it leaves both at once. C major is E phrygian's own pitch collection with the tonic moved, so not one new note enters — it simply turns the light on. The metre goes to 4/4 but the pulse does not change: 11/8 at 290 and 4/4 at 145 are the same eighth note, so only the grouping moves, which is what makes the 11 feel like home when it comes back. It ends on Em7, at once the third chord of C major and the tonic of E phrygian, and hands the song over without a seam.\n\nSeven sections, 2:30, mixed by measurement. E phrygian for the flat second, which is the Balkan cadence and a jazz colour at the same time: Em7, F, Em7, Dm7.\n\nChapters\n0:00 Head — the tune, no piano, the kit at its bones\n0:18 Solo — the full band arrives\n0:55 Bridge — C major and 4/4, the same pulse underneath\n1:08 Turn — the sax lays out and the bass opens up\n1:17 Strip — the bass alone with the darbuka\n1:35 Build — the climax, sax and vibraphone on the same cell\n2:12 Out — the head again\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. \n\nEvery song here is a text file. This one is songs/crooked.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+    "tags": [
+      "jazz",
+      "odd time signature",
+      "11/8",
+      "odd meter jazz",
+      "balkan jazz",
+      "world jazz",
+      "saxophone",
+      "upright bass",
+      "darbuka",
+      "phrygian",
+      "E phrygian",
+      "modal jazz",
+      "bass solo",
+      "polymeter",
+      "instrumental jazz",
+      "generative music",
+      "live coding",
+      "strudel",
+      "tidalcycles",
+      "creative coding",
+      "procedural music",
+      "music video"
+    ],
+    "hashtags": [
+      "#jazz",
+      "#oddtime",
+      "#livecoding"
+    ]
+  },
+  "prompt": "jazz, but deliberately not standard jazz: 11/8 grouped 3+3+3+2, a Balkan band playing jazz changes",
+  "requests": [
+    {
+      "date": "2026-09-23",
+      "ask": "lets make jazz.. but i dont want some standard jazz.. i want to do something unique. odd meter, a meter jazz doesn't use - 11/8",
+      "changes": [
+        {
+          "section": "song",
+          "why": "meter 11/8, the first song in the repo to set meter at all (parseMeter gives 22 steps a bar, pulse 2). Grouped 3+3+3+2 so three long groups are followed by a short one and every bar is cut off a beat early"
+        },
+        {
+          "section": "song",
+          "why": "no groove anywhere on purpose: the swing axis is swingBy(x, 4), which splits the CYCLE into four slices, and in 11/8 that is 2.75 eighths per slice and lands on nothing. Modern odd-metre jazz is played straight and the grouping is the lilt"
+        },
+        {
+          "section": "song",
+          "why": "key E:phrygian with i7 II i7 vii7 (Em7 F Em7 Dm7). Written as bII first, which gave E: in phrygian the second degree is already flat, so II is F major and bII flattens it again to Fb"
+        },
+        {
+          "section": "song",
+          "why": "the instruments are what keep it off Brubeck's turf: gm_clarinet lead, gm_acoustic_bass, piano comping and a darbuka instead of a kit. The darbuka's own sample loudness is already the right balance, doum -16.5 dB, tek -31.1, ka -37.5"
+        },
+        {
+          "section": "head",
+          "layer": "raw",
+          "why": "the piano stabs land at the END of each group so the comping pushes against the grouping the darbuka states"
+        },
+        {
+          "section": "head",
+          "layer": "drums",
+          "why": "level .9>.42 and build 1>.5 - the darbuka measured -2.7 dB under the mix at peak .881, dominating; now -5.9 with the clarinet leading at -5.0"
+        },
+        {
+          "section": "solo",
+          "layer": "melody",
+          "why": "sixteen bars of written solo, phrased 3+3+3+2 in every bar, from the root out to the ninth and home; the concept cannot carry the song, the writing has to"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "the melody is a bit too sharp, and random walking around.. is that just jazz? / in strip let the bass have sustain / let the bass go for a walk / the bass walk is boring and too straight, do something interesting, a solo for the bass / strip is too sudden / set the visual to combo",
+      "changes": [
+        {
+          "section": "head",
+          "layer": "melody",
+          "why": "it was not jazz, it was scales. Measured the old lines: 122 notes of solo whose most-repeated three-note shape was 'up a step, down a step', 8 times - no motif at all. Everything melodic is now built on one cell, '0 ~ 3' (a note, a rest, a leap up a fourth), which fills one group of the 3+3+3+2 exactly, transposed, inverted, filled in and fragmented"
+        },
+        {
+          "section": "build",
+          "layer": "melody",
+          "why": "the old climax was 57% leaps across a two-octave range (degrees 0..12), an arpeggio scramble rather than a line; it now reaches 9 and the lift comes from density and level"
+        },
+        {
+          "section": "head",
+          "layer": "melody",
+          "why": "sound gm_clarinet>sax and register .5>.25 - the clarinet soundfont measured centroid 1401 Hz and read sharp, and vcsl samples the sax A#1..G#4 (midi 34..68), so at octave 4 the head reached E5 = 76 and was resampled eight semitones above the top sample. At octave 3 the whole line sits at midi 52..67, inside the recording"
+        },
+        {
+          "section": "strip",
+          "layer": "bass",
+          "why": "a written bass solo, not a walk: the first try was '0 1 2 4 5 6 7 6 5 4 2', a scale up and back down, which is the same mistake the sax line had. Eight bars on the full 22-sixteenth grid, the rhythm carried by the rests, 3 to 13 notes a bar"
+        },
+        {
+          "section": "strip",
+          "layer": "bass",
+          "why": "articulation .7>.2 for sustain: the bass layer's hap is one grid step (~0.1 s at this tempo) so the articulation cell is the only thing that lets an upright ring - clip .98 plus a .22 s release"
+        },
+        {
+          "section": "strip",
+          "layer": "bass",
+          "why": "the eight bars are wrapped in <> so one plays per cycle; the bass layer has no phrase material the way melody does, so '[bar] [bar] ...' squeezed all eight into one bar and every bar came out identical"
+        },
+        {
+          "section": "turn",
+          "why": "a new four-bar section between solo and strip, because the bass solo arrived with the sax, piano and vibes all vanishing on one downbeat. The sax lays out, the rhythm section carries on, the bass gets busier each bar (4, 6, 9, 10 notes) and is already soloing when the piano stops. The arc taper is now 32.1 > 24.7 > 13.6"
+        },
+        {
+          "section": "build",
+          "layer": "melody",
+          "why": "level 1.45>2 and brightness .45>.52, piano .45>.28, drums .5>.42, vibes 1.1>.85 - dropping the sax an octave into its sampled range also dropped it to -11.6 dB, the quietest melodic part, under its own counter-line; now -8.2 and leading"
+        },
+        {
+          "section": "song",
+          "why": "visual combo, single"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "bass solo is better but the walk up in progression sounds lazy",
+      "changes": [
+        {
+          "section": "turn",
+          "layer": "bass",
+          "why": "the hand-off bars climbed by step (0 2 4 5 6 7), which is a scale with rests in it. Rewritten around the song's cell: fourths, thirds and chord tones, ending on the flat second leaning into the solo"
+        },
+        {
+          "section": "strip",
+          "layer": "bass",
+          "why": "solo bars 2, 3, 4 and 6 the same fix - bar 4 now zig-zags up in fourths to reach 9 instead of walking, and bar 6 descends in alternating fourths instead of running down the scale. Over turn and strip the bass is 2 stepwise intervals against 60 leaps"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "i dont love this song, is it that i just dont like jazz or is it not good? / bridge sounds out of place / this sounds too forced (the alternating-fourths bar) / bass should have more sustain",
+      "changes": [
+        {
+          "section": "bridge",
+          "why": "a new section in C major and 4/4: the harmony never moved in 60 bars and the metre never let up. C major is E phrygian's own pitch collection with the tonic moved, so no new note enters; 4/4 at bpm 145 is the same .207 s eighth as 11/8 at bpm 290, so the pulse is identical and only the grouping changes"
+        },
+        {
+          "section": "bridge",
+          "why": "progression I vi7 ii7 iii7, ending on Em7 - iii7 in C major and the tonic of E phrygian at once, the pivot that hands the song back. It ended on V7, leaving a G7 hanging before a jump to Em7, which is most of why it sat wrong"
+        },
+        {
+          "section": "bridge",
+          "why": "the 4/4 kit was bd on 1+3 and sd on 2+4, a rock backbeat played on a darbuka, which sounded like a different and cheaper band; now a hand-drum pattern with teks off the beat"
+        },
+        {
+          "section": "head",
+          "why": "no piano and the kit at its bones, so the solo is an arrival: head and solo had carried the same arc letter for 24 bars, nearly half the song. The arc went from A A B C D A to A B B' C D E B'"
+        },
+        {
+          "section": "strip",
+          "layer": "bass",
+          "why": "the alternating-fourths bars were as mechanical as the scales they replaced - 7 4 6 3 5 2 4 is a pattern, not a phrase. Rewritten with mixed motion, each bar its own gesture: 27% stepwise, 44% mid-leap, 29% wide"
+        },
+        {
+          "section": "head",
+          "layer": "bass",
+          "why": "articulation .7>.15 (and 0 in the solo) for sustain: at .7 the cell gave clip .5 and a .07 s release, about .12 s of sound. Now ~.41 s, which is the bass layer's ceiling - its hap is one grid step and the cell caps clip at 1.1"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "ok, when ready, do a final mix",
+      "changes": [
+        {
+          "section": "head",
+          "layer": "bass",
+          "why": "pass 1 hierarchy: the bass measured -1.8 to -4.9 dB under the mix in all seven sections, louder than the sax lead everywhere. Level 1.6>1.15 with the section overrides down in proportion, except strip where it is the soloist. The sax now leads at -5.5 in solo"
+        },
+        {
+          "section": "bridge",
+          "layer": "raw",
+          "why": "pass 3 depth: the bridge read all four parts at one distance. The piano goes farther (space .5>.68, brightness .52>.38) and the sax closer (space .35, brightness .62); they now spread .70 / .46 / .37 and the piano's tail goes .00>.95"
+        },
+        {
+          "section": "build",
+          "why": "pass 5 arc: the climax measured -19.3 against the solo's -19.0, a climax quieter than its own verse. Solo drums .42>.36 and build drums .42>.48, piano .28>.36, vibes .85>1.05, giving a 2.1 dB arc with build the peak"
+        },
+        {
+          "section": "build",
+          "layer": "melody",
+          "why": "postgain 1.5 - raising the climax buried the lead at -9.7 and level caps at 2, so postgain is the only control left; the sax reads -6.3 and is the loudest melodic part in the section"
+        },
+        {
+          "section": "out",
+          "layer": "melody",
+          "why": "level 1.2>1.7 - the sax measured -10.1 restating the head, its quietest anywhere"
+        },
+        {
+          "section": "song",
+          "why": "all seven sections lint clean on the mix: no headroom, inaudible, dominant, flat-stage or depth-contrast warnings. Peak .737, clip 0.000, climax traces 17% busy with no dropouts"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "the sax sounds more like a sax on a keyboard than a real sax, every note is the same length, there is no life or breath to it / the vibraphone should be in the song a bit more in other places but pretty quiet, they come in unexpectedly",
+      "changes": [
+        {
+          "section": "head",
+          "layer": "melody",
+          "why": "humanize.length .4, which I had never used: it scales the clip by a seeded curve correlated over four bars. Every note had been clip .89 from articulation .35, identical, with velocity moving only the loudness. Clips now run .61 .64 .78 .78 .74 .84 .93 .98 in a wave"
+        },
+        {
+          "section": "head",
+          "layer": "melody",
+          "why": "sound is now a weighted mix of sax, sax_vib and sax_stacc, picked per hit: vcsl samples all three across A#1..G#4, exactly where this line sits, and their own loudness is the right balance (-24.4, -28.9, -30.2 dB) because a tongued note is quieter and a vibrato note is a softer held one. Part crest 4.9>6.2"
+        },
+        {
+          "section": "head",
+          "layer": "melody",
+          "why": "timingMs 11>16 and velocity .1>.14, and postgain 1.35 (1.6 in the climax) because two of the three samples are quieter and the lead lost 1.2 dB; the sax now leads every section, -4.4 in solo"
+        },
+        {
+          "section": "solo",
+          "layer": "melody2",
+          "why": "the vibraphone only existed in the climax and arrived from nowhere. It plays in the solo, bridge and outro too at -17.3, -19.1 and -14.9 against -11.1 in the climax: present enough to be familiar, quiet enough not to be a part you listen to"
+        },
+        {
+          "section": "bridge",
+          "layer": "melody2",
+          "why": "its own line, since the bridge is 4/4 with eight slots a bar rather than eleven"
+        },
+        {
+          "section": "solo",
+          "layer": "raw",
+          "why": "comping piano level .38>.3, it measured -5.4 in out, above the lead"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "ask": "when done, do mix again",
+      "changes": [
+        {
+          "section": "build",
+          "layer": "melody",
+          "why": "the mix lint was clean on all seven sections, but it does not check that the lead leads: the sax sat under the rhythm section in the climax (-6.6 against drums -5.4 and bass -5.3). The sax is at its cap there (level 2 plus postgain 1.6) so the room came from underneath"
+        },
+        {
+          "section": "build",
+          "layer": "drums",
+          "why": "level .48>.4 and build.bass 1.7>1.25, with the piano .36>.45 and the vibraphone 1.05>1.3 taking up the slack so the section keeps its level and stays the peak; the sax now reads -6.2 and leads"
+        },
+        {
+          "section": "bridge",
+          "layer": "bass",
+          "why": "level 1.1>.95 and out.drums .38>.32, both for the same reason - the lead was second by a fraction of a dB"
+        },
+        {
+          "section": "song",
+          "why": "three of those level changes were silent no-ops: I applied them with a string replace against a literal I assumed was in the file, and the climax bass was 1.7 rather than the 1.45 I thought I had set, so three successive edits matched nothing. It surfaced only because the re-measure came back byte-identical. Every level in the file was verified afterwards"
+        }
+      ]
+    }
+  ]
+}

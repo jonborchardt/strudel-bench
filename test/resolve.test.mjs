@@ -51,6 +51,46 @@ song({ cps: .5 }, [
   assert.deepEqual(plan.report, []);
 });
 
+test('a layer that is not an object literal still reaches the mix card, and an edit wraps it in one', async () => {
+  await ready;
+  const { locate, setAxis, setMaterial, removeLayer } = await import('../lib/resolve.mjs');
+  const src = `const pad = { density: .4 }, bed = { level: 1 };
+const pick = (lvl) => ({ level: lvl });
+song({ cps: .5 }, [
+  section('verse', 8, {
+    drums: { density: .6 },
+    pad,
+    raw:  bed,
+    raw2: pick(.7),
+  }),
+])`;
+  const layers = locate(src).sections[0].layers;
+  // the bug: these three were skipped outright, so the part vanished from the knobs
+  assert.deepEqual(Object.keys(layers), ['drums', 'pad', 'raw', 'raw2']);
+  assert.equal(layers.drums.wrap, null);
+  for (const [l, text] of [['pad', 'pad'], ['raw', 'bed'], ['raw2', 'pick(.7)']]) {
+    assert.ok(layers[l].wrap, `${l} should carry a wrap`);
+    assert.equal(layers[l].spread, text);   // its values live in the evaluated song, as a spread's do
+    assert.deepEqual(layers[l].axes, {});
+  }
+
+  // an axis edit wraps the whole value; shorthand keeps its key
+  const one = setAxis(src, 'verse', 'pad', 'brightness', .7);
+  assert.match(one, /pad: \{ \.\.\.pad, brightness: \.7 \}/);
+  assert.equal(locate(one).sections[0].layers.pad.axes.brightness.value, .7);
+  assert.match(setAxis(src, 'verse', 'raw', 'space', .3), /raw:  \{ \.\.\.bed, space: \.3 \}/);
+  assert.match(setAxis(src, 'verse', 'raw2', 'width', .4), /raw2: \{ \.\.\.pick\(\.7\), width: \.4 \}/);
+
+  // a second edit lands inside the object the first one made, not in another wrapper
+  const twice = setAxis(one, 'verse', 'pad', 'space', .2);
+  assert.match(twice, /pad: \{ \.\.\.pad, brightness: \.7, space: \.2 \}/);
+  assert.ok(!/\.\.\.\{/.test(twice), twice);
+
+  // materials go the same way, and removing one of these layers still cuts the whole property
+  assert.match(setMaterial(src, 'verse', 'raw', 'sound', "'sawtooth'"), /raw:  \{ \.\.\.bed, sound: 'sawtooth' \}/);
+  assert.deepEqual(Object.keys(locate(removeLayer(src, 'verse', 'pad')).sections[0].layers), ['drums', 'raw', 'raw2']);
+});
+
 test('locate refuses a non-song file', async () => {
   await ready;
   const { locate } = await import('../lib/resolve.mjs');

@@ -1,0 +1,257 @@
+// crooked: jazz in 11/8, grouped 3+3+3+2, so every bar is cut off a beat early. It grooves and it limps.
+// Not a jazz quartet playing an odd metre - a Balkan band playing jazz changes: clarinet lead, upright bass,
+// piano comping, darbuka instead of a kit. E phrygian, whose flat second is both the Balkan cadence and a
+// legitimate jazz colour, with sevenths on every chord.
+//
+// No `groove` anywhere, on purpose. The swing axis is `swingBy(x, 4)` (lib/layers.mjs), which splits the *cycle*
+// into four slices: in 11/8 that is 2.75 eighths per slice and lands on nothing. Modern odd-metre jazz is played
+// straight anyway - the 3+3+3+2 grouping is the lilt, not the swing.
+//
+// Everything is written on an eleven-eighth grid. A bar of melody is four groups carrying their own weight,
+// [a b c]@3 [d e f]@3 [g h i]@3 [j k]@2, which is how the grouping stays audible in the line and not just the kit.
+// The drum and bass grids are 22 characters (11/8 -> 22 steps, parseMeter in lib/song.mjs), with the group heads
+// at steps 0, 6, 12 and 18.
+
+// darbuka, whose own sample loudness is already the right balance: the doum is the loud low hit (rms -16.5 dB),
+// the tek a slap 15 dB under it, the ka a light finger tap 21 dB under it. A frame drum takes the accents.
+const kit = { bd: 'darbuka:3', sd: 'darbuka:6', hh: 'darbuka:14', oh: 'framedrum:7' };
+//                 0     6     12    18          <- the group heads: 3 + 3 + 3 + 2
+const DOUM   = 'X.....x.....X.....x...';
+const TEK    = '....x.....x.....x...x.';
+const KA     = 'x.x.x.x.x.x.x.x.x.x.x.';   // the eighth pulse, all eleven of them
+const ACCENT = '..................x...';   // the frame drum marks the short group only
+const BEAT   = { bd: DOUM, sd: TEK, hh: KA, oh: ACCENT };
+const THIN   = { bd: DOUM, sd: '....x.....x...........', hh: 'x...x...x...x...x...x.', oh: '......................' };
+const drums  = { sounds: kit, template: BEAT, articulation: .6, density: .5, brightness: .55, level: .42, space: .35,
+                 humanize: { timingMs: 8, velocity: .12, correlation: 'bar' } };
+
+// the bass lands on the four group heads and takes the last short group as a pickup into the next bar
+const WALK = 'x.....x.....x.....x.x.';
+// in `strip` the bass takes a solo. A walk was the first try and it was the same mistake as the old sax line -
+// `0 1 2 4 5 6 7 6 5 4 2` is a scale up and back down, which is even, predictable and says nothing.
+// A solo needs rhythm, not just pitch, so the grid opens to all 22 sixteenths and the LINE carries the rhythm
+// through its rests: eight different bars, each one a different rhythmic idea, built on the same cell as the head.
+const OPEN = 'xxxxxxxxxxxxxxxxxxxxxx';
+//                   |. . . . .|. . . . .|. . . . .|. . .   group heads at slots 0, 6, 12, 18
+const BSOLO = [
+  '[0 ~ ~ ~ ~ ~ 3 ~ ~ ~ ~ ~ 0 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // the cell, alone, all the space in the world
+  '[~ ~ 0 ~ ~ ~ 5 ~ 4 ~ 3 ~ ~ ~ 2 ~ ~ ~ 0 ~ ~ ~]',   // starts late: one big leap up, then walks down off it
+  '[~ ~ ~ 4 ~ ~ ~ ~ 3 ~ ~ ~ ~ 7 ~ ~ ~ 6 ~ ~ 4 ~]',   // hovers on a step, jumps a fourth, falls back - off the beat throughout
+  '[0 ~ 4 ~ 3 ~ ~ ~ 5 ~ 6 ~ 9 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // leap, step back, two steps up, leap to 9 - and stops dead
+  '[6 ~ ~ ~ ~ ~ 9 ~ ~ ~ ~ ~ ~ ~ 7 ~ ~ ~ ~ ~ ~ ~]',   // the cell again, up at the top of the instrument
+  '[7 ~ 6 5 3 ~ 4 ~ 0 ~ ~ ~ 5 4 2 ~ 3 ~ ~ ~ ~ ~]',   // the fast bar: a fall that kicks back up twice, mixed steps and skips
+  '[0 ~ 3 ~ ~ ~ 1 ~ 4 ~ ~ ~ 2 ~ 5 ~ ~ ~ 3 ~ 6 ~]',   // the cell double-timed and sequenced, one per group
+  '[4 ~ ~ ~ ~ ~ 2 ~ ~ ~ ~ ~ 0 ~ ~ ~ ~ ~ ~ ~ ~ ~]',   // three notes down to the root, and out
+];
+// wrapped in <> so one bar plays per cycle. The bass layer has no `phrase` material the way melody does, so a plain
+// '[bar] [bar] ...' would squeeze all eight bars into a single bar - which is exactly what the first version did.
+const BASS_SOLO = '<' + BSOLO.join(' ') + '>';
+
+// four bars that hand the bass its solo instead of dropping everyone at once. The sax lays out at the top of these,
+// the rhythm section keeps playing, and the bass gets busier each bar until it is already soloing when the piano
+// stops. Same group-head line as the rest of the song in bar one, a run into the solo by bar four.
+const HANDOFF = '<' + [
+  '[0 ~ ~ ~ ~ ~ 4 ~ ~ ~ ~ ~ 7 ~ ~ ~ ~ ~ 4 ~ ~ ~]',   // as it has played all song
+  '[0 ~ ~ ~ ~ ~ 4 ~ ~ ~ 2 ~ 7 ~ ~ ~ ~ ~ 4 ~ 6 ~]',   // one extra note per group, and it is a chord tone, not a step
+  '[0 ~ 2 ~ ~ ~ 6 ~ 5 ~ ~ ~ 4 ~ 7 ~ ~ ~ 5 ~ 3 ~]',   // a step, a leap, a step off it - filling in without a formula
+  '[0 ~ ~ ~ 3 ~ 2 ~ 6 ~ 5 ~ 7 ~ ~ ~ 4 ~ 2 ~ 1 ~]',   // a phrase that falls to the flat second, leaning into the solo
+].join(' ') + '>';
+// articulation .15, not .7: at .7 the cell gives clip .5 and a .07 s release, about .12 s of sound - a pluck.
+// At .15 it is clip 1.04 and a .24 s release, which is an upright ringing into the gap the way one actually does.
+const bass = { sound: 'gm_acoustic_bass', rhythm: WALK, notes: '0 4 7 4 6', register: .4, articulation: .15,
+               brightness: .5, space: .25, level: 1.15, humanize: { timingMs: 10, velocity: .1, correlation: 'bar' } };
+
+// a real sampled sax, not the GM clarinet it started as: the clarinet soundfont measured centroid 1401 Hz and read
+// as sharp, and vcsl's sax is an actual recording (23 pitched samples, rms -24.4). brightness .45, not .6, for the
+// same reason - the melody cell sets the character now, so the tone does not have to cut.
+// register .25 (octave 3), not .5: vcsl samples the sax A#1..G#4 (midi 34..68), and at octave 4 the head reached E5
+// = 76, eight semitones above the top sample and resampled upward, which is thin and squeaky. At octave 3 the whole
+// line, degrees 0..9, lands at midi 52..67 - inside the recorded range, every note an actual sax note.
+// Three articulations of the same instrument, picked per hit by weight: vcsl samples the sax plain, with vibrato and
+// tongued short, all across A#1..G#4, which is exactly where this line sits. Their own loudness is the right balance
+// again - plain -24.4 dB, vibrato -28.9, staccato -30.2 - because a tongued note IS quieter and a vibrato note IS a
+// softer held one. With one sample and one clip every note came out the same length, which is what a keyboard does.
+// humanize.length is the other half: it scales the clip by a seeded curve correlated over four bars, so the notes
+// breathe long and short in waves instead of being stamped out. timingMs and velocity are up for the same reason.
+const reed = { sound: { sax: 5, sax_vib: 2, sax_stacc: 2 }, register: .25, brightness: .52, articulation: .35,
+               space: .5, level: 1.9, postgain: 1.35, position: .2,
+               humanize: { timingMs: 16, velocity: .14, length: .4, correlation: 'phrase' } };
+
+// piano comping: stabs at the END of each group, so the piano pushes against the grouping the drums state
+const Em = '[e3,g3,b3,d4]', F = '[f3,a3,c4,e4]', Dm = '[d3,f3,a3,c4]';
+const stab = (c) => '[[~ ~ ' + c + ']@3 [~ ~ ' + c + ']@3 [~ ~ ' + c + ']@3 [~ ' + c + ']@2]'; // no backticks: the transpiler reads a template literal as mini-notation
+const CHORDS = [Em, F, Em, Dm];
+const comp = (o = {}) => ({ pattern: note('<' + CHORDS.map(stab).join(' ') + '>').s('piano').clip(1.3),
+                            level: .3, position: -.3, space: .5,
+                            humanize: { timingMs: 12, velocity: .12, correlation: 'bar' }, ...o });
+
+// E phrygian: 0=E 1=F(the flat second) 2=G 3=A 4=B 5=C 6=D 7=E'
+//
+// THE CELL: `0 ~ 3` - a note, a rest, a leap up a fourth. Three slots, so it fills one group of the 3+3+3+2 exactly.
+// Everything melodic in this song is that shape transposed, inverted, filled in or fragmented. The first version of
+// this song had no cell at all: 122 notes of solo whose most-repeated three-note shape was "up a step, down a step",
+// appearing 8 times. That is a scale, not a tune, and it is what "random walking around" means. A head is one idea
+// you recognise coming back.
+const HEAD = [
+  '[[0 ~ 3]@3 [1 ~ 4]@3 [2 ~ 5]@3 [4 3]@2]',   // the cell, three times, each a step higher
+  '[[7 ~ 4]@3 [6 ~ 3]@3 [5 ~ 2]@3 [1 0]@2]',   // the same shape inverted and falling: the answer
+  '[[0 ~ 3]@3 [1 ~ 4]@3 [3 ~ 6]@3 [5 4]@2]',   // as bar one, but the third leap reaches further
+  '[[2 ~ ~]@3 [1 ~ ~]@3 [0 ~ ~]@3 [~ ~]@2]',   // held notes down to the root: the cell stops, the tune lands
+].join(' ');
+
+// sixteen bars of solo that develop the cell rather than run up and down the scale. Range stays inside 0..7 - one
+// octave - because the old line's two-octave sweep was most of why it read as sharp.
+const SOLO = [
+  '[[0 ~ 3]@3 [~ ~ ~]@3 [0 ~ 3]@3 [2 1]@2]',   // state it, and leave a whole group of silence after it
+  '[[0 ~ 3]@3 [1 ~ 4]@3 [2 ~ ~]@3 [~ ~]@2]',   // sequence it up, then stop early
+  '[[2 ~ 5]@3 [3 ~ 6]@3 [4 ~ 7]@3 [6 5]@2]',   // the same sequence from higher up
+  '[[4 ~ 1]@3 [3 ~ 0]@3 [2 ~ ~]@3 [1 0]@2]',   // inverted: the leap goes down now
+  '[[0 ~ 3]@3 [0 ~ 4]@3 [0 ~ 5]@3 [4 3]@2]',   // root held as a pedal, the leap widening off it
+  '[[0 ~ 6]@3 [0 ~ 7]@3 [6 ~ 5]@3 [4 ~]@2]',   // widened to a seventh, then walks back down
+  '[[3 ~ 0]@3 [4 ~ 1]@3 [5 ~ 2]@3 [3 4]@2]',   // the inversion sequenced upward
+  '[[5 ~ 2]@3 [4 ~ 1]@3 [3 ~ 0]@3 [~ ~]@2]',   // and back down, ending on air
+  '[[0 ~ 3]@3 [2 ~ 5]@3 [4 ~ 7]@3 [6 5]@2]',   // the cell moving in thirds instead of steps
+  '[[7 ~ 4]@3 [6 ~ 3]@3 [5 ~ 2]@3 [4 3]@2]',   // the head answer quoted back mid-solo
+  '[[0 3 0]@3 [1 4 1]@3 [2 5 2]@3 [3 2]@2]',   // the rest filled in: the cell becomes three notes
+  '[[4 7 4]@3 [3 6 3]@3 [2 5 2]@3 [1 0]@2]',   // filled-in and descending, the busiest bar
+  '[[0 ~ 3]@3 [~ ~ ~]@3 [2 ~ 5]@3 [~ ~]@2]',   // back to air: the solo breathes before it lands
+  '[[4 ~ 7]@3 [~ ~ ~]@3 [6 ~ 3]@3 [~ ~]@2]',
+  '[[2 ~ 5]@3 [1 ~ 4]@3 [0 ~ 3]@3 [2 1]@2]',   // the sequence descending, home
+  '[[0 ~ ~]@3 [~ ~ ~]@3 [0 ~ ~]@3 [~ ~]@2]',   // two long roots, nothing else
+].join(' ');
+
+// the climax: the same cell a fourth higher, filled in and driving. It reaches 9, not 12 - the old climax was 57%
+// leaps across two octaves, which is an arpeggio scramble, and it is what "too sharp" was pointing at. The lift comes
+// from density and level now, not from pitch.
+const RIDE = [
+  '[[4 ~ 7]@3 [5 ~ 8]@3 [6 ~ 9]@3 [8 7]@2]',   // the head's rising sequence, up a fourth
+  '[[9 ~ 6]@3 [8 ~ 5]@3 [7 ~ 4]@3 [5 6]@2]',   // its inversion, falling
+  '[[4 7 4]@3 [5 8 5]@3 [6 9 6]@3 [7 8]@2]',   // filled in: three notes a group, the busiest it gets
+  '[[9 ~ ~]@3 [8 ~ 7]@3 [6 ~ 5]@3 [4 3]@2]',   // a held top note, then a walk off it
+  '[[2 ~ 5]@3 [3 ~ 6]@3 [4 ~ 7]@3 [6 5]@2]',   // the sequence again from lower, rebuilding
+  '[[7 ~ 4]@3 [6 ~ 3]@3 [5 ~ 2]@3 [3 4]@2]',
+  '[[4 7 4]@3 [6 9 6]@3 [7 ~ 8]@3 [9 ~]@2]',   // filled in and climbing to the highest note of the song
+  '[[7 ~ 4]@3 [3 ~ 2]@3 [0 ~ ~]@3 [~ ~]@2]',   // one last leap down, and home
+].join(' ');
+
+// the vibraphone answers in the groups the sax leaves empty, and it answers with the cell: one statement a bar,
+// so the shape is coming at you from two instruments at once in the climax.
+// It plays in the solo, the bridge and the outro too, well under everything else - when it only existed in the climax
+// it arrived from nowhere. Quiet enough not to be a part you listen to, present enough that you already know it.
+const vibes = { sound: 'vibraphone', register: .5, brightness: .65, articulation: .3, space: .55, position: -.15,
+                humanize: { timingMs: 9, velocity: .1, correlation: 'phrase' } };
+// its own line for the bridge, which is 4/4 and eight slots to a bar, not eleven
+const BRIDGE_VIBES = [
+  '[~ ~ ~ ~ 4 ~ ~ ~]', '[~ ~ ~ ~ ~ ~ 2 ~]', '[~ ~ 5 ~ ~ ~ ~ ~]', '[~ ~ ~ ~ ~ ~ 0 ~]',
+  '[~ ~ ~ ~ 4 ~ ~ ~]', '[~ ~ 7 ~ ~ ~ ~ ~]', '[~ ~ ~ ~ ~ ~ 5 ~]', '[~ ~ 0 ~ ~ ~ ~ ~]',
+].join(' ');
+const ANSWER = [
+  '[[~ ~ ~]@3 [0 ~ 3]@3 [~ ~ ~]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [~ ~ ~]@3 [1 ~ 4]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [2 ~ 5]@3 [~ ~ ~]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [~ ~ ~]@3 [0 ~ 3]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [4 ~ 7]@3 [~ ~ ~]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [~ ~ ~]@3 [3 ~ 6]@3 [~ ~]@2]',
+  '[[~ ~ ~]@3 [2 ~ 5]@3 [~ ~ ~]@3 [~ ~]@2]',
+  '[[0 ~ ~]@3 [~ ~ ~]@3 [~ ~ ~]@3 [~ ~]@2]',
+].join(' ');
+
+const CHANGES = 'i7 II i7 vii7'; // Em7 F Em7 Dm7 - in phrygian the second degree is ALREADY flat, so II is F major; bII would flatten it again to Fb
+
+// ---- the bridge: the only place the song leaves E phrygian, and the only place it leaves 11/8 ----
+// C major is E phrygian's own pitch collection with the tonic moved, so not one new note enters - it simply turns
+// the light on, and the return to E phrygian afterwards reads as going back into the dark.
+// The metre becomes 4/4 but the PULSE does not change: 11/8 at bpm 290 is an eighth of 0.207 s, and 4/4 at bpm 145
+// is the same 0.207 s eighth. Same heartbeat, regrouped square. That is what makes the 11 feel like home on return.
+// a hand-drum 4/4, not a rock backbeat: kick on 1, 3 and 4 and teks off the beat, so it is still the same darbuka
+// player. bd on 1+3 with sd on 2+4 made the bridge sound like a different and cheaper band.
+const SQUARE = { bd: 'x.......x...x...', sd: '..x...x...x...x.', hh: 'x.x.x.x.x.x.x.x.', oh: '................' };
+const FOURS  = 'x...x...x...x...';   // and here a walking bass is idiomatic rather than lazy - but still by chord tone
+const BRIDGE_BASS = '0 4 2 6';       // root, fifth, third, seventh: an arpeggio, not a scale
+// eight bars of warm tune, the same cell (a note, a rest, a leap of a fourth) opened out into major
+// the piano's voicings are literal note names, so they cannot follow a key change: the bridge needs its own, and its
+// own comping rhythm, since `stab` places chords by the 3+3+3+2 groups that do not exist in 4/4
+const C = '[c3,e3,g3,b3]', Am = '[a2,c3,e3,g3]', Dm7 = '[d3,f3,a3,c4]', G7 = '[g2,b2,d3,f3]';
+const stab4 = (c) => '[~ ~ ' + c + ' ~ ~ ' + c + ' ~ ~]';   // off the beat, twice a bar
+const bridgeComp = (o = {}) => ({ pattern: note('<' + [C, Am, Dm7, G7].map(stab4).join(' ') + '>').s('piano').clip(1.3),
+                                  level: .32, position: -.3, space: .5,
+                                  humanize: { timingMs: 12, velocity: .12, correlation: 'bar' }, ...o });
+const BRIDGE = [
+  '[0 ~ 3 ~ 2 ~ ~ ~]',
+  '[4 ~ 7 ~ 6 ~ 4 ~]',
+  '[5 ~ 2 ~ 3 ~ ~ ~]',
+  '[1 ~ 4 ~ 2 ~ 0 ~]',
+  '[0 ~ 3 ~ 4 ~ ~ ~]',
+  '[5 ~ 8 ~ 7 ~ 5 ~]',
+  '[4 ~ 1 ~ 2 ~ 3 ~]',
+  '[0 ~ ~ ~ ~ ~ ~ ~]',
+].join(' ');
+
+song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'combo', composition: 'single' },
+       packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
+
+  // the head states the tune with no piano and the kit down to its bones, so the solo's full band is an arrival
+  // instead of a repeat. Before this, head and solo carried the same arc letter: 24 bars, nearly half the song,
+  // with the same parts at the same density and nothing structural happening.
+  section('head', 8, { role: 'establish', progression: CHANGES,
+    drums:  { ...drums, template: THIN, density: .4, level: .3 },
+    bass:   { ...bass, level: 1 },
+    melody: { ...reed, phrase: 4, level: 1.6, notes: HEAD, velocity: '.9 1 .85 1' },
+  }),
+
+  section('solo', 16, { role: 'develop', progression: CHANGES,
+    drums:  { ...drums, density: .55, variation: .2, level: .36 },
+    bass:   { ...bass },
+    raw:    { ...comp() },
+    melody: { ...reed, phrase: 16, level: 2, notes: SOLO, velocity: '.85 1 .9 1 .95 1 .9 .95' },
+    melody2: { ...vibes, phrase: 8, notes: ANSWER, level: .4 },
+  }),
+
+  // the bridge: C major and 4/4 at the same eighth-note pulse. The only key change and the only metre change in the
+  // song, and the reason the 11 feels like home when `turn` drops back into it.
+  // progression ends on Em7, which is iii7 in C major and the tonic of E phrygian at the same time: the pivot chord
+  // that hands the song back. Ending on V7 left a G7 hanging and then jumped to Em7, which is most of why the bridge
+  // sat wrong. (I, not I7: the grammar has no maj7, and I7 gives C7 - a Bb that is in neither key.)
+  section('bridge', 8, { role: 'develop', meter: '4/4', bpm: 145, key: 'C:major', progression: 'I vi7 ii7 iii7',
+    drums:  { ...drums, template: SQUARE, density: .5, level: .4 },
+    bass:   { ...bass, rhythm: FOURS, notes: BRIDGE_BASS, level: .95, articulation: .15 },
+    // depth: the bridge measured all four parts at one distance. The piano goes farther (darker and wetter) and the
+    // sax comes closer (brighter and drier) - the closer/farther descriptors written by hand on spread layers.
+    raw:    { ...bridgeComp({ space: .68, brightness: .38 }) },
+    melody2: { ...vibes, phrase: 8, notes: BRIDGE_VIBES, level: .45 },
+    melody: { ...reed, phrase: 8, level: 1.8, space: .35, brightness: .62, notes: BRIDGE, velocity: '.85 1 .9 1 .9 1 .95 .9' },
+  }),
+
+  // the hand-off: the sax has stopped, the piano and darbuka carry on, and the bass walks itself into its own solo.
+  // Without these four bars the bass solo arrived on a downbeat with three instruments vanishing at once.
+  section('turn', 4, { role: 'develop', progression: CHANGES,
+    drums:  { ...drums, density: .5, level: .4 },
+    bass:   { ...bass, rhythm: OPEN, notes: HANDOFF, level: 1.25, articulation: .15 },
+    raw:    { ...comp({ level: .3 }) },
+  }),
+
+  // the bass solo, with the darbuka thinned to almost nothing behind it: the metre naked, and the eleven finally
+  // countable. articulation .2, not .7: the bass layer's hap is one grid step (a 22nd of a bar, ~0.1 s), so the
+  // articulation cell is the only thing that lets an upright ring - clip ~0.98 plus a 0.22 s release, which gives
+  // the held notes a real decay without smearing the sixteenth runs in bars 4 and 6 together.
+  section('strip', 8, { role: 'breakdown', progression: CHANGES,
+    drums:  { ...drums, template: THIN, density: .4, level: .38 },
+    bass:   { ...bass, rhythm: OPEN, notes: BASS_SOLO, level: 1.55, articulation: 0 },
+  }),
+
+  section('build', 16, { role: 'climax', progression: CHANGES,
+    drums:  { ...drums, density: .65, variation: .35, level: .4 },
+    bass:   { ...bass, notes: '0 4 7 6 [7 2]', level: 1.25 },
+    raw:    { ...comp({ level: .45 }) },
+    melody:  { ...reed, phrase: 8, level: 2, postgain: 1.6, notes: RIDE, velocity: '.95 1 1 1 .95 1 1 .95' },
+    melody2: { ...vibes, phrase: 8, notes: ANSWER, level: 1.3 },
+  }),
+
+  section('out', 8, { role: 'release', progression: CHANGES,
+    drums:  { ...drums, density: .45, level: .32 },
+    bass:   { ...bass },
+    raw:    { ...comp() },
+    melody: { ...reed, phrase: 4, notes: HEAD, level: 1.7, velocity: '.9 1 .85 .9' },
+    melody2: { ...vibes, phrase: 8, notes: ANSWER, level: .5 },
+  }),
+])

@@ -64,6 +64,18 @@ test('the breath: nothing at the start of every period, full half way, from the 
   assert.equal(s().children.over.steps, s().children.base.steps, 'stepped throughout'); assert.equal(s().children.over.events, s().children.base.events, 'every event');
   assert.notEqual(s().children.base.r, s().children.over.r, 'each its own generator'); assert.deepEqual(s().children.over.size, { w: 16, h: 9 });
   assert.ok(Math.abs(breathAt(1, 4) - 0.5) < 1e-9 && Math.abs(breathAt(2, 4) - 1) < 1e-9 && breathAt(0) === 0);
+  assert.equal(breathAt(4, 8, 8), breathAt(4), 'every = bars is the old breath');
+  assert.ok(Math.abs(breathAt(4, 8, 24) - 1) < 1e-9 && breathAt(12, 8, 24) === 0 && breathAt(20, 8, 24) === 0 && Math.abs(breathAt(28, 8, 24) - 1) < 1e-9, 'every 24: the visit in bars 0..8 of each 24, nothing between');
+});
+
+test('visual.every: the director breathes once per every bars', async () => {
+  const g = await ready;
+  const base = song(g), score = { ...composeVisual(base.strudel), composition: { preset: 'overlay', worlds: ['a', 'b'], every: 24 } };
+  const W = { a: counter('a'), b: counter('b'), tunnel: counter('tunnel') };
+  const { p, at } = run(createDirector(W, { createCanvas: canvasStub().createCanvas }), score, base, 0);
+  assert.equal(p.state.every, 24);
+  at(4 / score.cps); assert.ok(Math.abs(p.state.breath - 1) < 0.01, 'full at half the first visit');
+  at(6 / score.cps); assert.ok(Math.abs(p.state.breath - breathAt(6, BREATH, 24)) < 0.01, 'the breath is breathAt with the every of the score (the fixture is 8 bars, so the gap between visits is pinned on breathAt above)');
 });
 
 test('worldOf: a single-world score gets the bare world, a composed one the director; withPick is the view override; the score carries the composition', async () => {
@@ -90,9 +102,14 @@ test('the header: composition and worlds are validated, and the check describes 
   assert.throws(() => g.song({ visual: { composition: 'overlay', worlds: ['tunnel', 'nope'] } }, []), /worlds must list worlds/);
   assert.throws(() => g.song({ visual: { worlds: ['tunnel'] } }, []), /goes with a composition/);
   assert.throws(() => g.song({ visual: { layout: 'x' } }, []), /not layout/);
+  assert.throws(() => g.song({ visual: { composition: 'overlay', every: 5 } }, []), /whole number of 8 or more/);
+  assert.throws(() => g.song({ visual: { every: 16 } }, []), /every goes with a composition/);
+  assert.equal(composeVisual(song(g, { composition: 'overlay', worlds: ['tunnel', 'ink'], every: 32 }).strudel).composition.every, 32, 'the score carries it');
   const { describeVisual } = await import('../lib/visual.mjs');
   const d = describeVisual(composeVisual(song(g, { composition: 'overlay', worlds: ['tunnel', 'ink'] }).strudel));
   assert.ok(d.some((c) => c === 'overlay: tunnel + ink'), d.join(' · '));
+  const e = describeVisual(composeVisual(song(g, { composition: 'overlay', worlds: ['tunnel', 'ink'], every: 32 }).strudel));
+  assert.ok(e.some((c) => c === 'overlay: tunnel + ink every 32 bars'), e.join(' · '));
 });
 
 test('through the exporter: a composed song renders every frame on a stub context, deterministically', async () => {

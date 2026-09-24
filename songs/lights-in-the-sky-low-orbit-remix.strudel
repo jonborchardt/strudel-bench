@@ -1,0 +1,328 @@
+// Nine Inch Nails - Lights In The Sky (Low Orbit Remix): C minor at 110, about 3:20. A remix from the
+// vocal stem alone; every other part is written here.
+//
+// The voice is every one of the 33 sung fragments of Nine Inch Nails' "Lights in the Sky" (The Slip
+// multitracks, CC BY-NC-SA 3.0, cut by strudle-pack into samples/user/lights-in-the-sky-low-orbit-remix-cuts), plus the three
+// bar-exact chunks of the same stem that carry voice no transcript caught, each placed in the gap it falls
+// in. That is every distinct thing the vocal stem says. Nothing else is borrowed: no piano, no flute, no
+// ambience from that record. Every note under the voice is written here.
+//
+// Five more chunks of the stem exist and are deliberately not used: every one of them is a bar containing a
+// phrase that is already played, so they would double a fragment rather than add anything.
+//
+// ORDER. The fragments are numbered by where they fall on the record, and none is ever heard before one
+// with a lower number. Repeats only echo forward inside the cluster they belong to, so a listener walks
+// the record's vocal in its own sequence:
+//   open   1 [2 3]                    verse1  4 [5 6] 7 8 9
+//   hold   (the held stem chunk)      lift    10 11 12 13 14 15
+//   verse2 16 17 18 | 19 [20 21]      flood   22 [23 24] [25 26] [27 28] 29 30 31 32     out  33 | 33
+// A [pair] shares one bar. Nothing is echoed any more: each fragment is heard once, where the record puts
+// it, because an echo was the thing that made the spacing arbitrary.
+//
+// SPACING, read off the stems' markers and the phrase times:
+//   source (55 bpm, 4/4)        vocal phrases        what it does here
+//   Verse 1   bars  2..17       9, in 3 clusters     open + verse1: a cluster, the hole, two more clusters
+//                               with a 6-bar hole    (the hole falls across the section boundary)
+//   Chorus 1  bars 18..25       6, nearly every bar  lift: a fragment every other bar; the pitch jumps a
+//                               and a fifth higher   fifth (verse fragments 117..132 Hz, chorus 147..178)
+//   Verse 2   bars 26..41       6, front-loaded,     verse2: three at the top, the record's eight-bar
+//                               then an 8-bar hole   silence kept whole, then the three that lead in
+//   Chorus 2  bars 42..49+      12, continuous,      flood: a fragment nearly every bar
+//                               spilling past 'End'  out: the one past the End marker, with its tail
+// hold has no voice at all, and that is not a choice: it is the record's run-up into its first chorus, the
+// 11.3 s between the last verse fragment and the first chorus one, and the stem holds nothing in that window
+// -- no phrase, no detected activity. Anything put there would have to come from somewhere else on the
+// record and would be heard before the material that precedes it. (The record's long verse hole, the 28 s
+// between fragments 3 and 4, is the empty run at the top of verse1, compressed to five bars.)
+//
+// So the order and the spacing are the record's; the tempo is doubled (110 = 55 felt in half-time), the key
+// is the fragments' own C minor, and the song underneath is not that song. Mute every voice part and the
+// guitar, bass, piano and pad still stand on their own.
+//
+// The fragments are one to four words each. None is used to say a sentence: they are syllables placed for
+// pitch and attack.
+//
+// Under them runs a second voice part per section (`raw5`): in the bars the lead leaves empty, more of what
+// this section has already said, cycling through it. Same clips, same treatment, off the beat.
+
+// clip n of the record, in order. 0 is a bar with no voice.
+const P = (n) => 'lights_in_the_sky_voc_ph_' + String(n).padStart(3, '0');
+// Three one-bar chunks of the stem that carry voice no transcript caught: the phrase clips cover only 19%
+// of the stem's 231 s, and the activity detector found sound in three places whisper wrote nothing for.
+// They are wordless, and each falls inside a gap the fragments leave -- including the one at 148.4 s, which
+// is in the middle of the 34 s stretch I had been treating as the record's silence. It is not silent there.
+const W1 = 'lights_in_the_sky_voc_l1_003';   // 100.4 s, between fragments 14 and 15
+const W2 = 'lights_in_the_sky_voc_l1_004';   // 148.4 s, inside the long verse-2 gap
+const W3 = 'lights_in_the_sky_voc_l1_006';   // 192.0 s, between fragments 26 and 27
+
+// The clips come off the stem 17 dB apart: -28.5 dB rms for the loudest chorus fragment, -46 for the
+// quietest one-word verse one, so each carries its own makeup gain toward a common -24 dB rms.
+//
+// That gain is capped at 4.5 (+13 dB), every entry: the first pass at this cap only lowered the ones that
+// read exactly 6, and clip 28 at 6 x the climax's 1.4 was the one moment in the whole render over the knee. Normalising the quietest four honestly wanted 12 to 15x, which lifts
+// the stem's own noise floor and room bleed by 22 dB along with the voice: those fragments arrived with an
+// audible swell of hiss around the word. They now sit lower than the rest, which is the right trade.
+// Clip 5 is set by hand at 2.5: its 23 dB crest would peak at 0.95 if normalised by rms, and at 4 it was
+// still the largest single peak in the song (0.744 in verse1, the one spot that pushed the whole render past
+// the soft clip's 0.8 knee).
+const GAIN = { 1: 4.2, 2: 4.02, 3: 4.5, 4: 2.15, 5: 2.5, 6: 4.5, 7: 4.25, 8: 4.5, 9: 4.5,
+               10: 1.71, 11: 1.75, 12: 2.53, 13: 3.39, 14: 1.83, 15: 3.01, 16: 4.5, 17: 2.63, 18: 4.5,
+               19: 4.5, 20: 4.5, 21: 4.5, 22: 2.24, 23: 1.68, 24: 3, 25: 2.41, 26: 3.07, 27: 3,
+               28: 3, 29: 1.99, 30: 1.79, 31: 2.99, 32: 2.93, 33: 4.5 };
+const SECS = { 1: 2.48, 2: 1.94, 3: 0.7, 4: 0.48, 5: 1.4, 6: 0.74, 7: 2.86, 8: 0.72, 9: 1.52,
+               10: 0.7, 11: 0.54, 12: 1.1, 13: 2.21, 14: 1.7, 15: 3.33, 16: 1.06, 17: 1.52, 18: 1.16,
+               19: 0.56, 20: 1.52, 21: 0.84, 22: 1.2, 23: 0.72, 24: 0.88, 25: 1.34, 26: 0.98, 27: 2.14,
+               28: 0.84, 29: 1.52, 30: 2.52, 31: 1.18, 32: 0.9, 33: 0.92 };   // each clip's own length in seconds
+
+// One slot is one bar. A slot is a clip number, 0 for a bar with no voice, or [n, m] for two clips sharing
+// a bar: m lands three quarters of the way through, 1.64 s behind n.
+//
+// That pair form exists because six of the 33 fragments are the tail of the one before them -- the
+// transcriber split a single sung line in two and they overlap by 0.2 s on the record. Their real gaps are
+// 1.08 to 1.94 s, all shorter than one bar here (2.18 s), so giving each its own bar pulled one line apart
+// into two events. [n, m] puts them back inside a bar. The wide gaps are the other half of the same
+// problem, and they are written as counts of empty slots at the record's own scale.
+//
+// The gain sequence runs in parallel with the same structure, so slot n of one is slot n of the other.
+// (single quotes and a join on purpose: Strudel's transpiler turns double quotes and backticks into
+// mini-notation before the interpolation happens)
+// Every clip is cut 200 ms after its last word (the transcriber's post-roll), which lands mid-decay: played
+// as-is the buffer stops dead and the note reads as chopped. So each one gates itself -- note-off FADE
+// seconds before its own buffer ends, with a release of the same length, which turns that hard edge into a
+// fade. `clip` multiplies the hap's length, and a hap is a whole bar alone but three quarters or one quarter
+// inside a pair, so the fraction has to come from the slot shape.
+// The fade is a third of the clip, up to .3 s: a fixed fade would be most of a half-second syllable and
+// almost none of a three-second line.
+const BARSEC = 240 / 110;
+const fade = (n) => Math.min(.3, SECS[n] * .33);
+const slot = (x, f) => (Array.isArray(x) ? '[' + f(x[0], .75) + '@3 ' + f(x[1], .25) + ']'
+  : x < 0 ? '[~ ~ ~ ' + f(-x, .25) + ']'   // a negative slot is a pickup: the clip on the last beat of the bar
+  : f(x, 1));
+const one = (n) => (n ? P(n) : '~');
+const lvl = (n) => GAIN[n] || 1;
+const clp = (n, frac, sp = 1) => (n ? +Math.max(.05, (SECS[n] / sp - fade(n)) / (frac * BARSEC)).toFixed(3) : 1);
+const rel = (n) => (n ? fade(n) : .1);
+const seq = (ns, f) => '<' + ns.map((x) => slot(x, f)).join(' ') + '>';
+const voice = (...ns) => s(seq(ns, one)).gain(seq(ns, lvl)).clip(seq(ns, clp)).release(seq(ns, rel))
+  .attack(.01);
+
+// Each section's lead sequence, named so the mumble under it can be derived from the same list.
+const LEAD = {
+  open:   [0, 0, 0, -1, 0, 0, [2, 3], 0],
+  verse1: [0, 0, 0, 0, 4, 0, 0, [5, 6], 0, 0, 0, 0, 7, 0, 8, 9],
+  lift:   [10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 0, 0, 0, 0, 15, 0],
+  verse2: [16, 0, 17, 0, 0, 18, 0, 0, 0, 0, 19, 0, 0, [20, 21], 0, 0],
+  flood:  [22, 0, 0, [23, 24], 0, [25, 26], 0, 0, 0, [27, 28], 0, 29, 0, 30, 31, 32],
+  hold:   [0, 0, 0, 0, 0, 0, 0, 0],          // no fragments of its own: it carries verse1's
+  out:    [0, 33, 0, 0, 0, 33, 0, 0],
+};
+
+// ---- the room: a conversation going on that you cannot quite make out ----
+//
+// Every bar is four quarter-note slots. An empty one takes three fragments, on beats 2, 3 and 4; a bar the
+// lead is already in takes one, clear of where the lead's own hit sits. The slots are .545 s apart and a
+// fragment runs from half a second to three and a third, so they run into each other by design: at any
+// moment two or three are sounding at once.
+//
+// That overlap is what makes it unintelligible rather than quiet. Voices masking each other stop resolving
+// into words while staying plainly present, which is the thing a low-pass at 900 Hz and a 22 dB drop failed
+// to do. Each slot also takes one of four speeds and one of four pans in turn, so it reads as a few people
+// across a room rather than one mouth doubling itself, and a gentle low-pass takes the consonants off.
+//
+// It only ever picks from what this section has already sounded (`carry` hands a section the previous one's
+// material, which is how `hold` can talk when the stem itself is silent there), so the record's order is
+// untouched by any amount of it.
+const clipsIn = (ns) => {
+  const out = [];
+  ns.forEach((x) => (Array.isArray(x) ? x : [Math.abs(x)]).forEach((n) => { if (n && !out.includes(n)) out.push(n); }));
+  return out;
+};
+const said = (ns, carry = []) => {
+  const seen = [...carry];
+  let k = 0;
+  const note = (n) => { if (n && !seen.includes(n)) seen.push(n); };
+  const next = () => seen[k++ % seen.length];
+  return ns.map((x) => {
+    const pair = Array.isArray(x);
+    if (pair) x.forEach(note); else note(Math.abs(x));
+    if (!seen.length) return [];                                  // nothing said here yet, nothing to say again
+    if (!pair && x === 0) return [0, next(), next(), next()];
+    return pair || x < 0 ? [0, next(), 0, 0] : [0, 0, next(), 0]; // clear of the lead's own hit
+  });
+};
+const SPEEDS = [.94, 1, 1.06, .97], PANS = [.3, .7, .42, .78];
+const fseq = (ns, carry, f) => {
+  let i = 0;
+  return '<' + said(ns, carry).map((row) => (row.length
+    ? '[' + row.map((n) => (n ? f(n, .25, i++) : '~')).join(' ') + ']'
+    : '~')).join(' ') + '>';
+};
+// .25, not .75: with three fragments a bar overlapping, the density carried it to 10.4 dB under the mix in
+// verse1 against the lead's 11.6 -- in front of the voice it is supposed to sit behind. It wants to be
+// roughly 8 dB under the lead, present the whole time and never the thing you are listening to.
+const more = (name, level = .25, carry = []) => {
+  const q = (f) => fseq(LEAD[name], carry, f);
+  return { level, space: .62,
+    pattern: s(q(one))
+      .gain(q((n) => GAIN[n]))
+      .clip(q((n, fr, i) => clp(n, fr, SPEEDS[i % 4])))
+      .release(q(rel))
+      .speed(q((n, fr, i) => SPEEDS[i % 4]))
+      .pan(q((n, fr, i) => PANS[i % 4]))
+      .lpf(2800).attack(.03) };
+};
+// one of the wordless chunks, fired on the bar it falls on and left to run its 4.4 s (two bars here) out
+const wordless = (sound, mask, gain) => ({ level: 1, space: .55, width: .5, position: -.2,
+  pattern: s(sound).mask(mask).gain(gain).attack(.05).release(1) });
+
+// 1 the ground: kick on one, a rim backbeat on three, the whole kit half-time at 110
+// Every section writes its own `level` on the drums line; .75 here is only the fallback.
+// The song runs the kit about a tenth of where it started: .1 in hold, lift and flood, a little under in
+// the verses. The arc is carried by the templates (kit / kitFull / kitPeak) and density, not by level.
+const kit = { level: .75, articulation: .7, weight: .5, brightness: .45, space: .35, organicness: 0, groove: .5,
+  template: { bd: 'x.......x.......', sd: '........x.......' } };
+const kitFull = { ...kit, template: { bd: 'x.....x.x.......', sd: '........x.......', hh: '..x...x...x...x.' } };
+const kitPeak = { ...kit, template: { bd: 'x.....x.x.....x.', sd: '........x.......', hh: 'x.x.x.x.x.x.x.x.', oh: '......x.......x.' } };
+const shaker = { sound: 'RolandTR808_sh', rhythm: '..x...x...x...x.', level: .4,   // peaked 0.657 at .65, the loudest thing in lift and flood brightness: .6, position: .3,
+  velocity: '.8 1 .7 .9', humanize: { timingMs: 8, velocity: .12, correlation: 'bar' } };
+
+// 2 the bass: two bars, root and octave against the kick, stepping down through Ab and G to Eb and home
+const bass = { sound: 'sawtooth', patch: 'sub', level: .8, register: .5, brightness: .3, articulation: .68,
+  weight: .62, duck: 'drums', duckDepth: .35, duckAttack: .12,
+  rhythm: 'xxxxxxxxxxxxxxxx|xxxxxxxxxxxxxxxx',
+  notes: '0 ~ ~ 0 ~ ~ 7 ~ ~ 0 ~ ~ ~ ~ 6 ~ 5 ~ ~ 5 ~ ~ 4 ~ ~ 2 ~ ~ 0 ~ ~ ~' };
+
+// 3 the picking: a clean electric guitar, four bars written against the chords rather than following them,
+// so the top voice walks c-eb-g over Cm, holds the c through Ab and lets go of it on Bb
+const pick = (lvl = .8) => ({ level: lvl, space: .5, width: .55, position: -.28, brightness: .5,
+  pattern: note('<[c3 g3 c4 eb4 g3 c4 eb4 g4] [c3 g3 c4 eb4 g3 c4 g4 eb4] ' +
+                '[ab2 eb3 ab3 c4 eb3 ab3 c4 eb4] [bb2 f3 bb3 d4 f3 bb3 d4 f4]>')
+    .s('gm_electric_guitar_clean').gain(.8) });
+
+// 4 the hook: a piano over the top, question and answer across sixteen slots, moving with the chords.
+// It measured 9.6 dB under the mix in hold with a 1830 Hz centroid and nothing above 3 kHz: not bright in the
+// top, but sitting right in the upper mids where a mallet reads as piercing. Down an octave-ish
+// (register .72 -> .62, which is where verse2 already had it and verse2 never sounded shrill), darker, quieter,
+// and a little further back.
+// Axis tuning was not going to reach this. The events said the line ran midi 60..72 -- C4 up to C5 -- at
+// 3.5 notes a cycle with a delay on it: a metallic mallet running constantly in the top octave reads as
+// shrill whatever its level or cutoff, and its centroid (1066 Hz, nothing above 3 kHz) never showed it.
+// The fix is the octave and nothing else. Thinning the line to four notes and clipping each hit shorter on
+// top of it took the part from shrill to absent (24.2 dB under the mix, then 20.1 after a level nudge), which
+// was over-correcting: the pitch was the problem, the hook was not.
+// `register` is a three-way step, not a dial -- melodyOctave in lib/layers.mjs is octave 3 below 1/3, 4 up to
+// 2/3, 5 above -- so .72 -> .62 moved it one octave and .62 -> .5 moved it nothing at all. .3 is octave 3.
+// So the written line and its ring are back as they were and level carries the balance instead. The piano
+// samples are louder than the vibraphone ones were, so the same level put it at 11.2 dB under the mix where
+// the vibraphone had sat at 14.4 and sounded right; .72 puts it back.
+const hook = { sound: 'piano', register: .3, level: .72, follow: true, phrase: 2, space: .62, width: .5,
+  articulation: .5, brightness: .4, position: .18,
+  notes: '0 ~ 2 4 ~ ~ 7 ~ ~ ~ 6 ~ 4 ~ 2 ~',
+  velocity: '.85 1 .9 1 .8 1 .9 .95', humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };
+// the counter-line for the climax only: an octave up, on the beats the hook leaves empty
+const counter = { sound: 'handchimes', register: .88, level: 1.2, follow: true, space: .7, width: .65, position: -.4,
+  notes: '~ ~ ~ 7 ~ ~ ~ ~ ~ 5 ~ ~ ~ ~ ~ 4' };
+
+// 5 the air: a wide dark pad ducked under the kick, and a filtered noise bed that never stops
+const air = { sound: 'triangle', density: .35, register: .45, brightness: .3, space: .7, width: .72, level: .4 };
+const pad = { ...air, duck: 'drums', duckDepth: .15, duckAttack: .25 };   // the ducked form, where there is a kick
+// The bed is defined but no section plays it any more. Halved on request it measured 30 dB under the mix,
+// which the mix lint calls inaudible, while still tripping masking warnings against the pad and the guitar:
+// nothing to hear, two things to flag. `raw2: bed,` in a section brings it back.
+const bed = { level: 1, width: .6, position: .32,
+  pattern: s('pink').clip(1).lpf(sine.range(1800, 6000).slow(24)).hpf(1500).gain(.28) };
+
+const V = { level: 1.2, space: .4, width: .35 };        // the voice: dry and close, it brings its own room
+const VF = { level: 1.4, space: .3, width: .3 };
+
+song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['lights-in-the-sky-low-orbit-remix-cuts', 'rooms'],
+       room: { ir: 'hall', size: 3.2, damping: 4500 },
+       visual: { composition: 'overlay', worlds: ['orrery', 'sediment'], every: 16 } }, [
+
+  // 0:00 the bed, the pad and the picking; one low fragment on the fifth bar, the way the record waits
+  // three bars before the first word
+  section('open', 8, { role: 'establish', progression: 'i@2 VI VII',
+    pad:    { ...air, level: .5 },
+    raw:    pick(.65),
+    raw3:   { ...V, level: 1, pattern: voice(...LEAD.open) },
+    raw5:   more('open'),
+  }),
+
+  // 0:17 verse 1, the record's first cluster: two fragments at the top, then the long hole, then two more.
+  // bass and a half-time kick under it; no hook yet
+  section('verse1', 16, { role: 'develop', progression: 'i@2 VI VII',
+    drums:  { ...kit, density: .4, level: .1 },
+    bass:   { ...bass, level: .7, brightness: ramp(.22, .32) },
+    pad,
+    raw:    pick(.8),
+    raw3:   { ...V, pattern: voice(...LEAD.verse1) },
+    raw5:   more('verse1', .35),   // measured 19.6 dB under the mix here against the lead's 11.3: a touch forward
+  }),
+
+  // 0:52 the hole in verse 1, kept as a section: no voice at all, the kit fills out and the hook arrives
+  section('hold', 8, { role: 'develop', progression: 'i@2 VI VII',
+    drums:  { ...kitFull, density: .7, level: .1 },
+    bass,
+    melody: hook,
+    pad,
+    raw:    pick(),
+    raw5:   more('hold', .25, clipsIn(LEAD.verse1)),
+    fx:     { riser: 3, level: .55 },
+  }),
+
+  // 1:09 the chorus shape: a fragment every other bar and a fifth higher than the verse ones
+  section('lift', 16, { role: 'develop', progression: 'i@2 VI VII',
+    drums:  { ...kitFull, variation: .2, level: .1 },
+    perc:   shaker,
+    perc2:  { sound: 'LinnDrum_oh', rhythm: '......x.......x.', level: .1, articulation: .75, position: -.2, brightness: .55 },
+    bass,
+    melody: hook,
+    pad:    { ...pad, level: .5, brightness: .38 },
+    raw:    pick(),
+    raw3:   { ...V, pattern: voice(...LEAD.lift) },
+    raw5:   more('lift'),
+    raw4:   wordless(W1, '<0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0>', 1.25),
+  }),
+
+  // 1:44 verse 2: two fragments at the top, then the record's eight-bar silence, then one lead-in.
+  // the kit drops to the half-time skeleton for the hole and the last two bars sweep shut
+  section('verse2', 16, { role: 'release', progression: 'i@2 VI VII', sweep: 2,
+    drums:  { ...kit, density: .4, level: 0.14 },
+    bass:   { ...bass, level: .7 },
+    melody: { ...hook, level: .55 },
+    pad,
+    raw:    pick(.7),
+    raw3:   { ...V, level: 1.1, pattern: voice(...LEAD.verse2) },
+    raw5:   more('verse2'),
+    raw4:   wordless(W2, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 4.5),   // the only voice in the hole, and wordless
+    fx:     { riser: 4, level: .55 },
+  }),
+
+  // 2:19 the flood: the last chorus is the densest thing on the record and this is the densest thing here.
+  // a fragment nearly every bar, the counter-line above the hook, and one fragment chopped into eight and
+  // played as an instrument so its syllables stop being words
+  section('flood', 16, { role: 'climax', progression: 'i@2 VI VII',
+    drums:  { ...kitPeak, variation: .3, level: .1, fill: 2 },
+    perc:   shaker,
+    bass:   { ...bass, brightness: .38, level: .85 },
+    melody: hook,
+    melody2: counter,
+    pad:    { ...pad, level: .45 },
+    raw:    pick(.7),
+    raw3:   { ...VF, pattern: voice(...LEAD.flood) },
+    raw5:   more('flood'),
+    // the chop: one 2.5 s fragment cut into eight equal pieces, each fitted to its step
+    raw4:   wordless(W3, '<0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0>', 1.95),
+    fx:     { impact: true, level: .3 },   // the downbeat measured 0.804 with it at .4
+  }),
+
+  // 2:54 the overrun: on the record the last phrases spill past the end marker with nothing behind them.
+  // the kit and the bass go, the pad and the bed hold, two fragments are left with their tails
+  section('out', 8, { role: 'release', progression: 'i@2 VI VII', dropout: 2,
+    pad:    { ...air, level: .55, brightness: ramp(.3, .12) },
+    melody: { ...hook, level: .45, notes: '0 ~ ~ ~ ~ ~ 4 ~ ~ ~ ~ ~ 0 ~ ~ ~' },
+    raw:    pick(.5),
+    raw3:   { ...V, level: 1.1, pattern: voice(...LEAD.out) },
+    raw5:   more('out'),
+  }),
+])
