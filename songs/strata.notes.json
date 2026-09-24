@@ -1,4 +1,37 @@
 {
+  "made": "2026-09-19",
+  "youtube": {
+    "url": "",
+    "title": "strata — a memory rebuilt, in three modes | 15 min dark ambient",
+    "description": "Dark ambient ritual music: a 15-minute piece in D minor at 76 BPM for kalimba, timpani, frame drums, bowed strings and drone, where one three-note refrain is buried and recovered over three movements.\n\nThe refrain is the memory. It opens as three notes on a kalimba (root, sixth, octave), is lost, and is rebuilt a note at a time until the whole line plays in every voice at once, and then alone. The notes on the page never change: the two degrees the modes move under them do the work, so the same line reads grave in D aeolian (wood), a semitone darker in D phrygian (stone) and warm in D dorian (air).\n\nThree strata, one ground. 294 bars, 24 sections, written as text and rendered in the browser.\n\nChapters\n0:00 Dust — the refrain, three notes on a kalimba\n0:25 Wood — the first stratum, D aeolian\n2:18 Carry\n4:25 Stone — the second stratum, D phrygian\n6:31 Forge\n8:00 Strain\n8:37 Shatter\n9:28 Ash — the rebuild begins\n10:56 Gather — the third stratum, D dorian\n12:37 Whole — the line in every voice at once\n13:53 After\n14:56 Dust again\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. \n\nEvery song here is a text file. This one is songs/strata.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+    "tags": [
+      "dark ambient",
+      "ritual ambient",
+      "drone music",
+      "kalimba",
+      "timpani",
+      "generative music",
+      "live coding",
+      "strudel",
+      "tidalcycles",
+      "algorave",
+      "minimalism",
+      "modal music",
+      "dorian",
+      "phrygian",
+      "long form ambient",
+      "focus music",
+      "D minor",
+      "procedural music",
+      "creative coding",
+      "music video"
+    ],
+    "hashtags": [
+      "#darkambient",
+      "#livecoding",
+      "#strudel"
+    ]
+  },
   "prompt": "a 17-minute ritual epic: a memory (the refrain) rebuilt across three movements in D aeolian, phrygian and dorian, ending where it began",
   "requests": [
     {

@@ -1,4 +1,35 @@
 {
+  "made": "2026-09-20",
+  "youtube": {
+    "url": "",
+    "title": "duel — two acoustic guitar players trading solos, six exchanges",
+    "description": "Acoustic guitar duel: two steel-string players trading six solos in E dorian at 125 BPM, over acoustic bass, cajon and shakers. Every note is written by hand, none generated.\n\nTwo players, not two sounds. One is tight and bright, close-miked and dry, legato, accenting on the beat, sitting left. The other is looser, warmer, roomier, punchier in the attack, leaning on the offbeats, sitting right. They play together in the intro, verse, break and pickup, then answer each other solo for solo. In three of the six exchanges they step on each other, the next player coming in under the last bar while the first refuses to stop. The finale ends the duel together, one on the coda's line a third up, the other pulsing beneath it.\n\nWritten as text, mixed by measurement, rendered in the browser.\n\nChapters\n0:00 Intro and verse\n0:23 First exchange\n0:38 The answer\n0:53 Second exchange\n1:09 The answer\n1:24 Break\n1:32 Third exchange\n1:47 The answer\n2:03 Fourth exchange\n2:18 The answer\n2:33 Pickup into the fifth\n2:53 The answer, both at once\n3:08 Coda, both players\n3:23 Outro\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. \n\nEvery song here is a text file. This one is songs/duel.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+    "tags": [
+      "acoustic guitar",
+      "guitar duel",
+      "trading solos",
+      "fingerstyle guitar",
+      "steel string guitar",
+      "acoustic instrumental",
+      "guitar solo",
+      "folk instrumental",
+      "dorian",
+      "cajon",
+      "generative music",
+      "live coding",
+      "strudel",
+      "tidalcycles",
+      "creative coding",
+      "procedural music",
+      "guitar duet",
+      "music video"
+    ],
+    "hashtags": [
+      "#acousticguitar",
+      "#guitarsolo",
+      "#livecoding"
+    ]
+  },
   "prompt": "porch with a second, nylon guitar: alongside the steel in the ensemble sections, dueling it solo for solo, together at the end",
   "requests": [
     {

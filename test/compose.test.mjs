@@ -51,13 +51,15 @@ test('notesView merges source comments with the metadata file, per section in so
   assert.deepEqual(b, { text: 'raised so b lifts off a', where: 'drums.density', change: '0.5 → 0.8', detail: '2026-09-10: make b busier' });
   assert.deepEqual(v.sections[0].items.at(-1), { text: 'LinnDrum: crisper hats than the 909', where: '', change: '', detail: '2026-09-11: brighter kit' });
   assert.deepEqual(v.sections[0].items[0], { text: 'the song' });
-  // every shipped notes file has the shape the card reads
+  // every shipped notes file says when the song was made, and any provenance in it has the shape the card reads
   for (const f of fs.readdirSync(path.join(ROOT, 'songs')).filter((f) => f.endsWith('.notes.json') && !f.startsWith('_t_'))) { // _t_: another test file's fixture, written and removed while this one runs
     const m = JSON.parse(fs.readFileSync(path.join(ROOT, 'songs', f), 'utf8'));
     const song = fs.readFileSync(path.join(ROOT, 'songs', f.replace(/\.notes\.json$/, '.strudel')), 'utf8');
+    assert.match(m.made ?? '', /^\d{4}-\d\d-\d\d$/, `${f} says when the song was made`);
     const view = notesView(song, m);
-    assert.ok(view.prompt && view.requests, `${f} has a prompt and at least one request`);
-    for (const r of m.requests) for (const c of r.changes) assert.ok(c.why && c.section, `${f}: every change says where and why`);
+    if (m.requests) assert.ok(view.prompt && view.requests, `${f} with requests has a prompt`);
+    for (const r of m.requests ?? []) for (const c of r.changes) assert.ok(c.why && c.section, `${f}: every change says where and why`);
+    if (m.youtube) assert.ok(m.youtube.title && m.youtube.description && m.youtube.tags.length, `${f}: youtube details carry a title, a description and tags`);
   }
 });
 

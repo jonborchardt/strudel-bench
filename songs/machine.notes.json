@@ -1,4 +1,35 @@
 {
+  "made": "2026-09-10",
+  "youtube": {
+    "url": "",
+    "title": "machine — filthy mechanical industrial rock, one chord, no mercy",
+    "description": "Industrial rock instrumental: filthy, mechanical, 120 BPM straight 4/4 in E minor, on one chord for the whole track. Distorted kit, corroded bass, saturated synths and texture doing the work harmony refuses to.\n\nThe groove is a physical loop and everything around it corrodes. Tension comes from density, drive, distortion, filtering and noise, never from a chord change. Each rebuild is more damaged than the last, and the ending is a burnout, not a resolution.\n\nWritten as text, mixed by measurement rather than by ear, rendered in the browser.\n\nChapters\n0:00 The machine starts\n0:16 Verse\n0:32 Build and the first chorus\n0:56 Breakdown and rebuild\n1:28 Chorus 2\n1:44 Chorus 3\n2:00 Burnout\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. \n\nEvery song here is a text file. This one is songs/machine.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+    "tags": [
+      "industrial rock",
+      "industrial music",
+      "instrumental metal",
+      "heavy electronic",
+      "distortion",
+      "E minor",
+      "one chord",
+      "noise rock",
+      "machine music",
+      "generative music",
+      "live coding",
+      "strudel",
+      "tidalcycles",
+      "algorave",
+      "creative coding",
+      "procedural music",
+      "dark electronic",
+      "music video"
+    ],
+    "hashtags": [
+      "#industrial",
+      "#instrumental",
+      "#livecoding"
+    ]
+  },
   "requests": [
     {
       "date": "2026-09-12",

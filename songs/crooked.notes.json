@@ -1,4 +1,39 @@
 {
+  "made": "2026-09-22",
+  "youtube": {
+    "url": "",
+    "title": "crooked — jazz in 11/8, a metre jazz doesn't use | Balkan quartet, E phrygian",
+    "description": "Jazz in 11/8: a Balkan band playing jazz changes in E phrygian, grouped 3+3+3+2 so three long groups are followed by a short one and every bar is cut off a beat early. Sax, upright bass, piano and a darbuka where the drum kit would be.\n\nNot a jazz quartet in an odd time signature — a different band entirely. 5/4 and 7/8 are Brubeck's, so this is in 11, which almost no jazz record uses, and the instruments are the ones that play it: a darbuka's doum, tek and ka instead of ride and snare, and a sax that mixes three recorded articulations, plain, vibrato and tongued short, picked per note. Everything melodic in the song is one three-note cell — a note, a rest, a leap of a fourth — which fills one group of the 3+3+3+2 exactly, then gets transposed, inverted, filled in and fragmented. The head states it, the sixteen-bar solo develops it, and the bass quotes it back during its own solo, alone with the drum.\n\nThe bridge is the only place the song leaves either the key or the metre, and it leaves both at once. C major is E phrygian's own pitch collection with the tonic moved, so not one new note enters — it simply turns the light on. The metre goes to 4/4 but the pulse does not change: 11/8 at 290 and 4/4 at 145 are the same eighth note, so only the grouping moves, which is what makes the 11 feel like home when it comes back. It ends on Em7, at once the third chord of C major and the tonic of E phrygian, and hands the song over without a seam.\n\nSeven sections, 2:30, mixed by measurement. E phrygian for the flat second, which is the Balkan cadence and a jazz colour at the same time: Em7, F, Em7, Dm7.\n\nChapters\n0:00 Head — the tune, no piano, the kit at its bones\n0:18 Solo — the full band arrives\n0:55 Bridge — C major and 4/4, the same pulse underneath\n1:08 Turn — the sax lays out and the bass opens up\n1:17 Strip — the bass alone with the darbuka\n1:35 Build — the climax, sax and vibraphone on the same cell\n2:12 Out — the head again\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. \n\nEvery song here is a text file. This one is songs/crooked.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+    "tags": [
+      "jazz",
+      "odd time signature",
+      "11/8",
+      "odd meter jazz",
+      "balkan jazz",
+      "world jazz",
+      "saxophone",
+      "upright bass",
+      "darbuka",
+      "phrygian",
+      "E phrygian",
+      "modal jazz",
+      "bass solo",
+      "polymeter",
+      "instrumental jazz",
+      "generative music",
+      "live coding",
+      "strudel",
+      "tidalcycles",
+      "creative coding",
+      "procedural music",
+      "music video"
+    ],
+    "hashtags": [
+      "#jazz",
+      "#oddtime",
+      "#livecoding"
+    ]
+  },
   "prompt": "jazz, but deliberately not standard jazz: 11/8 grouped 3+3+3+2, a Balkan band playing jazz changes",
   "requests": [
     {

@@ -3,7 +3,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
-import { streamOf, titleOf, frameCount, renderFrames, drawTitle, LEAD, TAIL } from '../web/visual/export.mjs';
+import { streamOf, frameCount, renderFrames, drawTitle, LEAD, TAIL } from '../web/visual/export.mjs';
+import { titleOf } from '../lib/title.mjs';
 import { clockOf, fallbackScore } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import tunnel from '../web/visual/tunnel.mjs';

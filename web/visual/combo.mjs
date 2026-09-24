@@ -65,7 +65,6 @@ export default {
     const s = {
       pal, size: { ...size }, bg: [pal.hue, 30, 4],
       weight: lerp(0.7, 1.5, p.mass), jitter: lerp(0, 1, p.jitter), spread: lerp(0.85, 1.2, p.spread), motion: lerp(0.7, 1.3, p.motion),
-      cps: score.cps, beats: 4,
       roles: score.sections.map((x) => x.role ?? 'none'),
       slotOf: Object.fromEntries(Object.entries(score.cast).map(([n, c]) => [n, c.slot])),
       playsIn: Object.fromEntries(Object.keys(score.cast).map((n) => [n, score.sections.map((x) => ((x.parts?.[n]?.onsets ?? 0) > 0 ? 1 : 0))])), // a player is on stage only in the sections its part sounds in
@@ -82,7 +81,6 @@ export default {
 
   step(s, dt, events, clock) {
     s.t += dt;
-    s.beats = clock.beats || 4;
     const role = clock.index >= 0 ? s.roles[clock.index] ?? 'none' : 'none', want = SIT[role] ?? SIT.none;
     s.energy = ease(s.energy, clock.energy, 2, dt);
     for (const k of Object.keys(want)) s.sit[k] = ease(s.sit[k], want[k], 1.2, dt);
@@ -164,7 +162,6 @@ export default {
       const step = Math.sin(s.t * 0.17 * s.motion + q.ph2) * 0.5 + Math.sin(s.t * 0.29 * s.motion + q.ph1) * 0.5;
       q.angle = q.base + wob * 0.16 * lerp(1.2, 0.6, s.energy);
       q.near = 1 + step * 0.09 * lerp(1.2, 0.7, s.energy);
-      q.angleZ = Math.sin(q.angle);
       q.hueAt = ease(q.hueAt, mine || !lit ? q.hue : lerp(q.hue, lit.hue, 0.3), 0.5, dt); // comping, a player takes on some of the soloist's colour
       q.shove = decay(q.shove, 3, dt);
       q.lo = ease(q.lo, q.mid - 0.03, 0.06, dt); q.hi = ease(q.hi, q.mid + 0.03, 0.06, dt); // the register relaxes back, so one old leap does not use up the instrument for ever
@@ -175,11 +172,10 @@ export default {
       }
       for (const r of q.ripples) { r.r += dt * (0.7 + 0.5 * r.w); r.hot = decay(r.hot, 2.6, dt); }
       q.ripples = q.ripples.filter((r) => r.hot > 0.03 && r.r < 1.3);
-      const idle = 0.3 + 0.7 * q.rest;
       for (const d of q.dots) { // shaken hard when played, and always settling and shifting when not
         d.v = decay(d.v, 5, dt);
-        d.px = d.x + Math.sin(s.t * 26 + d.ph) * 0.05 * d.v + Math.sin(s.t * 0.9 * s.motion + d.ph) * 0.05 * idle;
-        d.py = d.y + Math.cos(s.t * 31 + d.ph) * 0.04 * d.v + Math.cos(s.t * 0.7 * s.motion + d.ph) * 0.04 * idle;
+        d.px = d.x + Math.sin(s.t * 26 + d.ph) * 0.05 * d.v + Math.sin(s.t * 0.9 * s.motion + d.ph) * 0.05 * q.idle;
+        d.py = d.y + Math.cos(s.t * 31 + d.ph) * 0.04 * d.v + Math.cos(s.t * 0.7 * s.motion + d.ph) * 0.04 * q.idle;
       }
     }
     for (const u of s.waves) { u.r += dt * 0.85; u.hot = decay(u.hot, 1.5, dt); }
@@ -220,7 +216,7 @@ export default {
     ctx.restore();
 
     // the players, back to front: each one the instrument it is played on, ringing
-    for (const name of [...s.order].sort((a, b) => s.seats[a].angleZ - s.seats[b].angleZ)) {
+    for (const name of [...s.order].sort((a, b) => Math.sin(s.seats[a].angle) - Math.sin(s.seats[b].angle))) {
       const q = s.seats[name], p = at(q);
       if (q.here < 0.02) continue; // its part does not sound in this section: off stage
       const sc = p.scale * (1.3 + 0.5 * q.sw) * lerp(0.7, 1, q.here), col = (a, l = 70) => hsla(q.hueAt + s.hueShift, 78, l, a * q.here * lit);
@@ -310,8 +306,10 @@ export default {
 function restring(s, q) {
   const b = BUILD.line, n = b.n[0] + Math.round(rand(s) * (b.n[1] - b.n[0]));
   q.form = 'strings'; q.thick = b.thick; q.dots = [];
-  q.els = Array.from({ length: n }, (_, i) => ({ amp: 0, phase: i * 0.7, freq: lerp(6, 13, i / Math.max(1, n - 1)) * q.ring, hot: 0, hold: 0, age: 9 }));
+  q.els = strings(n, q.ring);
 }
+/** n elements (strings, bars or arcs) at rest, each tuned a little higher than the last */
+const strings = (n, ring) => Array.from({ length: n }, (_, i) => ({ amp: 0, phase: i * 0.7, freq: lerp(6, 13, i / Math.max(1, n - 1)) * ring, hot: 0, hold: 0, age: 9 }));
 
 /** midi note to 0..1 over the range a body could reach: 36 (C2) at the bottom, 84 (C6) at the top. */
 const pitch = (n) => clamp((n - 36) / 48);
@@ -327,19 +325,19 @@ function seatFor(s, name, slot) {
   const b = BUILD[slot] ?? BUILD.grain, r = rand(s), r2 = rand(s), r3 = rand(s);
   const n = b.n[0] + Math.round(r * (b.n[1] - b.n[0])), ring = lerp(b.ring[0], b.ring[1], r2);
   q = {
-    slot, form: b.form, angle: 0, angleZ: 0, jit: (rand(s) - 0.5) * 0.5,
+    slot, form: b.form, angle: 0, jit: (rand(s) - 0.5) * 0.5,
     hue: slot === 'ground' ? s.pal.hue + 20 : slot === 'impulse' ? s.pal.hue - 25 : slot === 'field' ? s.pal.field : s.pal.line + s.order.length * 24,
     ring, tall: lerp(b.tall[0], b.tall[1], r3), wide: lerp(0.8, 1.15, r2), thick: b.thick,
     base: 0, want: 0, near: 1, ph1: rand(s) * TAU, ph2: rand(s) * TAU, // base: where it stands now, want: where the band has room for it; near/ph: the drift around that, nobody sits still
     fast: 0, slow: 0, say: 0, hot: 0, sw: 0.1, lean: 0, shove: 0, lastWave: -9, here: 0, rest: 1, idle: 1,
     lo: 0.45, hi: 0.55, mid: 0.5, tint: 0.5, // lo/hi/mid: the register this player has actually used lately, what its instrument is played over
-    els: Array.from({ length: b.form === 'membrane' || b.form === 'aura' ? 0 : n }, (_, i) => ({ amp: 0, phase: i * 0.7, freq: lerp(6, 13, i / Math.max(1, n - 1)) * ring, hot: 0, hold: 0, age: 9 })),
+    els: b.form === 'membrane' || b.form === 'aura' ? [] : strings(n, ring),
     ripples: [],
     dots: b.form === 'cluster' ? Array.from({ length: n }, () => { const x = (rand(s) - 0.5) * 1.5, y = (rand(s) - 0.5) * 1.2; return { x, y, px: x, py: y, ph: rand(s) * TAU, v: 0 }; }) : [],
   };
   q.hueAt = q.hue;
   s.seats[name] = q; s.order.push(name);
   const m = s.order.length;
-  s.order.forEach((k, i) => { const seat = s.seats[k]; seat.base = -Math.PI / 2 + (i / m) * TAU + seat.jit * s.jitter * (TAU / (m * 3)); seat.want = seat.base; seat.angle = seat.base; seat.angleZ = Math.sin(seat.angle); });
+  s.order.forEach((k, i) => { const seat = s.seats[k]; seat.base = -Math.PI / 2 + (i / m) * TAU + seat.jit * s.jitter * (TAU / (m * 3)); seat.want = seat.base; seat.angle = seat.base; });
   return q;
 }

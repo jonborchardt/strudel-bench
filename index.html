@@ -16,7 +16,8 @@
 <main>
   <!-- song header: which song, new, save, export -->
   <header class="card row" id="head">
-    <label class="field">Song <select id="song"></select></label>
+    <!-- the song pick: the shared popover, each row the song's name over the date it was made and what it is; the select stays as the page's state -->
+    <label class="field">Song <button id="songpick" class="song" aria-haspopup="listbox"></button></label><select id="song" hidden></select>
     <button id="new" title="create a song from the minimal template">+ New song</button>
     <span class="field" id="packs" title="sample packs this song declares (packs: [...]): deployed ships with the site, local stays on this machine, missing is not in samples/user/ so its sounds will not play" hidden></span>
     <span class="grow"></span>
@@ -32,6 +33,9 @@
     </span>
   </header>
 
+  <!-- stage: the song's visual performance (web/visual/): a world composed from the song's score at every play, driven by the parts as they sound; the box fullscreens as a whole -->
+  <details class="card rack stage pane" aria-label="stage"><summary><h2>Stage</h2><small>&middot; the song's visual performance</small></summary><div class="stagebox" id="stagebox"><canvas id="stage"></canvas><select id="world" title="the world the stage plays: auto is the song's own pick (its visual header, else the selection), a name plays that world alone, overlay composes two (the director: the second world breathing over the first); a pick here is a view setting, never written to the song and not what the video exports. [ and ] step through them"></select><button id="fullscreen" title="fullscreen (esc leaves)">&#x26F6;</button></div></details>
+
   <!-- transport: one play/pause toggle, stop, the position slider with a tick per section, and where the playhead is -->
   <section class="card rack transport" id="transport" aria-label="transport">
     <button id="play" class="primary">&#9654; Play</button>
@@ -42,9 +46,6 @@
     <canvas id="scope" width="320" height="42" title="the mix as it plays and its peak in dBFS (red: clipping)"></canvas>
     <span class="where" id="where">&mdash;</span>
   </section>
-
-  <!-- stage: the song's visual performance (web/visual/): a world composed from the song's score at every play, driven by the parts as they sound; the box fullscreens as a whole -->
-  <section class="card rack stage" aria-label="stage"><div class="stagebox" id="stagebox"><canvas id="stage"></canvas><select id="world" title="the world the stage plays: auto is the song's own pick (its visual header, else the selection), a name plays that world alone, overlay composes two (the director: the second world breathing over the first); a pick here is a view setting, never written to the song and not what the video exports. [ and ] step through them"></select><button id="fullscreen" title="fullscreen (esc leaves)">&#x26F6;</button></div></section>
 
   <!-- mix: the arrangement strip over one section (the playhead's, or the pinned one) as layers x axes; knobs and word pills edit the source -->
   <details class="card rack" id="mix" open hidden>
@@ -159,7 +160,8 @@
   import { composeVisual, onsetsOf, samplesOf } from './lib/visual.mjs';
   import { mountStage, worldOf, WORLDS, PRESETS } from './web/visual/stage.mjs';
   import { fallbackScore } from './web/visual/host.mjs';
-  import { streamOf, titleOf, exportVideo, pickCodecs, TAIL } from './web/visual/export.mjs';
+  import { streamOf, exportVideo, pickCodecs, TAIL } from './web/visual/export.mjs';
+  import { titleOf } from './lib/title.mjs';
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
   $('nav').innerHTML = nav('Compose');
@@ -215,13 +217,27 @@
     const h = `#${$('song').value}${mixSection ? `/${mixSection}` : ''}`;
     if (decodeURIComponent(location.hash) !== h) history.replaceState(null, '', h);
   }
+  let about = {}; // songs/index.json by name: when the song was made and its first comment line
+  const mdy = (iso = '') => { const [y, m, d] = iso.split('-'); return y ? `${+m}/${+d}/${y}` : ''; }; // the index keeps the date sortable, the page shows it the way it is read here
+  function songBtn() { // the header button: the song, with the date it was made beside it
+    const n = $('song').value;
+    $('songpick').innerHTML = `<b>${esc(n)}</b>${about[n]?.date ? `<small>${esc(mdy(about[n].date))}</small>` : ''}`;
+    $('songpick').title = about[n]?.note || 'pick a song';
+  }
+  $('songpick').onclick = () => openPickList($('songpick'), {
+    names: [...$('song').options].map((o) => o.value), cur: $('song').value,
+    tags: Object.fromEntries(Object.values(about).map((s) => [s.name, mdy(s.date)])), // the date rides on the name's line
+    subs: Object.fromEntries(Object.values(about).map((s) => [s.name, s.note])), // what the song is, under it
+    onPick: (v) => { if (v === $('song').value) return; $('song').value = v; $('song').onchange(); },
+  });
   async function loadList(want = hashParts()[0]) {
     let shared = null; // #s=...: a song carried by the link itself
     if (location.hash.startsWith('#s=')) { try { shared = await shareDecode(location.hash.slice(3)); } catch { status('that link does not decode'); } }
     if (shared && !NAME.test(shared.name)) shared.name = 'shared.strudel'; // never land a link's text under another song's name (Save would write it there)
-    const listed = await (await fetch('songs/index.json')).json();
-    const unlisted = !shared && NAME.test(want) && !listed.includes(want) && (await fetch(`songs/${want}`)).ok ? [want] : []; // a `// @hidden` song opened by its url
-    const names = [...new Set([...listed, ...drafts(), ...unlisted, ...(shared ? [shared.name] : [])])].sort();
+    const listed = await (await fetch('songs/index.json')).json(); // [{ name, date, note }]
+    about = Object.fromEntries(listed.map((s) => [s.name, s]));
+    const unlisted = !shared && NAME.test(want) && !about[want] && (await fetch(`songs/${want}`)).ok ? [want] : []; // a `// @hidden` song opened by its url
+    const names = [...new Set([...listed.map((s) => s.name), ...drafts(), ...unlisted, ...(shared ? [shared.name] : [])])].sort();
     $('song').innerHTML = names.map((n) => `<option>${n}</option>`).join('');
     if (shared) want = shared.name;
     if (names.includes(want)) $('song').value = want;
@@ -233,6 +249,7 @@
   }
   async function loadSong() {
     const name = $('song').value;
+    songBtn();
     location.hash = name;
     const r = await fetch(`songs/${name}`); // not on disk: a song made in this browser (github pages)
     loaded = (r.ok ? await r.text() : localStorage.getItem(DRAFT + name) ?? '').replace(/\r\n/g, '\n'); // the textarea normalises line breaks, so compare like for like
@@ -607,6 +624,7 @@
     if (!NAME.test(name)) return status(`bad name: ${name} (letters, digits, . _ -)`);
     if ([...$('song').options].some((o) => o.value === name) && !confirm(`${name} exists. Overwrite it?`)) return;
     await store(name, TEMPLATE);
+    if (server) await fetch(`songs/${notesFile(name)}`, { method: 'PUT', body: JSON.stringify({ made: new Date().toISOString().slice(0, 10) }, null, 1) }); // the metadata file starts with the date the song was made
     await loadList(name);
     status(`created ${name}${server ? '' : ' in this browser'}`);
   }
@@ -1277,14 +1295,15 @@
   let pickFor = null; // what the open #pick menu does: { onPick(value), preview?(value, btn) }
   // the one menu behind every pick button, the materials panel's and the section pane's: `names` as rows (`labels` for their
   // text, `icon` for html before it), a play button per row when `preview` is given, and an empty row meaning "unset" when `ph` is
-  function openPickList(btn, { names, cur = '', ph, labels = {}, icon, onPick, preview, key }) { // key: html pinned under the list (the kit icon legend)
+  function openPickList(btn, { names, cur = '', ph, labels = {}, tags = {}, subs = {}, icon, onPick, preview, key }) { // tags: a lighter note after the name; subs: a lighter second line under it; key: html pinned under the list (the kit icon legend)
     pickFor = { onPick, preview };
     $('pick').querySelector('.pvlvl').hidden = !preview; // the preview level only matters where rows can be heard
     $('pickkey').innerHTML = key ?? ''; $('pickkey').hidden = !key;
-    $('picklist').innerHTML = [...(ph != null ? [''] : []), ...names].map((n) => `<div class="row" role="option" aria-selected="${n === cur}" data-v="${esc(n)}">${icon?.(n) ?? ''}<span>${n ? esc(labels[n] ?? n) : `<i>${esc(ph)}</i>`}</span>${preview ? '<button class="pv" title="hear it (pauses the song)">&#9654;</button>' : ''}</div>`).join('');
+    $('pick').classList.toggle('wide', Object.values(subs).some(Boolean)); // a second line wants the room
+    $('picklist').innerHTML = [...(ph != null ? [''] : []), ...names].map((n) => `<div class="row" role="option" aria-selected="${n === cur}" data-v="${esc(n)}"${n && subs[n] ? ` title="${esc(subs[n])}"` : ''}>${icon?.(n) ?? ''}<span>${n ? esc(labels[n] ?? n) : `<i>${esc(ph)}</i>`}${n && tags[n] ? `<small class="when">${esc(tags[n])}</small>` : ''}${n && subs[n] ? `<small>${esc(subs[n])}</small>` : ''}</span>${preview ? '<button class="pv" title="hear it (pauses the song)">&#9654;</button>' : ''}</div>`).join('');
     const r = btn.getBoundingClientRect();
-    Object.assign($('pick').style, { top: `${r.bottom + 4}px`, left: `${Math.min(r.left, innerWidth - 400)}px` });
     $('pick').showPopover();
+    Object.assign($('pick').style, { top: `${r.bottom + 4}px`, left: `${Math.max(0, Math.min(r.left, innerWidth - $('pick').offsetWidth - 8))}px` }); // measured once shown: the menu is wider with a second line
     $('pickq').value = ''; filterPick(); $('pickq').focus();
     $('picklist').querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'center' });
   }

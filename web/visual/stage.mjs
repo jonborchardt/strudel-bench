@@ -27,7 +27,10 @@ export const worldOf = (score, opts = {}) => {
 export const withPick = (score, pick) => {
   if (!pick) return score;
   if (WORLDS[pick]) { const { composition, ...rest } = score; return { ...rest, world: pick }; }
-  if (PRESETS.includes(pick)) return { ...score, composition: compositionOf(pick, score.world, score.odds ?? {}) };
+  if (PRESETS.includes(pick)) { // the song's own cast and visit rate stay: its written worlds (when it wrote two) and its `every`
+    const own = score.composition, worlds = own?.worlds?.length > 1 ? own.worlds : null;
+    return { ...score, composition: { ...compositionOf(pick, score.world, score.odds ?? {}, worlds), ...(own?.every ? { every: own.every } : {}) } };
+  }
   return score;
 };
 
@@ -46,12 +49,14 @@ export function mountStage(box, canvas, { clock, debug = false, solo = null }) {
   const label = (sc) => { const p = shown(sc), c = p.composition; return c && c.preset !== 'single' && c.worlds.length > 1 ? `${c.preset} (${c.worlds.join(' + ')})` : WORLDS[p.world] ? p.world : 'tunnel'; };
   const idOf = (sc) => JSON.stringify([label(sc), sc.seed, sc.palette]);
   const lastAt = {}; // part -> audio time of its last event, for the overlay's "active" list
-  const size = () => {
+  const size = () => { // true when the box is on screen (the stage card open); closed, it has no size and nothing is worth drawing
     const dpr = Math.min(2, window.devicePixelRatio || 1), r = box.getBoundingClientRect();
     const w = Math.max(2, Math.round(r.width * dpr)), h = Math.max(2, Math.round(r.height * dpr));
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    return r.width > 0 && r.height > 0;
   };
-  new ResizeObserver(size).observe(box);
+  new ResizeObserver(() => (running ? size() : idle())).observe(box); // a resize (the stage card opening, fullscreen) clears the canvas, so a still frame is redrawn from state
+
   size();
   const idle = () => { size(); ctx.clearRect(0, 0, canvas.width, canvas.height); perf?.draw(ctx, canvas.width, canvas.height); };
   const build = (sc) => createPerformance(worldOf(shown(sc)), shown(sc), { w: 16, h: 9 });
@@ -77,11 +82,9 @@ export function mountStage(box, canvas, { clock, debug = false, solo = null }) {
   }
   function frame() {
     if (!running) return;
-    size();
-    const c = clock();
-    fired = perf.advance(c.now, c.cycle);
-    perf.draw(ctx, canvas.width, canvas.height);
-    if (stage.debug) overlay(c);
+    const shown = size(), c = clock();
+    fired = perf.advance(c.now, c.cycle); // the state always advances, so opening the card later shows the song where it is
+    if (shown) { perf.draw(ctx, canvas.width, canvas.height); if (stage.debug) overlay(c); }
     requestAnimationFrame(frame);
   }
   const stage = {
