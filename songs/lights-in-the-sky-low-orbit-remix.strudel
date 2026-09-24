@@ -1,7 +1,8 @@
-// low-orbit: C minor at 110, about 3:20. A new song built around one borrowed voice.
+// Nine Inch Nails - Lights In The Sky (Low Orbit Remix): C minor at 110, about 3:20. A remix from the
+// vocal stem alone; every other part is written here.
 //
 // The voice is every one of the 33 sung fragments of Nine Inch Nails' "Lights in the Sky" (The Slip
-// multitracks, CC BY-NC-SA 3.0, cut by strudle-pack into samples/user/low-orbit-cuts), plus the three
+// multitracks, CC BY-NC-SA 3.0, cut by strudle-pack into samples/user/lights-in-the-sky-low-orbit-remix-cuts), plus the three
 // bar-exact chunks of the same stem that carry voice no transcript caught, each placed in the gap it falls
 // in. That is every distinct thing the vocal stem says. Nothing else is borrowed: no piano, no flute, no
 // ambience from that record. Every note under the voice is written here.
@@ -234,7 +235,7 @@ const bed = { level: 1, width: .6, position: .32,
 const V = { level: 1.2, space: .4, width: .35 };        // the voice: dry and close, it brings its own room
 const VF = { level: 1.4, space: .3, width: .3 };
 
-song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['low-orbit-cuts', 'rooms'],
+song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['lights-in-the-sky-low-orbit-remix-cuts', 'rooms'],
        room: { ir: 'hall', size: 3.2, damping: 4500 },
        visual: { composition: 'overlay', worlds: ['orrery', 'sediment'], every: 16 } }, [
 
