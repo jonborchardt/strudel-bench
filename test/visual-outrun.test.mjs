@@ -60,13 +60,23 @@ test('every cast job reaches the state: the melody steers, the bass bends the ro
   const still = fresh(); outrun.step(still, STEP, [], clockOf(score, 0));
   const kicked = one({ ...base, layer: 'drums', kind: 'drums', voice: 'bd', role: 'pulse' });
   assert.ok(kicked.vel > still.vel && kicked.kick > 0.9, 'a kick is a burst of speed and a bob');
-  const hit = fresh(); hit.cars = []; // the road ahead clear: a snare is a car to pass (some snares, not every one)
-  for (let i = 0; i < 12 && !hit.cars.length; i++) outrun.step(hit, STEP, [{ ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }], clockOf(score, 0));
-  assert.equal(hit.cars.length, 1, 'an impact puts a car just ahead');
-  assert.ok(hit.cars[0].z < hit.pos + 8 && Math.abs(hit.cars[0].x - hit.x) > 0.4, 'close, and not in our lane');
-  const jam = fresh(); jam.cars = [{ z: jam.pos + 4, x: 0.62, v: 3, hue: 0, kind: 'car', lit: 0, passed: 0, hit: 0 }];
-  for (let i = 0; i < 12; i++) outrun.step(jam, STEP, [{ ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }], clockOf(score, 0));
-  assert.equal(jam.cars.length, 1, 'but not when a car is already close ahead, so the traffic never stacks');
+  const hit = one({ ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }), first = still.cars.sort((a, b) => a.z - b.z)[0];
+  assert.equal(hit.cars.length, still.cars.length, 'a snare conjures no car');
+  assert.ok(hit.cars.sort((a, b) => a.z - b.z)[0].v < first.v && hit.cars[0].lit > 0.9, 'the car ahead brakes, lights on');
+  // contact: a car in our lane just ahead is followed, never driven through; a kick while on it shoves it off the road
+  const carAt = (s, z) => ({ z, x: 0, v: 2, hue: 0, kind: 'car', lit: 0, passed: 0, hit: 0, knocked: 0, spin: 0 });
+  const tail = fresh(); tail.cars = [carAt(tail, tail.pos + 0.9)]; tail.vel = 12; tail.melX = 0; tail.avoid = 0;
+  let gapMin = Infinity; for (let i = 0; i < 90; i++) { outrun.step(tail, STEP, [], clockOf(score, 0)); tail.avoid = 0; tail.x = 0; gapMin = Math.min(gapMin, tail.cars[0].z - tail.pos); }
+  assert.ok(gapMin > 0.5 && tail.vel <= 2.01 && !tail.cars[0].knocked, `we sit behind it at its speed (gap ${gapMin.toFixed(2)}, vel ${tail.vel.toFixed(2)})`);
+  outrun.step(tail, STEP, [{ ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }], clockOf(score, 0)); outrun.step(tail, STEP, [], clockOf(score, 0));
+  assert.ok(!tail.cars[0].knocked && tail.knocks === 0, 'a snare while already tucked in behind it is no crash');
+  const ram = fresh(); ram.cars = [carAt(ram, ram.pos + 1.5)]; ram.vel = 12; ram.melX = 0; ram.avoid = 0; // arriving on it as the snare lands: the crash
+  outrun.step(ram, STEP, [{ ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }], clockOf(score, 0)); outrun.step(ram, STEP, [], clockOf(score, 0));
+  assert.ok(ram.cars[0].knocked !== 0 && ram.knocks === 1, 'reaching it on a snare shoves it off');
+  Object.assign(tail, { cars: ram.cars, knocks: ram.knocks });
+  for (let i = 0; i < 60; i++) outrun.step(tail, STEP, [], clockOf(score, 0));
+  const knocked = tail.cars.find((c) => c.knocked);
+  assert.ok(!knocked || Math.abs(knocked.x) > 1.2, 'and it spins out past the shoulder (or is already behind us)');
   const hats = fresh(); for (let i = 0; i < 40; i++) outrun.step(hats, STEP, [{ ...base, layer: 'perc', kind: 'perc', voice: 'hh', role: 'grain' }], clockOf(score, 0));
   const planted = kinds(hats).length - kinds(still).length;
   assert.ok(planted > 3 && planted < 40, 'hats plant some of the roadside, not one each');
@@ -103,6 +113,10 @@ test('over a long run the traffic gets passed, the road bends both ways and the 
   assert.ok(s.score > 1000);
   assert.ok(s.cars.length <= 14);
   assert.ok(hi > 0 && lo < 0, 'the road bends both ways');
+  const HALF = { palm: 1.1, tree: 0.9, pine: 1, bush: 0.7, cactus: 0.55, rock: 0.6, cliff: 1.35, sign: 0.4, billboard: 1.05, lamp: 0.7, building: 0.65, house: 0.75, barn: 0.85, windmill: 0.95, lighthouse: 0.35, pylon: 0.85 };
+  const inRoad = s.segs.flatMap((x) => x.sprites).filter((o) => o.kind !== 'arch' && Math.abs(o.x) - (HALF[o.kind] ?? 0.6) * o.h < 1.16);
+  assert.deepEqual(inRoad, [], 'nothing planted reaches inside the shoulder');
+  assert.ok(s.cars.every((c) => c.knocked || Math.abs(c.x) <= 0.62), 'traffic keeps to its lanes unless knocked');
 });
 
 test('a plain pattern (no song) runs on the fallback score', async () => {

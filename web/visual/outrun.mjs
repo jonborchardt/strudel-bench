@@ -4,10 +4,13 @@
 // plays the game. The melody steers (a high note pulls the car right, a low one left, the counter nudges it); the
 // bass bends the road (a low note a left-hander, a high one a right, harder with the gain), and the car drifts to
 // the outside of every bend until the steering catches up, so what you watch is the driver fighting the road the
-// song draws, and swerving round the car ahead. A kick is a gear kick (a burst of speed, the car bobs, the exhaust
-// puffs), a snare or clap puts a slow car just ahead that gets passed at once, the hats plant the roadside (a palm, a
-// sign, a tree per hit, so a busy hi-hat lines the road and a sparse one leaves it open), the pad is the sky (its
-// level the cloud, its cutoff the light). Energy is the speed and the traffic; the role sets the pace. A riser is
+// song draws, and swerving round the car ahead. Traffic only ever arrives out of the fog at the far end, slower
+// than us; caught up in our lane, we sit behind it at its speed until the steering finds a lane, never through it,
+// unless we reach it just as a snare lands: then it is shoved off, spinning out to the shoulder, so a crash is a
+// hit on the beat and never a car driven through. A kick is a gear kick (a burst of speed, the car bobs, the exhaust
+// puffs); a snare or clap brakes the car ahead (its lights come on, we come up on it) and is the shoving hit; the hats plant the roadside (a palm, a sign, a tree per hit, so a busy
+// hi-hat lines the road and a sparse one leaves it open), every planted thing standing clear of the shoulder; the
+// pad is the sky (its level the cloud, its cutoff the light). Energy is the speed and the traffic; the role sets the pace. A riser is
 // the long climb at speed before a crest; the boundary is the CHECKPOINT, EXTENDED TIME, the next stage's scenery
 // (a coconut beach to establish; the gateway city, the canyon, the alps, the wheat fields, the cloudy pass and the
 // desert in turn to develop; the autobahn or the desert flats for a climax; the seaside town or the lakeside to
@@ -37,6 +40,8 @@ const LAND = {
 };
 const SKY = { cool: { top: [212, 60, 55], low: [200, 50, 80], sun: [48, 90, 92], stars: 0 }, warm: { top: [255, 55, 34], low: [28, 85, 62], sun: [22, 95, 62], stars: 0 }, dim: { top: [250, 40, 8], low: [265, 35, 22], sun: [50, 20, 88], stars: 1 }, pale: { top: [200, 12, 62], low: [195, 10, 78], sun: [50, 10, 90], stars: 0 } };
 const WORDS = ['GAS', 'MOTEL', 'DINER', 'RADIO', 'SURF', 'TIRES', 'CAFE', 'HOTEL', 'COLA', 'BEACH', 'OIL', 'PIZZA'];
+const EDGE = 1.22; // where the shoulder ends (the rumble strip is 1.16 wide): nothing planted reaches inside it
+const HALF = { palm: 1.1, tree: 0.9, pine: 1, bush: 0.7, cactus: 0.55, rock: 0.6, cliff: 1.35, sign: 0.4, billboard: 1.05, lamp: 0.7, building: 0.65, house: 0.75, barn: 0.85, windmill: 0.95, lighthouse: 0.35, pylon: 0.85 }; // each kind's half width at h = 1, the road side
 
 /** The stage of each section: by role, the develop ones in a seeded rotation, release alternating sea and lake. */
 const landsOf = (roles, rng) => {
@@ -48,9 +53,10 @@ const gap = (s, land) => land.gap[0] + rand(s) * (land.gap[1] - land.gap[0]);
 /** A thing at the roadside of segment `seg`: the stage's own pick unless `kind` says, on `side`, at a distance from the road that suits it. */
 const plant = (s, seg, land, side, kind = null) => {
   if (seg.sprites.length >= 3) return;
-  const k = kind ?? land.side[Math.floor(rand(s) * land.side.length)];
-  const x = k === 'arch' ? 0 : side * (k === 'cliff' ? 1.9 : k === 'lamp' || k === 'sign' ? 1.25 : k === 'building' ? 1.7 + rand(s) * 0.6 : 1.4 + rand(s) * 1.6);
-  seg.sprites.push({ kind: k, x, h: 0.8 + rand(s) * 0.5, v: rand(s), word: Math.floor(rand(s) * WORDS.length), dir: s.curveTo < 0 ? -1 : 1 });
+  const k = kind ?? land.side[Math.floor(rand(s) * land.side.length)], h = 0.8 + rand(s) * 0.5;
+  const out = k === 'lamp' || k === 'sign' || k === 'cliff' ? 0 : k === 'building' ? 0.3 : rand(s) * 1.2; // how far beyond the shoulder, past its own half width
+  const x = k === 'arch' ? 0 : side * (EDGE + (HALF[k] ?? 0.6) * h + out);
+  seg.sprites.push({ kind: k, x, h, v: rand(s), word: Math.floor(rand(s) * WORDS.length), dir: s.curveTo < 0 ? -1 : 1 });
 };
 /** Segment `i` of the road, generated on demand: the bend eases toward the bass's target (or wanders on its own), the slope toward the stage's roll, and the roadside fills by distance. */
 const segAt = (s, i) => {
@@ -65,11 +71,14 @@ const segAt = (s, i) => {
   }
   return s.segs[i - s.seg0];
 };
-const spawnCar = (s, z, frac, near = false) => {
-  if (s.cars.length >= MAX_CARS || (near && s.cars.some((c) => c.z > s.pos && c.z < s.pos + 9))) return; // a car put right ahead needs the road ahead clear, or the traffic stacks up
-  const r = rand(s), lanes = near ? LANES.filter((x) => Math.abs(x - s.x) > 0.4) : LANES, x = lanes.length ? lanes[Math.floor(rand(s) * lanes.length)] : 0;
-  s.cars.push({ z, x, v: (7 + 11 * s.energy) * frac, hue: Math.floor(rand(s) * 360), kind: r < 0.18 ? 'truck' : r < 0.32 ? 'van' : 'car', lit: near ? 1 : 0, passed: 0, hit: 0 });
+/** A car into the traffic at the far end of the road, out of the fog, so nothing ever pops in: in a lane, at a share `frac` of our nominal speed. */
+const spawnCar = (s, frac) => {
+  if (s.cars.length >= MAX_CARS) return;
+  const r = rand(s), x = LANES[Math.floor(rand(s) * LANES.length)];
+  s.cars.push({ z: s.pos + N * SEG * 0.98, x, v: (7 + 11 * s.energy) * frac, hue: Math.floor(rand(s) * 360), kind: r < 0.18 ? 'truck' : r < 0.32 ? 'van' : 'car', lit: 0, passed: 0, hit: 0, knocked: 0, spin: 0 });
 };
+/** The nearest car ahead of us, not yet knocked off. */
+const ahead = (s, from = 0) => s.cars.filter((c) => !c.knocked && c.z > s.pos + from).sort((a, b) => a.z - b.z)[0];
 const secsOf = (s, i) => s.secs[i] ?? 60;
 
 export default {
@@ -85,8 +94,8 @@ export default {
       roles, lands, landTo: lands[0] ?? 'beach', ground: [...first.ground], secs: score.sections.map((x) => (x.until - x.at) / score.cps),
       t: 0, pos: 0, vel: 0, energy: 0.5, speed: 1, traffic: 1, riser: 0, wasRiser: 0, beat: 0, beatPhase: 0, light: 0.6, cloud: 0.4, cloudTo: 0.4,
       x: 0, xTo: 0, steer: 0, melX: 0, nudge: 0, avoid: 0, curve: 0, curveTo: 0, slope: 0, slopeTo: 0, bassHold: 0,
-      seg0: 0, segs: [], sideNext: 0.5, bgX: 0, cars: [], carNext: 3, passed: 0, score: 0, hi: 1e6 + Math.floor(rng() * 9e6), time: 0, stage: 1, check: 0, flash: 0, lit: 0,
-      crash: 0, crashDir: 1, tumble: 0, bump: 0, kick: 0, rev: 0, shake: 0, wheel: 0,
+      seg0: 0, segs: [], sideNext: 0.5, bgX: 0, cars: [], carNext: 3, passed: 0, knocks: 0, score: 0, hi: 1e6 + Math.floor(rng() * 9e6), time: 0, stage: 1, check: 0, flash: 0, lit: 0,
+      crash: 0, crashDir: 1, tumble: 0, bump: 0, kick: 0, rev: 0, shake: 0, wheel: 0, shove: 0,
       bg: { peaks: shapes(), mesas: shapes(), city: shapes(), hills: shapes(), sea: shapes(), flat: shapes() },
       clouds: Array.from({ length: 6 }, () => ({ x: rng() * 3, y: 0.04 + rng() * 0.22, w: 0.1 + rng() * 0.2, a: 0.4 + rng() * 0.5 })),
       stars: Array.from({ length: 60 }, () => ({ x: rng() * 3, y: rng() * HOR * 0.9, w: 0.3 + rng() * 0.7 })),
@@ -94,7 +103,7 @@ export default {
     seed(s, rng);
     s.time = secsOf(s, 0) + 4;
     segAt(s, N + 2);
-    for (let i = 0; i < 3; i++) spawnCar(s, 5 + i * 5, 0.35 + rand(s) * 0.3);
+    for (let i = 0; i < 3; i++) { spawnCar(s, 0.35 + rand(s) * 0.3); s.cars[i].z = 6 + i * 5; } // the road is not empty on the first frame
     return s;
   },
 
@@ -118,14 +127,35 @@ export default {
     const off = Math.abs(s.x) > 1.05 ? 1 : 0;
     const vTo = s.crash ? 0 : (7 + 11 * s.energy) * s.speed * (1 + 0.5 * s.riser) * (off ? 0.5 : 1);
     s.vel = ease(s.vel, vTo, s.crash ? 4 : 0.8, dt);
-    s.pos += s.vel * dt; base = Math.floor(s.pos / SEG);
+    // the events, each by its part's job in the cast
+    for (const e of events) {
+      const slot = s.slotOf[e.layer] ?? DEFAULT_SLOT[e.kind] ?? 'grain', g = clamp(e.gain * e.velocity, 0, 1.5);
+      if (slot === 'transition') { if (e.dur >= 1) { s.flash = Math.max(s.flash, 0.7); s.bump = 1; plant(s, segAt(s, base + N - 2), land, rand(s) < 0.5 ? -1 : 1, 'billboard'); } } // the impact (a whole cycle long); a riser's slices are the clock's business
+      else if (e.role === 'pulse') { s.kick = 1; s.rev = 1; if (!s.crash) s.vel += 0.8 * g; } // a kick, whatever slot its part took: a gear kick
+      else if (e.role === 'impact') { const c = ahead(s, 1); if (c) { c.v *= 0.55; c.lit = 1; } s.lit = 1; s.shove = 1; } // the car ahead brakes, lights on, so we come up on it
+      else if (slot === 'impulse') s.kick = Math.max(s.kick, 0.5 * g);
+      else if (slot === 'ground') { if (e.note !== null) { s.curveTo = (clamp((e.note - 36) / 24) - 0.5) * 2 * CURVE * land.curve * clamp(g, 0.5, 1.2); s.bassHold = 1; } }
+      else if (slot === 'line') { if (e.note !== null) s.melX = lerp(-0.75, 0.75, clamp((e.note - 60) / 24)); }
+      else if (slot === 'counter') { if (e.note !== null) s.nudge = (clamp((e.note - 48) / 24) - 0.5) * 0.6; }
+      else if (slot === 'field') { s.cloudTo = clamp(0.3 + 0.6 * g); if (e.cutoff !== null) s.light = clamp(Math.log(e.cutoff / 200) / Math.log(40)); }
+      else if (e.role === 'grain' || slot === 'grain') { if (rand(s) < 0.4 * g) plant(s, segAt(s, base + N - 2), land, rand(s) < 0.5 ? -1 : 1); }
+    }
+    // the car ahead in our lane: on a hit it is shoved off the road (spinning out to the shoulder), otherwise we sit behind it, at its speed, until the steering finds a lane; never through it
+    let adv = s.vel * dt;
+    if (!s.crash) for (const c of s.cars) {
+      const d = c.z - s.pos;
+      if (c.knocked || d < -0.2 || d > 1.9 || Math.abs(c.x - s.x) > 0.5) continue;
+      if (!c.hit && s.shove > 0.3) { c.knocked = c.x > s.x + 0.02 ? 1 : c.x < s.x - 0.02 ? -1 : rand(s) < 0.5 ? -1 : 1; c.lit = 1; s.bump = 1; s.vel *= 0.85; s.score += 500; s.knocks++; s.shove = 0; }
+      else { s.vel = Math.min(s.vel, c.v); adv = Math.min(adv, Math.max(0, c.z + c.v * dt - 1.8 - s.pos)); if (!c.hit) { c.hit = 1; s.bump = Math.max(s.bump, 0.5); } c.lit = Math.max(c.lit, 0.6); } // 1.8 behind: its sprite stands clear above ours
+    }
+    s.pos += adv; base = Math.floor(s.pos / SEG);
     segAt(s, base + N + 1);
     if (base > s.seg0) { s.segs.splice(0, base - s.seg0); s.seg0 = base; }
     if (s.riser > 0) s.slopeTo = 0.07 * s.riser; // the long climb
     const here = segAt(s, base).curve;
     // the steering: the melody's target, the counter's nudge, a swerve round the car ahead in our lane; the bend drifts the car outward until the steering catches up
     let avoid = 0;
-    for (const c of s.cars) { const d = c.z - s.pos; if (d > 0 && d < 6 && Math.abs(c.x - s.x) < 0.55) avoid += (c.x > 0.05 ? -1 : c.x < -0.05 ? 1 : s.x >= c.x ? 1 : -1) * 0.7 * (1 - d / 6); }
+    for (const c of s.cars) { const d = c.z - s.pos; if (!c.knocked && d > -0.2 && d < 6 && Math.abs(c.x - s.x) < 0.55) avoid += (c.x > 0.05 ? -1 : c.x < -0.05 ? 1 : s.x >= c.x ? 1 : -1) * 0.7 * (1 - Math.max(0, d) / 6); }
     s.avoid = ease(s.avoid, clamp(avoid, -0.9, 0.9), 6, dt);
     s.nudge = decay(s.nudge, 1.5, dt);
     s.xTo = s.crash ? s.crashDir * 1.7 : clamp(s.melX + s.nudge + s.avoid, -0.85, 0.85);
@@ -135,35 +165,22 @@ export default {
     s.wheel = (s.wheel + s.vel * dt * 3) % 1;
     s.bgX += -here * s.vel * 14 * dt;
     for (const c of s.clouds) c.x = ((c.x - dt * 0.01 - here * s.vel * 5 * dt) % 3 + 3) % 3;
-    s.kick = decay(s.kick, 6, dt); s.rev = decay(s.rev, 5, dt); s.bump = decay(s.bump, 5, dt); s.flash = decay(s.flash, 5, dt); s.lit = decay(s.lit, 4, dt); s.bassHold = decay(s.bassHold, 0.4, dt);
+    s.kick = decay(s.kick, 6, dt); s.rev = decay(s.rev, 5, dt); s.shove = decay(s.shove, 6, dt); s.bump = decay(s.bump, 5, dt); s.flash = decay(s.flash, 5, dt); s.lit = decay(s.lit, 4, dt); s.bassHold = decay(s.bassHold, 0.4, dt);
     s.check = Math.max(0, s.check - dt);
     s.shake = ease(s.shake, off || s.crash ? 1 : 0, 6, dt);
     if (s.crash) s.tumble += dt * 7;
     const gt = land.ground; for (let i = 0; i < 3; i++) s.ground[i] = ease(s.ground[i], gt[i], 0.6, dt);
     s.cloud = ease(s.cloud, s.cloudTo, 0.5, dt); s.cloudTo = ease(s.cloudTo, 0.35, 0.05, dt);
-    // the traffic, by distance: a car every so often far ahead and slower than us, passed when it falls behind, bumped when it is where we are
+    // the traffic, by distance: a car every so often out of the fog, slower than us, passed when it falls behind; a knocked car spins out to the shoulder and stops
     s.carNext -= s.vel * dt;
-    if (s.carNext <= 0) { spawnCar(s, s.pos + N * SEG * 0.85, 0.3 + 0.4 * rand(s)); s.carNext = (4 + rand(s) * 8) / Math.max(0.2, s.traffic); }
+    if (s.carNext <= 0) { spawnCar(s, 0.3 + 0.4 * rand(s)); s.carNext = (5 + rand(s) * 9) / Math.max(0.2, s.traffic); }
     for (const c of s.cars) {
       c.z += c.v * dt; c.lit = decay(c.lit, 4, dt);
+      if (c.knocked) { c.x += c.knocked * 2.5 * dt; c.spin += dt * 7; c.v = ease(c.v, 0, 3, dt); }
       if (!c.passed && c.z < s.pos) { c.passed = 1; s.passed++; s.score += 1000; }
-      if (!c.hit && !s.crash && Math.abs(c.z - s.pos) < 0.7 && Math.abs(c.x - s.x) < 0.5) { c.hit = 1; s.bump = 1; s.vel *= 0.6; c.lit = 1; }
     }
-    s.cars = s.cars.filter((c) => c.z > s.pos - 0.3 && c.z < s.pos + N * SEG + 2);
+    s.cars = s.cars.filter((c) => c.z > s.pos - 0.3 && c.z < s.pos + N * SEG + 2 && Math.abs(c.x) < 2.8);
     s.score += s.vel * dt * 12;
-    // the events, each by its part's job in the cast
-    for (const e of events) {
-      const slot = s.slotOf[e.layer] ?? DEFAULT_SLOT[e.kind] ?? 'grain', g = clamp(e.gain * e.velocity, 0, 1.5);
-      if (slot === 'transition') { if (e.dur >= 1) { s.flash = Math.max(s.flash, 0.7); s.bump = 1; plant(s, segAt(s, base + N - 2), land, rand(s) < 0.5 ? -1 : 1, 'billboard'); } } // the impact (a whole cycle long); a riser's slices are the clock's business
-      else if (e.role === 'pulse') { s.kick = 1; s.rev = 1; if (!s.crash) s.vel += 0.8 * g; } // a kick, whatever slot its part took: a gear kick
-      else if (e.role === 'impact') { if (rand(s) < 0.6) spawnCar(s, s.pos + 5 + rand(s) * 2, 0.25 + 0.15 * rand(s), true); s.lit = 1; } // a slow car right ahead, brake lights on, passed at once
-      else if (slot === 'impulse') s.kick = Math.max(s.kick, 0.5 * g);
-      else if (slot === 'ground') { if (e.note !== null) { s.curveTo = (clamp((e.note - 36) / 24) - 0.5) * 2 * CURVE * land.curve * clamp(g, 0.5, 1.2); s.bassHold = 1; } }
-      else if (slot === 'line') { if (e.note !== null) s.melX = lerp(-0.75, 0.75, clamp((e.note - 60) / 24)); }
-      else if (slot === 'counter') { if (e.note !== null) s.nudge = (clamp((e.note - 48) / 24) - 0.5) * 0.6; }
-      else if (slot === 'field') { s.cloudTo = clamp(0.3 + 0.6 * g); if (e.cutoff !== null) s.light = clamp(Math.log(e.cutoff / 200) / Math.log(40)); }
-      else if (e.role === 'grain' || slot === 'grain') { if (rand(s) < 0.4 * g) plant(s, segAt(s, base + N - 2), land, rand(s) < 0.5 ? -1 : 1); }
-    }
   },
 
   draw(s, ctx, w, h) {
@@ -261,6 +278,11 @@ function sprite(s, ctx, h, o, px, py, u, night, day) {
 /** A car in the traffic, rear view, at (px, py) with `u` pixels a world unit. */
 function car(ctx, px, py, u, c, night, near) {
   if (u < 1) return;
+  if (c.knocked) { ctx.save(); ctx.translate(px, py); ctx.rotate(Math.sin(c.spin) * 0.5 * c.knocked); ctx.translate(-px, -py); } // spinning out
+  carBody(ctx, px, py, u, c, night, near);
+  if (c.knocked) ctx.restore();
+}
+function carBody(ctx, px, py, u, c, night, near) {
   const tall = c.kind === 'truck' ? 0.8 : c.kind === 'van' ? 0.62 : 0.4, wide = c.kind === 'car' ? 0.56 : 0.66, l = night ? 0.6 : 1;
   const R = (x, y, ww, hh, col) => { ctx.fillStyle = col; ctx.fillRect(px + x * u, py - y * u, ww * u, -hh * u); };
   ctx.fillStyle = hsla(0, 0, 0, 0.3); ctx.beginPath(); ctx.ellipse(px, py, wide * 0.6 * u, 0.06 * u, 0, 0, TAU); ctx.fill();
@@ -308,6 +330,6 @@ function hud(s, ctx, w, h) {
   txt('LAP ' + mm + "'" + pad(ss, 2) + '"' + pad(cc, 2), w - m, m + px * 0.8, px * 0.75, wht, 'right');
   const kmh = Math.min(320, Math.round(s.vel * 12));
   txt(kmh + ' km/h', m, h - m - px * 1.2, px * 1.1, wht); ctx.fillStyle = hsla(0, 85, 50); ctx.fillRect(m, h - m - px * 0.15, w * 0.22 * Math.min(1, kmh / 300), px * 0.15); ctx.fillStyle = hsla(0, 0, 100, 0.25); ctx.fillRect(m, h - m - px * 0.15, w * 0.22, px * 0.15);
-  if (s.passed) txt('PASSED ' + s.passed, w - m, h - m - px, px * 0.75, yel, 'right');
+  if (s.passed) txt('PASSED ' + s.passed + (s.knocks ? '  HIT ' + s.knocks : ''), w - m, h - m - px, px * 0.75, yel, 'right');
   if (s.check > 0 && Math.floor(s.check * 4) % 2 === 0) txt(s.check > 1.5 ? 'CHECKPOINT' : 'EXTENDED TIME', w / 2, h * 0.3, px * 1.6, s.check > 1.5 ? wht : yel, 'center');
 }
