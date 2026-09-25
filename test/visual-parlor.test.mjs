@@ -104,6 +104,22 @@ test('the clock alone: a boundary strikes the clock, a riser brings the nurse, a
   assert.ok(dark.dark > 0.9, 'the dropout tail goes dark');
 });
 
+test('the cat sits on a lap, crosses the floor to another now and then, and the window has traffic', async () => {
+  const g = await ready;
+  const ir = song(g), score = composeVisual(ir), clock = clockOf(score, 0);
+  const s = createPerformance(parlor, score, { w: 16, h: 9 }).state;
+  assert.equal(s.residents[s.cat.chair].kind, 'rocker', 'the cat starts on a rocking chair');
+  const modes = new Set(), chairs = new Set([s.cat.chair]);
+  for (let i = 0; i < 60 * 60; i++) { parlor.step(s, STEP, [], clock); modes.add(s.cat.mode); if (s.cat.chair !== null) chairs.add(s.cat.chair); }
+  assert.ok(modes.has('walk') && chairs.size >= 2, `in a minute the cat gets down and finds another lap (${[...chairs]})`);
+  assert.ok(s.outside.passers.length + s.outside.clouds.length > 3, 'something is going by outside');
+  parlor.step(s, STEP, [], clockOf(score, 2, clockOf(score, 1.9)));
+  assert.ok(s.outside.passers.some((p) => p.kind === 'bus'), 'the bus goes by at a boundary');
+  const hats = createPerformance(parlor, score, { w: 16, h: 9 }).state;
+  for (let i = 0; i < 40; i++) parlor.step(hats, STEP, [{ ...base, layer: 'drums', kind: 'drums', voice: 'hh', role: 'grain' }], clock);
+  assert.ok(hats.outside.passers.some((p) => p.kind === 'bird'), 'hats lift birds off the tree');
+});
+
 test('a plain pattern (no song) runs on the fallback score, in a home with someone rocking and someone asleep', async () => {
   const g = await ready;
   const p = createPerformance(parlor, fallbackScore(0.5), { w: 16, h: 9 });

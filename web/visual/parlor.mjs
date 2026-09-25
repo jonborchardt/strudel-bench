@@ -57,12 +57,17 @@ export default {
       t: 0, beats: 0, energy: 0.5, sit: { ...SIT.none }, riser: 0, dark: 0, flash: 0, beat: 0, lastBeat: -1, hueShift: 0, chime: 0,
       parts: {}, order: [], floor: null, lead: null, leadFor: 0, spot: { x: aspect / 2, on: 0 }, // who is speaking, and the lamp's pool under them
       residents: [], table: null, nurse: { x: aspect + 0.4, on: 0, rattle: 0 },
+      cat: null, // { fur, chair, mode, x, z, target, dir, walk, flick, startle, timer }: the home's cat, on a lap or crossing the floor to another
+      outside: { passers: [], clouds: [], next: 3 }, // what goes by the window: { kind, u, v, dir, speed, ph, life }
     };
     seed(s, rng);
     for (const name of Object.keys(score.cast)) partFor(s, name, score.cast[name].slot);
     if (!s.residents.some((r) => r.kind === 'rocker')) resident(s, 'rocker', null); // a home always has someone rocking, and someone asleep
     if (!s.residents.some((r) => r.kind === 'sleeper')) resident(s, 'sleeper', null);
     arrange(s);
+    const chair = s.residents.findIndex((r) => r.kind === 'rocker');
+    s.cat = { fur: [[25, 30, 40], [0, 0, 85], [30, 40, 20], [30, 60, 55]][Math.floor(rand(s) * 4)], chair, mode: 'sit', x: 0, z: 0, target: chair, dir: 1, walk: 0, flick: 0, startle: 0, timer: 8 + rand(s) * 12 };
+    for (let k = 0; k < 3; k++) s.outside.clouds.push({ u: rand(s) * 1.4 - 0.2, v: 0.08 + rand(s) * 0.3, size: 0.6 + rand(s) * 0.8, speed: 0.012 + rand(s) * 0.015 });
     return s;
   },
 
@@ -80,6 +85,7 @@ export default {
     if (clock.boundary) { // the clock strikes: everyone starts
       s.chime = 1; s.flash = Math.max(s.flash, 0.3); s.hueShift = ((clock.index * 37) % 30) - 15;
       for (const r of s.residents) { if (r.kind === 'rocker') r.w += (rand(s) - 0.5) * 2; else if (r.kind === 'sleeper') r.snort = 1; else if (r.kind === 'walker') r.dir = rand(s) < 0.5 ? -r.dir : r.dir; }
+      passer(s, 'bus'); // and the bus goes by
     }
     // the nurse: across with the trolley over the riser, and off again after
     s.nurse.on = ease(s.nurse.on, s.riser > 0 ? 1 : 0, 3, dt);
@@ -92,12 +98,14 @@ export default {
       if (e.note !== null) seen(q, pitch(e.note));
       const r = q.res === null ? null : s.residents[q.res];
       if (slot === 'transition') { if (e.dur >= 1) s.flash = Math.max(s.flash, 1); continue; }
+      if ((slot === 'grain' || e.role === 'grain') && s.outside.passers.filter((p) => p.kind === 'bird').length < 6 && rand(s) < 0.35) passer(s, 'bird'); // a hat lifts a bird off the tree
       if (!r) continue;
-      if (r.kind === 'rocker') { // shoved along the way it is going: a steady part rocks it hard and in time
+      if (r.kind === 'rocker') { // shoved along the way it is going: a steady part rocks it hard and in time; the resident taps a foot, nods, and knits a stitch
         const push = e.role === 'pulse' ? 1.5 : e.role === 'grain' ? 0.4 : 1;
         r.w = clamp(r.w + Math.sign(r.w || r.dir) * push * g * s.sit.pace, -3, 3);
-        r.nod = Math.min(1, r.nod + 0.5 * g);
-        if (r.cat && e.role !== 'grain') r.tail = 1;
+        r.nod = Math.min(1, r.nod + 0.7 * g); r.tap = 1;
+        if (r.c.knits) r.knitTo = -r.knitTo;
+        if (s.cat && s.cat.chair === q.res) { if (e.role !== 'grain') s.cat.flick = 1; if (g > 1.15 && e.role === 'impact') s.cat.startle = 1; }
       } else if (r.kind === 'sleeper') { // a held note is a breath; a loud one, a snort
         r.hold = clamp(e.dur, 0.3, 6); r.age = 0;
         if (g > 1.15) r.snort = 1;
@@ -146,7 +154,7 @@ export default {
         r.w += (-om * om * r.a - D * r.w + drive) * dt;
         r.a += r.w * dt;
         if (Math.abs(r.a) > 0.22) { r.a = Math.sign(r.a) * 0.22; r.w *= -0.3; } // the runner's end: it will not tip
-        r.nod = decay(r.nod, 3, dt); r.tail = decay(r.tail, 2.5, dt);
+        r.nod = decay(r.nod, 3, dt); r.tap = decay(r.tap, 5, dt); r.knit = ease(r.knit, r.knitTo, 10, dt);
       } else if (r.kind === 'sleeper') {
         r.age += dt;
         r.chest = ease(r.chest, r.age < r.hold ? 1 : 0, r.age < r.hold ? 2.5 : 1.2, dt);
@@ -161,6 +169,33 @@ export default {
     }
     if (s.table) for (const seat of s.table.seats) seat.reach = decay(seat.reach, 3.5, dt);
     if (s.table) for (const c of s.table.cards) c.f = Math.min(1, c.f + dt * 4);
+    // the cat: on a lap most of the time, and now and then down, across the floor and up onto another
+    const C = s.cat;
+    if (C) {
+      C.flick = decay(C.flick, 2.5, dt); C.startle = decay(C.startle, 2, dt); C.timer -= dt;
+      if (C.mode === 'sit' && C.timer < 0) {
+        const laps = s.residents.map((r, i) => i).filter((i) => i !== C.chair && (s.residents[i].kind === 'rocker' || s.residents[i].kind === 'sleeper'));
+        if (laps.length) { const from = s.residents[C.chair]; C.target = laps[Math.floor(rand(s) * laps.length)]; C.mode = 'walk'; C.x = from.x + (from.kind === 'rocker' ? from.dir * 0.12 : 0); C.z = from.z; C.chair = null; }
+        C.timer = 14 + rand(s) * 20;
+      }
+      if (C.mode === 'walk') {
+        const to = s.residents[C.target], tx = to.x + (to.kind === 'rocker' ? to.dir * 0.12 : 0), dx = tx - C.x, dz = to.z - C.z, d = Math.hypot(dx, dz * 0.6), sp = 0.28 * dt;
+        if (d < sp) { C.mode = 'sit'; C.chair = C.target; } else { C.x += (dx / d) * sp; C.z += (dz / d) * sp; C.walk += dt * 9; C.dir = dx < 0 ? -1 : 1; }
+      }
+    }
+    // outside the window: clouds always, and something going by every few seconds
+    const O = s.outside;
+    for (const c of O.clouds) { c.u += c.speed * dt * s.motion; if (c.u > 1.3) c.u = -0.3; }
+    O.next -= dt;
+    if (O.next < 0) { O.next = 3 + rand(s) * 7; const pool = s.temp === 'dim' ? ['car', 'bat', 'bat', 'star', 'star', 'dog', 'fox'] : ['car', 'car', 'bike', 'dog', 'jogger', 'balloon', 'plane', 'deer', 'bird']; passer(s, pool[Math.floor(rand(s) * pool.length)]); }
+    for (const p of O.passers) {
+      p.u += p.dir * p.speed * dt; p.life += dt;
+      if (p.kind === 'bird') { p.v -= dt * (0.12 + 0.1 * Math.sin(p.ph)); p.u += Math.sin(s.t * 3 + p.ph) * 0.02 * dt; }
+      else if (p.kind === 'bat') { p.v += Math.sin(s.t * 7 + p.ph) * 0.25 * dt; }
+      else if (p.kind === 'star') { p.v += dt * 0.5; }
+      else if (p.kind === 'balloon') { p.v -= dt * 0.01; }
+    }
+    O.passers = O.passers.filter((p) => p.u > -0.4 && p.u < 1.4 && p.v > -0.3 && (p.kind !== 'star' || p.life < 0.8));
   },
 
   draw(s, ctx, w, h) {
@@ -184,7 +219,15 @@ export default {
     ctx.fillStyle = sky; ctx.fillRect(wx0, wy0, wx1 - wx0, wy1 - wy0);
     if (wk.moon) { ctx.fillStyle = hsla(50, 20, 90); ctx.beginPath(); ctx.arc(lerp(wx0, wx1, 0.7), lerp(wy0, wy1, 0.3), R(0.03), 0, TAU); ctx.fill(); for (let k = 0; k < 7; k++) { ctx.fillStyle = hsla(50, 20, 90, 0.5 + 0.5 * Math.sin(s.t * 2 + k)); ctx.fillRect(lerp(wx0, wx1, (k * 0.37) % 1), lerp(wy0, wy1, (k * 0.61) % 0.7), 2, 2); } }
     else { ctx.fillStyle = hsla(48, 90, 92, 0.9); ctx.beginPath(); ctx.arc(lerp(wx0, wx1, 0.72), lerp(wy0, wy1, s.temp === 'warm' ? 0.72 : 0.28), R(0.035), 0, TAU); ctx.fill(); }
-    ctx.fillStyle = hsla(120, 15, night ? 30 : 55, 0.85); ctx.beginPath(); ctx.ellipse(lerp(wx0, wx1, 0.3), wy1, R(0.06), R(0.06 + 0.005 * Math.sin(s.t * 0.7 * s.motion)), 0, Math.PI, TAU); ctx.fill(); // a tree beyond the glass, in the breeze
+    ctx.save(); ctx.beginPath(); ctx.rect(wx0, wy0, wx1 - wx0, wy1 - wy0); ctx.clip(); // what goes on outside stays behind the glass
+    const wu = (u) => lerp(wx0, wx1, u), wv = (v) => lerp(wy0, wy1, v), WS = (wy1 - wy0) * 0.1;
+    for (const c of s.outside.clouds) { ctx.fillStyle = hsla(0, 0, night ? 30 : 100, night ? 0.5 : 0.85); for (const [dx, dy, rr] of [[0, 0, 1], [-0.9, 0.2, 0.7], [0.9, 0.25, 0.75], [0.3, -0.35, 0.6]]) { ctx.beginPath(); ctx.arc(wu(c.u) + dx * WS * c.size, wv(c.v) + dy * WS * c.size, rr * WS * c.size, 0, TAU); ctx.fill(); } }
+    ctx.fillStyle = hsla(100, 30, night ? 12 : 42); ctx.fillRect(wx0, wv(0.72), wx1 - wx0, wy1 - wv(0.72)); // the lawn, the lane and the hedge beyond the glass
+    ctx.fillStyle = hsla(0, 0, night ? 16 : 45); ctx.fillRect(wx0, wv(0.83), wx1 - wx0, wv(0.94) - wv(0.83));
+    ctx.fillStyle = hsla(0, 0, night ? 30 : 80, 0.7); for (let k = 0; k < 8; k++) ctx.fillRect(wu(k / 8 + 0.02), wv(0.885), (wx1 - wx0) * 0.06, Math.max(1, WS * 0.06));
+    ctx.fillStyle = hsla(120, 15, night ? 30 : 55, 0.85); ctx.beginPath(); ctx.ellipse(wu(0.3), wy1, R(0.06), R(0.06 + 0.005 * Math.sin(s.t * 0.7 * s.motion)), 0, Math.PI, TAU); ctx.fill(); // a tree beyond the glass, in the breeze
+    for (const p of s.outside.passers) goer(ctx, p, wu(p.u), wv(p.v), WS, s, night);
+    ctx.restore();
     ctx.strokeStyle = room(22); ctx.lineWidth = Math.max(1, R(0.012)); ctx.strokeRect(wx0, wy0, wx1 - wx0, wy1 - wy0);
     ctx.beginPath(); ctx.moveTo((wx0 + wx1) / 2, wy0); ctx.lineTo((wx0 + wx1) / 2, wy1); ctx.moveTo(wx0, (wy0 + wy1) / 2); ctx.lineTo(wx1, (wy0 + wy1) / 2); ctx.stroke();
     ctx.fillStyle = hsla(hue + 160, 30, night ? 18 : 40); ctx.fillRect(wx0 - R(0.05), wy0 - R(0.03), R(0.06), wy1 - wy0 + R(0.06)); ctx.fillRect(wx1 - R(0.01), wy0 - R(0.03), R(0.06), wy1 - wy0 + R(0.06));
@@ -229,20 +272,23 @@ export default {
     }
     ctx.globalCompositeOperation = 'source-over';
     // the residents, far to near; the table's back seats before it, its front seats after
-    const things = s.residents.map((r) => ({ z: r.z, r }));
+    const things = s.residents.map((r, i) => ({ z: r.z, r, i }));
     if (s.table) things.push({ z: s.table.z, table: true });
     if (s.nurse.on > 0.02) things.push({ z: 0.5, nurse: true });
+    if (s.cat && s.cat.mode === 'walk') things.push({ z: s.cat.z, cat: true });
     things.sort((a, b) => b.z - a.z);
+    const toneAt = (z) => { const dim = lerp(1, 0.55, z) * lit; return ([hh, ss, ll], a = 1) => hsla(hh + s.hueShift * 0.3, ss, ll * dim, a); };
     for (const th of things) {
       if (th.table) { table(ctx, s, X, R, lit); continue; }
       if (th.nurse) { nurse(ctx, s, X, R, lit); continue; }
+      if (th.cat) { ctx.save(); ctx.translate(X(s.cat.x), R(zY(s.cat.z))); catWalking(ctx, s.cat, R(0.3 * zScale(s.cat.z)), s, toneAt(s.cat.z)); ctx.restore(); continue; }
       const r = th.r; if (r.kind === 'player') continue;
-      const U = R((r.kind === 'rocker' ? 0.36 : 0.3) * zScale(r.z)), x = X(r.x), y = R(zY(r.z)); // the rocking chairs are the thing: a size up
-      const dim = lerp(1, 0.55, r.z) * lit, tone = ([hh, ss, ll], a = 1) => hsla(hh + s.hueShift * 0.3, ss, ll * dim, a);
+      const U = R(0.3 * zScale(r.z)), x = X(r.x), y = R(zY(r.z)), tone = toneAt(r.z);
+      const cat = s.cat && s.cat.mode === 'sit' && s.cat.chair === th.i ? s.cat : null;
       ctx.save(); ctx.translate(x, y);
       ctx.fillStyle = 'rgba(0 0 0 / 0.25)'; ctx.beginPath(); ctx.ellipse(0, 0, U * 0.7, U * 0.12, 0, 0, TAU); ctx.fill();
-      if (r.kind === 'rocker') rocker(ctx, r, U, s, tone);
-      else if (r.kind === 'sleeper') sleeper(ctx, r, U, s, tone);
+      if (r.kind === 'rocker') rocker(ctx, r, U, s, tone, cat);
+      else if (r.kind === 'sleeper') sleeper(ctx, r, U, s, tone, cat);
       else walker(ctx, r, U, s, tone);
       ctx.restore();
     }
@@ -358,7 +404,7 @@ function head(ctx, x, y, r, c, tone, tilt, eyes, dir = 0) {
 }
 
 /** A rocking chair side on, the whole thing rotated about the runner by its rock angle, with its resident sat back in it, feet out in front, and maybe a cat. */
-function rocker(ctx, r, U, s, tone) {
+function rocker(ctx, r, U, s, tone, cat = null) {
   const d = r.dir, wood = tone([28, 45, 32]), woodD = tone([28, 45, 22]), c = r.c, ol = U * 0.025;
   ctx.save(); ctx.translate(0, -U * 0.08); ctx.rotate(r.a * d); ctx.translate(0, U * 0.08);
   ctx.strokeStyle = woodD; ctx.lineWidth = Math.max(1, U * 0.05);
@@ -371,8 +417,9 @@ function rocker(ctx, r, U, s, tone) {
   const hip = [-d * U * 0.14, -U * 0.6], sh = [-d * U * 0.34, -U * 1.16];
   const leg = (near) => { // the far leg a little behind and darker
     const o = near ? 0 : d * U * 0.05, k = near ? 1 : 0.8, t = ([h, ss, l], a) => tone([h, ss, l * k], a);
+    const tap = near ? r.tap : 0; // the near foot taps: the toe lifts on every hit
     limb(ctx, [[hip[0] - o, hip[1]], [d * U * 0.36 - o, -U * 0.6], [d * U * 0.4 - o, -U * 0.14]], U * 0.12, t(c.trousers), t, ol);
-    blob(ctx, d * U * 0.46 - o, -U * 0.08, U * 0.13, U * 0.06, t(c.shoes), t, ol, d * 0.15);
+    blob(ctx, d * U * 0.46 - o, -U * (0.08 + 0.05 * tap), U * 0.13, U * 0.06, t(c.shoes), t, ol, d * (0.15 - 0.45 * tap));
   };
   leg(false);
   limb(ctx, [[sh[0] - d * U * 0.02, sh[1] + U * 0.1], [-d * U * 0.05, -U * 0.8], [d * U * 0.14, -U * 0.72]], U * 0.11, tone([c.cardigan[0], c.cardigan[1], c.cardigan[2] * 0.8]), tone, ol); // the far arm, down to the lap
@@ -385,24 +432,29 @@ function rocker(ctx, r, U, s, tone) {
     ctx.strokeStyle = tone(INK, 0.3); ctx.lineWidth = Math.max(1, ol * 0.6);
     for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(d * U * (0.06 + k * 0.13), -U * 0.7); ctx.lineTo(d * U * (0.16 + k * 0.12), -U * 0.36); ctx.stroke(); }
   }
-  if (r.cat) { // a cat on the lap, its tail flicking when the chair is shoved
-    const fur = tone(r.cat);
-    limb(ctx, [[-d * U * 0.02, -U * 0.76], [-d * U * 0.24, -U * (0.72 + 0.3 * r.tail)], [-d * U * 0.2, -U * (0.55 + 0.35 * r.tail)]], U * 0.05, fur, tone, ol * 0.7); // the tail
-    blob(ctx, d * U * 0.16, -U * 0.78, U * 0.22, U * 0.1, fur, tone, ol * 0.8);
-    blob(ctx, d * U * 0.36, -U * 0.85, U * 0.09, U * 0.08, fur, tone, ol * 0.8);
-    ctx.fillStyle = fur; ctx.beginPath(); ctx.moveTo(d * U * 0.29, -U * 0.9); ctx.lineTo(d * U * 0.3, -U * 1.0); ctx.lineTo(d * U * 0.35, -U * 0.92); ctx.moveTo(d * U * 0.38, -U * 0.92); ctx.lineTo(d * U * 0.43, -U * 1.0); ctx.lineTo(d * U * 0.44, -U * 0.9); ctx.fill();
-    ctx.fillStyle = tone(INK, 0.9); ctx.beginPath(); ctx.arc(d * U * 0.4, -U * 0.86, U * 0.012, 0, TAU); ctx.fill();
+  if (cat) catOnLap(ctx, cat, d, U, s, tone, r.rest);
+  else if (c.knits) { // knitting: two needles that cross the other way on every hit, a ball of wool on the seat
+    const k = r.knit * 0.35, nx = d * U * 0.14, ny = -U * 0.78, len = U * 0.3;
+    ctx.strokeStyle = tone([0, 0, 82]); ctx.lineWidth = Math.max(1, U * 0.02); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(nx - Math.cos(0.5 + k) * len * 0.3, ny + Math.sin(0.5 + k) * len * 0.3); ctx.lineTo(nx + Math.cos(0.5 + k) * len, ny - Math.sin(0.5 + k) * len);
+    ctx.moveTo(nx + Math.cos(0.5 - k) * len * 0.3, ny + Math.sin(0.5 - k) * len * 0.3); ctx.lineTo(nx - Math.cos(0.5 - k) * len, ny - Math.sin(0.5 - k) * len); ctx.stroke();
+    blob(ctx, -d * U * 0.28, -U * 0.62, U * 0.07, U * 0.06, tone(c.plaid), tone, ol * 0.7);
+    ctx.strokeStyle = tone(c.plaid); ctx.lineWidth = Math.max(1, ol * 0.6); ctx.beginPath(); ctx.moveTo(-d * U * 0.28, -U * 0.66); ctx.quadraticCurveTo(-d * U * 0.05, -U * 0.7, nx, ny); ctx.stroke(); // the wool up to the needles
+    blob(ctx, nx - d * U * 0.06, ny + U * 0.02, U * 0.065, U * 0.05, tone(c.skin), tone, ol); blob(ctx, nx + d * U * 0.07, ny + U * 0.03, U * 0.065, U * 0.05, tone(c.skin), tone, ol); // both hands at the work
   }
   ctx.strokeStyle = wood; ctx.lineWidth = Math.max(1, U * 0.04); ctx.beginPath(); ctx.moveTo(-d * U * 0.47, -U * 0.9); ctx.lineTo(d * U * 0.3, -U * 0.9); ctx.lineTo(d * U * 0.3, -U * 0.55); ctx.stroke(); // the armrest
-  limb(ctx, [[sh[0] + d * U * 0.1, sh[1] + U * 0.08], [-d * U * 0.04, -U * 0.9], [d * U * 0.24, -U * 0.92]], U * 0.11, tone(c.cardigan), tone, ol); // the near arm, along the rest
-  blob(ctx, d * U * 0.3, -U * 0.94, U * 0.075, U * 0.055, tone(c.skin), tone, ol, d * 0.3); // the hand on it
+  if (c.knits && !cat) limb(ctx, [[sh[0] + d * U * 0.1, sh[1] + U * 0.08], [-d * U * 0.06, -U * 0.86], [d * U * 0.18, -U * 0.76]], U * 0.11, tone(c.cardigan), tone, ol); // the near arm, in to the knitting
+  else {
+    limb(ctx, [[sh[0] + d * U * 0.1, sh[1] + U * 0.08], [-d * U * 0.04, -U * 0.9], [d * U * 0.24, -U * 0.92]], U * 0.11, tone(c.cardigan), tone, ol); // the near arm, along the rest
+    blob(ctx, d * U * 0.3, -U * 0.94, U * 0.075, U * 0.055, tone(c.skin), tone, ol, d * 0.3); // the hand on it
+  }
   neck(ctx, sh[0] + d * U * 0.05, sh[1] - U * 0.02, U * 0.16, c, tone, ol);
   head(ctx, sh[0] + d * U * 0.1, -U * 1.37, U * 0.165, c, tone, d * (0.08 * r.nod - 0.04 + 0.03 * Math.sin(s.t * 0.7 * s.motion + r.ph)), true, d);
   ctx.restore();
 }
 
 /** An armchair facing the room with a resident asleep in it: legs to the floor, head over to one side, eyes shut, the chest with the breath, z's rising. */
-function sleeper(ctx, r, U, s, tone) {
+function sleeper(ctx, r, U, s, tone, cat = null) {
   const c = r.c, chair = tone(c.chair), chairD = tone([c.chair[0], c.chair[1], c.chair[2] - 12]), ol = U * 0.025, ink = tone(INK, 0.9);
   ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, ol);
   ctx.fillStyle = chairD; ctx.beginPath(); ctx.roundRect(-U * 0.5, -U * 1.32, U, U * 0.85, U * 0.12); ctx.fill(); ctx.stroke(); // the back
@@ -419,6 +471,7 @@ function sleeper(ctx, r, U, s, tone) {
   ctx.beginPath(); ctx.moveTo(-U * 0.4, -U * 0.66); ctx.lineTo(U * 0.4, -U * 0.66); ctx.lineTo(U * 0.46, -U * 0.3); ctx.lineTo(-U * 0.46, -U * 0.3); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.strokeStyle = tone(INK, 0.3); ctx.lineWidth = Math.max(1, ol * 0.6);
   for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.moveTo(k * U * 0.16, -U * 0.66); ctx.lineTo(k * U * 0.18, -U * 0.3); ctx.moveTo(-U * 0.42, -U * (0.5 + k * 0.06)); ctx.lineTo(U * 0.42, -U * (0.5 + k * 0.06)); ctx.stroke(); }
+  if (cat) catCurled(ctx, cat, U, s, tone);
   ctx.fillStyle = chairD; ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, ol); // the chair's arms
   ctx.beginPath(); ctx.roundRect(-U * 0.64, -U * 0.92, U * 0.18, U * 0.92, U * 0.05); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.roundRect(U * 0.46, -U * 0.92, U * 0.18, U * 0.92, U * 0.05); ctx.fill(); ctx.stroke();
   for (const sd of [-1, 1]) { // the arms, down along the body to the hands on the chair's arms
@@ -544,6 +597,126 @@ function nurse(ctx, s, X, R, lit) {
   ctx.restore();
 }
 
+/** The cat's head, ears, eyes and whiskers at (x, y) facing `d`, radius r: ears back and eyes wide when startled, eyes shut when the lap has gone quiet. */
+function catHead(ctx, x, y, r, d, fur, tone, ol, startle, asleep) {
+  ctx.save(); ctx.translate(x, y);
+  const back = 0.9 * startle; // the ears flatten
+  ctx.fillStyle = fur; ctx.strokeStyle = tone(INK, 0.9); ctx.lineWidth = Math.max(1, ol);
+  for (const sd of [-1, 1]) { ctx.beginPath(); ctx.moveTo(sd * r * 0.75, -r * 0.4); ctx.lineTo(sd * r * (0.85 - 0.6 * back) - d * r * 0.3 * back, -r * (1.35 - 0.9 * back)); ctx.lineTo(sd * r * 0.2, -r * 0.85); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.9, 0, 0, TAU); ctx.fill(); ctx.stroke();
+  const ex = d * r * 0.25;
+  if (asleep && startle < 0.3) { ctx.lineWidth = Math.max(1, r * 0.12); ctx.beginPath(); ctx.arc(ex - r * 0.3, 0, r * 0.18, Math.PI * 0.15, Math.PI * 0.85); ctx.moveTo(ex + r * 0.48, 0); ctx.arc(ex + r * 0.3, 0, r * 0.18, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke(); }
+  else { ctx.fillStyle = tone([80, 70, 60]); for (const sd of [-1, 1]) { ctx.beginPath(); ctx.ellipse(ex + sd * r * 0.3, -r * 0.05, r * (0.2 + 0.08 * startle), r * (0.16 + 0.1 * startle), 0, 0, TAU); ctx.fill(); } ctx.fillStyle = tone(INK); for (const sd of [-1, 1]) { ctx.beginPath(); ctx.ellipse(ex + sd * r * 0.3, -r * 0.05, r * (0.06 + 0.1 * startle), r * 0.15, 0, 0, TAU); ctx.fill(); } }
+  ctx.fillStyle = tone([350, 60, 70]); ctx.beginPath(); ctx.moveTo(ex - r * 0.1, r * 0.22); ctx.lineTo(ex + r * 0.1, r * 0.22); ctx.lineTo(ex, r * 0.34); ctx.closePath(); ctx.fill(); // the nose
+  ctx.strokeStyle = tone([0, 0, 95], 0.8); ctx.lineWidth = Math.max(1, r * 0.05); ctx.beginPath(); // whiskers
+  for (const sd of [-1, 1]) for (const k of [-0.15, 0, 0.15]) { ctx.moveTo(ex + sd * r * 0.2, r * 0.3); ctx.lineTo(ex + sd * r * 1.1, r * (0.2 + k * 2)); }
+  ctx.stroke();
+  ctx.restore();
+}
+/** The cat on a rocking chair's lap, side on: the tail always swaying and flicking on a hit, the back arching when startled, asleep once the chair's part has gone quiet. */
+function catOnLap(ctx, cat, d, U, s, tone, rest) {
+  const fur = tone(cat.fur), ol = U * 0.02, sway = 0.5 + 0.5 * Math.sin(s.t * 1.3 * s.motion + 0.7), up = 0.15 + 0.35 * sway + 0.55 * cat.flick, arch = cat.startle;
+  const bx = d * U * 0.16, by = -U * 0.78;
+  limb(ctx, [[bx - d * U * 0.18, by + U * 0.02], [bx - d * U * 0.36, by - U * (0.02 + 0.28 * up)], [bx - d * U * (0.3 + 0.1 * up), by - U * (0.25 * up + 0.32 * up * up)]], U * 0.05, fur, tone, ol * 0.7); // the tail
+  blob(ctx, bx, by - U * 0.06 * arch, U * 0.23, U * (0.1 + 0.05 * arch + 0.008 * Math.sin(s.t * 1.8)), fur, tone, ol);
+  for (const k of [-0.08, 0.1]) blob(ctx, bx + d * U * k, by + U * 0.07, U * 0.05, U * 0.03, fur, tone, ol * 0.7); // paws tucked under
+  catHead(ctx, bx + d * U * 0.24, by - U * (0.09 + 0.05 * arch) + Math.sin(s.t * 0.9) * U * 0.006, U * 0.085, d, fur, tone, ol, arch, rest > 0.7);
+}
+/** The cat crossing the floor, side on: four legs walking, the tail up and swinging. */
+function catWalking(ctx, cat, U, s, tone) {
+  const fur = tone(cat.fur), ol = U * 0.02, d = cat.dir, w = cat.walk;
+  ctx.fillStyle = 'rgba(0 0 0 / 0.2)'; ctx.beginPath(); ctx.ellipse(0, 0, U * 0.3, U * 0.05, 0, 0, TAU); ctx.fill();
+  for (const [k, ph] of [[-0.16, 0], [0.14, Math.PI], [-0.1, Math.PI], [0.2, 0]]) { // back and front pairs, each pair opposite
+    const sw = Math.sin(w + ph) * U * 0.07, lift = Math.max(0, Math.cos(w + ph)) * U * 0.04;
+    limb(ctx, [[d * U * k, -U * 0.16], [d * U * k + sw, -U * 0.02 - lift]], U * 0.05, fur, tone, ol * 0.7);
+  }
+  blob(ctx, 0, -U * 0.17, U * 0.24, U * 0.09, fur, tone, ol);
+  limb(ctx, [[-d * U * 0.2, -U * 0.19], [-d * U * 0.3, -U * 0.34], [-d * U * (0.26 + 0.06 * Math.sin(w * 0.5)), -U * 0.48]], U * 0.05, fur, tone, ol * 0.7); // the tail up
+  catHead(ctx, d * U * 0.3, -U * 0.27 + Math.sin(w) * U * 0.01, U * 0.085, d, fur, tone, ol, cat.startle, false);
+}
+/** The cat curled on a sleeper's lap, seen from the front: a loaf with the tail wrapped round, breathing. */
+function catCurled(ctx, cat, U, s, tone) {
+  const fur = tone(cat.fur), ol = U * 0.02, br = 1 + 0.03 * Math.sin(s.t * 1.6);
+  blob(ctx, 0, -U * 0.5, U * 0.3, U * 0.13 * br, fur, tone, ol);
+  limb(ctx, [[-U * 0.26, -U * 0.42], [0, -U * 0.36 + Math.sin(s.t * 1.1) * U * 0.01], [U * 0.22, -U * 0.4]], U * 0.05, fur, tone, ol * 0.7); // the tail round the front
+  catHead(ctx, U * 0.2, -U * 0.58, U * 0.08, 0, fur, tone, ol, cat.startle, true);
+}
+
+/** Something sets off past the window: its lane, its way and its pace by what it is. */
+function passer(s, kind) {
+  const O = s.outside, dir = rand(s) < 0.5 ? -1 : 1;
+  const lane = { car: 0.885, bus: 0.88, bike: 0.89, dog: 0.8, jogger: 0.8, deer: 0.77, fox: 0.8, balloon: 0.35, plane: 0.12, bat: 0.3, star: 0.05, bird: 0.86 }[kind] ?? 0.85;
+  const speed = { car: 0.35, bus: 0.22, bike: 0.18, dog: 0.05, jogger: 0.12, deer: 0.09, fox: 0.13, balloon: 0.02, plane: 0.5, bat: 0.25, star: 0.9, bird: 0.18 }[kind] ?? 0.1;
+  const u = kind === 'bird' ? 0.3 : kind === 'star' ? 0.1 + rand(s) * 0.5 : dir > 0 ? -0.3 : 1.3;
+  O.passers.push({ kind, u, v: lane, dir: kind === 'star' ? 1 : dir, speed: speed * (0.8 + 0.4 * rand(s)), ph: rand(s) * TAU, life: 0 });
+  if (O.passers.length > 14) O.passers.shift();
+}
+/** One thing going by, drawn at (x, y) in the window, scale S (a tenth of the window's height), facing p.dir. */
+function goer(ctx, p, x, y, S, s, night) {
+  const d = p.dir, col = (h, sa, l, a = 1) => hsla(h, sa, night ? l * 0.45 : l, a), ink = col(0, 0, 12, 0.9), t = s.t;
+  ctx.save(); ctx.translate(x, y); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, S * 0.08);
+  const wheel = (wx, wy, r) => { ctx.fillStyle = col(0, 0, 15); ctx.beginPath(); ctx.arc(wx, wy, r, 0, TAU); ctx.fill(); ctx.strokeStyle = col(0, 0, 70); ctx.lineWidth = Math.max(1, r * 0.3); ctx.beginPath(); ctx.arc(wx, wy, r * 0.45, 0, TAU); ctx.stroke(); ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, S * 0.08); };
+  const walker = (h, bob, arms) => { // a small walking figure: legs swinging, a body, a head
+    const sw = Math.sin(t * 6 + p.ph) * S * 0.3;
+    ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, S * 0.18); ctx.beginPath(); ctx.moveTo(0, -S * 0.9); ctx.lineTo(sw, 0); ctx.moveTo(0, -S * 0.9); ctx.lineTo(-sw, 0); ctx.stroke();
+    ctx.fillStyle = col(h, 45, 45); ctx.beginPath(); ctx.roundRect(-S * 0.3, -S * 1.8 - bob, S * 0.6, S * 0.95, S * 0.15); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = Math.max(1, S * 0.14); ctx.beginPath(); ctx.moveTo(0, -S * 1.6 - bob); ctx.lineTo(d * S * 0.5, -S * (arms ? 1.7 : 1.1) - bob); ctx.stroke();
+    ctx.fillStyle = col(28, 45, 75); ctx.beginPath(); ctx.arc(0, -S * 2.1 - bob, S * 0.3, 0, TAU); ctx.fill(); ctx.stroke();
+  };
+  if (p.kind === 'car' || p.kind === 'bus') {
+    const L = p.kind === 'bus' ? S * 3.6 : S * 2.2, H = p.kind === 'bus' ? S * 1.4 : S * 0.7, hue = (p.ph * 57) % 360;
+    ctx.fillStyle = col(hue, 55, 50); ctx.beginPath(); ctx.roundRect(-L / 2, -H - S * 0.35, L, H, S * 0.2); ctx.fill(); ctx.stroke();
+    if (p.kind === 'car') { ctx.beginPath(); ctx.roundRect(-L * 0.25, -H - S * 0.9, L * 0.5, S * 0.6, S * 0.2); ctx.fill(); ctx.stroke(); ctx.fillStyle = col(200, 40, 80); ctx.fillRect(-L * 0.2, -H - S * 0.82, L * 0.4, S * 0.4); }
+    else { ctx.fillStyle = col(200, 40, 82); for (let k = 0; k < 4; k++) ctx.fillRect(-L / 2 + S * 0.25 + k * L * 0.23, -H - S * 0.2, L * 0.17, S * 0.55); }
+    wheel(-L * 0.3, -S * 0.3, S * 0.32); wheel(L * 0.3, -S * 0.3, S * 0.32);
+    if (night) { ctx.fillStyle = hsla(50, 90, 85, 0.9); ctx.beginPath(); ctx.arc(d * L / 2, -S * 0.6, S * 0.14, 0, TAU); ctx.fill(); ctx.fillStyle = hsla(0, 90, 55, 0.9); ctx.beginPath(); ctx.arc(-d * L / 2, -S * 0.6, S * 0.12, 0, TAU); ctx.fill(); }
+  } else if (p.kind === 'bike') {
+    wheel(-S * 0.6, -S * 0.4, S * 0.4); wheel(S * 0.6, -S * 0.4, S * 0.4);
+    ctx.strokeStyle = col(0, 60, 45); ctx.lineWidth = Math.max(1, S * 0.1); ctx.beginPath(); ctx.moveTo(-S * 0.6, -S * 0.4); ctx.lineTo(0, -S * 1.1); ctx.lineTo(S * 0.6, -S * 0.4); ctx.lineTo(d * S * 0.1, -S * 0.5); ctx.lineTo(0, -S * 1.1); ctx.stroke();
+    const ped = t * 8 + p.ph; ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, S * 0.15); ctx.beginPath(); ctx.moveTo(-d * S * 0.1, -S * 1.3); ctx.lineTo(Math.cos(ped) * S * 0.25, -S * 0.5 + Math.sin(ped) * S * 0.25); ctx.moveTo(-d * S * 0.1, -S * 1.3); ctx.lineTo(-Math.cos(ped) * S * 0.25, -S * 0.5 - Math.sin(ped) * S * 0.25); ctx.stroke();
+    ctx.fillStyle = col(200, 50, 50); ctx.beginPath(); ctx.moveTo(-d * S * 0.35, -S * 1.3); ctx.lineTo(d * S * 0.25, -S * 1.9); ctx.lineTo(d * S * 0.55, -S * 1.85); ctx.lineTo(d * S * 0.1, -S * 1.2); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = col(28, 45, 75); ctx.beginPath(); ctx.arc(d * S * 0.45, -S * 2.15, S * 0.28, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = col(50, 80, 55); ctx.beginPath(); ctx.arc(d * S * 0.45, -S * 2.2, S * 0.32, Math.PI, TAU); ctx.fill(); // the helmet
+  } else if (p.kind === 'dog') {
+    walker((p.ph * 90) % 360, 0, false);
+    const dx = d * S * 1.5, sw = Math.sin(t * 9 + p.ph) * S * 0.15; // the dog out in front on its lead, tail going
+    ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, S * 0.06); ctx.beginPath(); ctx.moveTo(d * S * 0.5, -S * 1.1); ctx.lineTo(dx - d * S * 0.2, -S * 0.6); ctx.stroke();
+    ctx.lineWidth = Math.max(1, S * 0.12); ctx.beginPath(); for (const k of [-0.3, 0.3]) { ctx.moveTo(dx + d * S * k, -S * 0.45); ctx.lineTo(dx + d * S * k + sw * (k > 0 ? 1 : -1), 0); } ctx.stroke();
+    ctx.fillStyle = col(30, 45, 45); ctx.beginPath(); ctx.ellipse(dx, -S * 0.5, S * 0.55, S * 0.28, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(dx + d * S * 0.6, -S * 0.75, S * 0.22, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = Math.max(1, S * 0.1); ctx.beginPath(); ctx.moveTo(dx - d * S * 0.5, -S * 0.6); ctx.lineTo(dx - d * S * 0.75, -S * (1 + 0.2 * Math.sin(t * 14))); ctx.stroke();
+  } else if (p.kind === 'jogger') walker(120, Math.abs(Math.sin(t * 6 + p.ph)) * S * 0.2, true);
+  else if (p.kind === 'deer' || p.kind === 'fox') {
+    const fox = p.kind === 'fox', fur = fox ? col(22, 75, 50) : col(28, 40, 45), sw = Math.sin(t * 7 + p.ph) * S * 0.2, L = fox ? S * 0.5 : S * 1.1;
+    ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, S * 0.14); ctx.beginPath(); for (const k of [-0.4, -0.25, 0.25, 0.4]) { ctx.moveTo(d * S * k * (fox ? 1.2 : 1), -L * 0.6); ctx.lineTo(d * S * k + sw * Math.sign(k), 0); } ctx.stroke();
+    ctx.fillStyle = fur; ctx.beginPath(); ctx.ellipse(0, -L * 0.7, S * (fox ? 0.6 : 0.8), S * (fox ? 0.25 : 0.4), 0, 0, TAU); ctx.fill(); ctx.stroke();
+    if (fox) { ctx.beginPath(); ctx.ellipse(-d * S * 0.75, -L * 0.75, S * 0.45, S * 0.2, -d * 0.4, 0, TAU); ctx.fill(); ctx.stroke(); ctx.fillStyle = col(0, 0, 95); ctx.beginPath(); ctx.arc(-d * S * 1.1, -L * 0.95, S * 0.1, 0, TAU); ctx.fill(); }
+    else { ctx.lineWidth = Math.max(1, S * 0.22); ctx.strokeStyle = fur; ctx.beginPath(); ctx.moveTo(d * S * 0.6, -L * 0.8); ctx.lineTo(d * S * 0.9, -L * 1.5); ctx.stroke(); }
+    ctx.fillStyle = fur; ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, S * 0.08); ctx.beginPath(); ctx.ellipse(d * S * (fox ? 0.7 : 1), -L * (fox ? 0.85 : 1.55), S * 0.25, S * 0.18, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); if (fox) { ctx.moveTo(d * S * 0.6, -L * 1.0); ctx.lineTo(d * S * 0.55, -L * 1.35); ctx.lineTo(d * S * 0.75, -L * 1.05); } else for (const k of [-0.1, 0.1]) { ctx.moveTo(d * S * (1 + k), -L * 1.7); ctx.lineTo(d * S * (1 + k * 3), -L * 2.1); ctx.lineTo(d * S * (1 + k * 5), -L * 1.95); }
+    fox ? (ctx.fill(), ctx.stroke()) : ctx.stroke();
+  } else if (p.kind === 'balloon') {
+    const hue = (p.ph * 80) % 360, bob = Math.sin(t * 0.8 + p.ph) * S * 0.1;
+    for (const [a0, a1, hh] of [[0, Math.PI / 2, hue], [Math.PI / 2, Math.PI, hue + 60], [Math.PI, Math.PI * 1.5, hue], [Math.PI * 1.5, TAU, hue + 60]]) { ctx.fillStyle = col(hh, 70, 55); ctx.beginPath(); ctx.moveTo(0, bob); ctx.arc(0, bob, S * 0.9, a0, a1); ctx.closePath(); ctx.fill(); }
+    ctx.beginPath(); ctx.arc(0, bob, S * 0.9, 0, TAU); ctx.stroke();
+    ctx.lineWidth = Math.max(1, S * 0.05); ctx.beginPath(); ctx.moveTo(-S * 0.4, S * 0.8 + bob); ctx.lineTo(-S * 0.2, S * 1.5 + bob); ctx.moveTo(S * 0.4, S * 0.8 + bob); ctx.lineTo(S * 0.2, S * 1.5 + bob); ctx.stroke();
+    ctx.fillStyle = col(30, 50, 40); ctx.fillRect(-S * 0.25, S * 1.5 + bob, S * 0.5, S * 0.35); ctx.strokeRect(-S * 0.25, S * 1.5 + bob, S * 0.5, S * 0.35);
+  } else if (p.kind === 'plane') {
+    ctx.fillStyle = col(0, 0, 88); ctx.beginPath(); ctx.ellipse(0, 0, S * 1.2, S * 0.22, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-d * S * 0.2, 0); ctx.lineTo(-d * S * 0.9, S * 0.55); ctx.lineTo(-d * S * 0.4, S * 0.5); ctx.closePath(); ctx.fill(); ctx.stroke(); // a wing
+    ctx.beginPath(); ctx.moveTo(-d * S * 0.9, 0); ctx.lineTo(-d * S * 1.25, -S * 0.55); ctx.lineTo(-d * S * 0.8, -S * 0.1); ctx.closePath(); ctx.fill(); ctx.stroke(); // the tail fin
+    if (Math.sin(t * 9) > 0.6) { ctx.fillStyle = hsla(0, 90, 60); ctx.beginPath(); ctx.arc(-d * S * 1.2, -S * 0.5, S * 0.1, 0, TAU); ctx.fill(); }
+  } else if (p.kind === 'bird' || p.kind === 'bat') {
+    const flap = Math.sin(t * (p.kind === 'bat' ? 22 : 12) + p.ph) * S * 0.45, W = S * 0.7;
+    ctx.strokeStyle = p.kind === 'bat' ? col(0, 0, 10) : col(0, 0, 25); ctx.lineWidth = Math.max(1, S * 0.1);
+    ctx.beginPath(); ctx.moveTo(-W, -flap); ctx.quadraticCurveTo(-W * 0.5, flap * 0.3, 0, 0); ctx.quadraticCurveTo(W * 0.5, flap * 0.3, W, -flap); ctx.stroke();
+    if (p.kind === 'bat') { ctx.fillStyle = col(0, 0, 10); ctx.beginPath(); ctx.moveTo(-W, -flap); ctx.lineTo(-W * 0.6, flap * 0.4); ctx.lineTo(-W * 0.3, flap * 0.1); ctx.lineTo(0, flap * 0.5); ctx.lineTo(W * 0.3, flap * 0.1); ctx.lineTo(W * 0.6, flap * 0.4); ctx.lineTo(W, -flap); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill(); }
+  } else if (p.kind === 'star') {
+    ctx.strokeStyle = hsla(50, 40, 95, clamp(1 - p.life / 0.8)); ctx.lineWidth = Math.max(1, S * 0.08); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-S * 2.2, -S * 1.2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
 /** midi note to 0..1 over 36 (C2) .. 84 (C6). */
 const pitch = (n) => clamp((n - 36) / 48);
 const seen = (q, v) => { q.lo = Math.min(q.lo, v); q.hi = Math.max(q.hi, v); q.mid = v; };
@@ -553,7 +726,7 @@ const place = (q, v) => clamp((v - q.lo) / Math.max(0.12, q.hi - q.lo));
 const character = (s) => ({
   skin: SKINS[Math.floor(rand(s) * SKINS.length)], hair: HAIRS[Math.floor(rand(s) * HAIRS.length)], hairStyle: Math.floor(rand(s) * 4),
   cardigan: CARDIGANS[Math.floor(rand(s) * CARDIGANS.length)].map((v, i) => v + (rand(s) - 0.5) * (i ? 10 : 24)),
-  glasses: rand(s) < 0.5, blanket: rand(s) < 0.6, plaid: PLAIDS[Math.floor(rand(s) * PLAIDS.length)],
+  glasses: rand(s) < 0.5, blanket: rand(s) < 0.6, knits: rand(s) < 0.45, plaid: PLAIDS[Math.floor(rand(s) * PLAIDS.length)],
   shirt: [[0, 0, 96], [45, 40, 92], [205, 45, 88], [340, 30, 90]][Math.floor(rand(s) * 4)], trousers: TROUSERS[Math.floor(rand(s) * TROUSERS.length)], skirt: rand(s) < 0.4, shoes: [[25, 30, 35], [0, 0, 15], [350, 40, 45], [30, 25, 60]][Math.floor(rand(s) * 4)],
   chair: [[25, 35, 40], [350, 30, 38], [210, 25, 40], [95, 20, 36]][Math.floor(rand(s) * 4)],
 });
@@ -573,7 +746,7 @@ function resident(s, kind, part) {
   if (n >= CAP[kind]) return null;
   const c = character(s), i = s.residents.length;
   const r = { kind, part, c, x: s.aspect / 2, z: 0.5, dir: 1, ph: rand(s) * TAU, rest: 1, turn: 0 };
-  if (kind === 'rocker') Object.assign(r, { a: 0, w: 0, nod: 0, period: rand(s) < 0.6 ? 2 : 4, cat: n === 0 && rand(s) < 0.6 ? [[25, 30, 40], [0, 0, 85], [30, 40, 20]][Math.floor(rand(s) * 3)] : null, tail: 0 });
+  if (kind === 'rocker') Object.assign(r, { a: 0, w: 0, nod: 0, tap: 0, knit: 1, knitTo: 1, period: rand(s) < 0.6 ? 2 : 4 });
   else if (kind === 'sleeper') Object.assign(r, { hold: 0, age: 9, chest: 0, snort: 0, zs: [], zt: rand(s) * 2, zEvery: 2 + rand(s) * 3, side: rand(s) < 0.5 ? -1 : 1 });
   else if (kind === 'walker') Object.assign(r, { to: 0, bob: 0, foot: 1, dir: rand(s) < 0.5 ? -1 : 1 });
   else if (kind === 'player') {
@@ -589,9 +762,10 @@ function resident(s, kind, part) {
 function arrange(s) {
   const A = s.aspect, by = { rocker: [], sleeper: [], walker: [], player: [] };
   for (const r of s.residents) by[r.kind].push(r);
-  const row = [[0.3, 0.14], [0.7, 0.19], [0.3, 0.72], [0.7, 0.72]]; // two at the front, either side of the table; a third and fourth in a back row by the window and the fire
+  const row = [[[0.3, 0.16]], [[0.25, 0.16], [0.75, 0.2]], [[0.17, 0.16], [0.5, 0.24], [0.83, 0.2]], [[0.13, 0.16], [0.38, 0.24], [0.62, 0.22], [0.87, 0.18]]][by.rocker.length - 1] ?? []; // one row across the front, nobody behind anybody
   by.rocker.forEach((r, i, all) => { [r.x, r.z] = [A * row[i][0], row[i][1]]; r.dir = all.length === 1 ? 1 : r.x < A / 2 ? 1 : -1; });
   by.sleeper.forEach((r, i) => { [r.x, r.z] = [[A * 0.09, 0.62], [A * 0.91, 0.62], [A * 0.5, 0.92]][i]; r.side = i === 1 ? -1 : 1; });
+  if (s.table) s.table.x = A * (by.rocker.length === 3 ? 0.68 : 0.5); // off to the side when a chair sits in the middle
   by.walker.forEach((r, i) => { if (!r.placed) { r.x = A * (0.3 + 0.4 * ((i * 0.37 + 0.2) % 1)); r.to = r.x; r.placed = true; } r.z = 0.42 + i * 0.07; });
   by.player.forEach((r) => { r.x = s.table.x; r.z = s.table.z; });
 }
