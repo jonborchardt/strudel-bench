@@ -2,8 +2,9 @@
 // bends, climbs and rushes at the player in painted bands, palms and billboards scaling up past the shoulders,
 // three lanes of traffic to thread, a stage per section and a checkpoint gantry at every boundary. The music plays
 // the game, and plays it like someone who never touches traffic. The road is three lanes and the car is a lane
-// picker: the melody's register picks the lane (low notes left, mid centre, high right), the change lands on the
-// kick (direction from the melody, moment from the drums, as the arcade's frame-stepped steering did), and a lane
+// picker: the melody's motion picks the lane (a note above the last one a lane to the right, below it a lane to the
+// left, so a rocking line rocks between lanes and a run walks across the road; two bars without a melody and the
+// bass does it), the change lands on the kick (direction from the melody, moment from the drums, as the arcade's frame-stepped steering did), and a lane
 // with a car ahead in it is refused for the nearest clear one; a car ahead in our own lane is left at once. Traffic
 // arrives out of the fog at the far end, all at one speed under ours, never spawned where it would close the third
 // lane, so a way through always exists and the road never slows for it. The bass bends the road (a low note a
@@ -18,7 +19,10 @@
 // release) and the counter set to the seconds to the next one, so it always runs down to the flag. The only crash
 // is the dropout, the song's own silence: the car leaves the road, tumbles and stops, and the song coming back is
 // a restart from the shoulder. Off the road is grass: the view shakes and the car slows. The HUD is the cabinet's (score, time, stage, km/h, the lap
-// clock) under scanlines and a curved-glass vignette. Deterministic: randomness only from the state's own generator
+// clock) under scanlines and a curved-glass vignette. The sun sits on the horizon and scrolls with it. The distance
+// is the train world's: sky traffic crossing (a plane, a UFO whose beam pulses on the beat, a balloon, a blimp, a
+// helicopter, a rocket, a dragon, a meteor) and bombs beyond the horizon, most fx impacts and now and then a bar on
+// its own, a flash and a shudder and a mushroom cloud rising for a minute. Deterministic: randomness only from the state's own generator
 // (kit.mjs); units are the canvas height, world units are the road's half width.
 import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf } from './kit.mjs';
 
@@ -73,27 +77,32 @@ const segAt = (s, i) => {
   return s.segs[i - s.seg0];
 };
 const TRAFFIC = 0.45; // every car's share of the nominal speed: one speed, so the traffic never bunches and the spawn's promise holds forever
-const CLEAR = 20; // world units: within this of any car, the middle lane never shares the road with an edge lane (cars come alone, or two abreast at the edges), so from an edge the middle is always the way out and from the middle both edges are
+const CLEAR = 16; // world units: within this of any car, the middle lane never shares the road with an edge lane (cars come alone, or two abreast at the edges), so from an edge the middle is always the way out and from the middle both edges are
 /** True when `lane` holds a car within `from`..`to` of our position (the window we could not clear in time). */
 const blocked = (s, lane, from, to) => s.cars.some((c) => c.lane === lane && c.z - s.pos > from && c.z - s.pos < to);
 /** A car into the traffic at the far end of the road, out of the fog, so nothing ever pops in; refused in a lane that would break CLEAR's promise. */
 const spawnCar = (s, at = s.pos + N * SEG * 0.98) => {
   if (s.cars.length >= MAX_CARS) return;
-  const lane = Math.floor(rand(s) * LANES.length), taken = new Set(s.cars.filter((c) => Math.abs(c.z - at) < CLEAR).map((c) => c.lane));
+  const r0 = rand(s), lane = r0 < 0.45 ? 1 : r0 < 0.725 ? 0 : 2, taken = new Set(s.cars.filter((c) => Math.abs(c.z - at) < CLEAR).map((c) => c.lane)); // the middle first: it keeps the edges open for the melody's picks
   taken.delete(lane); if (taken.size && (lane === 1 || taken.has(1))) return;
   const r = rand(s);
   s.cars.push({ z: at, lane, x: LANES[lane], hue: Math.floor(rand(s) * 360), kind: r < 0.18 ? 'truck' : r < 0.32 ? 'van' : 'car', lit: 0, passed: 0 });
 };
 /** The nearest car ahead of us. */
 const ahead = (s, from = 0) => s.cars.filter((c) => c.z > s.pos + from).sort((a, b) => a.z - b.z)[0];
-/** The lane to be in: `want` when it is clear (and, two lanes over, the middle too), else the nearest clear lane to it, else where we are. `reach` is how far ahead a car counts. */
+/** The lane to be in: `want` when it is clear (and, two lanes over, the middle too), else the other edge when an edge was wanted, else the middle, else where we are. `reach` is how far ahead a car counts. */
 const pickLane = (s, want, reach) => {
   const clear = (l) => !blocked(s, l, -0.5, reach);
-  const order = [want, ...[0, 1, 2].filter((l) => l !== want).sort((a, b) => Math.abs(a - want) - Math.abs(b - want) || Math.abs(a - s.lane) - Math.abs(b - s.lane))];
+  const order = want === 1 ? [1, s.lane === 1 ? 0 : s.lane, s.lane === 1 ? 2 : 2 - s.lane] : [want, 2 - want, 1];
   for (const l of order) if (clear(l) && (Math.abs(l - s.lane) < 2 || clear(1))) return l;
   return s.lane;
 };
 const secsOf = (s, i) => s.secs[i] ?? 60;
+const SKY_KINDS = ['plane', 'ufo', 'balloon', 'blimp', 'helicopter', 'rocket', 'dragon', 'meteor'];
+/** A bomb beyond the horizon: a flash and a shudder now, a mushroom cloud rising for a minute, fire turning to dust. */
+const nuke = (s) => { s.nukes.push({ x: 0.15 + rand(s) * (s.W - 0.3), age: 0, h: 0.8 + rand(s) * 0.5 }); s.flash = Math.max(s.flash, 1.2); s.bump = 1; };
+/** The lane the line wants after `note`: one to the right when it rose from the last note, one to the left when it fell, unchanged on a repeat (the first note only sets the reference). */
+const stepLane = (s, note, prev) => { if (s[prev] !== null) s.want = clamp(s.want + Math.sign(note - s[prev]), 0, 2); s[prev] = note; };
 
 export default {
   name: 'outrun',
@@ -107,8 +116,8 @@ export default {
       slotOf: Object.fromEntries(Object.entries(score.cast).map(([n, c]) => [n, c.slot])),
       roles, lands, landTo: lands[0] ?? 'beach', ground: [...first.ground], secs: score.sections.map((x) => (x.until - x.at) / score.cps),
       t: 0, pos: 0, vel: 0, energy: 0.5, speed: 1, traffic: 1, riser: 0, wasRiser: 0, beat: 0, beatPhase: 0, light: 0.6, cloud: 0.4, cloudTo: 0.4,
-      x: 0, lane: 1, want: 1, sway: 0, steer: 0, sinceKick: 0, curve: 0, curveTo: 0, slope: 0, slopeTo: 0, bassHold: 0,
-      seg0: 0, segs: [], sideNext: 0.5, bgX: 0, cars: [], carNext: 3, passed: 0, score: 0, hi: 1e6 + Math.floor(rng() * 9e6), time: 0, stage: 1, check: 0, flash: 0, lit: 0,
+      x: 0, lane: 1, want: 1, melPrev: null, bassPrev: null, melAge: 1e6, sway: 0, steer: 0, sinceKick: 0, curve: 0, curveTo: 0, slope: 0, slopeTo: 0, bassHold: 0,
+      seg0: 0, segs: [], sideNext: 0.5, bgX: 0, fliers: [], skyNext: 4, nukes: [], blink: 0, bar: -1, cars: [], carNext: 3, passed: 0, score: 0, hi: 1e6 + Math.floor(rng() * 9e6), time: 0, stage: 1, check: 0, flash: 0, lit: 0,
       crash: 0, crashDir: 1, tumble: 0, bump: 0, kick: 0, rev: 0, shake: 0, wheel: 0,
       bg: { peaks: shapes(), mesas: shapes(), city: shapes(), hills: shapes(), sea: shapes(), flat: shapes() },
       clouds: Array.from({ length: 6 }, () => ({ x: rng() * 3, y: 0.04 + rng() * 0.22, w: 0.1 + rng() * 0.2, a: 0.4 + rng() * 0.5 })),
@@ -127,8 +136,10 @@ export default {
     s.energy = ease(s.energy, clock.energy, 2, dt); s.speed = ease(s.speed, want.speed, 1.5, dt); s.traffic = ease(s.traffic, want.traffic, 1.5, dt);
     s.riser = clock.riserBars && clock.riser > 0 ? clamp(1 - clock.riser / clock.riserBars) : 0;
     s.wasRiser = s.riser > 0 ? s.riser : decay(s.wasRiser, 2, dt);
-    s.beat = clock.beat; s.beatPhase = clock.beatPhase;
+    s.beat = clock.beat; s.beatPhase = clock.beatPhase; s.blink = clock.beat % 2;
     let base = Math.floor(s.pos / SEG);
+    const bar = clock.index >= 0 ? clock.index * 1e4 + clock.bar : Math.floor(clock.cycle);
+    if (bar !== s.bar) { s.bar = bar; if (rand(s) < 0.03) nuke(s); } // now and then a bar sets off a bomb beyond the horizon
     if (clock.boundary) { // the checkpoint: the gantry just ahead, the time extended by the stage's length, the next scenery
       s.check = 3; s.stage = clock.index + 1; s.time = secsOf(s, clock.index) + 4; s.flash = Math.max(s.flash, 0.35); s.landTo = s.lands[clock.index] ?? s.landTo;
       plant(s, segAt(s, base + 3), land, 1, 'arch');
@@ -142,22 +153,22 @@ export default {
     const vTo = s.crash ? 0 : (7 + 11 * s.energy) * s.speed * (1 + 0.5 * s.riser) * (off ? 0.5 : 1);
     s.vel = ease(s.vel, vTo, s.crash ? 4 : 0.8, dt);
     // the events, each by its part's job in the cast
-    const reach = 6 + 0.35 * s.vel; // how far ahead a car in a lane counts as in the way: a lane change takes a quarter second
+    const reach = Math.min(CLEAR - 2, 6 + 0.35 * s.vel); // how far ahead a car in a lane counts as in the way: a lane change takes a quarter second; under CLEAR so the promise holds
     let change = false;
     for (const e of events) {
       const slot = s.slotOf[e.layer] ?? DEFAULT_SLOT[e.kind] ?? 'grain', g = clamp(e.gain * e.velocity, 0, 1.5);
-      if (slot === 'transition') { if (e.dur >= 1) { s.flash = Math.max(s.flash, 0.7); s.bump = 1; plant(s, segAt(s, base + N - 2), land, rand(s) < 0.5 ? -1 : 1, 'billboard'); } } // the impact (a whole cycle long); a riser's slices are the clock's business
+      if (slot === 'transition') { if (e.dur >= 1) { s.flash = Math.max(s.flash, 0.7); s.bump = 1; plant(s, segAt(s, base + N - 2), land, rand(s) < 0.5 ? -1 : 1, 'billboard'); if (rand(s) < 0.8) nuke(s); } } // the impact (a whole cycle long): a billboard, and most times a bomb in the distance; a riser's slices are the clock's business
       else if (e.role === 'pulse') { s.kick = 1; s.rev = 1; change = true; if (!s.crash) s.vel += 0.8 * g; } // a kick, whatever slot its part took: a gear kick, and the moment a lane change lands
       else if (e.role === 'impact') { const c = ahead(s, 1); if (c) c.lit = 1; s.lit = 1; } // the car ahead flashes its lights
       else if (slot === 'impulse') s.kick = Math.max(s.kick, 0.5 * g);
-      else if (slot === 'ground') { if (e.note !== null) { s.curveTo = (clamp((e.note - 36) / 24) - 0.5) * 2 * CURVE * land.curve * clamp(g, 0.5, 1.2); s.bassHold = 1; } }
-      else if (slot === 'line') { if (e.note !== null) s.want = Math.min(2, Math.floor(clamp((e.note - 60) / 24) * 3)); } // the register picks the lane: low left, mid centre, high right
+      else if (slot === 'ground') { if (e.note !== null) { s.curveTo = (clamp((e.note - 36) / 24) - 0.5) * 2 * CURVE * land.curve * clamp(g, 0.5, 1.2); s.bassHold = 1; if (s.melAge > 2 / Math.max(0.05, s.cps)) stepLane(s, e.note, 'bassPrev'); } } // no melody for two bars: the bass picks the lane
+      else if (slot === 'line') { if (e.note !== null) { stepLane(s, e.note, 'melPrev'); s.melAge = 0; } } // the melody's motion picks the lane: up a lane right, down a lane left
       else if (slot === 'counter') { if (e.note !== null) s.sway = (clamp((e.note - 48) / 24) - 0.5) * 0.1; } // the counter leans the car within its lane
       else if (slot === 'field') { s.cloudTo = clamp(0.3 + 0.6 * g); if (e.cutoff !== null) s.light = clamp(Math.log(e.cutoff / 200) / Math.log(40)); }
       else if (e.role === 'grain' || slot === 'grain') { if (rand(s) < 0.4 * g) plant(s, segAt(s, base + N - 2), land, rand(s) < 0.5 ? -1 : 1); }
     }
     // the lane: the melody's pick lands on the kick (or after a beat and a half with no kick), refused when that lane is taken ahead; a car ahead in our own lane is left at once, for the nearest clear lane
-    s.sinceKick = change ? 0 : s.sinceKick + dt;
+    s.sinceKick = change ? 0 : s.sinceKick + dt; s.melAge += dt;
     if (!s.crash) {
       if (blocked(s, s.lane, -0.5, reach)) s.lane = pickLane(s, s.want, reach);
       else if ((change || s.sinceKick > 1.5 / Math.max(0.2, s.cps * 4)) && s.want !== s.lane) { s.lane = pickLane(s, s.want, reach); s.sinceKick = 0; }
@@ -173,8 +184,14 @@ export default {
     s.x = clamp(ease(s.x, xTo, s.crash ? 1.5 : 8, dt), -1.9, 1.9);
     s.steer = ease(s.steer, (s.x - px) / dt, 8, dt);
     s.wheel = (s.wheel + s.vel * dt * 3) % 1;
-    s.bgX += -here * s.vel * 14 * dt;
+    const bg = -here * s.vel * 14 * dt; s.bgX += bg;
     for (const c of s.clouds) c.x = ((c.x - dt * 0.01 - here * s.vel * 5 * dt) % 3 + 3) % 3;
+    // the sky's traffic, by time: a thing every so often crossing the horizon at its own pace, carried a little with the bend; the bombs age out over a minute
+    s.skyNext -= dt;
+    if (s.skyNext <= 0) { const kind = SKY_KINDS[Math.floor(rand(s) * SKY_KINDS.length)]; if (s.fliers.length < 6) s.fliers.push({ kind, x: kind === 'meteor' ? s.W * 0.7 + rand(s) * 0.5 : s.W + 0.3, y: 0.06 + rand(s) * 0.22, h: 0.6 + rand(s) * 0.5, v: rand(s), k: kind === 'plane' ? 0.35 : kind === 'meteor' ? 1.4 : kind === 'rocket' ? -0.1 : 0.06 + rand(s) * 0.1, vy: kind === 'rocket' ? -0.12 : kind === 'meteor' ? 0.5 : 0 }); s.skyNext = 6 + rand(s) * 10; }
+    for (const o of s.fliers) { o.x -= o.k * dt - bg * 0.3; o.y += o.vy * dt; }
+    s.fliers = s.fliers.filter((o) => o.x > -0.4 && o.x < s.W + 0.6 && o.y > -0.2 && o.y < HOR);
+    for (const n of s.nukes) { n.age += dt; n.x += bg * 0.5; } s.nukes = s.nukes.filter((n) => n.age < 80);
     s.kick = decay(s.kick, 6, dt); s.rev = decay(s.rev, 5, dt); s.bump = decay(s.bump, 5, dt); s.flash = decay(s.flash, 5, dt); s.lit = decay(s.lit, 4, dt); s.bassHold = decay(s.bassHold, 0.4, dt);
     s.check = Math.max(0, s.check - dt);
     s.shake = ease(s.shake, off || s.crash ? 1 : 0, 6, dt);
@@ -183,7 +200,7 @@ export default {
     s.cloud = ease(s.cloud, s.cloudTo, 0.5, dt); s.cloudTo = ease(s.cloudTo, 0.35, 0.05, dt);
     // the traffic, by distance: a car every so often out of the fog, all at one speed under ours, passed when it falls behind
     s.carNext -= s.vel * dt;
-    if (s.carNext <= 0) { spawnCar(s); s.carNext = (5 + rand(s) * 9) / Math.max(0.2, s.traffic); }
+    if (s.carNext <= 0) { spawnCar(s); s.carNext = (7 + rand(s) * 9) / Math.max(0.2, s.traffic); }
     const cv = (7 + 11 * s.energy) * TRAFFIC * dt;
     for (const c of s.cars) {
       c.z += cv; c.lit = decay(c.lit, 4, dt);
@@ -203,8 +220,10 @@ export default {
     grad.addColorStop(0, hsla(sky.top[0], sky.top[1], sky.top[2] * day)); grad.addColorStop(1, hsla(sky.low[0], sky.low[1], sky.low[2] * day));
     ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
     if (night) for (const st of s.stars) { const x = ((st.x + s.bgX * 0.2) % 3 + 3) % 3; if (x > W) continue; ctx.fillStyle = hsla(50, 20, 90, 0.7 * st.w); ctx.fillRect(X(x), Y(st.y), h * 0.004 * st.w, h * 0.004 * st.w); }
-    const sunX = ((0.6 + s.bgX * 0.15) % 3 + 3) % 3;
-    if (sunX < W + 0.1) { ctx.beginPath(); ctx.arc(X(sunX), Y(HOR - 0.16), h * (night ? 0.035 : 0.06), 0, TAU); ctx.fillStyle = hsla(sky.sun[0], sky.sun[1], sky.sun[2], 0.95); ctx.fill(); }
+    const sunX = ((0.9 + s.bgX) % 3 + 3) % 3; // the sun sits on the horizon and scrolls with it, part of the distance, never a spot hung before the car
+    if (sunX < W + 0.15) { ctx.beginPath(); ctx.arc(X(sunX), Y(HOR - 0.01), h * (night ? 0.05 : 0.1), 0, TAU); ctx.fillStyle = hsla(sky.sun[0], sky.sun[1], sky.sun[2], 0.95); ctx.fill(); if (!night) { ctx.fillStyle = hsla(sky.low[0], sky.low[1], sky.low[2] * day, 0.35); for (let i = 0; i < 4; i++) ctx.fillRect(X(sunX - 0.11), Y(HOR - 0.07 + i * 0.018), h * 0.22, h * (0.004 + i * 0.002)); } } // the arcade sun's bands
+    for (const o of s.fliers) skyThing(s, ctx, h, o, X, Y, night);
+    for (const n of s.nukes) bomb(ctx, h, n, X, hor, night);
     for (const c of s.clouds) { const x = ((c.x + s.bgX * 0.3) % 3 + 3) % 3; if (x > W + 0.4) continue; ctx.fillStyle = hsla(sky.low[0], 20, night ? 28 : 94 * Math.min(1, day), 0.7 * c.a * s.cloud * 2); for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.ellipse(X(x + i * c.w * 0.4), Y(c.y + Math.abs(i) * 0.012), h * c.w * 0.5, h * c.w * (0.22 - Math.abs(i) * 0.06), 0, 0, TAU); ctx.fill(); } }
     skyline(s, ctx, h, W, land.bg, X, Y, night, day);
     const [gh, gs, gl] = s.ground;
@@ -238,6 +257,39 @@ export default {
     const vig = ctx.createRadialGradient(w / 2, h / 2, h * 0.45, w / 2, h / 2, h * 1.05); vig.addColorStop(0, 'rgba(0 0 0 / 0)'); vig.addColorStop(1, 'rgba(0 0 0 / .55)'); ctx.fillStyle = vig; ctx.fillRect(0, 0, w, h);
   },
 };
+
+/** A bomb beyond the horizon, from the train world: the fireball on the line in the first seconds, then the column and the cap growing with age, fire to dust, thinning out at the end. */
+function bomb(ctx, h, n, X, hor, night) {
+  const g = 1 - Math.exp(-n.age / 12), fire = Math.exp(-n.age / 6), a = clamp((80 - n.age) / 25) * (night ? 0.8 : 1), cx = X(n.x), base = hor + 2, capH = h * 0.5 * g * n.h, stemW = h * 0.06 * (0.4 + 0.6 * g) * n.h, capW = h * 0.26 * g * n.h, capY = base - capH;
+  const hue = lerp(20, 30, 1 - fire), sat = lerp(12, 90, fire), light = lerp(38, 62, fire);
+  const grad = ctx.createLinearGradient(0, capY, 0, base); grad.addColorStop(0, hsla(hue, sat, light, a)); grad.addColorStop(1, hsla(hue, sat * 0.6, light * 0.6, a));
+  ctx.fillStyle = grad; ctx.beginPath(); ctx.moveTo(cx - stemW, base); ctx.quadraticCurveTo(cx - stemW * 0.6, capY + capH * 0.5, cx - stemW * 1.2, capY + capH * 0.3); ctx.lineTo(cx + stemW * 1.2, capY + capH * 0.3); ctx.quadraticCurveTo(cx + stemW * 0.6, capY + capH * 0.5, cx + stemW, base); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = hsla(hue, sat, light, a); ctx.beginPath(); ctx.ellipse(cx, capY + capH * 0.22, capW, capH * 0.26, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = hsla(hue, sat, light + 12, a * 0.8); ctx.beginPath(); ctx.ellipse(cx - capW * 0.3, capY + capH * 0.12, capW * 0.5, capH * 0.18, 0, 0, TAU); ctx.ellipse(cx + capW * 0.35, capY + capH * 0.2, capW * 0.45, capH * 0.16, 0, 0, TAU); ctx.fill();
+  if (fire > 0.05) { ctx.fillStyle = hsla(45, 100, 90, fire * a); ctx.beginPath(); ctx.ellipse(cx, capY + capH * 0.25, capW * 0.5, capH * 0.15, 0, 0, TAU); ctx.fill(); }
+  if (fire > 0.02) { const r = h * 0.26 * n.h * (1 - Math.exp(-n.age / 1.2)); const fb = ctx.createRadialGradient(cx, base, 0, cx, base, r * 2); fb.addColorStop(0, hsla(50, 100, 98, fire * a)); fb.addColorStop(0.3, hsla(45, 100, 85, fire * a)); fb.addColorStop(0.5, hsla(30, 100, 62, 0.8 * fire * a)); fb.addColorStop(1, hsla(20, 100, 55, 0)); ctx.fillStyle = fb; ctx.beginPath(); ctx.ellipse(cx, base, r * 2, r * 1.4, 0, Math.PI, TAU); ctx.fill(); }
+}
+
+/** The sky's traffic, from the train world: everything flies left, a plane, a UFO whose beam pulses on the beat, a balloon, a blimp, a helicopter, a rocket climbing, a dragon, a meteor falling. */
+function skyThing(s, ctx, h, o, X, Y, night) {
+  const x = X(o.x), y = Y(o.y), S = h * 0.05 * o.h, F = (c) => { ctx.fillStyle = c; }, R = (dx, dy, w, hh) => ctx.fillRect(x + dx * S, y - dy * S, w * S, hh * S);
+  const C = (dx, dy, r) => { ctx.beginPath(); ctx.arc(x + dx * S, y - dy * S, r * S, 0, TAU); ctx.fill(); }, E = (dx, dy, rx, ry) => { ctx.beginPath(); ctx.ellipse(x + dx * S, y - dy * S, rx * S, ry * S, 0, 0, TAU); ctx.fill(); };
+  const T = (pts) => { ctx.beginPath(); pts.forEach(([dx, dy], i) => (i ? ctx.lineTo(x + dx * S, y - dy * S) : ctx.moveTo(x + dx * S, y - dy * S))); ctx.closePath(); ctx.fill(); }, flap = Math.sin(s.t * 6 + o.v * 9), dark = hsla(0, 0, night ? 30 : 15);
+  const mirror = ['dragon', 'helicopter', 'blimp'].includes(o.kind);
+  if (mirror) { ctx.save(); ctx.translate(2 * x, 0); ctx.scale(-1, 1); }
+  switch (o.kind) {
+    case 'plane': F(hsla(0, 0, night ? 40 : 92)); E(0, 0, 1.2, 0.3); T([[0.4, 0], [-0.4, 0], [-0.9, -0.9]]); T([[1.2, 0], [0.7, 0], [1.1, 0.7]]); break;
+    case 'ufo': { const on = 1 - 0.7 * s.beatPhase; F(hsla(120, 80, 60, 0.18 * on)); T([[-0.6, -0.3], [0.6, -0.3], [2.2, -(HOR - o.y) * 20], [-2.2, -(HOR - o.y) * 20]]); F(hsla(0, 0, night ? 45 : 70)); E(0, 0, 1.4, 0.4); F(hsla(180, 60, 80, 0.8)); E(0, 0.35, 0.6, 0.45); for (let i = -1; i <= 1; i++) { F(hsla((s.blink + i + 3) % 2 ? 0 : 60, 90, 60)); C(i * 0.8, -0.1, 0.12); } break; }
+    case 'balloon': F(hsla(o.v * 360, 75, 55)); E(0, 1.2, 1, 1.2); F(hsla(o.v * 360 + 180, 75, 65)); T([[-0.3, 2.3], [0.3, 2.3], [0.15, 0.1], [-0.15, 0.1]]); ctx.strokeStyle = dark; ctx.lineWidth = S * 0.05; ctx.beginPath(); ctx.moveTo(x - 0.5 * S, y - 0.4 * S); ctx.lineTo(x - 0.3 * S, y + 0.6 * S); ctx.moveTo(x + 0.5 * S, y - 0.4 * S); ctx.lineTo(x + 0.3 * S, y + 0.6 * S); ctx.stroke(); F(hsla(30, 50, 40)); R(-0.35, -0.6, 0.7, 0.45); break;
+    case 'blimp': F(hsla(0, 0, night ? 45 : 85)); E(0, 0, 2.2, 0.7); T([[-2, 0.2], [-2.8, 0.7], [-2.6, 0]]); T([[-2, -0.2], [-2.8, -0.7], [-2.6, 0]]); F(dark); R(-0.4, -0.7, 0.8, 0.3); break;
+    case 'helicopter': F(hsla(0, 70, 50)); E(0, 0, 1, 0.55); R(-2.4, 0.2, 2, 0.25); T([[-2.5, 0.1], [-2.5, 0.9], [-2, 0.3]]); F(hsla(200, 40, 80, 0.8)); E(0.4, 0.05, 0.4, 0.3); F(dark); R(-0.5, -0.8, 1, 0.1); { const sp = Math.abs(Math.cos(s.t * 25)); R(-2 * sp, 0.85, 4 * sp, 0.1); } break;
+    case 'rocket': F(hsla(0, 0, 90)); R(-0.3, 1.8, 0.6, 1.8); T([[-0.3, 1.8], [0, 2.6], [0.3, 1.8]]); F(hsla(0, 80, 55)); T([[-0.3, 0], [-0.7, -0.5], [-0.3, 0.7]]); T([[0.3, 0], [0.7, -0.5], [0.3, 0.7]]); F(hsla(30, 100, 60, 0.9)); T([[-0.25, 0], [0, -1.2 - 0.4 * Math.abs(flap)], [0.25, 0]]); F(hsla(55, 100, 80)); T([[-0.12, 0], [0, -0.6], [0.12, 0]]); break;
+    case 'dragon': F(hsla(120, 50, 35)); E(0, 0, 1.4, 0.4); E(1.5, 0.4, 0.5, 0.3); T([[-1.2, 0], [-2.6, 0.5 * flap], [-1.3, -0.2]]); T([[-0.6, 0.2], [0.2, 0.2], [-0.4, 1.6 * flap]]); F(hsla(50, 90, 60)); C(1.75, 0.5, 0.08); break;
+    case 'meteor': F(hsla(30, 100, 80, 0.9)); T([[0, 0], [3, 1.8], [0.4, 0.4], [-0.4, 0]]); F(hsla(50, 100, 95)); C(0, 0, 0.35); break;
+    default: break;
+  }
+  if (mirror) ctx.restore();
+}
 
 /** The horizon's skyline, one band per stage kind, repeating every three heights and scrolling against the bend. */
 function skyline(s, ctx, h, W, kind, X, Y, night, day) {

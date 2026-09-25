@@ -73,23 +73,33 @@ test('every cast job reaches the state: the melody picks the lane, the kick land
   assert.ok(low.curveTo < 0 && high.curveTo > 0, 'a low bass note bends the road left, a high one right');
   // the lane: the melody's register wants it, the kick lands it, a car in it refuses it, a car in ours moves us out at once
   const mel = (note) => ({ ...base, layer: 'melody', kind: 'melody', note });
-  assert.equal(one(mel(60)).want, 0); assert.equal(one(mel(70)).want, 1); assert.equal(one(mel(84)).want, 2);
-  assert.equal(one({ ...base, layer: null, kind: 'pitched', note: 84 }).want, 2, 'a pitched hap with no part picks a lane all the same');
-  const drive = fresh(); drive.cars = []; outrun.step(drive, STEP, [mel(84)], clockOf(score, 0));
+  const two = (a, b) => { const s = fresh(); outrun.step(s, STEP, [a], clockOf(score, 0)); outrun.step(s, STEP, [b], clockOf(score, 0)); return s; };
+  assert.equal(one(mel(60)).want, 1, 'the first note only sets the reference');
+  assert.equal(two(mel(60), mel(64)).want, 2, 'a note above the last steps a lane right'); assert.equal(two(mel(64), mel(60)).want, 0, 'below, a lane left'); assert.equal(two(mel(64), mel(64)).want, 1, 'a repeat stays');
+  assert.equal(two({ ...base, layer: null, kind: 'pitched', note: 60 }, { ...base, layer: null, kind: 'pitched', note: 67 }).want, 2, 'a pitched hap with no part picks a lane all the same');
+  const bassNote = (note) => ({ ...base, layer: 'bass', kind: 'bass', note });
+  assert.equal(two(bassNote(36), bassNote(43)).want, 2, 'with no melody yet, the bass picks');
+  const held = two(mel(60), mel(64)); outrun.step(held, STEP, [bassNote(43)], clockOf(score, 0)); outrun.step(held, STEP, [bassNote(36)], clockOf(score, 0));
+  assert.equal(held.want, 2, 'but not while the melody is sounding');
+  const drive = fresh(); drive.cars = []; outrun.step(drive, STEP, [mel(60)], clockOf(score, 0)); outrun.step(drive, STEP, [mel(72)], clockOf(score, 0));
   assert.equal(drive.lane, 1, 'the pick waits for the kick');
   outrun.step(drive, STEP, [KICK], clockOf(score, 0));
   assert.equal(drive.lane, 2, 'the kick lands it');
   for (let i = 0; i < 30; i++) outrun.step(drive, STEP, [], clockOf(score, 0));
   assert.ok(drive.x > 0.5, 'and the car crosses to it in well under a second');
-  const refused = fresh(); refused.cars = [carIn(2, refused.pos + 5)]; outrun.step(refused, STEP, [mel(84)], clockOf(score, 0)); outrun.step(refused, STEP, [KICK], clockOf(score, 0));
-  assert.equal(refused.lane, 1, 'a lane with a car ahead is refused');
+  const refused = fresh(); refused.cars = [carIn(2, refused.pos + 5)]; refused.want = 2; outrun.step(refused, STEP, [KICK], clockOf(score, 0));
+  assert.equal(refused.lane, 0, 'a lane with a car ahead is refused, for the other edge');
+  const both = fresh(); both.cars = [carIn(2, both.pos + 5), carIn(0, both.pos + 4)]; both.want = 2; outrun.step(both, STEP, [KICK], clockOf(score, 0));
+  assert.equal(both.lane, 1, 'both edges taken: the middle');
   const blocked = fresh(); blocked.cars = [carIn(1, blocked.pos + 5)]; outrun.step(blocked, STEP, [], clockOf(score, 0));
   assert.notEqual(blocked.lane, 1, 'a car ahead in our own lane moves us out, no kick needed');
-  const late = fresh(); late.cars = []; outrun.step(late, STEP, [mel(60)], clockOf(score, 0));
+  const late = fresh(); late.cars = []; late.want = 0;
   for (let i = 0; i < 60; i++) outrun.step(late, STEP, [], clockOf(score, 0));
   assert.equal(late.lane, 0, 'with no kick for a beat and a half the change lands anyway');
   assert.ok(one({ ...base, layer: 'pad', kind: 'pad', note: 60, cutoff: 3000 }).cloudTo > 0.5, 'a pad brings cloud');
   assert.ok(one({ ...base, layer: 'fx', kind: 'fx', role: 'pulse', dur: 2 }).flash > 0.6, 'the impact flashes');
+  const bombs = fresh(); for (let i = 0; i < 12 && !bombs.nukes.length; i++) outrun.step(bombs, STEP, [{ ...base, layer: 'fx', kind: 'fx', role: 'pulse', dur: 2 }], clockOf(score, 0));
+  assert.ok(bombs.nukes.length > 0, 'and most times sets off a bomb beyond the horizon');
   // the clock alone
   const rising = fresh(); for (let i = 0; i < 30; i++) outrun.step(rising, STEP, [], clockOf(score, 1.5)); // intro's riser is its last bar
   assert.ok(rising.riser > 0 && rising.slopeTo > 0, 'the riser is a climb');
@@ -107,19 +117,22 @@ test("over a long run the traffic gets passed and never driven through, a lane i
   const g = await ready;
   const ir = song(g), p = createPerformance(outrun, composeVisual(ir), { w: 16, h: 9 });
   for (const e of streamOf(ir)) p.push(e);
-  let lo = 0, hi = 0, through = 0, closed = 0, changes = 0, lane = 1;
+  let lo = 0, hi = 0, through = 0, closed = 0, changes = 0, lane = 1, flew = false;
+  const inLane = [0, 0, 0];
   for (let t = 0; t <= 40; t += 1 / 30) {
-    p.advance(t, t * ir.meta.cps); const s = p.state;
+    p.advance(t, t * ir.meta.cps); const s = p.state; inLane[s.lane]++; flew ||= s.fliers.length > 0;
     lo = Math.min(lo, s.curve); hi = Math.max(hi, s.curve);
     if (!s.crash) for (const c of s.cars) if (Math.abs(c.z - s.pos) < 0.6 && Math.abs(c.x - s.x) < 0.5) through++; // half our width plus half a car's is 0.53
-    for (const c of s.cars) { const lanes = new Set(s.cars.filter((o) => Math.abs(o.z - c.z) < 20).map((o) => o.lane)); if (lanes.has(1) && lanes.size > 1) closed++; }
+    for (const c of s.cars) { const lanes = new Set(s.cars.filter((o) => Math.abs(o.z - c.z) < 16).map((o) => o.lane)); if (lanes.has(1) && lanes.size > 1) closed++; }
     if (s.lane !== lane) { changes++; lane = s.lane; }
   }
   const s = p.state;
   assert.ok(s.passed > 0, 'cars were passed');
+  assert.ok(flew, 'something crossed the sky');
   assert.equal(through, 0, 'never a car where we are');
   assert.equal(closed, 0, 'the middle lane never shares a stretch with an edge lane, so a way out always exists');
   assert.ok(changes > 2, 'the car changes lane');
+  assert.ok(inLane[1] < 0.6 * (inLane[0] + inLane[1] + inLane[2]), `the middle lane is not where it lives (${inLane.join('/')} frames)`);
   assert.ok(s.score > 1000);
   assert.ok(hi > 0 && lo < 0, 'the road bends both ways');
   const HALF = { palm: 1.1, tree: 0.9, pine: 1, bush: 0.7, cactus: 0.55, rock: 0.6, cliff: 1.35, sign: 0.4, billboard: 1.05, lamp: 0.7, building: 0.65, house: 0.75, barn: 0.85, windmill: 0.95, lighthouse: 0.35, pylon: 0.85 };
