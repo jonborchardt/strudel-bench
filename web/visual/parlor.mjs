@@ -344,8 +344,12 @@ const neck = (ctx, x, y, r, c, tone, ol) => limb(ctx, [[x, y], [x, y - r * 0.9]]
 function head(ctx, x, y, r, c, tone, tilt, eyes, dir = 0) {
   ctx.save(); ctx.translate(x, y); ctx.rotate(tilt);
   const ol = r * 0.07, ink = tone(INK, 0.9), skin = tone(c.skin), [sh, ss, sl] = c.skin;
-  if (dir) blob(ctx, -dir * r * 0.72, r * 0.08, r * 0.17, r * 0.24, skin, tone, ol); // the ear this side of the profile
-  else { blob(ctx, -r * 0.96, r * 0.08, r * 0.18, r * 0.26, skin, tone, ol); blob(ctx, r * 0.96, r * 0.08, r * 0.18, r * 0.26, skin, tone, ol); }
+  const ear = (x, y, sd) => { // an ear: a small oval tucked into the head, low, with its fold inside, so it never reads as a lens
+    blob(ctx, x, y, r * 0.13, r * 0.19, skin, tone, ol * 0.8);
+    ctx.strokeStyle = tone([sh, ss + 5, sl - 18], 0.8); ctx.lineWidth = Math.max(1, ol * 0.7); ctx.beginPath(); ctx.arc(x + sd * r * 0.03, y, r * 0.1, sd > 0 ? -Math.PI * 0.45 : Math.PI * 0.55, sd > 0 ? Math.PI * 0.45 : Math.PI * 1.45); ctx.stroke();
+  };
+  if (dir) ear(-dir * r * 0.66, r * 0.16, -dir); // the ear this side of the profile
+  else { ear(-r * 0.92, r * 0.14, -1); ear(r * 0.92, r * 0.14, 1); }
   const g = ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r * 1.2); g.addColorStop(0, tone([sh, ss, sl + 7])); g.addColorStop(1, tone([sh, ss + 5, sl - 9]));
   ctx.fillStyle = g; ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, ol);
   ctx.beginPath();
@@ -360,19 +364,20 @@ function head(ctx, x, y, r, c, tone, tilt, eyes, dir = 0) {
   ctx.closePath(); ctx.fill(); ctx.stroke();
   // hair, outlined too
   ctx.fillStyle = tone(c.hair); ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, ol * 0.8);
-  if (c.hairStyle === 0) { ctx.beginPath(); ctx.arc(0, -r * 0.02, r * 1.02, Math.PI * 1.04, Math.PI * 1.96); ctx.closePath(); ctx.fill(); ctx.stroke(); } // a white cap
+  if (c.hairStyle === 0) { ctx.beginPath(); ctx.arc(0, -r * 0.02, r * 1.02, Math.PI * 1.13, Math.PI * 1.87); ctx.closePath(); ctx.fill(); ctx.stroke(); } // a white cap, the fringe well above the brows
   else if (c.hairStyle === 1) { // bald: tufts over the ears and a shine on the crown
-    blob(ctx, -r * 0.88, -r * 0.05, r * 0.28, r * 0.24, tone(c.hair), tone, ol * 0.8); blob(ctx, r * 0.88, -r * 0.05, r * 0.28, r * 0.24, tone(c.hair), tone, ol * 0.8);
+    if (dir) blob(ctx, -dir * r * 0.78, -r * 0.12, r * 0.3, r * 0.26, tone(c.hair), tone, ol * 0.8); // in profile only the one at the back shows: never a tuft on the face
+    else { blob(ctx, -r * 0.9, -r * 0.05, r * 0.24, r * 0.24, tone(c.hair), tone, ol * 0.8); blob(ctx, r * 0.9, -r * 0.05, r * 0.24, r * 0.24, tone(c.hair), tone, ol * 0.8); }
     ctx.fillStyle = tone([0, 0, 100], 0.28); ctx.beginPath(); ctx.ellipse(-r * 0.28, -r * 0.55, r * 0.26, r * 0.14, -0.5, 0, TAU); ctx.fill();
   } else if (c.hairStyle === 2) { // parted, with a bun behind
     blob(ctx, dir ? -dir * r * 0.55 : r * 0.62, -r * 0.82, r * 0.4, r * 0.36, tone(c.hair), tone, ol * 0.8);
-    ctx.beginPath(); ctx.arc(0, -r * 0.08, r * 1.02, Math.PI * 1.0, Math.PI * 2.0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, -r * 0.08, r * 1.02, Math.PI * 1.1, Math.PI * 1.9); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.strokeStyle = tone([c.hair[0], c.hair[1], c.hair[2] - 30], 0.5); ctx.beginPath(); ctx.moveTo(dir * r * 0.15, -r * 1.05); ctx.lineTo(dir * r * 0.3, -r * 0.6); ctx.stroke();
   } else { // short and grey, down over the ears
-    ctx.beginPath(); ctx.arc(0, -r * 0.1, r * 1.0, Math.PI * 1.08, Math.PI * 1.92); ctx.lineTo(r * 0.95, r * 0.15); ctx.lineTo(r * 0.72, r * 0.15); ctx.lineTo(r * 0.7, -r * 0.35); ctx.lineTo(-r * 0.7, -r * 0.35); ctx.lineTo(-r * 0.72, r * 0.15); ctx.lineTo(-r * 0.95, r * 0.15); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, -r * 0.1, r * 1.0, Math.PI * 1.08, Math.PI * 1.92); ctx.lineTo(r * 0.95, r * 0.15); ctx.lineTo(r * 0.76, r * 0.15); ctx.lineTo(r * 0.74, -r * 0.42); ctx.lineTo(-r * 0.74, -r * 0.42); ctx.lineTo(-r * 0.76, r * 0.15); ctx.lineTo(-r * 0.95, r * 0.15); ctx.closePath(); ctx.fill(); ctx.stroke();
   }
   // the face: the eyes sit toward the way a profile looks
-  const fx = dir * r * 0.32, ex = dir ? [fx + dir * r * 0.15] : [-r * 0.36, r * 0.36], ey = -r * 0.08;
+  const fx = dir * r * 0.32, ex = dir ? [fx + dir * r * 0.15] : [-r * 0.34, r * 0.34], ey = -r * 0.02;
   ctx.lineCap = 'round';
   for (const x of ex) {
     ctx.strokeStyle = tone([c.hair[0], c.hair[1], Math.min(60, c.hair[2])], 0.9); ctx.lineWidth = Math.max(1, r * 0.09); // a brow
@@ -387,17 +392,18 @@ function head(ctx, x, y, r, c, tone, tilt, eyes, dir = 0) {
     const cxs = dir ? dir * (x + r * 0.2) : Math.sign(x) * (Math.abs(x) + r * 0.2), sgn = dir || Math.sign(x);
     ctx.beginPath(); ctx.moveTo(sgn * Math.abs(cxs), ey); ctx.lineTo(sgn * (Math.abs(cxs) + r * 0.12), ey - r * 0.08); ctx.moveTo(sgn * Math.abs(cxs), ey + r * 0.04); ctx.lineTo(sgn * (Math.abs(cxs) + r * 0.12), ey + r * 0.1); ctx.stroke();
   }
-  if (!dir) { ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, r * 0.05); ctx.beginPath(); ctx.arc(0, r * 0.22, r * 0.14, Math.PI * 0.1, Math.PI * 0.9); ctx.stroke(); } // the nose, seen from the front
+  if (!dir) { ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, r * 0.05); ctx.beginPath(); ctx.arc(0, r * 0.26, r * 0.14, Math.PI * 0.1, Math.PI * 0.9); ctx.stroke(); } // the nose, seen from the front
   ctx.fillStyle = tone([5, 70, 70], 0.22); // the cheeks
-  for (const x of dir ? [fx + dir * r * 0.1] : [-r * 0.5, r * 0.5]) { ctx.beginPath(); ctx.ellipse(x, r * 0.32, r * 0.2, r * 0.13, 0, 0, TAU); ctx.fill(); }
+  for (const x of dir ? [fx + dir * r * 0.1] : [-r * 0.52, r * 0.52]) { ctx.beginPath(); ctx.ellipse(x, r * 0.36, r * 0.2, r * 0.13, 0, 0, TAU); ctx.fill(); }
   ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, r * 0.06); ctx.beginPath(); // the mouth: a smile, or open in sleep
-  if (eyes) { ctx.arc(fx, r * 0.42, r * 0.26, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke(); ctx.lineWidth = Math.max(1, r * 0.035); ctx.beginPath(); ctx.moveTo(fx - r * 0.3, r * 0.48); ctx.lineTo(fx - r * 0.24, r * 0.58); ctx.moveTo(fx + r * 0.3, r * 0.48); ctx.lineTo(fx + r * 0.24, r * 0.58); ctx.stroke(); }
-  else { ctx.fillStyle = tone([5, 50, 30]); ctx.ellipse(fx, r * 0.5, r * 0.11, r * 0.09, 0, 0, TAU); ctx.fill(); ctx.stroke(); }
-  if (c.glasses) {
+  if (eyes) { ctx.arc(fx, r * 0.46, r * 0.26, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke(); ctx.lineWidth = Math.max(1, r * 0.035); ctx.beginPath(); ctx.moveTo(fx - r * 0.3, r * 0.52); ctx.lineTo(fx - r * 0.24, r * 0.62); ctx.moveTo(fx + r * 0.3, r * 0.52); ctx.lineTo(fx + r * 0.24, r * 0.62); ctx.stroke(); }
+  else { ctx.fillStyle = tone([5, 50, 30]); ctx.ellipse(fx, r * 0.54, r * 0.11, r * 0.09, 0, 0, TAU); ctx.fill(); ctx.stroke(); }
+  if (c.glasses) { // round lenses centred on the eyes, a bridge over the nose, arms back to the top of the ears
     ctx.strokeStyle = tone([0, 0, 22], 0.9); ctx.lineWidth = Math.max(1, r * 0.06);
-    for (const x of ex) { ctx.beginPath(); ctx.arc(x, ey, r * 0.27, 0, TAU); ctx.stroke(); }
+    for (const x of ex) { ctx.beginPath(); ctx.ellipse(x, ey, r * 0.23, r * 0.21, 0, 0, TAU); ctx.stroke(); }
     ctx.beginPath();
-    if (dir) { ctx.moveTo(ex[0] - dir * r * 0.27, ey); ctx.lineTo(-dir * r * 0.75, ey - r * 0.05); } else { ctx.moveTo(-r * 0.09, ey); ctx.lineTo(r * 0.09, ey); ctx.moveTo(-r * 0.63, ey); ctx.lineTo(-r * 0.95, ey - r * 0.02); ctx.moveTo(r * 0.63, ey); ctx.lineTo(r * 0.95, ey - r * 0.02); }
+    if (dir) { ctx.moveTo(ex[0] - dir * r * 0.23, ey - r * 0.04); ctx.lineTo(-dir * r * 0.62, ey + r * 0.02); }
+    else { ctx.moveTo(-r * 0.11, ey - r * 0.03); ctx.quadraticCurveTo(0, ey - r * 0.12, r * 0.11, ey - r * 0.03); ctx.moveTo(-r * 0.57, ey - r * 0.04); ctx.lineTo(-r * 0.92, ey - r * 0.12); ctx.moveTo(r * 0.57, ey - r * 0.04); ctx.lineTo(r * 0.92, ey - r * 0.12); }
     ctx.stroke();
   }
   ctx.restore();
@@ -769,3 +775,6 @@ function arrange(s) {
   by.walker.forEach((r, i) => { if (!r.placed) { r.x = A * (0.3 + 0.4 * ((i * 0.37 + 0.2) % 1)); r.to = r.x; r.placed = true; } r.z = 0.42 + i * 0.07; });
   by.player.forEach((r) => { r.x = s.table.x; r.z = s.table.z; });
 }
+
+// the figure drawing, shared with cabaret.mjs (the same residents on a stage)
+export { INK, limb, blob, torso, neck, head, character };
