@@ -16,7 +16,8 @@
       "combo":    { "base": 0.1,  "organicness": 0.6, "melody": 0.5, "aggression": -0.4, "drive": -0.3, "sections": 0.2, "density": -0.2 },
       "train":    { "base": 0.1,  "tempo": 0.4, "drive": 0.4, "repetition": 0.3, "sections": 0.3, "space": 0.2, "aggression": -0.2 },
       "parlor":   { "base": 0.0,  "tempo": -0.4, "drive": -0.3, "space": 0.3, "pad": 0.3, "organicness": 0.3, "aggression": -0.4, "density": -0.2 },
-      "outrun":   { "base": 0.1,  "tempo": 0.5, "drive": 0.5, "brightness": 0.3, "melody": 0.4, "sections": 0.2, "space": -0.2, "organicness": -0.3 }
+      "outrun":   { "base": 0.1,  "tempo": 0.5, "drive": 0.5, "brightness": 0.3, "melody": 0.4, "sections": 0.2, "space": -0.2, "organicness": -0.3 },
+      "cabaret":  { "base": 0.0,  "melody": 0.4, "tempo": 0.2, "drive": 0.2, "organicness": 0.2, "sections": 0.2, "aggression": -0.3, "space": -0.1 }
     }
   },
   "temperature": { "major": "warm", "minor": "cool", "dorian": "cool", "phrygian": "dim", "lydian": "pale", "mixolydian": "warm", "default": "cool" },
@@ -50,6 +51,7 @@
     "combo":    { "slots": { "impulse": 2, "ground": 1, "line": 3, "counter": 3, "field": 2, "transition": 1 } },
     "train":    { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 } },
     "parlor":   { "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 2, "transition": 1 } },
-    "outrun":   { "slots": { "impulse": 2, "ground": 1, "line": 1, "counter": 2, "field": 1, "transition": 1 } }
+    "outrun":   { "slots": { "impulse": 2, "ground": 1, "line": 1, "counter": 2, "field": 1, "transition": 1 } },
+    "cabaret":  { "slots": { "impulse": 2, "ground": 1, "line": 1, "counter": 2, "field": 1, "transition": 1 } }
   }
 }
