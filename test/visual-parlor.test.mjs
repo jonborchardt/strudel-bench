@@ -73,7 +73,7 @@ test('a hit shoves the rocking chair, a pad note is a breath, a note deals a car
   const still = fresh(); for (let i = 0; i < 120; i++) parlor.step(still, STEP, [], clock);
   assert.ok(Math.abs(who(still, 'drums').a) > 0.001 && Math.abs(who(still, 'drums').a) < 0.2, 'left alone the chair still rocks, faintly');
   const rocked = fresh(); for (let i = 0; i < 120; i++) parlor.step(rocked, STEP, i % 30 === 0 ? [{ ...base, layer: 'drums', kind: 'drums', voice: 'bd', role: 'pulse' }] : [], clock);
-  assert.ok(Math.abs(who(rocked, 'drums').a) <= 0.34, 'and never tips');
+  assert.ok(Math.abs(who(rocked, 'drums').a) <= 0.22, 'and never tips');
   const pad = who(one({ ...base, layer: 'pad', kind: 'pad', note: 60, dur: 2 }), 'pad');
   assert.ok(pad.hold === 2 && pad.age < 0.1 && pad.chest > 0, 'a pad note holds the breath for its length');
   const s = fresh();
