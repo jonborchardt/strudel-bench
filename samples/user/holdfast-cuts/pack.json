@@ -1,0 +1,13 @@
+{
+ "deploy": false,
+ "license": "CC-BY-NC-SA-3.0",
+ "source": "Nine Inch Nails - Ghosts I-IV multitracks (26 Ghosts III), https://www.nin.com/; cut by strudel-pack",
+ "samples": {
+  "26_ghosts_iii_gtr_drone1_l4_002": {
+   "bars": 4
+  },
+  "26_ghosts_iii_gtr_drone2_l4_002": {
+   "bars": 4
+  }
+ }
+}

@@ -1,0 +1,54 @@
+{
+  "prompt": "holdfast: doom-shoegaze in D at 58 after True Widow's Four Teeth, sad and hopeful by harmony alone, on two borrowed Ghosts guitar drones",
+  "requests": [
+    {
+      "date": "2026-09-25",
+      "ask": "guitar drones as the shoegaze bed, doom/slow 50-60 bpm, in the direction of True Widow Four Teeth: drier, more rhythmic; sad vs happy from harmony and guitar movement, not weight: minor thirds, descending bass, unresolved tones, narrow register; lift = one note changes, bass rises, a higher guitar; happy = wider voicings, major thirds or open fifths with a colour note, upward movement; return = remove the bright note and let the bass fall",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "cps",
+          "why": "58 bpm: slower than any song here (held was 64); the tempo is the weight"
+        },
+        {
+          "section": "song",
+          "layer": "key",
+          "why": "D:minor with the sections re-keyed: sink/stuck/fall/out D:minor, lift D:dorian (the one note: B natural, G major for Gm), open D:major with sus and add9 voicings"
+        },
+        {
+          "section": "sink",
+          "layer": "bass",
+          "why": "FALLING 7 6 5 4 (D C Bb A from the octave down); stuck.bass ROOT (stuck on D under Bb and Am); lift.bass RISING 0 2 3 4; open.bass CLIMB 0 2 3 4 7; fall.bass FALLING again"
+        },
+        {
+          "section": "song",
+          "layer": "raw",
+          "why": "gm_overdriven_guitar chords hand-voiced a chord a bar, struck 1 / and-of-2 / 3 (the chug), lpf 2.6k>2k after the climax measured 1619 Hz centroid: heavy is dark"
+        },
+        {
+          "section": "song",
+          "layer": "sample",
+          "why": "26_ghosts_iii_gtr_drone1 tuned 134.5>146.8 Hz (D3 root bed) and song.sample2 gtr_drone2 tuned 151>174.6 (F3) in the minor sections, 151>185 (F#3) in open: the same amplifier a semitone up carries the one note that changes"
+        },
+        {
+          "section": "song",
+          "layer": "sample",
+          "axis": "level",
+          "from": 0.5,
+          "to": 0.17,
+          "why": "and song.sample2.level .35>.12: measured 8.5 and 11 dB under the climax mix (a lead), now 16 and 19 (a bed)"
+        },
+        {
+          "section": "open",
+          "layer": "drums",
+          "why": "OPENED with the ride on every beat and open.raw the full chug: with HALF hits the lift outran the climax (19.6 vs 15.4), so the space in open is voicing and register, not fewer hits"
+        },
+        {
+          "section": "song",
+          "layer": "drums",
+          "why": "humanize timingMs 10 velocity .1 per bar instead of organicness .15: a drummer counting slowly, not dice per hit"
+        }
+      ]
+    }
+  ]
+}
