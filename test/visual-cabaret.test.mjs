@@ -7,28 +7,12 @@ import { ready } from './_scope.mjs';
 import cabaret from '../web/visual/cabaret.mjs';
 import { eventOf, clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
-import { layerBase } from '../lib/song.mjs';
-
+import { streamOf, ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
+const run = (ir, seconds = 8) => runWorld(cabaret, ir, seconds);
 const song = (g, seed = 3) => g.song({ cps: .5, key: 'C:minor', seed, visual: 'cabaret' }, [
   g.section('intro', 2, { role: 'establish', pad: { space: .8 }, drums: { density: .3 }, fx: { riser: 1 } }),
   g.section('drop', 2, { role: 'climax', dropout: 1, drums: { density: .9 }, bass: { density: .8 }, melody: { density: .7, notes: '0 2 4 7' }, melody2: { notes: '7 5 4 2' }, pad: { arp: 'up' }, perc: { sound: 'cajon' } }),
 ]).strudel;
-const streamOf = (ir) => {
-  const out = [];
-  for (const s of ir.sections) for (const [name, l] of Object.entries(s.layers))
-    for (const h of l.pattern.queryArc(0, s.cycles)) if (h.hasOnset()) { const c = s.offset + h.whole.begin.valueOf(); out.push(eventOf(h, name, layerBase(name), c / ir.meta.cps)); }
-  return out.sort((a, b) => a.t - b.t);
-};
-const ctxStub = () => { const calls = {}, grad = { addColorStop() {} }; return new Proxy({}, { get: (o, k) => (k === 'calls' ? calls : (...a) => { calls[k] = (calls[k] ?? 0) + 1; return String(k).startsWith('create') ? grad : undefined; }), set: () => true }); };
-const run = (ir, seconds = 8) => {
-  const p = createPerformance(cabaret, composeVisual(ir), { w: 16, h: 9 });
-  for (const e of streamOf(ir)) p.push(e);
-  for (let t = 0; t <= seconds; t += 1 / 30) p.advance(t, t * ir.meta.cps);
-  return p;
-};
-const forbid = (obj, key) => { const was = obj[key]; obj[key] = () => { throw new Error(`${key} called inside the world`); }; return () => { obj[key] = was; }; };
-const base = { t: 0, cycle: 0, dur: .25, gain: 1, velocity: 1, pan: .5, cutoff: null, room: 0, note: null, voice: null, role: null };
-const KICK = { ...base, layer: 'drums', kind: 'drums', voice: 'bd', role: 'pulse' };
 
 test('cabaret is importable in Node and draws on a stub context with no randomness or clock of its own', async () => {
   const g = await ready;

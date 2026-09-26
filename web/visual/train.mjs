@@ -203,17 +203,7 @@ export default {
     }
     // the ridges, far then hills, the ground, the sea
     const ridgeDraw = (pts, col) => { ctx.beginPath(); ctx.moveTo(X(pts[0].x), hor + 2); for (const q of pts) ctx.lineTo(X(q.x), Y(HORIZON - q.y)); ctx.lineTo(X(pts[pts.length - 1].x), hor + 2); ctx.closePath(); ctx.fillStyle = col; ctx.fill(); };
-    for (const n of s.nukes) { // beyond the far ridge: the column and the cap grow with age, fire to dust, thinning out at the end
-      const g = 1 - Math.exp(-n.age / 12), fire = Math.exp(-n.age / 6), a = clamp((80 - n.age) / 25) * lit, cx = X(n.x), base = hor + 2, capH = h * 0.5 * g * n.h, stemW = h * 0.06 * (0.4 + 0.6 * g) * n.h, capW = h * 0.26 * g * n.h, capY = base - capH;
-      const hue = lerp(20, 30, 1 - fire), sat = lerp(12, 90, fire), light = lerp(38, 62, fire);
-      const grad = ctx.createLinearGradient(0, capY, 0, base); grad.addColorStop(0, hsla(hue, sat, light, a)); grad.addColorStop(1, hsla(hue, sat * 0.6, light * 0.6, a));
-      ctx.fillStyle = grad; ctx.beginPath(); ctx.moveTo(cx - stemW, base); ctx.quadraticCurveTo(cx - stemW * 0.6, capY + capH * 0.5, cx - stemW * 1.2, capY + capH * 0.3); ctx.lineTo(cx + stemW * 1.2, capY + capH * 0.3); ctx.quadraticCurveTo(cx + stemW * 0.6, capY + capH * 0.5, cx + stemW, base); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = hsla(hue, sat, light, a); ctx.beginPath(); ctx.ellipse(cx, capY + capH * 0.22, capW, capH * 0.26, 0, 0, TAU); ctx.fill();
-      ctx.fillStyle = hsla(hue, sat, light + 12, a * 0.8); ctx.beginPath(); ctx.ellipse(cx - capW * 0.3, capY + capH * 0.12, capW * 0.5, capH * 0.18, 0, 0, TAU); ctx.ellipse(cx + capW * 0.35, capY + capH * 0.2, capW * 0.45, capH * 0.16, 0, 0, TAU); ctx.fill();
-      if (fire > 0.05) { ctx.fillStyle = hsla(45, 100, 90, fire * a); ctx.beginPath(); ctx.ellipse(cx, capY + capH * 0.25, capW * 0.5, capH * 0.15, 0, 0, TAU); ctx.fill(); }
-      ctx.fillStyle = hsla(hue, sat * 0.5, 30, a * 0.6 * g); ctx.beginPath(); ctx.ellipse(cx, base, stemW * 4 * g, h * 0.02, 0, Math.PI, TAU); ctx.fill(); // the dust ring at the foot
-      if (fire > 0.02) { const r = h * 0.26 * n.h * (1 - Math.exp(-n.age / 1.2)); const fb = ctx.createRadialGradient(cx, base, 0, cx, base, r * 2); fb.addColorStop(0, hsla(50, 100, 98, fire * a)); fb.addColorStop(0.3, hsla(45, 100, 85, fire * a)); fb.addColorStop(0.5, hsla(30, 100, 62, 0.8 * fire * a)); fb.addColorStop(1, hsla(20, 100, 55, 0)); ctx.fillStyle = fb; ctx.beginPath(); ctx.ellipse(cx, base, r * 2, r * 1.4, 0, Math.PI, TAU); ctx.fill(); } // the fireball: a dome on the horizon in the first seconds, tall enough to clear the ridge, gone as the cloud takes over
-    }
+    for (const n of s.nukes) bomb(ctx, h, n, X, hor, lit);
     ridgeDraw(s.far, hsla(s.pal.hue, 25, lerp(30, 62, s.lum) * lit * (night ? 0.4 : 1), 0.9));
     const [gh, gs, gl] = s.ground;
     ctx.fillStyle = hsla(gh, gs, gl * lit * (night ? 0.55 : 1)); ctx.fillRect(0, hor, w, h - hor);
@@ -383,8 +373,21 @@ function whimsy(s, ctx, h, o, x, y, H, shade, night, lit, near) {
   }
 }
 
+/** A bomb beyond the horizon, shared with outrun: the column and the cap grow with age, fire to dust, thinning out at the end; a fireball on the line in the first seconds. */
+export function bomb(ctx, h, n, X, hor, lit) {
+    const g = 1 - Math.exp(-n.age / 12), fire = Math.exp(-n.age / 6), a = clamp((80 - n.age) / 25) * lit, cx = X(n.x), base = hor + 2, capH = h * 0.5 * g * n.h, stemW = h * 0.06 * (0.4 + 0.6 * g) * n.h, capW = h * 0.26 * g * n.h, capY = base - capH;
+    const hue = lerp(20, 30, 1 - fire), sat = lerp(12, 90, fire), light = lerp(38, 62, fire);
+    const grad = ctx.createLinearGradient(0, capY, 0, base); grad.addColorStop(0, hsla(hue, sat, light, a)); grad.addColorStop(1, hsla(hue, sat * 0.6, light * 0.6, a));
+    ctx.fillStyle = grad; ctx.beginPath(); ctx.moveTo(cx - stemW, base); ctx.quadraticCurveTo(cx - stemW * 0.6, capY + capH * 0.5, cx - stemW * 1.2, capY + capH * 0.3); ctx.lineTo(cx + stemW * 1.2, capY + capH * 0.3); ctx.quadraticCurveTo(cx + stemW * 0.6, capY + capH * 0.5, cx + stemW, base); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = hsla(hue, sat, light, a); ctx.beginPath(); ctx.ellipse(cx, capY + capH * 0.22, capW, capH * 0.26, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = hsla(hue, sat, light + 12, a * 0.8); ctx.beginPath(); ctx.ellipse(cx - capW * 0.3, capY + capH * 0.12, capW * 0.5, capH * 0.18, 0, 0, TAU); ctx.ellipse(cx + capW * 0.35, capY + capH * 0.2, capW * 0.45, capH * 0.16, 0, 0, TAU); ctx.fill();
+    if (fire > 0.05) { ctx.fillStyle = hsla(45, 100, 90, fire * a); ctx.beginPath(); ctx.ellipse(cx, capY + capH * 0.25, capW * 0.5, capH * 0.15, 0, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = hsla(hue, sat * 0.5, 30, a * 0.6 * g); ctx.beginPath(); ctx.ellipse(cx, base, stemW * 4 * g, h * 0.02, 0, Math.PI, TAU); ctx.fill(); // the dust ring at the foot
+    if (fire > 0.02) { const r = h * 0.26 * n.h * (1 - Math.exp(-n.age / 1.2)); const fb = ctx.createRadialGradient(cx, base, 0, cx, base, r * 2); fb.addColorStop(0, hsla(50, 100, 98, fire * a)); fb.addColorStop(0.3, hsla(45, 100, 85, fire * a)); fb.addColorStop(0.5, hsla(30, 100, 62, 0.8 * fire * a)); fb.addColorStop(1, hsla(20, 100, 55, 0)); ctx.fillStyle = fb; ctx.beginPath(); ctx.ellipse(cx, base, r * 2, r * 1.4, 0, Math.PI, TAU); ctx.fill(); } // the fireball: a dome on the horizon in the first seconds, tall enough to clear the ridge, gone as the cloud takes over
+}
+
 /** The sky's traffic, drawn in units of the height at (o.x, o.y), each thing at its own pace and with its own motion. */
-function skyThing(s, ctx, h, o, X, Y, night, lit) {
+export function skyThing(s, ctx, h, o, X, Y, night, lit, hor = HORIZON) {
   const x = X(o.x), y = Y(o.y), S = h * 0.05 * o.h, F = (c) => { ctx.fillStyle = c; }, R = (dx, dy, w, hh) => ctx.fillRect(x + dx * S, y - dy * S, w * S, hh * S);
   const C = (dx, dy, r) => { ctx.beginPath(); ctx.arc(x + dx * S, y - dy * S, r * S, 0, TAU); ctx.fill(); }, E = (dx, dy, rx, ry) => { ctx.beginPath(); ctx.ellipse(x + dx * S, y - dy * S, rx * S, ry * S, 0, 0, TAU); ctx.fill(); };
   const T = (pts) => { ctx.beginPath(); pts.forEach(([dx, dy], i) => (i ? ctx.lineTo(x + dx * S, y - dy * S) : ctx.moveTo(x + dx * S, y - dy * S))); ctx.closePath(); ctx.fill(); }, flap = Math.sin(s.t * 6 + o.v * 9), dark = hsla(0, 0, night ? 30 : 15);
@@ -392,7 +395,7 @@ function skyThing(s, ctx, h, o, X, Y, night, lit) {
   if (mirror) { ctx.save(); ctx.translate(2 * x, 0); ctx.scale(-1, 1); }
   switch (o.kind) {
     case 'plane': F(hsla(0, 0, night ? 40 : 92)); E(0, 0, 1.2, 0.3); T([[0.4, 0], [-0.4, 0], [-0.9, -0.9]]); T([[1.2, 0], [0.7, 0], [1.1, 0.7]]); break; // nose to the left, the way it flies
-    case 'ufo': { const on = 1 - 0.7 * s.beatPhase; F(hsla(120, 80, 60, 0.18 * on * lit)); T([[-0.6, -0.3], [0.6, -0.3], [2.2, -(0.55 - o.y) * 20], [-2.2, -(0.55 - o.y) * 20]]); F(hsla(0, 0, night ? 45 : 70)); E(0, 0, 1.4, 0.4); F(hsla(180, 60, 80, 0.8)); E(0, 0.35, 0.6, 0.45); for (let i = -1; i <= 1; i++) { F(hsla((s.blink + i + 3) % 2 ? 0 : 60, 90, 60)); C(i * 0.8, -0.1, 0.12); } break; } // the beam pulses on the beat
+    case 'ufo': { const on = 1 - 0.7 * s.beatPhase; F(hsla(120, 80, 60, 0.18 * on * lit)); T([[-0.6, -0.3], [0.6, -0.3], [2.2, -(hor - o.y) * 20], [-2.2, -(hor - o.y) * 20]]); F(hsla(0, 0, night ? 45 : 70)); E(0, 0, 1.4, 0.4); F(hsla(180, 60, 80, 0.8)); E(0, 0.35, 0.6, 0.45); for (let i = -1; i <= 1; i++) { F(hsla((s.blink + i + 3) % 2 ? 0 : 60, 90, 60)); C(i * 0.8, -0.1, 0.12); } break; } // the beam pulses on the beat
     case 'balloon': F(hsla(o.v * 360, 75, 55)); E(0, 1.2, 1, 1.2); F(hsla(o.v * 360 + 180, 75, 65)); T([[-0.3, 2.3], [0.3, 2.3], [0.15, 0.1], [-0.15, 0.1]]); ctx.strokeStyle = dark; ctx.lineWidth = S * 0.05; ctx.beginPath(); ctx.moveTo(x - 0.5 * S, y - 0.4 * S); ctx.lineTo(x - 0.3 * S, y + 0.6 * S); ctx.moveTo(x + 0.5 * S, y - 0.4 * S); ctx.lineTo(x + 0.3 * S, y + 0.6 * S); ctx.stroke(); F(hsla(30, 50, 40)); R(-0.35, -0.6, 0.7, 0.45); break;
     case 'blimp': F(hsla(0, 0, night ? 45 : 85)); E(0, 0, 2.2, 0.7); T([[-2, 0.2], [-2.8, 0.7], [-2.6, 0]]); T([[-2, -0.2], [-2.8, -0.7], [-2.6, 0]]); F(dark); R(-0.4, -0.7, 0.8, 0.3); break;
     case 'helicopter': F(hsla(0, 70, 50)); E(0, 0, 1, 0.55); R(-2.4, 0.2, 2, 0.25); T([[-2.5, 0.1], [-2.5, 0.9], [-2, 0.3]]); F(hsla(200, 40, 80, 0.8)); E(0.4, 0.05, 0.4, 0.3); F(dark); R(-0.5, -0.8, 1, 0.1); { const sp = Math.abs(Math.cos(s.t * 25)); R(-2 * sp, 0.85, 4 * sp, 0.1); } break;

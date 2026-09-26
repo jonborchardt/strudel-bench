@@ -18,14 +18,13 @@
 // lights; a dropout is lights out, the window and the fire the only light. Nothing is ever still: the fire flickers
 // on the beat, the lamp breathes, the pendulum swings, the chairs rock. Deterministic: randomness only from the
 // state's own seeded generator; units are the canvas height; the whole frame is repainted from state every draw.
-import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf } from './kit.mjs';
+import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf, DEFAULT_SLOT } from './kit.mjs';
 
 const TAU = Math.PI * 2;
-const DEFAULT_SLOT = { drums: 'impulse', pitched: 'line', hit: 'grain', bass: 'ground', melody: 'line', pad: 'field', perc: 'grain', sample: 'impulse', fx: 'transition' };
 const SAY = { ground: 0.8, line: 1, counter: 0.9, field: 0.5, impulse: 0.45, grain: 0.25, transition: 0.2 }; // how much one hit of each job counts as speaking
 const HOLD = 0.55, MARGIN = 1.2; // seconds a challenger must lead by MARGIN before the floor changes hands
-const KIND = { ground: 'rocker', impulse: 'rocker', field: 'sleeper', line: 'player', counter: 'player', grain: 'walker', transition: 'nurse' };
-const CAP = { rocker: 4, sleeper: 3, player: 4, walker: 3, nurse: 0 };
+const KIND = { ground: 'rocker', impulse: 'rocker', field: 'sleeper', line: 'player', counter: 'player', grain: 'walker' }; // the fx part is the room itself
+const CAP = { rocker: 4, sleeper: 3, player: 4, walker: 3 };
 // how the room sits, per section role: how lively (rock and step sizes), the light, the fire
 const SIT = {
   establish: { pace: 0.8, glow: 0.8, fire: 0.6 },
@@ -41,7 +40,7 @@ const HAIRS = [[0, 0, 92], [0, 0, 72], [35, 20, 82], [0, 0, 50]]; // white, grey
 const PLAIDS = [[0, 45, 40], [210, 35, 40], [120, 25, 35], [35, 50, 45]];
 const TROUSERS = [[220, 15, 28], [30, 20, 35], [0, 0, 45], [200, 10, 60], [340, 20, 40]];
 const zScale = (z) => lerp(1.2, 0.62, z), zY = (z) => lerp(0.96, 0.63, z); // a resident's size and floor line by depth (0 the front)
-const pc = (n) => (((n % 12) + 12) % 12) * 30; // a note's pitch class as a hue
+export const pc = (n) => (((n % 12) + 12) % 12) * 30; // a note's pitch class as a hue
 
 export default {
   name: 'parlor',
@@ -49,8 +48,7 @@ export default {
   init(score, rng, size) {
     const p = score.palette, pal = paletteOf(score, rng), aspect = size.w / size.h;
     const s = {
-      pal, size: { ...size }, aspect, temp: WINDOW[p.temperature] ? p.temperature : 'cool',
-      weight: lerp(0.8, 1.3, p.mass), jitter: lerp(0.3, 1, p.jitter), motion: lerp(0.7, 1.3, p.motion),
+      pal, aspect, temp: WINDOW[p.temperature] ? p.temperature : 'cool', motion: lerp(0.7, 1.3, p.motion),
       cps: score.cps,
       roles: score.sections.map((x) => x.role ?? 'none'),
       slotOf: Object.fromEntries(Object.entries(score.cast).map(([n, c]) => [n, c.slot])),
@@ -289,7 +287,7 @@ export default {
       ctx.fillStyle = 'rgba(0 0 0 / 0.25)'; ctx.beginPath(); ctx.ellipse(0, 0, U * 0.7, U * 0.12, 0, 0, TAU); ctx.fill();
       if (r.kind === 'rocker') rocker(ctx, r, U, s, tone, cat);
       else if (r.kind === 'sleeper') sleeper(ctx, r, U, s, tone, cat);
-      else walker(ctx, r, U, s, tone);
+      else walker(ctx, r, 0, 0, U, s, tone, 0, false);
       ctx.restore();
     }
     if (s.flash > 0.02) { ctx.fillStyle = hsla(45, 30, 96, 0.5 * s.flash * lit); ctx.fillRect(0, 0, w, h); }
@@ -491,10 +489,13 @@ function sleeper(ctx, r, U, s, tone, cat = null) {
   ctx.globalAlpha = 1;
 }
 
-/** A resident behind a walking frame, stooped over it, one step per hit: legs stepping, arms down to the handles. */
-function walker(ctx, r, U, s, tone) {
+/** A resident behind a walking frame at (x, y), stooped over it, one step per hit: legs stepping, arms down to the handles. Cabaret's star is the same figure: a hop lifts frame and all, a stagger leans him back off the frame, `bow` folds him over it. */
+export function walker(ctx, r, x, y, U, s, tone, bow = 0, shadow = true) {
   const c = r.c, step = r.bob * r.foot * U * 0.12, sway = Math.sin(s.t * 0.9 * s.motion + r.ph) * 0.02 * r.rest, ol = U * 0.025;
-  ctx.save(); ctx.translate(0, -U * 0.06 * r.bob); ctx.rotate(sway);
+  const stagger = r.stagger ?? 0, nod = r.nod ?? 0, lift = U * 0.18 * (r.hop ?? 0);
+  ctx.save(); ctx.translate(x, y);
+  if (shadow) { ctx.fillStyle = 'rgba(0 0 0 / 0.3)'; ctx.beginPath(); ctx.ellipse(0, 0, U * 0.7, U * 0.1, 0, 0, TAU); ctx.fill(); }
+  ctx.translate(0, -U * 0.06 * r.bob - lift); ctx.rotate(sway - r.dir * 0.14 * stagger);
   const hip = [0, -U * 1.0];
   for (const sd of [-1, 1]) { // legs from the hips, one forward and one back while stepping
     const fwd = sd * step;
@@ -502,12 +503,12 @@ function walker(ctx, r, U, s, tone) {
     blob(ctx, sd * U * 0.15 + fwd + r.dir * U * 0.04, -U * 0.03, U * 0.12, U * 0.06, tone(c.shoes), tone, ol);
   }
   if (c.skirt) { ctx.fillStyle = tone(c.trousers); ctx.strokeStyle = tone(INK, 0.9); ctx.lineWidth = Math.max(1, ol); ctx.beginPath(); ctx.moveTo(-U * 0.24, hip[1]); ctx.lineTo(U * 0.24, hip[1]); ctx.lineTo(U * 0.34, -U * 0.5); ctx.lineTo(-U * 0.34, -U * 0.5); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  ctx.save(); ctx.translate(hip[0], hip[1]); ctx.rotate(r.dir * 0.24); // stooped forward over the frame
+  ctx.save(); ctx.translate(hip[0], hip[1]); ctx.rotate(r.dir * (0.24 + 0.55 * bow)); // stooped forward over the frame, further for the bow
   torso(ctx, [-U * 0.24, 0], [U * 0.24, 0], [-U * 0.32, -U * 0.55], [U * 0.32, -U * 0.55], c, tone, ol, 0.9, r.dir * 0.5);
   neck(ctx, 0, -U * 0.56, U * 0.16, c, tone, ol);
-  head(ctx, r.dir * U * 0.04, -U * 0.72, U * 0.16, c, tone, r.turn * 0.15 + 0.12 * r.dir, true, r.dir);
+  head(ctx, r.dir * U * 0.04, -U * 0.72, U * 0.16, c, tone, r.turn * 0.15 + 0.12 * r.dir + 0.1 * nod * r.dir, true, r.dir);
   ctx.restore();
-  const fx = r.dir * U * 0.28, metal = tone([210, 10, 75]);
+  const fx = r.dir * U * (0.28 + 0.1 * stagger), metal = tone([210, 10, 75]); // the frame gets away from him a little
   for (const sd of [-1, 1]) { // the arms, from the shoulders down to the handles
     limb(ctx, [[sd * U * 0.28 + r.dir * U * 0.12, -U * 1.45], [sd * U * 0.3 + r.dir * U * 0.2, -U * 1.1], [fx + sd * U * 0.22, -U * 0.78]], U * 0.11, tone(c.cardigan), tone, ol);
     blob(ctx, fx + sd * U * 0.22, -U * 0.77, U * 0.07, U * 0.055, tone(c.skin), tone, ol);
@@ -723,10 +724,10 @@ function goer(ctx, p, x, y, S, s, night) {
   ctx.restore();
 }
 
-/** midi note to 0..1 over 36 (C2) .. 84 (C6). */
-const pitch = (n) => clamp((n - 36) / 48);
-const seen = (q, v) => { q.lo = Math.min(q.lo, v); q.hi = Math.max(q.hi, v); q.mid = v; };
-const place = (q, v) => clamp((v - q.lo) / Math.max(0.12, q.hi - q.lo));
+/** midi note to 0..1 over 36 (C2) .. 84 (C6); a part's register so far, and where a note sits in it. */
+export const pitch = (n) => clamp((n - 36) / 48);
+export const seen = (q, v) => { q.lo = Math.min(q.lo, v); q.hi = Math.max(q.hi, v); q.mid = v; };
+export const place = (q, v) => clamp((v - q.lo) / Math.max(0.12, q.hi - q.lo));
 
 /** A character: skin, hair, cardigan, glasses, blanket, from the song's own generator, so every resident is a different one. */
 const character = (s) => ({
@@ -741,7 +742,7 @@ const character = (s) => ({
 function partFor(s, name, slot) {
   let q = s.parts[name];
   if (q) return q;
-  q = { slot, res: resident(s, KIND[slot] ?? 'walker', name), fast: 0, slow: 0, say: 0, lo: 0.45, hi: 0.55, mid: 0.5 };
+  q = { slot, res: slot === 'transition' ? null : resident(s, KIND[slot] ?? 'walker', name), fast: 0, slow: 0, say: 0, lo: 0.45, hi: 0.55, mid: 0.5 };
   s.parts[name] = q; s.order.push(name);
   return q;
 }
@@ -776,5 +777,5 @@ function arrange(s) {
   by.player.forEach((r) => { r.x = s.table.x; r.z = s.table.z; });
 }
 
-// the figure drawing, shared with cabaret.mjs (the same residents on a stage)
+// the figure drawing, shared with cabaret.mjs (the same residents on a stage; `walker`, `pitch`, `pc`, `seen` and `place` are exported above)
 export { INK, limb, blob, torso, neck, head, character };

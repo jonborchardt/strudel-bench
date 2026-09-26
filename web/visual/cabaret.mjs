@@ -20,17 +20,14 @@
 // footlights go to colour and the second spot comes up and sweeps the stage; the dropout is his bow, held until the song comes back; an fx impact
 // is the flash bulb. Deterministic: randomness only from the state's own
 // generator (kit.mjs); units are the canvas height; the whole frame is repainted from state every draw.
-import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf } from './kit.mjs';
-import { INK, limb, blob, torso, neck, head, character } from './parlor.mjs';
+import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf, DEFAULT_SLOT } from './kit.mjs';
+import { character, walker as figure, pitch, pc, seen, place } from './parlor.mjs';
 
 const TAU = Math.PI * 2;
-const DEFAULT_SLOT = { drums: 'impulse', pitched: 'line', hit: 'grain', bass: 'ground', melody: 'line', pad: 'field', perc: 'grain', sample: 'impulse', fx: 'transition' };
 const ACT = { establish: { chorus: 0.15, roll: 0.6, glitz: 0 }, develop: { chorus: 0.3, roll: 1, glitz: 0 }, climax: { chorus: 0.6, roll: 1.6, glitz: 1 }, release: { chorus: 0.2, roll: 0.7, glitz: 0 }, none: { chorus: 0.3, roll: 1, glitz: 0 } };
 const FLATS = [0.35, 0.65, 1]; // how fast each painted flat rolls against the roll: the sky, the hills, the near scenery
 const SKY = { cool: { top: [215, 55, 30], low: [205, 45, 60], moon: 0 }, warm: { top: [265, 45, 30], low: [25, 85, 62], moon: 0 }, dim: { top: [235, 45, 8], low: [240, 35, 18], moon: 1 }, pale: { top: [205, 15, 55], low: [200, 12, 78], moon: 0 } };
-const MAX_CHORUS = 5, FLOOR = 0.86, BACK = 0.62; // the star's floor line and the chorus line's, in canvas heights
-const pitch = (n) => clamp((n - 36) / 48);
-const pc = (n) => (((n % 12) + 12) % 12) * 30;
+const MAX_CHORUS = 5, FLOOR = 0.86, BACK = 0.62, OPEN = 0.72; // the star's floor line and the chorus line's, in canvas heights; how far the curtains stand open
 
 export default {
   name: 'cabaret',
@@ -38,14 +35,14 @@ export default {
   init(score, rng, size) {
     const p = score.palette, pal = paletteOf(score, rng), aspect = size.w / size.h;
     const s = {
-      pal, size: { ...size }, aspect, temp: SKY[p.temperature] ? p.temperature : 'cool', motion: lerp(0.7, 1.3, p.motion), jitter: lerp(0.3, 1, p.jitter),
+      pal, aspect, temp: SKY[p.temperature] ? p.temperature : 'cool', motion: lerp(0.7, 1.3, p.motion),
       cps: score.cps, roles: score.sections.map((x) => x.role ?? 'none'),
       slotOf: Object.fromEntries(Object.entries(score.cast).map(([n, c]) => [n, c.slot])),
       t: 0, energy: 0.5, act: { ...ACT.none }, riser: 0, dark: 0, flash: 0, beat: 0, lastBeat: -1,
       parts: {}, // per part: its register so far, { lo, hi }
       star: null, // the resident with the frame, centre stage
       spots: [0, 1].map((side) => ({ side, x: aspect / 2, to: aspect / 2, hue: pal.hue + side * 150, hueTo: pal.hue + side * 150, on: 1 - side, pin: 0, away: 9 })), // the follow-spots, one from each back corner: where each is, where a note sent it, seconds since a note; the first is the melody's and always on, the second a counter part's
-      curtain: { open: 0.72, breath: 0, call: 0, flap: 1 }, // how far open (fixed), the pad's stir, a boundary's, and how hard the edge flaps
+      curtain: { breath: 0, call: 0, flap: 1 }, // the pad's stir, a boundary's, and how hard the edge flaps
       scene: { roll: 0, shove: 0, wobble: 0, kind: 0, stars: [], hills: [] }, // the backdrop's scroll, the bass's jolt and the near flat's wobble from it, which painted scenery, its stars and hills
       chorus: [], // walkers crossing upstage: { ...walker, x, to, dir, life }
       bow: 0, bulb: 0,
@@ -77,7 +74,7 @@ export default {
     for (const e of events) {
       const slot = s.slotOf[e.layer] ?? DEFAULT_SLOT[e.kind] ?? 'grain', g = clamp(e.gain * e.velocity, 0, 1.5);
       const q = s.parts[e.layer ?? slot] ?? (s.parts[e.layer ?? slot] = { lo: 0.45, hi: 0.55 });
-      if (e.note !== null) { const v = pitch(e.note); q.lo = Math.min(q.lo, v); q.hi = Math.max(q.hi, v); }
+      if (e.note !== null) seen(q, pitch(e.note));
       if (slot === 'transition') { if (e.dur >= 1) s.flash = Math.max(s.flash, 1); s.bulb = 1; continue; }
       if (slot === 'impulse') { // his feet: a kick a step, a snare a hop; a kick while he is still mid-step is a stagger, a run of them a spin
         if (e.role === 'impact') { S.hop = 1; for (const w of s.chorus) w.hop = 0.6; }
@@ -89,7 +86,7 @@ export default {
         S.bob = 1;
       } else if (slot === 'ground') { s.scene.shove = clamp(s.scene.shove + g * (0.6 + 0.6 * (1 - pitch(e.note ?? 48))), 0, 3); S.nod = 1; }
       else if (slot === 'line' || slot === 'counter') { // its spot goes where the note sits in this part's register, in the pitch class's colour
-        const where = e.note === null ? rand(s) : clamp((pitch(e.note) - q.lo) / Math.max(0.12, q.hi - q.lo)), Q = slot === 'line' ? P : P2;
+        const where = e.note === null ? rand(s) : place(q, pitch(e.note)), Q = slot === 'line' ? P : P2;
         Q.to = s.aspect * lerp(0.22, 0.78, where); Q.hueTo = e.note === null ? Q.hueTo : pc(e.note) + Q.side * 150; Q.away = 0; Q.pin = Math.max(Q.pin, 0.4 * g);
       } else if (slot === 'field') { C.breath = Math.min(1, C.breath + 0.5 * g); }
       else { // grain: the chorus steps, and now and then one more joins from a wing
@@ -184,7 +181,7 @@ export default {
     }
     ctx.globalCompositeOperation = 'source-over';
     // the curtains, each half hung from the pelmet in folds, drawn to its opening; the proscenium and pelmet over all
-    const C = s.curtain, half = w * 0.5 * (1 - C.open) + R(0.06);
+    const C = s.curtain, half = w * 0.5 * (1 - OPEN) + R(0.06);
     for (const side of [-1, 1]) {
       const x0 = side < 0 ? 0 : w, x1 = side < 0 ? half : w - half, sway = Math.sin(s.t * 1.1 * s.motion + side) * R(0.004) * C.flap;
       curtain(ctx, x0, x1, R(0.02), R(0.97), side, sway, s.t, hue, lit);
@@ -205,37 +202,6 @@ function stepTo(s, S, d, lo, hi) {
   S.to += S.dir * d;
   if (S.to > hi) { S.dir = -1; S.to = hi; } else if (S.to < lo) { S.dir = 1; S.to = lo; }
   S.foot = -S.foot;
-}
-
-/** The parlor's walker on the boards: legs stepping, stooped over the frame, a hop lifting frame and all, a bow folding him over it. */
-function figure(ctx, r, x, y, U, s, tone, bow = 0, shadow = true) {
-  const c = r.c, step = r.bob * r.foot * U * 0.12, sway = Math.sin(s.t * 0.9 * s.motion + r.ph) * 0.02 * r.rest, ol = U * 0.025, lift = U * 0.18 * r.hop;
-  ctx.save(); ctx.translate(x, y);
-  if (shadow) { ctx.fillStyle = 'rgba(0 0 0 / 0.3)'; ctx.beginPath(); ctx.ellipse(0, 0, U * 0.7, U * 0.1, 0, 0, TAU); ctx.fill(); }
-  const stagger = r.stagger ?? 0;
-  ctx.translate(0, -U * 0.06 * r.bob - lift); ctx.rotate(sway - r.dir * 0.14 * stagger); // a stagger: he leans back off the frame
-  const hip = [0, -U * 1.0];
-  for (const sd of [-1, 1]) {
-    const fwd = sd * step;
-    limb(ctx, [[sd * U * 0.1, hip[1]], [sd * U * 0.12 + fwd * 0.6, -U * 0.52], [sd * U * 0.14 + fwd, -U * 0.06]], U * 0.15, tone(c.trousers), tone, ol);
-    blob(ctx, sd * U * 0.15 + fwd + r.dir * U * 0.04, -U * 0.03, U * 0.12, U * 0.06, tone(c.shoes), tone, ol);
-  }
-  if (c.skirt) { ctx.fillStyle = tone(c.trousers); ctx.strokeStyle = tone(INK, 0.9); ctx.lineWidth = Math.max(1, ol); ctx.beginPath(); ctx.moveTo(-U * 0.24, hip[1]); ctx.lineTo(U * 0.24, hip[1]); ctx.lineTo(U * 0.34, -U * 0.5); ctx.lineTo(-U * 0.34, -U * 0.5); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  ctx.save(); ctx.translate(hip[0], hip[1]); ctx.rotate(r.dir * (0.24 + 0.55 * bow)); // stooped over the frame, further for the bow
-  torso(ctx, [-U * 0.24, 0], [U * 0.24, 0], [-U * 0.32, -U * 0.55], [U * 0.32, -U * 0.55], c, tone, ol, 0.9, r.dir * 0.5);
-  neck(ctx, 0, -U * 0.56, U * 0.16, c, tone, ol);
-  head(ctx, r.dir * U * 0.04, -U * 0.72, U * 0.16, c, tone, r.turn * 0.15 + 0.12 * r.dir + 0.1 * r.nod * r.dir, true, r.dir);
-  ctx.restore();
-  const fx = r.dir * U * (0.28 + 0.1 * stagger), metal = tone([210, 10, 75]); // the frame gets away from him a little
-  for (const sd of [-1, 1]) {
-    limb(ctx, [[sd * U * 0.28 + r.dir * U * 0.12, -U * 1.45], [sd * U * 0.3 + r.dir * U * 0.2, -U * 1.1], [fx + sd * U * 0.22, -U * 0.78]], U * 0.11, tone(c.cardigan), tone, ol);
-    blob(ctx, fx + sd * U * 0.22, -U * 0.77, U * 0.07, U * 0.055, tone(c.skin), tone, ol);
-  }
-  ctx.strokeStyle = tone(INK, 0.9); ctx.lineWidth = Math.max(1, U * 0.04 + 2 * ol);
-  const frame = () => { ctx.beginPath(); ctx.moveTo(fx - U * 0.22, 0); ctx.lineTo(fx - U * 0.22, -U * 0.75); ctx.lineTo(fx + U * 0.22, -U * 0.75); ctx.lineTo(fx + U * 0.22, 0); ctx.moveTo(fx - U * 0.22, -U * 0.4); ctx.lineTo(fx + U * 0.22, -U * 0.4); ctx.stroke(); };
-  frame(); ctx.strokeStyle = metal; ctx.lineWidth = Math.max(1, U * 0.04); frame();
-  blob(ctx, fx - U * 0.22, 0, U * 0.045, U * 0.045, tone([0, 0, 20]), tone, ol); blob(ctx, fx + U * 0.22, 0, U * 0.045, U * 0.045, tone([0, 0, 20]), tone, ol);
-  ctx.restore();
 }
 
 /** One half of the curtain from x0 (the wall) to x1 (where its leading edge would hang free): velvet in folds, gathered in at the waist by a tieback, the rope round the bunch and the tassel hanging from the knot; only the hem below the waist flaps. */

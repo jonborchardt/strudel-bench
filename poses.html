@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poses</title>
+<meta name="description" content="The tableau world's poses, arms and hands, drawn exactly as the stage draws them: every solo, duo and group pose on both sets, and every prop the hands hold.">
+<meta name="robots" content="noindex">
+<style>
+  html, body { margin: 0; background: #e7e4df; font-family: system-ui, sans-serif; color: #333; }
+  main { padding: 16px; }
+  h2 { font-size: 14px; font-weight: 500; margin: 20px 0 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  figure { margin: 0; width: 320px; text-align: center; font-size: 12px; }
+  canvas { width: 320px; height: 180px; display: block; box-shadow: 0 8px 24px rgba(0,0,0,.14); }
+  figure.svg { width: 150px; } figure.svg svg { width: 150px; height: auto; background: #d9d4cc; }
+  button, select { font: inherit; padding: 4px 10px; }
+</style>
+</head>
+<body>
+<main>
+  <h2>poses <button id="seedup">seed +1</button> <span id="seedlbl"></span> · framing <select id="framing"><option>medium</option><option selected>full</option><option>wide</option></select> · set <select id="set"><option>white</option><option>red</option></select></h2>
+  <p style="font-size:12px;max-width:70em">Each frame is the tableau world's own draw of one still shot (web/visual/tableau.mjs: <code>layoutOf</code> places the figures, <code>previewShot</code> builds the shot). Arms between two figures are drawn by the world in canvas space (a sleeve from one figure's shoulder to the other, the hand at its end); arms and hands on one figure are portrait props (web/visual/portrait.mjs <code>PROPS</code>).</p>
+  <h2>solo</h2><div class="row" id="solo"></div>
+  <h2>duo</h2><div class="row" id="duo"></div>
+  <h2>group</h2><div class="row" id="group"></div>
+  <h2>props: arms and hands on one figure (portrait sheet, no set)</h2><div class="row" id="props"></div>
+</main>
+<script type="module">
+  import tableau, { previewShot } from './web/visual/tableau.mjs';
+  import { renderPortrait, PROP_STYLES } from './web/visual/portrait.mjs';
+  import { dress } from './web/visual/cast.mjs';
+  import { fallbackScore, clockOf, STEP } from './web/visual/host.mjs';
+  import { prng } from './lib/random.mjs';
+  const SOLO = ['directFrontal', 'slightLeanLeft', 'slightLeanRight', 'swaggerLean', 'statueStill', 'handsAtSides', 'handHeart', 'handsUp', 'propPresentation'];
+  const DUO = ['pairFrontal', 'linkedArmDuo', 'shoulderLeanDuo', 'protectiveDuo', 'ceremonialOffering', 'oneBehindAnother', 'dominantForeground'];
+  const GROUP = ['rowFrontal', 'smallGroupCluster', 'oneBehindAnother'];
+  const W = 640, H = 360;
+  let n = +(location.hash.slice(1) || 1);
+  const fig = (label) => { const f = document.createElement('figure'); const c = document.createElement('canvas'); c.width = W; c.height = H; f.append(c, Object.assign(document.createElement('figcaption'), { textContent: label })); return [f, c]; };
+  function draw(id, poses, count) {
+    const box = document.getElementById(id); box.innerHTML = '';
+    const framing = document.getElementById('framing').value, set = document.getElementById('set').value;
+    for (const pose of poses) {
+      const s = tableau.init(fallbackScore(), prng(n), { w: 16, h: 9 });
+      const props = pose === 'propPresentation' ? [['flamingFlower']] : [];
+      s.plan = [[previewShot(s, { pose, n: count, framing, set, props })]]; s.section = 0; s.shotIx = -1;
+      tableau.step(s, STEP, [], clockOf(fallbackScore(), 0));
+      const [f, c] = fig(pose); box.append(f);
+      tableau.draw(s, c.getContext('2d'), W, H);
+    }
+  }
+  function all() { document.getElementById('seedlbl').textContent = `seed ${n}`; location.hash = n; draw('solo', SOLO, 1); draw('duo', DUO, 2); draw('group', GROUP, 3); }
+  document.getElementById('seedup').onclick = () => { n++; all(); };
+  document.getElementById('framing').onchange = all; document.getElementById('set').onchange = all;
+  all();
+  const s = tableau.init(fallbackScore(), prng(1), { w: 16, h: 9 }), model = s.cast[s.leads[0]];
+  document.getElementById('props').innerHTML = PROP_STYLES.filter((p) => p !== 'none' && p !== 'handsAtSides').map((p) => `<figure class="svg">${renderPortrait({ ...dress(model, { costume: 'minimalTurtleneck', makeup: [], props: [p] }), background: '#efede8' })}<figcaption>${p}</figcaption></figure>`).join('');
+</script>
+</body>
+</html>

@@ -24,11 +24,11 @@
 // helicopter, a rocket, a dragon, a meteor) and bombs beyond the horizon, most fx impacts and now and then a bar on
 // its own, a flash and a shudder and a mushroom cloud rising for a minute. Deterministic: randomness only from the state's own generator
 // (kit.mjs); units are the canvas height, world units are the road's half width.
-import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf } from './kit.mjs';
+import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf, DEFAULT_SLOT } from './kit.mjs';
+import { bomb, skyThing } from './train.mjs';
 
 const TAU = Math.PI * 2;
 const HOR = 0.42, CAM_H = 1, CAM_D = 0.85, SEG = 0.22, N = 80, Z0 = 1.3, CURVE = 0.0025, LANES = [-0.66, 0, 0.66], MAX_CARS = 9;
-const DEFAULT_SLOT = { drums: 'impulse', pitched: 'line', hit: 'grain', bass: 'ground', melody: 'line', pad: 'field', perc: 'grain', sample: 'impulse', fx: 'transition' };
 const SCENE = { establish: { speed: 0.75, traffic: 0.6 }, develop: { speed: 1, traffic: 1 }, climax: { speed: 1.3, traffic: 1.5 }, release: { speed: 0.85, traffic: 0.7 }, none: { speed: 1, traffic: 1 } };
 // a stage: its ground, what stands at the horizon, what lines the road and how far apart (world units), how much the road bends and rolls, and water beside it
 const LAND = {
@@ -45,8 +45,8 @@ const LAND = {
 };
 const SKY = { cool: { top: [212, 60, 55], low: [200, 50, 80], sun: [48, 90, 92], stars: 0 }, warm: { top: [255, 55, 34], low: [28, 85, 62], sun: [22, 95, 62], stars: 0 }, dim: { top: [250, 40, 8], low: [265, 35, 22], sun: [50, 20, 88], stars: 1 }, pale: { top: [200, 12, 62], low: [195, 10, 78], sun: [50, 10, 90], stars: 0 } };
 const WORDS = ['GAS', 'MOTEL', 'DINER', 'RADIO', 'SURF', 'TIRES', 'CAFE', 'HOTEL', 'COLA', 'BEACH', 'OIL', 'PIZZA'];
-const EDGE = 1.22; // where the shoulder ends (the rumble strip is 1.16 wide): nothing planted reaches inside it
-const HALF = { palm: 1.1, tree: 0.9, pine: 1, bush: 0.7, cactus: 0.55, rock: 0.6, cliff: 1.35, sign: 0.4, billboard: 1.05, lamp: 0.7, building: 0.65, house: 0.75, barn: 0.85, windmill: 0.95, lighthouse: 0.35, pylon: 0.85 }; // each kind's half width at h = 1, the road side
+export const EDGE = 1.22; // where the shoulder ends (the rumble strip is 1.16 wide): nothing planted reaches inside it
+export const HALF = { palm: 1.1, tree: 0.9, pine: 1, bush: 0.7, cactus: 0.55, rock: 0.6, cliff: 1.35, sign: 0.4, billboard: 1.05, lamp: 0.7, building: 0.65, house: 0.75, barn: 0.85, windmill: 0.95, lighthouse: 0.35, pylon: 0.85 }; // each kind's half width at h = 1, the road side
 
 /** The stage of each section: by role, the develop ones in a seeded rotation, release alternating sea and lake. */
 const landsOf = (roles, rng) => {
@@ -222,8 +222,8 @@ export default {
     if (night) for (const st of s.stars) { const x = ((st.x + s.bgX * 0.2) % 3 + 3) % 3; if (x > W) continue; ctx.fillStyle = hsla(50, 20, 90, 0.7 * st.w); ctx.fillRect(X(x), Y(st.y), h * 0.004 * st.w, h * 0.004 * st.w); }
     const sunX = ((0.9 + s.bgX) % 3 + 3) % 3; // the sun sits on the horizon and scrolls with it, part of the distance, never a spot hung before the car
     if (sunX < W + 0.15) { ctx.beginPath(); ctx.arc(X(sunX), Y(HOR - 0.01), h * (night ? 0.05 : 0.1), 0, TAU); ctx.fillStyle = hsla(sky.sun[0], sky.sun[1], sky.sun[2], 0.95); ctx.fill(); if (!night) { ctx.fillStyle = hsla(sky.low[0], sky.low[1], sky.low[2] * day, 0.35); for (let i = 0; i < 4; i++) ctx.fillRect(X(sunX - 0.11), Y(HOR - 0.07 + i * 0.018), h * 0.22, h * (0.004 + i * 0.002)); } } // the arcade sun's bands
-    for (const o of s.fliers) skyThing(s, ctx, h, o, X, Y, night);
-    for (const n of s.nukes) bomb(ctx, h, n, X, hor, night);
+    for (const o of s.fliers) skyThing(s, ctx, h, o, X, Y, night, 1, HOR);
+    for (const n of s.nukes) bomb(ctx, h, n, X, hor, night ? 0.8 : 1);
     for (const c of s.clouds) { const x = ((c.x + s.bgX * 0.3) % 3 + 3) % 3; if (x > W + 0.4) continue; ctx.fillStyle = hsla(sky.low[0], 20, night ? 28 : 94 * Math.min(1, day), 0.7 * c.a * s.cloud * 2); for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.ellipse(X(x + i * c.w * 0.4), Y(c.y + Math.abs(i) * 0.012), h * c.w * 0.5, h * c.w * (0.22 - Math.abs(i) * 0.06), 0, 0, TAU); ctx.fill(); } }
     skyline(s, ctx, h, W, land.bg, X, Y, night, day);
     const [gh, gs, gl] = s.ground;
@@ -257,39 +257,6 @@ export default {
     const vig = ctx.createRadialGradient(w / 2, h / 2, h * 0.45, w / 2, h / 2, h * 1.05); vig.addColorStop(0, 'rgba(0 0 0 / 0)'); vig.addColorStop(1, 'rgba(0 0 0 / .55)'); ctx.fillStyle = vig; ctx.fillRect(0, 0, w, h);
   },
 };
-
-/** A bomb beyond the horizon, from the train world: the fireball on the line in the first seconds, then the column and the cap growing with age, fire to dust, thinning out at the end. */
-function bomb(ctx, h, n, X, hor, night) {
-  const g = 1 - Math.exp(-n.age / 12), fire = Math.exp(-n.age / 6), a = clamp((80 - n.age) / 25) * (night ? 0.8 : 1), cx = X(n.x), base = hor + 2, capH = h * 0.5 * g * n.h, stemW = h * 0.06 * (0.4 + 0.6 * g) * n.h, capW = h * 0.26 * g * n.h, capY = base - capH;
-  const hue = lerp(20, 30, 1 - fire), sat = lerp(12, 90, fire), light = lerp(38, 62, fire);
-  const grad = ctx.createLinearGradient(0, capY, 0, base); grad.addColorStop(0, hsla(hue, sat, light, a)); grad.addColorStop(1, hsla(hue, sat * 0.6, light * 0.6, a));
-  ctx.fillStyle = grad; ctx.beginPath(); ctx.moveTo(cx - stemW, base); ctx.quadraticCurveTo(cx - stemW * 0.6, capY + capH * 0.5, cx - stemW * 1.2, capY + capH * 0.3); ctx.lineTo(cx + stemW * 1.2, capY + capH * 0.3); ctx.quadraticCurveTo(cx + stemW * 0.6, capY + capH * 0.5, cx + stemW, base); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = hsla(hue, sat, light, a); ctx.beginPath(); ctx.ellipse(cx, capY + capH * 0.22, capW, capH * 0.26, 0, 0, TAU); ctx.fill();
-  ctx.fillStyle = hsla(hue, sat, light + 12, a * 0.8); ctx.beginPath(); ctx.ellipse(cx - capW * 0.3, capY + capH * 0.12, capW * 0.5, capH * 0.18, 0, 0, TAU); ctx.ellipse(cx + capW * 0.35, capY + capH * 0.2, capW * 0.45, capH * 0.16, 0, 0, TAU); ctx.fill();
-  if (fire > 0.05) { ctx.fillStyle = hsla(45, 100, 90, fire * a); ctx.beginPath(); ctx.ellipse(cx, capY + capH * 0.25, capW * 0.5, capH * 0.15, 0, 0, TAU); ctx.fill(); }
-  if (fire > 0.02) { const r = h * 0.26 * n.h * (1 - Math.exp(-n.age / 1.2)); const fb = ctx.createRadialGradient(cx, base, 0, cx, base, r * 2); fb.addColorStop(0, hsla(50, 100, 98, fire * a)); fb.addColorStop(0.3, hsla(45, 100, 85, fire * a)); fb.addColorStop(0.5, hsla(30, 100, 62, 0.8 * fire * a)); fb.addColorStop(1, hsla(20, 100, 55, 0)); ctx.fillStyle = fb; ctx.beginPath(); ctx.ellipse(cx, base, r * 2, r * 1.4, 0, Math.PI, TAU); ctx.fill(); }
-}
-
-/** The sky's traffic, from the train world: everything flies left, a plane, a UFO whose beam pulses on the beat, a balloon, a blimp, a helicopter, a rocket climbing, a dragon, a meteor falling. */
-function skyThing(s, ctx, h, o, X, Y, night) {
-  const x = X(o.x), y = Y(o.y), S = h * 0.05 * o.h, F = (c) => { ctx.fillStyle = c; }, R = (dx, dy, w, hh) => ctx.fillRect(x + dx * S, y - dy * S, w * S, hh * S);
-  const C = (dx, dy, r) => { ctx.beginPath(); ctx.arc(x + dx * S, y - dy * S, r * S, 0, TAU); ctx.fill(); }, E = (dx, dy, rx, ry) => { ctx.beginPath(); ctx.ellipse(x + dx * S, y - dy * S, rx * S, ry * S, 0, 0, TAU); ctx.fill(); };
-  const T = (pts) => { ctx.beginPath(); pts.forEach(([dx, dy], i) => (i ? ctx.lineTo(x + dx * S, y - dy * S) : ctx.moveTo(x + dx * S, y - dy * S))); ctx.closePath(); ctx.fill(); }, flap = Math.sin(s.t * 6 + o.v * 9), dark = hsla(0, 0, night ? 30 : 15);
-  const mirror = ['dragon', 'helicopter', 'blimp'].includes(o.kind);
-  if (mirror) { ctx.save(); ctx.translate(2 * x, 0); ctx.scale(-1, 1); }
-  switch (o.kind) {
-    case 'plane': F(hsla(0, 0, night ? 40 : 92)); E(0, 0, 1.2, 0.3); T([[0.4, 0], [-0.4, 0], [-0.9, -0.9]]); T([[1.2, 0], [0.7, 0], [1.1, 0.7]]); break;
-    case 'ufo': { const on = 1 - 0.7 * s.beatPhase; F(hsla(120, 80, 60, 0.18 * on)); T([[-0.6, -0.3], [0.6, -0.3], [2.2, -(HOR - o.y) * 20], [-2.2, -(HOR - o.y) * 20]]); F(hsla(0, 0, night ? 45 : 70)); E(0, 0, 1.4, 0.4); F(hsla(180, 60, 80, 0.8)); E(0, 0.35, 0.6, 0.45); for (let i = -1; i <= 1; i++) { F(hsla((s.blink + i + 3) % 2 ? 0 : 60, 90, 60)); C(i * 0.8, -0.1, 0.12); } break; }
-    case 'balloon': F(hsla(o.v * 360, 75, 55)); E(0, 1.2, 1, 1.2); F(hsla(o.v * 360 + 180, 75, 65)); T([[-0.3, 2.3], [0.3, 2.3], [0.15, 0.1], [-0.15, 0.1]]); ctx.strokeStyle = dark; ctx.lineWidth = S * 0.05; ctx.beginPath(); ctx.moveTo(x - 0.5 * S, y - 0.4 * S); ctx.lineTo(x - 0.3 * S, y + 0.6 * S); ctx.moveTo(x + 0.5 * S, y - 0.4 * S); ctx.lineTo(x + 0.3 * S, y + 0.6 * S); ctx.stroke(); F(hsla(30, 50, 40)); R(-0.35, -0.6, 0.7, 0.45); break;
-    case 'blimp': F(hsla(0, 0, night ? 45 : 85)); E(0, 0, 2.2, 0.7); T([[-2, 0.2], [-2.8, 0.7], [-2.6, 0]]); T([[-2, -0.2], [-2.8, -0.7], [-2.6, 0]]); F(dark); R(-0.4, -0.7, 0.8, 0.3); break;
-    case 'helicopter': F(hsla(0, 70, 50)); E(0, 0, 1, 0.55); R(-2.4, 0.2, 2, 0.25); T([[-2.5, 0.1], [-2.5, 0.9], [-2, 0.3]]); F(hsla(200, 40, 80, 0.8)); E(0.4, 0.05, 0.4, 0.3); F(dark); R(-0.5, -0.8, 1, 0.1); { const sp = Math.abs(Math.cos(s.t * 25)); R(-2 * sp, 0.85, 4 * sp, 0.1); } break;
-    case 'rocket': F(hsla(0, 0, 90)); R(-0.3, 1.8, 0.6, 1.8); T([[-0.3, 1.8], [0, 2.6], [0.3, 1.8]]); F(hsla(0, 80, 55)); T([[-0.3, 0], [-0.7, -0.5], [-0.3, 0.7]]); T([[0.3, 0], [0.7, -0.5], [0.3, 0.7]]); F(hsla(30, 100, 60, 0.9)); T([[-0.25, 0], [0, -1.2 - 0.4 * Math.abs(flap)], [0.25, 0]]); F(hsla(55, 100, 80)); T([[-0.12, 0], [0, -0.6], [0.12, 0]]); break;
-    case 'dragon': F(hsla(120, 50, 35)); E(0, 0, 1.4, 0.4); E(1.5, 0.4, 0.5, 0.3); T([[-1.2, 0], [-2.6, 0.5 * flap], [-1.3, -0.2]]); T([[-0.6, 0.2], [0.2, 0.2], [-0.4, 1.6 * flap]]); F(hsla(50, 90, 60)); C(1.75, 0.5, 0.08); break;
-    case 'meteor': F(hsla(30, 100, 80, 0.9)); T([[0, 0], [3, 1.8], [0.4, 0.4], [-0.4, 0]]); F(hsla(50, 100, 95)); C(0, 0, 0.35); break;
-    default: break;
-  }
-  if (mirror) ctx.restore();
-}
 
 /** The horizon's skyline, one band per stage kind, repeating every three heights and scrolling against the bend. */
 function skyline(s, ctx, h, W, kind, X, Y, night, day) {

@@ -4,32 +4,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
-import outrun from '../web/visual/outrun.mjs';
+import outrun, { HALF } from '../web/visual/outrun.mjs';
 import { eventOf, clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
-import { layerBase } from '../lib/song.mjs';
-
+import { streamOf, ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
+const run = (ir, seconds = 8) => runWorld(outrun, ir, seconds);
 const song = (g, seed = 3) => g.song({ cps: .5, key: 'C:minor', seed, visual: 'outrun' }, [
   g.section('intro', 2, { role: 'establish', pad: { space: .8 }, drums: { density: .3 }, fx: { riser: 1 } }),
   g.section('drop', 2, { role: 'climax', dropout: 1, drums: { density: .9 }, bass: { density: .8 }, melody: { density: .7, notes: '0 2 4 7' }, pad: { arp: 'up' }, perc: { sound: 'cajon' } }),
   g.section('out', 2, { role: 'release', drums: { density: .4 } }),
 ]).strudel;
-const streamOf = (ir) => {
-  const out = [];
-  for (const s of ir.sections) for (const [name, l] of Object.entries(s.layers))
-    for (const h of l.pattern.queryArc(0, s.cycles)) if (h.hasOnset()) { const c = s.offset + h.whole.begin.valueOf(); out.push(eventOf(h, name, layerBase(name), c / ir.meta.cps)); }
-  return out.sort((a, b) => a.t - b.t);
-};
-const ctxStub = () => { const calls = {}, grad = { addColorStop() {} }; return new Proxy({}, { get: (o, k) => (k === 'calls' ? calls : (...a) => { calls[k] = (calls[k] ?? 0) + 1; return String(k).startsWith('create') ? grad : undefined; }), set: () => true }); };
-const run = (ir, seconds = 8) => {
-  const p = createPerformance(outrun, composeVisual(ir), { w: 16, h: 9 });
-  for (const e of streamOf(ir)) p.push(e);
-  for (let t = 0; t <= seconds; t += 1 / 30) p.advance(t, t * ir.meta.cps);
-  return p;
-};
-const forbid = (obj, key) => { const was = obj[key]; obj[key] = () => { throw new Error(`${key} called inside the world`); }; return () => { obj[key] = was; }; };
-const base = { t: 0, cycle: 0, dur: .25, gain: 1, velocity: 1, pan: .5, cutoff: null, room: 0, note: null, voice: null, role: null };
-const KICK = { ...base, layer: 'drums', kind: 'drums', voice: 'bd', role: 'pulse' };
 const carIn = (lane, z) => ({ z, lane, x: [-0.66, 0, 0.66][lane], hue: 0, kind: 'car', lit: 0, passed: 0 });
 
 test('outrun is importable in Node and draws on a stub context with no randomness or clock of its own', async () => {
@@ -135,7 +119,6 @@ test("over a long run the traffic gets passed and never driven through, a lane i
   assert.ok(inLane[1] < 0.6 * (inLane[0] + inLane[1] + inLane[2]), `the middle lane is not where it lives (${inLane.join('/')} frames)`);
   assert.ok(s.score > 1000);
   assert.ok(hi > 0 && lo < 0, 'the road bends both ways');
-  const HALF = { palm: 1.1, tree: 0.9, pine: 1, bush: 0.7, cactus: 0.55, rock: 0.6, cliff: 1.35, sign: 0.4, billboard: 1.05, lamp: 0.7, building: 0.65, house: 0.75, barn: 0.85, windmill: 0.95, lighthouse: 0.35, pylon: 0.85 };
   const inRoad = s.segs.flatMap((x) => x.sprites).filter((o) => o.kind !== 'arch' && Math.abs(o.x) - (HALF[o.kind] ?? 0.6) * o.h < 1.16);
   assert.deepEqual(inRoad, [], 'nothing planted reaches inside the shoulder');
   assert.ok(s.cars.every((c) => Math.abs(c.x) <= 0.66), 'traffic keeps to its lanes');
