@@ -73,9 +73,12 @@ This is the **Sep 26** row.
 which meant it stopped somewhere around the collarbone and *sat on top of the jumper* — two tabs of skin on
 the shoulders. Now every neck runs to a fixed `NECK_BOTTOM`, behind every garment, and is then drawn a second
 time through the hole the outermost neckline makes, closed upward rather than on its own chord. A neckline is
-a hole with skin inside it, not a curve painted on cloth. Look at Nan's turtleneck:
+a hole with skin inside it, not a curve painted on cloth. Look at Nan's turtleneck, and at the girl's denim
+jacket, where the neckline is a V cut into the cloth with a neck coming up through it:
 
-![Nan across the three revisions](img/04-nan.png)
+![Nan's neck and collar across the three revisions](img/06-neck.png)
+
+![The girl's denim jacket across the three revisions](img/07-jacket.png)
 
 **Asymmetry that agrees with itself.** A symmetrical face with one random wobble in it reads as a mistake. A
 face where one cheek is fuller *and* one jaw corner sharper *and* one temple wider *and* the chin sits toward
@@ -106,24 +109,41 @@ colour to fill the crescent of forehead a level cut would leave.
 The Sep 26 portraits were the best yet at full size — and then somebody looked at the thumbnails and asked why
 Nan and Dad had no eyes.
 
-![Nan and Dad's eyes at 160 px, 26 and 27 September](img/05-eyes.png)
+![Nan and Dad's eyes at 160 px, 25 and 27 September](img/05-eyes.png)
 
 They did have eyes. Sampling the pixels proved it: the iris, the pupil and the lid were all drawn, and the eye
-region was, on average, exactly as dark as it had been the day before. What had gone was the *edge*. The old
-line-art eye was framed by one heavy stroke corner to corner, so at fifteen pixels it read as a dark dash. The
-new eye was built from tone, and its lash line was anchored to the lid curve's Bézier **control** point rather
-than the curve itself — about a fifth of the lid's height above the aperture it was supposed to sit on. At a
-wide-open eye that gap hides inside the eyelid. At a half-shut one — Nan at 0.75 openness, Dad on a narrow
-eye — the lash floats clear of the white, the aperture is three pixels of near-white sclera with a small iris
-in the middle of it, and the eye vanishes.
+region measured, on average, exactly as dark as it had the day before. The eyes were also missing on only *one
+side* of each face — which is the detail that gave it away, because the only thing separating Nan's two eyes
+was `asym: 0.92`, an eight per cent difference in openness.
 
-Two lines, both saying the same thing: put the dark back where the eye is. The lash moved down onto the
-aperture's drawn edge, and the sclera stopped being nearly white (it now takes 40% of the skin's own tone
-rather than 18%). Nothing about the design changed — that is the **Sep 27** row, and it is the only row where
-you have to look at the eyes to see the difference at all.
+Eight per cent is nothing. Unless the thing you are scaling is already too small. A hooded eye at 0.82 openness
+draws an aperture about four sheet units tall; at 0.75 it draws about 3.7. Rendered at 160 px that is the
+difference between 1.75 pixels and 1.6 — and on the raster it came out as **four rows of tone against two**.
+One eye landed on the pixel grid and the other landed between it. The whole bug was that the eye had got small
+enough for rounding to decide whether it existed.
+
+So the fix is not a shading tweak, it is a floor. Three changes, each of which is also simply more true:
+
+- **The lower lid barely moves.** Narrowing your eyes is an upper-lid action; the lower lid travels very little.
+  It now takes 30% of the openness instead of all of it, which puts a floor under the aperture that `openness`
+  and `asym` cannot drag through.
+- **No style sits under about two pixels at portrait size.** The `narrow`, `hooded` and `monolid` apertures were
+  authored while looking at a 400-pixel sheet, where five units is a perfectly good squint. They went up by a
+  third. At size they still read as narrow, hooded and monolid — the shape carries the style, not the gap.
+- **The iris is a share of the eye's width**, rather than a size of its own. It used to be fixed per style, so
+  opening a lid filled the new space with sclera: a wider eye got *whiter*, not more eye. Now `sclera` genuinely
+  means how much white shows beside the iris, and the per-style `iris` sizes — dead data once the rule changed
+  — are gone.
+
+From the first, wrong attempt at this, two things worth keeping: the lash now sits on the aperture's drawn edge
+rather than on the lid curve's Bézier control point about a fifth of a lid-height above it, and the sclera takes
+40% of the skin's tone instead of 18%, because a white that is nearly white is a bright patch at any size.
 
 The lesson is not about eyes. It is that a renderer judged only at the size you draw it while you work will
-quietly stop working at the size people actually see it.
+quietly stop working at the size people actually see it — and that the failure will look like a shading problem
+when it is really an arithmetic one.
+
+![Nan across the three revisions](img/04-nan.png)
 
 ## The arc
 
@@ -137,6 +157,17 @@ above is a new feature. The props, the halo behind the head (visible in the Sep 
 four-setup lighting rig were the additions, and every one of them came back out.
 
 The family in the sheet never aged. Only the hand drawing them did.
+
+## The rest of the family
+
+The other three carry the same three days, and between them they cover what Nan and Dad do not: the boy's
+hoodie, the hair under the girl's braids, and a face with neither a beard nor glasses to hide behind.
+
+![Mum across the three revisions](img/08-mum.png)
+
+![The boy across the three revisions](img/09-boy.png)
+
+![The girl across the three revisions](img/10-girl.png)
 
 ---
 
