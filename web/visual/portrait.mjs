@@ -188,7 +188,7 @@ function eye(cx, p, side) { // side: +1 the right eye, -1 the left (its outer co
   const xi = cx - st.w * side, xo = cx + st.w * side, yi = y + (st.inn ?? 0), yo = y + (st.out ?? 0), th = st.top * o, bh = st.bot * o, px = cx + 2 * side; // the upper lid peaks past the centre toward the outer corner
   const lid = `M ${xi} ${yi} Q ${px} ${y - th} ${xo} ${yo} Q ${cx - side} ${y + bh} ${xi} ${yi} Z`;
   const ir = st.iris * (1.5 - 0.55 * scl), lx = cx + e.look.x * 3, ly = y - th * 0.22 + e.look.y * 2; // the iris sits up under the upper lid; the more sclera, the smaller it is against the aperture
-  const white = mix('#ece0d3', p.skin, 0.18); // the white is never white: it takes a little of the skin
+  const white = mix('#ece0d3', p.skin, 0.4); // the white is never white: it takes a good deal of the skin, or a half-shut eye is a bright patch with a dot in it and reads as no eye at all once the portrait is small
   return [
     ...(depth > 0.02 ? soft(cx, y - 9, st.w + 4, 8, '#1d0f0c', 0.2 * depth) : []),
     ...(bags > 0.02 ? [path(`M ${xi} ${yi + 3} Q ${cx} ${y + bh + 9} ${xo} ${yo + 3} Q ${cx} ${y + bh + 16 + 4 * bags} ${xi} ${yi + 5} Z`, { fill: TONE, op: 0.18 * bags }), path(`M ${xi + 3 * side} ${y + bh + 5} Q ${cx} ${y + bh + 11 + 3 * bags} ${xo - 2 * side} ${y + bh + 4}`, stroke('#6b473b', 1.1, 0.3 * bags))] : []),
@@ -196,7 +196,7 @@ function eye(cx, p, side) { // side: +1 the right eye, -1 the left (its outer co
     clip(lid), ellipse(lx, ly, ir, ir, { fill: e.iris }), ellipse(lx, ly, ir, ir, stroke(shade(e.iris, 0.55), 1, 0.45)), ellipse(lx, ly, ir * 0.42, ir * 0.42, { fill: e.pupil }), ellipse(lx - 1.6 * side, ly - 1.8, 1.2, 1.2, { fill: '#fff', op: 0.75 }),
     ellipse(lx + 0.5, ly + ir * 0.35, ir * 0.7, ir * 0.35, { fill: '#fff', op: 0.08 }), // the iris lit from below, where the light gets under the lid
     path(`M ${xi - 2 * side} ${yi - 2} Q ${px} ${y - th + 3.5} ${xo + 2 * side} ${yo - 2} L ${xo + 2 * side} ${yo - 12} L ${xi - 2 * side} ${yi - 12} Z`, { fill: TONE, op: 0.24 + 0.1 * depth }), UNCLIP, // the upper lid's shadow across the white and the iris
-    path(`M ${xi} ${yi} Q ${cx - 4 * side} ${y - th - 0.3} ${px + 2 * side} ${y - th * 0.85}`, stroke(dark, 0.7 + 1.1 * lw, 0.75)), path(`M ${px} ${y - th * 0.95} Q ${xo - 4 * side} ${y - th * 0.7} ${xo + 3 * side} ${yo - 1.5}`, stroke(dark, 1.4 + 2 * lw, 0.9)), // the upper lid: thin at the inner end, heavy at the outer third where the lashes gather
+    path(`M ${xi} ${yi} Q ${cx - 4 * side} ${y - th * 0.8 - 0.3} ${px + 2 * side} ${y - th * 0.68}`, stroke(dark, 0.7 + 1.1 * lw, 0.75)), path(`M ${px} ${y - th * 0.76} Q ${xo - 4 * side} ${y - th * 0.56} ${xo + 3 * side} ${yo - 1.5}`, stroke(dark, 1.4 + 2 * lw, 0.9)), // the upper lid: thin at the inner end, heavy at the outer third where the lashes gather
     path(`M ${xi + 4 * side} ${yi + 1} Q ${cx} ${y + bh + 1.2} ${xo - 2 * side} ${yo + 0.4}`, stroke('#fff', 1.4, 0.16)), path(`M ${cx + 2 * side} ${y + bh + 0.6} Q ${xo - 3 * side} ${y + bh - 0.5} ${xo - side} ${yo}`, stroke(dark, 0.9, 0.3)), // the lower lid: a light rim, its outer third a faint dark
     ...(corner > 0.05 ? [path(`M ${xi} ${yi - 1.5} Q ${xi - 3.5 * corner * side} ${yi} ${xi} ${yi + 1.8}`, { fill: '#b8635a', op: 0.5 })] : []), // the tear duct
     ...(st.crease ? [path(`M ${cx - 16} ${y + st.crease.dy} Q ${cx} ${y + st.crease.ctl} ${cx + 16} ${y + st.crease.dy}`, stroke(st.crease.color, st.crease.sw, st.crease.op * (0.6 + 0.8 * depth)))] : []),
