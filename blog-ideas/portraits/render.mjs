@@ -2,7 +2,7 @@
 // between the rows is the drawing code. The old revision is pulled out with `git show` into a temp directory and
 // thrown away: no old code ever lands in the repo.
 //
-//   node blog-ideas/portraits/render.mjs d11afc8 .   # writes ./out/<who>-<rev>.svg and out/sheet.html; `.` is the working tree
+//   node blog-ideas/portraits/render.mjs d11afc8 b458cef .   # writes ./out/<who>-<rev>.svg and out/sheet.html; `.` is the working tree
 import { execFileSync } from 'node:child_process';
 import { writeFileSync, mkdtempSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { FAMILY } from './family.mjs';
 
-const REVS = process.argv.slice(2).length ? process.argv.slice(2) : ['d11afc8', '.'];
+const REVS = process.argv.slice(2).length ? process.argv.slice(2) : ['d11afc8', 'b458cef', '.'];
 const dir = mkdtempSync(join(tmpdir(), 'portraits-')), OUT = 'out';
 mkdirSync(OUT, { recursive: true });
 
