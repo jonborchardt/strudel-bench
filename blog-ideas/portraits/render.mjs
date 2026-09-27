@@ -19,10 +19,14 @@ for (const rev of REVS) {
   let file = 'web/visual/portrait.mjs';
   if (rev !== '.') writeFileSync(file = join(dir, `${rev}.mjs`), execFileSync('git', ['show', `${rev}:web/visual/portrait.mjs`], { maxBuffer: 1 << 24 }));
   const { renderPortrait, ACCESSORY_STYLES } = await import(pathToFileURL(file).href);
+  // toSvg numbers clip paths from a module-level counter, and each revision is its own module, so every one of
+  // them starts again at c1. Two c1s in one document resolve to the first, and the later portrait silently draws
+  // through the earlier one's clips: irises and beards disappear. Namespace them per portrait.
+  const uniq = (svg, k) => svg.replace(/(id="|url\(#)c(\d+)/g, `$1${k}c$2`);
   cols.push([rev, FAMILY.map((p) => {
     const spec = { ...p, background: '#d9d4cc', accessories: (p.accessories ?? []).filter((a) => ACCESSORY_STYLES.includes(a)) };
     delete spec.who; delete spec.label;
-    const svg = renderPortrait(spec);
+    const svg = uniq(renderPortrait(spec), `${rev.replace(/\W/g, '')}${p.who}`);
     writeFileSync(`${OUT}/${p.who}-${rev}.svg`, svg);
     return svg;
   })]);

@@ -1,6 +1,7 @@
 # The family that didn't age
 
-*Three days of changes to a portrait renderer, told through five people who never changed.*
+*Three days of changes to a portrait renderer, told through five people who never changed — and one day
+spent fixing something that was never broken.*
 
 ---
 
@@ -44,7 +45,7 @@ Three iterations, one evening, and the thing is still an emoji. That was the use
 
 ## Day 1: tone over line
 
-![The family, 25 to 27 September](img/02-family.png)
+![The family, 25 and 26 September](img/02-family.png)
 
 The instinct at this point is to blame proportions. It is almost never proportions. What made those heads
 cartoons is that **every feature was a stroke**: the eye was an outline, the nose was an arc, the smile was
@@ -76,9 +77,11 @@ time through the hole the outermost neckline makes, closed upward rather than on
 a hole with skin inside it, not a curve painted on cloth. Look at Nan's turtleneck, and at the girl's denim
 jacket, where the neckline is a V cut into the cloth with a neck coming up through it:
 
-![Nan's neck and collar across the three revisions](img/06-neck.png)
+![Nan across both revisions](img/04-nan.png)
 
-![The girl's denim jacket across the three revisions](img/07-jacket.png)
+![Nan's neck and collar](img/06-neck.png)
+
+![The girl's denim jacket](img/07-jacket.png)
 
 **Asymmetry that agrees with itself.** A symmetrical face with one random wobble in it reads as a mistake. A
 face where one cheek is fuller *and* one jaw corner sharper *and* one temple wider *and* the chin sits toward
@@ -95,59 +98,57 @@ from *this* face's own outline, let out — so a beard on a square jaw is square
 lip it sits on: pinned under the nose, its lower edge taking the lip curve's own move, so a smile bows it and
 it is never the one still thing on a moving face.
 
-![Dad across the three revisions](img/03-dad.png)
+![Dad across both revisions](img/03-dad.png)
 
 **Cloth behaving as cloth.** The head's shadow on the chest, shoulder folds, armpit pull, neckline thickness,
-the torso shaded as a cylinder. Compare the three shirts above; the collar on the right sits *on* someone.
+the torso shaded as a cylinder. Compare the two shirts above; the collar on the right sits *on* someone.
 
 **Hats that admit hair is under them.** The hair is clipped to below the crown line and pressed in at a slant
 rather than cut flat, and because a crown's bottom edge arcs upward, the hat wears a small skirt in its own
 colour to fill the crescent of forehead a level cut would leave.
 
-## Day 3: the thing the close-ups hid
+## Day 3: a whole day spent on a bug that was not there
 
-The Sep 26 portraits were the best yet at full size — and then somebody looked at the thumbnails and asked why
+The Sep 26 portraits were the best yet at full size — and then somebody looked at this very sheet and asked why
 Nan and Dad had no eyes.
 
-![Nan and Dad's eyes at 160 px, 25 and 27 September](img/05-eyes.png)
+They were right: in the sheet, they did not. Blank white almonds, no iris, no pupil. Dad's beard was mostly gone
+too, though nobody noticed that until later.
 
-They did have eyes. Sampling the pixels proved it: the iris, the pupil and the lid were all drawn, and the eye
-region measured, on average, exactly as dark as it had the day before. The eyes were also missing on only *one
-side* of each face — which is the detail that gave it away, because the only thing separating Nan's two eyes
-was `asym: 0.92`, an eight per cent difference in openness.
+What followed was most of a day of increasingly careful work on the eye code. The lash was moved off the lid
+curve's Bézier control point and onto the aperture it is supposed to sit on. The sclera stopped being nearly
+white. The lower lid was given a floor so `openness` could not drag the aperture under two pixels. The `narrow`,
+`hooded` and `monolid` apertures went up a third. The iris became a share of the eye's width so that opening a
+lid would show more eye and not more white. Each of these was defensible. Two of them were probably improvements.
+All of them were fixing nothing.
 
-Eight per cent is nothing. Unless the thing you are scaling is already too small. A hooded eye at 0.82 openness
-draws an aperture about four sheet units tall; at 0.75 it draws about 3.7. Rendered at 160 px that is the
-difference between 1.75 pixels and 1.6 — and on the raster it came out as **four rows of tone against two**.
-One eye landed on the pixel grid and the other landed between it. The whole bug was that the eye had got small
-enough for rounding to decide whether it existed.
+The clue was in plain sight the whole time and took three rounds to read: the eyes were missing on **one side
+only**, and the sole difference between Nan's two eyes is `asym: 0.92`. The other clue was that every
+measurement taken on a single portrait — sampling the actual pixels, scanning the eye region, comparing the
+average darkness against the day before — came back saying the eye was exactly as dark as it had always been.
+It was. The eye was fine. The **sheet** was broken.
 
-So the fix is not a shading tweak, it is a floor. Three changes, each of which is also simply more true:
+![The same portraits with colliding ids and with namespaced ids](img/05-clash.png)
 
-- **The lower lid barely moves.** Narrowing your eyes is an upper-lid action; the lower lid travels very little.
-  It now takes 30% of the openness instead of all of it, which puts a floor under the aperture that `openness`
-  and `asym` cannot drag through.
-- **No style sits under about two pixels at portrait size.** The `narrow`, `hooded` and `monolid` apertures were
-  authored while looking at a 400-pixel sheet, where five units is a perfectly good squint. They went up by a
-  third. At size they still read as narrow, hooded and monolid — the shape carries the style, not the gap.
-- **The iris is a share of the eye's width**, rather than a size of its own. It used to be fixed per style, so
-  opening a lid filled the new space with sclera: a wider eye got *whiter*, not more eye. Now `sclera` genuinely
-  means how much white shows beside the iris, and the per-style `iris` sizes — dead data once the rule changed
-  — are gone.
+`toSvg` gives each clip path an id from a counter, with a comment explaining that ids are document-wide so the
+counter is module-level. That is correct, and it works, for the page, which loads exactly one `portrait.mjs`.
+But the comparison sheet loads *several revisions of that module at once*, and each one starts its counter again
+at `c1`. Two `c1`s in one document resolve to the first, so every portrait after the first row was drawing
+through some earlier portrait's clips — clips cut for a different face at a different height. The irises fell
+outside them and vanished. So did the beard. So did the odd hard creases that had been appearing on Nan's cheek,
+which I had been reading as over-aggressive plane shading.
 
-From the first, wrong attempt at this, two things worth keeping: the lash now sits on the aperture's drawn edge
-rather than on the lid curve's Bézier control point about a fifth of a lid-height above it, and the sclera takes
-40% of the skin's tone instead of 18%, because a white that is nearly white is a bright patch at any size.
+The renderer never changed. Both fixes are reverted; `portrait.mjs` is byte-identical to where it stood on
+Sep 26, and the eye styles are the ones that were authored. The sheets namespace their ids, which is four lines
+in a scratchpad script that is not part of the project.
 
-The lesson is not about eyes. It is that a renderer judged only at the size you draw it while you work will
-quietly stop working at the size people actually see it — and that the failure will look like a shading problem
-when it is really an arithmetic one.
-
-![Nan across the three revisions](img/04-nan.png)
+The lesson I actually wanted from this post was that a renderer judged only at the size you work at will stop
+working at the size people see it. That turned out to be a nicer lesson than the true one, which is: when your
+instrument and your subject disagree three times running, stop adjusting the subject.
 
 ## The arc
 
-Six revisions over three days, and essentially one move repeated: **stop drawing the outline of a thing and
+Five revisions of the drawing over three days, and essentially one move repeated: **stop drawing the outline of a thing and
 start drawing the thing the light does to it.** Tone instead of line on the face. A neck that goes *into* a
 collar instead of a column parked in front of it. A beard cut from a jaw instead of fitted over one.
 Asymmetries that agree with each other instead of dice rolled per feature.
@@ -160,25 +161,26 @@ The family in the sheet never aged. Only the hand drawing them did.
 
 ## The rest of the family
 
-The other three carry the same three days, and between them they cover what Nan and Dad do not: the boy's
+The other three carry the same two revisions, and between them they cover what Nan and Dad do not: the boy's
 hoodie, the hair under the girl's braids, and a face with neither a beard nor glasses to hide behind.
 
-![Mum across the three revisions](img/08-mum.png)
+![Mum across both revisions](img/08-mum.png)
 
-![The boy across the three revisions](img/09-boy.png)
+![The boy across both revisions](img/09-boy.png)
 
-![The girl across the three revisions](img/10-girl.png)
+![The girl across both revisions](img/10-girl.png)
 
 ---
 
 ## Reproducing the pictures
 
 ```sh
-node blog-ideas/portraits/render.mjs d11afc8 b458cef .    # ./out/sheet.html, one row per revision
+node blog-ideas/portraits/render.mjs d11afc8 b458cef    # ./out/sheet.html, one row per revision
 ```
 
 `family.mjs` is the five specs, written only with keys that exist in every revision's `DEFAULTS`, so the same
-five people survive the trip. `render.mjs` pulls each old `portrait.mjs` out with `git show` into a temp file
+five people survive the trip. `render.mjs` namespaces each portrait's clip ids, which is the entire subject of
+day three. `render.mjs` pulls each old `portrait.mjs` out with `git show` into a temp file
 and imports it — the module has no imports of its own, so nothing else has to be reconstructed, and no old
 code is ever checked back in. Day 0 is the one exception: those heads come from `parlor.mjs` at `099ab41`,
 `b4499d3` and `89e8053`, which draw to a canvas rather than SVG, so they were shot in a headless browser.
