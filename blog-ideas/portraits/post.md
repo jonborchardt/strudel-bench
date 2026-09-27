@@ -106,6 +106,8 @@ colour to fill the crescent of forehead a level cut would leave.
 The Sep 26 portraits were the best yet at full size — and then somebody looked at the thumbnails and asked why
 Nan and Dad had no eyes.
 
+![Nan and Dad's eyes at 160 px, 26 and 27 September](img/05-eyes.png)
+
 They did have eyes. Sampling the pixels proved it: the iris, the pupil and the lid were all drawn, and the eye
 region was, on average, exactly as dark as it had been the day before. What had gone was the *edge*. The old
 line-art eye was framed by one heavy stroke corner to corner, so at fifteen pixels it read as a dark dash. The
