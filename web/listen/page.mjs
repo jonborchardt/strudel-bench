@@ -1,109 +1,179 @@
 // The listen page: one song's mp3 with its visuals drawn live from the baked stream (web/listen/show.mjs), in one
-// world, two side by side, or all of them. The <audio> element is the clock and the only thing that knows the time;
-// this file is the only DOM here, and it never evaluates a song, so the page carries no Strudel and no sample packs.
+// world or all of them at once. The <audio> element is the clock and the only thing that knows the time; this file
+// is the only DOM here, and it never evaluates a song, so the page carries no Strudel and no sample packs.
+//
+// Every channel is mounted and stepped for as long as the song is open, on screen or not, and the view only decides
+// where each is drawn. That is what makes it channel surfing: turning to another world shows it already running, in
+// the same bar as the music, instead of building it and starting from bar one. The worlds run in workers and hand
+// back finished pictures (web/listen/pool.mjs); this file blits them into one canvas and animates the rectangles,
+// so going into a world and back out is a zoom of the live picture rather than a cut between two layouts.
 import { nav, footer } from '../boot.mjs';
-import { createShow, loadWorlds, viewOf, parseHash, formatHash, WORLD_NAMES } from './show.mjs';
+import { createStage } from './pool.mjs';
+import { viewOf, tileGrid, parseHash, formatHash, WORLD_NAMES } from './show.mjs';
 import POLICY from '../../lib/visual.json' with { type: 'json' };
 
 const $ = (id) => document.getElementById(id);
 const mmss = (s) => (Number.isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00');
-const DRAWS = 4; // canvases repainted per frame: stepping every world is cheap, drawing all seventeen is not
+/** Every channel there is: the worlds, and the director's overlay of the song's two. */
+const CHANNELS = [...WORLD_NAMES, 'overlay'];
+const GAP = 8;           // css pixels between tiles
+const ZOOM = 320;        // milliseconds for a zoom in or out
+const MIN_TILE = 230;    // the narrowest a grid tile gets before the wall drops a column
 
 let audio, songs = [], audioMap = { base: '', songs: {} };
-let view = { song: null, mode: 'single', worlds: [] }, data = null, show = null, cells = [], turn = 0, loading = 0;
+let view = { song: null, mode: 'single', worlds: [] };
+let data = null, stage = null, loading = 0;
+let wall, wctx, from = new Map(), to = new Map(), started = 0, hover = null;
 
 const say = (text, bad = false) => { const el = $('msg'); el.textContent = text; el.style.color = bad ? 'var(--err)' : ''; };
-/** What a cell is showing, in words: a world's own line, or what the composition does. */
 const aboutOf = (name) => POLICY.worlds[name]?.about ?? POLICY.compositions[name]?.about ?? '';
+/** The channel a song picks for itself, which the world menu calls "auto". */
+const ownChannel = (score) => (score.composition?.worlds?.length > 1 ? 'overlay' : score.world);
+const dpr = () => Math.min(2, window.devicePixelRatio || 1);
+const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+
+/** The channels this view puts on screen, in order. Anything unknown falls back to the song's own. */
+function shown() {
+  if (!data) return [];
+  if (view.mode === 'grid') return CHANNELS;
+  if (view.mode === 'ab') return viewOf(data.score, { mode: 'ab', worlds: view.worlds }).names.slice(0, 2);
+  const pick = view.worlds[0];
+  return [CHANNELS.includes(pick) ? pick : ownChannel(data.score)];
+}
 
 /**
- * The world objects this view wants, keyed by the label the page shows, and the score to run them on. `viewOf` picks
- * both (and rewrites the score for the director, which reads its cast from it); this only fetches the modules.
+ * Where every channel sits on the wall, in css pixels, and how opaque. The ones on screen are laid out in a grid
+ * that fills the width; the rest are parked on top of the first of them, invisible, so a zoom in collapses them into
+ * the one being opened and a zoom out grows them back out of it.
  */
-async function viewWorlds(view, score) {
-  const v = viewOf(score, view);
-  const worlds = await loadWorlds(v.names);
-  if (!v.director) return { score: v.score, worlds };
-  const { createDirector } = await import('../visual/director.mjs');
-  return { score: v.score, worlds: { overlay: createDirector(worlds) } };
+function layout() {
+  const on = shown(), W = Math.max(120, wall.clientWidth);
+  // one row in single and compare; as many columns as fit in the grid
+  const g = tileGrid(on.length, W, { gap: GAP, min: MIN_TILE, cols: view.mode === 'grid' ? 0 : on.length });
+  const rects = new Map();
+  on.forEach((name, i) => rects.set(name, { ...g.at(i), a: 1 }));
+  // A channel going off screen fades where it stands rather than flying to the one being opened: seventeen tiles
+  // converging on one spot at half opacity is a smear, not a zoom. It leaves them in place to be grown back out of.
+  const anchor = rects.get(on[0]) ?? { x: 0, y: 0, w: W, h: (W * 9) / 16 };
+  for (const name of CHANNELS) if (!rects.has(name)) rects.set(name, { ...(to.get(name) ?? anchor), a: 0 });
+  return { rects, height: g.height };
 }
 
-/** One 16:9 box per world on show, with its name and what it is for under it. */
-function makeCells(names) {
-  const host = $('cells');
-  host.className = `cells ${view.mode}`;
-  host.replaceChildren(...names.map((name) => {
-    const fig = document.createElement('figure');
-    const box = document.createElement('div'); box.className = 'stagebox';
-    const canvas = document.createElement('canvas'); box.append(canvas);
-    const cap = document.createElement('figcaption');
-    cap.innerHTML = '<b></b><span></span>';
-    if (view.mode === 'ab') { // either half can be swapped for another world without leaving the comparison
-      const sel = document.createElement('select');
-      sel.replaceChildren(...WORLD_NAMES.map((w) => { const o = document.createElement('option'); o.value = w; o.textContent = w; return o; }));
-      sel.value = name;
-      sel.onchange = () => { const ws = [...show.names]; ws[names.indexOf(name)] = sel.value; go({ ...view, mode: 'ab', worlds: ws }); };
-      cap.querySelector('b').replaceWith(sel);
-    } else cap.querySelector('b').textContent = name;
-    cap.querySelector('span').textContent = aboutOf(name);
-    fig.append(box, cap);
-    if (view.mode !== 'single') box.onclick = () => go({ ...view, mode: 'single', worlds: [name] });
-    return fig;
-  }));
-  cells = [...host.querySelectorAll('figure')].map((fig, i) => {
-    const box = fig.querySelector('.stagebox'), canvas = fig.querySelector('canvas');
-    const cell = { name: names[i], box, canvas, ctx: canvas.getContext('2d'), on: true };
-    // off the screen: still stepped (a world's state is the song's history), not drawn
-    new IntersectionObserver(([e]) => { cell.on = e.isIntersecting; }).observe(box);
-    return cell;
-  });
-  turn = 0;
+/** Move to a new arrangement, animating from wherever the tiles are now. */
+function relayout(animate = true) {
+  if (!data) return;
+  const { rects, height } = layout();
+  from = new Map([...(to.size ? to : rects)].map(([k, v]) => [k, { ...(at(k) ?? v) }]));
+  to = rects;
+  started = animate ? performance.now() : 0;
+  wall.style.height = `${height}px`;
+  sizeWall();
+  // the render size is the settled one, so a zoom scales the last picture instead of re-rendering every frame
+  const want = new Map();
+  for (const name of shown()) { const r = rects.get(name); want.set(name, { w: r.w * dpr(), h: r.h * dpr() }); }
+  stage?.layout(want);
+  placeHits();
 }
 
-// Drawing is most of a crowded frame, but it costs per shape, not per pixel: measured, four times the pixels cost
-// seven per cent more, so a grid cell keeps the retina resolution rather than trading looks for nothing.
-const sizeCell = (c) => {
-  const dpr = Math.min(2, window.devicePixelRatio || 1), r = c.box.getBoundingClientRect();
-  const w = Math.max(2, Math.round(r.width * dpr)), h = Math.max(2, Math.round(r.height * dpr));
-  if (c.canvas.width !== w || c.canvas.height !== h) { c.canvas.width = w; c.canvas.height = h; }
+/** Where a channel is at this instant, part way through a zoom. */
+function at(name) {
+  const a = from.get(name), b = to.get(name);
+  if (!b) return null;
+  if (!a || !started) return b;
+  const t = Math.min(1, (performance.now() - started) / ZOOM);
+  if (t >= 1) return b;
+  const k = ease(t);
+  // opacity moves in the first half: what is leaving is gone before the tile opening over it is big enough to
+  // matter, so the two never sit on top of each other at half strength
+  const ka = ease(Math.min(1, t * 2));
+  return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, w: a.w + (b.w - a.w) * k, h: a.h + (b.h - a.h) * k, a: a.a + (b.a - a.a) * ka };
+}
+
+const sizeWall = () => {
+  const w = Math.max(2, Math.round(wall.clientWidth * dpr())), h = Math.max(2, Math.round(wall.clientHeight * dpr()));
+  if (wall.width !== w || wall.height !== h) { wall.width = w; wall.height = h; }
 };
 
-/** One frame: the audio's own position drives every world, and the lit cells take turns being repainted. */
+/** A transparent button over each tile: the click target, and what a keyboard and a screen reader can reach. */
+function placeHits() {
+  const host = $('hits'), on = new Set(shown());
+  for (const b of host.children) {
+    const r = to.get(b.dataset.name);
+    const live = on.has(b.dataset.name);
+    b.hidden = !live;
+    if (live && r) Object.assign(b.style, { left: `${r.x}px`, top: `${r.y}px`, width: `${r.w}px`, height: `${r.h}px` });
+  }
+}
+
+/** One frame: the audio's own position drives every channel, and the wall is repainted from their latest pictures. */
 function frame() {
   requestAnimationFrame(frame);
-  if (!show || !data) return;
+  if (!stage || !data) return;
   const now = audio.currentTime;
-  // Always advance, never replay. A replay from here would be self-feeding: it takes real time, the audio does not
-  // wait, so the next frame sees a gap at least as big and replays again — seventeen worlds on a long song sat at
-  // one full replay per frame. The real discontinuities announce themselves (onseeked, visibilitychange) and are
-  // replayed there; anything else is a slow frame, which host.mjs's MAX_CATCHUP already limps through.
-  show.at(now);
-  const lit = cells.filter((c) => c.on);
-  for (let i = 0; i < Math.min(DRAWS, lit.length); i++) {
-    const c = lit[(turn + i) % lit.length];
-    sizeCell(c);
-    show.draw(c.name, c.ctx, c.canvas.width, c.canvas.height);
+  stage.at(now);
+  sizeWall();
+  // the ones on their way out first, so the tile being opened paints over them rather than under
+  const k = dpr(), where = new Map(), on = new Set(shown());
+  for (const name of [...CHANNELS.filter((n) => !on.has(n)), ...CHANNELS.filter((n) => on.has(n))]) {
+    const r = at(name);
+    if (r) where.set(name, { x: r.x * k, y: r.y * k, w: r.w * k, h: r.h * k, a: r.a });
   }
-  turn = lit.length ? (turn + DRAWS) % lit.length : 0;
-  const len = audio.duration || data.seconds, cl = show.clock;
+  wctx.clearRect(0, 0, wall.width, wall.height);
+  stage.paint(wctx, where);
+  labels(where, k);
+  const len = audio.duration || data.seconds, cl = stage.clock;
   $('pos').textContent = `${mmss(now)} / ${mmss(len)}${cl?.section ? ` · ${cl.section} bar ${cl.bar + 1}` : ''}`;
   if (!audio.paused && len) $('scrub').value = String(Math.round((now / len) * 1000));
   $('play').textContent = audio.paused ? (now > 0 ? 'Resume' : 'Play') : 'Pause';
 }
 
-/** The world pick: the song's own choice first, then every world, then the overlay of two. */
+/** The channel's name over its own tile, so a wall of eighteen can be read; the line about it goes under the wall. */
+function labels(where, k) {
+  if (view.mode === 'single') return;
+  wctx.save();
+  wctx.font = `600 ${Math.round(12 * k)}px system-ui, sans-serif`;
+  wctx.textBaseline = 'bottom';
+  for (const [name, r] of where) {
+    if (r.a <= 0.4 || r.w < 60) continue;
+    wctx.globalAlpha = r.a;
+    wctx.fillStyle = 'rgba(0,0,0,.55)';
+    const pad = 4 * k, tw = wctx.measureText(name).width;
+    wctx.fillRect(r.x, r.y + r.h - 18 * k, tw + pad * 2, 18 * k);
+    wctx.fillStyle = name === hover ? '#fff' : 'rgba(255,255,255,.85)';
+    wctx.fillText(name, r.x + pad, r.y + r.h - 4 * k);
+  }
+  wctx.restore();
+}
+
+/** Turn to one channel, or back out to the wall when it is the one already filling the frame. */
+const tune = (name) => go(view.mode === 'single' && shown()[0] === name
+  ? { ...view, mode: 'grid', worlds: [] }
+  : { ...view, mode: 'single', worlds: [name] });
+
 function fillWorldPick() {
-  const sel = $('world'), own = data.score.composition?.worlds?.length > 1 ? 'overlay' : data.score.world;
-  sel.replaceChildren(...[['', `auto (${own})`], ...WORLD_NAMES.map((w) => [w, w]), ['overlay', 'overlay']]
+  const sel = $('world');
+  sel.replaceChildren(...[['', `auto (${ownChannel(data.score)})`], ...CHANNELS.map((w) => [w, w])]
     .map(([v, label]) => { const o = document.createElement('option'); o.value = v; o.textContent = label; return o; }));
-  sel.value = view.mode === 'single' && view.worlds[0] ? view.worlds[0] : '';
-  sel.disabled = view.mode !== 'single';
+}
+
+/** Lay the view out. No loading and no rebuilding: every channel is already running, this only moves the tiles. */
+function applyView() {
+  if (!data) return;
+  $('world').value = view.mode === 'single' && CHANNELS.includes(view.worlds[0]) ? view.worlds[0] : '';
+  $('world').disabled = view.mode !== 'single';
+  $('grid').classList.toggle('on', view.mode === 'grid');
+  $('grid').textContent = view.mode === 'grid' ? 'One' : 'Grid';
+  $('ab').classList.toggle('on', view.mode === 'ab');
+  $('ab').textContent = view.mode === 'ab' ? 'One' : 'Compare';
+  const one = view.mode === 'single' ? shown()[0] : hover;
+  $('chan').textContent = one ? `${one} — ${aboutOf(one)}` : `${CHANNELS.length} worlds, one song; click one to open it`;
+  relayout();
 }
 
 /**
- * Load what the view asks for: the song's data, its mp3, and the worlds. Nothing here touches the transport. Two
- * loads can be in flight (a slow song picked, then a cached one), so each takes a number and a stale one gives up at
- * every await rather than overwriting the newer song's title, show and audio behind the newer song's url.
+ * Load a song: its data, its mp3, and a fresh set of channels. Two loads can be in flight (a slow song picked, then
+ * a cached one), so each takes a number and a stale one gives up at every await rather than overwriting the newer
+ * song's title, stage and audio behind the newer song's url.
  */
 async function load() {
   const mine = ++loading, { song } = view;
@@ -112,16 +182,16 @@ async function load() {
   let got;
   try {
     got = await fetch(`listen/${encodeURIComponent(song)}.json`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${song}: ${r.status} ${r.statusText}`))));
-  } catch (e) { if (stale()) return; data = null; show = null; $('play').disabled = true; return say(e.message, true); }
+  } catch (e) { if (stale()) return; data = null; stage?.destroy(); stage = null; $('play').disabled = true; return say(e.message, true); }
   if (stale()) return;
   data = got;
   $('ttl').textContent = data.title.name;
   $('line').textContent = data.title.line;
   $('song').value = song;
-  const v = await viewWorlds(view, data.score); // an await: the director's module may still be downloading
-  if (stale()) return;
-  show = createShow({ score: v.score, stream: data.stream, worlds: v.worlds });
-  makeCells(show.names);
+  stage?.destroy();
+  from = new Map(); to = new Map();
+  // the score the director reads its cast from; a plain world never looks at `composition`, so one score serves all
+  stage = createStage({ score: viewOf(data.score, { mode: 'single', worlds: ['overlay'] }).score, stream: data.stream, names: CHANNELS });
   fillWorldPick();
   const file = audioMap.songs[song];
   const src = file ? new URL(audioMap.base + file, location.href).href : '';
@@ -130,33 +200,31 @@ async function load() {
   if (audio.src !== src) { if (src) audio.src = src; else { audio.removeAttribute('src'); audio.load(); } }
   $('play').disabled = !file;
   say(file ? '' : `no mp3 published for ${song} yet, so there is nothing to play it against`, !file);
-  // follow the audio, which is 0 for a new song (the element resets on a new src) and the playhead when only the
-  // worlds changed: picking a world mid-song must not send the picture back to bar 1
-  show.seek(audio.currentTime || 0);
-  // the grid's payoff has to be in the first two seconds, so it opens at the song's peak section. The length is the
+  // the wall's payoff has to be in the first two seconds, so it opens at the song's peak section. The length is the
   // score's when the element has none: on a first load the mp3's metadata has not arrived yet, and waiting for it
-  // would mean the grid always opens on the intro. Setting currentTime this early is the default start position.
+  // would mean it always opened on the intro. Setting currentTime this early is the default start position.
   if (view.mode === 'grid' && data.score.peak) {
     const s = data.score.sections.find((x) => x.name === data.score.peak), len = audio.duration || data.seconds;
-    if (s && len) { audio.currentTime = Math.min(s.at / data.score.cps, len - 1); show.seek(audio.currentTime); }
+    if (s && len) audio.currentTime = Math.min(s.at / data.score.cps, len - 1);
   }
-  $('grid').classList.toggle('on', view.mode === 'grid');
-  $('grid').textContent = view.mode === 'grid' ? 'One' : 'Grid';
-  $('ab').classList.toggle('on', view.mode === 'ab');
-  $('ab').textContent = view.mode === 'ab' ? 'One' : 'Compare';
+  applyView();
+  relayout(false); // the first arrangement does not zoom in from nowhere
+  stage.seek(audio.currentTime || 0);
 }
 
 /**
- * A new view: the url first (it is the share link), then the load. A song the list does not have (a stale link, a
- * typo in the hash bar, a song since renamed) falls back to the first one — here rather than at startup, because a
- * hashchange on an open page arrives the same way and would otherwise ask the server for a song that is not there.
+ * A new view. The url first, since it is the share link; then either a song load or, when only the channel changed,
+ * a relayout — which is the whole point, because the channel being turned to has been running all along.
  */
 function go(next) {
   const song = songs.some((s) => s.name === next.song) ? next.song : songs[0]?.name ?? next.song;
+  const same = data && song === view.song;
   view = { ...next, song };
   const hash = formatHash(view);
   if (location.hash !== hash) history.replaceState(null, '', hash);
-  return load();
+  if (!same) return load();
+  applyView();
+  return Promise.resolve();
 }
 
 async function pick() { // the song list, and which of them have an mp3
@@ -173,29 +241,37 @@ export async function start() {
   $('nav').innerHTML = nav('Listen');
   $('foot').innerHTML = footer();
   audio = $('au');
+  wall = $('wall'); wctx = wall.getContext('2d');
+  $('hits').replaceChildren(...CHANNELS.map((name) => {
+    const b = document.createElement('button');
+    b.dataset.name = name; b.type = 'button'; b.hidden = true;
+    b.setAttribute('aria-label', `${name}: ${aboutOf(name)}`);
+    b.onclick = () => tune(name);
+    b.onmouseenter = () => { hover = name; if (view.mode !== 'single') $('chan').textContent = `${name} — ${aboutOf(name)}`; };
+    return b;
+  }));
   await pick();
   const want = parseHash(location.hash);
   if (!songs.length) return say('no songs to play', true);
-  $('play').onclick = () => (audio.paused ? (show?.rebase(), audio.play()) : audio.pause()); // rebase: the pause is not a stall to be replayed
+  $('play').onclick = () => (audio.paused ? audio.play() : audio.pause());
   $('scrub').oninput = () => { const len = audio.duration || data.seconds; if (len) audio.currentTime = (Number($('scrub').value) / 1000) * len; };
-  audio.onseeked = () => show?.seek(audio.currentTime); // a scrub: one of the two real discontinuities
+  audio.onseeked = () => stage?.seek(audio.currentTime); // a scrub: one of the two real discontinuities
   // the other: a hidden tab stops getting frames, so the worlds come back as far behind as the tab was away
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) show?.seek(audio.currentTime); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) stage?.seek(audio.currentTime); });
   audio.onerror = () => say(`the mp3 for ${view.song} did not load`, true);
   $('world').onchange = () => go({ ...view, mode: 'single', worlds: $('world').value ? [$('world').value] : [] });
   $('grid').onclick = () => go(view.mode === 'grid' ? { ...view, mode: 'single', worlds: [] } : { ...view, mode: 'grid', worlds: [] });
-  $('ab').onclick = () => go(view.mode === 'ab'
-    ? { ...view, mode: 'single', worlds: [show?.names[0] ?? ''].filter(Boolean) }
-    : { ...view, mode: 'ab', worlds: [] }); // viewWorlds fills in the score's world and the next best
-  $('full').onclick = () => (document.fullscreenElement ? document.exitFullscreen() : cells[0]?.box.requestFullscreen?.());
+  $('ab').onclick = () => go(view.mode === 'ab' ? { ...view, mode: 'single', worlds: shown().slice(0, 1) } : { ...view, mode: 'ab', worlds: [] });
+  $('full').onclick = () => (document.fullscreenElement ? document.exitFullscreen() : $('cells').requestFullscreen?.());
   window.onhashchange = () => { const h = parseHash(location.hash); if (h.song) go(h); };
+  window.addEventListener('resize', () => relayout(false));
   document.addEventListener('keydown', (e) => {
     if (e.target.matches('input, select, textarea')) return;
     if (e.key === ' ') { e.preventDefault(); $('play').click(); }
-    if (e.key === '[' || e.key === ']') { // step through the worlds, as on the Compose stage
-      const now = view.worlds[0] && WORLD_NAMES.includes(view.worlds[0]) ? WORLD_NAMES.indexOf(view.worlds[0]) : WORLD_NAMES.indexOf(data.score.world);
-      const next = (now + (e.key === ']' ? 1 : WORLD_NAMES.length - 1) + WORLD_NAMES.length) % WORLD_NAMES.length;
-      go({ ...view, mode: 'single', worlds: [WORLD_NAMES[next]] });
+    if (e.key === 'Escape' && view.mode !== 'grid') go({ ...view, mode: 'grid', worlds: [] });
+    if ((e.key === '[' || e.key === ']') && data) { // surf: the next channel is already running, so it appears at once
+      const here = CHANNELS.indexOf(shown()[0]);
+      go({ ...view, mode: 'single', worlds: [CHANNELS[(here + (e.key === ']' ? 1 : CHANNELS.length - 1)) % CHANNELS.length]] });
     }
   });
   $('song').onchange = () => go({ ...view, song: $('song').value });

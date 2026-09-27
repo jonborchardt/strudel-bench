@@ -21,7 +21,11 @@
       <span class="grow"></span>
       <label class="field">song <select id="song"></select></label>
     </header>
-    <div id="cells" class="cells single"></div>
+    <div id="cells" class="cells">
+      <canvas id="wall"></canvas>
+      <div id="hits"></div>
+    </div>
+    <p class="muted chan" id="chan"></p>
     <div class="row">
       <button id="play" class="primary" disabled>Play</button>
       <input type="range" id="scrub" class="grow" min="0" max="1000" value="0" step="1" aria-label="position">

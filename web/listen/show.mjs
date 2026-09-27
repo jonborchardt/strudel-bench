@@ -36,6 +36,18 @@ export async function loadWorlds(names) {
 }
 
 /**
+ * A channel's world: a name from lib/visual.json, or `overlay`, the director over the two worlds the score composes.
+ * The score handed in is the one `viewOf` rewrote, so the director finds its cast where it looks for it.
+ */
+export async function channelWorld(name, score) {
+  if (name !== 'overlay') return (await loadWorlds([name]))[name] ?? null;
+  const cast = score.composition?.worlds ?? [];
+  if (cast.length < 2) return null;
+  const { createDirector } = await import('../visual/director.mjs');
+  return createDirector(await loadWorlds([...cast, 'tunnel'])); // tunnel too: the director falls back to it
+}
+
+/**
  * One show: a performance per world, all fed the same stream and the same clock. `at(seconds)` takes the audio
  * element's currentTime; `seek(seconds)` is the discontinuity path (a scrub, a stalled tab, a fresh play).
  */
@@ -121,6 +133,23 @@ export function viewOf(score, { mode = 'single', worlds = [] } = {}) {
   const composition = { preset: 'overlay', worlds: cast, ...(own?.every ? { every: own.every } : {}) };
   // tunnel too: the director falls back to it for a name its map lacks
   return { score: { ...score, composition }, names: [...cast, 'tunnel'], director: true };
+}
+
+/**
+ * How to tile `count` boxes across `width`: as many 16:9 columns as fit without going under `min`, the last row
+ * short where the count does not divide. The page reads it to place the wall's tiles; it is here because it is
+ * arithmetic with no DOM in it, and the awkward cases (one box, a box narrower than the minimum) are worth pinning.
+ */
+export function tileGrid(count, width, { gap = 8, min = 230, cols: fixed = 0 } = {}) {
+  const n = Math.max(1, count), w = Math.max(1, width);
+  const cols = Math.max(1, Math.min(n, fixed || Math.floor((w + gap) / (min + gap)) || 1));
+  const rows = Math.ceil(n / cols);
+  const tw = (w - gap * (cols - 1)) / cols, th = (tw * 9) / 16;
+  return {
+    cols, rows, tw, th,
+    height: rows * th + (rows - 1) * gap,
+    at: (i) => ({ x: (i % cols) * (tw + gap), y: Math.floor(i / cols) * (th + gap), w: tw, h: th }),
+  };
 }
 
 /**

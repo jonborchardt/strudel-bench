@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import { streamOf } from '../web/visual/export.mjs';
-import { createShow, loadWorlds, viewOf, parseHash, formatHash, WORLD_NAMES } from '../web/listen/show.mjs';
+import { createShow, loadWorlds, viewOf, tileGrid, parseHash, formatHash, WORLD_NAMES } from '../web/listen/show.mjs';
 import { createDirector } from '../web/visual/director.mjs';
 import { prng } from '../lib/random.mjs';
 import tunnel from '../web/visual/tunnel.mjs';
@@ -120,6 +120,22 @@ test('loadWorlds: every world named in lib/visual.json loads by name and has the
   assert.deepEqual(Object.keys(worlds), WORLD_NAMES, 'every name resolves, an unknown one is skipped');
   for (const [n, w] of Object.entries(worlds))
     for (const k of ['name', 'init', 'step', 'draw']) assert.ok(w?.[k], `${n} has no ${k}`);
+});
+
+test('tileGrid: the wall fills its width in 16:9 boxes, and the awkward counts still fit', () => {
+  const wide = tileGrid(18, 1300, { gap: 8, min: 230 });
+  assert.equal(wide.cols, 5);
+  assert.equal(wide.rows, 4, '18 in 5 columns is four rows, the last one short');
+  assert.ok(Math.abs(wide.tw * 5 + 8 * 4 - 1300) < 1e-9, 'the columns and the gaps between them are the whole width');
+  assert.ok(Math.abs(wide.th - (wide.tw * 9) / 16) < 1e-9, 'every box is 16:9');
+  assert.equal(wide.at(0).x, 0);
+  assert.equal(wide.at(5).y, wide.th + 8, 'the sixth box starts the second row');
+  assert.ok(Math.abs(wide.at(4).x + wide.tw - 1300) < 1e-9, 'the last column ends flush');
+  assert.equal(tileGrid(18, 1300, { cols: 1 }).cols, 1, 'one column when the view asks for one');
+  assert.equal(tileGrid(1, 1300).cols, 1, 'never more columns than there are boxes');
+  assert.equal(tileGrid(18, 200, { min: 230 }).cols, 1, 'a width under the minimum is one column, not zero');
+  assert.equal(tileGrid(0, 1300).rows, 1, 'no boxes still describes one row rather than dividing by zero');
+  assert.ok(tileGrid(18, 1300).height > 0 && Number.isFinite(tileGrid(18, 1300).height));
 });
 
 test('parseHash / formatHash: the share link is the whole state', () => {
