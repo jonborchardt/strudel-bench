@@ -5,15 +5,17 @@ import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import { streamOf } from '../web/visual/export.mjs';
-import { createShow, loadWorlds, parseHash, formatHash, WORLD_NAMES } from '../web/listen/show.mjs';
+import { createShow, loadWorlds, viewOf, parseHash, formatHash, WORLD_NAMES } from '../web/listen/show.mjs';
+import { createDirector } from '../web/visual/director.mjs';
+import { prng } from '../lib/random.mjs';
 import tunnel from '../web/visual/tunnel.mjs';
 import sediment from '../web/visual/sediment.mjs';
 
-const songOf = (g) => g.song({ cps: .5, key: 'C:minor', seed: 3 }, [
+const songOf = (g, visual) => g.song({ cps: .5, key: 'C:minor', seed: 3, ...(visual ? { visual } : {}) }, [
   g.section('intro', 4, { role: 'establish', pad: { space: .8 }, drums: { density: .4 }, fx: { riser: 1 } }),
   g.section('drop', 4, { role: 'climax', bpm: 60, drums: { density: .9 }, bass: {}, melody: { notes: '0 2 4 7' } }),
 ]);
-const dataOf = (g) => { const pat = songOf(g); return { score: composeVisual(pat.strudel), stream: streamOf(pat) }; };
+const dataOf = (g, visual) => { const pat = songOf(g, visual); return { score: composeVisual(pat.strudel), stream: streamOf(pat) }; };
 // the page's frame loop, at a steady 60 fps
 const through = (show, T) => { show.seek(0); for (let k = 1; k / 60 <= T + 1e-12; k++) show.at(k / 60); return show; };
 const json = (x) => JSON.stringify(x, (k, v) => (typeof v === 'number' ? +v.toFixed(9) : v));
@@ -61,6 +63,43 @@ test('one stream, many worlds: each world sees what it would see alone, and a wo
   assert.equal(late.pending, solo.pending, 'the late world was caught up to the same moment');
   late.drop('tunnel');
   assert.deepEqual(late.names, ['sediment']);
+});
+
+test('seek: the replay is capped, so a long song and seventeen worlds cannot freeze the page', async () => {
+  const g = await ready, { score, stream } = dataOf(g);
+  // a world that only counts its steps: what a seek costs is the number of world.step calls, and nothing else here
+  const counter = () => { const c = { steps: 0 }; c.world = { name: 'count', init: () => ({}), step: () => { c.steps++; }, draw: () => {} }; return c; };
+  const near = counter(), far = counter();
+  createShow({ score, stream, worlds: { count: near.world } }).seek(10);
+  createShow({ score, stream, worlds: { count: far.world } }).seek(600); // a scrub ten minutes into a long song
+  assert.ok(far.steps < 1200, `${far.steps} steps: a replay must be bounded, not the whole song up to the seek`);
+  assert.ok(far.steps <= near.steps * 2, `ten minutes in cost ${far.steps} steps against ${near.steps} at ten seconds`);
+  // and the cap does not change a seek inside it: the short song still replays whole, events and all
+  const whole = counter();
+  const show = createShow({ score, stream, worlds: { count: whole.world } }).seek(10);
+  assert.equal(whole.steps, 601, 'ten seconds is 600 steps plus the one that lands on second 0');
+  assert.equal(show.pending, stream.filter((e) => e.t > 10).length, 'and everything up to the seek has fired, with the rest still queued');
+});
+
+test('viewOf: the overlay hands the director a score naming both worlds, not the song\'s one', async () => {
+  const g = await ready, { score } = dataOf(g, { composition: 'single' }); // a song that asked for one world, as ballast and held do
+  assert.equal(score.composition.worlds.length, 1, 'the fixture composes one world, so the overlay has to supply the second');
+  const bare = viewOf(score, { mode: 'single', worlds: [] });
+  assert.deepEqual(bare, { score, names: [score.world], director: false }, 'no pick: the score\'s own world, untouched');
+  assert.deepEqual(viewOf(score, { mode: 'single', worlds: ['ink'] }).names, ['ink']);
+  assert.deepEqual(viewOf(score, { mode: 'grid' }).names, WORLD_NAMES);
+  const ab = viewOf(score, { mode: 'ab', worlds: ['train'] });
+  assert.equal(ab.names.length, 2);
+  assert.equal(ab.names[0], 'train');
+  const over = viewOf(score, { mode: 'single', worlds: ['overlay'] });
+  assert.equal(over.director, true);
+  assert.equal(over.score.composition?.worlds.length, 2, 'the director reads its cast from the score, so both worlds belong in it');
+  assert.equal(over.score.composition.worlds[0], score.world, 'the score\'s own world is the base');
+  assert.ok(over.names.includes(over.score.composition.worlds[1]), 'and the second world is among the ones to load');
+  // the proof: on that score the director actually builds a second world, which on the bare score it does not
+  const worlds = await loadWorlds([...over.score.composition.worlds, 'tunnel']);
+  assert.equal(createDirector(worlds).init(over.score, prng(1), { w: 16, h: 9 }).over, over.score.composition.worlds[1]);
+  assert.equal(createDirector(worlds).init(score, prng(1), { w: 16, h: 9 }).over, null, 'the unrewritten score is what made the overlay draw one world');
 });
 
 test('loadWorlds: every world named in lib/visual.json loads by name and has the world shape', async () => {

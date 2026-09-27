@@ -2,7 +2,7 @@
 // world, two side by side, or all of them. The <audio> element is the clock and the only thing that knows the time;
 // this file is the only DOM here, and it never evaluates a song, so the page carries no Strudel and no sample packs.
 import { nav, footer } from '../boot.mjs';
-import { createShow, loadWorlds, parseHash, formatHash, WORLD_NAMES } from './show.mjs';
+import { createShow, loadWorlds, viewOf, parseHash, formatHash, WORLD_NAMES } from './show.mjs';
 import POLICY from '../../lib/visual.json' with { type: 'json' };
 
 const $ = (id) => document.getElementById(id);
@@ -11,39 +11,22 @@ const DRAWS = 4; // canvases repainted per frame: stepping every world is cheap,
 const JUMP = 0.5; // seconds of clock the page may miss before it replays instead of limping on (host.mjs's MAX_CATCHUP)
 
 let audio, songs = [], audioMap = { base: '', songs: {} };
-let view = { song: null, mode: 'single', worlds: [] }, data = null, show = null, cells = [], turn = 0, seen = 0;
+let view = { song: null, mode: 'single', worlds: [] }, data = null, show = null, cells = [], turn = 0, seen = 0, loading = 0;
 
 const say = (text, bad = false) => { const el = $('msg'); el.textContent = text; el.style.color = bad ? 'var(--err)' : ''; };
 /** What a cell is showing, in words: a world's own line, or what the composition does. */
 const aboutOf = (name) => POLICY.worlds[name]?.about ?? POLICY.compositions[name]?.about ?? '';
 
-/** The best world that is not `not`, by the score's own odds: what Compare and the overlay reach for. */
-const nextBest = (score, not) => Object.entries(score.odds ?? {}).sort((a, b) => b[1] - a[1]).map(([w]) => w)
-  .find((w) => w !== not && POLICY.worlds[w]) ?? WORLD_NAMES.find((w) => w !== not);
-
 /**
- * The world objects this view wants, keyed by the label the page shows. A named world is itself; `overlay`, and the
- * default view of a song whose score composes two worlds, is the director over them, so the page shows what the
- * Compose stage shows. Anything unknown falls back to the score's own world.
+ * The world objects this view wants, keyed by the label the page shows, and the score to run them on. `viewOf` picks
+ * both (and rewrites the score for the director, which reads its cast from it); this only fetches the modules.
  */
-async function viewWorlds({ mode, worlds }, score) {
-  if (mode === 'grid') return loadWorlds(WORLD_NAMES);
-  if (mode === 'ab') {
-    const a = POLICY.worlds[worlds[0]] ? worlds[0] : score.world;
-    const b = POLICY.worlds[worlds[1]] && worlds[1] !== a ? worlds[1] : nextBest(score, a);
-    return loadWorlds([a, b]);
-  }
-  const pick = worlds[0];
-  if (pick && POLICY.worlds[pick]) return loadWorlds([pick]);
-  const c = score.composition;
-  const composed = pick === 'overlay' || (!pick && c && c.preset !== 'single' && c.worlds?.length > 1);
-  if (composed) {
-    const names = c?.worlds?.length > 1 ? c.worlds : [score.world, nextBest(score, score.world)];
-    const { createDirector } = await import('../visual/director.mjs');
-    // tunnel too: the director falls back to it for a name its map lacks
-    return { overlay: createDirector(await loadWorlds([...names, 'tunnel'])) };
-  }
-  return loadWorlds([score.world]);
+async function viewWorlds(view, score) {
+  const v = viewOf(score, view);
+  const worlds = await loadWorlds(v.names);
+  if (!v.director) return { score: v.score, worlds };
+  const { createDirector } = await import('../visual/director.mjs');
+  return { score: v.score, worlds: { overlay: createDirector(worlds) } };
 }
 
 /** One 16:9 box per world on show, with its name and what it is for under it. */
@@ -89,8 +72,9 @@ function frame() {
   requestAnimationFrame(frame);
   if (!show || !data) return;
   const now = audio.currentTime;
-  if (Math.abs(now - seen) > JUMP) show.seek(now); else show.at(now);
-  seen = now;
+  // a replay takes real time, and the audio does not wait for it: read the clock again afterwards, or the next frame
+  // sees a gap the size of the replay and replays again, further on each time, and never catches up
+  if (Math.abs(now - seen) > JUMP) { show.seek(now); seen = audio.currentTime; } else { show.at(now); seen = now; }
   const lit = cells.filter((c) => c.on);
   for (let i = 0; i < Math.min(DRAWS, lit.length); i++) {
     const c = lit[(turn + i) % lit.length];
@@ -113,17 +97,27 @@ function fillWorldPick() {
   sel.disabled = view.mode !== 'single';
 }
 
-/** Load what the view asks for: the song's data, its mp3, and the worlds. Nothing here touches the transport. */
+/**
+ * Load what the view asks for: the song's data, its mp3, and the worlds. Nothing here touches the transport. Two
+ * loads can be in flight (a slow song picked, then a cached one), so each takes a number and a stale one gives up at
+ * every await rather than overwriting the newer song's title, show and audio behind the newer song's url.
+ */
 async function load() {
-  const { song } = view;
+  const mine = ++loading, { song } = view;
+  const stale = () => mine !== loading;
   say('loading…');
+  let got;
   try {
-    data = await fetch(`listen/${encodeURIComponent(song)}.json`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${song}: ${r.status} ${r.statusText}`))));
-  } catch (e) { data = null; show = null; $('play').disabled = true; return say(e.message, true); }
+    got = await fetch(`listen/${encodeURIComponent(song)}.json`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${song}: ${r.status} ${r.statusText}`))));
+  } catch (e) { if (stale()) return; data = null; show = null; $('play').disabled = true; return say(e.message, true); }
+  if (stale()) return;
+  data = got;
   $('ttl').textContent = data.title.name;
   $('line').textContent = data.title.line;
   $('song').value = song;
-  show = createShow({ score: data.score, stream: data.stream, worlds: await viewWorlds(view, data.score) });
+  const v = await viewWorlds(view, data.score); // an await: the director's module may still be downloading
+  if (stale()) return;
+  show = createShow({ score: v.score, stream: data.stream, worlds: v.worlds });
   makeCells(show.names);
   fillWorldPick();
   const file = audioMap.songs[song];

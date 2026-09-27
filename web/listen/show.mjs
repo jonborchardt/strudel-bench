@@ -10,6 +10,19 @@ export const WORLD_NAMES = Object.keys(POLICY.worlds);
 
 const CHUNK = 0.4; // seconds of song replayed per advance() while seeking: exactly 24 fixed steps, inside host.mjs's MAX_CATCHUP
 const EPS = 1e-6;
+/**
+ * ponytail: the most steps a seek replays per world, ~15 seconds of song. Without a cap a scrub costs the whole song
+ * up to that point, once per world on show, which on seventeen worlds and a four-minute song blocked the page for
+ * half a minute (swarm and dish are the expensive ones). Past the cap a world starts cold that far back instead of
+ * at the song's start, so an accumulating world (growth, sediment, ink, loom) shows its last fifteen seconds of
+ * history rather than all of it — the "reset at the seek point" ceiling, softened. Raise it if a machine can afford
+ * more; the alternative, a wall-clock budget, would give the same seek a different picture on different machines.
+ */
+const MAX_REPLAY = 900;
+
+/** The best world that is not `not`, by the score's own odds: what the comparison and the overlay reach for. */
+export const nextBest = (score, not) => Object.entries(score.odds ?? {}).sort((a, b) => b[1] - a[1]).map(([w]) => w)
+  .find((w) => w !== not && POLICY.worlds[w]) ?? WORLD_NAMES.find((w) => w !== not);
 
 /**
  * The worlds named, imported by name from web/visual/. There is no second registry to keep in step with stage.mjs:
@@ -32,7 +45,9 @@ export function createShow({ score, stream, worlds, size = { w: 16, h: 9 } }) {
   // read as a section boundary while the reverb is still dying
   const last = score.total > 0 ? score.total / score.cps - EPS : Infinity;
   const cycleAt = (sec) => Math.min(Math.max(0, sec), last) * score.cps;
-  const fill = (p) => { for (const e of stream) p.push({ ...e }); return p; }; // a copy each: seventeen worlds must not share one event object
+  // a copy each: seventeen worlds must not share one event object. `from` is where a capped replay starts, and the
+  // events before it are left out rather than dumped into the first step, which would land the whole history at once
+  const fill = (p, from = 0) => { for (const e of stream) if (e.t >= from) p.push({ ...e }); return p; };
   const advance = (sec) => { const c = cycleAt(sec); for (const p of perfs.values()) p.advance(sec, c); };
   const first = () => (perfs.size ? perfs.values().next().value : null);
   const show = {
@@ -57,18 +72,46 @@ export function createShow({ score, stream, worlds, size = { w: 16, h: 9 } }) {
      */
     seek(seconds) {
       const target = Math.max(0, seconds);
-      for (const p of perfs.values()) { p.reset(); fill(p); }
-      // The replay starts one step before second 0, so the first real step lands exactly on it. A fresh performance's
-      // first advance only records the time it was handed; with no time elapsed it takes no step at all, and a world
-      // that has taken no step has no clock — which would leave a seek to 0 (a fresh song, a scrub home) reading null.
-      advance(-STEP);
-      advance(0);
-      for (let t = 0; t < target;) { t = Math.min(target, t + CHUNK); advance(t); }
+      const from = Math.max(0, target - MAX_REPLAY * STEP); // 0 for anything inside the cap, so a short song replays whole
+      for (const p of perfs.values()) { p.reset(); fill(p, from); }
+      // The replay starts one step before its first second, so the first real step lands exactly on it. A fresh
+      // performance's first advance only records the time it was handed; with no time elapsed it takes no step at
+      // all, and a world that has taken no step has no clock — which would leave a seek reading null.
+      advance(from - STEP);
+      advance(from);
+      for (let t = from; t < target;) { t = Math.min(target, t + CHUNK); advance(t); }
       return show;
     },
   };
   for (const [n, w] of Object.entries(worlds)) show.add(n, w);
   return show;
+}
+
+/**
+ * What a view asks the page to load: the world names, and the score to run them on. A named world is itself; the
+ * `overlay`, and the default view of a song whose score already composes two worlds, is the director, which reads
+ * its cast from the score's own `composition` — so the score is rewritten here, the way the Compose stage's
+ * `withPick` rewrites it, or the director would build its base world and no second one and draw that world alone.
+ * (`lib/visual.mjs`'s `compositionOf` does this for the stage, but importing it would pull `lib/song.mjs` and the
+ * rest of the song builder into a page whose whole point is not carrying them, so the cast is built from the policy
+ * json here.) `director` says whether the one name is the director over `names` or a world to show as itself.
+ */
+export function viewOf(score, { mode = 'single', worlds = [] } = {}) {
+  if (mode === 'grid') return { score, names: WORLD_NAMES, director: false };
+  if (mode === 'ab') {
+    const a = POLICY.worlds[worlds[0]] ? worlds[0] : score.world;
+    const b = POLICY.worlds[worlds[1]] && worlds[1] !== a ? worlds[1] : nextBest(score, a);
+    return { score, names: [a, b], director: false };
+  }
+  const pick = worlds[0], own = score.composition;
+  if (pick && POLICY.worlds[pick]) return { score, names: [pick], director: false };
+  const composed = pick === 'overlay' || (!pick && own && own.preset !== 'single' && own.worlds?.length > 1);
+  if (!composed) return { score, names: [score.world], director: false };
+  // the song's own pair when it wrote one, else its world and the next best; its visit rate survives the override
+  const cast = own?.worlds?.length > 1 ? own.worlds.slice(0, 2) : [score.world, nextBest(score, score.world)];
+  const composition = { preset: 'overlay', worlds: cast, ...(own?.every ? { every: own.every } : {}) };
+  // tunnel too: the director falls back to it for a name its map lacks
+  return { score: { ...score, composition }, names: [...cast, 'tunnel'], director: true };
 }
 
 /**
