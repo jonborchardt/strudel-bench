@@ -81,7 +81,7 @@ function localStage({ score, stream, names }) {
   const own = new Map(); // name -> a canvas of its own, so the page still composites a single layer
   let rects = new Map(), turn = 0;
   const ready = Promise.all(names.map(async (name) => {
-    const world = await channelWorld(name, score);
+    const world = await channelWorld(name);
     if (world) { show.add(name, world); own.set(name, document.createElement('canvas')); }
   }));
   // one thread cannot repaint them all, so they take turns; every one of them is still blitted every frame

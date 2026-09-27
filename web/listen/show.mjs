@@ -20,10 +20,6 @@ const EPS = 1e-6;
  */
 const MAX_REPLAY = 900, MIN_REPLAY = 60;
 
-/** The best world that is not `not`, by the score's own odds: what the comparison and the overlay reach for. */
-export const nextBest = (score, not) => Object.entries(score.odds ?? {}).sort((a, b) => b[1] - a[1]).map(([w]) => w)
-  .find((w) => w !== not && POLICY.worlds[w]) ?? WORLD_NAMES.find((w) => w !== not);
-
 /**
  * The worlds named, imported by name from web/visual/. There is no second registry to keep in step with stage.mjs:
  * the names are lib/visual.json's, and the single-song page loads the one or two files it shows instead of all of
@@ -35,17 +31,8 @@ export async function loadWorlds(names) {
   return out;
 }
 
-/**
- * A channel's world: a name from lib/visual.json, or `overlay`, the director over the two worlds the score composes.
- * The score handed in is the one `viewOf` rewrote, so the director finds its cast where it looks for it.
- */
-export async function channelWorld(name, score) {
-  if (name !== 'overlay') return (await loadWorlds([name]))[name] ?? null;
-  const cast = score.composition?.worlds ?? [];
-  if (cast.length < 2) return null;
-  const { createDirector } = await import('../visual/director.mjs');
-  return createDirector(await loadWorlds([...cast, 'tunnel'])); // tunnel too: the director falls back to it
-}
+/** One channel's world, by name. Null when the name is not one, so a stale link cannot break the page. */
+export const channelWorld = async (name) => (await loadWorlds([name]))[name] ?? null;
 
 /**
  * One show: a performance per world, all fed the same stream and the same clock. `at(seconds)` takes the audio
@@ -109,33 +96,6 @@ export function createShow({ score, stream, worlds, size = { w: 16, h: 9 } }) {
 }
 
 /**
- * What a view asks the page to load: the world names, and the score to run them on. A named world is itself; the
- * `overlay`, and the default view of a song whose score already composes two worlds, is the director, which reads
- * its cast from the score's own `composition` — so the score is rewritten here, the way the Compose stage's
- * `withPick` rewrites it, or the director would build its base world and no second one and draw that world alone.
- * (`lib/visual.mjs`'s `compositionOf` does this for the stage, but importing it would pull `lib/song.mjs` and the
- * rest of the song builder into a page whose whole point is not carrying them, so the cast is built from the policy
- * json here.) `director` says whether the one name is the director over `names` or a world to show as itself.
- */
-export function viewOf(score, { mode = 'single', worlds = [] } = {}) {
-  if (mode === 'grid') return { score, names: WORLD_NAMES, director: false };
-  if (mode === 'ab') {
-    const a = POLICY.worlds[worlds[0]] ? worlds[0] : score.world;
-    const b = POLICY.worlds[worlds[1]] && worlds[1] !== a ? worlds[1] : nextBest(score, a);
-    return { score, names: [a, b], director: false };
-  }
-  const pick = worlds[0], own = score.composition;
-  if (pick && POLICY.worlds[pick]) return { score, names: [pick], director: false };
-  const composed = pick === 'overlay' || (!pick && own && own.preset !== 'single' && own.worlds?.length > 1);
-  if (!composed) return { score, names: [score.world], director: false };
-  // the song's own pair when it wrote one, else its world and the next best; its visit rate survives the override
-  const cast = own?.worlds?.length > 1 ? own.worlds.slice(0, 2) : [score.world, nextBest(score, score.world)];
-  const composition = { preset: 'overlay', worlds: cast, ...(own?.every ? { every: own.every } : {}) };
-  // tunnel too: the director falls back to it for a name its map lacks
-  return { score: { ...score, composition }, names: [...cast, 'tunnel'], director: true };
-}
-
-/**
  * How to tile `count` boxes across `width`: as many 16:9 columns as fit without going under `min`, the last row
  * short where the count does not divide. The page reads it to place the wall's tiles; it is here because it is
  * arithmetic with no DOM in it, and the awkward cases (one box, a box narrower than the minimum) are worth pinning.
@@ -153,9 +113,9 @@ export function tileGrid(count, width, { gap = 8, min = 230, cols: fixed = 0 } =
 }
 
 /**
- * What the page is showing, from its hash: `#<song>` alone, `&w=<world|overlay>` for one named view, `&ab=<a>,<b>`
- * for two side by side, `&grid` for all of them. Unknown keys are ignored, so the hash stays the whole state and a
- * link from a future version degrades instead of breaking.
+ * What the page is showing, from its hash: `#<song>&grid` for the wall of every world, `#<song>&w=<world>` for one
+ * of them opened. Unknown keys are ignored, so the hash stays the whole state and a link from another version of
+ * this page degrades to the song rather than breaking.
  */
 export function parseHash(hash = '') {
   const parts = String(hash).replace(/^#/, '').split('&').filter(Boolean);
@@ -165,14 +125,12 @@ export function parseHash(hash = '') {
     return i < 0 ? [s, ''] : [s.slice(0, i), decodeURIComponent(s.slice(i + 1))];
   }));
   if (flags.has('grid')) return { song, mode: 'grid', worlds: [] };
-  const ab = flags.get('ab');
-  if (ab) return { song, mode: 'ab', worlds: ab.split(',').filter(Boolean).slice(0, 2) };
   const w = flags.get('w');
   return { song, mode: 'single', worlds: w ? [w] : [] };
 }
 
 /** The same, back to a hash: what the page pushes into the url bar and what a visitor copies. */
 export function formatHash({ song, mode = 'single', worlds = [] }) {
-  const tail = mode === 'grid' ? '&grid' : mode === 'ab' ? `&ab=${worlds.slice(0, 2).join(',')}` : worlds[0] ? `&w=${worlds[0]}` : '';
+  const tail = mode === 'grid' ? '&grid' : worlds[0] ? `&w=${worlds[0]}` : '';
   return `#${encodeURIComponent(song ?? '')}${tail}`;
 }

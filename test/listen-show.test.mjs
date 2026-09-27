@@ -5,9 +5,7 @@ import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import { streamOf } from '../web/visual/export.mjs';
-import { createShow, loadWorlds, viewOf, tileGrid, parseHash, formatHash, WORLD_NAMES } from '../web/listen/show.mjs';
-import { createDirector } from '../web/visual/director.mjs';
-import { prng } from '../lib/random.mjs';
+import { createShow, loadWorlds, tileGrid, parseHash, formatHash, WORLD_NAMES } from '../web/listen/show.mjs';
 import tunnel from '../web/visual/tunnel.mjs';
 import sediment from '../web/visual/sediment.mjs';
 
@@ -93,27 +91,6 @@ test('a world is handed an event just before it is due, never the whole song at 
   assert.equal(show.pending, 0, 'and by the end every event has been delivered');
 });
 
-test('viewOf: the overlay hands the director a score naming both worlds, not the song\'s one', async () => {
-  const g = await ready, { score } = dataOf(g, { composition: 'single' }); // a song that asked for one world, as ballast and held do
-  assert.equal(score.composition.worlds.length, 1, 'the fixture composes one world, so the overlay has to supply the second');
-  const bare = viewOf(score, { mode: 'single', worlds: [] });
-  assert.deepEqual(bare, { score, names: [score.world], director: false }, 'no pick: the score\'s own world, untouched');
-  assert.deepEqual(viewOf(score, { mode: 'single', worlds: ['ink'] }).names, ['ink']);
-  assert.deepEqual(viewOf(score, { mode: 'grid' }).names, WORLD_NAMES);
-  const ab = viewOf(score, { mode: 'ab', worlds: ['train'] });
-  assert.equal(ab.names.length, 2);
-  assert.equal(ab.names[0], 'train');
-  const over = viewOf(score, { mode: 'single', worlds: ['overlay'] });
-  assert.equal(over.director, true);
-  assert.equal(over.score.composition?.worlds.length, 2, 'the director reads its cast from the score, so both worlds belong in it');
-  assert.equal(over.score.composition.worlds[0], score.world, 'the score\'s own world is the base');
-  assert.ok(over.names.includes(over.score.composition.worlds[1]), 'and the second world is among the ones to load');
-  // the proof: on that score the director actually builds a second world, which on the bare score it does not
-  const worlds = await loadWorlds([...over.score.composition.worlds, 'tunnel']);
-  assert.equal(createDirector(worlds).init(over.score, prng(1), { w: 16, h: 9 }).over, over.score.composition.worlds[1]);
-  assert.equal(createDirector(worlds).init(score, prng(1), { w: 16, h: 9 }).over, null, 'the unrewritten score is what made the overlay draw one world');
-});
-
 test('loadWorlds: every world named in lib/visual.json loads by name and has the world shape', async () => {
   assert.ok(WORLD_NAMES.length >= 17, WORLD_NAMES.join(' '));
   const worlds = await loadWorlds([...WORLD_NAMES, 'not-a-world']);
@@ -141,11 +118,11 @@ test('tileGrid: the wall fills its width in 16:9 boxes, and the awkward counts s
 test('parseHash / formatHash: the share link is the whole state', () => {
   assert.deepEqual(parseHash('#demo.strudel'), { song: 'demo.strudel', mode: 'single', worlds: [] });
   assert.deepEqual(parseHash('#demo.strudel&w=train'), { song: 'demo.strudel', mode: 'single', worlds: ['train'] });
-  assert.deepEqual(parseHash('#demo.strudel&ab=train,rave'), { song: 'demo.strudel', mode: 'ab', worlds: ['train', 'rave'] });
+  assert.deepEqual(parseHash('#demo.strudel&ab=train,rave'), { song: 'demo.strudel', mode: 'single', worlds: [] }, 'a link from when there was a comparison mode degrades to the song');
   assert.deepEqual(parseHash('#demo.strudel&grid'), { song: 'demo.strudel', mode: 'grid', worlds: [] });
   assert.deepEqual(parseHash(''), { song: null, mode: 'single', worlds: [] });
   assert.deepEqual(parseHash('#demo.strudel&nonsense=1'), { song: 'demo.strudel', mode: 'single', worlds: [] }, 'an unknown key is ignored');
   for (const v of [{ song: 'a.strudel', mode: 'single', worlds: [] }, { song: 'a.strudel', mode: 'single', worlds: ['ink'] },
-    { song: 'a.strudel', mode: 'ab', worlds: ['ink', 'loom'] }, { song: 'a.strudel', mode: 'grid', worlds: [] }])
+    { song: 'a.strudel', mode: 'grid', worlds: [] }])
     assert.deepEqual(parseHash(formatHash(v)), v, JSON.stringify(v));
 });

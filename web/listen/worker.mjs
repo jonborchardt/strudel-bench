@@ -59,7 +59,7 @@ self.onmessage = async ({ data: m }) => {
   }
   if (!show) return;
   if (m.type === 'add') {
-    const world = await channelWorld(m.name, score);
+    const world = await channelWorld(m.name);
     if (!world) return self.postMessage({ missing: m.name, clock: show.clock, tiles: {} });
     show.add(m.name, world);
     const s = sizes.get(m.name);

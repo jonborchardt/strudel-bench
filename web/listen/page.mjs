@@ -9,13 +9,13 @@
 // so going into a world and back out is a zoom of the live picture rather than a cut between two layouts.
 import { nav, footer } from '../boot.mjs';
 import { createStage } from './pool.mjs';
-import { viewOf, tileGrid, parseHash, formatHash, WORLD_NAMES } from './show.mjs';
+import { tileGrid, parseHash, formatHash, WORLD_NAMES } from './show.mjs';
 import POLICY from '../../lib/visual.json' with { type: 'json' };
 
 const $ = (id) => document.getElementById(id);
 const mmss = (s) => (Number.isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00');
-/** Every channel there is: the worlds, and the director's overlay of the song's two. */
-const CHANNELS = [...WORLD_NAMES, 'overlay'];
+/** Every channel there is: one per world. */
+const CHANNELS = WORLD_NAMES;
 const GAP = 8;           // css pixels between tiles
 const ZOOM = 320;        // milliseconds for a zoom in or out
 const MIN_TILE = 230;    // the narrowest a grid tile gets before the wall drops a column
@@ -27,8 +27,6 @@ let wall, wctx, from = new Map(), to = new Map(), started = 0, hover = null;
 
 const say = (text, bad = false) => { const el = $('msg'); el.textContent = text; el.style.color = bad ? 'var(--err)' : ''; };
 const aboutOf = (name) => POLICY.worlds[name]?.about ?? POLICY.compositions[name]?.about ?? '';
-/** The channel a song picks for itself, which the world menu calls "auto". */
-const ownChannel = (score) => (score.composition?.worlds?.length > 1 ? 'overlay' : score.world);
 const dpr = () => Math.min(2, window.devicePixelRatio || 1);
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
@@ -36,9 +34,8 @@ const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 function shown() {
   if (!data) return [];
   if (view.mode === 'grid') return CHANNELS;
-  if (view.mode === 'ab') return viewOf(data.score, { mode: 'ab', worlds: view.worlds }).names.slice(0, 2);
   const pick = view.worlds[0];
-  return [CHANNELS.includes(pick) ? pick : ownChannel(data.score)];
+  return [CHANNELS.includes(pick) ? pick : data.score.world];
 }
 
 /**
@@ -48,15 +45,28 @@ function shown() {
  */
 function layout() {
   const on = shown(), W = Math.max(120, wall.clientWidth);
-  // one row in single and compare; as many columns as fit in the grid
+  // one box filling the width when a world is open; as many columns as fit on the wall
   const g = tileGrid(on.length, W, { gap: GAP, min: MIN_TILE, cols: view.mode === 'grid' ? 0 : on.length });
+  // The wall has a height to live in: the screen in fullscreen, and otherwise enough of the window that the
+  // transport stays in sight, since that is what the surfing is done from. A grid too tall for it shrinks to fit
+  // and sits in the middle, rather than running off the bottom.
+  const full = !!document.fullscreenElement;
+  const room = full ? $('cells').clientHeight : window.innerHeight * 0.74;
+  const k = g.height > room ? room / g.height : 1;
+  // fullscreen takes the whole screen whatever the tiles add up to, so the wall is centred in it rather than sitting
+  // at the top with the rest black; 16:9 boxes rarely fill a screen exactly, and letterboxing is what a wall does
+  const height = full || k < 1 ? room : g.height;
+  const ox = (W - (g.cols * g.tw + (g.cols - 1) * GAP) * k) / 2, oy = (height - g.height * k) / 2;
   const rects = new Map();
-  on.forEach((name, i) => rects.set(name, { ...g.at(i), a: 1 }));
+  on.forEach((name, i) => {
+    const r = g.at(i);
+    rects.set(name, { x: ox + r.x * k, y: oy + r.y * k, w: r.w * k, h: r.h * k, a: 1 });
+  });
   // A channel going off screen fades where it stands rather than flying to the one being opened: seventeen tiles
   // converging on one spot at half opacity is a smear, not a zoom. It leaves them in place to be grown back out of.
   const anchor = rects.get(on[0]) ?? { x: 0, y: 0, w: W, h: (W * 9) / 16 };
   for (const name of CHANNELS) if (!rects.has(name)) rects.set(name, { ...(to.get(name) ?? anchor), a: 0 });
-  return { rects, height: g.height };
+  return { rects, height };
 }
 
 /** Move to a new arrangement, animating from wherever the tiles are now. */
@@ -124,7 +134,8 @@ function frame() {
   const len = audio.duration || data.seconds, cl = stage.clock;
   $('pos').textContent = `${mmss(now)} / ${mmss(len)}${cl?.section ? ` · ${cl.section} bar ${cl.bar + 1}` : ''}`;
   if (!audio.paused && len) $('scrub').value = String(Math.round((now / len) * 1000));
-  $('play').textContent = audio.paused ? (now > 0 ? 'Resume' : 'Play') : 'Pause';
+  $('play').innerHTML = audio.paused ? (now > 0 ? '&#9654; Resume' : '&#9654; Play') : '&#10073;&#10073; Pause';
+  $('stop').disabled = !audio.src || (audio.paused && now === 0);
 }
 
 /** The channel's name over its own tile, so a wall of eighteen can be read; the line about it goes under the wall. */
@@ -150,23 +161,13 @@ const tune = (name) => go(view.mode === 'single' && shown()[0] === name
   ? { ...view, mode: 'grid', worlds: [] }
   : { ...view, mode: 'single', worlds: [name] });
 
-function fillWorldPick() {
-  const sel = $('world');
-  sel.replaceChildren(...[['', `auto (${ownChannel(data.score)})`], ...CHANNELS.map((w) => [w, w])]
-    .map(([v, label]) => { const o = document.createElement('option'); o.value = v; o.textContent = label; return o; }));
-}
-
 /** Lay the view out. No loading and no rebuilding: every channel is already running, this only moves the tiles. */
 function applyView() {
   if (!data) return;
-  $('world').value = view.mode === 'single' && CHANNELS.includes(view.worlds[0]) ? view.worlds[0] : '';
-  $('world').disabled = view.mode !== 'single';
-  $('grid').classList.toggle('on', view.mode === 'grid');
-  $('grid').textContent = view.mode === 'grid' ? 'One' : 'Grid';
-  $('ab').classList.toggle('on', view.mode === 'ab');
-  $('ab').textContent = view.mode === 'ab' ? 'One' : 'Compare';
   const one = view.mode === 'single' ? shown()[0] : hover;
-  $('chan').textContent = one ? `${one} — ${aboutOf(one)}` : `${CHANNELS.length} worlds, one song; click one to open it`;
+  $('chan').textContent = one
+    ? `${one} — ${aboutOf(one)}${view.mode === 'single' ? ' · click it again, or Escape, for the wall' : ''}`
+    : `${CHANNELS.length} worlds, one song; click one to open it, [ and ] to surf`;
   relayout();
 }
 
@@ -190,9 +191,7 @@ async function load() {
   $('song').value = song;
   stage?.destroy();
   from = new Map(); to = new Map();
-  // the score the director reads its cast from; a plain world never looks at `composition`, so one score serves all
-  stage = createStage({ score: viewOf(data.score, { mode: 'single', worlds: ['overlay'] }).score, stream: data.stream, names: CHANNELS });
-  fillWorldPick();
+  stage = createStage({ score: data.score, stream: data.stream, names: CHANNELS });
   const file = audioMap.songs[song];
   const src = file ? new URL(audioMap.base + file, location.href).href : '';
   // no mp3: drop the attribute rather than setting it empty, which resolves to the page itself and fires onerror, so
@@ -254,15 +253,16 @@ export async function start() {
   const want = parseHash(location.hash);
   if (!songs.length) return say('no songs to play', true);
   $('play').onclick = () => (audio.paused ? audio.play() : audio.pause());
+  $('stop').onclick = () => { audio.pause(); audio.currentTime = 0; }; // onseeked rebuilds the picture at the top
   $('scrub').oninput = () => { const len = audio.duration || data.seconds; if (len) audio.currentTime = (Number($('scrub').value) / 1000) * len; };
   audio.onseeked = () => stage?.seek(audio.currentTime); // a scrub: one of the two real discontinuities
   // the other: a hidden tab stops getting frames, so the worlds come back as far behind as the tab was away
   document.addEventListener('visibilitychange', () => { if (!document.hidden) stage?.seek(audio.currentTime); });
   audio.onerror = () => say(`the mp3 for ${view.song} did not load`, true);
-  $('world').onchange = () => go({ ...view, mode: 'single', worlds: $('world').value ? [$('world').value] : [] });
-  $('grid').onclick = () => go(view.mode === 'grid' ? { ...view, mode: 'single', worlds: [] } : { ...view, mode: 'grid', worlds: [] });
-  $('ab').onclick = () => go(view.mode === 'ab' ? { ...view, mode: 'single', worlds: shown().slice(0, 1) } : { ...view, mode: 'ab', worlds: [] });
   $('full').onclick = () => (document.fullscreenElement ? document.exitFullscreen() : $('cells').requestFullscreen?.());
+  // the wall is measured, not styled, so entering and leaving fullscreen has to re-measure it; the tiles and their
+  // click targets are inside the fullscreen element, so clicking to zoom in and out keeps working there
+  document.addEventListener('fullscreenchange', () => relayout(false));
   window.onhashchange = () => { const h = parseHash(location.hash); if (h.song) go(h); };
   window.addEventListener('resize', () => relayout(false));
   document.addEventListener('keydown', (e) => {

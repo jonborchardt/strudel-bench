@@ -26,13 +26,11 @@
       <div id="hits"></div>
     </div>
     <p class="muted chan" id="chan"></p>
-    <div class="row">
-      <button id="play" class="primary" disabled>Play</button>
+    <div class="row transport">
+      <button id="play" class="primary" disabled>&#9654; Play</button>
+      <button id="stop" disabled>&#9632; Stop</button>
       <input type="range" id="scrub" class="grow" min="0" max="1000" value="0" step="1" aria-label="position">
       <span class="muted" id="pos">0:00</span>
-      <label class="field">world <select id="world"></select></label>
-      <button id="grid" title="every world at once">Grid</button>
-      <button id="ab" title="this world beside the next best">Compare</button>
       <button id="full" title="fullscreen">&#x2922;</button>
     </div>
     <p class="muted" id="msg"></p>
