@@ -32,7 +32,7 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
   const clean = fixtures();
   try {
     build(out);
-    for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', '404.html', 'sitemap.xml', 'robots.txt', 'web/icon.svg', 'web/og.png', 'web/strudel.css', 'web/boot.mjs', 'web/mp3.mjs', '.nojekyll', 'lib/index.mjs', 'lib/packs.json', 'lib/packs.mjs', 'songs/demo.strudel', 'songs/demo.notes.json', 'node_modules/@strudel/web/dist/index.js', 'node_modules/@breezystack/lamejs/dist/lamejs.js', 'node_modules/acorn/dist/acorn.mjs', 'node_modules/@codemirror/view/dist/index.js', 'node_modules/@codemirror/lang-javascript/dist/index.js', 'node_modules/@lezer/javascript/dist/index.js', 'node_modules/style-mod/src/style-mod.js', 'node_modules/@marijn/find-cluster-break/src/index.js', 'web/cm-editor.mjs', 'web/cm-controls.mjs', 'web/hll-schema.mjs', 'lib/resolve.mjs', 'lib/analyze.mjs', 'assets'])
+    for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', '404.html', 'sitemap.xml', 'robots.txt', 'web/icon.svg', 'web/og.png', 'web/strudel.css', 'web/boot.mjs', 'web/mp3.mjs', '.nojekyll', 'lib/index.mjs', 'lib/packs.json', 'lib/packs.mjs', 'songs/demo.strudel', 'songs/demo.notes.json', 'node_modules/@strudel/web/dist/index.js', 'node_modules/@breezystack/lamejs/dist/lamejs.js', 'node_modules/acorn/dist/acorn.mjs', 'node_modules/@codemirror/view/dist/index.js', 'node_modules/@codemirror/lang-javascript/dist/index.js', 'node_modules/@lezer/javascript/dist/index.js', 'node_modules/style-mod/src/style-mod.js', 'node_modules/@marijn/find-cluster-break/src/index.js', 'web/cm-editor.mjs', 'web/cm-controls.mjs', 'web/hll-schema.mjs', 'lib/resolve.mjs', 'lib/analyze.mjs', 'assets', 'listen.html', 'web/listen/page.mjs', 'web/listen/show.mjs', 'listen/demo.strudel.json', 'listen/audio.json'])
       assert.ok(fs.existsSync(path.join(out, f)), f);
     assert.ok(!fs.existsSync(path.join(out, 'samples.html')), 'the workshop is not deployed');
     const list = JSON.parse(fs.readFileSync(path.join(out, 'songs/index.json'), 'utf8')).map((s) => s.name);
@@ -62,7 +62,13 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
     assert.deepEqual(idx._t_subset.samples, { 'pub-hit': { sound: 'pub', end: .5 } }, 'a definition on a sound outside the deploy subset is dropped');
     assert.deepEqual(Object.keys(idx['demo-pack'].samples).sort(), ['loop', 'loop-kick', 'loop-snare'], 'the demo definitions ship');
     assert.ok(!fs.existsSync(path.join(out, 'samples/packs')), 'packs stream from the cdn');
-    for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', 'web/boot.mjs', 'web/mp3.mjs', 'web/compose.mjs', 'web/examples.mjs', 'web/waveform.mjs', 'web/workshop.mjs', 'web/preview.mjs', 'lib/packs.mjs'])
+    const listen = JSON.parse(fs.readFileSync(path.join(out, 'listen/demo.strudel.json'), 'utf8'));
+    assert.ok(listen.score.world && listen.stream.length > 10, 'the listen page gets a score and a stream per song');
+    const am = JSON.parse(fs.readFileSync(path.join(out, 'listen/audio.json'), 'utf8'));
+    assert.ok(am.base.startsWith('https://'), 'the deployed audio comes from the release, not from renders/');
+    assert.ok(!fs.existsSync(path.join(out, 'listen/_t_private.strudel.json')), 'a song that does not ship gets no data either');
+    assert.ok(fs.readFileSync(path.join(out, 'sitemap.xml'), 'utf8').includes('listen.html'));
+    for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', 'listen.html', 'web/boot.mjs', 'web/mp3.mjs', 'web/compose.mjs', 'web/examples.mjs', 'web/waveform.mjs', 'web/workshop.mjs', 'web/preview.mjs', 'web/listen/page.mjs', 'web/listen/show.mjs', 'lib/packs.mjs'])
       assert.ok(!/['`"]\/[\w.]/.test(fs.readFileSync(path.join(out, f), 'utf8')), `root-absolute url in ${f}`); // a quote, a slash, then a path character; a bare '/' is a separator
     // the page does not need the server for export: no fetch of a render/dump route without a server guard
     assert.ok(!/fetch\(`dump\//.test(fs.readFileSync(path.join(out, 'index.html'), 'utf8')), 'no server dump route');

@@ -41,7 +41,7 @@ for (const s of songs.filter((s) => !hidden.includes(s) && declared[s].length)) 
 
 fs.rmSync(OUT, { recursive: true, force: true });
 const copy = (rel, to = rel) => fs.cpSync(path.join(ROOT, rel), path.join(OUT, to), { recursive: true });
-const PAGES = ['index.html', 'examples.html', 'about.html', 'legal.html']; // the sitemap; 404.html ships too but is not a destination
+const PAGES = ['index.html', 'examples.html', 'about.html', 'legal.html', 'listen.html']; // the sitemap; 404.html ships too but is not a destination
 for (const p of [...PAGES, '404.html']) copy(p);
 copy('web');
 copy('lib');
@@ -63,6 +63,19 @@ for (const f of ['style-mod/src/style-mod.js', 'w3c-keyname/index.js', 'crelt/in
 copy('node_modules/@strudel/web/dist/assets', 'assets'); // strudel resolves its clock SharedWorker against the page url
 const write = (rel, obj) => { fs.mkdirSync(path.dirname(path.join(OUT, rel)), { recursive: true }); fs.writeFileSync(path.join(OUT, rel), JSON.stringify(obj)); };
 write('songs/index.json', listedSongs().filter((s) => !hidden.includes(s.name)));
+// the listen page's data: a score and an event stream per shipped song, so the viewer draws the visuals live with no
+// strudel in the page, plus where the mp3s live. The audio itself is a github release asset (renders/ is gitignored
+// and this build runs in CI), so a song whose mp3 was never published simply says so on the page.
+const { showData } = await import('./listen.mjs');
+const published = JSON.parse(fs.readFileSync(path.join(ROOT, 'web/listen/published.json'), 'utf8'));
+const audio = { base: `https://github.com/${published.repo}/releases/download/${published.tag}/`, songs: {} };
+for (const s of listedSongs().filter((x) => !hidden.includes(x.name)).map((x) => x.name)) {
+  try {
+    write(`listen/${s}.json`, await showData(path.join(ROOT, 'songs', s)));
+    if (published.songs.includes(s)) audio.songs[s] = `${s.replace(/\.strudel$/, '')}.mp3`;
+  } catch (e) { console.warn(`listen: ${s} left out (${e.message})`); } // a song that will not evaluate is not a reason to fail the site
+}
+write('listen/audio.json', audio);
 write('samples/user/strudel.json', { ...userMap(shipped), _base: 'samples/user/' }); // relative: a project page lives under /<repo>/
 write('samples/user/packs.json', shipped);
 fs.writeFileSync(path.join(OUT, '.nojekyll'), ''); // jekyll would drop node_modules/
