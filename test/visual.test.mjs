@@ -22,6 +22,7 @@ test('visual policy is well-formed data: every selection row is a built world we
   assert.ok(POLICY.temperature.default);
   assert.ok(POLICY.moodThreshold > 0 && POLICY.moodThreshold < 1);
   for (const [w, def] of Object.entries(POLICY.worlds)) for (const [slot, n] of Object.entries(def.slots)) assert.ok(Number.isInteger(n) && n >= 0 && slot !== 'grain', `worlds.${w}.slots.${slot}: a whole number, and grain is never capped`);
+  for (const [w, def] of Object.entries(POLICY.worlds)) assert.ok(def.about?.length > 20, `worlds.${w} has no "about": one line saying what the world is for, shown on the listen page`);
 });
 
 test('classifyHap: kit voices by bare or indexed name, or in full under a known kit; pitched by note; anything else with a sound is a hit; nothing else is none', async () => {

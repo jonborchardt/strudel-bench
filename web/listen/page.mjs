@@ -131,6 +131,15 @@ async function load() {
   // worlds changed: picking a world mid-song must not send the picture back to bar 1
   seen = audio.currentTime || 0;
   show.seek(seen);
+  // the grid's payoff has to be in the first two seconds, so it opens at the song's peak section. The length is the
+  // score's when the element has none: on a first load the mp3's metadata has not arrived yet, and waiting for it
+  // would mean the grid always opens on the intro. Setting currentTime this early is the default start position.
+  if (view.mode === 'grid' && data.score.peak) {
+    const s = data.score.sections.find((x) => x.name === data.score.peak), len = audio.duration || data.seconds;
+    if (s && len) { audio.currentTime = Math.min(s.at / data.score.cps, len - 1); seen = audio.currentTime; show.seek(seen); }
+  }
+  $('grid').classList.toggle('on', view.mode === 'grid');
+  $('grid').textContent = view.mode === 'grid' ? 'One' : 'Grid';
 }
 
 /**
@@ -168,6 +177,7 @@ export async function start() {
   audio.onseeked = () => { if (show) { show.seek(audio.currentTime); seen = audio.currentTime; } };
   audio.onerror = () => say(`the mp3 for ${view.song} did not load`, true);
   $('world').onchange = () => go({ ...view, mode: 'single', worlds: $('world').value ? [$('world').value] : [] });
+  $('grid').onclick = () => go(view.mode === 'grid' ? { ...view, mode: 'single', worlds: [] } : { ...view, mode: 'grid', worlds: [] });
   $('full').onclick = () => (document.fullscreenElement ? document.exitFullscreen() : cells[0]?.box.requestFullscreen?.());
   window.onhashchange = () => { const h = parseHash(location.hash); if (h.song) go(h); };
   document.addEventListener('keydown', (e) => {
