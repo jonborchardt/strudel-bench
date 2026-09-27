@@ -56,7 +56,13 @@ function makeCells(names) {
     const canvas = document.createElement('canvas'); box.append(canvas);
     const cap = document.createElement('figcaption');
     cap.innerHTML = '<b></b><span></span>';
-    cap.querySelector('b').textContent = name;
+    if (view.mode === 'ab') { // either half can be swapped for another world without leaving the comparison
+      const sel = document.createElement('select');
+      sel.replaceChildren(...WORLD_NAMES.map((w) => { const o = document.createElement('option'); o.value = w; o.textContent = w; return o; }));
+      sel.value = name;
+      sel.onchange = () => { const ws = [...show.names]; ws[names.indexOf(name)] = sel.value; go({ ...view, mode: 'ab', worlds: ws }); };
+      cap.querySelector('b').replaceWith(sel);
+    } else cap.querySelector('b').textContent = name;
     cap.querySelector('span').textContent = aboutOf(name);
     fig.append(box, cap);
     if (view.mode !== 'single') box.onclick = () => go({ ...view, mode: 'single', worlds: [name] });
@@ -140,6 +146,8 @@ async function load() {
   }
   $('grid').classList.toggle('on', view.mode === 'grid');
   $('grid').textContent = view.mode === 'grid' ? 'One' : 'Grid';
+  $('ab').classList.toggle('on', view.mode === 'ab');
+  $('ab').textContent = view.mode === 'ab' ? 'One' : 'Compare';
 }
 
 /**
@@ -178,6 +186,9 @@ export async function start() {
   audio.onerror = () => say(`the mp3 for ${view.song} did not load`, true);
   $('world').onchange = () => go({ ...view, mode: 'single', worlds: $('world').value ? [$('world').value] : [] });
   $('grid').onclick = () => go(view.mode === 'grid' ? { ...view, mode: 'single', worlds: [] } : { ...view, mode: 'grid', worlds: [] });
+  $('ab').onclick = () => go(view.mode === 'ab'
+    ? { ...view, mode: 'single', worlds: [show?.names[0] ?? ''].filter(Boolean) }
+    : { ...view, mode: 'ab', worlds: [] }); // viewWorlds fills in the score's world and the next best
   $('full').onclick = () => (document.fullscreenElement ? document.exitFullscreen() : cells[0]?.box.requestFullscreen?.());
   window.onhashchange = () => { const h = parseHash(location.hash); if (h.song) go(h); };
   document.addEventListener('keydown', (e) => {
