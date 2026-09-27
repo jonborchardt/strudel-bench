@@ -165,16 +165,18 @@ function faceLight(p, d) {
 }
 
 // eyes: the right eye's shape (its outer corner at +x), mirrored for the left; `top`/`bot` are the lid heights at
-// openness 1, `inn`/`out` the corners' drop, `lid` the upper lid's weight, `sclera` how much white shows around the
-// iris, `corner` the inner corner drawn out to a point, a crease the fold above a hooded or monolid eye
+// openness 1 (the aperture the curve draws is half of each, so no style is under about two pixels once the portrait
+// is drawn at 160, where the eye has to survive being three pixels of anything at all), `inn`/`out` the corners'
+// drop, `lid` the upper lid's weight, `sclera` how much white shows beside the iris (which is a share of `w`, not a
+// size of its own), `corner` the inner corner drawn out to a point, a crease the fold above a hooded or monolid eye
 export const EYES = {
-  almond: { w: 14, top: 9, bot: 6, iris: 5.8, lid: 0.55, sclera: 0.45, corner: 0.6 },
-  round: { w: 13, top: 11, bot: 10, iris: 6.2, lid: 0.4, sclera: 0.8, corner: 0.3 },
-  narrow: { w: 15, top: 5, bot: 4, iris: 5.2, lid: 0.7, sclera: 0.15, corner: 0.5 },
-  hooded: { w: 14, top: 6, bot: 5, iris: 5.6, lid: 0.8, sclera: 0.25, corner: 0.4, crease: { dy: -7, ctl: -12, sw: 1.3, op: 0.32, color: '#684b3d' } },
-  monolid: { w: 14, top: 4, bot: 5, iris: 5.3, lid: 0.9, sclera: 0.2, corner: 0.2, crease: { dy: -5, ctl: -8, sw: 1.5, op: 0.35, color: '#5f4238' } },
-  upturned: { w: 14.5, top: 8, bot: 6, inn: 1, out: -3, iris: 5.6, lid: 0.5, sclera: 0.5, corner: 0.8 },
-  downturned: { w: 14, top: 8, bot: 7, inn: -2, out: 2, iris: 5.6, lid: 0.45, sclera: 0.55, corner: 0.5 },
+  almond: { w: 14, top: 9, bot: 6, lid: 0.55, sclera: 0.45, corner: 0.6 },
+  round: { w: 13, top: 11, bot: 10, lid: 0.4, sclera: 0.8, corner: 0.3 },
+  narrow: { w: 15, top: 7, bot: 5.5, lid: 0.7, sclera: 0.15, corner: 0.5 },
+  hooded: { w: 14, top: 8, bot: 6, lid: 0.8, sclera: 0.25, corner: 0.4, crease: { dy: -7, ctl: -12, sw: 1.3, op: 0.32, color: '#684b3d' } },
+  monolid: { w: 14, top: 6, bot: 5.5, lid: 0.9, sclera: 0.2, corner: 0.2, crease: { dy: -5, ctl: -8, sw: 1.5, op: 0.35, color: '#5f4238' } },
+  upturned: { w: 14.5, top: 8, bot: 6, inn: 1, out: -3, lid: 0.5, sclera: 0.5, corner: 0.8 },
+  downturned: { w: 14, top: 8, bot: 7, inn: -2, out: 2, lid: 0.45, sclera: 0.55, corner: 0.5 },
 };
 export const EYE_STYLES = Object.keys(EYES);
 // An eye is tone before it is line: the socket under the brow (deeper for deep-set eyes), a white that takes the
@@ -185,9 +187,9 @@ const featureScale = (p) => Math.min(1.12, Math.max(0.92, 0.5 + 0.5 * ((p.face?.
 function eye(cx, p, side) { // side: +1 the right eye, -1 the left (its outer corner at -x)
   const e = p.eyes, k = featureScale(p), st0 = EYES[e.style] ?? EYES.almond, st = { ...st0, w: st0.w * k, top: st0.top * k, bot: st0.bot * k, iris: st0.iris * k, inn: (st0.inn ?? 0) * k, out: (st0.out ?? 0) * k, crease: st0.crease && { ...st0.crease, dy: st0.crease.dy * k, ctl: st0.crease.ctl * k } }, o = e.openness * (side < 0 ? e.asym : 1), y = e.y + (side < 0 ? e.dy ?? 0 : 0);
   const depth = e.depth ?? 0.5, scl = e.sclera ?? st.sclera, lw = e.lidWeight ?? st.lid, corner = e.corner ?? st.corner, bags = e.bags ?? 0, dark = '#2b1d19';
-  const xi = cx - st.w * side, xo = cx + st.w * side, yi = y + (st.inn ?? 0), yo = y + (st.out ?? 0), th = st.top * o, bh = st.bot * o, px = cx + 2 * side; // the upper lid peaks past the centre toward the outer corner
+  const xi = cx - st.w * side, xo = cx + st.w * side, yi = y + (st.inn ?? 0), yo = y + (st.out ?? 0), th = st.top * o, bh = st.bot * (0.7 + 0.3 * o), px = cx + 2 * side; // the upper lid peaks past the centre toward the outer corner
   const lid = `M ${xi} ${yi} Q ${px} ${y - th} ${xo} ${yo} Q ${cx - side} ${y + bh} ${xi} ${yi} Z`;
-  const ir = st.iris * (1.5 - 0.55 * scl), lx = cx + e.look.x * 3, ly = y - th * 0.22 + e.look.y * 2; // the iris sits up under the upper lid; the more sclera, the smaller it is against the aperture
+  const ir = st.w * (0.58 - 0.16 * scl), lx = cx + e.look.x * 3, ly = y - th * 0.22 + e.look.y * 2; // the iris sits up under the upper lid, and is a share of the eye's own width, so `sclera` is really how much white shows beside it: sized on its own it did not follow when a lid opened, and the opening filled with white instead of eye
   const white = mix('#ece0d3', p.skin, 0.4); // the white is never white: it takes a good deal of the skin, or a half-shut eye is a bright patch with a dot in it and reads as no eye at all once the portrait is small
   return [
     ...(depth > 0.02 ? soft(cx, y - 9, st.w + 4, 8, '#1d0f0c', 0.2 * depth) : []),
