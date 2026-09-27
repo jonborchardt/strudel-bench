@@ -81,6 +81,18 @@ test('seek: the replay is capped, so a long song and seventeen worlds cannot fre
   assert.equal(show.pending, stream.filter((e) => e.t > 10).length, 'and everything up to the seek has fired, with the rest still queued');
 });
 
+test('a world is handed an event just before it is due, never the whole song at once', async () => {
+  const g = await ready, { score, stream } = dataOf(g);
+  // host.mjs re-sorts everything still queued on every frame, so a deep queue costs per step what the world does not.
+  // Keeping it shallow is the whole reason seventeen worlds can be stepped at once; nothing else here depends on it.
+  const show = createShow({ score, stream, worlds: { tunnel } });
+  show.seek(0);
+  let deepest = 0;
+  for (let k = 1; k / 60 <= score.total / score.cps; k++) { show.at(k / 60); deepest = Math.max(deepest, show.queued); }
+  assert.ok(deepest <= 8, `the host queue reached ${deepest} of ${stream.length} events; it must stay shallow`);
+  assert.equal(show.pending, 0, 'and by the end every event has been delivered');
+});
+
 test('viewOf: the overlay hands the director a score naming both worlds, not the song\'s one', async () => {
   const g = await ready, { score } = dataOf(g, { composition: 'single' }); // a song that asked for one world, as ballast and held do
   assert.equal(score.composition.worlds.length, 1, 'the fixture composes one world, so the overlay has to supply the second');

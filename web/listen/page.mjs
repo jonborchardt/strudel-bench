@@ -8,10 +8,9 @@ import POLICY from '../../lib/visual.json' with { type: 'json' };
 const $ = (id) => document.getElementById(id);
 const mmss = (s) => (Number.isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00');
 const DRAWS = 4; // canvases repainted per frame: stepping every world is cheap, drawing all seventeen is not
-const JUMP = 0.5; // seconds of clock the page may miss before it replays instead of limping on (host.mjs's MAX_CATCHUP)
 
 let audio, songs = [], audioMap = { base: '', songs: {} };
-let view = { song: null, mode: 'single', worlds: [] }, data = null, show = null, cells = [], turn = 0, seen = 0, loading = 0;
+let view = { song: null, mode: 'single', worlds: [] }, data = null, show = null, cells = [], turn = 0, loading = 0;
 
 const say = (text, bad = false) => { const el = $('msg'); el.textContent = text; el.style.color = bad ? 'var(--err)' : ''; };
 /** What a cell is showing, in words: a world's own line, or what the composition does. */
@@ -61,20 +60,24 @@ function makeCells(names) {
   turn = 0;
 }
 
+// Drawing is most of a crowded frame, but it costs per shape, not per pixel: measured, four times the pixels cost
+// seven per cent more, so a grid cell keeps the retina resolution rather than trading looks for nothing.
 const sizeCell = (c) => {
   const dpr = Math.min(2, window.devicePixelRatio || 1), r = c.box.getBoundingClientRect();
   const w = Math.max(2, Math.round(r.width * dpr)), h = Math.max(2, Math.round(r.height * dpr));
   if (c.canvas.width !== w || c.canvas.height !== h) { c.canvas.width = w; c.canvas.height = h; }
 };
 
-/** One frame: the audio's own position drives every world, and a jump in it (a scrub, a stalled or hidden tab) is replayed. */
+/** One frame: the audio's own position drives every world, and the lit cells take turns being repainted. */
 function frame() {
   requestAnimationFrame(frame);
   if (!show || !data) return;
   const now = audio.currentTime;
-  // a replay takes real time, and the audio does not wait for it: read the clock again afterwards, or the next frame
-  // sees a gap the size of the replay and replays again, further on each time, and never catches up
-  if (Math.abs(now - seen) > JUMP) { show.seek(now); seen = audio.currentTime; } else { show.at(now); seen = now; }
+  // Always advance, never replay. A replay from here would be self-feeding: it takes real time, the audio does not
+  // wait, so the next frame sees a gap at least as big and replays again — seventeen worlds on a long song sat at
+  // one full replay per frame. The real discontinuities announce themselves (onseeked, visibilitychange) and are
+  // replayed there; anything else is a slow frame, which host.mjs's MAX_CATCHUP already limps through.
+  show.at(now);
   const lit = cells.filter((c) => c.on);
   for (let i = 0; i < Math.min(DRAWS, lit.length); i++) {
     const c = lit[(turn + i) % lit.length];
@@ -129,14 +132,13 @@ async function load() {
   say(file ? '' : `no mp3 published for ${song} yet, so there is nothing to play it against`, !file);
   // follow the audio, which is 0 for a new song (the element resets on a new src) and the playhead when only the
   // worlds changed: picking a world mid-song must not send the picture back to bar 1
-  seen = audio.currentTime || 0;
-  show.seek(seen);
+  show.seek(audio.currentTime || 0);
   // the grid's payoff has to be in the first two seconds, so it opens at the song's peak section. The length is the
   // score's when the element has none: on a first load the mp3's metadata has not arrived yet, and waiting for it
   // would mean the grid always opens on the intro. Setting currentTime this early is the default start position.
   if (view.mode === 'grid' && data.score.peak) {
     const s = data.score.sections.find((x) => x.name === data.score.peak), len = audio.duration || data.seconds;
-    if (s && len) { audio.currentTime = Math.min(s.at / data.score.cps, len - 1); seen = audio.currentTime; show.seek(seen); }
+    if (s && len) { audio.currentTime = Math.min(s.at / data.score.cps, len - 1); show.seek(audio.currentTime); }
   }
   $('grid').classList.toggle('on', view.mode === 'grid');
   $('grid').textContent = view.mode === 'grid' ? 'One' : 'Grid';
@@ -176,7 +178,9 @@ export async function start() {
   if (!songs.length) return say('no songs to play', true);
   $('play').onclick = () => (audio.paused ? (show?.rebase(), audio.play()) : audio.pause()); // rebase: the pause is not a stall to be replayed
   $('scrub').oninput = () => { const len = audio.duration || data.seconds; if (len) audio.currentTime = (Number($('scrub').value) / 1000) * len; };
-  audio.onseeked = () => { if (show) { show.seek(audio.currentTime); seen = audio.currentTime; } };
+  audio.onseeked = () => show?.seek(audio.currentTime); // a scrub: one of the two real discontinuities
+  // the other: a hidden tab stops getting frames, so the worlds come back as far behind as the tab was away
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) show?.seek(audio.currentTime); });
   audio.onerror = () => say(`the mp3 for ${view.song} did not load`, true);
   $('world').onchange = () => go({ ...view, mode: 'single', worlds: $('world').value ? [$('world').value] : [] });
   $('grid').onclick = () => go(view.mode === 'grid' ? { ...view, mode: 'single', worlds: [] } : { ...view, mode: 'grid', worlds: [] });

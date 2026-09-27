@@ -18,7 +18,7 @@ const EPS = 1e-6;
  * history rather than all of it — the "reset at the seek point" ceiling, softened. Raise it if a machine can afford
  * more; the alternative, a wall-clock budget, would give the same seek a different picture on different machines.
  */
-const MAX_REPLAY = 900;
+const MAX_REPLAY = 900, MIN_REPLAY = 60;
 
 /** The best world that is not `not`, by the score's own odds: what the comparison and the overlay reach for. */
 export const nextBest = (score, not) => Object.entries(score.odds ?? {}).sort((a, b) => b[1] - a[1]).map(([w]) => w)
@@ -45,23 +45,28 @@ export function createShow({ score, stream, worlds, size = { w: 16, h: 9 } }) {
   // read as a section boundary while the reverb is still dying
   const last = score.total > 0 ? score.total / score.cps - EPS : Infinity;
   const cycleAt = (sec) => Math.min(Math.max(0, sec), last) * score.cps;
-  // a copy each: seventeen worlds must not share one event object. `from` is where a capped replay starts, and the
-  // events before it are left out rather than dumped into the first step, which would land the whole history at once
-  const fill = (p, from = 0) => { for (const e of stream) if (e.t >= from) p.push({ ...e }); return p; };
-  const advance = (sec) => { const c = cycleAt(sec); for (const p of perfs.values()) p.advance(sec, c); };
+  // Each performance keeps a cursor into the (already sorted) stream and is handed an event just before it is due,
+  // the way the live stage's scheduler hands over its lookahead. Pushing the whole song up front instead costs 29x
+  // more per step: host.mjs's advance() re-sorts everything still queued on every frame, so a four-minute song made
+  // every world sort three thousand events sixty times a second. Same events, same steps, same state — measured.
+  const startAt = (from) => { let i = 0; while (i < stream.length && stream[i].t < from) i++; return i; };
+  const feed = (e, sec) => { while (e.at < stream.length && stream[e.at].t <= sec) e.p.push({ ...stream[e.at++] }); }; // a copy each: seventeen worlds must not share one event object
+  const advance = (sec) => { const c = cycleAt(sec); for (const e of perfs.values()) { feed(e, sec); e.p.advance(sec, c); } };
   const first = () => (perfs.size ? perfs.values().next().value : null);
   const show = {
     get names() { return [...perfs.keys()]; },
-    get clock() { return first()?.clock ?? null; }, // the musical moment: the same for every world on show
-    get pending() { return first()?.pending ?? 0; },
-    get state() { return first()?.state ?? null; }, // for the tests; the page never reads a world's state
+    get clock() { return first()?.p.clock ?? null; }, // the musical moment: the same for every world on show
+    /** Events not yet delivered to the world: the ones still ahead in the stream plus the ones already handed over. */
+    get pending() { const e = first(); return e ? stream.length - e.at + e.p.pending : 0; },
+    get queued() { return first()?.p.pending ?? 0; }, // how deep the host's own queue is kept, which is what costs
+    get state() { return first()?.p.state ?? null; }, // for the tests; the page never reads a world's state
     has: (name) => perfs.has(name),
     /** A world on show. Added mid-song it starts cold, so the caller seeks afterwards to catch it up. */
-    add(name, world) { perfs.set(name, fill(createPerformance(world, score, size))); return show; },
+    add(name, world) { perfs.set(name, { p: createPerformance(world, score, size), at: 0 }); return show; },
     drop(name) { perfs.delete(name); return show; },
     at: advance,
-    draw(name, ctx, w, h) { perfs.get(name)?.draw(ctx, w, h); },
-    rebase() { for (const p of perfs.values()) p.rebase(); }, // after a pause, so it is not simulated as a stall
+    draw(name, ctx, w, h) { perfs.get(name)?.p.draw(ctx, w, h); },
+    rebase() { for (const e of perfs.values()) e.p.rebase(); }, // after a pause, so it is not simulated as a stall
     /**
      * Every world starts again from the score's seed and the song is replayed up to `seconds` in chunks, so a scrub
      * lands where the music is with the history a play-through would have built (which matters: growth, sediment,
@@ -72,8 +77,12 @@ export function createShow({ score, stream, worlds, size = { w: 16, h: 9 } }) {
      */
     seek(seconds) {
       const target = Math.max(0, seconds);
-      const from = Math.max(0, target - MAX_REPLAY * STEP); // 0 for anything inside the cap, so a short song replays whole
-      for (const p of perfs.values()) { p.reset(); fill(p, from); }
+      // the budget is shared out among the worlds on show, so a scrub costs about the same whether one world is up or
+      // seventeen: alone a world gets fifteen seconds of history, in the grid about a second each
+      const steps = Math.max(MIN_REPLAY, Math.floor(MAX_REPLAY / Math.max(1, perfs.size)));
+      const from = Math.max(0, target - steps * STEP); // 0 for anything inside the budget, so a short song replays whole
+      const at = startAt(from); // the events before the replay's start are skipped, not dumped into its first step
+      for (const e of perfs.values()) { e.p.reset(); e.at = at; }
       // The replay starts one step before its first second, so the first real step lands exactly on it. A fresh
       // performance's first advance only records the time it was handed; with no time elapsed it takes no step at
       // all, and a world that has taken no step has no clock — which would leave a seek reading null.
