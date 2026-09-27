@@ -20,6 +20,7 @@
 <main>
   <h2>crowd <button id="reroll">reroll</button> <button id="seedup">seed +1</button> <span id="seedlbl"></span></h2>
   <div class="row" id="crowd"></div>
+  <h2>families <small>(the structural families a face is built in, web/visual/cast.mjs, three seeds each)</small></h2><div class="row" id="families"></div>
   <h2>face shapes</h2><div class="row" id="faces"></div>
   <h2>eyes</h2><div class="row" id="eyes"></div>
   <h2>brows</h2><div class="row" id="brows"></div>
@@ -44,12 +45,13 @@
 </main>
 <script type="module">
   import { renderPortrait, HAIR_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, FACE_SHAPES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES } from './web/visual/portrait.mjs';
-  import { characterOf, identityOf, dress, ARCHETYPE_NAMES, COSTUME_FAMILIES, EXPRESSIONS } from './web/visual/cast.mjs';
+  import { characterOf, identityOf, dress, ARCHETYPE_NAMES, COSTUME_FAMILIES, EXPRESSIONS, FAMILY_NAMES, ARCHETYPES } from './web/visual/cast.mjs';
   import { seed } from './web/visual/kit.mjs';
   import { prng } from './lib/random.mjs';
   const fig = (svg, label) => `<figure>${svg}<figcaption>${label}</figcaption></figure>`;
   const bald = { hair: { style: 'bald' } };
   const sheet = (id, styles, make) => { document.getElementById(id).innerHTML = styles.map((s) => fig(renderPortrait(make(s)), s)).join(''); };
+  document.getElementById('families').innerHTML = FAMILY_NAMES.flatMap((f, i) => [1, 2, 3].map((k) => { const s = {}; seed(s, prng(k * 7 + i * 31)); ARCHETYPES._sheet = { family: f, costume: 'plainTee' }; return fig(renderPortrait({ ...dress(identityOf(s, '_sheet', k), { makeup: [], props: [] }), light: { amount: 0.6 }, background: '#d9d4cc' }), `${f} · ${k}`); })).join(''); delete ARCHETYPES._sheet; // one face per family and seed, lit flat, in a plain tee
   sheet('faces', Object.keys(FACE_SHAPES), (s) => ({ ...bald, face: { ...FACE_SHAPES[s] } }));
   sheet('eyes', EYE_STYLES, (s) => ({ ...bald, eyes: { style: s } }));
   sheet('brows', BROW_STYLES, (s) => ({ ...bald, eyes: { browStyle: s } }));
@@ -59,7 +61,7 @@
   sheet('beards', FACIAL_HAIR_STYLES, (s) => ({ ...bald, facialHair: { style: s } }));
   sheet('glasses', GLASSES_STYLES, (s) => ({ ...bald, glasses: { style: s } }));
   sheet('hats', HAT_STYLES, (s) => ({ hat: { style: s } }));
-  const onHair = ['afroMedium', 'curlyMedium', 'longWavy', 'bob', 'wavyMedium', 'locsShort', 'boxBraids', 'sideParts'];
+  const onHair = ['afroMedium', 'curlyMedium', 'longStraight', 'bob', 'wavyMedium', 'locsShort', 'boxBraids', 'sideParts'];
   document.getElementById('hathair').innerHTML = HAT_STYLES.filter((h) => h !== 'none').flatMap((h, i) => [onHair[i % 7], onHair[(i + 3) % 7]].map((hr) => fig(renderPortrait({ hair: { style: hr }, hat: { style: h } }), `${h} · ${hr}`))).join('');
   sheet('tops', TOP_STYLES, (s) => ({ ...bald, top: { style: s } }));
   sheet('jackets', JACKET_STYLES, (s) => ({ ...bald, jacket: { style: s, color: '#54595d' } }));

@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import faces, { characterOf } from '../web/visual/faces.mjs';
-import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, FACE_SHAPES } from '../web/visual/portrait.mjs';
+import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, FACE_SHAPES } from '../web/visual/portrait.mjs';
 import { eventOf, clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
@@ -15,6 +15,9 @@ const song = (g, seed = 3) => g.song({ cps: .5, key: 'C:minor', seed, visual: 'f
   g.section('drop', 2, { role: 'climax', dropout: 1, drums: { density: .9 }, bass: { density: .8 }, melody: { density: .7, notes: '0 2 4 7' }, melody2: { notes: '7 5 4 2' }, pad: { arp: 'up' }, perc: { sound: 'cajon' } }),
 ]).strudel;
 const SNARE = { ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' };
+
+// an eye's lid clip: a Q curve up on the face, not the neckline opening's own Q curve down on the chest
+const isLid = (o) => o.k === 'clip' && /^M [\d.]+ [\d.]+ Q/.test(o.d) && +o.d.split(' ')[2] < 300;
 
 test('every part style draws finite numbers, as SVG and on a canvas', () => {
   const of = (key, styles) => styles.map((s) => ({ [key]: { style: s } }));
@@ -30,25 +33,56 @@ test('every part style draws finite numbers, as SVG and on a canvas', () => {
   assert.ok(renderPortrait({ background: '#123' }).includes('fill="#123"'), 'the background rect');
   const ops = portraitOps({ face: { width: 176 } }), ear = ops.find((o) => o.k === 'ellipse' && o.ry === 27);
   assert.equal(ear.cx, 200 - 88, 'the ears, hair and hat follow the face width');
-  const hatted = portraitOps({ hair: { style: 'afroMedium' }, hat: { style: 'baseballCap', color: '#123456' } }), at = hatted.findIndex((o) => o.k === 'clip' && o.d.startsWith('M -100 137'));
-  assert.ok(at > 0 && hatted.slice(at).filter((o) => o.fill === '#123456').length >= 4, 'under a hat the hair above its crown is painted over in the hat colour, before the hat');
-  assert.equal(hatted.filter((o) => o.k === 'ellipse' && o.fill === '#123456' && o.rx === 96).length, 1, 'the afro keeps its full shape below, and its mass above is hat');
-  assert.equal(portraitOps({ hair: { style: 'afroMedium' } }).filter((o) => o.k === 'clip').length, 5, 'without a hat only the eyes, the hairline shadow and the hair texture clip (an afro textures its back and its front)');
-  assert.equal(portraitOps({ light: { side: 1, amount: 1 } }).find((o) => o.fill === '#fff' && o.rx === 34).cx, 230, 'the light falls on the side the character says');
-  assert.equal(portraitOps({ light: { amount: 0 } }).filter((o) => o.rx === 34).length, 0, 'a flat face has no modelling');
+  const hatted = portraitOps({ hair: { style: 'afroMedium' }, hat: { style: 'baseballCap', color: '#123456' } }), at = hatted.findIndex((o) => o.k === 'clip' && o.d.startsWith('M -100 900') && / 137 L [\d.]+ 137 L /.test(o.d)); // the crown line at 137 between the cap's edges, then the slants out to the sides
+  const afro = hatted.findIndex((o) => o.k === 'ellipse' && o.rx === 96), end = hatted.findIndex((o, i) => i > at && o.k === 'unclip');
+  assert.ok(at > 0 && afro > at && afro < end, 'under a hat the hair is clipped to below the crown line: its mass above is inside the hat');
+  assert.ok(!hatted.some((o) => o.k === 'ellipse' && o.fill === '#123456' && o.rx === 96), 'the cap does not take the afro\'s shape');
+  const skirt = hatted.findIndex((o) => o.k === 'clip' && o.d === `M -100 -200 L 500 -200 L 500 137 L -100 137 Z`);
+  assert.ok(skirt > at && hatted[skirt + 1].fill === '#123456' && hatted[skirt + 1].d.includes(`${70 + HAT_TUCK}`), 'the hat wears a skirt of its own shape HAT_TUCK lower, clipped above its line, to fill the crescent under its arched edge');
+  assert.equal(portraitOps({ hair: { style: 'afroMedium' } }).filter((o) => o.k === 'clip').length, 11, 'without a hat the eyes, the neck twice (once behind the clothes and once through the neckline), the neckline opening, the cloth, the planes, the light, the hairline shadow and the hair texture clip (an afro textures its back and its front)');
+  assert.ok(portraitOps({ light: { amount: 1 } }).some((o) => o.fill === '#fff' && o.k === 'path' && o.op === 0.035), 'the soft light is a pale plane over the front of the face');
+  const flat = portraitOps({ light: { amount: 0 } }); assert.ok(flat.filter((o) => o.k === 'clip').length === 9, 'a flat face has no light clip');
+  const through = portraitOps({}).filter((o) => o.k === 'clip' && o.d === 'M 161 361 Q 200 389 239 361 L 239 240 L 161 240 Z'); // the neckline curve closed upward, not on its own chord
+  assert.equal(through.length, 1, 'the crew neckline is an opening: the neck is drawn again through it, so skin shows inside the curve instead of the curve sitting on the cloth');
+  assert.equal(portraitOps({ top: { style: 'turtleneck' } }).filter((o) => o.k === 'clip' && / Z$/.test(o.d) && o.d.startsWith('M 1') && o.d.includes('Q 200 3')).length, 0, 'a turtleneck has no opening: its collar covers the neck');
+  const tall = portraitOps({ face: { height: 230 } }), lidOf = (o) => o.find((x) => isLid(x)).d, mouthOf = (o) => o.find((x) => x.k === 'path' && x.stroke === '#4c2d28').d;
+  assert.ok(lidOf(tall).startsWith('M 188 206.7') && mouthOf(tall).startsWith('M 176 278.8') && lidOf(portraitOps({})).startsWith('M 188 196') && mouthOf(portraitOps({})).startsWith('M 176 260'), 'the eyes and mouth are laid out by the face height: a long face is long between its features');
+  assert.equal(Math.round(eyeY({ face: { height: 230 } }) * 10) / 10, 180.7, 'eyeY says where the eye line landed on the sheet: laid out down the taller face, then the whole head moved up the neck so the chin sits where every chin sits'); assert.equal(eyeY({}), 196);
+  const chinOf = (o) => { const g = o.find((x) => x.k === 'push' && x.cy === 308); return g.ty + 112 + 230 + 16 * 0.2; }; assert.equal(Math.round(chinOf(portraitOps({ face: { height: 230 } })) * 10) / 10, 327.2, 'a tall face\'s chin lands on the same line as the default\'s');
+  const bearded = portraitOps({ facialHair: { style: 'fullBeard' }, face: { width: 180, height: 204, jaw: 0.67, chin: 0.1, corner: 40 } }), bandAt = bearded.findIndex((o) => o.fill === '#30231e' && o.k === 'path' && o.d.includes(' 700 '));
+  assert.ok(bandAt > 0 && bearded[bandAt - 1].k === 'clip' && bearded[bandAt - 1].d.startsWith('M 200 '), 'a beard is a band cut to this face\'s own outline, let out');
+  const stache = (smile) => portraitOps({ facialHair: { style: 'mustache' }, mouth: { smile } }).find((o) => o.k === 'path' && o.fill === '#30231e').d.split(' ').map(Number);
+  const rest = stache(0), smiled = stache(0.9), moved = rest.map((v, i) => Math.abs(v - smiled[i])).filter(Number.isFinite);
+  assert.ok(Math.max(...moved) > 3, 'the moustache rides the lip: a smile bows it down with the lip line');
+  assert.ok(Math.abs(rest[1] - smiled[1]) < 0.01, 'and its outer tip stays pinned where the nose holds it');
+  assert.ok(portraitOps({ light: { contrast: 2 } }).find((o) => o.k === 'ellipse' && o.fill === '#4a2418' && o.ry === 7).op === 0.16 && portraitOps({}).find((o) => o.k === 'ellipse' && o.fill === '#4a2418' && o.ry === 7).op === 0.08, 'contrast deepens the planes (the tableau\'s dial), 1 is the default');
   const long = portraitOps({ hair: { style: 'longStraight' } }), firstPop = long.findIndex((o) => o.k === 'pop');
   assert.ok(long.slice(0, firstPop).some((o) => o.k === 'path' && o.d.includes('L 294 350')), 'long hair puts a sheet behind the neck before the front frame');
-  assert.ok(firstPop < long.findIndex((o) => o.k === 'path' && o.d.includes('L 340 600')), 'and behind the shirt');
-  const asym = portraitOps({ eyes: { asym: 0.8, browSkew: 0.4 } }), lids = asym.filter((o) => o.k === 'clip');
-  assert.ok(lids[0].d.includes('188.8') && lids[1].d.includes('Q 226 187 '), 'the left eye opens 80% as far as the right');
-  assert.ok(portraitOps({ nose: { width: 30 } }).some((o) => o.k === 'path' && o.d.startsWith('M 198.5 205')), 'the nose is scaled to its width');
-  assert.equal(portraitOps({ skin: '#452d27' }).find((o) => o.k === 'path' && o.d.startsWith('M 199 205')).stroke, '#231714', 'the nose line on deep skin is darker than the skin, not the light-skin brown');
-  assert.equal(ops.filter((o) => o.k === 'clip').length, 4, 'each iris is clipped to its lids, the hair shadow to the face, the strands to the hair'); assert.ok(toSvg(ops).includes('<clipPath'));
-  const cc = ctxStub(); drawOn(cc, ops); assert.equal(cc.calls.clip, 4);
+  assert.ok(firstPop < long.findIndex((o) => o.k === 'path' && o.d.includes('L 340 700')), 'and behind the shirt');
+  const asym = portraitOps({ eyes: { asym: 0.8, browSkew: 0.4 } }), lids = asym.filter(isLid);
+  assert.ok(lids[0].d.includes('Q 172 188.8') && lids[1].d.includes('Q 228 187 '), 'the left eye opens 80% as far as the right, each lid peaking toward its outer corner');
+  assert.ok(portraitOps({ eyes: { dy: 3 } }).filter(isLid)[0].d.startsWith('M 188 199'), 'one eye sits lower than the other');
+  const nostril = (o) => o.find((x) => x.k === 'path' && x.fill === '#543c2c' || x.fill === '#1d1310'), n20 = nostril(portraitOps({})), n30 = nostril(portraitOps({ nose: { width: 30 } }));
+  assert.ok(n20.d.startsWith('M 194.5 247.9') && n30.d.startsWith('M 191.75 247.9'), 'the nose is tone (a nostril shadow), scaled to its width');
+  assert.ok(!portraitOps({}).some((o) => o.stroke && o.k === 'path' && o.d.startsWith('M 199 205')), 'no line traces the bridge');
+  assert.equal(nostril(portraitOps({ skin: '#452d27' })).fill, '#1d1310', 'the nostril on deep skin is darker than the skin, not the light-skin brown');
+  assert.equal(ops.filter((o) => o.k === 'clip').length, 10, 'each iris is clipped to its lids, the neck\'s shading to the neck (twice: behind the clothes and through the neckline), the neckline opening, the cloth to the shirt, the planes, the light and the hair shadow to the face, the strands to the hair'); assert.ok(toSvg(ops).includes('<clipPath'));
+  const cc = ctxStub(); drawOn(cc, ops); assert.equal(cc.calls.clip, 10);
+  const turned = portraitOps({ pose: { turn: 0.8 } }), ears = turned.filter((o) => o.k === 'ellipse' && o.ry === 27);
+  assert.deepEqual(ears.map((o) => o.cx), [125.2, 270], 'turned toward +x the +x ear slides in behind the head, a sliver left past the outline, the other rides with the outline'); assert.ok(turned.some((o) => o.k === 'clip' && o.d.startsWith('M 197.6 196')), 'the features slide further than the outline');
+  const sheared = portraitOps({ pose: { shoulder: 1 } }), torsoOf = (o) => o.find((x) => x.k === 'path' && x.d.endsWith('L 60 600 Z') || (x.k === 'path' && x.d.includes('L 340 ')));
+  assert.notEqual(torsoOf(sheared).d, torsoOf(portraitOps({})).d, 'a dropped shoulder shears the torso');
+  const chained = portraitOps({ top: { style: 'buttonDown' }, accessories: ['chainNecklace', 'tie'] }), at2 = (f) => chained.findIndex(f);
+  const collarAgain = chained.map((o) => !!o.collar).lastIndexOf(true);
+  assert.ok(at2((o) => o.stroke === '#a49b81') < collarAgain && collarAgain < at2((o) => o.fill === '#b3202a'), 'the chain goes under the collar (drawn again over the neck), the tie over it');
+  const specs = portraitOps({ glasses: { style: 'round', color: '#abc' } });
+  assert.ok(specs.findIndex((o) => o.stroke === '#000' && o.op === 0.16) < specs.findIndex((o) => o.stroke === '#abc'), 'glasses drop a shadow on the face under the frames');
+  const irregular = portraitOps({ face: { asym: { cheek: 1, jaw: -1, temple: 1, chin: 1 } } }).find((o) => o.k === 'path' && o.d.startsWith('M 200 112')).d, regular = portraitOps({}).find((o) => o.k === 'path' && o.d.startsWith('M 200 112')).d;
+  assert.ok(irregular !== regular && irregular.startsWith('M 200 112 C 140 110, 117 170,') && irregular.endsWith('266 110, 200 112 Z'), 'the asymmetries move one cheek, one jaw corner, one temple and the chin, and the other temple stays');
   const posed = portraitOps({ pose: { headX: 10, headTilt: 0.1, bodyTilt: -0.03 } }), pushes = posed.filter((o) => o.k === 'push');
-  assert.equal(pushes.length, 4, 'the body group, the head group twice, the neck group'); assert.equal(posed.filter((o) => o.k === 'pop').length, 4);
+  assert.equal(pushes.length, 5, 'the body group, the head group twice, the neck group twice (behind the clothes and through the neckline)'); assert.equal(posed.filter((o) => o.k === 'pop').length, 5);
   assert.ok(toSvg(posed).includes(`<g transform="translate(10 ${HEAD_DY}) rotate(`), 'the head sits down the neck and the pose prints as svg groups');
-  assert.deepEqual([pushes[2].tx, pushes[2].rot, pushes[2].cy], [3, 0.1 * 0.3, 374], 'the neck follows 30% of the head, pivoting at its base');
+  assert.deepEqual([pushes[2].tx, pushes[2].rot, pushes[2].cy], [3, 0.1 * 0.15, 374], 'the neck slides 30% of the head\'s way and turns 15%, pivoting at its base');
   const pc = ctxStub(); drawOn(pc, posed); assert.equal(pc.calls.save, pc.calls.restore, 'every push and clip is restored');
   const ctx = ctxStub(); tracePath(ctx, 'M 1 2 L 3 4 C 1 2 3 4 5 6 Q 1 2 3 4 Z');
   assert.deepEqual([ctx.calls.moveTo, ctx.calls.lineTo, ctx.calls.bezierCurveTo, ctx.calls.quadraticCurveTo, ctx.calls.closePath], [1, 1, 1, 1, 1]);
@@ -142,7 +176,7 @@ test('every cast job reaches the state: a kick bobs and opens the mouth, an impa
   assert.ok(shut.dark > 0.8, 'the dropout shuts the eyes');
   const c = characterOf(still, 'climax', 1);
   assert.ok(c.mouth.smile > 0.4 && c.hat.style !== 'none' && HAIR_STYLES.includes(c.hair.style) && TOP_STYLES.includes(c.top.style) && EYE_STYLES.includes(c.eyes.style) && c.eyes.asym !== 1, 'a character at full energy smiles under a hat, in ordinary clothes, with uneven eyes');
-  for (let i = 0; i < 40; i++) { const k = characterOf(still); assert.ok(!/NaN|undefined/.test(JSON.stringify(portraitOps(k))), 'every generated character draws'); assert.ok(k.hat.style === 'none' || k.hair.style !== 'highBun', 'no bun under a hat'); }
+  for (let i = 0; i < 40; i++) { const k = characterOf(still); assert.ok(!/NaN|undefined/.test(JSON.stringify(portraitOps(k))), 'every generated character draws'); assert.ok(k.hat.style === 'none' || k.hair.style !== 'highBun', 'no bun under a hat'); assert.ok(!['bob', 'bluntBob', 'longStraight'].includes(k.hair.style) || k.facialHair.style === 'none', 'no beard under a bob or long hair'); }
 });
 
 test('a plain pattern (no song) runs on the fallback score', async () => {

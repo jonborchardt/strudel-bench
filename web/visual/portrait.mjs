@@ -12,6 +12,8 @@ export const CLOTHING_COLORS = { black: '#222426', charcoal: '#373b3e', darkGray
 export const COLORS = { skin: SKIN_COLORS, hair: HAIR_COLORS, eyes: EYE_COLORS, clothing: CLOTHING_COLORS };
 /** A hex colour scaled toward black (k < 1) or white (k > 1). */
 export const shade = (hex, k) => '#' + [1, 3, 5].map((i) => Math.round(Math.min(255, parseInt(hex.slice(i, i + 2), 16) * k)).toString(16).padStart(2, '0')).join('');
+/** `a` blended toward `b` by `t`. */
+export const mix = (a, b, t) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(i, i + 2), 16) * (1 - t) + parseInt(b.slice(i, i + 2), 16) * t).toString(16).padStart(2, '0')).join('');
 
 // corner: how far above the chin the jaw angle sits (32 unless set); the square and broad heads carry it higher, so they taper under the beard
 export const FACE_SHAPES = {
@@ -22,13 +24,17 @@ export const FACE_SHAPES = {
 export const NECK_TYPES = { narrow: { width: 48, height: 71 }, average: { width: 63, height: 72 }, thick: { width: 79, height: 67 }, long: { width: 58, height: 88 }, short: { width: 68, height: 55 } };
 
 export const HEAD_DY = 8; // the head sits this far down the neck
+export const NECK_FOLLOW = 0.15; // how much of the head's tilt the neck takes (a third read as a rubber neck bending, none as a peg)
+export const HAT_TUCK = 14; // how far the hat's skirt hangs below the hat, filling the crescent under a crown's arched edge
+const NECK_BOTTOM = 430; // every neck runs to here, below the lowest neckline: the neck sits behind the garments, so its base and its flare into the shoulders are covered whatever the collar, and only the straight column between chin and neckline shows. A neck that stopped at its own height left two tabs of skin sitting on a low collar.
 const NECK_TOP = 240, NECK_BASE = [200, 300 + HEAD_DY], HIPS = [200, 600];
-const headDrop = (p) => (204 - p.face.height) * 0.8; // the chin, not the crown, is what sits on the neck: a short face rides lower, a long one higher, so every face shows the same neck
+export const CHIN_Y = 327.2, NECK_SHOW = 0.2; // where every chin lands on the sheet (the default head's), and how much of a neck type's height shows above the collar (a long neck is a little longer, never a stalk)
+const headDrop = (p) => CHIN_Y + ((p.neck?.height ?? 72) - 72) * NECK_SHOW - (112 + HEAD_DY + (p.face?.height ?? 204) + 16 * (p.face?.chin ?? 0.2)); // the chin, not the crown, is what sits on the neck: the head moves up or down the neck so a short face and a long one show the same neck
 export const DEFAULTS = {
   background: '#d7d0c5', skin: '#c98e68', hairColor: '#30231e',
-  face: { ...FACE_SHAPES.oval, skew: 0 }, // skew: the seed's asymmetry, one side a little lower, the chin off centre, in -1..1
+  face: { ...FACE_SHAPES.oval, skew: 0, asym: { cheek: 0, jaw: 0, temple: 0, chin: 0 } }, // skew: one side a little lower, the chin off centre, in -1..1; asym: the face's own irregularities, each signed by side (+x is the character's right): one cheek fuller, one jaw corner sharper, one temple wider, the chin toward one side
   ears: { size: 1 },
-  eyes: { y: 196, spacing: 52, openness: 1, asym: 1, style: 'almond', iris: '#604839', pupil: '#171716', browStyle: 'softArch', browLift: 0, browSkew: 0, look: { x: 0, y: 0 } }, // asym: the left eye's openness against the right's
+  eyes: { y: 196, spacing: 52, openness: 1, asym: 1, dy: 0, depth: 0.5, sclera: null, lidWeight: null, corner: null, bags: 0, style: 'almond', iris: '#604839', pupil: '#171716', browStyle: 'softArch', browLift: 0, browSkew: 0, look: { x: 0, y: 0 } }, // asym: the left eye's openness against the right's; dy: the left eye lower by this much; depth: how far under the brow the eyes sit; sclera: how much white shows (null: the style's); lidWeight: the upper lid's weight (null: the style's); corner: the inner corner drawn out to a point (null: the style's); bags: the lower socket
   nose: { style: 'straight', length: 38, width: 20 },
   mouth: { style: 'plain', y: 260, width: 48, smile: 0.05, fullness: 0.45, color: null, open: 0 }, // color: the lips; null is a lip tone under the skin
   hair: { style: 'sidePart' },
@@ -40,9 +46,9 @@ export const DEFAULTS = {
   glasses: null, // { style, color }
   accessories: [], details: [], makeup: [], marks: [], props: [], blush: 0, // names in ACCESSORIES, DETAILS, MAKEUP, MARKS, PROPS
   seed: 1, // places the sheen's folds
-  light: { side: -1, amount: 0.5 }, // the modelling: a light on one cheek and a shadow on the other, from none (0) to full (1)
+  light: { side: -1, amount: 0.5, contrast: 1 }, // the light: a soft frontal wash, its strength from none (0) to full (1), the side the planes' shadows fall away from, and contrast: how deep the tonal planes go (the sockets, the cheek, under the chin, the neck, the torso's far side); 1 is the soft default, more is harder (the tableau's dial, never the generic one)
   neck: { ...NECK_TYPES.average },
-  pose: { headX: 0, headY: 0, headTilt: 0, bodyX: 0, bodyTilt: 0 }, // the head moves on the neck (sheet units, radians, about the neck base), the body sways about the hips
+  pose: { headX: 0, headY: 0, headTilt: 0, bodyX: 0, bodyTilt: 0, turn: 0, shoulder: 0 }, // the head moves on the neck (sheet units, radians, about the neck base), the body sways about the hips; turn: the head turned off the torso (-1..1, the features slide toward one side and the far ear goes); shoulder: one shoulder dropped (-1..1, the +x one down when positive)
 };
 
 export function merge(base, override) {
@@ -69,16 +75,35 @@ export function mapXY(ops, fx, fy = (y) => y) {
 }
 export const mapX = (ops, fx) => mapXY(ops, fx);
 const scaleAbout = (c, k) => (v) => c + (v - c) * k;
+/** The ops with every point through `f(x, y) → [x, y]` (a shear, a turn); an ellipse or rect moves by its centre and keeps its size. */
+export function mapPts(ops, f) {
+  const r = (v) => Math.round(v * 100) / 100;
+  const px = (d) => { let cmd = 'M', i = 0, x = 0; const out = []; for (const t of tokens(d)) { if (/[a-z]/i.test(t)) { cmd = t.toUpperCase(); i = 0; out.push(t); continue; } if (i % 2 === 0) x = +t; else { const [a, b] = f(x, +t); out.push(r(a), r(b)); } i++; } return out.join(' '); };
+  return ops.map((o) => { if (o.k === 'path' || o.k === 'clip') return { ...o, d: px(o.d) }; if (o.k === 'ellipse') { const [cx, cy] = f(o.cx, o.cy); return { ...o, cx: r(cx), cy: r(cy) }; } if (o.k === 'rect') { const [cx, cy] = f(o.x + o.w / 2, o.y + o.h / 2); return { ...o, x: r(cx - o.w / 2), y: r(cy - o.h / 2) }; } if (o.k === 'line') { const [x1, y1] = f(o.x1, o.y1), [x2, y2] = f(o.x2, o.y2); return { ...o, x1: r(x1), y1: r(y1), x2: r(x2), y2: r(y2) }; } return o; });
+}
+const lcg = (seed) => { let x = (Math.abs(Math.floor(seed * 7919)) % 233280) || 7; return () => (x = (x * 9301 + 49297) % 233280) / 233280; };
+// an irregular plane: a closed smooth curve through n points around (cx, cy), their radii jittered by `rnd`, so no
+// two planes share a silhouette and none is an ellipse
+const blob = (cx, cy, rx, ry, rnd, n = 7, wob = 0.22) => {
+  const pts = Array.from({ length: n }, (_, i) => { const a = (i / n) * Math.PI * 2 + rnd() * 0.3, k = 1 + (rnd() - 0.5) * 2 * wob; return [cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]; }), f = (v) => Math.round(v * 10) / 10;
+  let d = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
+  for (let i = 0; i < n; i++) { const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n]; d += ` C ${f(p1[0] + (p2[0] - p0[0]) / 6)} ${f(p1[1] + (p2[1] - p0[1]) / 6)}, ${f(p2[0] - (p3[0] - p1[0]) / 6)} ${f(p2[1] - (p3[1] - p1[1]) / 6)}, ${f(p2[0])} ${f(p2[1])}`; }
+  return d + ' Z';
+};
+const solid = (o) => o.fill && o.fill !== 'none' && (o.op ?? 1) >= 0.5, region = (ops) => ops.filter((o) => solid(o) && (o.k === 'path' || o.k === 'ellipse')).map((o) => (o.k === 'ellipse' ? ellipsePath(o) : o.d)).join(' '); // the filled shapes as one clip region
 
 // the head is not an egg: from the temple the side runs out to a cheekbone, then in along the jaw to its angle (an
 // on-curve corner, rounded off the more `jaw` is), then under to the chin; `skew` (from the seed) drops one cheekbone
-// and jaw a little and moves the chin off centre, since no face is symmetric
+// and jaw a little and moves the chin off centre, and `asym` gives the face its own irregularities, coherent rather
+// than wobbled: one cheek fuller (its bone out and its jaw curve rounder), one jaw corner sharper, one temple wider,
+// the chin toward one side
 function facePath(p) {
-  const cx = 200, top = 112, w = p.face.width, h = p.face.height, hw = w / 2, bottom = top + h, sk = p.face.skew ?? 0;
-  const jawX = hw * p.face.jaw * 0.94, chinDrop = 16 * p.face.chin, chinX = cx + sk * 5, soft = 12 + 26 * p.face.jaw; // how far the jaw corner's handles reach: a round face has no corner
+  const cx = 200, top = 112, w = p.face.width, h = p.face.height, hw = w / 2, bottom = top + h, sk = p.face.skew ?? 0, A = p.face.asym ?? {};
+  const jawX = hw * p.face.jaw * 0.94, chinDrop = 16 * p.face.chin, chinX = cx + sk * 5 + (A.chin ?? 0) * 6, soft0 = 12 + 26 * p.face.jaw; // how far the jaw corner's handles reach: a round face has no corner
   const seg = (s) => { // one side descending, temple to chin, as three cubics [c1, c2, end]
     const x = (d) => cx + s * d, cheekY = top + 104 + s * sk * 5, jawY = bottom - (p.face.corner ?? 32) - s * sk * 4;
-    return [[[x(hw - 18), top - 2], [x(hw + 5), top + 58], [x(hw - 6), cheekY]], [[x(hw - 8), cheekY + 34], [x(jawX + soft * 0.45), jawY - soft], [x(jawX), jawY]], [[x(jawX - soft * 0.36), jawY + soft * 0.8], [chinX + s * 16, bottom + chinDrop + 1], [chinX, bottom + chinDrop]]];
+    const full = 1 + Math.max(0, s * (A.cheek ?? 0)) * 0.08 - Math.max(0, -s * (A.cheek ?? 0)) * 0.025, temple = Math.max(0, s * (A.temple ?? 0)) * 6, soft = soft0 * (1 - Math.max(0, s * (A.jaw ?? 0)) * 0.6 + Math.max(0, -s * (A.jaw ?? 0)) * 0.25);
+    return [[[x(hw - 18 + temple), top - 2], [x(hw + 5 + temple), top + 58], [x((hw - 6) * full), cheekY]], [[x((hw - 8) * full), cheekY + 34 + s * (A.cheek ?? 0) * 4], [x(jawX * full + soft * 0.45), jawY - soft], [x(jawX * full), jawY]], [[x(jawX * full - soft * 0.36), jawY + soft * 0.8], [chinX + s * 16, bottom + chinDrop + 1], [chinX, bottom + chinDrop]]];
   };
   const P = ([a, b]) => `${Math.round(a * 10) / 10} ${Math.round(b * 10) / 10}`, L = seg(-1), R = seg(1);
   const down = L.map(([c1, c2, e]) => `C ${P(c1)}, ${P(c2)}, ${P(e)}`).join(' ');
@@ -86,61 +111,95 @@ function facePath(p) {
   return `M ${cx} ${top} ${down} ${up} Z`;
 }
 
-// the neck starts high behind the head (the head is drawn over it), no wider than the jaw, its shadow under the chin
+// the neck starts high behind the head (the head is drawn over it), no wider than the jaw at the top and flaring into the
+// shoulders at its base (a column that narrows downward reads as a pipe stuck into a shirt), its shadow under the chin
+// fading in steps too fine to see, and its far side rounded off into shadow like the face's
+const chinY = (p) => 112 + HEAD_DY + headDrop(p) + p.face.height + 16 * p.face.chin - 6; // where the jaw meets the neck on the sheet
+// the sides of the neck are not two verticals: straight under the jaw, then curving out into the trapezius from a
+// hand's width below the chin, so the base is 16 wider each side than the throat and the flare shows above the collar
+const neckPath = (p) => { const w = Math.min(p.neck.width, p.face.width * p.face.jaw * 0.8), x1 = 200 - w / 2, x2 = 200 + w / 2, bottom = NECK_BOTTOM, c = chinY(p); return `M ${x1} ${NECK_TOP} L ${x1} ${c} C ${x1} ${c + 30}, ${x1 - 4} ${c + 34}, ${x1 - 16} ${bottom} Q 200 ${bottom + 22} ${x2 + 16} ${bottom} C ${x2 + 4} ${c + 34}, ${x2} ${c + 30}, ${x2} ${c} L ${x2} ${NECK_TOP} Z`; };
 function neck(p) {
-  const w = Math.min(p.neck.width, p.face.width * p.face.jaw * 0.8), x1 = 200 - w / 2, x2 = 200 + w / 2, top = NECK_TOP, bottom = 302 + p.neck.height;
-  const chin = 112 + HEAD_DY + headDrop(p) + p.face.height + 16 * p.face.chin - 6;
+  const w = Math.min(p.neck.width, p.face.width * p.face.jaw * 0.8), x1 = 200 - w / 2, x2 = 200 + w / 2, sd = p.light.side || -1, c = p.light.contrast ?? 1;
+  const chin = chinY(p);
   return [
-    path(`M ${x1} ${top} L ${x1 + 4} ${bottom} Q 200 ${bottom + 22} ${x2 - 4} ${bottom} L ${x2} ${top} Z`, { fill: p.skin }),
-    ...[30, 22, 14, 7].map((d) => path(`M ${x1} ${chin} L ${x2} ${chin} L ${x2} ${chin + d} C ${x2 - 10} ${chin + d + 14}, ${x1 + 10} ${chin + d + 14}, ${x1} ${chin + d} Z`, { fill: '#000', op: 0.06 })), // the chin's shadow, fading down the neck
+    path(neckPath(p), { fill: p.skin }), clip(neckPath(p)),
+    ...[36, 30, 24, 18, 12, 6].map((d) => path(`M ${x1 - 12} ${chin} L ${x2 + 12} ${chin} L ${x2 + 12} ${chin + d} C ${x2 - 10} ${chin + d + 14}, ${x1 + 10} ${chin + d + 14}, ${x1 - 12} ${chin + d} Z`, { fill: TONE, op: 0.045 * c })), // the chin's shadow, fading down the neck
+    ...soft(200 - sd * w * 0.44, chin + 46, w * 0.3, 64, TONE, 0.18 * c), // the far side of the column, in shadow
+    ...soft(200 + sd * w * 0.08, chin + 34, w * 0.14, 34, '#fff', 0.07), // the throat's front catches the light: with the far side dark, the column is round
+    ...[-1, 1].map((s) => path(`M ${200 + s * (w / 2 - 4)} ${chin + 6} Q ${200 + s * w * 0.3} ${chin + 36} ${200 + s * w * 0.14} ${chin + 62}`, stroke(TONE, 3, 0.08 * c))), // the two muscles from behind the jaw to the pit of the neck: what makes it a neck and not a tube
+    ...[-1, 1].map((s) => path(`M ${200 + s * (w / 2 + 2)} ${chin + 22} Q ${200 + s * (w / 2 + 12)} ${chin + 44} ${200 + s * (w / 2 + 22)} ${chin + 70}`, stroke('#fff', 3, 0.07))), // the flare's lit edge, where the neck widens into the shoulder
+    UNCLIP,
   ];
 }
 
-function ears(p) {
+// the ears: both, always; a turned head slides the far one behind the outline until only a sliver shows
+function ears(p, turn = 0) {
   const rx = 15 * p.ears.size, ry = 27 * p.ears.size, s = stroke(underSkin(p.skin, '#7f5140', 0.5), 2.2, 0.48);
   const k = p.ears.size, bowl = (cx, sd) => [...soft(cx + 2 * sd, 215, 6 * k, 11 * k, TONE, 0.3), ellipse(cx - 4 * sd, 226, 5 * k, 4 * k, { fill: '#fff', op: 0.08 }), path(`M ${cx - 3 * sd} ${187} C ${cx - 14 * sd} 190, ${cx - 17 * sd} 206, ${cx - 12 * sd} 222`, stroke('#fff', 2, 0.14))]; // the ear's bowl in shadow, the lobe and the rim of the helix in light
-  return [ellipse(122, 212, rx, ry, { fill: p.skin }), ellipse(278, 212, rx, ry, { fill: p.skin }), ...bowl(122, 1), ...bowl(278, -1), path('M 119 199 C 109 205, 111 224, 121 227 C 129 222, 127 211, 120 211', s), path('M 281 199 C 291 205, 289 224, 279 227 C 271 222, 273 211, 280 211', s)];
+  const left = [ellipse(122, 212, rx, ry, { fill: p.skin }), ...bowl(122, 1), path('M 119 199 C 109 205, 111 224, 121 227 C 129 222, 127 211, 120 211', s)], right = [ellipse(278, 212, rx, ry, { fill: p.skin }), ...bowl(278, -1), path('M 281 199 C 291 205, 289 224, 279 227 C 271 222, 273 211, 280 211', s)];
+  return mapXY([...mapX(left, (x) => x + Math.max(0, -14 * turn)), ...mapX(right, (x) => x - Math.max(0, 14 * turn))], (x) => x, (y) => y + p.eyes.y - 196); // turned toward +x, the +x ear slides behind the head (drawn under it) with a sliver still showing past the outline; drawn for the eye line at 196, they ride with this face's
 }
 
-// the head: the face, its modelling (a light on one side, a shadow on the other, as strong as the character's `light` says) and a faint blush on the cheeks when `blush` is up
-// Tone, not line, is what keeps a face from reading as a cartoon: every head gets its planes (the eye sockets under
-// the brow, the hollow under each cheekbone, the temples) as soft low-opacity shapes, and `light` adds a side.
+// the head: the face and its planes, then a faint blush on the cheeks when `blush` is up; the soft light comes over the features (faceLight)
+// Tone, not line, is what keeps a face from reading as a cartoon, and one kind of tone everywhere is what makes it
+// airbrushed: the sockets and the shadow under the nose are tight and soft, the cheek and the forehead are large
+// irregular planes with a hard edge at low opacity, and the temples get nothing.
 const TONE = '#4a2418';
 const soft = (cx, cy, rx, ry, fill, op) => [1, 0.92, 0.84, 0.76, 0.68, 0.6, 0.5, 0.4].map((k) => ellipse(cx, cy, rx * k, ry * k, { fill, op: op / 8 })); // a plane with no edge: eight fading ellipses stand in for a gradient
-const planes = (p) => { const y = p.eyes.y, sp = p.eyes.spacing / 2, h = p.face.height, w = p.face.width / 2; return [
-  ...soft(200 - sp, y - 2, 26, 16, TONE, 0.09), ...soft(200 + sp, y - 2, 26, 16, TONE, 0.09), // the sockets
-  ...soft(200 - w * 0.66, y + 60, 22, h * 0.18, TONE, 0.08), ...soft(200 + w * 0.66, y + 60, 22, h * 0.18, TONE, 0.08), // the hollows under the cheekbones
-  ...soft(200 - w * 0.82, y - 8, 14, 30, TONE, 0.06), ...soft(200 + w * 0.82, y - 8, 14, 30, TONE, 0.06), // the temples
-  ...soft(200, 112 + h * 0.62, w * 0.55, h * 0.32, '#fff', 0.07), // the light on the front plane: the forehead, the nose and the chin
+const planes = (p) => { const y = p.eyes.y, sp = p.eyes.spacing / 2, h = p.face.height, w = p.face.width / 2, sd = p.light.side || -1, rnd = lcg(p.seed + 3), depth = p.eyes.depth ?? 0.5, c = p.light.contrast ?? 1, k = featureScale(p), ky = h / 204; return [
+  ...soft(200 - sp, y - 3, 21 * k, 12 * k, TONE, (0.05 + 0.1 * depth) * c), ...soft(200 + sp, y - 3, 21 * k, 12 * k, TONE, (0.05 + 0.1 * depth) * c), // the sockets: tight, deeper for deep-set eyes, as big as the eyes
+  path(blob(200 - sd * w * 0.6, y + 66 * ky, w * 0.3, h * 0.24, rnd, 9, 0.3), { fill: TONE, op: 0.035 * c }), path(blob(200 - sd * w * 0.62, y + 70 * ky, w * 0.22, h * 0.18, rnd, 9, 0.3), { fill: TONE, op: 0.035 * c }), // the shadow cheek: one large irregular plane under the bone (as far under the eye as this face is tall), down to the jaw, in two steps so its edge is not a cut
+  ...soft(200 + sd * w * 0.52, y + 30 * ky, w * 0.2, 14 * ky, '#fff', 0.05), // the lit cheekbone: the one high plane that ties the eye to the jaw below it
+  path(blob(200 + sd * 8, 112 + h * 0.2, w * 0.66, h * 0.11, rnd, 9, 0.3), { fill: '#fff', op: 0.035 }), // the forehead's front plane
+  ellipse(200, 112 + h * 0.95 + 16 * p.face.chin, w * 0.5, 7, { fill: TONE, op: 0.08 * c }), // under the chin
 ]; };
-const head = (p) => [path(facePath(p), { fill: p.skin }), ...planes(p),
-  ...(p.light.amount > 0.02 ? [ellipse(200 + 30 * p.light.side, 245, 34, 48, { fill: '#fff', op: 0.03 * p.light.amount }), ...soft(200 - 36 * p.light.side, 240, 44, 60, '#592e23', 0.12 * p.light.amount)] : []),
+const head = (p) => [path(facePath(p), { fill: p.skin }),
   ...(p.blush > 0.02 ? [ellipse(200 - p.eyes.spacing / 2 - 6, p.eyes.y + 32, 16, 8, { fill: '#c9564c', op: 0.15 * p.blush }), ellipse(200 + p.eyes.spacing / 2 + 6, p.eyes.y + 32, 16, 8, { fill: '#c9564c', op: 0.15 * p.blush })] : [])];
+const modelling = (p) => [clip(facePath(p)), ...planes(p), UNCLIP]; // the planes stay inside the face: a cheek plane past the jaw is a shadow beside the head; drawn over any paint on the skin, so a painted face is modelled in the same language as a bare one
+
+// the light: one soft frontal wash on the face (a pale plane over the forehead, nose and chin, a little dark under the jaw), as strong as `amount` says; `side` says which cheek the planes' and shadows' light falls on
+function faceLight(p, d) {
+  const a = p.light.amount; if (a <= 0.02) return [];
+  const h = p.face.height, w = p.face.width / 2, bot = 112 + h + 16 * p.face.chin;
+  return [clip(d), path(blob(200, 112 + h * 0.55, w * 0.7, h * 0.4, lcg(p.seed + 5), 8, 0.12), { fill: '#fff', op: 0.035 * a }), rect(0, bot - 26, 400, 60, { fill: TONE, op: 0.045 * a * (p.light.contrast ?? 1) }), UNCLIP];
+}
 
 // eyes: the right eye's shape (its outer corner at +x), mirrored for the left; `top`/`bot` are the lid heights at
-// openness 1, `inn`/`out` the corners' drop, a crease the fold above a hooded or monolid eye
+// openness 1, `inn`/`out` the corners' drop, `lid` the upper lid's weight, `sclera` how much white shows around the
+// iris, `corner` the inner corner drawn out to a point, a crease the fold above a hooded or monolid eye
 export const EYES = {
-  almond: { w: 14, top: 9, bot: 6, iris: 5.8, white: '#f1e7dc' },
-  round: { w: 13, top: 11, bot: 10, iris: 6.2, white: '#f1e7dc' },
-  narrow: { w: 15, top: 5, bot: 4, iris: 5.2, irisY: 4.8, white: '#eee3d9' },
-  hooded: { w: 14, top: 6, bot: 5, iris: 5.6, irisY: 5.3, white: '#eee4da', crease: { dy: -7, ctl: -12, sw: 1.3, op: 0.32, color: '#684b3d' } },
-  monolid: { w: 14, top: 4, bot: 5, iris: 5.3, irisY: 4.8, white: '#ede3da', crease: { dy: -5, ctl: -8, sw: 1.5, op: 0.35, color: '#5f4238' } },
-  upturned: { w: 14.5, top: 8, bot: 6, inn: 1, out: -3, iris: 5.6, irisY: 5.4, irisDy: -1 },
-  downturned: { w: 14, top: 8, bot: 7, inn: -2, out: 2, iris: 5.6, irisY: 5.4 },
+  almond: { w: 14, top: 9, bot: 6, iris: 5.8, lid: 0.55, sclera: 0.45, corner: 0.6 },
+  round: { w: 13, top: 11, bot: 10, iris: 6.2, lid: 0.4, sclera: 0.8, corner: 0.3 },
+  narrow: { w: 15, top: 5, bot: 4, iris: 5.2, lid: 0.7, sclera: 0.15, corner: 0.5 },
+  hooded: { w: 14, top: 6, bot: 5, iris: 5.6, lid: 0.8, sclera: 0.25, corner: 0.4, crease: { dy: -7, ctl: -12, sw: 1.3, op: 0.32, color: '#684b3d' } },
+  monolid: { w: 14, top: 4, bot: 5, iris: 5.3, lid: 0.9, sclera: 0.2, corner: 0.2, crease: { dy: -5, ctl: -8, sw: 1.5, op: 0.35, color: '#5f4238' } },
+  upturned: { w: 14.5, top: 8, bot: 6, inn: 1, out: -3, iris: 5.6, lid: 0.5, sclera: 0.5, corner: 0.8 },
+  downturned: { w: 14, top: 8, bot: 7, inn: -2, out: 2, iris: 5.6, lid: 0.45, sclera: 0.55, corner: 0.5 },
 };
 export const EYE_STYLES = Object.keys(EYES);
+// An eye is tone before it is line: the socket under the brow (deeper for deep-set eyes), a white that takes the
+// skin's tone, the iris up under the upper lid (which cuts its top and drops its shadow across it), the upper lid a
+// stroke that is thin at the inner end and heavy at the outer third, the lower lid a rim of light with a faint dark
+// at its outer end, a tear duct at the inner corner, a bag under the eye when the character has one.
+const featureScale = (p) => Math.min(1.12, Math.max(0.92, 0.5 + 0.5 * ((p.face?.width ?? 156) / 156))); // the eyes and brows grow a little with the head: one fixed eye on a broad face is a bead, on a narrow one a saucer, and either reads as a part placed on a head
 function eye(cx, p, side) { // side: +1 the right eye, -1 the left (its outer corner at -x)
-  const e = p.eyes, st = EYES[e.style] ?? EYES.almond, o = e.openness * (side < 0 ? e.asym : 1), y = e.y;
-  const xi = cx - st.w * side, xo = cx + st.w * side, yi = y + (st.inn ?? 0), yo = y + (st.out ?? 0), lx = cx + e.look.x * 3, ly = y + (st.irisDy ?? 0) + e.look.y * 2;
-  const lid = `M ${xi} ${yi} Q ${cx} ${y - st.top * o} ${xo} ${yo} Q ${cx} ${y + st.bot * o} ${xi} ${yi} Z`;
-  const ir = st.iris * 1.25, iry = (st.irisY ?? st.iris) * 1.25; // an eye at rest shows little white: the iris nearly fills the lids' height
+  const e = p.eyes, k = featureScale(p), st0 = EYES[e.style] ?? EYES.almond, st = { ...st0, w: st0.w * k, top: st0.top * k, bot: st0.bot * k, iris: st0.iris * k, inn: (st0.inn ?? 0) * k, out: (st0.out ?? 0) * k, crease: st0.crease && { ...st0.crease, dy: st0.crease.dy * k, ctl: st0.crease.ctl * k } }, o = e.openness * (side < 0 ? e.asym : 1), y = e.y + (side < 0 ? e.dy ?? 0 : 0);
+  const depth = e.depth ?? 0.5, scl = e.sclera ?? st.sclera, lw = e.lidWeight ?? st.lid, corner = e.corner ?? st.corner, bags = e.bags ?? 0, dark = '#2b1d19';
+  const xi = cx - st.w * side, xo = cx + st.w * side, yi = y + (st.inn ?? 0), yo = y + (st.out ?? 0), th = st.top * o, bh = st.bot * o, px = cx + 2 * side; // the upper lid peaks past the centre toward the outer corner
+  const lid = `M ${xi} ${yi} Q ${px} ${y - th} ${xo} ${yo} Q ${cx - side} ${y + bh} ${xi} ${yi} Z`;
+  const ir = st.iris * (1.5 - 0.55 * scl), lx = cx + e.look.x * 3, ly = y - th * 0.22 + e.look.y * 2; // the iris sits up under the upper lid; the more sclera, the smaller it is against the aperture
+  const white = mix('#ece0d3', p.skin, 0.18); // the white is never white: it takes a little of the skin
   return [
-    path(lid, { fill: st.white ?? '#f0e6dc' }),
-    clip(lid), ellipse(lx, ly, ir, iry, { fill: e.iris }), ellipse(lx, ly, ir, iry, stroke(shade(e.iris, 0.5), 1.2, 0.7)), ellipse(lx, ly, ir * 0.4, ir * 0.4, { fill: e.pupil }), ellipse(lx - 1.8, ly - 2, 1.3, 1.3, { fill: '#fff', op: 0.8 }), // the iris (a dark limbal ring) and pupil stay behind the lids
-    ellipse(cx, y - st.top * o - 2, st.w + 2, 5, { fill: TONE, op: 0.28 }), UNCLIP, // the upper lid's shadow across the white and the iris
-    path(`M ${xi - side} ${yi} Q ${cx} ${y - st.top * o - 0.6} ${xo + side} ${yo} Q ${xo + 2.5 * side} ${yo - 1} ${xo + 4 * side} ${yo - 2.5}`, stroke('#32241f', 2)), // the upper lid, flicking out into a lash
-    path(`M ${xi + 3 * side} ${yi + 1} Q ${cx} ${y + st.bot * o + 1.5} ${xo - side} ${yo + 0.5}`, stroke('#32241f', 1, 0.35)), // the lower lid, half tone
-    ...(st.crease ? [path(`M ${cx - 16} ${y + st.crease.dy} Q ${cx} ${y + st.crease.ctl} ${cx + 16} ${y + st.crease.dy}`, stroke(st.crease.color, st.crease.sw, st.crease.op))] : []),
+    ...(depth > 0.02 ? soft(cx, y - 9, st.w + 4, 8, '#1d0f0c', 0.2 * depth) : []),
+    ...(bags > 0.02 ? [path(`M ${xi} ${yi + 3} Q ${cx} ${y + bh + 9} ${xo} ${yo + 3} Q ${cx} ${y + bh + 16 + 4 * bags} ${xi} ${yi + 5} Z`, { fill: TONE, op: 0.18 * bags }), path(`M ${xi + 3 * side} ${y + bh + 5} Q ${cx} ${y + bh + 11 + 3 * bags} ${xo - 2 * side} ${y + bh + 4}`, stroke('#6b473b', 1.1, 0.3 * bags))] : []),
+    path(lid, { fill: white }),
+    clip(lid), ellipse(lx, ly, ir, ir, { fill: e.iris }), ellipse(lx, ly, ir, ir, stroke(shade(e.iris, 0.55), 1, 0.45)), ellipse(lx, ly, ir * 0.42, ir * 0.42, { fill: e.pupil }), ellipse(lx - 1.6 * side, ly - 1.8, 1.2, 1.2, { fill: '#fff', op: 0.75 }),
+    ellipse(lx + 0.5, ly + ir * 0.35, ir * 0.7, ir * 0.35, { fill: '#fff', op: 0.08 }), // the iris lit from below, where the light gets under the lid
+    path(`M ${xi - 2 * side} ${yi - 2} Q ${px} ${y - th + 3.5} ${xo + 2 * side} ${yo - 2} L ${xo + 2 * side} ${yo - 12} L ${xi - 2 * side} ${yi - 12} Z`, { fill: TONE, op: 0.24 + 0.1 * depth }), UNCLIP, // the upper lid's shadow across the white and the iris
+    path(`M ${xi} ${yi} Q ${cx - 4 * side} ${y - th - 0.3} ${px + 2 * side} ${y - th * 0.85}`, stroke(dark, 0.7 + 1.1 * lw, 0.75)), path(`M ${px} ${y - th * 0.95} Q ${xo - 4 * side} ${y - th * 0.7} ${xo + 3 * side} ${yo - 1.5}`, stroke(dark, 1.4 + 2 * lw, 0.9)), // the upper lid: thin at the inner end, heavy at the outer third where the lashes gather
+    path(`M ${xi + 4 * side} ${yi + 1} Q ${cx} ${y + bh + 1.2} ${xo - 2 * side} ${yo + 0.4}`, stroke('#fff', 1.4, 0.16)), path(`M ${cx + 2 * side} ${y + bh + 0.6} Q ${xo - 3 * side} ${y + bh - 0.5} ${xo - side} ${yo}`, stroke(dark, 0.9, 0.3)), // the lower lid: a light rim, its outer third a faint dark
+    ...(corner > 0.05 ? [path(`M ${xi} ${yi - 1.5} Q ${xi - 3.5 * corner * side} ${yi} ${xi} ${yi + 1.8}`, { fill: '#b8635a', op: 0.5 })] : []), // the tear duct
+    ...(st.crease ? [path(`M ${cx - 16} ${y + st.crease.dy} Q ${cx} ${y + st.crease.ctl} ${cx + 16} ${y + st.crease.dy}`, stroke(st.crease.color, st.crease.sw, st.crease.op * (0.6 + 0.8 * depth)))] : []),
   ];
 }
 
@@ -151,32 +210,47 @@ export const BROWS = {
 };
 export const BROW_STYLES = Object.keys(BROWS);
 function brow(cx, p, side) {
-  const e = p.eyes, [x0, y0, mx, my, x1, y1, sw] = BROWS[e.browStyle] ?? BROWS.softArch, y = e.y - e.browLift + side * e.browSkew * 5; // skew: one brow up, the other down
-  const a = [cx + x0 * side, y + y0], c = [cx + mx * side, y + my], b = [cx + x1 * side, y + y1], m = [(a[0] + 2 * c[0] + b[0]) / 4, (a[1] + 2 * c[1] + b[1]) / 4]; // the curve split at its middle: a drawn brow is heavy at the inner end and tapers out
-  const out = [path(`M ${a[0]} ${a[1]} Q ${(a[0] + c[0]) / 2} ${(a[1] + c[1]) / 2} ${m[0]} ${m[1]}`, stroke(p.hairColor, sw, 0.92)), path(`M ${m[0]} ${m[1]} Q ${(c[0] + b[0]) / 2} ${(c[1] + b[1]) / 2} ${b[0]} ${b[1]}`, stroke(p.hairColor, sw * 0.6, 0.85))];
+  const e = p.eyes, k = featureScale(p), [x0, y0, mx, my, x1, y1, sw] = (BROWS[e.browStyle] ?? BROWS.softArch).map((v, i) => (i < 6 ? v * k : v)), y = e.y - e.browLift + side * e.browSkew * 5; // skew: one brow up, the other down; the brow grows with the eye
+  const a = [cx + x0 * side, y + y0], c = [cx + mx * side, y + my], b = [cx + x1 * side, y + y1], q = (t) => [(1 - t) ** 2 * a[0] + 2 * (1 - t) * t * c[0] + t * t * b[0], (1 - t) ** 2 * a[1] + 2 * (1 - t) * t * c[1] + t * t * b[1]]; // a drawn brow is heavy at the inner end and tapers out: a thick stroke over the inner two thirds, a thinner one from a third of the way out, overlapping so no joint shows
+  const seg = (t0, t1, sw, op) => { const p0 = q(t0), p1 = q(t1), s = (t1 - t0) / (1 - t0), r = [(1 - t0) * c[0] + t0 * b[0], (1 - t0) * c[1] + t0 * b[1]], cp = [(1 - s) * p0[0] + s * r[0], (1 - s) * p0[1] + s * r[1]]; return path(`M ${p0[0]} ${p0[1]} Q ${cp[0]} ${cp[1]} ${p1[0]} ${p1[1]}`, stroke(p.hairColor, sw, op)); }; // the sub-curve t0..t1 of the brow's quadratic (de Casteljau)
+  const out = [seg(0, 0.6, sw * 0.95, 0.9), seg(0.45, 1, sw * 0.42, 0.8)];
   if (e.browStyle === 'tapered') out.push(path(`M ${cx + 7 * side} ${y - 29} Q ${cx + 14 * side} ${y - 28} ${cx + 19 * side} ${y - 27}`, stroke(p.skin, 2.4)));
   return out;
 }
-const eyes = (p) => [...eye(200 - p.eyes.spacing / 2, p, -1), ...eye(200 + p.eyes.spacing / 2, p, 1), ...brow(200 - p.eyes.spacing / 2, p, -1), ...brow(200 + p.eyes.spacing / 2, p, 1)];
+const eyes = (p, brows = true) => [...eye(200 - p.eyes.spacing / 2, p, -1), ...eye(200 + p.eyes.spacing / 2, p, 1), ...(brows ? [...brow(200 - p.eyes.spacing / 2, p, -1), ...brow(200 + p.eyes.spacing / 2, p, 1)] : [])]; // brows false: a masked face, whose brows are behind the shell
 
-const NL = (sw, op) => stroke('#805243', sw, op); // a nose line, recoloured under the skin by `nose`, and lifted in opacity on a dark skin, where a half-tone line would vanish
 // a feature line under this skin: the reference colour (drawn for the default skin), or the skin darkened by `k` where that is darker, channel by channel, so a line never comes out lighter than the face it sits on
 const luma = (hex) => [0.299, 0.587, 0.114].reduce((a, w, i) => a + (w * parseInt(hex.slice(1 + 2 * i, 3 + 2 * i), 16)) / 255, 0);
 const underSkin = (skin, ref, k) => { const d = shade(skin, k); return '#' + [1, 3, 5].map((i) => Math.min(parseInt(d.slice(i, i + 2), 16), parseInt(ref.slice(i, i + 2), 16)).toString(16).padStart(2, '0')).join(''); };
+// noses as geometry, not outlines: `len` the bridge from the eye line to the tip, `w` the wings' half width, `tip`
+// the ball's radius, `bridge` the profile (a hook > 0, a dip < 0), `up` the tip lifted (the nostrils show more)
 export const NOSES = {
-  straight: () => [path('M 199 205 C 198 219, 195 233, 195 243 C 197 249, 204 250, 209 246', NL(2.2, 0.55)), path('M 190 248 Q 200 255 211 248', NL(1.7, 0.45))],
-  short: () => [path('M 199 210 C 198 222, 196 233, 196 239 Q 200 245 205 240', NL(2.1, 0.5)), path('M 191 242 Q 200 248 209 242', NL(1.8, 0.45))],
-  long: () => [path('M 199 202 C 197 222, 193 242, 194 252 Q 200 260 208 254', NL(2.2, 0.55)), path('M 188 255 Q 200 262 212 255', NL(1.7, 0.45))],
-  broad: () => [path('M 199 207 C 198 222, 196 238, 197 246', NL(2.1, 0.5)), path('M 184 249 C 190 256, 211 256, 217 249', NL(2, 0.52))],
-  narrow: () => [path('M 200 205 C 198 221, 197 238, 198 246 Q 200 250 204 247', NL(1.9, 0.52)), path('M 192 249 Q 200 253 208 249', NL(1.4, 0.45))],
-  upturned: () => [path('M 199 208 C 197 223, 195 237, 197 243', NL(2, 0.5)), path('M 189 247 Q 200 242 211 247', NL(2, 0.52))],
-  aquiline: () => [path('M 199 203 C 198 218, 205 225, 202 236 C 200 243, 198 249, 205 253', NL(2.4, 0.56)), path('M 191 254 Q 200 259 211 254', NL(1.7, 0.46))],
-  roundedTip: () => [path('M 199 205 C 198 221, 195 236, 196 245', NL(2.1, 0.5)), ellipse(200, 250, 9, 5, { fill: '#754334', op: 0.08 }), path('M 189 249 Q 200 257 212 249', NL(1.8, 0.48))],
+  straight: { len: 38, w: 10, tip: 6, bridge: 0, up: 0 },
+  short: { len: 32, w: 10, tip: 6, bridge: 0, up: 0.3 },
+  long: { len: 46, w: 10, tip: 6, bridge: 0.1, up: -0.2 },
+  broad: { len: 38, w: 15, tip: 8, bridge: 0, up: 0.1 },
+  narrow: { len: 40, w: 8, tip: 5, bridge: 0.1, up: 0 },
+  upturned: { len: 36, w: 10, tip: 6.5, bridge: -0.3, up: 0.8 },
+  aquiline: { len: 44, w: 10, tip: 6, bridge: 1, up: -0.3 },
+  roundedTip: { len: 38, w: 11, tip: 8.5, bridge: 0, up: 0.2 },
 };
 export const NOSE_STYLES = Object.keys(NOSES);
-const nose = (p) => { const c = underSkin(p.skin, '#805243', 0.5), lift = 1 + Math.max(0, 0.5 - luma(p.skin)) * 2, sd = p.light.side || -1; return mapXY([
-  ellipse(200 - 7 * sd, 232, 7, 17, { fill: TONE, op: 0.07 }), ellipse(200, 254, 12, 4, { fill: TONE, op: 0.09 }), // the bridge's shadow side and the shadow under the tip: a nose has planes before it has a line
-  ...(NOSES[p.nose.style] ?? NOSES.straight)().map((o) => (o.stroke === '#805243' ? { ...o, stroke: c, op: Math.min(1, o.op * lift) } : o.fill === '#754334' ? { ...o, fill: c } : o))], scaleAbout(200, p.nose.width / 20), scaleAbout(206, p.nose.length / 38)); };
+// Most of a nose is shadow: the far side of the bridge, the wings, the underside of the tip on the lip, the nostrils;
+// then a highlight down the ridge and a spot on the tip. The only lines are the crease at the far wing and a hint of
+// the tip's underside, both short. A hook catches light on its bump, a dip holds shadow.
+const nose = (p) => { const st = NOSES[p.nose.style] ?? NOSES.straight, sd = p.light.side || -1, dk = underSkin(p.skin, '#6e4236', 0.42), lift = 1 + Math.max(0, 0.5 - luma(p.skin)) * 1.4, y0 = p.eyes.y + 10, yt = y0 + st.len, w = st.w, t = st.tip, up = st.up, hook = st.bridge; // the bridge starts just under the eye line, wherever this face has it
+  const nostril = (s) => path(`M ${200 + s * w * 0.55} ${yt + t * 0.65} Q ${200 + s * w * 0.3} ${yt + t * 0.4 + 4 * up} ${200 + s * w * 0.1} ${yt + t * 0.75} Q ${200 + s * w * 0.35} ${yt + t * 1.05} ${200 + s * w * 0.55} ${yt + t * 0.65} Z`, { fill: dk, op: Math.min(1, (0.3 + 0.35 * up) * lift) });
+  return mapXY([
+    ...soft(200 - 5.5 * sd, y0 + st.len * 0.45, 4.5 + 2 * Math.max(0, hook), st.len * 0.42, TONE, 0.22),
+    ...(hook > 0.3 ? [ellipse(200 - 3 * sd, y0 + st.len * 0.4, 6, 8, { fill: '#fff', op: 0.08 * hook })] : hook < -0.2 ? [ellipse(200 - 4 * sd, y0 + st.len * 0.55, 5, 9, { fill: TONE, op: 0.1 * -hook })] : []),
+    ...soft(200 + 2 * sd + 2 * hook * sd, y0 + st.len * 0.5, 3.5, st.len * 0.3, '#fff', 0.07), // the ridge's light
+    ...soft(200, yt + t * 0.3, t * 1.15, t * 0.95, '#fff', 0.1), ellipse(200 + 1.2 * sd, yt - t * 0.25, t * 0.4, t * 0.3, { fill: '#fff', op: 0.22 }), // the ball of the tip and its highlight
+    ...[-1, 1].flatMap((s) => soft(200 + s * w * 0.95, yt + 2, 5.5, 5, TONE, s === -sd ? 0.22 : 0.12)), // the wings, the far one darker
+    path(`M ${200 - w * 0.7} ${yt + t * 0.75} Q ${200 - w * 0.2 * sd} ${yt + t * 1.9} ${200 + w * 0.7} ${yt + t * 0.75} Q 200 ${yt + t * 1.15} ${200 - w * 0.7} ${yt + t * 0.75} Z`, { fill: TONE, op: 0.2 }), // the shadow under the tip, on the lip
+    nostril(-1), nostril(1),
+    path(`M ${200 - (w + 2) * sd} ${yt - 6} Q ${200 - (w + 4) * sd} ${yt + 1} ${200 - (w - 2) * sd} ${yt + 6}`, stroke(dk, 1.3, Math.min(1, 0.35 * lift))), // the crease at the far wing
+    path(`M ${200 - t * 0.9 * sd} ${yt + t * 0.5} Q ${200 - t * 0.2 * sd} ${yt + t * 1.05} ${200 + t * 0.5 * sd} ${yt + t * 0.75}`, stroke(dk, 1.2, Math.min(1, 0.28 * lift))), // a hint of the tip's underside
+  ], scaleAbout(200, p.nose.width / 20), scaleAbout(y0, p.nose.length / 38)); };
 
 // mouths: the lips' style; the smile is a parameter (a broad one shows teeth), as is `open`
 export const MOUTHS = { plain: {}, thin: { thin: true }, full: { full: true }, wide: { wide: 1.3 }, asym: { asym: 1 } };
@@ -184,13 +258,13 @@ export const MOUTH_STYLES = Object.keys(MOUTHS);
 function mouth(p) {
   const m = { ...p.mouth, color: p.mouth.color ?? underSkin(p.skin, '#8b5149', 0.72) }, st = MOUTHS[m.style] ?? MOUTHS.plain, w = m.width * (st.wide ?? 1), x1 = 200 - w / 2, x2 = 200 + w / 2, open = m.open ?? 0, a = st.asym ?? 0;
   const yl = m.y + a * 2, yr = m.y - a * 4, qx = 200 - a * 7, mid = m.y + m.smile * 18 - 2 * open, dark = shade(m.color, 0.45);
-  const upper = `M ${x1} ${yl} Q ${qx} ${mid} ${x2} ${yr}`, out = [ellipse(200, m.y + 11 + 6 * m.fullness, w * 0.36, 4.5, { fill: TONE, op: 0.09 }), ellipse(200, m.y + 5 + 5 * m.fullness, w * 0.28, 3, { fill: '#fff', op: 0.07 })]; // the shadow under the lower lip and the light on it, so the mouth sits in a face rather than on it
+  const upper = `M ${x1} ${yl} Q ${qx} ${mid} ${x2} ${yr}`, out = [ellipse(200, m.y + 11 + 6 * m.fullness, w * 0.36, 4.5, { fill: TONE, op: 0.12 }), ellipse(200, m.y + 5 + 5 * m.fullness, w * 0.28, 3, { fill: '#fff', op: 0.1 }), ellipse(200, m.y - 9, w * 0.2, 4, { fill: TONE, op: 0.05 })]; // the shadow under the lower lip and the light on it, and the philtrum's shade above, so the mouth sits in a face rather than on it
   // every mouth is two lips, not a line: the upper a bowed lens in shadow, the lower a fuller lens in the light, the parting drawn between them; the style sets how much lip there is
   const k = st.thin ? 0.45 : st.full ? 1.5 : 1, top = (4 + 4 * m.fullness) * k, bot = (6 + 8 * m.fullness) * k;
-  out.push(path(`${upper} Q ${qx + w * 0.26} ${mid - top * 1.15} ${qx} ${mid - top * 0.55} Q ${qx - w * 0.26} ${mid - top * 1.15} ${x1} ${yl} Z`, { fill: shade(m.color, 0.82), op: 0.8 }), path(`${upper} Q ${qx} ${mid + bot} ${x1} ${yl} Z`, { fill: shade(m.color, 1.08), op: 0.72 }));
+  out.push(path(`${upper} Q ${qx + w * 0.26} ${mid - top * 1.15} ${qx} ${mid - top * 0.55} Q ${qx - w * 0.26} ${mid - top * 1.15} ${x1} ${yl} Z`, { fill: shade(m.color, 0.82), op: 0.88 }), path(`${upper} Q ${qx} ${mid + bot} ${x1} ${yl} Z`, { fill: shade(m.color, 1.08), op: 0.82 }));
   if (open > 0.08) out.push(path(`${upper} Q ${qx} ${m.y + 8 + 26 * open} ${x1} ${yl} Z`, { fill: '#3a1f1c' })); // the inside is the region between the two lips, so it never shows past them
   else if (m.smile > 0.75) out.push(path(`${upper} Q ${qx} ${m.y + m.smile * 6} ${x1} ${yl} Z`, { fill: dark }), path(`M ${x1 + 6} ${m.y + 2} Q ${qx} ${m.y + m.smile * 8} ${x2 - 6} ${m.y + 2}`, stroke('#f2e7dc', 4))); // a broad smile shows teeth
-  out.push(path(upper, stroke(shade(m.color, 0.55), st.thin ? 1.3 : 1.7, 0.85))); // the parting
+  out.push(path(upper, stroke(shade(m.color, 0.55), st.thin ? 1.4 : 2, 0.9)), ellipse(x1, yl, 2.2, 1.6, { fill: dark, op: 0.45 }), ellipse(x2, yr, 2.2, 1.6, { fill: dark, op: 0.45 })); // the parting, and the corners tucked into the cheeks
   if (open > 0.08) out.push(path(`M ${x1} ${yl} Q ${qx} ${m.y + 8 + 26 * open} ${x2} ${yr}`, stroke(shade(m.color, 0.7), 2)));
   return out;
 }
@@ -232,27 +306,52 @@ export const HAIR = {
   bob: { back: (p) => longBack(240, p), front: (p) => [path('M 118 171 C 108 126, 121 90, 151 76 C 177 64, 223 64, 249 76 C 279 90, 292 126, 282 171 L 272 246 C 256 236, 250 211, 248 183 C 245 145, 228 117, 200 112 C 172 117, 155 145, 152 183 C 150 211, 144 236, 128 246 Z', { fill: p.hairColor })] },
   bluntBob: { back: (p) => longBack(240, p), front: (p) => [path('M 116 170 C 108 121, 124 86, 154 73 C 178 62, 222 62, 246 73 C 276 86, 292 121, 284 170 L 272 245 L 243 245 C 248 210, 247 166, 236 140 C 221 112, 179 112, 164 140 C 153 166, 152 210, 157 245 L 128 245 Z', { fill: p.hairColor })] },
   longStraight: { back: (p) => longBack(350, p), front: (p) => [path('M 114 178 C 103 125, 120 84, 151 70 C 177 58, 223 58, 249 70 C 280 84, 297 125, 286 178 L 299 355 L 259 355 C 264 285, 259 220, 247 171 C 239 140, 223 120, 200 118 C 177 120, 161 140, 153 171 C 141 220, 136 285, 141 355 L 101 355 Z', { fill: p.hairColor })] },
-  longWavy: { back: (p) => longBack(350, p), front: (p) => [path('M 114 178 C 102 126, 119 86, 149 70 C 179 54, 222 58, 251 71 C 281 87, 298 126, 286 178 C 300 214, 287 239, 297 270 C 307 302, 292 330, 300 357 L 260 357 C 252 320, 270 292, 256 256 C 245 226, 262 196, 248 165 C 236 140, 221 120, 200 118 C 179 120, 164 140, 152 165 C 138 196, 155 226, 144 256 C 130 292, 148 320, 140 357 L 100 357 C 108 330, 93 302, 103 270 C 113 239, 100 214, 114 178 Z', { fill: p.hairColor })] },
   ponytailLow: { back: (p) => [path('M 254 139 C 292 150, 303 195, 284 229 C 273 248, 260 257, 249 264 C 263 221, 261 176, 254 139 Z', { fill: p.hairColor })], front: (p) => [path('M 122 168 C 116 124, 128 93, 154 78 C 179 64, 221 64, 246 78 C 272 93, 284 124, 278 168 C 258 140, 234 122, 200 120 C 166 122, 142 140, 122 168 Z', { fill: p.hairColor })] },
   highBun: { back: (p) => [ellipse(200, 54, 36, 31, { fill: p.hairColor })], front: (p) => [path('M 121 168 C 117 124, 129 92, 155 78 C 179 66, 221 66, 245 78 C 271 92, 283 124, 279 168 C 259 139, 235 122, 200 120 C 165 122, 141 139, 121 168 Z', { fill: p.hairColor })] },
   lowBun: { back: (p) => [ellipse(268, 171, 29, 31, { fill: p.hairColor })], front: (p) => [path('M 122 169 C 118 125, 130 93, 155 78 C 179 64, 221 64, 245 78 C 270 93, 282 125, 278 169 C 258 140, 234 122, 200 120 C 166 122, 142 140, 122 169 Z', { fill: p.hairColor })] },
   locsShort: { back: (p) => [[135, 96, 126, 167], [151, 82, 145, 176], [169, 74, 165, 179], [187, 70, 184, 175], [205, 69, 205, 179], [223, 72, 225, 177], [241, 80, 247, 176], [257, 94, 270, 168]].map(([x1, y1, x2, y2]) => path(`M ${x1} ${y1} Q ${(x1 + x2) / 2 + 6} ${(y1 + y2) / 2} ${x2} ${y2}`, stroke(p.hairColor, 11))), front: CAP },
-  boxBraids: { back: (p) => [118, 132, 148, 165, 182, 218, 235, 252, 268, 282].flatMap((x) => { const s = x < 200 ? -1 : 1, x1 = x + 14 * s, y0 = 150, y1 = 322; return [line(x, y0, x1, y1, stroke(p.hairColor, 7)), ...Array.from({ length: 10 }, (_, i) => { const t = 0.2 + i * 0.08, bx = x + (x1 - x) * t, by = y0 + (y1 - y0) * t; return line(bx - 3, by - 2 * s, bx + 3, by + 2 * s, stroke('#fff', 2, 0.12)); })]; }), front: (p) => [...CAP(p), ...[-40, -14, 14, 40].map((d) => path(`M ${200 + d} 92 Q ${200 + d * 1.3} 120 ${200 + d * 1.6} 150`, stroke(p.skin, 1.6, 0.5)))] }, // a braided cap parted into sections, the braids hanging from under its edge, each knotted along its length
-  receding: (p) => [path('M 127 163 C 126 123, 144 95, 168 88 C 171 111, 182 117, 200 112 C 218 117, 229 111, 232 88 C 256 95, 274 123, 273 163 C 251 139, 228 129, 200 129 C 172 129, 149 139, 127 163 Z', { fill: p.hairColor })],
+  boxBraids: { back: (p) => [130, 142, 155, 169, 184, 216, 231, 245, 258, 270].flatMap((x) => { const s = x < 200 ? -1 : 1, x1 = x - 12 * s, y0 = 150, y1 = 322; return [line(x, y0, x1, y1, stroke(p.hairColor, 7)), ...Array.from({ length: 10 }, (_, i) => { const t = 0.2 + i * 0.08, bx = x + (x1 - x) * t, by = y0 + (y1 - y0) * t; return line(bx - 3, by - 2 * s, bx + 3, by + 2 * s, stroke('#fff', 2, 0.12)); })]; }), front: (p) => [...CAP(p), ...[-40, -14, 14, 40].map((d) => path(`M ${200 + d} 92 Q ${200 + d * 1.3} 120 ${200 + d * 1.6} 150`, stroke(p.skin, 1.6, 0.5)))] }, // a braided cap parted into sections, the braids starting under its edge and falling in toward the neck (none hangs out beside the head), each knotted along its length
+  receding: (p) => [path('M 127 163 C 126 125, 140 104, 166 98 C 172 112, 184 118, 200 114 C 216 118, 228 112, 234 98 C 260 104, 274 125, 273 163 C 251 139, 228 129, 200 129 C 172 129, 149 139, 127 163 Z', { fill: p.hairColor })], // the crown bare between two low tufts that follow the skull (tall narrow tufts read as horns on a narrow head)
 };
 export const HAIR_STYLES = Object.keys(HAIR);
-export const LONG_HAIR = ['bob', 'bluntBob', 'longStraight', 'longWavy']; // the styles that hang past the jaw: never on a long oval head, which they stretch further
+export const LONG_HAIR = ['bob', 'bluntBob', 'longStraight']; // the styles that hang past the jaw: never on a long oval head, which they stretch further
 const hairOf = (p) => { const r = HAIR[p.hair.style] ?? HAIR.sidePart; return typeof r === 'function' ? { back: [], front: r(p) } : { back: r.back(p), front: r.front(p) }; };
 
+// Beards wrap the face they are on: the mass is a band whose top edge is the beard line (from the sideburn under the
+// ear, down the cheek, under the mouth's corners and the lower lip) cut to this face's own outline let out a little
+// (`hull`: wider at the jaw, longer under the chin), so a beard on a square jaw is square and one on a narrow chin is
+// narrow. Drawn in the face's real coordinates (the eye line, the mouth), not fitted from a default beard.
+const hull = (p, chin) => { const ey = p.eyes.y, bot = 112 + p.face.height + 16 * p.face.chin; return mapXY([path(facePath(p))], scaleAbout(200, 1.03), (y) => ey + (y - ey) * (1 + chin / (bot - ey)))[0].d; }; // the outline let out: the chin pushed down by `chin`, the jaw with it
+// top: the sideburn's y under the eye line; cheek: how far in from the outline the beard line runs (0..1 of the half width); lip: how far under the lower lip the beard starts; chin: how far the mass hangs past the chin; sharp: a straight, barbered line
+function beardBand(p, { top = 26, cheek = 0.1, lip = 14, chin = 6, sharp = false, op = 1 } = {}) {
+  const w = p.face.width / 2, ey = p.eyes.y, my = p.mouth.y, mw = p.mouth.width / 2, x0 = 200 - w - 30, x1 = 200 + w + 30, ya = ey + top, cx = w * (1 - cheek), c2 = w * 0.62;
+  const band = sharp
+    ? `M ${x0} ${ya} L ${200 - cx} ${ya} L ${200 - mw} ${my + lip * 0.4} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.4} L ${200 + cx} ${ya} L ${x1} ${ya} L ${x1} 700 L ${x0} 700 Z`
+    : `M ${x0} ${ya} C ${200 - cx} ${ya}, ${200 - c2} ${my - 4}, ${200 - mw} ${my + lip * 0.4} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.4} C ${200 + c2} ${my - 4}, ${200 + cx} ${ya}, ${x1} ${ya} L ${x1} 700 L ${x0} 700 Z`;
+  return [clip(hull(p, chin)), path(band, { fill: p.hairColor, op }), ...(op >= 0.5 ? [clip(band), ...strands(p, { from: [200, my + 10], a0: 0.4, a1: Math.PI - 0.4, len: 55, n: 16 }), UNCLIP] : []), UNCLIP]; // a stubble is a wash with no grain
+}
+const onMouth = (p, ops) => mapXY(ops, scaleAbout(200, p.mouth.width / 48), (y) => y + p.mouth.y - 260); // ops drawn for the default mouth (48 wide on the line 260) follow this one
+// A moustache sits on the upper lip, so it moves with it: its top stays pinned under the nose and its lower edge
+// rides the lip's own curve (the same quadratic `mouth` draws, `2t(1-t)` of the centre's move, nothing at the tips),
+// so a smile bows the hair down with the lip and an open mouth draws it up. `LIP_PULL` is how much of that move the
+// hair takes: all of it on its own, less inside a beard, where the mass around it holds it.
+export const LIP_PULL = 1, BEARD_PULL = 0.55;
+const MUSTACHE = 'M 175 252 C 184 243, 194 245, 200 251 C 206 245, 216 243, 225 252 C 216 254, 207 260, 200 258 C 193 260, 184 254, 175 252 Z'; // drawn for the default mouth: its top at 243, its lower edge on the lip line at 260
+const unit = (v) => Math.min(1, Math.max(0, v));
+const mustache = (p, pull = LIP_PULL) => {
+  const m = p.mouth, ops = onMouth(p, [path(MUSTACHE, { fill: p.hairColor })]), drop = (m.smile * 18 - 2 * (m.open ?? 0)) * pull, hw = (m.width * ((MOUTHS[m.style] ?? MOUTHS.plain).wide ?? 1)) / 2;
+  if (Math.abs(drop) < 0.2) return ops; // a resting mouth moves nothing
+  return mapPts(ops, (x, y) => { const t = unit((x - 200 + hw) / (2 * hw)), d = unit((y - (m.y - 17)) / 17); return [x, y + d * 2 * t * (1 - t) * drop]; });
+};
 export const FACIAL_HAIR = {
   none: () => [],
-  lightStubble: (p) => [path('M 151 248 C 155 296, 176 319, 200 323 C 224 319, 245 296, 249 248 C 239 278, 223 294, 200 297 C 177 294, 161 278, 151 248 Z', { fill: p.hairColor, op: 0.09 })],
-  heavyStubble: (p) => [path('M 149 246 C 153 300, 175 326, 200 331 C 225 326, 247 300, 251 246 C 242 281, 224 302, 200 305 C 176 302, 158 281, 149 246 Z', { fill: p.hairColor, op: 0.2 })],
-  mustache: (p) => [path('M 175 252 C 184 243, 194 245, 200 251 C 206 245, 216 243, 225 252 C 216 254, 207 260, 200 258 C 193 260, 184 254, 175 252 Z', { fill: p.hairColor })],
-  shortBeard: (p) => [path('M 149 245 C 151 298, 174 329, 200 335 C 226 329, 249 298, 251 245 C 243 281, 224 302, 200 305 C 176 302, 157 281, 149 245 Z', { fill: p.hairColor, op: 0.91 }), path('M 173 260 Q 200 275 227 260 Q 218 290 200 295 Q 182 290 173 260 Z', { fill: p.skin })],
-  fullBeard: (p) => [path('M 145 240 C 145 294, 165 342, 200 356 C 235 342, 255 294, 255 240 C 247 277, 226 303, 200 307 C 174 303, 153 277, 145 240 Z', { fill: p.hairColor }), path('M 170 258 Q 200 274 230 258 Q 221 291 200 296 Q 179 291 170 258 Z', { fill: p.skin })],
-  goatee: (p) => [path('M 179 252 C 189 246, 195 247, 200 252 C 205 247, 211 246, 221 252 C 211 255, 206 258, 200 258 C 194 258, 189 255, 179 252 Z', { fill: p.hairColor }), path('M 184 271 Q 200 282 216 271 L 211 313 Q 200 321 189 313 Z', { fill: p.hairColor })],
-  boxedBeard: (p) => [path('M 150 246 L 158 296 Q 174 326 200 331 Q 226 326 242 296 L 250 246 L 240 251 L 232 286 Q 219 306 200 310 Q 181 306 168 286 L 160 251 Z', { fill: p.hairColor })],
+  lightStubble: (p) => beardBand({ ...p, hairColor: mix(p.hairColor, '#3a2a24', 0.45) }, { op: 0.09, chin: 0 }), // a stubble is a shadow of hair, so it is never lighter than the skin: pale hair is pulled toward dark for it
+  heavyStubble: (p) => beardBand({ ...p, hairColor: mix(p.hairColor, '#3a2a24', 0.45) }, { op: 0.2, chin: 0 }),
+  mustache: (p) => mustache(p),
+  shortBeard: (p) => [...beardBand(p, { chin: 8, op: 0.92 }), ...mustache(p, BEARD_PULL)],
+  fullBeard: (p) => [...beardBand(p, { top: 20, cheek: 0.02, lip: 12, chin: 40 }), ...mustache(p, BEARD_PULL)],
+  goatee: (p) => [...mustache(p, (LIP_PULL + BEARD_PULL) / 2), clip(hull(p, 8)), ...onMouth(p, [path('M 184 271 Q 200 282 216 271 L 211 313 Q 200 321 189 313 Z', { fill: p.hairColor })]), UNCLIP],
+  boxedBeard: (p) => beardBand(p, { top: 36, cheek: 0.26, lip: 16, chin: 10, sharp: true }),
 };
 export const FACIAL_HAIR_STYLES = Object.keys(FACIAL_HAIR);
 
@@ -277,9 +376,9 @@ export const HATS = {
   beanie: (p) => [path('M 123 137 C 127 79, 158 52, 200 52 C 242 52, 273 79, 277 137 Z', { fill: p.hat.color }), path('M 119 129 Q 200 113 281 129 L 278 154 Q 200 138 122 154 Z', { fill: p.hat.accent })],
   cuffedBeanie: (p) => [path('M 128 132 C 130 80, 158 56, 200 56 C 242 56, 270 80, 272 132 Z', { fill: p.hat.color }), rect(120, 124, 160, 32, { rx: 9, fill: p.hat.accent })],
   fishermanBeanie: (p) => [path('M 133 125 C 137 89, 159 69, 200 69 C 241 69, 263 89, 267 125 Z', { fill: p.hat.color }), rect(129, 118, 142, 24, { rx: 7, fill: p.hat.accent })],
-  bucketHat: (p) => [path('M 138 108 Q 200 77 262 108 L 272 141 Q 200 125 128 141 Z', { fill: p.hat.color }), path('M 88 141 Q 200 119 312 141 Q 200 164 88 141 Z', { fill: p.hat.accent })],
+  bucketHat: (p) => [path('M 138 108 Q 200 77 262 108 L 272 141 Q 200 125 128 141 Z', { fill: p.hat.color }), path('M 88 139 Q 200 121 312 139 Q 200 170 88 139 Z', { fill: p.hat.accent }), path('M 104 146 Q 200 168 296 146', stroke('#000', 4, 0.12))],
   flatCap: (p) => [path('M 122 127 C 138 86, 171 73, 215 78 C 245 81, 267 95, 277 118 L 268 134 Q 200 123 122 134 Z', { fill: p.hat.color }), path('M 184 126 Q 248 119 289 132 Q 242 139 185 137 Z', { fill: p.hat.accent })],
-  wideBrimFelt: (p) => [path('M 142 112 L 151 68 Q 200 50 249 68 L 258 112 Z', { fill: p.hat.color }), rect(146, 98, 108, 14, { rx: 3, fill: p.hat.accent }), path('M 74 120 Q 200 97 326 120 Q 200 143 74 120 Z', { fill: p.hat.color })],
+  wideBrimFelt: (p) => [path('M 142 112 L 151 68 Q 200 50 249 68 L 258 112 Z', { fill: p.hat.color }), rect(146, 98, 108, 14, { rx: 3, fill: p.hat.accent }), path('M 74 118 Q 200 100 326 118 Q 200 150 74 118 Z', { fill: p.hat.color }), path('M 90 124 Q 200 148 310 124', stroke('#000', 4, 0.14))], // the brim seen from a little above: its front edge dips, and its underside is in shade
   cowboy: (p) => [path('M 145 115 L 155 62 Q 200 42 245 62 L 255 115 Z', { fill: p.hat.color }), path('M 90 119 C 119 128, 148 117, 170 113 L 230 113 C 252 117, 281 128, 310 119 C 292 145, 251 142, 200 136 C 149 142, 108 145, 90 119 Z', { fill: p.hat.color }), rect(148, 98, 104, 16, { fill: p.hat.accent })],
   sunHat: (p) => [path('M 128 126 C 132 74, 162 55, 200 55 C 238 55, 268 74, 272 126 Z', { fill: p.hat.color }), path('M 52 128 C 80 112, 120 104, 200 104 C 280 104, 320 112, 348 128 C 330 150, 300 138, 270 148 C 240 156, 220 140, 200 150 C 180 140, 160 156, 130 148 C 100 138, 70 150, 52 128 Z', { fill: p.hat.color }), path('M 52 128 C 80 112, 120 104, 200 104 C 280 104, 320 112, 348 128', stroke('#000', 2, 0.15)), rect(132, 104, 136, 16, { rx: 4, fill: p.hat.accent })],
   // a hood up: one path with the face opening wound the other way (a nonzero hole), from the crown down over the shoulders; its shadow rims the face
@@ -292,24 +391,36 @@ export const HAT_STYLES = Object.keys(HATS);
 // where each hat's crown meets the head: hair above this line is inside the hat, so it is painted over in the hat's colour and the crown fits the hair
 export const HAT_CROWN = { baseballCap: 137, dadCap: 137, snapback: 137, truckerCap: 137, beanie: 140, cuffedBeanie: 140, fishermanBeanie: 130, bucketHat: 141, flatCap: 134, wideBrimFelt: 120, cowboy: 122, sunHat: 128, hood: 400 };
 export const HAT_HAIR = HAIR_STYLES.filter((s) => s !== 'highBun'); // the styles a hat can sit on
+/** How far from the centre a hat reaches at its crown line: the widest x of any point of its ops within ten units of the line (80 when it has none there). */
+export function hatWidth(ops, crown) {
+  let hw = 0;
+  for (const o of ops) {
+    if (o.k === 'path') { let cmd = 'M', i = 0, x = 0; for (const t of tokens(o.d)) { if (/[a-z]/i.test(t)) { cmd = t.toUpperCase(); i = 0; continue; } if (i % 2 === 0) x = +t; else if (Math.abs(+t - crown) <= 10) hw = Math.max(hw, Math.abs(x - 200)); i++; } }
+    else if (o.k === 'rect' && o.y <= crown + 10 && o.y + o.h >= crown - 10) hw = Math.max(hw, Math.abs(o.x - 200), Math.abs(o.x + o.w - 200));
+    else if (o.k === 'ellipse' && Math.abs(o.cy - crown) <= o.ry + 10) hw = Math.max(hw, Math.abs(o.cx - 200) + o.rx);
+  }
+  return hw || 80;
+}
 
 // tops: each draws its own torso, run past the sheet's bottom (480) so a tilted or lifted sheet shows no edge
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 600 L 60 600 Z'), { fill });
+const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill });
 const dk = (op) => ({ fill: '#000', op }), dkl = (sw, op) => stroke('#000', sw, op, 'butt');
 export const TOPS = {
   crewTshirt: (p) => [torso('M 78 480 C 91 397, 136 370, 166 359 L 234 359 C 264 370, 309 397, 322 480 Z', p.top.color), path('M 161 361 Q 200 389 239 361 Q 230 350 200 349 Q 170 350 161 361 Z', dk(0.13))],
   vneckTshirt: (p) => [torso('M 78 480 C 91 397, 136 370, 167 358 L 233 358 C 264 370, 309 397, 322 480 Z', p.top.color), path('M 165 359 L 200 398 L 235 359 Q 220 350 200 350 Q 180 350 165 359 Z', dk(0.17))],
   heavyweightTshirt: (p) => [torso('M 68 480 C 84 395, 132 366, 165 356 L 235 356 C 268 366, 316 395, 332 480 Z', p.top.color), path('M 158 359 Q 200 389 242 359', dkl(7, 0.14))],
-  polo: (p) => [torso('M 76 480 C 89 400, 132 369, 166 356 L 234 356 C 268 369, 311 400, 324 480 Z', p.top.color), path('M 165 355 L 192 377 L 181 403 L 151 366 Z', dk(0.12)), path('M 235 355 L 208 377 L 219 403 L 249 366 Z', dk(0.12)), line(200, 375, 200, 419, dkl(2, 0.15))],
+  // an op marked `collar` is drawn a second time over the neck's accessories, so a chain goes under the collar
+  // the placket carries the `collar` flag with the wings, so that under a jacket the shirt still shows between them instead of a wedge of the jacket
+  polo: (p) => [torso('M 76 480 C 89 400, 132 369, 166 356 L 234 356 C 268 369, 311 400, 324 480 Z', p.top.color), path('M 192 377 L 208 377 L 220 407 L 180 407 Z', { fill: p.top.color, collar: true }), path('M 165 355 L 192 377 L 181 403 L 151 366 Z', { fill: p.top.color, collar: true }), path('M 235 355 L 208 377 L 219 403 L 249 366 Z', { fill: p.top.color, collar: true }), path('M 165 355 L 192 377 L 181 403 L 151 366 Z', { ...dk(0.12), collar: true }), path('M 235 355 L 208 377 L 219 403 L 249 366 Z', { ...dk(0.12), collar: true }), line(200, 375, 200, 419, dkl(2, 0.15))],
   henley: (p) => [torso('M 76 480 C 90 398, 134 370, 166 357 L 234 357 C 266 370, 310 398, 324 480 Z', p.top.color), path('M 163 360 Q 200 386 237 360', dkl(4, 0.14)), line(200, 368, 200, 414, dkl(2, 0.22)), ...[381, 393, 405].map((y) => ellipse(200, y, 2.3, 2.3, { fill: '#222', op: 0.55 }))],
   crewSweater: (p) => [torso('M 72 480 C 86 394, 130 365, 163 354 L 237 354 C 270 365, 314 394, 328 480 Z', p.top.color), path('M 159 356 Q 200 387 241 356', dkl(8, 0.1)), path('M 84 430 Q 200 416 316 430', stroke('#fff', 1.5, 0.04))],
-  turtleneck: (p) => [torso('M 73 480 C 87 395, 131 365, 165 353 L 235 353 C 269 365, 313 395, 327 480 Z', p.top.color), path('M 169 319 L 231 319 L 238 371 Q 200 388 162 371 Z', { fill: p.top.color }), line(169, 343, 231, 343, dkl(2, 0.08))],
-  hoodie: (p) => [torso('M 67 480 C 81 393, 127 365, 164 352 L 236 352 C 273 365, 319 393, 333 480 Z', p.top.color), path('M 156 355 C 140 363, 132 384, 135 409 L 168 385 Q 200 403 232 385 L 265 409 C 268 384, 260 363, 244 355 Q 221 345 200 347 Q 179 345 156 355 Z', dk(0.11)), line(175, 377, 168, 432, stroke('#ddd', 2, 0.8)), line(225, 377, 232, 432, stroke('#ddd', 2, 0.8))],
-  buttonDown: (p) => [torso('M 74 480 C 88 397, 131 369, 164 356 L 236 356 C 269 369, 312 397, 326 480 Z', p.top.color), path('M 164 356 L 195 377 L 181 409 L 150 365 Z', { fill: '#fff', op: 0.09 }), path('M 236 356 L 205 377 L 219 409 L 250 365 Z', { fill: '#fff', op: 0.09 }), line(200, 377, 200, 600, dkl(1.5, 0.14)), ...[399, 420, 441].map((y) => ellipse(200, y, 2, 2, { fill: '#222', op: 0.55 }))],
+  turtleneck: (p) => [torso('M 73 480 C 87 395, 131 365, 165 353 L 235 353 C 269 365, 313 395, 327 480 Z', p.top.color), path('M 169 319 L 231 319 L 238 371 Q 200 388 162 371 Z', { fill: p.top.color, collar: true }), line(169, 343, 231, 343, { ...dkl(2, 0.08), collar: true })],
+  hoodie: (p) => [torso('M 67 480 C 81 393, 127 365, 164 352 L 236 352 C 273 365, 319 393, 333 480 Z', p.top.color), path('M 144 372 C 138 334, 168 314, 200 312 C 232 314, 262 334, 256 372 Z', { fill: shade(p.top.color, 0.78), hood: true }), path('M 150 356 C 138 366, 134 388, 138 410 L 170 390 Q 200 406 230 390 L 262 410 C 266 388, 262 366, 250 356 Q 226 368, 200 370 Q 174 368, 150 356 Z', dk(0.11)), line(176, 380, 170, 432, stroke('#ddd', 2, 0.8)), line(224, 380, 230, 432, stroke('#ddd', 2, 0.8))], // the hood bunched behind the neck, the cowl's edge low on the chest: nothing of it in front of the neck
+  buttonDown: (p) => [torso('M 74 480 C 88 397, 131 369, 164 356 L 236 356 C 269 369, 312 397, 326 480 Z', p.top.color), path('M 195 377 L 205 377 L 220 413 L 180 413 Z', { fill: p.top.color, collar: true }), path('M 164 356 L 195 377 L 181 409 L 150 365 Z', { fill: p.top.color, collar: true }), path('M 236 356 L 205 377 L 219 409 L 250 365 Z', { fill: p.top.color, collar: true }), path('M 164 356 L 195 377 L 181 409 L 150 365 Z', { fill: '#fff', op: 0.09, collar: true }), path('M 236 356 L 205 377 L 219 409 L 250 365 Z', { fill: '#fff', op: 0.09, collar: true }), line(200, 377, 200, 600, dkl(1.5, 0.14)), ...[399, 420, 441].map((y) => ellipse(200, y, 2, 2, { fill: '#222', op: 0.55 }))],
   // the editorial wardrobe: a bare torso, oversized shapes, sportswear piping, an open shirt
   bare: (p) => [torso('M 72 480 C 86 396, 132 368, 166 357 L 234 357 C 268 368, 314 396, 328 480 Z', p.skin), path('M 150 388 Q 176 378 198 392', dkl(2, 0.1)), path('M 250 388 Q 224 378 202 392', dkl(2, 0.1)), path('M 140 430 Q 170 470 200 452 Q 230 470 260 430', dkl(2.5, 0.07)), line(200, 405, 200, 500, dkl(2, 0.06))],
   tunic: (p) => [torso('M 48 480 C 56 390, 108 356, 160 345 L 240 345 C 292 356, 344 390, 352 480 Z', p.top.color), path('M 162 347 Q 200 372 238 347', dkl(6, 0.1)), line(146, 420, 138, 600, dkl(1.5, 0.06)), line(254, 420, 262, 600, dkl(1.5, 0.06))],
-  hoodieBig: (p) => [torso('M 50 480 C 60 388, 110 356, 158 344 L 242 344 C 290 356, 340 388, 350 480 Z', p.top.color), path('M 138 376 C 132 332, 164 312, 200 310 C 236 312, 268 332, 262 376 Z', { fill: shade(p.top.color, 0.78) }), path('M 150 350 C 136 362, 130 386, 134 412 L 168 388 Q 200 406 232 388 L 266 412 C 270 386, 264 362, 250 350 Q 224 340 200 342 Q 176 340 150 350 Z', dk(0.11)), line(176, 380, 170, 440, stroke('#ddd', 2.4, 0.7)), line(224, 380, 230, 440, stroke('#ddd', 2.4, 0.7)), path('M 120 500 L 280 500 L 274 560 L 126 560 Z', dkl(1.5, 0.08))],
+  hoodieBig: (p) => [torso('M 50 480 C 60 388, 110 356, 158 344 L 242 344 C 290 356, 340 388, 350 480 Z', p.top.color), path('M 138 376 C 132 332, 164 312, 200 310 C 236 312, 268 332, 262 376 Z', { fill: shade(p.top.color, 0.78), hood: true }), path('M 150 350 C 136 362, 130 386, 134 412 L 168 388 Q 200 406 232 388 L 266 412 C 270 386, 264 362, 250 350 Q 224 340 200 342 Q 176 340 150 350 Z', dk(0.11)), line(176, 380, 170, 440, stroke('#ddd', 2.4, 0.7)), line(224, 380, 230, 440, stroke('#ddd', 2.4, 0.7)), path('M 120 500 L 280 500 L 274 560 L 126 560 Z', dkl(1.5, 0.08))],
   trackTop: (p) => [torso('M 74 480 C 88 397, 131 369, 164 356 L 236 356 C 269 369, 312 397, 326 480 Z', p.top.color), path('M 96 440 C 106 400, 130 378, 160 362', stroke(p.top.accent ?? '#b3202a', 5, 1, 'butt')), path('M 304 440 C 294 400, 270 378, 240 362', stroke(p.top.accent ?? '#b3202a', 5, 1, 'butt')), path('M 168 358 L 200 386 L 232 358 L 226 350 L 200 372 L 174 350 Z', { fill: p.top.accent ?? '#b3202a' }), line(200, 386, 200, 470, stroke(p.top.accent ?? '#b3202a', 2, 0.6, 'butt'))],
   openShirt: (p) => [torso('M 72 480 C 86 396, 132 368, 164 356 L 236 356 C 268 368, 314 396, 328 480 Z', p.top.color), path('M 166 357 L 200 478 L 234 357 Z', { fill: p.skin }), path('M 170 366 L 200 470 L 200 400 Q 190 380 170 366 Z', dk(0.12)), path('M 164 356 L 200 478 L 178 478 L 150 372 Z', { fill: shade(p.top.color, 0.7) }), path('M 236 356 L 200 478 L 222 478 L 250 372 Z', { fill: shade(p.top.color, 0.7) }), path('M 155 392 Q 178 384 198 398', dkl(2, 0.1)), path('M 245 392 Q 222 384 202 398', dkl(2, 0.1))],
 };
@@ -317,13 +428,13 @@ export const TOP_STYLES = Object.keys(TOPS);
 
 export const JACKETS = {
   none: () => [],
-  blazer: (p) => [path('M 71 480 C 81 403, 111 374, 161 354 L 193 480 L 200 600 L 60 600 Z', { fill: p.jacket.color }), path('M 329 480 C 319 403, 289 374, 239 354 L 207 480 L 200 600 L 340 600 Z', { fill: p.jacket.color }), path('M 160 354 L 198 387 L 176 424 L 149 369 Z', { fill: '#fff', op: 0.08 }), path('M 240 354 L 202 387 L 224 424 L 251 369 Z', { fill: '#fff', op: 0.08 })],
+  blazer: (p) => [path('M 71 480 C 81 403, 111 374, 161 354 L 193 480 L 200 700 L 60 700 Z', { fill: p.jacket.color }), path('M 329 480 C 319 403, 289 374, 239 354 L 207 480 L 200 700 L 340 700 Z', { fill: p.jacket.color }), path('M 160 354 L 198 387 L 176 424 L 149 369 Z', { fill: '#fff', op: 0.08 }), path('M 240 354 L 202 387 L 224 424 L 251 369 Z', { fill: '#fff', op: 0.08 })],
   denimJacket: (p) => [torso('M 68 480 C 80 395, 122 366, 161 351 L 239 351 C 278 366, 320 395, 332 480 Z', p.jacket.color), path('M 163 352 L 198 380 L 180 410 L 146 365 Z', { fill: '#fff', op: 0.07 }), path('M 237 352 L 202 380 L 220 410 L 254 365 Z', { fill: '#fff', op: 0.07 }), line(200, 381, 200, 600, stroke('#222', 2, 0.25, 'butt')), rect(109, 414, 57, 42, { rx: 3, fill: 'none', stroke: '#222', sw: 1.5, op: 0.2 }), rect(234, 414, 57, 42, { rx: 3, fill: 'none', stroke: '#222', sw: 1.5, op: 0.2 })],
   bomber: (p) => [torso('M 62 480 C 71 398, 120 361, 163 351 L 237 351 C 280 361, 329 398, 338 480 Z', p.jacket.color), line(200, 358, 200, 600, stroke('#1e2021', 4, 0.55, 'butt')), path('M 162 352 Q 200 385 238 352', stroke('#1d1e20', 9, 0.35, 'butt'))],
   leatherJacket: (p) => [torso('M 63 480 C 74 392, 119 361, 160 348 L 240 348 C 281 361, 326 392, 337 480 Z', p.jacket.color), path('M 160 349 L 202 385 L 178 424 L 146 367 Z', { fill: '#fff', op: 0.06 }), path('M 240 349 L 198 385 L 222 424 L 254 367 Z', { fill: '#fff', op: 0.06 }), line(199, 383, 182, 480, stroke('#111', 3, 0.42, 'butt'))],
   puffer: (p) => [torso('M 56 480 C 62 390, 111 358, 160 348 L 240 348 C 289 358, 338 390, 344 480 Z', p.jacket.color), ...[385, 408, 431, 454, 477].map((y) => line(80, y, 320, y, dkl(2, 0.12))), line(200, 352, 200, 600, stroke('#111', 3, 0.25, 'butt'))],
   fieldJacket: (p) => [torso('M 67 480 C 79 395, 121 363, 161 351 L 239 351 C 279 363, 321 395, 333 480 Z', p.jacket.color), line(200, 358, 200, 600, stroke('#111', 2, 0.18, 'butt')), rect(102, 412, 61, 47, { rx: 3, fill: 'none', stroke: '#111', sw: 1.7, op: 0.19 }), rect(237, 412, 61, 47, { rx: 3, fill: 'none', stroke: '#111', sw: 1.7, op: 0.19 })],
-  openJacket: (p) => [path('M 66 480 C 76 400, 108 372, 158 352 L 172 480 L 168 600 L 56 600 Z', { fill: p.jacket.color }), path('M 334 480 C 324 400, 292 372, 242 352 L 228 480 L 232 600 L 344 600 Z', { fill: p.jacket.color }), path('M 158 352 L 176 392 L 172 480 L 150 372 Z', { fill: '#000', op: 0.18 }), path('M 242 352 L 224 392 L 228 480 L 250 372 Z', { fill: '#000', op: 0.18 })], // hanging open: the chest shows between the panels
+  openJacket: (p) => [path('M 66 480 C 76 400, 108 372, 158 352 L 172 480 L 168 700 L 56 700 Z', { fill: p.jacket.color }), path('M 334 480 C 324 400, 292 372, 242 352 L 228 480 L 232 700 L 344 700 Z', { fill: p.jacket.color }), path('M 158 352 L 176 392 L 172 480 L 150 372 Z', { fill: '#000', op: 0.18 }), path('M 242 352 L 224 392 L 228 480 L 250 372 Z', { fill: '#000', op: 0.18 })], // hanging open: the chest shows between the panels
 };
 export const JACKET_STYLES = Object.keys(JACKETS);
 
@@ -337,7 +448,7 @@ export const ACCESSORIES = {
   pendantNecklace: { at: 'neck', ops: () => [path('M 163 369 Q 200 398 237 369', stroke('#a49b81', 2.3)), ellipse(200, 397, 5, 7, { fill: '#8f8267' })] },
   earbuds: { at: 'ear', ops: () => [ellipse(120, 213, 4, 7, { fill: '#e3e3df' }), ellipse(280, 213, 4, 7, { fill: '#e3e3df' }), line(120, 218, 119, 230, stroke('#ddd', 2)), line(280, 218, 281, 230, stroke('#ddd', 2))] },
   overEarHeadphones: { at: 'over', ops: () => [path('M 121 206 C 108 153, 131 111, 200 105 C 269 111, 292 153, 279 206', stroke('#303438', 10)), rect(106, 188, 24, 48, { rx: 10, fill: '#26292c' }), rect(270, 188, 24, 48, { rx: 10, fill: '#26292c' })] },
-  tie: { at: 'neck', ops: (p) => [path('M 192 370 L 208 370 L 213 384 L 205 462 L 195 462 L 187 384 Z', { fill: p.top.accent ?? '#b3202a' }), path('M 192 370 L 208 370 L 205 380 L 195 380 Z', { fill: '#000', op: 0.25 })] },
+  tie: { at: 'tie', ops: (p) => [path('M 192 370 L 208 370 L 213 384 L 205 462 L 195 462 L 187 384 Z', { fill: p.top.accent ?? '#b3202a' }), path('M 192 370 L 208 370 L 205 380 L 195 380 Z', { fill: '#000', op: 0.25 })] },
 };
 export const ACCESSORY_STYLES = Object.keys(ACCESSORIES);
 const accessories = (p, at) => p.accessories.flatMap((n) => (ACCESSORIES[n]?.at === at ? ACCESSORIES[n].ops(p) : []));
@@ -354,33 +465,41 @@ const INKL = (sw, op = 0.7, color = '#1c1a1e') => stroke(color, sw, op);
 const PALE = '#ece6e0', BLACKP = '#141216', REDP = '#b3202a', GOLDP = '#d9b34a';
 // a physical mask, not paint: a hard shell a little inside the face outline (skin shows at its rim), a dark edge, its
 // own shading (a shadow down the far side, a sheen on the lit cheek) and dark holes the wearer's eyes look out of;
-// on the skin slot, so the eyes, nose and mouth come over it
-const maskOf = (p, fill, op = 0.94) => {
-  const cy = 112 + p.face.height / 2, ex = p.eyes.spacing / 2, ey = p.eyes.y, side = p.light.side;
-  const shell = mapXY([path(facePath(p))], scaleAbout(200, 0.955), scaleAbout(cy, 0.965))[0].d;
+// on the skin slot, so the eyes and nose come over it; the wearer's mouth does not (portraitOps drops it under a
+// mask), so a mask with no graphic of its own gets a painted mouth that never moves (`mouth`)
+const maskOf = (p, fill, op = 0.94, mouth = false) => {
+  const cy = 112 + p.face.height / 2, ex = p.eyes.spacing / 2, ey = p.eyes.y, side = p.light.side, my = p.mouth.y;
+  const shell = mapXY([path(facePath({ face: { ...p.face, skew: 0, asym: {} } }))], scaleAbout(200, 0.955), scaleAbout(cy, 0.965))[0].d; // a mask is a made thing: a perfect symmetric curve, none of the face's own irregularity
   return [path(shell, facePaint(fill, op)), path(shell, stroke('#000', 2.4, 0.22)),
     ellipse(200 - 34 * side, cy + 10, 30, 62, facePaint('#000', 0.09)), path(`M ${200 + 22 * side} ${ey + 20} Q ${200 + 46 * side} ${ey + 46} ${200 + 40 * side} ${ey + 76}`, stroke('#fff', 9, 0.12)),
-    ellipse(200 - ex, ey, 21, 13, facePaint('#1a1418', 0.5)), ellipse(200 + ex, ey, 21, 13, facePaint('#1a1418', 0.5))];
+    ellipse(200 - ex, ey, 21, 13, facePaint('#1a1418', 0.5)), ellipse(200 + ex, ey, 21, 13, facePaint('#1a1418', 0.5)),
+    ...(mouth ? [path(`M 182 ${my} Q 200 ${my + 3} 218 ${my}`, stroke('#2a1a1c', 1.6, 0.4))] : [])];
 };
-const hollows = (p, op) => mapX([path('M 126 232 Q 158 262 178 298 Q 148 270 126 232 Z', facePaint('#4a2a24', op)), path('M 274 232 Q 242 262 222 298 Q 252 270 274 232 Z', facePaint('#4a2a24', op))], scaleAbout(200, p.face.width / 156)); // the cheeks sucked in under the bone
+const maskHoles = (p) => [ellipse(200 - p.eyes.spacing / 2, p.eyes.y, 21, 13), ellipse(200 + p.eyes.spacing / 2, p.eyes.y, 21, 13)].map(ellipsePath).join(' '); // the two holes of `maskOf`, as one clip: all the wearer shows through a mask
+const faceY = (p) => { const k = (p.face?.height ?? 204) / 204; return (y) => 112 + (y - 112) * k; }; // a y authored for the 204-tall head, on this face
+const hollows = (p, op) => mapXY([path('M 126 232 Q 158 262 178 298 Q 148 270 126 232 Z', facePaint('#4a2a24', op)), path('M 274 232 Q 242 262 222 298 Q 252 270 274 232 Z', facePaint('#4a2a24', op))], scaleAbout(200, p.face.width / 156), faceY(p)); // the cheeks sucked in under the bone
 const onEyes = (p, ops) => mapXY(ops, scaleAbout(200, p.eyes.spacing / 68), (y) => y + p.eyes.y - 196); // ops drawn for the default eyes follow this pair
 export const MAKEUP = {
   none: {},
-  // makeup, kept on the model: the pale base is thin enough for the face to read through, and the modelling is put back over it with the sockets and cheeks sunk
-  paleCorpseBase: { skin: (p) => [path(facePath(p), facePaint('#e6dfd8', 0.6)), ellipse(200 - 36 * p.light.side, 240, 40, 56, facePaint('#4a2a34', 0.1)), ...hollows(p, 0.14), ...onEyes(p, [ellipse(166, 202, 24, 16, facePaint('#3b2331', 0.22)), ellipse(234, 202, 24, 16, facePaint('#3b2331', 0.22))])] },
-  whiteMaskBase: { mask: true, skin: (p) => maskOf(p, '#f3f0ea') },
+  // makeup, kept on the model: paint is thin enough for the face to read through it, and the modelling goes back on over it
+  whiteMaskBase: { mask: true, skin: (p) => maskOf(p, '#f3f0ea', 0.94, true) },
   darkEyeSockets: { fit: 'eyes', skin: () => [ellipse(166, 198, 25, 17, facePaint('#2b1c26', 0.6)), ellipse(234, 198, 25, 17, facePaint('#2b1c26', 0.6))] },
   heavyUnderEye: { fit: 'eyes', skin: () => [path('M 144 204 Q 166 230 188 204 Q 166 216 144 204 Z', facePaint('#3b2331', 0.55)), path('M 212 204 Q 234 230 256 204 Q 234 216 212 204 Z', facePaint('#3b2331', 0.55))] },
   sharpEditorialEyes: { fit: 'eyes', face: () => [path('M 188 194 Q 174 184 160 191 L 148 183', stroke(BLACKP, 3.2)), path('M 212 194 Q 226 184 240 191 L 252 183', stroke(BLACKP, 3.2))] },
   blackLipLine: { face: (p) => [path(`M ${200 - p.mouth.width / 2} ${p.mouth.y} Q 200 ${p.mouth.y + 4} ${200 + p.mouth.width / 2} ${p.mouth.y}`, stroke(BLACKP, 3.6)), line(200, p.mouth.y + 6, 200, p.mouth.y + 42, stroke(BLACKP, 3))] },
   geometricEyePaint: { fit: 'eyes', face: () => [path('M 212 168 L 258 168 L 236 226 Z', facePaint(BLACKP, 0.86)), rect(144, 191, 44, 9, facePaint(BLACKP, 0.86))] },
-  asymmetricGraphicPaint: { face: (p) => [clip(facePath(p)), ...mapX([path('M 200 112 L 122 150 L 128 300 L 200 334 Z', facePaint(BLACKP, 0.82))], scaleAbout(200, p.face.width / 156)), UNCLIP] }, // paint on one half of the face: clipped to it, or it hangs beside the head
+  // a half mask: a hard shell over one side of the face with an eye hole cut in it, taking the face's own outline
+  // (clipped to it, and its division drawn from the real crown to the real chin), so it covers exactly half of any
+  // head instead of a fixed polygon that misses a long chin and overruns a short one
+  asymmetricGraphicPaint: { face: (p) => { const top = 112, bot = 112 + p.face.height + 16 * p.face.chin, x = 200 + 10, hole = ellipsePath({ cx: 200 - p.eyes.spacing / 2, cy: p.eyes.y, rx: 20, ry: 13 });
+    const half = `M 20 ${top - 20} L ${x} ${top - 20} L ${x - 24} ${bot + 20} L 20 ${bot + 20} Z`;
+    return [clip(facePath(p)), path(`${half} ${hole}`, { ...facePaint(BLACKP, 0.88), rule: 'evenodd' }), path(`M ${x} ${top - 20} L ${x - 24} ${bot + 20}`, stroke('#000', 3, 0.45)), path(hole, stroke('#000', 2.5, 0.35)), UNCLIP]; } },
   // the clown faces are masks with their graphics on the shell, under the eyes, so the wearer looks out through them
   clownGraphic: { mask: true, skin: (p) => [...maskOf(p, '#f3f0ea'), ...onEyes(p, [path('M 166 170 L 188 197 L 166 224 L 144 197 Z', facePaint(BLACKP, 0.9)), path('M 234 170 L 256 197 L 234 224 L 212 197 Z', facePaint(BLACKP, 0.9))]), rect(191, p.mouth.y - 8, 18, 16, facePaint(REDP, 0.9))] },
   smearedClown: { mask: true, skin: (p) => [...maskOf(p, '#efe9e2', 0.9), ...onEyes(p, [path('M 150 240 C 170 232, 186 250, 176 268 C 166 276, 150 262, 150 240 Z', facePaint(REDP, 0.4)), path('M 250 240 C 230 232, 214 250, 224 268 C 234 276, 250 262, 250 240 Z', facePaint(REDP, 0.4)), path('M 146 180 C 160 176, 178 186, 186 208 C 172 214, 154 206, 146 180 Z', facePaint(BLACKP, 0.75)), path('M 254 180 C 240 176, 222 186, 214 208 C 228 214, 246 206, 254 180 Z', facePaint(BLACKP, 0.75))])], face: (p) => [path(`M 184 ${p.mouth.y - 6} Q 200 ${p.mouth.y + 14} 216 ${p.mouth.y - 6}`, stroke(REDP, 6, 0.6))] },
   severeContour: { skin: (p) => hollows(p, 0.32) },
   metallicEyeAccent: { fit: 'eyes', face: () => [path('M 148 186 Q 166 175 184 186', stroke(GOLDP, 4.5, 0.85)), path('M 216 186 Q 234 175 252 186', stroke(GOLDP, 4.5, 0.85))] },
-  foreheadMark: { fit: 'face', face: () => [ellipse(200, 150, 6, 6, { fill: 'none', stroke: BLACKP, sw: 2.2 }), line(200, 158, 200, 172, stroke(BLACKP, 2.2))] },
+  foreheadMark: { face: (p) => { const by = p.eyes.y - p.eyes.browLift; return [ellipse(200, by - 46, 6, 6, { fill: 'none', stroke: BLACKP, sw: 2.2 }), line(200, by - 38, 200, by - 24, stroke(BLACKP, 2.2))]; } }, // between and above the brows, wherever this face carries them, so it never lands on one
   cheekMark: { fit: 'face', face: () => [line(234, 246, 244, 256, stroke(BLACKP, 2)), line(244, 246, 234, 256, stroke(BLACKP, 2))] },
 };
 export const MAKEUP_STYLES = Object.keys(MAKEUP);
@@ -426,7 +545,6 @@ export const PROPS = {
   none: {},
   handsAtSides: {},
   gloves: {}, // hands at the sides are below the sheet; gloves show on whatever the hands do hold (handColor)
-  goldField: { back: () => [ellipse(200, 200, 172, 172, { fill: GOLDP, op: 0.2 }), ellipse(200, 200, 172, 172, { fill: 'none', stroke: GOLDP, sw: 3, op: 0.4 }), ellipse(200, 200, 118, 118, { fill: GOLDP, op: 0.14 })] }, // a gilded ground far behind the head: two discs and a rim
   chain: { neck: () => [path('M 150 368 Q 200 424 250 368', stroke('#c9a03c', 7)), path('M 150 368 Q 200 424 250 368', stroke('#fff0c0', 2, 0.5)), ellipse(200, 396, 9, 11, { fill: '#c9a03c' })] },
   flamingFlower: { front: (p) => [...arm(p, 1, { lift: 0.15, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), ...stem(262, 458, 272, 386), ...petals(274, 380, '#b3202a'), path('M 274 362 C 260 344, 268 322, 276 306 C 280 324, 294 336, 286 352 C 298 340, 298 328, 294 316 C 304 336, 298 358, 274 362 Z', { fill: '#e8862a' }), path('M 274 358 C 266 344, 272 330, 276 322 C 280 334, 286 342, 282 352 Z', { fill: '#ffd94a' })] },
   flower: { front: (p) => [...arm(p, 1, { lift: 0.15, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), ...stem(262, 458, 272, 386), ...petals(274, 380, '#efe6d6', 7, 14)] },
@@ -455,7 +573,6 @@ const LAYERS = [['makeup', MAKEUP], ['marks', MARKS], ['props', PROPS]];
 const overlays = (p, at, fits) => LAYERS.flatMap(([key, reg]) => (p[key] ?? []).flatMap((n) => { const d = reg[n], f = d?.[at]; if (!f) return []; const fit = typeof d.fit === 'string' ? d.fit : d.fit?.[at]; return fit ? fits[fit](f(p)) : f(p); }));
 
 // metallic cloth: SVG has no gold lamé, so the garment gets dark folds falling from the shoulders, sharp pale patches beside them and a few near-white slivers, all clipped to its shape; the seed places them
-const lcg = (seed) => { let x = (Math.abs(Math.floor(seed * 7919)) % 233280) || 7; return () => (x = (x * 9301 + 49297) % 233280) / 233280; };
 export function sheen(d, color, seed = 1, [y0, y1] = [340, 600], n = 6, rule) {
   const r = lcg(seed), out = [clip(d, rule)], span = y1 - y0;
   for (let i = 0; i < n; i++) { const x = 50 + r() * 300, bend = (r() - 0.5) * 70, w = 6 + r() * 16; out.push(path(`M ${x} ${y0} C ${x + bend} ${y0 + span * 0.3}, ${x - bend} ${y0 + span * 0.65}, ${x + bend * 0.5} ${y1} L ${x + bend * 0.5 + w} ${y1} C ${x - bend + w} ${y0 + span * 0.65}, ${x + bend + w} ${y0 + span * 0.3}, ${x + w} ${y0} Z`, { fill: shade(color, 0.5), op: 0.38 })); }
@@ -478,45 +595,100 @@ export const DETAILS = {
   crowsFeet: { fit: 'eyes', ops: () => [line(144, 192, 137, 188, DL('#6b473b', 1, 0.32)), line(144, 197, 136, 198, DL('#6b473b', 1, 0.32)), line(256, 192, 263, 188, DL('#6b473b', 1, 0.32)), line(256, 197, 264, 198, DL('#6b473b', 1, 0.32))] },
   foreheadLines: { fit: 'face', ops: () => [path('M 168 145 Q 200 139 232 145', DL('#6f493d', 1.2, 0.2)), path('M 174 153 Q 200 148 226 153', DL('#6f493d', 1.1, 0.16))] },
   dimples: { fit: 'face', ops: () => [path('M 166 269 Q 170 274 174 269', DL('#754b3d', 1.4, 0.42)), path('M 226 269 Q 230 274 234 269', DL('#754b3d', 1.4, 0.42))] },
-  cleftChin: { fit: 'face', ops: (p) => mapXY([path('M 196 297 Q 200 303 204 297', DL('#744a3d', 1.4, 0.4))], (x) => x, (y) => y + p.face.height - 204) },
+  cleftChin: { fit: 'face', ops: () => [path('M 196 297 Q 200 303 204 297', DL('#744a3d', 1.4, 0.4))] },
   noseRingLeft: { fit: 'face', ops: () => [ellipse(191, 248, 4.5, 4.5, { fill: 'none', stroke: '#aaa397', sw: 1.7 })] },
 };
 export const DETAIL_STYLES = Object.keys(DETAILS);
 const details = (p, fitFace, fitEyes) => p.details.flatMap((n) => { const d = DETAILS[n]; return d ? (d.fit === 'eyes' ? fitEyes : fitFace)(d.ops(p)) : []; });
 
+// Cloth is not flat: every garment gets the head's shadow across its chest, folds falling from the shoulders, the
+// pull at the armpits, creases at the sleeve seams and a thickness to its neckline, all clipped to its own shape and
+// placed by the seed. A bare torso keeps only the head's shadow. The hems are below the sheet.
+const NECKLINES = { crewTshirt: 'M 161 361 Q 200 389 239 361', heavyweightTshirt: 'M 158 359 Q 200 389 242 359', henley: 'M 163 360 Q 200 386 237 360', crewSweater: 'M 159 356 Q 200 387 241 356', polo: 'M 165 355 L 192 377 L 200 386 L 208 377 L 235 355', vneckTshirt: 'M 165 359 L 200 398 L 235 359', buttonDown: 'M 164 356 L 195 377 L 200 386 L 205 377 L 236 356', tunic: 'M 162 347 Q 200 372 238 347', trackTop: 'M 168 358 L 200 386 L 232 358', denimJacket: 'M 163 352 L 198 380 L 202 380 L 237 352', bomber: 'M 162 352 Q 200 385 238 352', leatherJacket: 'M 160 349 L 202 385 L 240 349', fieldJacket: 'M 161 351 Q 200 384 239 351', puffer: 'M 160 348 Q 200 380 240 348' };
+const JACKET_EDGE = { blazer: ['M 161 354 L 193 480 L 200 700', 'M 239 354 L 207 480 L 200 700'], openJacket: ['M 158 352 L 172 480 L 168 700', 'M 242 352 L 228 480 L 232 700'] }; // the inner edges of the jackets that hang open: they drop a shadow on the shirt
+function cloth(p, ops, style, color, seed) {
+  const d = region(ops); if (!d) return ops;
+  const rnd = lcg(seed), dark = shade(color, 0.55), neckline = NECKLINES[style], bare = style === 'bare';
+  const fold = (x0, y0, x1, y1, x2, y2, sw, op) => [path(`M ${x0} ${y0} Q ${x1} ${y1} ${x2} ${y2}`, stroke(dark, sw, op, 'butt')), path(`M ${x0 + 3} ${y0 + 2} Q ${x1 + 3} ${y1 + 2} ${x2 + 3} ${y2 + 2}`, stroke('#fff', sw * 0.6, op * 0.4, 'butt'))]; // a fold: a dark valley with a lit ridge beside it
+  const out = [clip(d), ...(bare // the head's and the neck's shadow on the chest: on cloth it has an edge, on skin it must not, or its lower edge reads as a neckline and a bare torso looks dressed
+    ? soft(200, 368, 78, 36, '#000', 0.18)
+    : [path(`M 130 358 Q 200 346 270 358 Q 262 ${392 + (p.neck.height - 72) * 0.4} 200 402 Q 138 392 130 358 Z`, { fill: '#000', op: 0.12 }), path('M 150 358 Q 200 350 250 358 Q 244 384 200 390 Q 156 384 150 358 Z', { fill: '#000', op: 0.07 })])];
+  const sd = p.light.side || -1, c = p.light.contrast ?? 1, a = 0.5 + 0.5 * (p.light.amount ?? 0.5);
+  out.push(...soft(200 - sd * 150, 520, 125, 260, '#000', 0.15 * c * a), ...soft(200 + sd * 110, 480, 70, 200, '#fff', 0.06 * a)); // the torso is a cylinder under the same light as the face: its far side in shadow, its near side lit, so a garment is a volume and not a block
+  for (const s of [-1, 1]) out.push(path(`M ${200 + s * 118} 470 C ${200 + s * 104} 410, ${200 + s * 76} 380, ${200 + s * 40} 366`, stroke('#fff', 14, 0.05 * a))); // the top of each shoulder catches the light
+  if (!bare) for (const s of [-1, 1]) {
+    const x = 200 + s * (78 + rnd() * 14);
+    out.push(...fold(x, 370 + rnd() * 10, x - s * (14 + rnd() * 14), 424, x - s * (30 + rnd() * 24), 500 + rnd() * 40, 4.5 + rnd() * 3, 0.13), ...fold(x + s * 10, 366, x + s * 2, 410, x - s * (8 + rnd() * 10), 470 + rnd() * 30, 2.5 + rnd() * 2, 0.09)); // the shoulder's folds falling to the chest
+    out.push(path(`M ${200 + s * 100} ${440 + rnd() * 10} Q ${200 + s * 82} 428 ${200 + s * 56} ${438 + rnd() * 8}`, stroke(dark, 3, 0.14, 'butt')), path(`M ${200 + s * 104} 460 Q ${200 + s * 86} 448 ${200 + s * 64} 460`, stroke(dark, 2, 0.09, 'butt'))); // the pull at the armpit
+    out.push(path(`M ${200 + s * (88 + rnd() * 4)} ${386 + rnd() * 4} C ${200 + s * 100} 420, ${200 + s * 104} 452, ${200 + s * 100} 484`, stroke(dark, 3, 0.16 * c, 'butt')), path(`M ${200 + s * 91} 388 C ${200 + s * 103} 422, ${200 + s * 107} 452, ${200 + s * 103} 484`, stroke('#fff', 1.4, 0.1))); // the sleeve seam from the shoulder point to the armpit, a dark line with a lit edge: what makes the arm a separate volume from the chest
+  }
+  if (neckline && !bare) out.push(path(neckline, stroke(dark, 5, 0.14, 'butt')), path(neckline, stroke('#fff', 1.6, 0.14)), ...mapXY([path(neckline, stroke('#000', 7, 0.14, 'butt'))], (x) => x, (y) => y + 5)); // the neckline: its rib's thickness, a lit edge, the shadow it drops on the chest
+  return [...ops, ...out, UNCLIP];
+}
+// no two edges at the same precision: every fine stroke's weight and opacity vary a little by the seed, so brow ends,
+// hair contours, seams, lip edges and frames stop being one pen; the wide strokes (arms, rims, bands) keep their size
+const rough = (ops, seed) => { const rnd = lcg(seed + 29); return ops.map((o) => (o.stroke && o.k !== 'clip' && (o.sw ?? 1) <= 6 ? { ...o, sw: Math.round((o.sw ?? 1) * (0.8 + 0.4 * rnd()) * 100) / 100, op: Math.min(1, Math.round((o.op ?? 1) * (0.88 + 0.24 * rnd()) * 100) / 100) } : o)); };
+
+/** Where the eye line sits on this face: `eyes.y` is authored for the 204-tall head and laid out by the face's height (what a world centres its framing on). */
+export const eyeY = (p) => faceY(p)(p.eyes?.y ?? DEFAULTS.eyes.y) + headDrop(p); // on the sheet: the face's layout, plus how far the head moved on the neck to seat its chin
 /** The drawing, back to front, without the background: a plain list of primitives for `toSvg` or `drawOn`. */
 export function portraitOps(options = {}) {
-  const p = merge(DEFAULTS, options), hair = hairOf(p), q = p.pose;
-  const fit = (ops) => (p.face.width === 156 ? ops : mapX(ops, scaleAbout(200, p.face.width / 156))); // hair, ears, beard, hat and cheeks are drawn for the default head and follow this one's width
+  const p = merge(DEFAULTS, options), hair = hairOf(p), q = p.pose, turn = q.turn ?? 0, sd = p.light.side || -1, fy = faceY(p);
+  p.eyes.y = fy(p.eyes.y); p.mouth.y = fy(p.mouth.y); p.nose.length *= p.face.height / 204; // the features are authored for the 204 head and laid out by this face's height: a long face is long between its features, not a face with a tall chin, and a short one is not a face with the mouth on the jaw
+  const fit = (ops) => (p.face.width === 156 ? ops : mapX(ops, scaleAbout(200, p.face.width / 156))); // hair, ears, hat and cheeks are drawn for the default head and follow this one's width (the hair and hat hang from the crown, so the height is theirs to fill)
+  const fitFace = (ops) => mapXY(ops, scaleAbout(200, p.face.width / 156), fy); // the beard, the face's details and its paints follow the width and the height
   const fitEyes = (ops) => mapXY(ops, scaleAbout(200, p.eyes.spacing / 68), (y) => y + p.eyes.y - 196);
+  const tf = (ops, k) => (turn ? mapX(ops, (x) => x + k * turn) : ops); // the turn: the features slide across the head further than the head's own outline and hair, a cheap quarter turn
   const headG = push(q.headX, HEAD_DY + headDrop(p) + q.headY, q.headTilt, NECK_BASE); // the head sits HEAD_DY down the neck and moves about its base; the back hair rides with it but sits behind the neck, so the group opens twice
-  const neckG = push(q.headX * 0.3, 0, q.headTilt * 0.3, [200, 302 + p.neck.height]); // the neck follows a third of the head's move, pivoting at its base
+  const neckG = push(q.headX * 0.3, 0, q.headTilt * NECK_FOLLOW, [200, 302 + p.neck.height]); // the neck slides a third of the head's way and turns less: the skull pivots on the neck, the neck does not bend under it
   const crown = HAT_CROWN[p.hat.style], back = fit(hair.back), front = fit(hair.front);
-  const solid = (o) => o.fill && o.fill !== 'none' && (o.op ?? 1) >= 0.5, region = (ops) => ops.filter((o) => solid(o) && (o.k === 'path' || o.k === 'ellipse')).map((o) => (o.k === 'ellipse' ? ellipsePath(o) : o.d)).join(' '); // the filled shapes as one clip region
   const grain = HAIR_TEXTURE[p.hair.style] ?? 'strands', mass = region(grain === 'curls' ? [...back, ...front] : front); // the hair's mass: the front, or with the back for curls (an afro's mass is behind the head)
   const textured = (ops, mass, grainOps) => (grain !== 'none' && mass ? [...ops, clip(mass), ...grainOps, ...soft(200, 96, 46, 22, '#fff', 0.14), UNCLIP] : ops); // the hair with its grain (strands combed from the crown, or curls) and a light on it inside its mass, so it is hair and not a cap
   const backHair = grain === 'curls' ? textured(back, region(back), curls(p)) : back, frontHair = textured(front, region(front), grain === 'curls' ? curls(p) : strands(p)); // the back's texture goes on behind the head, since the face sits inside an afro's footprint
-  const hairShadow = front.length ? [clip(facePath(p)), ...mapXY(front.filter((o) => o.fill && o.fill !== 'none' && (o.op ?? 1) >= 0.5), (x) => x, (y) => y + 6).map((o) => ({ ...o, fill: '#000', op: 0.14 })), UNCLIP] : []; // the hair's cast shadow on the forehead: the front hair a little lower, dark, inside the face
-  const beardOps = fit((FACIAL_HAIR[p.facialHair.style] ?? FACIAL_HAIR.none)(p)), beardMass = region(beardOps.filter((o) => o.fill === p.hairColor)); // the beard's own hair, not the skin it leaves around the mouth or a stubble wash
-  const beard = beardMass ? [...beardOps, clip(beardMass), ...strands(p, { from: [200, 258], a0: 0.4, a1: Math.PI - 0.4, len: 55, n: 16 }), UNCLIP] : beardOps, masked = p.makeup.some((n) => MAKEUP[n]?.mask); // a mask goes on over the beard, so the beard goes under the skin overlays
-  const asHat = (ops) => ops.filter((o) => (o.op ?? 1) >= 0.5).map((o) => ({ ...o, ...(o.fill && o.fill !== 'none' ? { fill: p.hat.color } : {}), ...(o.stroke ? { stroke: p.hat.color } : {}) })); // the hair in the hat's colour (its glosses dropped)
-  const cover = crown ? [clip(`M -100 ${crown} L 500 ${crown} L 500 -200 L -100 -200 Z`), ...asHat(back), ...asHat(front), UNCLIP] : []; // the hat covers everything of the hair above its line: the crown takes the hair's shape
-  const fits = { face: fit, eyes: fitEyes }, wide = (ops) => (p.body.width === 1 ? ops : mapX(ops, scaleAbout(200, p.body.width))); // the torso, its print and the arms follow the body's width
+  const hairShadow = front.length ? [clip(facePath(p)), ...mapXY(front.filter(solid), (x) => x, (y) => y + 6).map((o) => ({ ...o, fill: '#000', op: 0.14 })), UNCLIP] : []; // the hair's cast shadow on the forehead: the front hair a little lower, dark, inside the face
+  const beard = (FACIAL_HAIR[p.facialHair.style] ?? FACIAL_HAIR.none)(p), masked = p.makeup.some((n) => MAKEUP[n]?.mask); // the beard is built on this face's own outline and mouth (beardBand); a mask goes on over the beard, so the beard goes under the skin overlays
+  const plainHat = fit((HATS[p.hat.style] ?? HATS.none)(p)); // the hat before any sheen: what the skirt below is built from, since a sheen's patches are clipped to the garment and a copy of them would leave loose bars on the background
+  let hat = plainHat; if (p.hat.metal) hat = metalize(hat, p.hat.color, p.seed + 2, [40, 390]);
+  const hw = hatWidth(hat, crown), under = (ops) => (crown && ops.length ? [clip(`M -100 900 L -100 ${crown + 50} L ${200 - hw - 50} ${crown + 50} L ${200 - hw} ${crown} L ${200 + hw} ${crown} L ${200 + hw + 50} ${crown + 50} L 500 ${crown + 50} L 500 900 Z`), ...ops, UNCLIP] : ops); // under a hat the hair stops at the crown line and is pressed in under the hat's edge: the mass above is inside the hat (a cap does not take an afro's shape), and what is below springs out past the brim at a slant, not as a shelf
+  // a crown's bottom edge arcs upward, so cutting the hair level with the crown line leaves a crescent of bare
+  // forehead under the arc. The hat wears a skirt to fill it: its own filled shapes again, HAT_TUCK lower, in its own
+  // colour, clipped to above the line so it can never show below the hat. Drawn under the hat, so only the crescent shows.
+  const skirt = crown && crown < 300 && plainHat.length ? [clip(`M -100 -200 L 500 -200 L 500 ${crown} L -100 ${crown} Z`), ...mapXY(plainHat.filter(solid), (x) => x, (y) => y + HAT_TUCK).map((o) => ({ ...o, fill: p.hat.color, op: 1 })), UNCLIP] : []; // only a hat that sits on the skull has a crescent to fill: a hood covers the whole head, and shifting its face opening down would lay a band across the face
+  const brim = crown && crown < 300 ? [clip(`${facePath(p)} ${region([...front, ...back])}`), rect(200 - hw, crown, 2 * hw, 16, { fill: '#000', op: 0.14 }), rect(200 - hw, crown, 2 * hw, 30, { fill: '#000', op: 0.07 }), UNCLIP] : []; // the hat's shadow on the forehead and on the hair under its edge: no wider than the hat itself and never above its line, or it shows past the brim as a pale tab where the hair was pressed in
+  const specs = glasses(p), specShadow = specs.length ? [clip(facePath(p)), ...mapXY(specs.filter((o) => o.stroke), (x) => x - 2 * sd, (y) => y + 4).map((o) => ({ ...o, stroke: '#000', op: 0.16 })), UNCLIP] : []; // the frames drop a shadow on the face, away from the light
+  const fits = { face: fitFace, eyes: fitEyes }, wide = (ops) => (p.body.width === 1 ? ops : mapX(ops, scaleAbout(200, p.body.width))); // the torso, its print and the arms follow the body's width
+  const shear = (ops) => (q.shoulder ? mapPts(ops, (x, y) => [x, y + q.shoulder * 0.1 * (x - 200)]) : ops); // one shoulder dropped: the torso sheared about its centre
   let top = (TOPS[p.top.style] ?? TOPS.crewTshirt)(p); if (p.top.metal) top = metalize(top, p.top.color, p.seed); if (p.top.graphic && GRAPHICS[p.top.graphic]) top = [...top, clip(top[0].d), ...GRAPHICS[p.top.graphic](p), UNCLIP]; // every top's first op is its torso
+  const hoodBack = top.filter((o) => o.hood); if (hoodBack.length) top = top.filter((o) => !o.hood); // a hood bunched behind the head goes behind the neck, or it swallows it: the chin ends up resting on a dome of cloth
+  const collar = top.filter((o) => o.collar); top = cloth(p, top, p.top.style, p.top.style === 'bare' ? p.skin : p.top.color, p.seed + 11);
   const lifted = p.props.flatMap((n) => PROPS[n]?.lift ?? []); // the sides whose arm a prop raises: the garment's shoulder slope is cut away there and the side under the arm is trimmed to an armpit notch, so the shirt still reaches the arm; the arm's cap and sleeve take the shoulder's place
   const armpit = lifted.length ? [clip(`M -100 -200 L 500 -200 L 500 700 L -100 700 Z ${lifted.map((sd) => `M ${200 + 54 * sd} 300 L ${200 + 220 * sd} 300 L ${200 + 220 * sd} 600 L ${200 + 96 * sd} 600 L ${200 + 88 * sd} 424 L ${200 + 58 * sd} 392 Z`).join(' ')}`, 'evenodd')] : [];
-  let jacket = (JACKETS[p.jacket.style] ?? JACKETS.none)(p); if (p.jacket.metal) jacket = metalize(jacket, p.jacket.color, p.seed + 1);
-  let hat = fit((HATS[p.hat.style] ?? HATS.none)(p)); if (p.hat.metal) hat = metalize(hat, p.hat.color, p.seed + 2, [40, 390]);
-  return [
+  let jacket = (JACKETS[p.jacket.style] ?? JACKETS.none)(p); if (p.jacket.metal) jacket = metalize(jacket, p.jacket.color, p.seed + 1); if (jacket.length) jacket = cloth(p, jacket, p.jacket.style, p.jacket.color, p.seed + 12);
+  const edge = JACKET_EDGE[p.jacket.style] ? [clip(top[0].d), ...JACKET_EDGE[p.jacket.style].map((d) => path(d, stroke('#000', 14, 0.2, 'butt'))), UNCLIP] : []; // an open jacket's shadow on the shirt beside its edge
+  // A neckline is an opening: the neck is drawn once behind the clothes, so every collar covers its base, and once
+  // more through the hole the outermost garment's neckline makes (each `NECKLINES` curve closed on its own chord),
+  // so a crew or a V shows skin inside it instead of a curve drawn on the fabric. A jacket with a neckline of its own
+  // is the outer one; a blazer or an open jacket has none, so the shirt's own neckline shows in the gap. A turtleneck,
+  // a hood or a bare chest has no entry and needs none.
+  const outer = p.jacket.style !== 'none' && NECKLINES[p.jacket.style] ? p.jacket.style : p.top.style;
+  const openingOf = (d) => { const t = d.match(/-?[\d.]+/g); return `${d} L ${t[t.length - 2]} ${NECK_TOP} L ${t[0]} ${NECK_TOP} Z`; }; // the curve closed upward, not on its own chord: a garment's top edge sits a little above the neckline, and closing on the chord leaves a band of cloth lying across the throat
+  const through = NECKLINES[outer] ? [...wide(shear([clip(openingOf(NECKLINES[outer]))])), neckG, ...neck(p), POP, UNCLIP] : [];
+  const model = modelling(p);
+  return rough([
     ...overlays(p, 'back', fits), // the ground behind the figure, outside its sway
     push(q.bodyX, 0, q.bodyTilt, HIPS),
-    headG, ...backHair, POP, // the back hair hangs behind the shoulders, so it goes down before the top
-    ...wide([...armpit, ...top, ...jacket, ...(armpit.length ? [UNCLIP] : []), ...overlays(p, 'body', fits)]),
-    neckG, ...neck(p), POP, ...accessories(p, 'neck'), ...overlays(p, 'neck', fits),
-    headG, ...fit(ears(p)), ...fit(accessories(p, 'ear')), ...head(p), ...details(p, fit, fitEyes), ...(masked ? beard : []), ...overlays(p, 'skin', fits), ...eyes(p), ...nose(p), ...mouth(p), ...overlays(p, 'face', fits), ...(masked ? [] : beard), ...hairShadow, ...frontHair, ...glasses(p), ...cover, ...hat, ...fit(accessories(p, 'over')), ...overlays(p, 'over', fits), POP,
+    headG, ...tf(under(backHair), 4), POP, // the back hair hangs behind the shoulders, so it goes down before the top
+    ...wide(shear(hoodBack)), // a hood hangs behind the neck
+    neckG, ...neck(p), ...overlays(p, 'neck', fits), POP, // the neck goes behind every garment, so a collar, a lapel or a neckline covers its base: a collar, a lapel or a neckline covers its base, or the skin reads as a column standing on the shirt
+    ...wide(shear([...armpit, ...top, ...edge, ...jacket, ...(armpit.length ? [UNCLIP] : []), ...overlays(p, 'body', fits)])),
+    ...through, // and shows again through the outermost neckline, because a neckline is a hole, not a curve painted on the cloth
+    ...accessories(p, 'neck'), ...wide(shear(collar)), ...accessories(p, 'tie'), // a chain lies on the shirt, the collar goes back over it, a tie over that
+    headG, ...tf(fit(ears(p, turn)), 4), ...tf(fit(accessories(p, 'ear')), 4), ...tf(head(p), 4), ...tf(masked ? beard : [], 8), ...tf(masked ? model : [], 4), ...tf(overlays(p, 'skin', fits), 4), ...tf(masked ? [] : model, 4), ...tf(masked ? [] : details(p, fitFace, fitEyes), 12), // the planes go over paint on the skin (one modelling for a painted face and a bare one); a mask is a shell with its own shading, so they go under it, with the beard
+    ...tf(masked ? [clip(maskHoles(p)), ...eyes(p, false), UNCLIP] : eyes(p), 12), ...tf(masked ? [] : nose(p), 12), ...tf(masked ? [] : mouth(p), 12), ...tf(overlays(p, 'face', fits), 12), ...tf(masked ? [] : beard, 8), // a mask is a rigid thing: none of the wearer's face is drawn on it, no brows, no nose, no mouth, no lines, and the eyes show only through its holes, where they still look about and blink
+    ...tf(faceLight(p, facePath(p)), 4), ...tf(hairShadow, 4), ...tf(under(frontHair), 4), ...tf(specShadow, 12), ...tf(specs, 12), ...tf(brim, 4), ...tf(skirt, 4), ...tf(hat, 4), ...tf(fit(accessories(p, 'over')), 4), ...tf(overlays(p, 'over', fits), 4), POP,
     ...wide(overlays(p, 'front', fits)),
     POP,
-  ];
+  ], p.seed);
 }
 
 const attrs = (o) => [o.fill !== undefined ? `fill="${o.fill}"` : '', o.stroke ? `stroke="${o.stroke}" stroke-width="${o.sw ?? 1}" stroke-linecap="${o.cap ?? 'round'}"` : '', o.op !== undefined ? `opacity="${o.op}"` : '', o.rx ? `rx="${o.rx}"` : '', o.rule ? `fill-rule="${o.rule}"` : ''].filter(Boolean).join(' ');
@@ -524,7 +696,7 @@ let clipN = 0; // clip ids are unique across every svg printed, since a page sho
 export function toSvg(ops, background = null) {
   let n = 0;
   const body = ops.map((o) => o.k === 'push' ? `<g transform="translate(${o.tx} ${o.ty}) rotate(${(o.rot * 180) / Math.PI} ${o.cx} ${o.cy})">` : o.k === 'pop' ? '</g>' : o.k === 'clip' ? `<clipPath id="c${(n = ++clipN)}"><path d="${o.d}"${o.rule ? ` clip-rule="${o.rule}"` : ''}/></clipPath><g clip-path="url(#c${n})">` : o.k === 'unclip' ? '</g>' : o.k === 'path' ? `<path d="${o.d}" ${attrs(o)}/>` : o.k === 'ellipse' ? `<ellipse cx="${o.cx}" cy="${o.cy}" rx="${o.rx}" ry="${o.ry}" ${attrs({ ...o, rx: 0 })}/>` : o.k === 'rect' ? `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" ${attrs(o)}/>` : `<line x1="${o.x1}" y1="${o.y1}" x2="${o.x2}" y2="${o.y2}" ${attrs(o)}/>`).join('\n');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" role="img">\n${background ? `<rect width="400" height="480" fill="${background}"/><circle cx="200" cy="194" r="150" fill="#fff" opacity=".08"/>` : ''}\n${body}\n</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" role="img">\n${background ? `<rect width="400" height="480" fill="${background}"/>` : ''}\n${body}\n</svg>`;
 }
 /** The whole portrait as SVG, background included. */
 export const renderPortrait = (options = {}) => toSvg(portraitOps(options), merge(DEFAULTS, options).background);

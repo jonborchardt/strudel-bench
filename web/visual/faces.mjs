@@ -13,7 +13,7 @@
 // impact flashes, a dropout shuts the eyes and dims the room. Deterministic: randomness only from the
 // state's own generator (kit.mjs).
 import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn } from './portrait.mjs';
+import { portraitOps, drawOn, eyeY } from './portrait.mjs';
 import { characterOf } from './cast.mjs';
 export { characterOf }; // the generator lives in cast.mjs (shared with tableau); faces.html and the test still read it here
 
@@ -99,20 +99,20 @@ export default {
     const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr); g.addColorStop(0, hsla(glowHue, 60, 60, 0.45 * s.glow * lit + 0.06)); g.addColorStop(1, hsla(glowHue, 60, 50, 0));
     ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
     // the two last faces at the sides: in shadow (a filter, not alpha: a translucent face shows its hair through its skin), off frame in the close shot
-    const zoom = (1 - 0.08 * s.pop) * (1 + 0.04 * s.bob) * (1 + 0.35 * s.riser), k0 = k * lerp(CLOSE, WIDE, s.wide), ey = s.faces[0]?.eyes.y ?? 196;
-    const eyeY = h * lerp(0.42, 0.98 - (SHEET.h - ey) * WIDE / SHEET.h, s.wide); // where the live eyes sit: high in the close crop, feet on the floor in the wide shot; the pivot of every scale
+    const zoom = (1 - 0.08 * s.pop) * (1 + 0.04 * s.bob) * (1 + 0.35 * s.riser), k0 = k * lerp(CLOSE, WIDE, s.wide), ey = s.faces[0] ? eyeY(s.faces[0]) : 196;
+    const eyeLine = h * lerp(0.42, 0.98 - (SHEET.h - ey) * WIDE / SHEET.h, s.wide); // where the live eyes sit: high in the close crop, feet on the floor in the wide shot; the pivot of every scale
     for (let i = Math.min(2, s.faces.length - 1); i >= 1; i--) {
       const dx = (i === 1 ? -1 : 1) * lerp(1.4, 0.56, s.wide) * h, sk = k0 * 0.75;
-      ctx.save(); ctx.filter = `brightness(${(0.55 * lit).toFixed(2)}) saturate(.75)`; ctx.translate(w / 2 + dx, eyeY + h * 0.08); ctx.scale(sk, sk); ctx.translate(-SHEET.w / 2, -s.faces[i].eyes.y);
+      ctx.save(); ctx.filter = `brightness(${(0.55 * lit).toFixed(2)}) saturate(.75)`; ctx.translate(w / 2 + dx, eyeLine + h * 0.08); ctx.scale(sk, sk); ctx.translate(-SHEET.w / 2, -eyeY(s.faces[i]));
       drawOn(ctx, portraitOps(s.faces[i])); ctx.restore();
     }
     // the live face: bobbed, tilted, popped in, zoomed on the eyes by a riser
     const f = s.faces[0]; if (!f) return;
-    const live = { ...f, blush: (f.cheeks ?? 0.5) * (0.3 + 0.7 * s.blush + 0.3 * s.stare), pose: { headX: s.sway * 10.8, headY: -8 * s.bob, headTilt: s.sway * 0.08 + s.tilt, bodyX: -s.sway * 5, bodyTilt: -s.sway * 0.035 },
+    const live = { ...f, blush: (f.cheeks ?? 0.5) * (0.3 + 0.7 * s.blush + 0.3 * s.stare), pose: { ...f.pose, headX: s.sway * 10.8, headY: (f.pose?.headY ?? 0) - 8 * s.bob, headTilt: (f.pose?.headTilt ?? 0) + s.sway * 0.08 + s.tilt, bodyX: -s.sway * 5, bodyTilt: (f.pose?.bodyTilt ?? 0) - s.sway * 0.035 }, // the dance over the character's own stance (turn, a dropped shoulder, a tilt)
       eyes: { ...f.eyes, openness: (f.eyes.openness * (1 + 0.5 * s.stare) * (1 - s.blink) * (1 - 0.85 * s.dark)) + 0.02, browLift: f.eyes.browLift + s.brow + 3 * s.bob + 4 * s.stare, browSkew: s.skew, look: { x: s.look.x, y: s.look.y } },
       mouth: { ...f.mouth, width: f.mouth.width * (1 + 0.15 * s.grin), smile: s.smile } };
     ctx.save(); // the sheet itself only scales about the eyes (a pop, a riser); the dance is in the pose
-    ctx.translate(w / 2, eyeY); ctx.scale(k0 * zoom, k0 * zoom); ctx.translate(-SHEET.w / 2, -ey);
+    ctx.translate(w / 2 + (f.frame ?? 0) * h * (1 - s.wide), eyeLine); ctx.scale(k0 * zoom, k0 * zoom); ctx.translate(-SHEET.w / 2, -ey); // the character enters the close shot where they stand, off centre; the wide shot centres the three
     drawOn(ctx, portraitOps(live), lit);
     ctx.restore();
     if (s.flash > 0.01) { ctx.fillStyle = `rgba(255 250 235 / ${0.6 * s.flash})`; ctx.fillRect(0, 0, w, h); }

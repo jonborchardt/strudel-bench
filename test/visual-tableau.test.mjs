@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES, PHASES, FRAMING, phaseOf, layoutOf } from '../web/visual/tableau.mjs';
-import { identityOf, dress, ARCHETYPE_NAMES, COSTUMES, COSTUME_FAMILIES, METALLIC, EXPRESSIONS, exprVals, characterOf } from '../web/visual/cast.mjs';
+import { identityOf, dress, ARCHETYPE_NAMES, COSTUMES, COSTUME_FAMILIES, METALLIC, HOODED, HOOD_MAX_WIDTH, wearable, EXPRESSIONS, exprVals, characterOf } from '../web/visual/cast.mjs';
 import { portraitOps, toSvg, drawOn, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, sheen } from '../web/visual/portrait.mjs';
 import { curtain, cyclorama, voidSet, sculpture, SCULPTURES, floorShadow, vignette } from '../web/visual/sets.mjs';
 import { eventOf, clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
@@ -34,7 +34,14 @@ test('the editorial wardrobe draws: every makeup, mark, prop, graphic, the hood,
   }
   const beardAt = (o) => { const ops = portraitOps({ ...o, facialHair: { style: 'fullBeard' }, hairColor: '#123123' }); return [ops.findIndex((x) => x.fill === '#123123'), ops.findIndex((x) => x.fill === '#f3f0ea')]; };
   assert.ok(beardAt({ makeup: ['whiteMaskBase'] })[0] < beardAt({ makeup: ['whiteMaskBase'] })[1], 'a mask goes on over the beard');
-  assert.ok(beardAt({ makeup: ['paleCorpseBase'] })[0] > portraitOps({ makeup: ['paleCorpseBase'], facialHair: { style: 'fullBeard' } }).findIndex((x) => x.fill === '#e6dfd8'), 'makeup goes on under it');
+  const painted = portraitOps({ makeup: ['darkEyeSockets'], facialHair: { style: 'fullBeard' }, hairColor: '#123123' });
+  assert.ok(painted.findIndex((x) => x.fill === '#123123') > painted.findIndex((x) => x.fill === '#2b1c26'), 'paint that is not a mask goes on under the beard');
+  assert.ok(!MAKEUP_STYLES.includes('paleCorpseBase'), 'the corpse base is gone');
+  const mask = portraitOps({ makeup: ['whiteMaskBase'], facialHair: { style: 'fullBeard' }, details: ['crowsFeet'], nose: { style: 'broad' } });
+  const holes = mask.findIndex((o) => o.k === 'clip' && o.d.startsWith('M 195 196') && o.d.split('M ').length === 3); // the two hole ellipses as one clip
+  assert.ok(holes > 0 && mask[holes + 1].fill && mask.slice(holes).some((o) => o.k === 'unclip'), 'a masked face draws its eyes inside the mask\'s two holes and nothing outside them');
+  assert.ok(!mask.some((o) => o.stroke === '#30231e' && o.k === 'path' && o.sw < 7), 'no brows on a mask'); // the brow strokes are the hair colour at a few units wide
+  assert.ok(!mask.some((o) => o.stroke === '#6b473b'), 'no crow\'s feet on a mask');
   const gold = portraitOps({ top: { style: 'crewTshirt', color: '#b8892b', metal: 1 }, seed: 4 }), plain = portraitOps({ top: { style: 'crewTshirt', color: '#b8892b' } });
   assert.ok(gold.length > plain.length + 10 && gold.some((o) => o.fill === '#ffd443' || o.fill === '#5c4516'), 'a metallic top carries highlight and fold shapes in the gold\'s lights and darks');
   assert.notDeepEqual(sheen('M 0 0 L 10 0 L 10 10 Z', '#b8892b', 1), sheen('M 0 0 L 10 0 L 10 10 Z', '#b8892b', 2), 'the seed places the sheen');
@@ -121,17 +128,21 @@ test('the timeline: phases from role and energy, the first shot a long still red
   assert.ok(first.tpl === 'redCurtainSoloPortrait' && first.len === 8 && first.pose === 'statueStill' && first.ids[0] === s.leads[0] && !first.mutate, 'the opening shot');
   assert.ok(last.tpl === 'redCurtainDuo' && last.len >= 8 && last.ids.length === 2 && s.leads.includes(last.ids[0]) && s.leads.includes(last.ids[1]) && !last.mutate, 'the closing duo');
   const all = s.plan.flat(); assert.ok(all.length > 20, 'an 80-bar song is many shots');
-  for (const shots of s.plan) for (let i = 1; i < shots.length; i++) assert.ok(!(['mirroredFace', 'splitFace', 'duplicateGrid', 'repeatedCharacterGrid', 'blackVoidPortrait', 'graphicFlash', 'eyesCrop', 'extremeFaceCrop'].includes(shots[i].tpl) && ['mirroredFace', 'splitFace', 'duplicateGrid', 'repeatedCharacterGrid', 'blackVoidPortrait', 'graphicFlash', 'eyesCrop', 'extremeFaceCrop'].includes(shots[i - 1].tpl)), 'punctuation is never two in a row');
+  for (const shots of s.plan) for (let i = 1; i < shots.length; i++) assert.ok(!(['mirroredFace', 'splitFace', 'duplicateGrid', 'repeatedCharacterGrid', 'blackVoidPortrait', 'eyesCrop', 'extremeFaceCrop'].includes(shots[i].tpl) && ['mirroredFace', 'splitFace', 'duplicateGrid', 'repeatedCharacterGrid', 'blackVoidPortrait', 'eyesCrop', 'extremeFaceCrop'].includes(shots[i - 1].tpl)), 'punctuation is never two in a row');
+  assert.ok(all.every((x) => x.ids.length > 0) && Object.values(TEMPLATES).every((t) => t.n > 0), 'every shot holds somebody: there is no empty graphic frame to cut to');
+  const sp = all.find((x) => x.fx === 'split'); if (sp) assert.ok(sp.layout.every((l) => l.dx === 0 && l.turn === sp.layout[0].turn && l.tilt === sp.layout[0].tilt && l.k === sp.layout[0].k), 'both halves of a split face stand the same way, centred');
   const mean = (i) => s.plan[i].reduce((n, x) => n + x.len, 0) / s.plan[i].length;
   assert.ok(mean(0) > mean(3) && mean(4) > mean(3), 'the peak cuts faster than the opening and the release');
   assert.ok(all.some((x) => x.mutate || x.cascade) && all.some((x) => x.alts.length > 1), 'some shots mutate');
   assert.ok(all.every((x) => x.ids.every((id) => id >= 0 && id < 24)), 'every id is a cast member');
+  assert.ok(all.every((x) => x.alts.every((alt) => alt.every((st, i) => !HOODED.includes(st.costume) || s.cast[x.ids[i]].base.face.width <= HOOD_MAX_WIDTH))), 'no hood on a wide face, in any shot or mutation');
+  assert.ok(HOODED.includes('goldHoodedMetallic') && !wearable(s.cast[ARCHETYPE_NAMES.indexOf('severeShaved')], 'goldHoodedMetallic') && wearable(s.cast[ARCHETYPE_NAMES.indexOf('goldHood')], 'goldHoodedMetallic'));
   assert.ok(s.plan[3].some((x) => x.set === 'white') && s.plan[3].some((x) => x.set === 'red'), 'the peak alternates the worlds');
   // every template renders on a stub, with every pose and framing it allows
   const clock = clockOf(score, 0), fresh = () => createPerformance(tableau, score, { w: 16, h: 9 }).state;
   for (const [name, tpl] of Object.entries(TEMPLATES)) {
     for (const pose of tpl.poses ?? ['none']) {
-      const st = fresh(); st.plan = [[{ ...st.plan[0][0], tpl: name, set: tpl.set === 'any' ? 'white' : tpl.set, framing: tpl.framing ?? 'close', pose, ids: st.plan[0][0].ids.concat([1, 2]).slice(0, tpl.n), layout: layoutOf(pose, tpl.n, FRAMING[tpl.framing ?? 'close']), alts: [[{}, {}, {}].slice(0, tpl.n).map((_, i) => ({ costume: tpl.costume ?? 'plainTee', makeup: [], marks: [], props: [] }))], fx: tpl.fx ?? null, grid: tpl.grid ?? 0, band: tpl.band ? { color: '#fff', dir: 'v', at: 0.3, size: 0.1 } : null, sculptures: tpl.sculptures ? [{ kind: 'bust', x: -0.6, size: 0.5 }] : [], flash: !!tpl.flash, gap: !!tpl.gap }]];
+      const st = fresh(); st.plan = [[{ ...st.plan[0][0], tpl: name, set: tpl.set === 'any' ? 'white' : tpl.set, framing: tpl.framing ?? 'close', pose, ids: st.plan[0][0].ids.concat([1, 2]).slice(0, tpl.n), layout: layoutOf(pose, tpl.n, FRAMING[tpl.framing ?? 'close']), alts: [[{}, {}, {}].slice(0, tpl.n).map((_, i) => ({ costume: tpl.costume ?? 'plainTee', makeup: [], marks: [], props: [] }))], fx: tpl.fx ?? null, grid: tpl.grid ?? 0, band: tpl.band ? { color: '#fff', dir: 'v', at: 0.3, size: 0.1 } : null, sculptures: tpl.sculptures ? [{ kind: 'bust', x: -0.6, size: 0.5 }] : [], gap: !!tpl.gap }]];
       st.section = 0; st.shotIx = 0; tableau.step(st, STEP, [], clock);
       const ctx = ctxStub(); tableau.draw(st, ctx, 320, 180);
       assert.equal(ctx.calls.save, ctx.calls.restore, `${name} ${pose} restores`); assert.ok(ctx.calls.fillRect > 0, `${name} ${pose} paints`);
@@ -157,6 +168,9 @@ test('every cast job reaches the state: a snare jump-cuts a mutating shot and ne
   const kicks = fresh(); const before = kicks.punch; for (let i = 0; i < 300; i++) { tableau.step(kicks, STEP, [KICK], clock); }
   assert.ok(kicks.punch >= before, 'a kick may punch in and never pulls out');
   assert.ok(one(KICK).pulse > 0.9, 'a kick pulses the face (the mouth parts, the eyes and brows lift a touch)');
+  assert.ok(one(KICK).bob > 0.9, 'and nods the body: the music is danced with the head and shoulders, not the brows');
+  const swayed = fresh(); tableau.step(swayed, STEP, [], clockOf(score, 0.25));
+  assert.ok(Math.abs(swayed.sway) > 0.05 && swayed.swayAmp > 0, 'the cast sways with the bar, from the song\'s own clock');
   const emoting = fresh(); emoting.plan[emoting.section][emoting.shotIx].emote = true; emoting.plan[emoting.section][emoting.shotIx].mutate = false;
   const was = JSON.stringify(emoting.exprTo); let moved = false; for (let i = 0; i < 12 && !moved; i++) { tableau.step(emoting, STEP, [SNARE], clock); for (let k = 0; k < 30; k++) tableau.step(emoting, STEP, [], clock); moved = JSON.stringify(emoting.exprTo) !== was; }
   assert.ok(moved, 'on an emoting shot a snare moves the actor to another expression');
