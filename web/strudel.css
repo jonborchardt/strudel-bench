@@ -483,3 +483,18 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .workshop #editor button.sl.on, .workshop #editor button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .workshop #wstatus { min-height: 1.2em; color: #9a9aa2; font-size: .85rem; }
 @media (max-width: 60rem) { .workshop { grid-template-columns: 1fr; } }
+
+/* the listen page: one stage, two side by side, or every world at once. The boxes are .stagebox, as on the Compose
+   stage, but sized by the grid rather than by the window's height. */
+.listen .cells { display: grid; gap: .6rem; }
+.listen .cells.single { grid-template-columns: minmax(0, 1fr); }
+.listen .cells.ab { grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+.listen .cells.grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); }
+.listen .cells .stagebox { width: 100%; }
+.listen .cells.grid .stagebox, .listen .cells.ab .stagebox { cursor: pointer; }
+.listen figure { margin: 0; display: grid; gap: .2rem; }
+.listen figcaption { display: flex; gap: .4rem; align-items: baseline; font-size: .85rem; min-width: 0; }
+.listen figcaption b { font-weight: 600; }
+.listen figcaption span { color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.listen .cells.single figcaption { font-size: .9rem; }
+.listen #scrub { min-width: 8rem; }
