@@ -104,6 +104,7 @@ function serveStatic(res, urlPath) {
 export function createServer() {
   const clients = new Set();
   const waiters = new Map();
+  const listenCache = new Map(); // song -> { mtime, data }: the strudel scope is expensive, and fs.watch already tells us when a song changed
   fs.mkdirSync(SONGS, { recursive: true });
   const watcher = fs.watch(SONGS, (_ev, file) => {
     if (!file || !SONG_FILE.test(file)) return;
@@ -133,6 +134,29 @@ export function createServer() {
       }
       if (!fs.existsSync(file)) return send(res, 404, 'no such song');
       return send(res, 200, fs.readFileSync(file), name.endsWith('.json') ? 'application/json' : 'text/plain; charset=utf-8');
+    }
+
+    // The listen page's data: one song's visual score and event stream (scripts/listen.mjs), and which songs have an
+    // mp3 in renders/ to play. The script is imported on the first request, not at the top: it pulls the strudel
+    // packages (seconds of startup for a server that may never serve this) and it imports this file.
+    if (p.startsWith('/listen/') && req.method === 'GET') {
+      const name = decodeURIComponent(p.slice('/listen/'.length));
+      if (name === 'audio.json') {
+        const have = fs.existsSync(RENDERS) ? new Set(fs.readdirSync(RENDERS).filter((f) => f.endsWith('.mp3'))) : new Set();
+        const songs = Object.fromEntries(songList().map((s) => [s, `${s.replace(/\.strudel$/, '')}.mp3`]).filter(([, f]) => have.has(f)));
+        return json(res, { base: 'renders/', songs }); // relative: the page is one directory up from neither, and the deployed build writes a different base
+      }
+      if (!/^[\w.-]+\.strudel\.json$/.test(name)) return send(res, 400, 'bad listen name');
+      const song = name.slice(0, -'.json'.length), file = path.join(SONGS, song);
+      if (!fs.existsSync(file)) return send(res, 404, 'no such song');
+      const mtime = fs.statSync(file).mtimeMs, hit = listenCache.get(song);
+      if (hit?.mtime === mtime) return json(res, hit.data);
+      try {
+        const { showData } = await import('./scripts/listen.mjs');
+        const data = await showData(file);
+        listenCache.set(song, { mtime, data });
+        return json(res, data);
+      } catch (e) { return send(res, 422, `${song}: ${e.message}`); }
     }
 
     if (p === '/events') {
@@ -193,6 +217,26 @@ export function createServer() {
       const w = waiters.get(key);
       if (w) { waiters.delete(key); clearTimeout(w.timer); w.resolve(path.relative(ROOT, out)); }
       return send(res, 200, path.relative(ROOT, out));
+    }
+
+    // the mp3 behind a song on the listen page. An <audio> element scrubs by asking for a byte range, and answers a
+    // range with the whole file are what make a track "not seekable" in chrome, so serve 206 properly.
+    if (p.startsWith('/renders/') && req.method === 'GET') {
+      const name = decodeURIComponent(p.slice('/renders/'.length));
+      if (!/^[\w.-]+\.(mp3|wav)$/.test(name)) return send(res, 400, 'bad render name');
+      const file = path.join(RENDERS, name);
+      if (!fs.existsSync(file)) return send(res, 404, 'no such render');
+      const size = fs.statSync(file).size, type = MIME[path.extname(file).toLowerCase()];
+      const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? '');
+      if (!m || (!m[1] && !m[2])) {
+        res.writeHead(200, { 'content-type': type, 'content-length': size, 'accept-ranges': 'bytes' });
+        return fs.createReadStream(file).pipe(res);
+      }
+      const start = m[1] ? Number(m[1]) : Math.max(0, size - Number(m[2])); // no start: the last n bytes
+      const end = m[1] && m[2] ? Math.min(Number(m[2]), size - 1) : size - 1;
+      if (!(start >= 0 && start <= end && end < size)) return send(res, 416, 'range outside the file');
+      res.writeHead(206, { 'content-type': type, 'content-length': end - start + 1, 'accept-ranges': 'bytes', 'content-range': `bytes ${start}-${end}/${size}` });
+      return fs.createReadStream(file, { start, end }).pipe(res);
     }
 
     // the Compose page's sample import: the file lands in samples/user/<pack>/ where userPacks() scans it, so the map,
