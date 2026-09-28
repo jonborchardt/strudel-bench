@@ -115,14 +115,30 @@ test('tileGrid: the wall fills its width in 16:9 boxes, and the awkward counts s
   assert.ok(tileGrid(18, 1300).height > 0 && Number.isFinite(tileGrid(18, 1300).height));
 });
 
+test('tileGrid: given a height it picks the columns that fill the space, and never overflows it', () => {
+  for (const [w, h] of [[1300, 700], [2400, 900], [700, 900], [420, 700], [1920, 1080], [900, 400]]) {
+    const g = tileGrid(17, w, { gap: 8, height: h });
+    assert.ok(g.height <= h + 1e-9, `${w}x${h}: ${g.height} runs past the box`);
+    assert.ok(g.cols * g.tw + 8 * (g.cols - 1) <= w + 1e-9, `${w}x${h}: wider than the wall`);
+    assert.ok(Math.abs(g.th - (g.tw * 9) / 16) < 1e-9, 'still 16:9');
+    assert.ok(g.cols * g.rows >= 17, `${w}x${h}: ${g.cols}x${g.rows} does not hold 17`);
+    for (const c of [g.cols - 1, g.cols + 1]) // no other column count makes the boxes bigger
+      if (c >= 1 && c <= 17) assert.ok(tileGrid(17, w, { gap: 8, height: h, cols: c }).tw <= g.tw + 1e-9, `${w}x${h}: ${c} columns beats ${g.cols}`);
+  }
+  assert.equal(tileGrid(17, 1400, { gap: 8, height: 700 }).cols, 5, 'a laptop window is the five-by-four wall');
+  assert.ok(tileGrid(17, 500, { gap: 8, height: 800 }).cols < 5, 'a narrow window drops columns rather than shrinking past the space');
+  const one = tileGrid(1, 1400, { gap: 8, height: 300, cols: 1 });
+  assert.ok(Math.abs(one.th - 300) < 1e-9, 'one box open fills the height it is given');
+});
+
 test('parseHash / formatHash: the share link is the whole state', () => {
-  assert.deepEqual(parseHash('#demo.strudel'), { song: 'demo.strudel', mode: 'single', worlds: [] });
+  assert.deepEqual(parseHash('#demo.strudel'), { song: 'demo.strudel', mode: 'grid', worlds: [] }, 'the wall is the landing');
   assert.deepEqual(parseHash('#demo.strudel&w=train'), { song: 'demo.strudel', mode: 'single', worlds: ['train'] });
-  assert.deepEqual(parseHash('#demo.strudel&ab=train,rave'), { song: 'demo.strudel', mode: 'single', worlds: [] }, 'a link from when there was a comparison mode degrades to the song');
+  assert.deepEqual(parseHash('#demo.strudel&ab=train,rave'), { song: 'demo.strudel', mode: 'grid', worlds: [] }, 'a link from when there was a comparison mode degrades to the wall');
   assert.deepEqual(parseHash('#demo.strudel&grid'), { song: 'demo.strudel', mode: 'grid', worlds: [] });
-  assert.deepEqual(parseHash(''), { song: null, mode: 'single', worlds: [] });
-  assert.deepEqual(parseHash('#demo.strudel&nonsense=1'), { song: 'demo.strudel', mode: 'single', worlds: [] }, 'an unknown key is ignored');
-  for (const v of [{ song: 'a.strudel', mode: 'single', worlds: [] }, { song: 'a.strudel', mode: 'single', worlds: ['ink'] },
+  assert.deepEqual(parseHash(''), { song: null, mode: 'grid', worlds: [] });
+  assert.deepEqual(parseHash('#demo.strudel&nonsense=1'), { song: 'demo.strudel', mode: 'grid', worlds: [] }, 'an unknown key is ignored');
+  for (const v of [{ song: 'a.strudel', mode: 'single', worlds: ['ink'] },
     { song: 'a.strudel', mode: 'grid', worlds: [] }])
     assert.deepEqual(parseHash(formatHash(v)), v, JSON.stringify(v));
 });
