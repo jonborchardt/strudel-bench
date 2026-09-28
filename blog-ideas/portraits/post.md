@@ -1,7 +1,7 @@
 # The family that didn't age
 
-*Three days of changes to a portrait renderer, told through five people who never changed — and one day
-spent fixing something that was never broken.*
+*Four days of changes to a portrait renderer, told through five people who never changed — one day spent
+fixing something that was never broken, and one spent building the thing that finds what is.*
 
 ---
 
@@ -10,11 +10,11 @@ spent fixing something that was never broken.*
 Pick five portrait specs — a grandmother, a father, a mother, two kids — and freeze them. They are plain
 objects: face width, eye spacing, nose style, a jumper colour. Then hand that same frozen family to each
 revision of the drawing code and shoot them again. Nobody in the family gets older, changes clothes or moves.
-The only thing that changes between the rows is the hand drawing them. It turns three days of commits into a
+The only thing that changes between the rows is the hand drawing them. It turns four days of commits into a
 family album, and it makes every "why did we change that" answerable by pointing at a face.
 
 No old code goes back into the repo to do it: `git show <rev>:web/visual/portrait.mjs` into a temp file,
-import it, render, throw it away. The whole apparatus is `family.mjs` (data) and `render.mjs` (25 lines) in
+import it, render, throw it away. The whole apparatus is `family.mjs` (data) and `render.mjs` (forty lines) in
 this folder.
 
 ---
@@ -45,7 +45,7 @@ Three iterations, one evening, and the thing is still an emoji. That was the use
 
 ## Day 1: tone over line
 
-![The family, 25 and 26 September](img/02-family.png)
+![The family, 25, 26 and 28 September](img/02-family.png)
 
 The instinct at this point is to blame proportions. It is almost never proportions. What made those heads
 cartoons is that **every feature was a stroke**: the eye was an outline, the nose was an arc, the smile was
@@ -77,7 +77,7 @@ time through the hole the outermost neckline makes, closed upward rather than on
 a hole with skin inside it, not a curve painted on cloth. Look at Nan's turtleneck, and at the girl's denim
 jacket, where the neckline is a V cut into the cloth with a neck coming up through it:
 
-![Nan across both revisions](img/04-nan.png)
+![Nan across the three revisions](img/04-nan.png)
 
 ![Nan's neck and collar](img/06-neck.png)
 
@@ -98,7 +98,7 @@ from *this* face's own outline, let out — so a beard on a square jaw is square
 lip it sits on: pinned under the nose, its lower edge taking the lip curve's own move, so a smile bows it and
 it is never the one still thing on a moving face.
 
-![Dad across both revisions](img/03-dad.png)
+![Dad across the three revisions](img/03-dad.png)
 
 **Cloth behaving as cloth.** The head's shadow on the chest, shoulder folds, armpit pull, neckline thickness,
 the torso shaded as a cylinder. Compare the two shirts above; the collar on the right sits *on* someone.
@@ -146,38 +146,92 @@ The lesson I actually wanted from this post was that a renderer judged only at t
 working at the size people see it. That turned out to be a nicer lesson than the true one, which is: when your
 instrument and your subject disagree three times running, stop adjusting the subject.
 
+## Day 4: the editor, and every fault it found was the same fault
+
+The **Sep 28** row is the third one in the sheet, and it exists because of a tool rather than a session of
+staring. `portrait.html` is an editor for exactly one face: a control per parameter, grouped in the order the
+face is built — base, head, features, hair, clothing, pose and light — over a state of three things,
+`{ seed, family, ov }`. `seed` and `family` draw a random person out of one structural family; `ov` is the
+edits as flat dotted paths over that person, so one control writes one parameter and nothing else. The whole
+state encodes into the URL hash, which means **the hash is the face**: the same link is the same portrait, and
+every committed edit is a history entry, so the browser's Back button walks backwards through them.
+
+Being able to drag one number and watch the rest of the face fail to follow it turns out to find a particular
+kind of bug, and it only found the one kind. Every fault in the list below is **a part drawn at a fixed size
+sitting next to a part that scales.**
+
+**The ear.** Shrink an ear and the shell shrank; the rim of the helix and the lobe's highlight did not, so a
+small ear came out as a small shell with a full-size rim lying beside it. The ear is now drawn once at size
+1 — shell, the bowl in shadow, the lobe, the rim — and the whole thing scaled about its own centre. Compare
+anyone's ears across the last two rows; the boy's are the clearest.
+
+**Brows and upper lids.** These were two constant-width strokes butted end to end, which shows the joint as a
+step and leaves the thin one sticking out past the fat one like a whisker. A brow is not two strokes, it is
+one stroke that changes weight along its length, so there is now a `taper(a, c, b, wf)` that walks a quadratic
+and returns the whole thing as one filled outline, `wf(t)` being the width at t.
+
+**Hats.** A hat was sized and seated on the skull, but it is never worn on a skull: every hair style rises
+about forty units above one. So a hat on a bob sat inside the hair with the flat cut showing past it as a
+shelf at the temple, and a hat on a receding or buzzed head hung in the air over hair that was not there. A hat
+now takes the width of the hair it actually goes over (up to 1.22× its bare size, past which it is a costume
+and a big afro is meant to show around it) and drops by whatever lift the hair failed to supply, crown line,
+skirt and brim shadow together. Dad's cap in the Sep 28 panel is sitting on his head for the first time.
+
+**The turtleneck.** A fixed tube, on every neck. It is now cut to this neck's own width with a little slack,
+and its top sits just under the chin wherever the neck happened to put it — see Nan.
+
+**Teeth**, for the mouths open enough to have any: the band between the two lips, shaped to both of them, and
+the band is also the clip, so a gap or a crooked edge is drawn as a straight mark running past the band's edge
+and cut there rather than fitted to it by hand.
+
+And a scatter of styles that had been drawn as one thing pretending to be several: cornrows parted to the skin
+between the rows instead of hatched on a cap of hair, a mohawk with the sides actually shaved so a hat sits on
+the skull, a beret as a soft disc with no crown seam, and nose and lip hoops drawn as *half* a ring, because
+the other half is inside the face.
+
+Day 2's lesson was that the cartoon was not in the face. Day 4's is that it was not in any one part either: it
+is in the parts that never got the memo when a neighbouring part learned to scale. You do not find those by
+looking at finished portraits, because each one looks deliberate. You find them by dragging a single number
+and noticing what stays still.
+
 ## The arc
 
-Five revisions of the drawing over three days, and essentially one move repeated: **stop drawing the outline of a thing and
+Six revisions of the drawing over four days, and essentially one move repeated: **stop drawing the outline of a thing and
 start drawing the thing the light does to it.** Tone instead of line on the face. A neck that goes *into* a
-collar instead of a column parked in front of it. A beard cut from a jaw instead of fitted over one.
-Asymmetries that agree with each other instead of dice rolled per feature.
+collar instead of a column parked in front of it. A beard cut from a jaw instead of fitted over one. A hat that
+takes its size from the hair rather than the skull. Asymmetries that agree with each other instead of dice
+rolled per feature.
 
-Every change that made the faces more interesting was either subtractive or structural. Nothing in the list
-above is a new feature. The props, the halo behind the head (visible in the Sep 25 row, gone by Sep 26) and a
-four-setup lighting rig were the additions, and every one of them came back out.
+Almost every change that made the faces more interesting was subtractive or structural — a part measured off
+its neighbour instead of off a default. The handful of genuinely new things (teeth, a waistcoat, a nose hoop)
+changed nothing about whether a face reads as a person. Meanwhile the props, the halo behind the head (visible
+in the Sep 25 row, gone by Sep 26) and a four-setup lighting rig were the other additions, and every one of
+them came back out.
 
 The family in the sheet never aged. Only the hand drawing them did.
 
 ## The rest of the family
 
-The other three carry the same two revisions, and between them they cover what Nan and Dad do not: the boy's
+The other three carry the same three revisions, and between them they cover what Nan and Dad do not: the boy's
 hoodie, the hair under the girl's braids, and a face with neither a beard nor glasses to hide behind.
 
-![Mum across both revisions](img/08-mum.png)
+![Mum across the three revisions](img/08-mum.png)
 
-![The boy across both revisions](img/09-boy.png)
+![The boy across the three revisions](img/09-boy.png)
 
-![The girl across both revisions](img/10-girl.png)
+![The girl across the three revisions](img/10-girl.png)
 
 ---
 
 ## Reproducing the pictures
 
 ```sh
-node blog-ideas/portraits/render.mjs d11afc8 b458cef    # ./out/sheet.html, one row per revision
+node blog-ideas/portraits/render.mjs 'd11afc8=Sep 25' 'b458cef=Sep 26' '.=Sep 28'
+# ./out/sheet.html, one row per revision, plus out/<who>.html, one person across all of them
 ```
 
+An argument is a revision, or `<rev>=<row label>`, because the rows are labelled by the evening the drawing
+was written and a commit that lands at 00:32 belongs to the day before it. `.` is the working tree.
 `family.mjs` is the five specs, written only with keys that exist in every revision's `DEFAULTS`, so the same
 five people survive the trip. `render.mjs` namespaces each portrait's clip ids, which is the entire subject of
 day three. `render.mjs` pulls each old `portrait.mjs` out with `git show` into a temp file
