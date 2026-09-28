@@ -1,5 +1,17 @@
 {
   "repo": "jonborchardt/strudel-bench",
   "tag": "audio",
-  "songs": []
+  "songs": [
+    "arrival.strudel",
+    "ascent.strudel",
+    "ballast.strudel",
+    "breakwater.strudel",
+    "duel.strudel",
+    "held.strudel",
+    "holdfast.strudel",
+    "lights-in-the-sky-low-orbit-remix.strudel",
+    "machine.strudel",
+    "neon.strudel",
+    "strata.strudel"
+  ]
 }

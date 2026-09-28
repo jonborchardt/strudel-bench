@@ -37,7 +37,10 @@
   </article>
 </main>
 <footer class="site" id="foot"></footer>
-<audio id="au" preload="metadata" crossorigin="anonymous"></audio>
+<!-- no crossorigin: the mp3 is a github release asset, whose 302 carries no Access-Control-Allow-Origin, and a
+     CORS-mode fetch of it fails. Nothing here reads the audio's samples (the worlds run off the baked event stream
+     and audio.currentTime), so a plain no-cors media load is all the page ever needed. -->
+<audio id="au" preload="metadata"></audio>
 <script type="module">
   import { start } from './web/listen/page.mjs';
   start();
