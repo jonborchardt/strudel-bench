@@ -9,7 +9,7 @@
 // so going into a world and back out is a zoom of the live picture rather than a cut between two layouts.
 import { nav, footer } from '../boot.mjs';
 import { createStage } from './pool.mjs';
-import { tileGrid, setCast, SLOTS, ROLES, parseHash, formatHash, WORLD_NAMES } from './show.mjs';
+import { tileGrid, parseHash, formatHash, WORLD_NAMES } from './show.mjs';
 import POLICY from '../../lib/visual.json' with { type: 'json' };
 
 const $ = (id) => document.getElementById(id);
@@ -26,8 +26,6 @@ let audio, songs = [], audioMap = { base: '', songs: {} };
 let view = { song: null, mode: 'single', worlds: [] };
 let data = null, stage = null, loading = 0;
 let wall, wctx, from = new Map(), to = new Map(), started = 0, hover = null;
-const casts = new Map(); // channel -> its own reading of the parts, for as long as the song is open
-const binds = new Map(); // channel -> what drives each of its world's hooks, same lifetime
 
 const say = (text, bad = false) => { const el = $('msg'); el.textContent = text; el.style.color = bad ? 'var(--err)' : ''; };
 const aboutOf = (name) => POLICY.worlds[name]?.about ?? POLICY.compositions[name]?.about ?? '';
@@ -166,103 +164,6 @@ function labels(where, k) {
 }
 
 /**
- * The open channel's patch bay, when its world publishes one: a row per thing the world does, in the world's own
- * words, saying what drives it, only over what, and how hard. The world reads its bindings every step, so a slider
- * is felt as you drag it. Live only, per channel, like the jobs below it.
- */
-async function patch() {
-  const host = $('patch'), ch = shown()[0];
-  const world = view.mode === 'single' && data && ch ? await import(`../visual/${ch}.mjs`).catch(() => null) : null;
-  const hooks = world?.hooks;
-  host.hidden = !hooks;
-  if (!hooks) return;
-  const bound = binds.get(ch) ?? {};
-  // who can drive a hook: any part the song has, any drum voice in it, or nothing at all
-  const parts = Object.entries(data.score.cast);
-  const sources = [['', 'as written'], ...parts.flatMap(([p, c]) => [[p, p], ...Object.keys(c.voices ?? {}).map((v) => [`${p}:${v}`, `${p} · ${v}`])]), ['*', 'anything'], ['-', 'nothing']];
-  host.replaceChildren(...Object.entries(hooks).map(([key, h]) => {
-    const b = bound[key] ?? {};
-    const row = document.createElement('div');
-    row.className = 'hook';
-    const name = document.createElement('b'); name.textContent = h.label;
-    const src = document.createElement('select');
-    src.replaceChildren(...sources.map(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; return o; }));
-    src.value = b.src === undefined ? '' : b.src === null ? '-' : b.src;
-    src.onchange = () => tweak(ch, key, { src: src.value === '' ? undefined : src.value === '-' ? null : src.value });
-    const amt = slider('how hard', b.depth ?? 1, 0, 2, (v) => tweak(ch, key, { depth: v }));
-    const over = slider('only over', b.over ?? 0, 0, 1, (v) => tweak(ch, key, { over: v }));
-    row.append(name, src, amt, over);
-    return row;
-  }));
-}
-
-/** A labelled slider that reports while it is dragged, so the picture answers the hand. */
-function slider(label, value, min, max, onInput) {
-  const box = document.createElement('label');
-  box.className = 'amt';
-  const cap = document.createElement('small'); cap.textContent = label;
-  const el = document.createElement('input');
-  el.type = 'range'; el.min = String(min); el.max = String(max); el.step = '0.01'; el.value = String(value);
-  el.oninput = () => onInput(Number(el.value));
-  box.append(cap, el);
-  return box;
-}
-
-/** One hook changed. A source of `null` means nothing drives it, which is different from "as written". */
-function tweak(ch, key, change) {
-  const next = { ...(binds.get(ch) ?? {}) };
-  next[key] = { ...(next[key] ?? {}), ...change };
-  if (next[key].src === undefined && (next[key].depth ?? 1) === 1 && (next[key].over ?? 0) === 0) delete next[key];
-  if (Object.keys(next).length) binds.set(ch, next); else binds.delete(ch);
-  stage?.bind(ch, binds.get(ch) ?? null);
-}
-
-/**
- * The open channel's reading of the song: one control per part saying which job it does, and one per drum voice
- * saying which role it plays. Clicking cycles. It is live only — kept per channel for as long as the song is open,
- * never written to the song and never in the url, so the wall stays the reading the song asked for.
- */
-function jobs() {
-  const host = $('jobs'), ch = shown()[0];
-  const open = view.mode === 'single' && data && ch;
-  host.hidden = !open;
-  if (!open) return;
-  const cast = casts.get(ch) ?? data.score.cast;
-  const pick = (label, value, options, part, voice) => {
-    const box = document.createElement('label');
-    box.className = 'job';
-    box.title = `what ${label} does in ${ch}`;
-    const b = document.createElement('b'); b.textContent = label;
-    const sel = document.createElement('select');
-    sel.replaceChildren(...options.map((o) => { const el = document.createElement('option'); el.value = o; el.textContent = o; return el; }));
-    sel.value = value;
-    sel.onchange = () => recast(ch, setCast(cast, part, voice, sel.value));
-    box.append(b, sel);
-    return box;
-  };
-  const out = [];
-  for (const [part, c] of Object.entries(cast)) {
-    out.push(pick(part, c.slot, SLOTS, part, null));
-    for (const [voice, role] of Object.entries(c.voices ?? {})) out.push(pick(voice, role, ROLES, part, voice));
-  }
-  if (casts.has(ch)) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.textContent = 'as written';
-    b.title = `put ${ch} back to the reading the song asked for`;
-    b.onclick = () => recast(ch, null);
-    out.push(b);
-  }
-  host.replaceChildren(...out);
-}
-
-/** Give one channel a reading of its own, or `null` to put it back to the song's. */
-function recast(ch, cast) {
-  if (cast) casts.set(ch, cast); else casts.delete(ch);
-  stage?.recast(ch, cast);
-  jobs();
-}
-
-/**
  * Something moved, so show the transport and the pointer again and start the count to hiding them. Only fullscreen
  * hides anything: on the page the transport is part of the layout and would jump the wall about if it came and went.
  */
@@ -285,8 +186,6 @@ function applyView() {
   $('chan').textContent = one
     ? `${one} — ${aboutOf(one)}${view.mode === 'single' ? ' · click it again, or Escape, for the wall' : ''}`
     : `${CHANNELS.length} worlds, one song; click one to open it, [ and ] to surf`;
-  jobs();
-  patch();
   relayout();
 }
 
@@ -309,7 +208,7 @@ async function load() {
   $('line').textContent = data.title.line;
   $('song').value = song;
   stage?.destroy();
-  from = new Map(); to = new Map(); casts.clear(); binds.clear();
+  from = new Map(); to = new Map();
   stage = createStage({ score: data.score, stream: data.stream, names: CHANNELS });
   const file = audioMap.songs[song];
   const src = file ? new URL(audioMap.base + file, location.href).href : '';

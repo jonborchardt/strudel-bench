@@ -60,18 +60,8 @@ export function createShow({ score, stream, worlds, size = { w: 16, h: 9 } }) {
     get queued() { return first()?.p.pending ?? 0; }, // how deep the host's own queue is kept, which is what costs
     get state() { return first()?.p.state ?? null; }, // for the tests; the page never reads a world's state
     has: (name) => perfs.has(name),
-    /**
-     * A world on show. Added mid-song it starts cold, so the caller seeks afterwards to catch it up. `over` is a
-     * score of its own — the same song with a different cast, so one channel can be told to read the parts
-     * differently while the rest read them as written. Only the cast differs, so the clock stays the same.
-     */
-    add(name, world, over) { perfs.set(name, { p: createPerformance(world, over ?? score, size), at: 0, bind: null }); return show; },
-    /**
-     * What drives each of a world's hooks, live. The world reads its bindings every step, so a slider is felt at once
-     * and the picture never cuts — unlike a recast, which has to build the channel again. A reset throws the state
-     * away, so the binding is kept out here and put back on.
-     */
-    tune(name, bind) { const e = perfs.get(name); if (e) { e.bind = bind; if (e.p.state) e.p.state.bind = bind; } return show; },
+    /** A world on show. Added mid-song it starts cold, so the caller seeks afterwards to catch it up. */
+    add(name, world) { perfs.set(name, { p: createPerformance(world, score, size), at: 0 }); return show; },
     drop(name) { perfs.delete(name); return show; },
     at: advance,
     draw(name, ctx, w, h) { perfs.get(name)?.p.draw(ctx, w, h); },
@@ -91,7 +81,7 @@ export function createShow({ score, stream, worlds, size = { w: 16, h: 9 } }) {
       const steps = Math.max(MIN_REPLAY, Math.floor(MAX_REPLAY / Math.max(1, perfs.size)));
       const from = Math.max(0, target - steps * STEP); // 0 for anything inside the budget, so a short song replays whole
       const at = startAt(from); // the events before the replay's start are skipped, not dumped into its first step
-      for (const e of perfs.values()) { e.p.reset(); e.at = at; if (e.bind && e.p.state) e.p.state.bind = e.bind; }
+      for (const e of perfs.values()) { e.p.reset(); e.at = at; }
       // The replay starts one step before its first second, so the first real step lands exactly on it. A fresh
       // performance's first advance only records the time it was handed; with no time elapsed it takes no step at
       // all, and a world that has taken no step has no clock — which would leave a seek reading null.
@@ -103,31 +93,6 @@ export function createShow({ score, stream, worlds, size = { w: 16, h: 9 } }) {
   };
   for (const [n, w] of Object.entries(worlds)) show.add(n, w);
   return show;
-}
-
-/**
- * The jobs a part can be given, and the ones a drum voice can. A world asks the cast what job a part has and never
- * which instrument it is, so moving a part to another job is the whole of "make this world read the music
- * differently" — the hi-hat as the heartbeat, the bass as the thing that flashes.
- */
-export const SLOTS = ['impulse', 'ground', 'line', 'counter', 'field', 'transition', 'grain'];
-export const ROLES = ['pulse', 'impact', 'grain'];
-
-/**
- * The cast with one part given another job, or one drum voice another role. Returns a new cast, so a channel can be
- * given its own reading while the others keep the song's. `voice` names a drum voice instead of the part itself.
- * Over-filling a job is allowed: a world reads the cast per part and only uses the slot counts in lib/visual.json
- * when it has to assign them itself, so three lines where it expects one simply draws three.
- */
-export function setCast(cast, part, voice, job) {
-  const entry = cast[part];
-  if (!entry || !(voice ? ROLES : SLOTS).includes(job)) return cast;
-  return {
-    ...cast,
-    [part]: voice
-      ? { ...entry, voices: { ...entry.voices, [voice]: job } }
-      : { ...entry, slot: job },
-  };
 }
 
 /**

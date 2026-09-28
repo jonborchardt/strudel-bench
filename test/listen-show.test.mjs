@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import { streamOf } from '../web/visual/export.mjs';
-import { createShow, loadWorlds, tileGrid, setCast, SLOTS, ROLES, parseHash, formatHash, WORLD_NAMES } from '../web/listen/show.mjs';
+import { createShow, loadWorlds, tileGrid, parseHash, formatHash, WORLD_NAMES } from '../web/listen/show.mjs';
 import tunnel from '../web/visual/tunnel.mjs';
 import sediment from '../web/visual/sediment.mjs';
 
@@ -97,29 +97,6 @@ test('loadWorlds: every world named in lib/visual.json loads by name and has the
   assert.deepEqual(Object.keys(worlds), WORLD_NAMES, 'every name resolves, an unknown one is skipped');
   for (const [n, w] of Object.entries(worlds))
     for (const k of ['name', 'init', 'step', 'draw']) assert.ok(w?.[k], `${n} has no ${k}`);
-});
-
-test('setCast: a part is given another job, a drum voice another role, and the rest is left alone', async () => {
-  const g = await ready, { score } = dataOf(g);
-  const cast = score.cast;
-  const drums = Object.keys(cast).find((k) => cast[k].kind === 'drums');
-  assert.ok(drums && cast[drums].slot === 'impulse' && cast.bass?.slot === 'ground', JSON.stringify(cast));
-
-  const moved = setCast(cast, 'bass', null, 'counter');
-  assert.equal(moved.bass.slot, 'counter', 'the bass takes the job it was given');
-  assert.equal(moved[drums].slot, 'impulse', 'and nothing else moves');
-  assert.equal(cast.bass.slot, 'ground', 'the cast handed in is not touched, so other channels keep theirs');
-  for (const job of SLOTS) assert.equal(setCast(cast, 'bass', null, job).bass.slot, job, 'every job is reachable in one go');
-
-  const voice = Object.keys(cast[drums].voices)[0];
-  const swung = setCast(cast, drums, voice, 'impact');
-  assert.equal(swung[drums].voices[voice], 'impact');
-  assert.equal(swung[drums].slot, cast[drums].slot, 'giving a voice a role does not move the part');
-  assert.deepEqual(Object.keys(swung[drums].voices), Object.keys(cast[drums].voices), 'and the other voices stay');
-
-  assert.equal(setCast(cast, 'nosuchpart', null, 'line'), cast, 'a part the song does not have changes nothing');
-  assert.equal(setCast(cast, 'bass', null, 'nonsense'), cast, 'and so does a job that is not one');
-  assert.equal(setCast(cast, drums, voice, 'line'), cast, 'a voice can only take a role, never a job meant for a part');
 });
 
 test('tileGrid: the wall fills its width in 16:9 boxes, and the awkward counts still fit', () => {

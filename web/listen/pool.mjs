@@ -74,10 +74,6 @@ function workerStage({ score, stream, names }) {
         if (!was || was.w !== w || was.h !== h || was.gpu !== gpu) { sent.set(name, { w, h, gpu }); owner.get(name)?.w.postMessage({ type: 'size', name, w, h, gpu }); }
       }
     },
-    /** What drives each of one channel's hooks. Live: the world reads it every step, so this rebuilds nothing. */
-    bind(name, b) { owner.get(name)?.w.postMessage({ type: 'bind', name, bind: b }); },
-    /** Read one channel's parts differently: `cast` as lib/visual.mjs builds it, or null for the song's own. */
-    recast(name, cast) { owner.get(name)?.w.postMessage({ type: 'cast', name, cast }); },
     paint(ctx, where) { blit(ctx, where, (name) => tile.get(name)); },
     destroy() { for (const r of workers) r.w.terminate(); for (const b of tile.values()) b.close(); tile.clear(); },
   };
@@ -87,7 +83,7 @@ function workerStage({ score, stream, names }) {
 function localStage({ score, stream, names }) {
   const show = createShow({ score, stream, worlds: {} });
   const own = new Map(); // name -> a canvas of its own, so the page still composites a single layer
-  let rects = new Map(), turn = 0, seen = 0;
+  let rects = new Map(), turn = 0;
   const ready = Promise.all(names.map(async (name) => {
     const world = await channelWorld(name);
     if (world) { show.add(name, world); own.set(name, document.createElement('canvas')); }
@@ -109,17 +105,9 @@ function localStage({ score, stream, names }) {
     workers: 0,
     ready,
     get clock() { return show.clock; },
-    at(t) { seen = t; show.at(t); render(); },
-    seek(t) { seen = t; show.seek(t); render(); },
+    at(t) { show.at(t); render(); },
+    seek(t) { show.seek(t); render(); },
     layout(next) { rects = next; turn = 0; },
-    bind(name, b) { show.tune(name, b); },
-    async recast(name, cast) {
-      const world = await channelWorld(name);
-      if (!world) return;
-      show.drop(name);
-      show.add(name, world, cast ? { ...score, cast } : undefined);
-      show.seek(seen);
-    },
     paint(ctx, where) { blit(ctx, where, (name) => (own.get(name)?.width > 2 ? own.get(name) : null)); },
     destroy() {},
   };

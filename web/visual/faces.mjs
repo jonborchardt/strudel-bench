@@ -15,31 +15,7 @@
 import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf, DEFAULT_SLOT } from './kit.mjs';
 import { portraitOps, drawOn, eyeY } from './portrait.mjs';
 import { characterOf } from './cast.mjs';
-import { drive, reading } from './hooks.mjs';
 export { characterOf }; // the generator lives in cast.mjs (shared with tableau); faces.html and the test still read it here
-
-/**
- * What this world does, in its own words, and what drives each of them by default. A binding replaces the `src` (who
- * feeds it) and scales the result, so "the melody moves the eyes" is the default and "the bass moves the eyes, when
- * it is loud" is a source and a threshold away. The defaults are exactly what faces did before it published these.
- */
-export const hooks = {
-  cut: { label: 'cuts to a new face', src: '@impulse:impact', reads: 'gain' },
-  stare: { label: 'widens the eyes', src: '@impulse:impact', reads: 'gain' },
-  cock: { label: 'cocks a brow and tilts', src: '@impulse:impact', reads: 'pan' },
-  blink: { label: 'blinks', src: '@impulse:grain', reads: 'gain' },
-  nod: { label: 'nods the head', src: '@impulse', except: ['impact', 'grain'], reads: 'gain' },
-  grin: { label: 'grins', src: '@impulse', except: ['impact', 'grain'], reads: 'gain' },
-  eyes: { label: 'moves the eyes', src: '@line', reads: 'note' },
-  brow: { label: 'lifts the brows', src: '@line', reads: 'note' },
-  smile: { label: 'bends the smile', src: '@line', reads: 'note' },
-  lean: { label: 'leans the head', src: '@counter', reads: 'pan' },
-  tint: { label: 'tints the room', src: '@ground', reads: 'note' },
-  sway: { label: 'sways to it', src: '@ground', reads: 'gain' },
-  glow: { label: 'glows behind the head', src: '@field', reads: 'gain' },
-  warm: { label: 'warms or cools the glow', src: '@field', reads: 'cutoff' },
-  flash: { label: 'flashes the frame', src: '@transition', reads: 'dur' },
-};
 
 const SHEET = { w: 400, h: 480 };
 const MIN_GAP = 0.15; // seconds between two pops
@@ -93,29 +69,25 @@ export default {
     s.look.x = ease(s.look.x, s.lookTo.x, 9, dt); s.look.y = ease(s.look.y, s.lookTo.y, 9, dt); s.brow = ease(s.brow, s.browTo, 6, dt); s.tilt = ease(s.tilt, s.tiltTo, 5, dt);
     s.smile = ease(s.smile, lerp(-0.15, 0.45, s.energy) + 0.5 * s.tune + 0.35 * s.grin, 6, dt); s.hueShift = ease(s.hueShift, s.hueTo, 2, dt);
     s.lookTo.x = ease(s.lookTo.x, 0, 0.6, dt); s.lookTo.y = ease(s.lookTo.y, 0, 0.6, dt); s.browTo = ease(s.browTo, 0, 0.8, dt); s.tiltTo = ease(s.tiltTo, 0, 1, dt);
-    // Every event is offered to every hook, and a hook takes it when its source says so. `drive` returns how hard,
-    // which is the reading (gain, pitch, pan...) past the hook's threshold and scaled by its depth, so a slider on
-    // any of them is felt without the world being rebuilt: the bindings are read here, every step.
     for (const e of events) {
-      const b = s.bind ?? {}, at = (k) => drive(hooks[k], b[k], e, s.slotOf), g = clamp(e.gain * e.velocity, 0, 1.5);
-      let took = false;
-      if (at('cut') > 0) { if (s.t - s.lastPop > MIN_GAP) pop(s, s.role, clock.energy); took = true; }
-      if (at('stare') > 0) { s.stare = 1; took = true; }
-      if (at('cock') > 0) { const pan = reading(hooks.cock, b.cock, e, 'pan'); s.tiltTo = (pan - 0.5) * 0.3; s.skew = pan < 0.5 ? -1 : 1; took = true; }
-      if (at('blink') > 0) { blink(s); took = true; }
-      const nod = at('nod'); if (nod > 0) { s.bob = Math.max(s.bob, nod * 1.5); took = true; }
-      const grin = at('grin'); if (grin > 0) { s.grin = Math.max(s.grin, grin * 1.5); took = true; }
-      const sway = at('sway'); if (sway > 0) { s.bob = Math.max(s.bob, 0.3 * sway * 1.5); took = true; }
-      if (at('tint') > 0 && e.note !== null) { s.hueTo = ((e.note % 12) / 12) * 80 - 40; took = true; }
-      const up = e.note === null ? null : clamp((e.note - 48) / 36);
-      if (at('eyes') > 0 && up !== null) { s.lookTo = { x: (e.pan - 0.5) * 2, y: 1 - 2 * up }; took = true; }
-      if (at('brow') > 0 && up !== null) { s.browTo = 8 * up; took = true; }
-      if (at('smile') > 0 && up !== null) { s.tune = up - 0.5; took = true; }
-      if (at('lean') > 0 && up !== null) { s.tiltTo = (e.pan - 0.5) * 0.4 + (up - 0.5) * 0.2; took = true; }
-      const glow = at('glow'); if (glow > 0) { s.glow = Math.min(1, 0.5 + 0.5 * glow * 1.5); took = true; }
-      if (at('warm') > 0 && e.cutoff !== null) { s.warm = 1 - reading(hooks.warm, b.warm, e, 'cutoff'); took = true; }
-      if (at('flash') > 0 && e.dur >= 1) { s.flash = 1; took = true; }
-      if (!took) blink(s); // a part nothing claimed still registers, as it always did
+      const slot = s.slotOf?.[e.layer] ?? DEFAULT_SLOT[e.kind] ?? 'grain', g = clamp(e.gain * e.velocity, 0, 1.5);
+      if (slot === 'impulse') {
+        if (e.role === 'impact') { if (s.t - s.lastPop > MIN_GAP) pop(s, s.role, clock.energy); s.tiltTo = (e.pan - 0.5) * 0.3; s.stare = 1; s.skew = e.pan < 0.5 ? -1 : 1; }
+        else if (e.role === 'grain') blink(s);
+        else { s.bob = Math.max(s.bob, g); s.grin = Math.max(s.grin, g); }
+      } else if (slot === 'ground') {
+        if (e.note !== null) s.hueTo = ((e.note % 12) / 12) * 80 - 40;
+        s.bob = Math.max(s.bob, 0.3 * g);
+      } else if (slot === 'line' || slot === 'counter') {
+        if (e.note === null) continue;
+        const up = clamp((e.note - 48) / 36);
+        s.lookTo = { x: (e.pan - 0.5) * 2, y: 1 - 2 * up }; s.browTo = 8 * up; s.tune = up - 0.5;
+        if (slot === 'counter') s.tiltTo = (e.pan - 0.5) * 0.4 + (up - 0.5) * 0.2;
+      } else if (slot === 'field') {
+        s.glow = Math.min(1, 0.5 + 0.5 * g);
+        if (e.cutoff !== null) s.warm = 1 - clamp(Math.log(e.cutoff / 200) / Math.log(40));
+      } else if (slot === 'transition') { if (e.dur >= 1) s.flash = 1; }
+      else blink(s);
     }
   },
 
