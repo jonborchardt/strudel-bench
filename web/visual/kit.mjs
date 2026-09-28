@@ -7,6 +7,8 @@ export const lerp = (a, b, t) => a + (b - a) * clamp(t);
 export const decay = (x, rate, dt) => x * Math.exp(-rate * dt);
 /** x eased toward `to` with time constant 1/rate: the same result whatever the step size. */
 export const ease = (x, to, rate, dt) => to + (x - to) * Math.exp(-rate * dt);
+/** A part outside the cast (a plain pattern) by its kind: the slot a world reads for it. */
+export const DEFAULT_SLOT = { drums: 'impulse', pitched: 'line', hit: 'grain', bass: 'ground', melody: 'line', pad: 'field', perc: 'grain', sample: 'impulse', fx: 'transition' };
 export const hsla = (h, s, l, a = 1) => `hsla(${((h % 360) + 360) % 360} ${clamp(s, 0, 100)}% ${clamp(l, 0, 100)}% / ${clamp(a)})`;
 
 /** A generator in a state object: `seed(s, rng)` puts the first value from the injected rng, `rand(s)` steps it (mulberry32) and returns [0, 1). */

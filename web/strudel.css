@@ -483,3 +483,30 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .workshop #editor button.sl.on, .workshop #editor button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .workshop #wstatus { min-height: 1.2em; color: #9a9aa2; font-size: .85rem; }
 @media (max-width: 60rem) { .workshop { grid-template-columns: 1fr; } }
+
+/* the listen page: one stage, two side by side, or every world at once. The boxes are .stagebox, as on the Compose
+   stage, but sized by the grid rather than by the window's height. */
+/* The wall: every channel is painted into this one canvas, because a canvas per channel is a layer per channel for
+   the compositor, and eighteen live layers cap the whole page at about a hundred tile updates a second. The tiles
+   are rectangles inside it, animated in js, so opening a world is a zoom of the moving picture and not a cut. */
+.listen .cells { position: relative; }
+.listen #screen { position: relative; }
+.listen #wall { display: block; width: 100%; background: #05060a; border-radius: 6px; }
+/* one transparent button per tile: the click target, and what a keyboard and a screen reader reach */
+.listen #hits { position: absolute; inset: 0; }
+.listen #hits button { position: absolute; margin: 0; padding: 0; border: 0; border-radius: 6px; background: none; cursor: pointer; }
+.listen #hits button:hover { box-shadow: inset 0 0 0 2px #fff6; }
+.listen #hits button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.listen .chan { margin: .4rem 0 0; min-height: 1.2em; font-size: .85rem; }
+/* the transport sits under the wall on the page, and over it in fullscreen, where it fades away until the mouse
+   moves: a wall you are watching should not have a toolbar across it */
+.listen .cells:fullscreen { background: #000; }
+.listen .cells:fullscreen #wall { border-radius: 0; }
+.listen .cells:fullscreen #screen { height: 100%; }
+.listen .cells:fullscreen #bar { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: .75rem 1rem;
+  background: linear-gradient(transparent, #000c 40%); transition: opacity .3s; }
+.listen .cells:fullscreen #bar .muted { color: #ccc; }
+.listen .cells:fullscreen.idle { cursor: none; }
+.listen .cells:fullscreen.idle #bar { opacity: 0; pointer-events: none; }
+.listen #bar { margin-top: .5rem; }
+.listen #scrub { min-width: 8rem; }

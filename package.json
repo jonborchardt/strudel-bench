@@ -12,6 +12,7 @@
     "samples": "node scripts/samples.mjs",
     "pages": "node scripts/pages.mjs",
     "render": "node scripts/render.mjs",
+    "publish-audio": "node scripts/publish-audio.mjs",
     "mp3": "node scripts/mp3.mjs",
     "video": "node scripts/video.mjs",
     "snippets": "node scripts/snippets.mjs",

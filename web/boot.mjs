@@ -95,7 +95,7 @@ export async function expandCode(ready, code) {
 export function nav(page) {
   const link = (href, name, extra = '') => `<a href="${href}" class="${page === name ? 'on' : ''}"${extra}>${name}</a>`;
   // the sample workshop is local-only (it writes samples/user/), so it stays hidden until a page knows it has the server
-  return `<a class="brand" href="./">strudel-bench</a>${link('./', 'Compose')}${link('examples.html', 'Examples')}${link('samples.html', 'Samples', ' hidden')}${link('about.html', 'About')}<span class="status" id="status"></span><span class="narrow" role="alert">Made for a desktop browser: this window is too narrow for the mix card and panes.</span>`;
+  return `<a class="brand" href="./">strudel-bench</a>${link('./', 'Compose')}${link('examples.html', 'Examples')}${link('listen.html', 'Listen')}${link('samples.html', 'Samples', ' hidden')}${link('about.html', 'About')}<span class="status" id="status"></span><span class="narrow" role="alert">Made for a desktop browser: this window is too narrow for the mix card and panes.</span>`;
 }
 
 /** Site footer shared by every page: author line, links, copyright. */

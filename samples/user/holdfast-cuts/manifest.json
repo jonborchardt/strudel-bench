@@ -1,0 +1,360 @@
+{
+ "packer": {
+  "name": "strudel-pack",
+  "version": "0.1.0"
+ },
+ "generatedAt": "2026-09-25T04:59:18+00:00",
+ "license": {
+  "license": "CC-BY-NC-SA-3.0",
+  "license_url": "https://creativecommons.org/licenses/by-nc-sa/3.0/",
+  "attribution": "Nine Inch Nails",
+  "album": "The Slip",
+  "source_url": "https://www.nin.com/"
+ },
+ "packs": [
+  {
+   "id": "26-ghosts-iii",
+   "title": "26 Ghosts III",
+   "album": "Ghosts I-IV",
+   "bpm": 158.0,
+   "beats_per_bar": 4.0,
+   "markers": [
+    [
+     2,
+     "Start"
+    ],
+    [
+     6,
+     "in"
+    ],
+    [
+     18,
+     "Riff"
+    ],
+    [
+     30,
+     "RE In"
+    ],
+    [
+     54,
+     "Outro"
+    ],
+    [
+     80,
+     "end"
+    ]
+   ],
+   "license": "CC-BY-NC-SA-3.0",
+   "clipCount": 1309,
+   "bytes": 579154908,
+   "stems": [
+    {
+     "name": "bass",
+     "role": "bass",
+     "clips": 110,
+     "kinds": {
+      "l1": 65,
+      "l2": 30,
+      "l4": 15
+     }
+    },
+    {
+     "name": "cello",
+     "role": "strings",
+     "clips": 54,
+     "kinds": {
+      "l1": 32,
+      "l2": 15,
+      "l4": 7
+     }
+    },
+    {
+     "name": "contra",
+     "role": "strings",
+     "clips": 55,
+     "kinds": {
+      "l1": 32,
+      "l2": 15,
+      "l4": 8
+     }
+    },
+    {
+     "name": "delay-gtr",
+     "role": "guitar",
+     "clips": 33,
+     "kinds": {
+      "l1": 20,
+      "l2": 9,
+      "l4": 4
+     }
+    },
+    {
+     "name": "drums",
+     "role": "drums",
+     "clips": 123,
+     "kinds": {
+      "l1": 72,
+      "l2": 35,
+      "l4": 16
+     }
+    },
+    {
+     "name": "glocken",
+     "role": "keys",
+     "clips": 12,
+     "kinds": {
+      "l1": 9,
+      "l2": 3
+     }
+    },
+    {
+     "name": "gtr-drone1",
+     "role": "guitar",
+     "clips": 137,
+     "kinds": {
+      "l1": 80,
+      "l2": 38,
+      "l4": 19
+     }
+    },
+    {
+     "name": "gtr-drone2",
+     "role": "guitar",
+     "clips": 118,
+     "kinds": {
+      "l1": 68,
+      "l2": 33,
+      "l4": 17
+     }
+    },
+    {
+     "name": "gtr-drone3",
+     "role": "guitar",
+     "clips": 93,
+     "kinds": {
+      "l1": 56,
+      "l2": 24,
+      "l4": 13
+     }
+    },
+    {
+     "name": "gtr-drone4",
+     "role": "guitar",
+     "clips": 12,
+     "kinds": {
+      "l1": 9,
+      "l2": 2,
+      "l4": 1
+     }
+    },
+    {
+     "name": "gtr-drone5",
+     "role": "guitar",
+     "clips": 13,
+     "kinds": {
+      "l1": 8,
+      "l2": 3,
+      "l4": 2
+     }
+    },
+    {
+     "name": "mod",
+     "role": "synth",
+     "clips": 119,
+     "kinds": {
+      "l1": 70,
+      "l2": 33,
+      "l4": 16
+     }
+    },
+    {
+     "name": "nasty-gtr",
+     "role": "guitar",
+     "clips": 83,
+     "kinds": {
+      "l1": 48,
+      "l2": 23,
+      "l4": 12
+     }
+    },
+    {
+     "name": "nasty-gtr2",
+     "role": "guitar",
+     "clips": 83,
+     "kinds": {
+      "l1": 48,
+      "l2": 23,
+      "l4": 12
+     }
+    },
+    {
+     "name": "noiz-gtr1",
+     "role": "guitar",
+     "clips": 20,
+     "kinds": {
+      "l1": 12,
+      "l2": 5,
+      "l4": 3
+     }
+    },
+    {
+     "name": "noiz-gtr2",
+     "role": "guitar",
+     "clips": 12,
+     "kinds": {
+      "l1": 12
+     }
+    },
+    {
+     "name": "piano",
+     "role": "keys",
+     "clips": 0,
+     "kinds": {}
+    },
+    {
+     "name": "riff",
+     "role": "guitar",
+     "clips": 33,
+     "kinds": {
+      "l1": 20,
+      "l2": 8,
+      "l4": 5
+     }
+    },
+    {
+     "name": "sloshy-tamb",
+     "role": "perc",
+     "clips": 22,
+     "kinds": {
+      "l1": 12,
+      "l2": 6,
+      "l4": 3,
+      "hit": 1
+     }
+    },
+    {
+     "name": "tamb",
+     "role": "perc",
+     "clips": 77,
+     "kinds": {
+      "l1": 44,
+      "l2": 21,
+      "l4": 11,
+      "hit": 1
+     }
+    },
+    {
+     "name": "tape-delay",
+     "role": "other",
+     "clips": 17,
+     "kinds": {
+      "l1": 9,
+      "l2": 5,
+      "l4": 2,
+      "hit": 1
+     }
+    },
+    {
+     "name": "viola",
+     "role": "strings",
+     "clips": 83,
+     "kinds": {
+      "l1": 48,
+      "l2": 23,
+      "l4": 12
+     }
+    }
+   ]
+  }
+ ],
+ "clips": [
+  {
+   "pack": "26-ghosts-iii",
+   "title": "26 Ghosts III",
+   "album": "Ghosts I-IV",
+   "bpm": 158.0,
+   "stem": "gtr-drone1",
+   "role": "guitar",
+   "sound": "26_ghosts_iii_gtr_drone1_l4_002",
+   "kind": "l4",
+   "bars": 4,
+   "seconds": 6.07595,
+   "startBar": 5,
+   "section": "Start",
+   "rmsDb": -17.66,
+   "peakDb": -3.88,
+   "transcript": null,
+   "file": "26_ghosts_iii_gtr_drone1_l4_002.wav",
+   "pitchHz": 139.6,
+   "pitchRange": 0.5,
+   "wordsPerSec": null,
+   "density": 0.66,
+   "brightness": 0.3,
+   "weight": 0.67,
+   "space": 0.78,
+   "articulation": 0.55,
+   "aggression": 0.07,
+   "groove": 0.75,
+   "variation": 0.86,
+   "organicness": 0.32,
+   "width": 0.71,
+   "register": 0.5,
+   "feel": [
+    "busy",
+    "dark",
+    "massive",
+    "dreamy",
+    "very smooth",
+    "swung",
+    "mechanical",
+    "wide"
+   ],
+   "moods": [
+    "cinematic",
+    "playful"
+   ]
+  },
+  {
+   "pack": "26-ghosts-iii",
+   "title": "26 Ghosts III",
+   "album": "Ghosts I-IV",
+   "bpm": 158.0,
+   "stem": "gtr-drone2",
+   "role": "guitar",
+   "sound": "26_ghosts_iii_gtr_drone2_l4_002",
+   "kind": "l4",
+   "bars": 4,
+   "seconds": 6.075949,
+   "startBar": 33,
+   "section": "RE In",
+   "rmsDb": -17.21,
+   "peakDb": -4.43,
+   "transcript": null,
+   "file": "26_ghosts_iii_gtr_drone2_l4_002.wav",
+   "pitchHz": 156.4,
+   "pitchRange": 0.6,
+   "wordsPerSec": null,
+   "density": 0.71,
+   "brightness": 0.26,
+   "weight": 0.61,
+   "space": 0.52,
+   "articulation": 0.37,
+   "aggression": 0.07,
+   "groove": 0.57,
+   "variation": 0.88,
+   "organicness": 0.39,
+   "width": 0.74,
+   "register": 0.55,
+   "feel": [
+    "busy",
+    "dark",
+    "very smooth",
+    "wide"
+   ],
+   "moods": [
+    "cinematic",
+    "sad"
+   ]
+  }
+ ]
+}

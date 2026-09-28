@@ -269,3 +269,40 @@ test('PUT of a pack.json validates the json whatever the case of the name', asyn
     });
   } finally { fs.rmSync(pack, { recursive: true, force: true }); }
 });
+
+test('listen: a song\'s data, which mp3s exist, and the mp3 itself by byte range', async () => {
+  await withServer(async (base) => {
+    const d = await (await fetch(`${base}/listen/demo.strudel.json`)).json();
+    assert.ok(d.score.world && d.stream.length > 10, 'the score and the stream');
+    assert.equal((await fetch(`${base}/listen/demo.strudel.json`)).status, 200, 'served again from the cache');
+    assert.equal((await fetch(`${base}/listen/nope.strudel.json`)).status, 404);
+    assert.equal((await fetch(`${base}/listen/..%2Fserver.mjs.json`)).status, 400, 'no path games');
+    const a = await (await fetch(`${base}/listen/audio.json`)).json();
+    assert.equal(a.base, 'renders/');
+    const broken = path.join(ROOT, 'songs', '_t_broken.strudel');
+    fs.writeFileSync(broken, 'song({}, [section("a", 1, { drums: { density: )]');
+    try {
+      const bad = await fetch(`${base}/listen/_t_broken.strudel.json`);
+      assert.equal(bad.status, 422, 'a song that will not evaluate is the song\'s problem, not the server\'s');
+      assert.match(await bad.text(), /_t_broken/);
+    } finally { fs.rmSync(broken, { force: true }); }
+    const mp3 = path.join(ROOT, 'renders', '_t_x.mp3');
+    fs.mkdirSync(path.join(ROOT, 'renders'), { recursive: true });
+    fs.writeFileSync(mp3, '0123456789');
+    try {
+      assert.ok((await (await fetch(`${base}/listen/audio.json`)).json()).songs, 'the map is keyed by song');
+      const whole = await fetch(`${base}/renders/_t_x.mp3`);
+      assert.equal(whole.headers.get('accept-ranges'), 'bytes', 'an <audio> element needs to know it can seek');
+      assert.equal(whole.headers.get('content-type'), 'audio/mpeg');
+      assert.equal(await whole.text(), '0123456789');
+      const part = await fetch(`${base}/renders/_t_x.mp3`, { headers: { range: 'bytes=2-4' } });
+      assert.equal(part.status, 206);
+      assert.equal(part.headers.get('content-range'), 'bytes 2-4/10');
+      assert.equal(await part.text(), '234');
+      const tail = await fetch(`${base}/renders/_t_x.mp3`, { headers: { range: 'bytes=8-' } });
+      assert.equal(await tail.text(), '89', 'an open-ended range');
+      assert.equal((await fetch(`${base}/renders/_t_x.mp3`, { headers: { range: 'bytes=99-200' } })).status, 416);
+      assert.equal((await fetch(`${base}/renders/_t_missing.mp3`)).status, 404);
+    } finally { fs.rmSync(mp3, { force: true }); }
+  });
+});

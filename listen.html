@@ -1,0 +1,44 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>strudel-bench · listen</title>
+<meta name="description" content="Every strudel-bench song, played with its visuals drawn live: pick any of the seventeen visual worlds, or watch all of them answer the same music at once.">
+<link rel="canonical" href="https://jonborchardt.github.io/strudel-bench/listen.html">
+<meta property="og:title" content="Listen · strudel-bench">
+<meta property="og:description" content="Every song, played with its visuals drawn live: pick any visual world, or watch all seventeen answer the same music at once.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jonborchardt.github.io/strudel-bench/listen.html">
+<meta property="og:image" content="https://jonborchardt.github.io/strudel-bench/web/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="web/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="web/strudel.css">
+<nav class="top" id="nav"></nav>
+<main>
+  <article class="card listen">
+    <header>
+      <h1 id="ttl">listen</h1>
+      <span class="muted" id="line"></span>
+      <span class="grow"></span>
+      <label class="field">song <select id="song"></select></label>
+    </header>
+    <div id="cells" class="cells">
+      <div id="screen"><canvas id="wall"></canvas><div id="hits"></div></div>
+      <!-- the transport lives inside the stage so it comes along into fullscreen, where it fades out until the mouse moves -->
+      <div class="row transport" id="bar">
+        <button id="play" class="primary" disabled>&#9654; Play</button>
+        <button id="stop" disabled>&#9632; Stop</button>
+        <input type="range" id="scrub" class="grow" min="0" max="1000" value="0" step="1" aria-label="position">
+        <span class="muted" id="pos">0:00</span>
+        <button id="full" title="fullscreen">&#x2922;</button>
+      </div>
+    </div>
+    <p class="muted chan" id="chan"></p>
+    <p class="muted" id="msg"></p>
+  </article>
+</main>
+<footer class="site" id="foot"></footer>
+<audio id="au" preload="metadata" crossorigin="anonymous"></audio>
+<script type="module">
+  import { start } from './web/listen/page.mjs';
+  start();
+</script>
