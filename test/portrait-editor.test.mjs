@@ -1,6 +1,6 @@
-import test from 'node:test';
+﻿import test from 'node:test';
 import assert from 'node:assert/strict';
-import { renderPortrait } from '../web/visual/portrait.mjs';
+import { renderPortrait, portraitOps, DEFAULTS, NOSES, FACIAL_HAIR, FACIAL_HAIR_STYLES } from '../web/visual/portrait.mjs';
 import { GROUPS, CONTROLS, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../web/visual/editor.mjs';
 import { FAMILIES } from '../web/visual/cast.mjs';
 
@@ -92,3 +92,64 @@ test('the idle animation drifts the pose, moves the gaze and blinks, and never l
   }
   assert.ok(shut > 5 && shut < 200, `blinks: ${shut} frames shut`);
 });
+
+// --- the dials added for matching a face to a photograph: the beard's own colour and density, the hairline,
+// the cheeks' weight, the smile's squint, the print on the chest, and the gaze through a turn ---
+
+test('the moustache belongs to the features: under the nose, above the lip, and it travels with them on a turned head', () => {
+  const stache = (o) => portraitOps({ facialHair: { style: 'mustache' }, ...o }).filter((x) => x.stache);
+  const xOf = (ops) => +ops[0].d.match(/-?[\d.]+/)[0];
+  assert.equal(stache({}).length, 1);
+  for (const turn of [-1, 1]) {
+    const moved = xOf(stache({ pose: { turn } })) - xOf(stache({}));
+    assert.equal(moved, 12 * turn, `a turn of ${turn} slides the moustache with the mouth, not with the jaw`); // the beard's mass travels 8, the features 12: before this the moustache went with the mass and came off the lip
+  }
+  const yOf = (ops) => ops[0].d.match(/-?[\d.]+/g).map(Number).filter((_, i) => i % 2); // every y in the path
+  const noseBottom = (nose) => DEFAULTS.eyes.y + 10 + (NOSES[nose.style].len + NOSES[nose.style].tip * 1.1) * (nose.length / 38);
+  for (const nose of [{ style: 'short', length: 30 }, { style: 'long', length: 52 }]) for (const mouth of [{ y: 268 }, { y: 292, fullness: 1, style: 'full' }]) {
+    const ys = yOf(stache({ nose, mouth })), what = JSON.stringify({ nose, mouth });
+    if (noseBottom(nose) + 10 < mouth.y - 8) assert.ok(Math.min(...ys) >= noseBottom(nose), `the moustache hangs from the nose, wherever the nose ends (${what})`); // where there is a gap to hang in
+    assert.ok(Math.max(...ys) < mouth.y, `and stops above the lip (${what})`);
+  }
+  const squeezed = yOf(stache({ nose: { style: 'long', length: 52 }, mouth: { y: 250 } })); // a nose that runs down to the lip leaves no gap: the hair is squeezed, never drawn over the mouth
+  assert.ok(Math.max(...squeezed) < 250 && Math.max(...squeezed) - Math.min(...squeezed) >= 8);
+});
+
+test('the beard takes a colour, a density, a cheek line and a moustache of its own', () => {
+  const ops = (f) => portraitOps({ facialHair: { style: 'shortBeard', ...f }, hairColor: '#123123' });
+  const band = (f) => ops(f).filter((o) => o.k === 'path' && / 700/.test(o.d)).at(-1); // the mass is the band that runs off the bottom of the sheet, drawn after the shirt that does the same
+  assert.equal(band({}).fill, '#123123', 'the beard is the hair colour by default');
+  assert.equal(band({ color: '#a05020' }).fill, '#a05020', 'a beard colour of its own, apart from the hair');
+  // density is how much hair, drawn as the skin showing between it, never as a transparent beard (which shows the mouth through itself)
+  const near = (a, b) => [1, 3, 5].reduce((s, i) => s + Math.abs(parseInt(a.slice(i, i + 2), 16) - parseInt(b.slice(i, i + 2), 16)), 0);
+  const thin = band({ density: 0.15 }), thick = band({ density: 1 });
+  assert.ok((thin.op ?? 1) === 1 && (thick.op ?? 1) === 1, 'every density is opaque');
+  assert.ok(near(thin.fill, DEFAULTS.skin) < near(thick.fill, DEFAULTS.skin), 'a thin beard is nearer the skin, a full one is the hair');
+  assert.equal(thick.fill, '#123123');
+  assert.equal(ops({ mustache: false }).filter((o) => o.stache).length, 0);
+  assert.equal(portraitOps({ facialHair: { style: 'heavyStubble', mustache: true } }).filter((o) => o.stache).length, 1, 'and a stubble can carry one');
+  const high = band({ cheekLine: 1 }), low = band({ cheekLine: 0 });
+  assert.ok(Math.min(...high.d.match(/-?[\d.]+/g).map(Number).filter((_, i) => i % 2)) < Math.min(...low.d.match(/-?[\d.]+/g).map(Number).filter((_, i) => i % 2)), 'the cheek line climbs');
+  for (const s of FACIAL_HAIR_STYLES) assert.ok(Array.isArray(FACIAL_HAIR[s](DEFAULTS)), s); // every style still answers as a function of the face
+});
+
+test('the hairline, the cheeks, the squint, the print and the gaze', () => {
+  const lowest = (ops, fill) => Math.max(...ops.filter((o) => o.fill === fill && !o.brow).flatMap((o) => (o.d ?? '').match(/-?[\d.]+/g)?.map(Number).filter((_, i) => i % 2) ?? []));
+  const hair = (h) => lowest(portraitOps({ hair: { style: 'sidePart', ...h }, hairColor: '#123123' }), '#123123');
+  assert.ok(hair({ hairline: 1 }) < hair({}) && hair({ hairline: -1 }) > hair({}), 'the hairline moves up and down the forehead');
+  assert.ok(hair({ recession: 1 }) < hair({}), 'and the temples retreat');
+  // the face path is M crown, then one cubic down to the cheek: its end point is where the cheek sits (to the left of centre, so wider is smaller)
+  const cheek = (fn) => portraitOps({ face: { fullness: fn } }).find((o) => o.fill === DEFAULTS.skin && o.d?.startsWith('M 200 112')).d.match(/-?[\d.]+/g).map(Number)[6];
+  const temple = (fn) => portraitOps({ face: { fullness: fn } }).find((o) => o.fill === DEFAULTS.skin && o.d?.startsWith('M 200 112')).d.match(/-?[\d.]+/g).map(Number)[2];
+  assert.ok(cheek(1) < cheek(0) && cheek(-1) > cheek(0), 'fullness puts weight on the cheek');
+  assert.equal(temple(1), temple(0), 'and none on the temple, which is bone');
+  const aperture = (sq) => { const o = portraitOps({ eyes: { squint: sq } }).find((x) => x.k === 'path' && x.fill?.startsWith('#') && / Q /.test(x.d) && x.d.split('Q').length === 3); return o; };
+  assert.notEqual(JSON.stringify(aperture(0)), JSON.stringify(aperture(1)), 'the squint closes the eye from below');
+  const print = (t) => portraitOps({ top: { style: 'crewTshirt', graphic: 'concentric', ...t } }).filter((o) => o.k === 'ellipse' && o.cy > 380);
+  assert.equal(print({ graphicColor: '#ff0000' })[0].stroke, '#ff0000');
+  assert.ok(print({ graphicScale: 2 })[0].rx > print({})[0].rx * 1.9 && print({ graphicY: 40 })[0].cy - print({})[0].cy === 40, 'the print sizes and moves on the chest');
+  const iris = (pose) => portraitOps({ pose, eyes: { iris: '#abcdef' } }).find((o) => o.fill === '#abcdef').cx;
+  assert.ok(iris({ turn: -1, gaze: 'camera' }) > iris({ turn: -1 }), 'the gaze stays on the viewer through a turn');
+  assert.equal(iris({ gaze: 'camera' }), iris({}), 'and changes nothing on a square head');
+});
+

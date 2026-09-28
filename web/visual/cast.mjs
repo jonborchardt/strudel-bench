@@ -5,7 +5,7 @@
 // styling on that base (a COSTUMES family, makeup, marks, props, a hat, an expression, a pose) and returns what
 // portraitOps takes, so the same face is recognisable in every outfit. All randomness is rand(s) on the caller's state.
 import { clamp, lerp, rand } from './kit.mjs';
-import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR_STYLES, HAT_HAIR, LONG_HAIR, FACIAL_HAIR_STYLES, GLASSES_STYLES, TOP_STYLES, JACKET_STYLES, DETAIL_STYLES, shade, merge } from './portrait.mjs';
+import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR_STYLES, HAT_HAIR, LONG_HAIR, FACIAL_HAIR_STYLES, GLASSES_STYLES, TOP_STYLES, JACKET_STYLES, DETAIL_STYLES, GRAPHIC_STYLES, shade, merge } from './portrait.mjs';
 
 // the hats a section role wears: bare or a beanie to establish, a cap or a brim to develop, everyone hatted at the climax
 const WARDROBE = { establish: ['none', 'beanie', 'baseballCap', 'none', 'cuffedBeanie'], develop: ['dadCap', 'flatCap', 'bucketHat', 'none', 'fishermanBeanie', 'snapback', 'beret'], climax: ['wideBrimFelt', 'cowboy', 'sunHat', 'snapback', 'truckerCap', 'bucketHat'], release: ['none', 'sunHat', 'beanie', 'none', 'bucketHat'], none: ['none', 'beanie', 'baseballCap', 'dadCap', 'flatCap', 'wideBrimFelt', 'bucketHat'] };
@@ -36,8 +36,8 @@ export function faceOf(s, fam, a = {}) {
   const eyeY = 190 + r() * 10, noseL = between(s, f.noseL ?? [32, 44]), lip = LIP_GAP[0] + r() * (LIP_GAP[1] - LIP_GAP[0]);
   return {
     shape,
-    face: { width, height, jaw: clamp(shape.jaw * j(0.1), 0.55, 1), chin: shape.chin, corner: shape.corner ?? 32, skew: (r() - 0.5) * 0.6, asym: { cheek: sd * (0.4 + r() * 0.6), jaw: -sd * (0.3 + r() * 0.7), temple: (r() < 0.5 ? sd : -sd) * r(), chin: sd * r() * 0.6 } },
-    eyes: { y: eyeY, spacing, openness: 0.85 + r() * 0.3, asym: 0.92 + r() * 0.16, dy: sd * (0.5 + r() * 2.5), depth: between(s, f.depth ?? [0.3, 0.7]), sclera: f.sclera ? between(s, f.sclera) : null, bags: f.bags ? between(s, f.bags) : r() < 0.2 ? r() * 0.4 : 0, style: choose(s, a.eyes ?? f.eyes, EYE_STYLES), iris: IRIS[Math.floor(r() * IRIS.length)], browStyle: choose(s, a.brows ?? f.brows, BROW_STYLES), browLift: between(s, f.browLift ?? [0, 3]), browSkew: (r() - 0.5) * 0.2 },
+    face: { width, height, jaw: clamp(shape.jaw * j(0.1), 0.55, 1), chin: shape.chin, corner: shape.corner ?? 32, skew: (r() - 0.5) * 0.6, fullness: (r() - 0.5) * 1.1, asym: { cheek: sd * (0.4 + r() * 0.6), jaw: -sd * (0.3 + r() * 0.7), temple: (r() < 0.5 ? sd : -sd) * r(), chin: sd * r() * 0.6 } }, // fullness: how much weight this one carries, apart from the skull the shape gives it
+    eyes: { y: eyeY, spacing, openness: 0.85 + r() * 0.3, asym: 0.92 + r() * 0.16, dy: sd * (0.5 + r() * 2.5), depth: between(s, f.depth ?? [0.3, 0.7]), sclera: f.sclera ? between(s, f.sclera) : null, bags: f.bags ? between(s, f.bags) : r() < 0.55 ? 0.15 + r() * 0.6 : 0, squint: r() < 0.4 ? r() * 0.45 : 0, style: choose(s, a.eyes ?? f.eyes, EYE_STYLES), iris: IRIS[Math.floor(r() * IRIS.length)], browStyle: choose(s, a.brows ?? f.brows, BROW_STYLES), browLift: between(s, f.browLift ?? [0, 3]), browSkew: (r() - 0.5) * 0.2 },
     nose: { style: choose(s, a.nose ?? f.noses, NOSE_STYLES), width: between(s, f.noseW ?? [16, 24]) * k, length: noseL },
     mouth: { style: choose(s, a.mouth ?? f.mouths ?? MOUTH_STYLES.filter((m) => m !== 'asym'), MOUTH_STYLES), y: eyeY + 10 + noseL + lip, width: between(s, f.mouthW ?? [40, 52]) * k, fullness: between(s, f.full ?? [0.3, 0.7]) },
   };
@@ -56,17 +56,22 @@ export function characterOf(s, role = 'none', energy = 0.5) {
   return {
     skin: pick(SKINS), hairColor: hair,
     face, ears: { size: 0.85 + r() * 0.3 }, eyes, nose, mouth: { ...mouth, smile: lerp(-0.15, 0.45, energy) },
-    hair: { style: hairStyle },
-    facialHair: { style: beard ? pick(BEARDS) : 'none' },
+    hair: { style: hairStyle, hairline: (r() - 0.5) * 0.7, recession: r() < 0.25 ? r() * 0.5 : 0 }, // where this one's hair sits on the forehead, and the quarter of them whose temples have gone back
+    // a beard is a style and then how much of it there is: the density and the cheek line are what separate two men
+    // with the same beard, and a beard is often a shade off the hair, so the dials are drawn here and not left at their defaults
+    facialHair: beard
+      ? { style: pick(BEARDS), density: 0.3 + r() * 0.7, cheekLine: 0.2 + r() * 0.7, color: r() < 0.35 ? shade(hair, 0.85 + r() * 0.5) : null, mustache: r() < 0.25 ? r() < 0.5 : null }
+      : { style: 'none' },
     hat: { style: hat, color: pick(CLOTHES), accent: shade(pick(CLOTHES), 0.75) },
-    top: { style: pick(PLAIN_TOPS), color: pick(CLOTHES) },
+    top: { style: pick(PLAIN_TOPS), color: pick(CLOTHES), ...(r() < 0.25 ? { graphic: pick(GRAPHIC_STYLES), graphicScale: 0.65 + r() * 0.8, graphicY: (r() - 0.5) * 50 } : {}) }, // a quarter of them wear something printed, at their own size and height on the chest
     jacket: r() < 0.35 ? { style: pick(JACKETS), color: pick(CLOTHES) } : { style: 'none' },
     glasses: sig === 'glasses' ? { style: pick(GLASSES_STYLES), color: pick(['#2b2927', '#211f1e', '#5c5a57', '#6b4a3a']) } : null,
     accessories: sig === 'accessory' ? [pick([...ONE_SIDED, ...EXTRAS])] : [], details: sig === 'detail' ? [pick(DETAIL_STYLES)] : [],
-    cheeks: r() < 0.35 ? 0 : 0.3 + r() * 0.7, // how much this face colours: a third not at all
+    cheeks: r() < 0.35 ? 0 : 0.3 + r() * 0.7, // how much this face colours: a third not at all (the faces world's key)
+    blush: r() < 0.45 ? 0 : 0.2 + r() * 0.7, // and the portrait's own: colour in the cheeks on rather more than half of them
     light: lightOf(s, 0.55 + r() * 0.3), // one lighting language across a crowd: every face modelled, none flat, none harsh
     neck: { ...pick(NECKS) },
-    pose: stanceOf(s), // how this person holds themself: one stance, not five dice
+    pose: { ...stanceOf(s), gaze: r() < 0.5 ? 'camera' : null }, // how this person holds themself: one stance, not five dice; half of them look back at the viewer through the turn, half let their eyes go with the head
     frame: r() < 0.4 ? 0 : (r() - 0.5) * 0.36, // where they enter the frame: off centre by this much of the frame's height, more often than not
   };
 }
