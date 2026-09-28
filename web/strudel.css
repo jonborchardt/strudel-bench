@@ -489,6 +489,8 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 /* The wall: every channel is painted into this one canvas, because a canvas per channel is a layer per channel for
    the compositor, and eighteen live layers cap the whole page at about a hundred tile updates a second. The tiles
    are rectangles inside it, animated in js, so opening a world is a zoom of the moving picture and not a cut. */
+/* the wall is the page here, so it takes the window's width rather than the reading measure the other pages keep */
+main.wide { max-width: none; padding-bottom: 1rem; }
 .listen .cells { position: relative; }
 .listen #screen { position: relative; }
 .listen #wall { display: block; width: 100%; background: #05060a; border-radius: 6px; }

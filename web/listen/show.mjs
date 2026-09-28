@@ -96,15 +96,25 @@ export function createShow({ score, stream, worlds, size = { w: 16, h: 9 } }) {
 }
 
 /**
- * How to tile `count` boxes across `width`: as many 16:9 columns as fit without going under `min`, the last row
- * short where the count does not divide. The page reads it to place the wall's tiles; it is here because it is
- * arithmetic with no DOM in it, and the awkward cases (one box, a box narrower than the minimum) are worth pinning.
+ * How to tile `count` boxes across `width`: 16:9 columns, the last row short where the count does not divide.
+ * With a `height` to live in, the column count is whichever makes the boxes biggest inside that box — so a wide
+ * screen gets more columns and a narrow one fewer, and either way the wall fills the space it has rather than
+ * running off the bottom. Without one it falls back to as many columns as fit without going under `min`.
+ * It is here because it is arithmetic with no DOM in it, and the awkward cases are worth pinning.
  */
-export function tileGrid(count, width, { gap = 8, min = 230, cols: fixed = 0 } = {}) {
+export function tileGrid(count, width, { gap = 8, min = 230, cols: fixed = 0, height: room = 0 } = {}) {
   const n = Math.max(1, count), w = Math.max(1, width);
-  const cols = Math.max(1, Math.min(n, fixed || Math.floor((w + gap) / (min + gap)) || 1));
+  // the box width `c` columns leaves, limited by the width and, when there is one, by the height
+  const fit = (c) => Math.min((w - gap * (c - 1)) / c,
+    room > 0 ? (((room - gap * (Math.ceil(n / c) - 1)) / Math.ceil(n / c)) * 16) / 9 : Infinity);
+  let cols = fixed ? Math.min(n, fixed) : 0;
+  if (!cols) {
+    if (room > 0) for (let c = 1, best = -1; c <= n; c++) { if (fit(c) > best) { best = fit(c); cols = c; } }
+    else cols = Math.min(n, Math.floor((w + gap) / (min + gap)) || 1);
+  }
+  cols = Math.max(1, cols);
   const rows = Math.ceil(n / cols);
-  const tw = (w - gap * (cols - 1)) / cols, th = (tw * 9) / 16;
+  const tw = Math.max(1, fit(cols)), th = (tw * 9) / 16;
   return {
     cols, rows, tw, th,
     height: rows * th + (rows - 1) * gap,
@@ -113,9 +123,9 @@ export function tileGrid(count, width, { gap = 8, min = 230, cols: fixed = 0 } =
 }
 
 /**
- * What the page is showing, from its hash: `#<song>&grid` for the wall of every world, `#<song>&w=<world>` for one
- * of them opened. Unknown keys are ignored, so the hash stays the whole state and a link from another version of
- * this page degrades to the song rather than breaking.
+ * What the page is showing, from its hash: `#<song>&w=<world>` for one world opened, and the wall of every world
+ * for anything else, which is the landing. Unknown keys are ignored, so the hash stays the whole state and a link
+ * from another version of this page degrades to the wall rather than breaking.
  */
 export function parseHash(hash = '') {
   const parts = String(hash).replace(/^#/, '').split('&').filter(Boolean);
@@ -124,9 +134,8 @@ export function parseHash(hash = '') {
     const i = s.indexOf('=');
     return i < 0 ? [s, ''] : [s.slice(0, i), decodeURIComponent(s.slice(i + 1))];
   }));
-  if (flags.has('grid')) return { song, mode: 'grid', worlds: [] };
   const w = flags.get('w');
-  return { song, mode: 'single', worlds: w ? [w] : [] };
+  return w ? { song, mode: 'single', worlds: [w] } : { song, mode: 'grid', worlds: [] };
 }
 
 /** The same, back to a hash: what the page pushes into the url bar and what a visitor copies. */

@@ -18,12 +18,11 @@ const mmss = (s) => (Number.isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.f
 const CHANNELS = WORLD_NAMES;
 const GAP = 8;           // css pixels between tiles
 const ZOOM = 320;        // milliseconds for a zoom in or out
-const MIN_TILE = 230;    // the narrowest a grid tile gets before the wall drops a column
 const MAX_PX = 1920;     // the widest any one tile is rendered, whatever the screen's pixel ratio
 const IDLE = 2600;       // milliseconds of stillness before fullscreen hides the transport and the pointer
 
 let audio, songs = [], audioMap = { base: '', songs: {} };
-let view = { song: null, mode: 'single', worlds: [] };
+let view = { song: null, mode: 'grid', worlds: [] }; // the wall is the landing
 let data = null, stage = null, loading = 0;
 let wall, wctx, from = new Map(), to = new Map(), started = 0, hover = null;
 
@@ -41,28 +40,38 @@ function shown() {
 }
 
 /**
- * Where every channel sits on the wall, in css pixels, and how opaque. The ones on screen are laid out in a grid
- * that fills the width; the rest are parked on top of the first of them, invisible, so a zoom in collapses them into
- * the one being opened and a zoom out grows them back out of it.
+ * The height the wall has to live in: the screen in fullscreen, and otherwise what is left of the window under the
+ * page's header once the transport, the two lines under it and the footer have their share. Measured rather than a
+ * fraction, so the wall fills the window without ever pushing a scrollbar out of it. Nothing below the wall depends
+ * on the wall's own height, so this does not feed back into itself.
+ */
+function room() {
+  if (document.fullscreenElement) return Math.max(120, $('cells').clientHeight);
+  const top = wall.getBoundingClientRect().top + window.scrollY;
+  // everything under the wall, margins and the footer included: the page's height measured from where the transport
+  // starts. Both numbers move by the same amount when the wall grows, so their difference does not, and this does
+  // not chase its own tail.
+  const below = document.documentElement.scrollHeight - ($('bar').getBoundingClientRect().top + window.scrollY);
+  return Math.max(180, window.innerHeight - top - below);
+}
+
+/**
+ * Where every channel sits on the wall, in css pixels, and how opaque. The ones on screen are laid out in the grid
+ * that makes them biggest inside the space there is; the rest are parked on top of the first of them, invisible, so
+ * a zoom in collapses them into the one being opened and a zoom out grows them back out of it.
  */
 function layout() {
-  const on = shown(), W = Math.max(120, wall.clientWidth);
-  // one box filling the width when a world is open; as many columns as fit on the wall
-  const g = tileGrid(on.length, W, { gap: GAP, min: MIN_TILE, cols: view.mode === 'grid' ? 0 : on.length });
-  // The wall has a height to live in: the screen in fullscreen, and otherwise enough of the window that the
-  // transport stays in sight, since that is what the surfing is done from. A grid too tall for it shrinks to fit
-  // and sits in the middle, rather than running off the bottom.
-  const full = !!document.fullscreenElement;
-  const room = full ? $('cells').clientHeight : window.innerHeight * 0.74;
-  const k = g.height > room ? room / g.height : 1;
+  const on = shown(), W = Math.max(120, wall.clientWidth), space = room();
+  // one box filling the space when a world is open; otherwise whatever column count fills it best
+  const g = tileGrid(on.length, W, { gap: GAP, height: space, cols: view.mode === 'grid' ? 0 : on.length });
   // fullscreen takes the whole screen whatever the tiles add up to, so the wall is centred in it rather than sitting
   // at the top with the rest black; 16:9 boxes rarely fill a screen exactly, and letterboxing is what a wall does
-  const height = full || k < 1 ? room : g.height;
-  const ox = (W - (g.cols * g.tw + (g.cols - 1) * GAP) * k) / 2, oy = (height - g.height * k) / 2;
+  const height = document.fullscreenElement ? space : g.height;
+  const ox = (W - (g.cols * g.tw + (g.cols - 1) * GAP)) / 2, oy = (height - g.height) / 2;
   const rects = new Map();
   on.forEach((name, i) => {
     const r = g.at(i);
-    rects.set(name, { x: ox + r.x * k, y: oy + r.y * k, w: r.w * k, h: r.h * k, a: 1 });
+    rects.set(name, { x: ox + r.x, y: oy + r.y, w: r.w, h: r.h, a: 1 });
   });
   // A channel going off screen fades where it stands rather than flying to the one being opened: seventeen tiles
   // converging on one spot at half opacity is a smear, not a zoom. It leaves them in place to be grown back out of.
@@ -137,30 +146,11 @@ function frame() {
   }
   wctx.clearRect(0, 0, wall.width, wall.height);
   stage.paint(wctx, where);
-  labels(where, k);
   const len = audio.duration || data.seconds, cl = stage.clock;
   $('pos').textContent = `${mmss(now)} / ${mmss(len)}${cl?.section ? ` · ${cl.section} bar ${cl.bar + 1}` : ''}`;
   if (!audio.paused && len) $('scrub').value = String(Math.round((now / len) * 1000));
   $('play').innerHTML = audio.paused ? (now > 0 ? '&#9654; Resume' : '&#9654; Play') : '&#10073;&#10073; Pause';
   $('stop').disabled = !audio.src || (audio.paused && now === 0);
-}
-
-/** The channel's name over its own tile, so a wall of eighteen can be read; the line about it goes under the wall. */
-function labels(where, k) {
-  if (view.mode === 'single') return;
-  wctx.save();
-  wctx.font = `600 ${Math.round(12 * k)}px system-ui, sans-serif`;
-  wctx.textBaseline = 'bottom';
-  for (const [name, r] of where) {
-    if (r.a <= 0.4 || r.w < 60) continue;
-    wctx.globalAlpha = r.a;
-    wctx.fillStyle = 'rgba(0,0,0,.55)';
-    const pad = 4 * k, tw = wctx.measureText(name).width;
-    wctx.fillRect(r.x, r.y + r.h - 18 * k, tw + pad * 2, 18 * k);
-    wctx.fillStyle = name === hover ? '#fff' : 'rgba(255,255,255,.85)';
-    wctx.fillText(name, r.x + pad, r.y + r.h - 4 * k);
-  }
-  wctx.restore();
 }
 
 /**
