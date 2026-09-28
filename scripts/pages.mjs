@@ -42,7 +42,7 @@ for (const s of songs.filter((s) => !hidden.includes(s) && declared[s].length)) 
 fs.rmSync(OUT, { recursive: true, force: true });
 const copy = (rel, to = rel) => fs.cpSync(path.join(ROOT, rel), path.join(OUT, to), { recursive: true });
 const PAGES = ['index.html', 'examples.html', 'about.html', 'legal.html', 'listen.html']; // the sitemap; 404.html ships too but is not a destination
-for (const p of [...PAGES, '404.html']) copy(p);
+for (const p of [...PAGES, '404.html', 'portrait.html']) copy(p); // portrait.html ships but stays out of the sitemap: it is noindex, a tool, not a destination
 copy('web');
 copy('lib');
 copy('songs');
