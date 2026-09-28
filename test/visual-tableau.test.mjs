@@ -172,7 +172,8 @@ test('every cast job reaches the state: a snare jump-cuts a mutating shot and ne
   const swayed = fresh(); tableau.step(swayed, STEP, [], clockOf(score, 0.25));
   assert.ok(Math.abs(swayed.sway) > 0.05 && swayed.swayAmp > 0, 'the cast sways with the bar, from the song\'s own clock');
   const emoting = fresh(); emoting.plan[emoting.section][emoting.shotIx].emote = true; emoting.plan[emoting.section][emoting.shotIx].mutate = false;
-  const was = JSON.stringify(emoting.exprTo); let moved = false; for (let i = 0; i < 12 && !moved; i++) { tableau.step(emoting, STEP, [SNARE], clock); for (let k = 0; k < 30; k++) tableau.step(emoting, STEP, [], clock); moved = JSON.stringify(emoting.exprTo) !== was; }
+  // a snare emotes one time in four, EMOTE_GAP holds the next for 1.5 s, and a quarter of EMOTES is the deadpan the actor is already on: a dozen tries is a coin flip on the seeded stream, not a test
+  const was = JSON.stringify(emoting.exprTo); let moved = false; for (let i = 0; i < 60 && !moved; i++) { tableau.step(emoting, STEP, [SNARE], clock); for (let k = 0; k < 30; k++) tableau.step(emoting, STEP, [], clock); moved = JSON.stringify(emoting.exprTo) !== was; }
   assert.ok(moved, 'on an emoting shot a snare moves the actor to another expression');
   const mid = JSON.stringify(emoting.expr); tableau.step(emoting, STEP, [], clock); assert.notEqual(JSON.stringify(emoting.expr), mid, 'the expression eases there: an animation, not a cut');
   const stiff = fresh(); stiff.plan[stiff.section][stiff.shotIx].emote = false; const w2 = JSON.stringify(stiff.exprTo); for (let i = 0; i < 20; i++) { tableau.step(stiff, STEP, [SNARE], clock); for (let k = 0; k < 30; k++) tableau.step(stiff, STEP, [], clock); }

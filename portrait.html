@@ -27,6 +27,15 @@
   .row .auto { width: auto; }
   #rep { white-space: pre-wrap; word-break: break-all; background: #f3f1ec; border: 1px solid #cfcac1; padding: 6px; max-height: 40vh; overflow: auto; font-size: 11px; }
   #note { width: 100%; box-sizing: border-box; }
+  /* the reference photo: laid over the portrait at a fade, with the three lines a likeness is judged on */
+  #stack { position: relative; width: fit-content; overflow: hidden; } /* the reference is clipped to the sheet: a photo hanging off the drawing is not a comparison */
+  #refimg, .guide { position: absolute; pointer-events: none; }
+  #refimg { top: 0; left: 50%; height: 100%; transform-origin: center; display: none; }
+  .guide { left: 0; right: 0; height: 0; border-top: 1px dashed rgba(179,32,42,.75); display: none; }
+  .guide span { position: absolute; right: 2px; top: -13px; font-size: 10px; color: #b3202a; }
+  #refcard .bar { align-items: center; }
+  #refcard label { display: inline-flex; gap: 4px; align-items: center; font-size: 11px; }
+  #refcard input[type=range] { width: 88px; }
 </style>
 </head>
 <body>
@@ -37,11 +46,30 @@
       <button id="clear">clear edits</button>
       <button id="reset">reset</button>
       <button id="copy">copy link</button>
-      <label><input type="checkbox" id="anim"> animate</label>
+      <button id="copyimg">copy image</button>
+      <label><input type="checkbox" id="anim" checked> animate</label>
     </div>
   </aside>
   <section id="view">
-    <div id="art"></div>
+    <div id="stack">
+      <div id="art"></div>
+      <img id="refimg" alt="">
+      <div class="guide" data-g="eye"><span>eyes</span></div>
+      <div class="guide" data-g="mouth"><span>mouth</span></div>
+      <div class="guide" data-g="chin"><span>chin</span></div>
+    </div>
+    <details id="refcard">
+      <summary>reference photo</summary>
+      <div class="bar">
+        <input type="file" id="reffile" accept="image/*">
+        <label>fade <input type="range" id="refop" min="0" max="1" step="0.02" value="0.5"></label>
+        <label>size <input type="range" id="refk" min="0.3" max="3" step="0.01" value="1"></label>
+        <label>x <input type="range" id="refx" min="-200" max="200" step="1" value="0"></label>
+        <label>y <input type="range" id="refy" min="-200" max="200" step="1" value="0"></label>
+        <label><input type="checkbox" id="refg"> guides</label>
+        <button id="refclear">clear</button>
+      </div>
+    </details>
     <details id="dbg">
       <summary>debug &amp; report</summary>
       <textarea id="note" rows="2" placeholder="what looks wrong? e.g. the hair on this character is bad / this shirt with this neck is bad"></textarea>
@@ -51,7 +79,7 @@
   </section>
 </main>
 <script type="module">
-  import { renderPortrait } from './web/visual/portrait.mjs';
+  import { renderPortrait, eyeY, mouthY, CHIN_Y } from './web/visual/portrait.mjs';
   import { GROUPS, CONTROLS, PALETTES, blank, params, encode, decode, setOv, at, labelOf, presetMatch, report, idle } from './web/visual/editor.mjs';
 
   const $ = (id) => document.getElementById(id);
@@ -122,10 +150,24 @@
   const tick = (ms) => { if (!$('anim').checked) return; $('art').innerHTML = renderPortrait(idle(params(st), (ms - t0) / 1000)); raf = requestAnimationFrame(tick); };
   const animate = () => { cancelAnimationFrame(raf); if ($('anim').checked) { t0 = performance.now(); raf = requestAnimationFrame(tick); } else refresh(); };
 
+  // the reference photo: a picture of the person laid over the drawing at a fade, moved and sized onto it, with the
+  // three lines a likeness is actually judged on (the eye line, the mouth, the chin) drawn across both. Nothing here
+  // touches the state: it is a way of looking, not a parameter of the face.
+  const refImg = $('refimg');
+  const placeRef = () => { refImg.style.opacity = $('refop').value; refImg.style.transform = `translate(calc(-50% + ${$('refx').value}px), ${$('refy').value}px) scale(${$('refk').value})`; };
+  const guides = (p) => { const on = $('refg').checked, y = { eye: eyeY(p), mouth: mouthY(p), chin: CHIN_Y }; for (const g of document.querySelectorAll('.guide')) { g.style.display = on ? 'block' : 'none'; g.style.top = `${(y[g.dataset.g] / 480) * 100}%`; } };
+  $('reffile').onchange = (e) => { const f = e.target.files[0]; if (!f) return; refImg.src = URL.createObjectURL(f); refImg.style.display = 'block'; placeRef(); };
+  for (const id of ['refop', 'refk', 'refx', 'refy']) $(id).oninput = placeRef;
+  $('refg').onchange = () => guides(params(st));
+  $('refclear').onclick = () => { refImg.removeAttribute('src'); refImg.style.display = 'none'; };
+  addEventListener('dragover', (e) => e.preventDefault());
+  addEventListener('drop', (e) => { const f = e.dataTransfer.files[0]; if (!f || !f.type.startsWith('image/')) return; e.preventDefault(); $('refcard').open = true; refImg.src = URL.createObjectURL(f); refImg.style.display = 'block'; placeRef(); });
+
   function refresh() {
     const p = params(st);
     if (!$('anim').checked) $('art').innerHTML = renderPortrait(p);
     sync(p);
+    guides(p);
     $('rep').textContent = report(st, $('note').value, location.href.split('#')[0] + '#' + encode(st));
   }
   const commit = () => { hash = encode(st); location.hash = hash; refresh(); }; // one history entry per committed edit, so Back walks the edits
@@ -146,11 +188,22 @@
   $('clear').onclick = () => { st = { ...st, ov: {} }; commit(); };
   $('reset').onclick = () => { st = blank(); commit(); };
   $('copy').onclick = () => navigator.clipboard.writeText(location.href.split('#')[0] + '#' + encode(st));
+  // the face as a picture: the drawing rasterised on the page background (a transparent png reads as black wherever it is pasted), to the clipboard, or saved where the clipboard refuses it
+  $('copyimg').onclick = async () => {
+    const img = new Image();
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent($('art').innerHTML.replace('<svg ', '<svg width="800" height="960" '));
+    await img.decode();
+    const c = Object.assign(document.createElement('canvas'), { width: 800, height: 960 }), ctx = c.getContext('2d');
+    ctx.fillStyle = getComputedStyle(document.body).backgroundColor; ctx.fillRect(0, 0, 800, 960); ctx.drawImage(img, 0, 0);
+    const png = await new Promise((r) => c.toBlob(r, 'image/png'));
+    try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]); }
+    catch { const a = document.createElement('a'); a.href = URL.createObjectURL(png); a.download = `portrait-${st.seed}.png`; a.click(); }
+  };
   $('copyrep').onclick = () => navigator.clipboard.writeText($('rep').textContent);
   addEventListener('hashchange', () => { if (location.hash.slice(1) !== hash) { st = decode(location.hash); hash = location.hash.slice(1); refresh(); } });
   addEventListener('keydown', (e) => { if (e.target.matches('input, select, textarea')) return; if (e.key === '[' || e.key === ']') { st = { ...st, seed: Math.max(0, st.seed + (e.key === ']' ? 1 : -1)) }; commit(); } });
 
-  hash = encode(st); history.replaceState(null, '', '#' + hash); refresh();
+  hash = encode(st); history.replaceState(null, '', '#' + hash); refresh(); animate(); // the sitter is alive when the page opens
 </script>
 </body>
 </html>
