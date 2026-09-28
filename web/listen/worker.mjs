@@ -17,7 +17,8 @@
 import { createShow, channelWorld } from './show.mjs';
 
 let show = null, score = null, at = 0;
-const tiles = new Map(); // name -> { canvas, ctx, gpu }: where this worker paints that channel
+const tiles = new Map();  // name -> { canvas, ctx, gpu }: where this worker paints that channel
+const worlds = new Map(); // name -> its world, kept so a recast can build the channel again without re-importing
 const sizes = new Map(); // name -> { w, h, gpu } the page last asked for, kept whether or not the world has loaded yet
 
 const make = (s) => {
@@ -64,20 +65,32 @@ self.onmessage = async ({ data: m }) => {
   if (m.type === 'init') { // a new song: the score and the whole event stream, once
     score = m.score; at = 0;
     show = createShow({ score, stream: m.stream, worlds: {} });
-    tiles.clear(); sizes.clear();
+    tiles.clear(); sizes.clear(); worlds.clear();
     return;
   }
   if (!show) return;
   if (m.type === 'add') {
     const world = await channelWorld(m.name);
     if (!world) return self.postMessage({ missing: m.name, clock: show.clock, tiles: {} });
+    worlds.set(m.name, world);
     show.add(m.name, world);
     tiles.set(m.name, make(sizes.get(m.name)));
     show.seek(at); // the whole show, not just the newcomer: seek resets every world, so they all land together
     return;
   }
+  // A different reading of the same music: which part does which job in this one channel. A world builds its state
+  // from the cast when it starts, so there is no way to change it in place — the channel is built again and caught
+  // back up, which reads as a cut on that tile. `cast: null` puts it back to the one the song wrote.
+  if (m.type === 'cast') {
+    const world = worlds.get(m.name);
+    if (!world) return;
+    show.drop(m.name);
+    show.add(m.name, world, m.cast ? { ...score, cast: m.cast } : undefined);
+    show.seek(at);
+    return;
+  }
   if (m.type === 'size') { sizes.set(m.name, { w: m.w, h: m.h, gpu: m.gpu }); fit(m.name); return; }
   if (m.type === 'clock') { at = m.t; return step(() => show.at(m.t), m.paint); }
   if (m.type === 'seek') { at = m.t; return step(() => show.seek(m.t), m.paint); }
-  if (m.type === 'drop') { show.drop(m.name); tiles.delete(m.name); sizes.delete(m.name); }
+  if (m.type === 'drop') { show.drop(m.name); tiles.delete(m.name); sizes.delete(m.name); worlds.delete(m.name); }
 };

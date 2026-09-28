@@ -509,4 +509,9 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .listen .cells:fullscreen.idle { cursor: none; }
 .listen .cells:fullscreen.idle #bar { opacity: 0; pointer-events: none; }
 .listen #bar { margin-top: .5rem; }
+/* the open channel's reading of the parts: a label over a menu per part, so every job is visible and one pick away */
+.listen .jobs { gap: .35rem .5rem; margin-top: .4rem; }
+.listen label.job { display: grid; gap: .1rem; }
+.listen label.job b { font-weight: 600; font-size: .75rem; color: var(--muted); padding-left: .1rem; }
+.listen label.job select { padding: .15rem .3rem; font-size: .8rem; }
 .listen #scrub { min-width: 8rem; }

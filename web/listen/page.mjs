@@ -9,7 +9,7 @@
 // so going into a world and back out is a zoom of the live picture rather than a cut between two layouts.
 import { nav, footer } from '../boot.mjs';
 import { createStage } from './pool.mjs';
-import { tileGrid, parseHash, formatHash, WORLD_NAMES } from './show.mjs';
+import { tileGrid, setCast, SLOTS, ROLES, parseHash, formatHash, WORLD_NAMES } from './show.mjs';
 import POLICY from '../../lib/visual.json' with { type: 'json' };
 
 const $ = (id) => document.getElementById(id);
@@ -26,6 +26,7 @@ let audio, songs = [], audioMap = { base: '', songs: {} };
 let view = { song: null, mode: 'single', worlds: [] };
 let data = null, stage = null, loading = 0;
 let wall, wctx, from = new Map(), to = new Map(), started = 0, hover = null;
+const casts = new Map(); // channel -> its own reading of the parts, for as long as the song is open
 
 const say = (text, bad = false) => { const el = $('msg'); el.textContent = text; el.style.color = bad ? 'var(--err)' : ''; };
 const aboutOf = (name) => POLICY.worlds[name]?.about ?? POLICY.compositions[name]?.about ?? '';
@@ -164,6 +165,51 @@ function labels(where, k) {
 }
 
 /**
+ * The open channel's reading of the song: one control per part saying which job it does, and one per drum voice
+ * saying which role it plays. Clicking cycles. It is live only — kept per channel for as long as the song is open,
+ * never written to the song and never in the url, so the wall stays the reading the song asked for.
+ */
+function jobs() {
+  const host = $('jobs'), ch = shown()[0];
+  const open = view.mode === 'single' && data && ch;
+  host.hidden = !open;
+  if (!open) return;
+  const cast = casts.get(ch) ?? data.score.cast;
+  const pick = (label, value, options, part, voice) => {
+    const box = document.createElement('label');
+    box.className = 'job';
+    box.title = `what ${label} does in ${ch}`;
+    const b = document.createElement('b'); b.textContent = label;
+    const sel = document.createElement('select');
+    sel.replaceChildren(...options.map((o) => { const el = document.createElement('option'); el.value = o; el.textContent = o; return el; }));
+    sel.value = value;
+    sel.onchange = () => recast(ch, setCast(cast, part, voice, sel.value));
+    box.append(b, sel);
+    return box;
+  };
+  const out = [];
+  for (const [part, c] of Object.entries(cast)) {
+    out.push(pick(part, c.slot, SLOTS, part, null));
+    for (const [voice, role] of Object.entries(c.voices ?? {})) out.push(pick(voice, role, ROLES, part, voice));
+  }
+  if (casts.has(ch)) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = 'as written';
+    b.title = `put ${ch} back to the reading the song asked for`;
+    b.onclick = () => recast(ch, null);
+    out.push(b);
+  }
+  host.replaceChildren(...out);
+}
+
+/** Give one channel a reading of its own, or `null` to put it back to the song's. */
+function recast(ch, cast) {
+  if (cast) casts.set(ch, cast); else casts.delete(ch);
+  stage?.recast(ch, cast);
+  jobs();
+}
+
+/**
  * Something moved, so show the transport and the pointer again and start the count to hiding them. Only fullscreen
  * hides anything: on the page the transport is part of the layout and would jump the wall about if it came and went.
  */
@@ -186,6 +232,7 @@ function applyView() {
   $('chan').textContent = one
     ? `${one} — ${aboutOf(one)}${view.mode === 'single' ? ' · click it again, or Escape, for the wall' : ''}`
     : `${CHANNELS.length} worlds, one song; click one to open it, [ and ] to surf`;
+  jobs();
   relayout();
 }
 
@@ -208,7 +255,7 @@ async function load() {
   $('line').textContent = data.title.line;
   $('song').value = song;
   stage?.destroy();
-  from = new Map(); to = new Map();
+  from = new Map(); to = new Map(); casts.clear();
   stage = createStage({ score: data.score, stream: data.stream, names: CHANNELS });
   const file = audioMap.songs[song];
   const src = file ? new URL(audioMap.base + file, location.href).href : '';
