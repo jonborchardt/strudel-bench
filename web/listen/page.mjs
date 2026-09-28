@@ -19,6 +19,8 @@ const CHANNELS = WORLD_NAMES;
 const GAP = 8;           // css pixels between tiles
 const ZOOM = 320;        // milliseconds for a zoom in or out
 const MIN_TILE = 230;    // the narrowest a grid tile gets before the wall drops a column
+const MAX_PX = 1920;     // the widest any one tile is rendered, whatever the screen's pixel ratio
+const IDLE = 2600;       // milliseconds of stillness before fullscreen hides the transport and the pointer
 
 let audio, songs = [], audioMap = { base: '', songs: {} };
 let view = { song: null, mode: 'single', worlds: [] };
@@ -78,9 +80,14 @@ function relayout(animate = true) {
   started = animate ? performance.now() : 0;
   wall.style.height = `${height}px`;
   sizeWall();
-  // the render size is the settled one, so a zoom scales the last picture instead of re-rendering every frame
+  // The render size is the settled one, so a zoom scales the last picture rather than re-rendering every frame.
+  // A tile is never rendered wider than MAX_PX: on a retina screen a full-width one would be 2540 across, and a
+  // world's draw is what limits how often an open channel refreshes, so past that the sharpness is not worth it.
   const want = new Map();
-  for (const name of shown()) { const r = rects.get(name); want.set(name, { w: r.w * dpr(), h: r.h * dpr() }); }
+  for (const name of shown()) {
+    const r = rects.get(name), k = Math.min(dpr(), Math.max(1, MAX_PX / r.w));
+    want.set(name, { w: r.w * k, h: r.h * k });
+  }
   stage?.layout(want);
   placeHits();
 }
@@ -154,6 +161,17 @@ function labels(where, k) {
     wctx.fillText(name, r.x + pad, r.y + r.h - 4 * k);
   }
   wctx.restore();
+}
+
+/**
+ * Something moved, so show the transport and the pointer again and start the count to hiding them. Only fullscreen
+ * hides anything: on the page the transport is part of the layout and would jump the wall about if it came and went.
+ */
+let idle = 0;
+function stir() {
+  clearTimeout(idle);
+  $('cells').classList.remove('idle');
+  if (document.fullscreenElement) idle = setTimeout(() => $('cells').classList.add('idle'), IDLE);
 }
 
 /** Turn to one channel, or back out to the wall when it is the one already filling the frame. */
@@ -262,7 +280,9 @@ export async function start() {
   $('full').onclick = () => (document.fullscreenElement ? document.exitFullscreen() : $('cells').requestFullscreen?.());
   // the wall is measured, not styled, so entering and leaving fullscreen has to re-measure it; the tiles and their
   // click targets are inside the fullscreen element, so clicking to zoom in and out keeps working there
-  document.addEventListener('fullscreenchange', () => relayout(false));
+  document.addEventListener('fullscreenchange', () => { relayout(false); stir(); });
+  // fullscreen hides the transport and the pointer after a few still seconds, and any movement brings them back
+  for (const ev of ['pointermove', 'pointerdown', 'keydown', 'wheel']) document.addEventListener(ev, stir, { passive: true });
   window.onhashchange = () => { const h = parseHash(location.hash); if (h.song) go(h); };
   window.addEventListener('resize', () => relayout(false));
   document.addEventListener('keydown', (e) => {

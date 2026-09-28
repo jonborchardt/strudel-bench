@@ -22,17 +22,17 @@
       <label class="field">song <select id="song"></select></label>
     </header>
     <div id="cells" class="cells">
-      <canvas id="wall"></canvas>
-      <div id="hits"></div>
+      <div id="screen"><canvas id="wall"></canvas><div id="hits"></div></div>
+      <!-- the transport lives inside the stage so it comes along into fullscreen, where it fades out until the mouse moves -->
+      <div class="row transport" id="bar">
+        <button id="play" class="primary" disabled>&#9654; Play</button>
+        <button id="stop" disabled>&#9632; Stop</button>
+        <input type="range" id="scrub" class="grow" min="0" max="1000" value="0" step="1" aria-label="position">
+        <span class="muted" id="pos">0:00</span>
+        <button id="full" title="fullscreen">&#x2922;</button>
+      </div>
     </div>
     <p class="muted chan" id="chan"></p>
-    <div class="row transport">
-      <button id="play" class="primary" disabled>&#9654; Play</button>
-      <button id="stop" disabled>&#9632; Stop</button>
-      <input type="range" id="scrub" class="grow" min="0" max="1000" value="0" step="1" aria-label="position">
-      <span class="muted" id="pos">0:00</span>
-      <button id="full" title="fullscreen">&#x2922;</button>
-    </div>
     <p class="muted" id="msg"></p>
   </article>
 </main>

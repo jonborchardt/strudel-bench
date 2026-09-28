@@ -10,6 +10,8 @@
 // either way, and falls back to running them here when a browser has no module workers or no OffscreenCanvas.
 import { createShow, channelWorld } from './show.mjs';
 
+const SOLO = 2; // tiles at which a channel gets the gpu to itself rather than sharing the cpu with a wall of them
+
 const canWork = () => typeof Worker !== 'undefined' && typeof OffscreenCanvas !== 'undefined';
 
 /**
@@ -64,10 +66,12 @@ function workerStage({ score, stream, names }) {
      */
     layout(next) {
       rects = next;
+      // one or two tiles have the machine to themselves, so they rasterise on the gpu; a wall of them must not
+      const gpu = next.size <= SOLO;
       for (const [name, s] of next) {
         const w = Math.max(2, Math.round(s.w)), h = Math.max(2, Math.round(s.h));
         const was = sent.get(name);
-        if (!was || was.w !== w || was.h !== h) { sent.set(name, { w, h }); owner.get(name)?.w.postMessage({ type: 'size', name, w, h }); }
+        if (!was || was.w !== w || was.h !== h || was.gpu !== gpu) { sent.set(name, { w, h, gpu }); owner.get(name)?.w.postMessage({ type: 'size', name, w, h, gpu }); }
       }
     },
     paint(ctx, where) { blit(ctx, where, (name) => tile.get(name)); },

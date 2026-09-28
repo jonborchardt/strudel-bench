@@ -10,18 +10,28 @@
 // Two things had to be true for that to be worth anything, both measured rather than assumed:
 //   - the canvases are the worker's own, not the page's. Eighteen canvases the page owns are eighteen layers for the
 //     compositor, which caps the wall at about a hundred tile updates a second however the repaints are shared out.
-//   - they rasterise on the cpu (`willReadFrequently`). Left to the gpu, every worker funnels into the one gpu
-//     process and they serialise: eleven workers ran the page slower than one did. On the cpu they are really
-//     parallel, and all eighteen tiles run at sixty frames.
+//   - the rasteriser depends on how many tiles are up, and the page says which to use. A wall of them has to be on
+//     the cpu (`willReadFrequently`): left to the gpu every worker funnels into the one gpu process and they
+//     serialise, and eleven workers ran the page slower than one did. One tile alone is the opposite — nothing to
+//     contend with, a canvas five times wider, and the gpu is about twice the cpu's rate.
 import { createShow, channelWorld } from './show.mjs';
 
 let show = null, score = null, at = 0;
-const tiles = new Map(); // name -> { canvas, ctx }: where this worker paints that channel
-const sizes = new Map(); // name -> the size the page last asked for, kept whether or not the world has loaded yet
+const tiles = new Map(); // name -> { canvas, ctx, gpu }: where this worker paints that channel
+const sizes = new Map(); // name -> { w, h, gpu } the page last asked for, kept whether or not the world has loaded yet
+
+const make = (s) => {
+  const canvas = new OffscreenCanvas(Math.max(2, s?.w ?? 2), Math.max(2, s?.h ?? 2));
+  // `willReadFrequently` is the rasteriser, and which one is right depends on how many tiles are up. See the note
+  // at the top: on the wall the gpu serialises every worker, and alone the cpu is half the speed of the gpu.
+  return { canvas, ctx: canvas.getContext('2d', { willReadFrequently: !s?.gpu }), gpu: !!s?.gpu };
+};
 
 const fit = (name) => {
   const t = tiles.get(name), s = sizes.get(name);
-  if (t && s && (t.canvas.width !== s.w || t.canvas.height !== s.h)) { t.canvas.width = s.w; t.canvas.height = s.h; }
+  if (!t || !s) return;
+  if (t.gpu !== !!s.gpu) return void tiles.set(name, make(s)); // the attribute is fixed at getContext, so it takes a new canvas
+  if (t.canvas.width !== s.w || t.canvas.height !== s.h) { t.canvas.width = s.w; t.canvas.height = s.h; }
 };
 
 /**
@@ -62,13 +72,11 @@ self.onmessage = async ({ data: m }) => {
     const world = await channelWorld(m.name);
     if (!world) return self.postMessage({ missing: m.name, clock: show.clock, tiles: {} });
     show.add(m.name, world);
-    const s = sizes.get(m.name);
-    const canvas = new OffscreenCanvas(s?.w ?? 2, s?.h ?? 2);
-    tiles.set(m.name, { canvas, ctx: canvas.getContext('2d', { willReadFrequently: true }) });
+    tiles.set(m.name, make(sizes.get(m.name)));
     show.seek(at); // the whole show, not just the newcomer: seek resets every world, so they all land together
     return;
   }
-  if (m.type === 'size') { sizes.set(m.name, { w: m.w, h: m.h }); fit(m.name); return; }
+  if (m.type === 'size') { sizes.set(m.name, { w: m.w, h: m.h, gpu: m.gpu }); fit(m.name); return; }
   if (m.type === 'clock') { at = m.t; return step(() => show.at(m.t), m.paint); }
   if (m.type === 'seek') { at = m.t; return step(() => show.seek(m.t), m.paint); }
   if (m.type === 'drop') { show.drop(m.name); tiles.delete(m.name); sizes.delete(m.name); }
