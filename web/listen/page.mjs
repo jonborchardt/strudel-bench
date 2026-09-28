@@ -244,12 +244,13 @@ function go(next) {
   return Promise.resolve();
 }
 
-async function pick() { // the song list, and which of them have an mp3
+async function pick() { // the songs that have an mp3 to play; a song without one is not a thing the page can show
   songs = await fetch('songs/index.json').then((r) => (r.ok ? r.json() : []));
   audioMap = await fetch('listen/audio.json').then((r) => (r.ok ? r.json() : { base: '', songs: {} })).catch(() => ({ base: '', songs: {} }));
+  songs = songs.filter((s) => audioMap.songs[s.name]); // everything downstream reads `songs`, so one filter covers the menu, the empty case and a share link to an unpublished song
   $('song').replaceChildren(...songs.map((s) => {
     const o = document.createElement('option');
-    o.value = s.name; o.textContent = `${s.name.replace(/\.strudel$/, '')}${audioMap.songs[s.name] ? '' : ' (no mp3)'}`;
+    o.value = s.name; o.textContent = s.name.replace(/\.strudel$/, '');
     return o;
   }));
 }
