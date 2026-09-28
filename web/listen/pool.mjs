@@ -74,6 +74,8 @@ function workerStage({ score, stream, names }) {
         if (!was || was.w !== w || was.h !== h || was.gpu !== gpu) { sent.set(name, { w, h, gpu }); owner.get(name)?.w.postMessage({ type: 'size', name, w, h, gpu }); }
       }
     },
+    /** What drives each of one channel's hooks. Live: the world reads it every step, so this rebuilds nothing. */
+    bind(name, b) { owner.get(name)?.w.postMessage({ type: 'bind', name, bind: b }); },
     /** Read one channel's parts differently: `cast` as lib/visual.mjs builds it, or null for the song's own. */
     recast(name, cast) { owner.get(name)?.w.postMessage({ type: 'cast', name, cast }); },
     paint(ctx, where) { blit(ctx, where, (name) => tile.get(name)); },
@@ -110,6 +112,7 @@ function localStage({ score, stream, names }) {
     at(t) { seen = t; show.at(t); render(); },
     seek(t) { seen = t; show.seek(t); render(); },
     layout(next) { rects = next; turn = 0; },
+    bind(name, b) { show.tune(name, b); },
     async recast(name, cast) {
       const world = await channelWorld(name);
       if (!world) return;

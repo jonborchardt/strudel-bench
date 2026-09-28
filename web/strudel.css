@@ -514,4 +514,12 @@ textarea.note { width: 100%; min-height: 4rem; font: inherit; padding: .5rem; bo
 .listen label.job { display: grid; gap: .1rem; }
 .listen label.job b { font-weight: 600; font-size: .75rem; color: var(--muted); padding-left: .1rem; }
 .listen label.job select { padding: .15rem .3rem; font-size: .8rem; }
+/* the patch bay: a row per thing the world does, in its own words, over what drives it and how hard */
+.listen .patch { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)); gap: .3rem .9rem; margin-top: .5rem; }
+.listen .hook { display: grid; grid-template-columns: 9.5rem 7rem 1fr 1fr; align-items: center; gap: .4rem; }
+.listen .hook > b { font-weight: 600; font-size: .8rem; }
+.listen .hook select { padding: .1rem .2rem; font-size: .75rem; }
+.listen label.amt { display: grid; }
+.listen label.amt small { font-size: .65rem; color: var(--muted); line-height: 1; }
+.listen label.amt input { width: 100%; accent-color: var(--accent); }
 .listen #scrub { min-width: 8rem; }

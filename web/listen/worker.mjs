@@ -89,6 +89,8 @@ self.onmessage = async ({ data: m }) => {
     show.seek(at);
     return;
   }
+  // live, so a slider is felt at once: the world reads its bindings every step, nothing is rebuilt and nothing cuts
+  if (m.type === 'bind') { show.tune(m.name, m.bind); return; }
   if (m.type === 'size') { sizes.set(m.name, { w: m.w, h: m.h, gpu: m.gpu }); fit(m.name); return; }
   if (m.type === 'clock') { at = m.t; return step(() => show.at(m.t), m.paint); }
   if (m.type === 'seek') { at = m.t; return step(() => show.seek(m.t), m.paint); }
