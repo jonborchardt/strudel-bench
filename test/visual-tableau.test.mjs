@@ -32,15 +32,15 @@ test('the editorial wardrobe draws: every makeup, mark, prop, graphic, the hood,
     const ctx = ctxStub(); drawOn(ctx, ops); assert.equal(ctx.calls.save, ctx.calls.restore, 'every clip and group restored: ' + JSON.stringify(o));
     assert.ok(toSvg(ops).startsWith('<svg'));
   }
-  const beardAt = (o) => { const ops = portraitOps({ ...o, facialHair: { style: 'fullBeard' }, hairColor: '#123123' }); return [ops.findIndex((x) => x.fill === '#123123'), ops.findIndex((x) => x.fill === '#f3f0ea')]; };
+  const beardAt = (o) => { const ops = portraitOps({ ...o, facialHair: { style: 'fullBeard' }, hairColor: '#123123' }); return [ops.findIndex((x) => x.fill === '#123123' && !x.brow), ops.findIndex((x) => x.fill === '#f3f0ea')]; };
   assert.ok(beardAt({ makeup: ['whiteMaskBase'] })[0] < beardAt({ makeup: ['whiteMaskBase'] })[1], 'a mask goes on over the beard');
   const painted = portraitOps({ makeup: ['darkEyeSockets'], facialHair: { style: 'fullBeard' }, hairColor: '#123123' });
-  assert.ok(painted.findIndex((x) => x.fill === '#123123') > painted.findIndex((x) => x.fill === '#2b1c26'), 'paint that is not a mask goes on under the beard');
+  assert.ok(painted.findIndex((x) => x.fill === '#123123' && !x.brow) > painted.findIndex((x) => x.fill === '#2b1c26'), 'paint that is not a mask goes on under the beard');
   assert.ok(!MAKEUP_STYLES.includes('paleCorpseBase'), 'the corpse base is gone');
   const mask = portraitOps({ makeup: ['whiteMaskBase'], facialHair: { style: 'fullBeard' }, details: ['crowsFeet'], nose: { style: 'broad' } });
   const holes = mask.findIndex((o) => o.k === 'clip' && o.d.startsWith('M 195 196') && o.d.split('M ').length === 3); // the two hole ellipses as one clip
   assert.ok(holes > 0 && mask[holes + 1].fill && mask.slice(holes).some((o) => o.k === 'unclip'), 'a masked face draws its eyes inside the mask\'s two holes and nothing outside them');
-  assert.ok(!mask.some((o) => o.stroke === '#30231e' && o.k === 'path' && o.sw < 7), 'no brows on a mask'); // the brow strokes are the hair colour at a few units wide
+  assert.ok(!mask.some((o) => o.brow), 'no brows on a mask'); // a brow is one tapered fill, marked
   assert.ok(!mask.some((o) => o.stroke === '#6b473b'), 'no crow\'s feet on a mask');
   const gold = portraitOps({ top: { style: 'crewTshirt', color: '#b8892b', metal: 1 }, seed: 4 }), plain = portraitOps({ top: { style: 'crewTshirt', color: '#b8892b' } });
   assert.ok(gold.length > plain.length + 10 && gold.some((o) => o.fill === '#ffd443' || o.fill === '#5c4516'), 'a metallic top carries highlight and fold shapes in the gold\'s lights and darks');
