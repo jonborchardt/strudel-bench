@@ -41,7 +41,7 @@ export const DEFAULTS = {
   nose: { style: 'straight', length: 38, width: 20 },
   mouth: { style: 'plain', y: 260, width: 48, smile: 0.05, fullness: 0.45, color: null, open: 0, teeth: 'even' }, // color: the lips; null is a lip tone under the skin. teeth: what shows between them when the mouth is parted or smiling broadly
   hair: { style: 'sidePart', hairline: 0, recession: 0 }, // hairline: the front hair's edge higher (+1) or lower (-1) on the forehead, the style's own cut at 0; recession: the temples retreating, the centre staying, in 0..1
-  facialHair: { style: 'none', color: null, density: null, mustache: null, cheekLine: null }, // color: null is the hair's; density: how much hair, 0..1, null the style's (the gap between a stubble and a beard is a number, not a style); it is always drawn opaque, a thin beard being the skin showing between the hair rather than a transparent one; mustache: null the style's, true or false to add or drop one; cheekLine: how high up the cheek the beard climbs, 0..1, null the style's
+  facialHair: { style: 'none', color: null, density: null, mustache: null, mustacheStyle: null, cheekLine: null }, // color: null is the hair's; density: how much hair, 0..1, null the style's (the gap between a stubble and a beard is a number, not a style); it is always drawn opaque, a thin beard being the skin showing between the hair rather than a transparent one; mustache: null the style's, true or false to add or drop one; cheekLine: how high up the cheek the beard climbs, 0..1, null the style's
   hat: { style: 'none', color: '#353b43', accent: '#24292f', metal: 0 }, // metal: the garment shaded as metallic cloth (sheen)
   top: { style: 'crewTshirt', color: '#42576c', accent: null, graphic: null, graphicColor: null, graphicScale: 1, graphicY: 0, metal: 0 }, // accent: piping, a tie; graphic: a GRAPHICS name printed on the torso, the print a slot rather than a fixed mark: graphicColor recolours it (null keeps its own inks), graphicScale sizes it about the print's centre and graphicY moves it up or down the chest
   jacket: { style: 'none', color: '#373b3e', metal: 0 },
@@ -324,6 +324,10 @@ const curls = (p) => { const rnd = lcg(p.seed + 7), out = [];
     out.push(path(`M ${x + Math.cos(a) * r} ${y + Math.sin(a) * r} Q ${x + Math.cos(a + s * 1.2) * r * 1.5} ${y + Math.sin(a + s * 1.2) * r * 1.5} ${x + Math.cos(a + s * 2.6) * r} ${y + Math.sin(a + s * 2.6) * r}`, stroke(i % 2 ? '#fff' : '#000', 1 + rnd(), i % 2 ? 0.08 : 0.15 * (1 - 0.7 * luma(p.hairColor))))); }
   return out; };
 const K = 0.5523, ellipsePath = (o) => `M ${o.cx + o.rx} ${o.cy} C ${o.cx + o.rx} ${o.cy + K * o.ry}, ${o.cx + K * o.rx} ${o.cy + o.ry}, ${o.cx} ${o.cy + o.ry} C ${o.cx - K * o.rx} ${o.cy + o.ry}, ${o.cx - o.rx} ${o.cy + K * o.ry}, ${o.cx - o.rx} ${o.cy} C ${o.cx - o.rx} ${o.cy - K * o.ry}, ${o.cx - K * o.rx} ${o.cy - o.ry}, ${o.cx} ${o.cy - o.ry} C ${o.cx + K * o.rx} ${o.cy - o.ry}, ${o.cx + o.rx} ${o.cy - K * o.ry}, ${o.cx + o.rx} ${o.cy} Z`; // an ellipse as a path, so a clip can take it
+// the wreath a head that has lost the top is left with: WREATH is the mass behind the skull, a shade darker as
+// `longBack` is, showing past its sides as the volume hair has; WINGS is the same band's near side, on the head.
+const WREATH = (p) => [path('M 114 174 C 109 204, 117 232, 136 254 L 164 244 C 143 220, 134 196, 135 170 Z', { fill: shade(p.hairColor, 0.88) }), path('M 286 174 C 291 204, 283 232, 264 254 L 236 244 C 257 220, 266 196, 265 170 Z', { fill: shade(p.hairColor, 0.88) })];
+const WINGS = (p) => [path('M 126 154 C 121 172, 122 187, 127 197 C 137 195, 146 187, 150 177 C 153 168, 152 159, 149 152 C 140 148, 131 149, 126 154 Z', { fill: p.hairColor }), path('M 274 154 C 279 172, 278 187, 273 197 C 263 195, 254 187, 250 177 C 247 168, 248 159, 251 152 C 260 148, 269 149, 274 154 Z', { fill: p.hairColor })];
 const HAIR_TEXTURE = { curlyMedium: 'curls', afroShort: 'curls', afroMedium: 'curls', locsShort: 'none', boxBraids: 'none', cornrows: 'none', shortMohawk: 'none' }; // the grain each style takes; unlisted styles are combed strands
 export const HAIR = {
   bald: () => [],
@@ -353,6 +357,14 @@ export const HAIR = {
   // shaved to the skin either side of a crest standing off the crown: the crest is the whole style, so a hat sits on the skull
   shortMohawk: (p) => [path('M 183 138 C 177 114, 181 86, 200 76 C 219 86, 223 114, 217 138 Z', { fill: p.hairColor }), gloss('M 192 132 C 190 112, 192 94, 199 82', 2.2), gloss('M 208 134 C 210 114, 208 96, 202 84', 1.8)],
   receding: (p) => [path('M 127 163 C 126 125, 140 104, 166 98 C 172 112, 184 118, 200 114 C 216 118, 228 112, 234 98 C 260 104, 274 125, 273 163 C 251 139, 228 129, 200 129 C 172 129, 149 139, 127 163 Z', { fill: p.hairColor })], // the crown bare between two low tufts that follow the skull (tall narrow tufts read as horns on a narrow head)
+  // the rest of the way bald, in the order it goes: the temples first (widowsPeak), then the top (horseshoe, with
+  // combOver over it), and the whole head shaved down to the shadow hair leaves (shavedHead). A head that has lost
+  // the top is the one case that needs the mass drawn behind the skull as well: the wreath is hair with a head in
+  // front of it, and it shows past the sides as the volume it has. The front wings are its near side, on the head.
+  widowsPeak: (p) => [path('M 126 163 C 124 121, 150 91, 199 90 C 247 91, 275 121, 274 163 C 268 148, 250 136, 232 131 C 223 136, 210 139, 200 146 C 190 139, 177 136, 168 131 C 150 136, 132 148, 126 163 Z', { fill: p.hairColor })], // the hairline gone at the temples with the centre holding: two gulfs and a point between them, the whole edge kept inside the head's own outline
+  horseshoe: { back: (p) => WREATH(p), front: (p) => WINGS(p) },
+  combOver: { back: (p) => WREATH(p), front: (p) => [...WINGS(p), path('M 131 146 C 158 116, 222 105, 273 130 C 279 154, 244 158, 206 159 C 176 164, 148 160, 131 146 Z', { fill: p.hairColor }), gloss('M 150 140 C 186 122, 232 122, 264 134', 2.6)] }, // the same wreath with the long side combed across the bare top
+  shavedHead: (p) => CAP(p).map((o) => ({ ...o, op: 0.34 })), // shaved to the skin: the hair is only the shadow it leaves where it grows
 };
 export const HAIR_STYLES = Object.keys(HAIR);
 export const LONG_HAIR = ['bob', 'bluntBob', 'longStraight']; // the styles that hang past the jaw: never on a long oval head, which they stretch further
@@ -363,12 +375,12 @@ const hairOf = (p) => { const r = HAIR[p.hair.style] ?? HAIR.sidePart; return ty
 // (`hull`: wider at the jaw, longer under the chin), so a beard on a square jaw is square and one on a narrow chin is
 // narrow. Drawn in the face's real coordinates (the eye line, the mouth), not fitted from a default beard.
 const hull = (p, chin) => { const ey = p.eyes.y, bot = 112 + p.face.height + 16 * p.face.chin; return mapXY([path(facePath(p))], scaleAbout(200, 1.03), (y) => ey + (y - ey) * (1 + chin / (bot - ey)))[0].d; }; // the outline let out: the chin pushed down by `chin`, the jaw with it
-// top: the sideburn's y under the eye line; cheek: how far in from the outline the beard line runs (0..1 of the half width); lip: how far under the lower lip the beard starts; chin: how far the mass hangs past the chin; sharp: a straight, barbered line
-function beardBand(p, { top = 26, cheek = 0.1, lip = 14, chin = 6, sharp = false, op = 1 } = {}) {
-  const w = p.face.width / 2, ey = p.eyes.y, my = p.mouth.y, mw = p.mouth.width / 2, x0 = 200 - w - 30, x1 = 200 + w + 30, ya = ey + top, cx = w * (1 - cheek), c2 = w * 0.62;
+// top: the sideburn's y under the eye line; cheek: how far in from the outline the beard line runs (0..1 of the half width); lip: how far under the lower lip the beard starts; chin: how far the mass hangs past the chin; sharp: a straight, barbered line; width: how far out the band reaches (1 past the face, less for a beard that leaves the jaw's sides bare and sits round the mouth)
+function beardBand(p, { top = 26, cheek = 0.1, lip = 9, chin = 6, sharp = false, op = 1, width = 1 } = {}) {
+  const w = p.face.width / 2, ey = p.eyes.y, my = p.mouth.y, mw = p.mouth.width / 2, x0 = 200 - (w + 30) * width, x1 = 200 + (w + 30) * width, ya = ey + top, cx = Math.min(w * (1 - cheek), (w + 30) * width), c2 = w * 0.44; // c2: how tightly the beard line closes on the mouth. Swung wide it leaves the mouth sitting on a bare island in the middle of the beard, which is what a beard never looks like
   const band = sharp
-    ? `M ${x0} ${ya} L ${200 - cx} ${ya} L ${200 - mw} ${my + lip * 0.4} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.4} L ${200 + cx} ${ya} L ${x1} ${ya} L ${x1} 700 L ${x0} 700 Z`
-    : `M ${x0} ${ya} C ${200 - cx} ${ya}, ${200 - c2} ${my - 4}, ${200 - mw} ${my + lip * 0.4} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.4} C ${200 + c2} ${my - 4}, ${200 + cx} ${ya}, ${x1} ${ya} L ${x1} 700 L ${x0} 700 Z`;
+    ? `M ${x0} ${ya} L ${200 - cx} ${ya} L ${200 - mw} ${my + lip * 0.25} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.25} L ${200 + cx} ${ya} L ${x1} ${ya} L ${x1} 700 L ${x0} 700 Z`
+    : `M ${x0} ${ya} C ${200 - cx} ${ya}, ${200 - c2} ${my - 6}, ${200 - mw} ${my + lip * 0.25} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.25} C ${200 + c2} ${my - 6}, ${200 + cx} ${ya}, ${x1} ${ya} L ${x1} 700 L ${x0} 700 Z`;
   return [clip(hull(p, chin)), path(band, { fill: p.hairColor, op }), ...(op >= 0.5 ? [clip(band), ...strands(p, { from: [200, my + 10], a0: 0.4, a1: Math.PI - 0.4, len: 55, n: 16 }), UNCLIP] : []), UNCLIP]; // a stubble is a wash with no grain
 }
 const onMouth = (p, ops) => mapXY(ops, scaleAbout(200, p.mouth.width / 48), (y) => y + p.mouth.y - 260); // ops drawn for the default mouth (48 wide on the line 260) follow this one
@@ -381,12 +393,35 @@ const noseBottom = (p) => { const st = NOSES[p.nose.style] ?? NOSES.straight; re
 // smile bows the hair down with the lip and an open mouth draws it up. `LIP_PULL` is how much of that move the hair
 // takes: all of it on its own, less inside a beard, where the mass around it holds it.
 export const LIP_PULL = 1, BEARD_PULL = 0.55;
-const MUSTACHE = 'M 175 252 C 184 243, 194 245, 200 251 C 206 245, 216 243, 225 252 C 216 254, 207 260, 200 258 C 193 260, 184 254, 175 252 Z'; // drawn for the default mouth: its top at 243, its lower edge on the lip line at 260
+// Each shape is one path drawn for the default mouth (48 wide): its top at 243, its lower edge on the lip line at
+// 260, so `mustache` below can squeeze all of them into whatever gap this face's nose and lip leave.
+export const MUSTACHES = {
+  chevron: { d: 'M 175 252 C 184 243, 194 245, 200 251 C 206 245, 216 243, 225 252 C 216 254, 207 260, 200 258 C 193 260, 184 254, 175 252 Z' },
+  walrus: { d: 'M 166 246 C 179 240, 192 244, 200 249 C 208 244, 221 240, 234 246 C 236 253, 231 259, 222 260 C 212 260, 206 257, 200 256 C 194 257, 188 260, 178 260 C 169 259, 164 253, 166 246 Z', w: 1.3 },
+  handlebar: { d: 'M 168 246 C 164 239, 171 237, 175 244 C 180 250, 188 253, 195 254 C 197 252, 203 252, 205 254 C 212 253, 220 250, 225 244 C 229 237, 236 239, 232 246 C 227 256, 212 260, 203 258 L 197 258 C 188 260, 173 256, 168 246 Z', w: 1.35 },
+  pencil: { d: 'M 180 253 C 188 250, 194 251, 200 253 C 206 251, 212 250, 220 253 C 212 258, 206 256, 200 255 C 194 256, 188 258, 180 253 Z', w: 0.86 },
+  horseshoe: { d: 'M 172 246 C 182 242, 193 245, 200 250 C 207 245, 218 242, 228 246 C 231 252, 230 258, 227 260 C 224 254, 220 251, 214 250 C 208 250, 205 253, 200 254 C 195 253, 192 250, 186 250 C 180 251, 176 254, 173 260 C 170 258, 169 252, 172 246 Z', w: 1.2 },
+};
+export const MUSTACHE_STYLES = Object.keys(MUSTACHES);
 const unit = (v) => Math.min(1, Math.max(0, v));
-const mustache = (p, pull = LIP_PULL, op = 1) => {
+/** Where a moustache sits on this face: the gap it hangs in (top..bot, between the nostrils and the upper lip's own
+ *  top edge, never squeezed to nothing), the mouth's half width and its own, which is wider on the fuller shapes. */
+function stacheBox(p, style = 'chevron') {
+  const m = p.mouth, st = MOUTHS[m.style] ?? MOUTHS.plain, sh = MUSTACHES[style] ?? MUSTACHES.chevron;
+  const lipK = st.thin ? 0.45 : st.full ? 1.5 : 1, bot = m.y - (4 + 4 * m.fullness) * lipK - 1;
+  return { mw: (m.width * (st.wide ?? 1)) / 2, hw: 25 * ((m.width * (st.wide ?? 1)) / 48) * (sh.w ?? 1), bot, top: Math.min(bot - 8, noseBottom(p) + 1) };
+}
+// The strip of hair down the corner of the mouth that joins a moustache to the beard under it. Without it the two are
+// two marks with a wedge of bare skin between them, which is what a shaved gap looks like and not what a beard does;
+// hair grows through that corner, so anything with both a moustache and a mass gets it. Tagged `stache`, since the
+// corner of the mouth is a feature and travels with the features on a turned head.
+const stacheJoin = (p, style, lip, op) => { const { mw, hw, bot } = stacheBox(p, style), y = p.mouth.y + lip * 0.4 + 3, x0 = Math.min(mw - 1, hw - 3);
+  return [-1, 1].map((sd) => ({ ...path(`M ${200 + sd * x0} ${bot - 2} C ${200 + sd * (x0 + 7)} ${bot - 1} ${200 + sd * (x0 + 11)} ${y - 5} ${200 + sd * (x0 + 12)} ${y} L ${200 + sd * (x0 - 2)} ${y} C ${200 + sd * (x0 + 2)} ${y - 6} ${200 + sd * x0} ${bot + 2} ${200 + sd * x0} ${bot - 2} Z`, { fill: p.hairColor, op }), stache: true })); };
+const mustache = (p, pull = LIP_PULL, op = 1, style = 'chevron') => {
   const m = p.mouth, st = MOUTHS[m.style] ?? MOUTHS.plain, hw = (m.width * (st.wide ?? 1)) / 2;
-  const lipK = st.thin ? 0.45 : st.full ? 1.5 : 1, bot = m.y - (4 + 4 * m.fullness) * lipK - 1, top = Math.min(bot - 8, noseBottom(p) + 1); // between the nostrils and the upper lip's own top edge, and never squeezed to nothing
-  const ops = mapXY([path(MUSTACHE, { fill: p.hairColor, op })], scaleAbout(200, (m.width * (st.wide ?? 1)) / 48), (y) => top + ((y - 243) * (bot - top)) / 17).map((o) => ({ ...o, stache: true })); // marked: on a turned head the moustache rides with the features, not with the jaw the beard sits on
+  const { top, bot } = stacheBox(p, style);
+  const sh = MUSTACHES[style] ?? MUSTACHES.chevron; // the gap under the nose is only ever a few units tall, so what tells one moustache from another is mostly its width: each shape carries its own
+  const ops = mapXY([path(sh.d, { fill: p.hairColor, op })], scaleAbout(200, ((m.width * (st.wide ?? 1)) / 48) * (sh.w ?? 1)), (y) => top + ((y - 243) * (bot - top)) / 17).map((o) => ({ ...o, stache: true })); // marked: on a turned head the moustache rides with the features, not with the jaw the beard sits on
   const drop = (m.smile * 18 - 2 * (m.open ?? 0)) * pull;
   if (Math.abs(drop) < 0.2) return ops; // a resting mouth moves nothing
   return mapPts(ops, (x, y) => { const t = unit((x - 200 + hw) / (2 * hw)), d = unit((y - top) / (bot - top)); return [x, y + d * 2 * t * (1 - t) * drop]; });
@@ -395,13 +430,20 @@ const mustache = (p, pull = LIP_PULL, op = 1) => {
 // mustache, cheekLine) go over it, so the gap between a stubble and a beard is a number and not a missing style.
 const BEARDS = {
   none: null,
-  lightStubble: { op: 0.09, chin: 0, stubble: true, stache: false }, // a stubble is a shadow of hair, so it is never lighter than the skin: pale hair is pulled toward dark for it
-  heavyStubble: { op: 0.2, chin: 0, stubble: true, stache: false },
+  lightStubble: { op: 0.09, chin: 0, stubble: true, stache: true, stacheStyle: 'walrus' }, // a shadow of hair grows on the upper lip as well: a stubble with a shaved moustache is a choice, not the default (facialHair.mustache 0 makes it one) // a stubble is a shadow of hair, so it is never lighter than the skin: pale hair is pulled toward dark for it
+  heavyStubble: { op: 0.2, chin: 0, stubble: true, stache: true, stacheStyle: 'walrus' },
   mustache: { band: false, stache: true, pull: LIP_PULL },
   shortBeard: { chin: 8, op: 0.92, stache: true },
-  fullBeard: { top: 20, cheek: 0.02, lip: 12, chin: 40, stache: true },
+  fullBeard: { top: 20, cheek: 0.02, lip: 7, chin: 40, stache: true },
   goatee: { band: false, stache: true, pull: (LIP_PULL + BEARD_PULL) / 2, chinPatch: true },
-  boxedBeard: { top: 36, cheek: 0.26, lip: 16, chin: 10, sharp: true, stache: false },
+  boxedBeard: { top: 36, cheek: 0.26, lip: 13, chin: 10, sharp: true, stache: false },
+  // the styles the moustache is half of: the hair round the mouth is the shape, and each names the moustache it is drawn with
+  circleBeard: { top: 34, cheek: 0.5, lip: 9, chin: 8, width: 0.52, stache: true, stacheStyle: 'chevron' }, // the jaw's sides bare: a ring of hair round the mouth and chin
+  vanDyke: { band: false, chinPatch: true, stache: true, pull: (LIP_PULL + BEARD_PULL) / 2, stacheStyle: 'handlebar' }, // the chin patch and the moustache, apart, with the ends turned up
+  garibaldi: { top: 22, cheek: 0.02, lip: 6, chin: 64, stache: true, stacheStyle: 'walrus' }, // a long full beard under a moustache to match
+  ducktail: { top: 28, cheek: 0.14, lip: 9, chin: 30, width: 0.86, stache: true, stacheStyle: 'chevron' }, // full at the jaw and drawn to a point below the chin
+  stubbleStache: { op: 0.22, chin: 0, stubble: true, stache: true, pull: LIP_PULL, stacheStyle: 'horseshoe', stacheOp: 1 }, // the one the other way round: the beard is a shadow and the moustache is grown out, at its own full weight // a shadow of a beard with a real moustache standing in it
+  pencilStache: { band: false, stache: true, pull: LIP_PULL, stacheStyle: 'pencil' },
 };
 /** One style's ops with the character's own dials applied: a density anywhere between a wash and a mass, a beard colour of its own, a moustache added or dropped, and how high the mass climbs the cheek. */
 function beardOps(p, spec) {
@@ -416,11 +458,12 @@ function beardOps(p, spec) {
   const q = { ...p, hairColor: fill };
   const op = d == null ? spec.op ?? 1 : 1;
   const top = f.cheekLine == null ? spec.top : 46 - 32 * unit(f.cheekLine); // 0: a beard line low on the jaw; 1: up to the cheekbone
-  const stache = f.mustache == null ? !!spec.stache : !!f.mustache;
+  const stache = f.mustache == null ? !!spec.stache : !!f.mustache, stacheStyle = f.mustacheStyle ?? spec.stacheStyle ?? 'chevron'; // the style's own moustache, or the one this face asks for over it
   return [
-    ...(spec.band === false ? [] : beardBand(q, { top, cheek: spec.cheek, lip: spec.lip, chin: spec.chin, sharp: spec.sharp, op })),
+    ...(spec.band === false ? [] : beardBand(q, { top, cheek: spec.cheek, lip: spec.lip, chin: spec.chin, sharp: spec.sharp, width: spec.width, op })),
     ...(spec.chinPatch ? [clip(hull(q, 8)), ...onMouth(q, [path('M 184 271 Q 200 282 216 271 L 211 313 Q 200 321 189 313 Z', { fill: q.hairColor })]), UNCLIP] : []),
-    ...(stache ? mustache(q, spec.pull ?? (spec.band === false ? LIP_PULL : BEARD_PULL), op) : []), // the moustache is the same hair: the beard's colour and the beard's weight
+    ...(stache && spec.band !== false ? stacheJoin(q, stacheStyle, spec.lip ?? 14, op) : []), // the corners of the mouth, so the moustache and the mass under it are one beard
+    ...(stache ? mustache(q, spec.pull ?? (spec.band === false ? LIP_PULL : BEARD_PULL), spec.stacheOp ?? op, stacheStyle) : []), // the moustache is the same hair: the beard's colour and the beard's weight
   ];
 }
 export const FACIAL_HAIR = Object.fromEntries(Object.entries(BEARDS).map(([name, spec]) => [name, (p) => beardOps(p, spec)]));

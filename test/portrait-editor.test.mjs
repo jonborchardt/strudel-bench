@@ -127,7 +127,8 @@ test('the beard takes a colour, a density, a cheek line and a moustache of its o
   assert.ok(near(thin.fill, DEFAULTS.skin) < near(thick.fill, DEFAULTS.skin), 'a thin beard is nearer the skin, a full one is the hair');
   assert.equal(thick.fill, '#123123');
   assert.equal(ops({ mustache: false }).filter((o) => o.stache).length, 0);
-  assert.equal(portraitOps({ facialHair: { style: 'heavyStubble', mustache: true } }).filter((o) => o.stache).length, 1, 'and a stubble can carry one');
+  assert.equal(portraitOps({ facialHair: { style: 'heavyStubble', mustache: true } }).filter((o) => o.stache).length, 3, 'and a stubble carries one: the moustache itself plus the strip down each corner of the mouth that joins it to the mass'); // stubble grows on the upper lip too, so it is the default for every stubble now
+  assert.equal(portraitOps({ facialHair: { style: 'mustache' } }).filter((o) => o.stache).length, 1, 'a moustache with no beard under it has nothing to join to');
   const high = band({ cheekLine: 1 }), low = band({ cheekLine: 0 });
   assert.ok(Math.min(...high.d.match(/-?[\d.]+/g).map(Number).filter((_, i) => i % 2)) < Math.min(...low.d.match(/-?[\d.]+/g).map(Number).filter((_, i) => i % 2)), 'the cheek line climbs');
   for (const s of FACIAL_HAIR_STYLES) assert.ok(Array.isArray(FACIAL_HAIR[s](DEFAULTS)), s); // every style still answers as a function of the face

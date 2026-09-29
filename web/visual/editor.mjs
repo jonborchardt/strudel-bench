@@ -6,7 +6,7 @@
 // generator (constrained to one FAMILIES entry unless family is 'any'), `ov` the edits as flat dotted paths over it,
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
-import { DEFAULTS, COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge } from './portrait.mjs';
+import { DEFAULTS, COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge } from './portrait.mjs';
 import { FAMILY_NAMES, characterOf, faceOf, EXPRESSIONS, COSTUMES, COSTUME_FAMILIES } from './cast.mjs';
 import { seed as seedState } from './kit.mjs';
 import { prng } from '../../lib/random.mjs';
@@ -93,7 +93,7 @@ export const GROUPS = [
     preset('neck', Object.keys(NECK_TYPES), neckPreset), int('neck.width', 34, 98), int('neck.height', 44, 102),
     num('body.width', 0.7, 1.6), col('skin', 'skin'),
     col('hairColor', 'hair'), en('hair.style', HAIR_STYLES), num('hair.hairline', -1, 1, 0.02), num('hair.recession', 0, 1, 0.02),
-    en('facialHair.style', FACIAL_HAIR_STYLES), col('facialHair.color', 'hair', { nullable: true }), num('facialHair.density', 0, 1, 0.02, { nullable: true }), num('facialHair.cheekLine', 0, 1, 0.02, { nullable: true }), num('facialHair.mustache', 0, 1, 1, { nullable: true }),
+    en('facialHair.style', FACIAL_HAIR_STYLES), col('facialHair.color', 'hair', { nullable: true }), num('facialHair.density', 0, 1, 0.02, { nullable: true }), num('facialHair.cheekLine', 0, 1, 0.02, { nullable: true }), num('facialHair.mustache', 0, 1, 1, { nullable: true }), en('facialHair.mustacheStyle', MUSTACHE_STYLES, { nullable: true }),
   ] },
   { name: 'features', items: [
     preset('expression', Object.keys(EXPRESSIONS), exprPreset),
