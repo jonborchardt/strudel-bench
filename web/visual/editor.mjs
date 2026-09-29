@@ -6,7 +6,7 @@
 // generator (constrained to one FAMILIES entry unless family is 'any'), `ov` the edits as flat dotted paths over it,
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
-import { DEFAULTS, COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge } from './portrait.mjs';
+import { DEFAULTS, COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge } from './portrait.mjs';
 import { FAMILY_NAMES, characterOf, faceOf, EXPRESSIONS, COSTUMES, COSTUME_FAMILIES } from './cast.mjs';
 import { seed as seedState } from './kit.mjs';
 import { prng } from '../../lib/random.mjs';
@@ -87,18 +87,19 @@ export const GROUPS = [
   { name: 'head', items: [
     preset('shape', Object.keys(FACE_SHAPES), shapePreset),
     int('face.width', 118, 205), int('face.height', 158, 245), num('face.jaw', 0.45, 1.05), num('face.chin', 0, 0.5), int('face.corner', 0, 64),
-    num('face.skew', -1, 1, 0.02),
+    num('face.skew', -1, 1, 0.02), num('face.fullness', -1, 1, 0.02),
     num('face.asym.cheek', -2, 2, 0.05), num('face.asym.jaw', -2, 2, 0.05), num('face.asym.temple', -2, 2, 0.05), num('face.asym.chin', -2, 2, 0.05),
     num('ears.size', 0.5, 1.6, 0.02),
     preset('neck', Object.keys(NECK_TYPES), neckPreset), int('neck.width', 34, 98), int('neck.height', 44, 102),
     num('body.width', 0.7, 1.6), col('skin', 'skin'),
-    col('hairColor', 'hair'), en('hair.style', HAIR_STYLES), en('facialHair.style', FACIAL_HAIR_STYLES),
+    col('hairColor', 'hair'), en('hair.style', HAIR_STYLES), num('hair.hairline', -1, 1, 0.02), num('hair.recession', 0, 1, 0.02),
+    en('facialHair.style', FACIAL_HAIR_STYLES), col('facialHair.color', 'hair', { nullable: true }), num('facialHair.density', 0, 1, 0.02, { nullable: true }), num('facialHair.cheekLine', 0, 1, 0.02, { nullable: true }), num('facialHair.mustache', 0, 1, 1, { nullable: true }), en('facialHair.mustacheStyle', MUSTACHE_STYLES, { nullable: true }),
   ] },
   { name: 'features', items: [
     preset('expression', Object.keys(EXPRESSIONS), exprPreset),
     en('eyes.style', EYE_STYLES), en('eyes.browStyle', BROW_STYLES),
     int('eyes.y', 176, 216), num('eyes.spacing', 36, 76, 0.5), num('eyes.openness', 0, 1.4, 0.02), num('eyes.asym', 0.55, 1.45, 0.02), num('eyes.dy', -6, 6, 0.1),
-    num('eyes.depth', 0, 1, 0.02), num('eyes.sclera', 0, 1, 0.02, { nullable: true }), num('eyes.lidWeight', 0, 1, 0.02, { nullable: true }), num('eyes.corner', 0, 1, 0.02, { nullable: true }), num('eyes.bags', 0, 1, 0.02),
+    num('eyes.depth', 0, 1, 0.02), num('eyes.sclera', 0, 1, 0.02, { nullable: true }), num('eyes.lidWeight', 0, 1, 0.02, { nullable: true }), num('eyes.corner', 0, 1, 0.02, { nullable: true }), num('eyes.bags', 0, 1, 0.02), num('eyes.squint', 0, 1, 0.02),
     col('eyes.iris', 'eyes'), col('eyes.pupil'),
     num('eyes.browLift', -6, 8, 0.1), num('eyes.browSkew', -0.6, 0.6, 0.02),
     num('eyes.look.x', -1, 1, 0.02), num('eyes.look.y', -1, 1, 0.02),
@@ -109,7 +110,7 @@ export const GROUPS = [
   ] },
   { name: 'clothing', items: [
     preset('costume', COSTUME_FAMILIES, costumePreset),
-    en('top.style', TOP_STYLES), col('top.color', 'clothing'), col('top.accent', 'clothing', { nullable: true }), en('top.graphic', ['none', ...GRAPHIC_STYLES], { nullable: true }), bool('top.metal'),
+    en('top.style', TOP_STYLES), col('top.color', 'clothing'), col('top.accent', 'clothing', { nullable: true }), en('top.graphic', ['none', ...GRAPHIC_STYLES], { nullable: true }), col('top.graphicColor', null, { nullable: true }), num('top.graphicScale', 0.4, 2, 0.05), int('top.graphicY', -60, 60), bool('top.metal'),
     en('jacket.style', JACKET_STYLES), col('jacket.color', 'clothing'), bool('jacket.metal'),
     en('hat.style', HAT_STYLES), col('hat.color', 'clothing'), col('hat.accent', 'clothing'), bool('hat.metal'),
     en('glasses.style', ['none', ...GLASSES_STYLES], { nullable: true, clears: 'glasses' }), col('glasses.color'),
@@ -118,7 +119,7 @@ export const GROUPS = [
   { name: 'pose & light', items: [
     num('pose.headX', -25, 25, 0.5), num('pose.headY', -25, 25, 0.5), num('pose.headTilt', -0.4, 0.4, 0.01),
     num('pose.bodyX', -25, 25, 0.5), num('pose.bodyTilt', -0.15, 0.15, 0.005),
-    num('pose.turn', -1, 1, 0.02), num('pose.shoulder', -1, 1, 0.02),
+    num('pose.turn', -1, 1, 0.02), num('pose.shoulder', -1, 1, 0.02), en('pose.gaze', ['none', 'camera'], { nullable: true }),
     en('light.side', [-1, 1], { labels: ['left', 'right'] }), num('light.amount', 0, 1, 0.02), num('light.contrast', 0.4, 2, 0.05),
     int('seed', 0, 99), col('background'), // the portrait's own seed: where the metallic sheen's folds fall
   ] },
@@ -141,7 +142,7 @@ export function report(st, note, url) {
     `seed ${st.seed} · family ${st.family}`,
     `head: ${styles(p)}`,
     `features: eyes ${p.eyes.style}/${p.eyes.browStyle} spacing ${p.eyes.spacing.toFixed(1)} · nose ${p.nose.style} ${p.nose.length.toFixed(1)}x${p.nose.width.toFixed(1)} · mouth ${p.mouth.style} w${p.mouth.width.toFixed(1)}`,
-    `hair: ${p.hair.style} (${p.hairColor}) · beard ${p.facialHair.style} · glasses ${p.glasses?.style ?? 'none'} · hat ${p.hat.style} (${p.hat.color})`,
+    `hair: ${p.hair.style} (${p.hairColor}) hairline ${p.hair.hairline ?? 0}/${p.hair.recession ?? 0} · beard ${p.facialHair.style} (${p.facialHair.color ?? 'hair'}) density ${p.facialHair.density ?? 'style'} cheek ${p.facialHair.cheekLine ?? 'style'} stache ${p.facialHair.mustache ?? 'style'} · glasses ${p.glasses?.style ?? 'none'} · hat ${p.hat.style} (${p.hat.color})`,
     `worn: top ${p.top.style} (${p.top.color})${p.top.graphic ? ' graphic ' + p.top.graphic : ''} · jacket ${p.jacket.style} (${p.jacket.color}) · accessories [${p.accessories}] · props [${p.props}] · makeup [${p.makeup}] · marks [${p.marks}] · details [${p.details}]`,
     `pose: ${Object.entries(p.pose).map(([k, v]) => `${k} ${v}`).join(' ')} · light side ${p.light.side} amount ${p.light.amount} contrast ${p.light.contrast}`,
     `edits: ${Object.entries(st.ov ?? {}).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(', ') || '(none)'}`,
