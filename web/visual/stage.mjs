@@ -21,8 +21,9 @@ import cabaret from './cabaret.mjs';
 import dish from './dish.mjs';
 import faces from './faces.mjs';
 import tableau from './tableau.mjs';
+import undead from './undead.mjs';
 
-export const WORLDS = { tunnel, ink, sediment, signal, swarm, orrery, loom, growth, rave, combo, train, parlor, outrun, cabaret, dish, faces, tableau };
+export const WORLDS = { tunnel, ink, sediment, signal, swarm, orrery, loom, growth, rave, combo, train, parlor, outrun, cabaret, dish, faces, tableau, undead };
 export { PRESETS };
 /** What the score plays: its world, bare (tunnel when it names one that is not built), or the director when it composes two or more worlds. The bare path is exactly the stage before the director existed. */
 export const worldOf = (score, opts = {}) => {

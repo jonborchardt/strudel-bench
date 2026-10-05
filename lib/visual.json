@@ -20,7 +20,8 @@
       "cabaret":  { "base": 0.0,  "melody": 0.4, "tempo": 0.2, "drive": 0.2, "organicness": 0.2, "sections": 0.2, "aggression": -0.3, "space": -0.1 },
       "dish":     { "base": 0.0,  "organicness": 0.6, "space": 0.4, "pad": 0.3, "tempo": -0.4, "drive": -0.3, "aggression": -0.4, "melody": 0.2 },
       "faces":    { "base": 0.0,  "melody": 0.4, "sections": 0.3, "drive": 0.3, "tempo": 0.2, "complexity": 0.2, "space": -0.2, "organicness": -0.1 },
-      "tableau":  { "base": 0.0,  "aggression": 0.4, "sections": 0.4, "drive": 0.3, "weight": 0.2, "repetition": 0.2, "organicness": -0.3, "space": -0.2 }
+      "tableau":  { "base": 0.0,  "aggression": 0.4, "sections": 0.4, "drive": 0.3, "weight": 0.2, "repetition": 0.2, "organicness": -0.3, "space": -0.2 },
+      "undead":   { "base": -0.3, "aggression": 0.3, "drive": 0.3, "repetition": 0.3, "weight": 0.2, "sections": 0.2, "brightness": -0.2, "space": -0.2 }
     }
   },
   "temperature": { "major": "warm", "minor": "cool", "dorian": "cool", "phrygian": "dim", "lydian": "pale", "mixolydian": "warm", "default": "cool" },
@@ -109,6 +110,10 @@
     "tableau": {
       "slots": { "impulse": 2, "ground": 1, "line": 1, "counter": 2, "field": 1, "transition": 1 },
       "about": "A fashion-editorial video: twenty-four recurring actors on three sets, cutting with the arrangement."
+    },
+    "undead": {
+      "slots": { "impulse": 2, "ground": 1, "line": 1, "counter": 2, "field": 1, "transition": 1 },
+      "about": "A night-street dance video after Thriller: a lead in a red jacket, the dead rising in rows behind, one step a beat."
     }
   }
 }

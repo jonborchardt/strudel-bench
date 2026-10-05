@@ -42,6 +42,22 @@ export function voidSet(ctx, w, h, band = null, lit = 1) {
   if (band) { ctx.fillStyle = band.color; ctx.globalAlpha = lit; if (band.dir === 'h') ctx.fillRect(x0, h * band.at, W, h * band.size); else ctx.fillRect(w * band.at, y0, h * band.size, H); ctx.globalAlpha = 1; }
 }
 
+/** A night street for the dead to dance on: a near-black blue sky, a moon high right with its glow, headstones (`stones`: { x (0..1 of the width), w, h (fractions of the frame height) } from the caller's generator) standing on the back line `far`, a band of fog over them and a cold ground from `floor` down. `lit` dims it all (a dropout). */
+export function graveyard(ctx, w, h, stones, { lit = 1, floor = 0.9, far = 0.7 } = {}) {
+  const x0 = -w * OVER, y0 = -h * OVER, W = w * (1 + 2 * OVER), H = h * (1 + 2 * OVER), k = (v) => Math.round(v * lit);
+  const sky = ctx.createLinearGradient(0, y0, 0, h * far); sky.addColorStop(0, `rgb(${k(6)} ${k(8)} ${k(18)})`); sky.addColorStop(1, `rgb(${k(22)} ${k(28)} ${k(44)})`);
+  ctx.fillStyle = sky; ctx.fillRect(x0, y0, W, H);
+  const mx = w * 0.78, my = h * 0.2, glow = ctx.createRadialGradient(mx, my, h * 0.05, mx, my, h * 0.4); glow.addColorStop(0, `rgba(210 214 230 / ${0.35 * lit})`); glow.addColorStop(1, 'rgba(210 214 230 / 0)');
+  ctx.fillStyle = glow; ctx.fillRect(mx - h * 0.4, my - h * 0.4, h * 0.8, h * 0.8);
+  ctx.fillStyle = `rgb(${k(222)} ${k(224)} ${k(214)})`; ctx.beginPath(); ctx.arc(mx, my, h * 0.055, 0, Math.PI * 2); ctx.fill();
+  const fy = h * far; ctx.fillStyle = `rgb(${k(30)} ${k(38)} ${k(34)})`; ctx.fillRect(x0, fy, W, H); // the ground, from the back line down
+  for (const st of stones) { const sx = x0 + st.x * W, sw = st.w * h, sh = st.h * h; ctx.fillStyle = `rgb(${k(52)} ${k(56)} ${k(58)})`; ctx.beginPath(); ctx.moveTo(sx - sw / 2, fy + h * 0.01); ctx.lineTo(sx - sw / 2, fy - sh + sw / 2); ctx.arc(sx, fy - sh + sw / 2, sw / 2, Math.PI, 0); ctx.lineTo(sx + sw / 2, fy + h * 0.01); ctx.closePath(); ctx.fill(); ctx.fillStyle = `rgba(0 0 0 / ${0.35 * lit})`; ctx.fillRect(sx + sw * 0.25, fy - sh + sw / 2, sw * 0.25, sh - sw / 2); }
+  const fog = ctx.createLinearGradient(0, fy - h * 0.12, 0, fy + h * 0.1); fog.addColorStop(0, 'rgba(150 160 170 / 0)'); fog.addColorStop(0.5, `rgba(150 160 170 / ${0.28 * lit})`); fog.addColorStop(1, 'rgba(150 160 170 / 0)');
+  ctx.fillStyle = fog; ctx.fillRect(x0, fy - h * 0.12, W, h * 0.22);
+  const g = ctx.createLinearGradient(0, fy, 0, h * floor + h * 0.3); g.addColorStop(0, `rgb(${k(30)} ${k(38)} ${k(34)})`); g.addColorStop(1, `rgb(${k(14)} ${k(18)} ${k(17)})`);
+  ctx.fillStyle = g; ctx.fillRect(x0, fy, W, H);
+}
+
 /** A cast shadow on the floor under a figure standing at (x, floorY), `r` its half width in canvas units. */
 export function floorShadow(ctx, x, y, r, dark = 0.14) {
   const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(0 0 0 / ${dark})`); g.addColorStop(0.6, `rgba(0 0 0 / ${dark * 0.5})`); g.addColorStop(1, 'rgba(0 0 0 / 0)');
