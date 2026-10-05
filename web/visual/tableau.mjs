@@ -18,14 +18,14 @@ import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
 import { portraitOps, drawOn, eyeY } from './portrait.mjs';
 import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, METALLIC, wearable, WHITE, RED, GOLD } from './cast.mjs';
 import { curtain, cyclorama, voidSet, floorShadow, vignette, sculpture, SCULPTURES } from './sets.mjs';
-import thriller from './thriller.mjs';
+import { THEMES } from './themes.mjs';
 
 // A theme is another cast and another set of poses on the same machinery: the sets, the timeline, the cuts, the
 // dance and the sheet all stay. A song picks one with `visual: { world: 'tableau', theme: 'thriller' }` (validated
 // in lib/song.mjs against lib/visual.json's `themes`, carried as `score.theme`); with none written nothing below
-// changes. Each theme is one module exporting its cast names, templates, phases, poses, expression pools, opening
-// and closing shots, motion dials and the styling rules its shots use (see thriller.mjs for the shape).
-const THEMES = { thriller };
+// changes. themes.mjs binds each theme from lib/visual.json: a cast (its people and expression pools), the part packs
+// it wears and a dance (templates, phases, poses, opening and closing shots, motion dials and the styling rules its
+// shots use, closed over the cast), into one object of the shape read below.
 const themeOf = (s) => (s.theme && THEMES[s.theme]) || null;
 const OPEN = { tpl: 'redCurtainSoloPortrait', set: 'red', pose: 'statueStill', framing: 'medium', expression: 'deadpan' }, CLOSE = { tpl: 'redCurtainDuo', set: 'red', pose: 'pairFrontal', framing: 'medium' }; // the first and last shots of the song
 const MOTION = { sway: 1, tilt: 1, nod: 1, jaw: 0 }; // the dance's amplitudes (a theme scales them: a zombie lurches further and its jaw drops on the kick)

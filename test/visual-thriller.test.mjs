@@ -5,6 +5,7 @@
 // deterministically, with no clock or randomness of its own. Human eyes judge the look (thriller.html is the sheet).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES as EDITORIAL, layoutOf, FRAMING, previewShot } from '../web/visual/tableau.mjs';
 import thriller, { ZOMBIES, ZOMBIE_NAMES, ZOMBIE_COSTUMES, ZOMBIE_COSTUME_NAMES, ZOMBIE_MAKEUP, ZOMBIE_MARKS, ZOMBIE_PROPS, ZOMBIE_EXPRESSIONS, ZOMBIE_SKINS, POSES, TEMPLATES, PHASES, SPECIAL, claw } from '../web/visual/thriller.mjs';
@@ -113,6 +114,12 @@ test('with the theme on, the tableau casts the dead and plans only Thriller shot
   const a = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state), b = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state), c = JSON.stringify(runWorld(tableau, song(g, THEMED, 4), 4).state);
   assert.equal(a, b); assert.notEqual(a, c);
   assert.notEqual(a, JSON.stringify(runWorld(tableau, song(g, 'tableau'), 4).state), 'the theme is a different world');
+});
+
+test('the themed state is what it was before the theme file was split (test/fixtures/thriller-state.json)', async () => {
+  const g = await ready;
+  const pinned = JSON.parse(readFileSync(new URL('./fixtures/thriller-state.json', import.meta.url), 'utf8'));
+  assert.deepEqual(JSON.parse(JSON.stringify(runWorld(tableau, song(g, THEMED), 8).state)), pinned);
 });
 
 test('every theme template draws in every pose it allows, on every set, and the phases, specials and fallbacks are consistent', async () => {
