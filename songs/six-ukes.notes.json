@@ -1,4 +1,5 @@
 {
+  "made": "2026-10-04",
   "prompt": "a ukulele sextet (soprano, concert, tenor, baritone, low-G tenor, bass uke) playing an original creeping minor funk groove in a small real room, the only drums the instruments' own bodies",
   "requests": [
     {
@@ -115,6 +116,35 @@
           "layer": "raw",
           "axis": "sound",
           "why": "gm_electric_bass_finger>gm_acoustic_guitar_nylon why: the fingered electric read as a keyboard; a U-bass is a nylon string on a uke body, so the nylon sample thumbed in the bass register, every section through the one helper"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-05",
+      "ask": "overall a bit too flamenco; we want more pop: Thriller has a big hook, dhuuu dhuuu, du du du",
+      "changes": [
+        {
+          "section": "chorus",
+          "layer": "raw4",
+          "axis": "notes",
+          "why": "syncopated 16ths>'e4@5 ~ g4@5 ~ a4 g4 e4 ~' why: a hook you can sing, two long notes and three short, one bar per chord"
+        },
+        {
+          "section": "chorus",
+          "layer": "raw5",
+          "axis": "notes",
+          "why": "picking>the hook in unison why: the concert doubles the baritone an ear's width to the right, which is what makes a hook big"
+        },
+        {
+          "section": "chorus",
+          "layer": "raw2",
+          "axis": "rhythm",
+          "why": "16th strums>the hook's own rhythm why: the rolled 16th strums were the flamenco; the strummers now hit with the hook, the long hits ringing and the short ones stopped (clip per slot)"
+        },
+        {
+          "section": "bridge",
+          "layer": "progression",
+          "why": "'i bII i bII'>'i VI i VI' why: the Neapolitan was the other Spanish thing"
         }
       ]
     }
