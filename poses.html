@@ -19,8 +19,8 @@
 </head>
 <body>
 <main>
-  <h2>poses <button id="seedup">seed +1</button> <span id="seedlbl"></span> · framing <select id="framing"><option>medium</option><option selected>full</option><option>wide</option></select> · set <select id="set"><option>white</option><option>red</option></select></h2>
-  <p style="font-size:12px;max-width:70em">Each frame is the tableau world's own draw of one still shot (web/visual/tableau.mjs: <code>layoutOf</code> places the figures, <code>previewShot</code> builds the shot). Arms between two figures are drawn by the world in canvas space (a sleeve from one figure's shoulder to the other, the hand at its end); arms and hands on one figure are portrait props (web/visual/portrait.mjs <code>PROPS</code>).</p>
+  <h2>poses <button id="seedup">seed +1</button> <span id="seedlbl"></span> · framing <select id="framing"><option>medium</option><option selected>full</option><option>wide</option><option>figure</option></select> · set <select id="set"><option>white</option><option>red</option><option>void</option></select> · theme <select id="theme"><option>none</option><option>thriller</option></select></h2>
+  <p style="font-size:12px;max-width:70em">Each frame is the tableau world's own draw of one still shot (web/visual/tableau.mjs: <code>layoutOf</code> places the figures, <code>previewShot</code> builds the shot). Arms between two figures are drawn by the world in canvas space (a sleeve from one figure's shoulder to the other, the hand at its end); arms and hands on one figure are portrait props (web/visual/portrait.mjs <code>PROPS</code>). A theme (web/visual/thriller.mjs) swaps in its own cast, poses and hands, as a song gets with <code>visual: { world: 'tableau', theme: 'thriller' }</code>; with none, this is the editorial sheet as it always was.</p>
   <h2>solo</h2><div class="row" id="solo"></div>
   <h2>duo</h2><div class="row" id="duo"></div>
   <h2>group</h2><div class="row" id="group"></div>
@@ -28,6 +28,7 @@
 </main>
 <script type="module">
   import tableau, { previewShot } from './web/visual/tableau.mjs';
+  import { POSES as THRILLER_POSES, ZOMBIE_PROPS } from './web/visual/thriller.mjs';
   import { renderPortrait, PROP_STYLES } from './web/visual/portrait.mjs';
   import { dress } from './web/visual/cast.mjs';
   import { fallbackScore, clockOf, STEP } from './web/visual/host.mjs';
@@ -35,27 +36,32 @@
   const SOLO = ['directFrontal', 'slightLeanLeft', 'slightLeanRight', 'swaggerLean', 'statueStill', 'handsAtSides', 'handHeart', 'handsUp', 'propPresentation'];
   const DUO = ['pairFrontal', 'linkedArmDuo', 'shoulderLeanDuo', 'protectiveDuo', 'ceremonialOffering', 'oneBehindAnother', 'dominantForeground'];
   const GROUP = ['rowFrontal', 'smallGroupCluster', 'oneBehindAnother'];
+  const themed = (k) => Object.keys(THRILLER_POSES).filter((p) => THRILLER_POSES[p](k, 1).length === k); // the theme's poses for k figures (its single-figure ones stand any count the same way, so they list under solo)
   const W = 640, H = 360;
   let n = +(location.hash.slice(1) || 1);
+  const theme = () => document.getElementById('theme').value, score = () => (theme() === 'none' ? fallbackScore() : { ...fallbackScore(), theme: theme() });
   const fig = (label) => { const f = document.createElement('figure'); const c = document.createElement('canvas'); c.width = W; c.height = H; f.append(c, Object.assign(document.createElement('figcaption'), { textContent: label })); return [f, c]; };
   function draw(id, poses, count) {
     const box = document.getElementById(id); box.innerHTML = '';
-    const framing = document.getElementById('framing').value, set = document.getElementById('set').value;
+    const framing = document.getElementById('framing').value, set = document.getElementById('set').value, sc = score();
     for (const pose of poses) {
-      const s = tableau.init(fallbackScore(), prng(n), { w: 16, h: 9 });
+      const s = tableau.init(sc, prng(n), { w: 16, h: 9 });
       const props = pose === 'propPresentation' ? [['flamingFlower']] : [];
-      s.plan = [[previewShot(s, { pose, n: count, framing, set, props })]]; s.section = 0; s.shotIx = -1;
-      tableau.step(s, STEP, [], clockOf(fallbackScore(), 0));
+      s.plan = [[previewShot(s, { pose, n: count, framing, set, props, band: set === 'void' ? { color: '#b3202a', dir: 'h', at: 0.3, size: 0.08 } : null })]]; s.section = 0; s.shotIx = -1;
+      tableau.step(s, STEP, [], clockOf(sc, 0));
       const [f, c] = fig(pose); box.append(f);
       tableau.draw(s, c.getContext('2d'), W, H);
     }
   }
-  function all() { document.getElementById('seedlbl').textContent = `seed ${n}`; location.hash = n; draw('solo', SOLO, 1); draw('duo', DUO, 2); draw('group', GROUP, 3); }
+  function props() { // the arms and hands on one figure: the editorial ones on an editorial lead, a theme's on its own lead
+    const s = tableau.init(score(), prng(1), { w: 16, h: 9 }), model = s.cast[s.leads[0]], on = theme() !== 'none';
+    const list = on ? Object.keys(ZOMBIE_PROPS) : PROP_STYLES.filter((p) => p !== 'none' && p !== 'handsAtSides');
+    document.getElementById('props').innerHTML = list.map((p) => `<figure class="svg">${renderPortrait({ ...dress(model, { costume: on ? model.home.costume : 'minimalTurtleneck', ...(on ? {} : { makeup: [] }), props: [p] }), background: '#efede8' })}<figcaption>${p}</figcaption></figure>`).join('');
+  }
+  function all() { document.getElementById('seedlbl').textContent = `seed ${n}`; location.hash = n; const on = theme() !== 'none'; draw('solo', on ? themed(1) : SOLO, 1); draw('duo', on ? themed(2) : DUO, 2); draw('group', on ? themed(3) : GROUP, 3); props(); }
   document.getElementById('seedup').onclick = () => { n++; all(); };
-  document.getElementById('framing').onchange = all; document.getElementById('set').onchange = all;
+  document.getElementById('framing').onchange = all; document.getElementById('set').onchange = all; document.getElementById('theme').onchange = all;
   all();
-  const s = tableau.init(fallbackScore(), prng(1), { w: 16, h: 9 }), model = s.cast[s.leads[0]];
-  document.getElementById('props').innerHTML = PROP_STYLES.filter((p) => p !== 'none' && p !== 'handsAtSides').map((p) => `<figure class="svg">${renderPortrait({ ...dress(model, { costume: 'minimalTurtleneck', makeup: [], props: [p] }), background: '#efede8' })}<figcaption>${p}</figcaption></figure>`).join('');
 </script>
 </body>
 </html>

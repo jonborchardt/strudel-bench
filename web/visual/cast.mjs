@@ -5,7 +5,7 @@
 // styling on that base (a COSTUMES family, makeup, marks, props, a hat, an expression, a pose) and returns what
 // portraitOps takes, so the same face is recognisable in every outfit. All randomness is rand(s) on the caller's state.
 import { clamp, lerp, rand } from './kit.mjs';
-import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR_STYLES, HAT_HAIR, LONG_HAIR, FACIAL_HAIR_STYLES, GLASSES_STYLES, TOP_STYLES, JACKET_STYLES, DETAIL_STYLES, GRAPHIC_STYLES, shade, merge } from './portrait.mjs';
+import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR_STYLES, HAT_HAIR, HAIR, LONG_HAIR, FACIAL_HAIR_STYLES, GLASSES_STYLES, TOP_STYLES, JACKET_STYLES, DETAIL_STYLES, GRAPHIC_STYLES, shade, merge } from './portrait.mjs';
 
 // the hats a section role wears: bare or a beanie to establish, a cap or a brim to develop, everyone hatted at the climax
 const WARDROBE = { establish: ['none', 'beanie', 'baseballCap', 'none', 'cuffedBeanie'], develop: ['dadCap', 'flatCap', 'bucketHat', 'none', 'fishermanBeanie', 'snapback', 'beret'], climax: ['wideBrimFelt', 'cowboy', 'sunHat', 'snapback', 'truckerCap', 'bucketHat'], release: ['none', 'sunHat', 'beanie', 'none', 'bucketHat'], none: ['none', 'beanie', 'baseballCap', 'dadCap', 'flatCap', 'wideBrimFelt', 'bucketHat'] };
@@ -65,6 +65,7 @@ export function characterOf(s, role = 'none', energy = 0.5) {
     hat: { style: hat, color: pick(CLOTHES), accent: shade(pick(CLOTHES), 0.75) },
     top: { style: pick(PLAIN_TOPS), color: pick(CLOTHES), ...(r() < 0.25 ? { graphic: pick(GRAPHIC_STYLES), graphicScale: 0.65 + r() * 0.8, graphicY: (r() - 0.5) * 50 } : {}) }, // a quarter of them wear something printed, at their own size and height on the chest
     jacket: r() < 0.35 ? { style: pick(JACKETS), color: pick(CLOTHES) } : { style: 'none' },
+    pants: { style: 'trousers', color: shade(hair, 1.6) }, // dark trousers off the hair's tone: no draw from the generator, so every seeded face stays the face it was
     glasses: sig === 'glasses' ? { style: pick(GLASSES_STYLES), color: pick(['#2b2927', '#211f1e', '#5c5a57', '#6b4a3a']) } : null,
     accessories: sig === 'accessory' ? [pick([...ONE_SIDED, ...EXTRAS])] : [], details: sig === 'detail' ? [pick(DETAIL_STYLES)] : [],
     cheeks: r() < 0.35 ? 0 : 0.3 + r() * 0.7, // how much this face colours: a third not at all (the faces world's key)
@@ -204,8 +205,8 @@ export function dress(idn, styling = {}) {
   const p = merge(idn.base, garments);
   p.hat ??= { style: 'none', color: BLACK, accent: '#2a2a2d' }; p.jacket ??= { style: 'none' }; p.top ??= { style: 'crewTshirt', color: '#6e7278' };
   const hat = st.hat ?? idn.home.hat; if (hat && !cos.hat) p.hat = typeof hat === 'string' ? { style: hat, color: BLACK, accent: '#2a2a2d' } : { ...p.hat, ...hat }; // the shot's hat, else the person's own
-  if (p.hat.style !== 'none' && !HAT_HAIR.includes(p.hair.style)) p.hair = { style: 'lowBun' };
-  const mk = st.makeup ?? [idn.home.makeup], marks = st.marks ?? [idn.home.marks], props = [...cprops, ...(st.props ?? [idn.home.prop])];
+  if (p.hat.style !== 'none' && (p.hair.style === 'highBun' || !HAIR[p.hair.style])) p.hair = { style: 'lowBun' }; // a hat sits on any registered style but a high bun (a theme's styles included): HAT_HAIR is the list a random hat picks from, not this check
+  const mk = st.makeup ?? [idn.home.makeup].flat(), marks = st.marks ?? [idn.home.marks].flat(), props = [...cprops, ...(st.props ?? [idn.home.prop])]; // a home makeup or marks may be a list (a theme's zombie wears its rot in several layers)
   p.makeup = mk.filter((x) => x && x !== 'none'); p.marks = marks.filter((x) => x && x !== 'none'); p.props = props.filter((x) => x && x !== 'none');
   p.accessories = [...new Set([...(idn.base.accessories ?? []), ...cacc])];
   const ex = EXPRESSIONS[st.expression] ?? EXPRESSIONS.deadpan;

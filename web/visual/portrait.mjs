@@ -46,6 +46,7 @@ export const DEFAULTS = {
   top: { style: 'crewTshirt', color: '#42576c', accent: null, graphic: null, graphicColor: null, graphicScale: 1, graphicY: 0, metal: 0 }, // accent: piping, a tie; graphic: a GRAPHICS name printed on the torso, the print a slot rather than a fixed mark: graphicColor recolours it (null keeps its own inks), graphicScale sizes it about the print's centre and graphicY moves it up or down the chest
   jacket: { style: 'none', color: '#373b3e', metal: 0 },
   body: { width: 1 }, // the shoulders' width against the default torso
+  pants: { style: 'trousers', color: '#2e3136' }, shoes: { color: '#1f1d1b' }, // the legs: LEGS style and its cloth, and the shoes
   glasses: null, // { style, color }
   accessories: [], details: [], makeup: [], marks: [], props: [], blush: 0, // names in ACCESSORIES, DETAILS, MAKEUP, MARKS, PROPS
   seed: 1, // places the sheen's folds
@@ -68,6 +69,7 @@ const line = (x1, y1, x2, y2, a = {}) => ({ k: 'line', x1, y1, x2, y2, ...a });
 const clip = (d, rule) => ({ k: 'clip', d: d.replace(/\s+/g, ' ').trim(), ...(rule ? { rule } : {}) }), UNCLIP = { k: 'unclip' }; // rule: 'evenodd' for a path with a hole
 const push = (tx, ty, rot, [cx, cy]) => ({ k: 'push', tx, ty, rot, cx, cy }), POP = { k: 'pop' }; // a transform group: shifted by (tx, ty), turned by rot about (cx, cy)
 const stroke = (color, sw, op = 1, cap = 'round') => ({ fill: 'none', stroke: color, sw, op, cap });
+export { path, ellipse, rect, line, clip, UNCLIP, stroke }; // for a theme module (thriller.mjs) that registers parts of its own into the registries below
 const ARGS = { M: 2, L: 2, C: 6, Q: 4, Z: 0 };
 const tokens = (d) => d.match(/[MLCQZ]|-?\d*\.?\d+(?:e-?\d+)?/gi) ?? [];
 /** The ops with every x through `fx` and every y through `fy`: how a part drawn for the default head follows this one. */
@@ -77,14 +79,14 @@ export function mapXY(ops, fx, fy = (y) => y) {
   return ops.map((o) => o.k === 'path' || o.k === 'clip' ? { ...o, d: px(o.d) } : o.k === 'ellipse' ? { ...o, cx: r(fx(o.cx)), cy: r(fy(o.cy)), rx: r(fx(o.cx + o.rx) - fx(o.cx)), ry: r(fy(o.cy + o.ry) - fy(o.cy)) } : o.k === 'rect' ? { ...o, x: r(fx(o.x)), y: r(fy(o.y)), w: r(fx(o.x + o.w) - fx(o.x)), h: r(fy(o.y + o.h) - fy(o.y)) } : o.k === 'line' ? { ...o, x1: r(fx(o.x1)), x2: r(fx(o.x2)), y1: r(fy(o.y1)), y2: r(fy(o.y2)) } : o);
 }
 export const mapX = (ops, fx) => mapXY(ops, fx);
-const scaleAbout = (c, k) => (v) => c + (v - c) * k;
+export const scaleAbout = (c, k) => (v) => c + (v - c) * k;
 /** The ops with every point through `f(x, y) → [x, y]` (a shear, a turn); an ellipse or rect moves by its centre and keeps its size. */
 export function mapPts(ops, f) {
   const r = (v) => Math.round(v * 100) / 100;
   const px = (d) => { let cmd = 'M', i = 0, x = 0; const out = []; for (const t of tokens(d)) { if (/[a-z]/i.test(t)) { cmd = t.toUpperCase(); i = 0; out.push(t); continue; } if (i % 2 === 0) x = +t; else { const [a, b] = f(x, +t); out.push(r(a), r(b)); } i++; } return out.join(' '); };
   return ops.map((o) => { if (o.k === 'path' || o.k === 'clip') return { ...o, d: px(o.d) }; if (o.k === 'ellipse') { const [cx, cy] = f(o.cx, o.cy); return { ...o, cx: r(cx), cy: r(cy) }; } if (o.k === 'rect') { const [cx, cy] = f(o.x + o.w / 2, o.y + o.h / 2); return { ...o, x: r(cx - o.w / 2), y: r(cy - o.h / 2) }; } if (o.k === 'line') { const [x1, y1] = f(o.x1, o.y1), [x2, y2] = f(o.x2, o.y2); return { ...o, x1: r(x1), y1: r(y1), x2: r(x2), y2: r(y2) }; } return o; });
 }
-const lcg = (seed) => { let x = (Math.abs(Math.floor(seed * 7919)) % 233280) || 7; return () => (x = (x * 9301 + 49297) % 233280) / 233280; };
+export const lcg = (seed) => { let x = (Math.abs(Math.floor(seed * 7919)) % 233280) || 7; return () => (x = (x * 9301 + 49297) % 233280) / 233280; };
 // an irregular plane: a closed smooth curve through n points around (cx, cy), their radii jittered by `rnd`, so no
 // two planes share a silhouette and none is an ellipse
 const blob = (cx, cy, rx, ry, rnd, n = 7, wob = 0.22) => {
@@ -151,7 +153,7 @@ function ears(p, turn = 0) {
 // airbrushed: the sockets and the shadow under the nose are tight and soft, the cheek and the forehead are large
 // irregular planes with a hard edge at low opacity, and the temples get nothing.
 const TONE = '#4a2418';
-const soft = (cx, cy, rx, ry, fill, op) => [1, 0.92, 0.84, 0.76, 0.68, 0.6, 0.5, 0.4].map((k) => ellipse(cx, cy, rx * k, ry * k, { fill, op: op / 8 })); // a plane with no edge: eight fading ellipses stand in for a gradient
+export const soft = (cx, cy, rx, ry, fill, op) => [1, 0.92, 0.84, 0.76, 0.68, 0.6, 0.5, 0.4].map((k) => ellipse(cx, cy, rx * k, ry * k, { fill, op: op / 8 })); // a plane with no edge: eight fading ellipses stand in for a gradient
 const planes = (p) => { const y = p.eyes.y, sp = p.eyes.spacing / 2, h = p.face.height, w = p.face.width / 2, sd = p.light.side || -1, rnd = lcg(p.seed + 3), depth = p.eyes.depth ?? 0.5, c = p.light.contrast ?? 1, k = featureScale(p), ky = h / 204; return [
   ...soft(200 - sp, y - 3, 21 * k, 12 * k, TONE, (0.05 + 0.1 * depth) * c), ...soft(200 + sp, y - 3, 21 * k, 12 * k, TONE, (0.05 + 0.1 * depth) * c), // the sockets: tight, deeper for deep-set eyes, as big as the eyes
   path(blob(200 - sd * w * 0.6, y + 66 * ky, w * 0.3, h * 0.24, rnd, 9, 0.3), { fill: TONE, op: 0.035 * c }), path(blob(200 - sd * w * 0.62, y + 70 * ky, w * 0.22, h * 0.18, rnd, 9, 0.3), { fill: TONE, op: 0.035 * c }), // the shadow cheek: one large irregular plane under the bone (as far under the eye as this face is tall), down to the jaw, in two steps so its edge is not a cut
@@ -659,15 +661,22 @@ const sleeveColor = (p) => (p.jacket.style !== 'none' ? p.jacket.color : p.top.s
 // elbow and the forearm to a wrist, both at arm thickness, and a mitten hand carrying on past the wrist; `side` +1 is the character's right (+x)
 const ARM_W = 58, FORE_W = 52, SHOULDER = (side) => [200 + 86 * side, 398];
 const mitten = (p, x, y, a, k = 1) => { const c = Math.cos(a), sn = Math.sin(a), at = (dx, dy) => [x + (dx * c - dy * sn) * k, y + (dx * sn + dy * c) * k], col = handColor(p), f = at(11, 0), t = at(2, -14); return [ellipse(x, y, 15 * k, 17 * k, { fill: col }), ellipse(f[0], f[1], 12 * k, 12 * k, { fill: col }), ellipse(t[0], t[1], 6.5 * k, 8 * k, { fill: col })]; };
-/** An arm from the shoulder on `side` through `elbow` to `wrist` (sheet points), the shoulder lifted by `lift` (0..1), with a hand unless `hand` is false. */
+/** An arm from the shoulder on `side` through `elbow` to `wrist` (sheet points), with a hand unless `hand` is false. The upper arm and the forearm are round tubes from the joint; over the joint sits the deltoid, a soft bulge that continues the trunk's own shoulder curve out over the top of the arm and fades into it, so the arm grows out of a shoulder rather than hanging off a corner. No outline: a highlight along the top of the shoulder, a soft shadow where the upper arm meets the chest, and a soft edge under the forearm so a sleeve the colour of the shirt still reads against the body. `lift` moves the joint up and out as the arm rises. */
 export function arm(p, side, { lift = 0, elbow, wrist, hand = true }) {
-  const [sx0, sy0] = SHOULDER(side), sx = sx0 - (16 - 24 * lift) * side, sy = sy0 - 8 * lift, col = sleeveColor(p), [ex, ey] = elbow, [wx, wy] = wrist; // the cap sits inside the torso's shoulder and rises out of it as the arm lifts
+  const [sx0, sy0] = SHOULDER(side), sx = sx0 - (16 - 24 * lift) * side, sy = sy0 - 8 * lift, col = sleeveColor(p), [ex, ey] = elbow, [wx, wy] = wrist, dark = shade(col, 0.5);
   const dx = wx - ex, dy = wy - ey, L = Math.hypot(dx, dy) || 1, a = Math.atan2(dy, dx), hx = wx + (dx / L) * 16, hy = wy + (dy / L) * 16;
+  const ux0 = ex - sx, uy0 = ey - sy, UL = Math.hypot(ux0, uy0) || 1, ux = ux0 / UL, uy = uy0 / UL; let nx = -uy, ny = ux; if (nx * side < 0) { nx = -nx; ny = -ny; } // along the upper arm, and its outward normal
+  const P = (x, y) => `${Math.round(x * 10) / 10} ${Math.round(y * 10) / 10}`;
+  const t0 = [200 + 60 * side, 356], t1 = [sx + nx * 31 - ux * 4, sy + ny * 31 - uy * 4], jo = [sx + ux * 46 + nx * 29, sy + uy * 46 + ny * 29], jc = [sx + ux * 46, sy + uy * 46], ap = [200 + 84 * side, 436]; // the deltoid: from the trunk's shoulder top, over the joint to the arm's outer edge a little down it, back under the tube to the armpit
+  const delt = `M ${P(...t0)} C ${P(200 + 88 * side, 344)}, ${P(t1[0] - ux * 16 + nx * 6, t1[1] - uy * 16 + ny * 6)}, ${P(...t1)} Q ${P(sx + nx * 34 + ux * 22, sy + ny * 34 + uy * 22)} ${P(...jo)} L ${P(...jc)} L ${P(...ap)} Z`;
   return [
-    ...(lift > 0.5 ? [ellipse(200 + 72 * side, 404, 34, 30, { fill: col })] : []), // a lifted arm's shoulder: a rounded mass joining the torso across the armpit notch
-    ellipse(sx, sy, 20 + 12 * lift, 17 + 13 * lift, { fill: col }), ...(lift > 0.5 ? [path(`M ${sx - 22 * side} ${sy + 18} Q ${sx} ${sy + 30} ${sx + 18 * side} ${sy + 20}`, stroke('#000', 2.5, 0.12))] : []), // the cap, and the crease under a lifted one
-    line(sx, sy, ex, ey, stroke(col, ARM_W)), line(ex, ey, wx, wy, stroke(col, FORE_W)),
-    ellipse(ex, ey, 9, 7, { fill: '#000', op: 0.08 }), // the elbow
+    line(ex, ey, wx, wy, stroke(dark, FORE_W + 4, 0.25)), // a soft edge under the forearm
+    path(delt, { fill: col }), line(sx, sy, ex, ey, stroke(col, ARM_W)), // the shoulder, and the upper arm's tube from the joint
+    path(`M ${P(...t0)} C ${P(200 + 88 * side, 346)}, ${P(t1[0] - ux * 16 + nx * 4, t1[1] - uy * 16 + ny * 4)}, ${P(...t1)}`, stroke('#fff', 5, 0.1)), // the light on the top of the shoulder
+    path(`M ${P(...ap)} L ${P(ex - nx * 24, ey - ny * 24)}`, stroke('#000', 10, 0.06)), path(`M ${P(...ap)} L ${P(ex - nx * 24, ey - ny * 24)}`, stroke('#000', 4, 0.07)), // a soft shadow where the arm meets the chest, no line
+    ...(lift > 0.5 ? [path(`M ${P(sx - 18 * side, sy + 18)} Q ${P(sx, sy + 30)} ${P(sx + 14 * side, sy + 20)}`, stroke('#000', 2.5, 0.09))] : []), // the crease under a lifted arm
+    line(ex, ey, wx, wy, stroke(col, FORE_W)),
+    ellipse(ex, ey, 9, 7, { fill: '#000', op: 0.07 }), // the elbow
     ...(hand ? mitten(p, hx + (dx / L) * 4, hy + (dy / L) * 4, a, 1.25) : []),
   ];
 }
@@ -681,17 +690,29 @@ export const PROPS = {
   handsAtSides: {},
   gloves: {}, // hands at the sides are below the sheet; gloves show on whatever the hands do hold (handColor)
   chain: { neck: () => [path('M 150 368 Q 200 424 250 368', stroke('#c9a03c', 7)), path('M 150 368 Q 200 424 250 368', stroke('#fff0c0', 2, 0.5)), ellipse(200, 396, 9, 11, { fill: '#c9a03c' })] },
-  flamingFlower: { front: (p) => [...arm(p, 1, { lift: 0.15, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), ...stem(262, 458, 272, 386), ...petals(274, 380, '#b3202a'), path('M 274 362 C 260 344, 268 322, 276 306 C 280 324, 294 336, 286 352 C 298 340, 298 328, 294 316 C 304 336, 298 358, 274 362 Z', { fill: '#e8862a' }), path('M 274 358 C 266 344, 272 330, 276 322 C 280 334, 286 342, 282 352 Z', { fill: '#ffd94a' })] },
-  flower: { front: (p) => [...arm(p, 1, { lift: 0.15, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), ...stem(262, 458, 272, 386), ...petals(274, 380, '#efe6d6', 7, 14)] },
-  sunglassesInHand: { front: (p) => [...arm(p, 1, { lift: 0.15, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), rect(230, 444, 22, 15, { rx: 6, fill: '#141216' }), rect(256, 444, 22, 15, { rx: 6, fill: '#141216' }), line(252, 449, 256, 449, stroke('#141216', 2.5))] },
-  ceremonialObject: { front: (p) => [...arm(p, -1, { lift: 0.15, elbow: [98, 486], wrist: [172, 474], hand: false }), ...arm(p, 1, { lift: 0.15, elbow: [302, 486], wrist: [228, 474], hand: false }), ...hand(p, 178, 472, 0.6), ...hand(p, 222, 472, -0.6), path('M 178 436 L 222 436 L 214 466 L 186 466 Z', { fill: '#b8892b' }), rect(190, 466, 20, 8, { fill: '#8a6519' }), line(184, 442, 216, 442, stroke('#fff3c8', 1.5, 0.6))] },
-  abstractGoldObject: { front: (p) => [...arm(p, 1, { lift: 0.15, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), ...GOLD_OBJ(250, 432, 24)] },
-  abstractToyLikeProp: { front: (p) => [...arm(p, 1, { lift: 0.15, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), rect(240, 420, 28, 32, { rx: 5, fill: '#b3202a' }), ellipse(248, 432, 3.5, 3.5, { fill: '#fff' }), ellipse(260, 432, 3.5, 3.5, { fill: '#fff' }), rect(246, 442, 16, 4, { fill: '#fff' })] },
-  handHeartGesture: { front: (p) => [...arm(p, -1, { lift: 0.1, elbow: [96, 490], wrist: [176, 476], hand: false }), ...arm(p, 1, { lift: 0.1, elbow: [304, 490], wrist: [224, 476], hand: false }), path('M 200 498 C 172 480, 160 452, 178 442 C 188 437, 197 443, 200 452 C 203 443, 212 437, 222 442 C 240 452, 228 480, 200 498 Z', stroke(handColor(p), 19)), path('M 200 494 C 176 478, 166 456, 180 448 C 190 444, 198 449, 200 458 C 202 449, 210 444, 220 448 C 234 456, 224 478, 200 494 Z', { fill: '#000', op: 0.16 })] },
+  flamingFlower: { arms: [1], front: (p) => [...arm(p, 1, { lift: 0.35, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), ...stem(262, 458, 272, 386), ...petals(274, 380, '#b3202a'), path('M 274 362 C 260 344, 268 322, 276 306 C 280 324, 294 336, 286 352 C 298 340, 298 328, 294 316 C 304 336, 298 358, 274 362 Z', { fill: '#e8862a' }), path('M 274 358 C 266 344, 272 330, 276 322 C 280 334, 286 342, 282 352 Z', { fill: '#ffd94a' })] },
+  flower: { arms: [1], front: (p) => [...arm(p, 1, { lift: 0.35, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), ...stem(262, 458, 272, 386), ...petals(274, 380, '#efe6d6', 7, 14)] },
+  sunglassesInHand: { arms: [1], front: (p) => [...arm(p, 1, { lift: 0.35, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), rect(230, 444, 22, 15, { rx: 6, fill: '#141216' }), rect(256, 444, 22, 15, { rx: 6, fill: '#141216' }), line(252, 449, 256, 449, stroke('#141216', 2.5))] },
+  ceremonialObject: { arms: [-1, 1], front: (p) => [...arm(p, -1, { lift: 0.35, elbow: [98, 486], wrist: [172, 474], hand: false }), ...arm(p, 1, { lift: 0.35, elbow: [302, 486], wrist: [228, 474], hand: false }), ...hand(p, 178, 472, 0.6), ...hand(p, 222, 472, -0.6), path('M 178 436 L 222 436 L 214 466 L 186 466 Z', { fill: '#b8892b' }), rect(190, 466, 20, 8, { fill: '#8a6519' }), line(184, 442, 216, 442, stroke('#fff3c8', 1.5, 0.6))] },
+  abstractGoldObject: { arms: [1], front: (p) => [...arm(p, 1, { lift: 0.35, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), ...GOLD_OBJ(250, 432, 24)] },
+  abstractToyLikeProp: { arms: [1], front: (p) => [...arm(p, 1, { lift: 0.35, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), rect(240, 420, 28, 32, { rx: 5, fill: '#b3202a' }), ellipse(248, 432, 3.5, 3.5, { fill: '#fff' }), ellipse(260, 432, 3.5, 3.5, { fill: '#fff' }), rect(246, 442, 16, 4, { fill: '#fff' })] },
+  handHeartGesture: { arms: [-1, 1], front: (p) => [...arm(p, -1, { lift: 0.35, elbow: [96, 490], wrist: [176, 476], hand: false }), ...arm(p, 1, { lift: 0.35, elbow: [304, 490], wrist: [224, 476], hand: false }), path('M 200 498 C 172 480, 160 452, 178 442 C 188 437, 197 443, 200 452 C 203 443, 212 437, 222 442 C 240 452, 228 480, 200 498 Z', stroke(handColor(p), 19)), path('M 200 494 C 176 478, 166 456, 180 448 C 190 444, 198 449, 200 458 C 202 449, 210 444, 220 448 C 234 456, 224 478, 200 494 Z', { fill: '#000', op: 0.16 })] },
   handsUp: { lift: [-1, 1], front: (p) => [...arm(p, -1, { lift: 1, elbow: [70, 300], wrist: [92, 190] }), ...arm(p, 1, { lift: 1, elbow: [330, 300], wrist: [308, 190] })] }, // both shoulders lifted, elbows out past the ears, hands above the head
   armRaised: { lift: [1], front: (p) => [...arm(p, 1, { lift: 1, elbow: [332, 296], wrist: [312, 184] })] },
 };
 export const PROP_STYLES = Object.keys(PROPS);
+// The body is a figure: a trunk the body's own width (shoulders rounded at the joint, the sides straight to the hip),
+// arms from the shoulder joints, legs from the hips. Every garment is clipped to the trunk (a top to the hem at 640,
+// a jacket to 690) instead of drawing its own wide torso, so the shirt is the body's width and the sleeves make the
+// figure's width; the legs are drawn under the hem in the trousers' cloth, the shoes under them.
+export const TRUNK = (bottom) => `M 200 330 L 136 352 C 112 362, 100 380, 100 404 L 102 520 C 102 580, 108 620, 112 ${bottom} L 288 ${bottom} C 292 620, 298 580, 298 520 L 300 404 C 300 380, 288 362, 264 352 Z`;
+export const FEET_Y = 1078; // where the shoes meet the floor
+const shoes = (p) => [-1, 1].flatMap((s) => [ellipse(200 + s * 44, 1066, 36, 14, { fill: p.shoes.color }), ellipse(200 + s * 52, 1064, 14, 6, { fill: '#fff', op: 0.08 })]);
+export const LEGS = {
+  trousers: (p) => [...shoes(p), path('M 110 596 L 290 596 L 292 700 L 266 1062 L 216 1062 L 200 770 L 184 1062 L 134 1062 L 108 700 Z', { fill: p.pants.color }), path('M 200 700 L 200 772', stroke('#000', 7, 0.18)), ...[-1, 1].map((s) => path(`M ${200 + s * 50} 724 Q ${200 + s * 54} 900 ${200 + s * 58} 1050`, stroke('#000', 3, 0.1))), ...[-1, 1].map((s) => path(`M ${200 + s * 24} 724 Q ${200 + s * 22} 900 ${200 + s * 28} 1050`, stroke('#fff', 3, 0.06)))], // two legs from the hips, a crease down each
+  skirt: (p) => [...shoes(p), path('M 110 596 L 290 596 L 338 1052 Q 200 1072 62 1052 Z', { fill: p.pants.color }), ...[-60, -20, 20, 60].map((d) => path(`M ${200 + d * 0.6} 640 Q ${200 + d * 0.9} 850 ${200 + d * 1.3} 1050`, stroke('#000', 3, 0.1)))], // a long skirt to the floor, folds falling from the waist
+};
+export const LEG_STYLES = Object.keys(LEGS);
 const ink = (p) => (p.top.color && parseInt(p.top.color.slice(1, 3), 16) > 150 ? '#1a1719' : '#ece8e0'); // a print in the colour that shows on this top
 export const GRAPHICS = {
   redLabel: (p) => [rect(172, 404, 56, 20, { fill: REDP }), rect(178, 411, 26, 5, { fill: '#f4ece0' })],
@@ -712,7 +733,7 @@ const printed = (p) => {
   return c ? ops.map((o) => ({ ...o, ...(o.fill && o.fill !== 'none' ? { fill: c } : {}), ...(o.stroke ? { stroke: c } : {}) })) : ops;
 };
 const LAYERS = [['makeup', MAKEUP], ['marks', MARKS], ['props', PROPS]];
-const overlays = (p, at, fits) => LAYERS.flatMap(([key, reg]) => (p[key] ?? []).flatMap((n) => { const d = reg[n], f = d?.[at]; if (!f) return []; const fit = typeof d.fit === 'string' ? d.fit : d.fit?.[at]; return fit ? fits[fit](f(p)) : f(p); }));
+const overlays = (p, at, fits, fitIs = () => true) => LAYERS.flatMap(([key, reg]) => (p[key] ?? []).flatMap((n) => { const d = reg[n], f = d?.[at]; if (!f) return []; const fit = typeof d.fit === 'string' ? d.fit : d.fit?.[at]; if (!fitIs(fit)) return []; return fit ? fits[fit](f(p)) : f(p); })); // fitIs: which fits to take, so one slot can be drawn in two groups that slide differently on a turned head
 
 // metallic cloth: SVG has no gold lamé, so the garment gets dark folds falling from the shoulders, sharp pale patches beside them and a few near-white slivers, all clipped to its shape; the seed places them
 export function sheen(d, color, seed = 1, [y0, y1] = [340, 600], n = 6, rule) {
@@ -757,8 +778,8 @@ const details = (p, fitFace, fitEyes) => p.details.flatMap((n) => { const d = DE
 // Cloth is not flat: every garment gets the head's shadow across its chest, folds falling from the shoulders, the
 // pull at the armpits, creases at the sleeve seams and a thickness to its neckline, all clipped to its own shape and
 // placed by the seed. A bare torso keeps only the head's shadow. The hems are below the sheet.
-const NECKLINES = { crewTshirt: 'M 161 361 Q 200 389 239 361', heavyweightTshirt: 'M 158 359 Q 200 389 242 359', henley: 'M 163 360 Q 200 386 237 360', crewSweater: 'M 159 356 Q 200 387 241 356', polo: 'M 165 355 L 192 377 L 200 386 L 208 377 L 235 355', vneckTshirt: 'M 165 359 L 200 398 L 235 359', buttonDown: 'M 164 356 L 195 377 L 200 386 L 205 377 L 236 356', tunic: 'M 162 347 Q 200 372 238 347', trackTop: 'M 168 358 L 200 386 L 232 358', denimJacket: 'M 163 352 L 198 380 L 202 380 L 237 352', bomber: 'M 162 352 Q 200 385 238 352', leatherJacket: 'M 160 349 L 202 385 L 240 349', fieldJacket: 'M 161 351 Q 200 384 239 351', puffer: 'M 160 348 Q 200 380 240 348', trenchCoat: 'M 158 346 L 200 396 L 242 346' };
-const JACKET_EDGE = { blazer: ['M 161 354 L 193 480 L 200 700', 'M 239 354 L 207 480 L 200 700'], openJacket: ['M 158 352 L 172 480 L 168 700', 'M 242 352 L 228 480 L 232 700'], waistcoat: ['M 165 359 L 196 442 L 196 700', 'M 235 359 L 204 442 L 204 700'] }; // the inner edges of the jackets that hang open: they drop a shadow on the shirt
+export const NECKLINES = { crewTshirt: 'M 161 361 Q 200 389 239 361', heavyweightTshirt: 'M 158 359 Q 200 389 242 359', henley: 'M 163 360 Q 200 386 237 360', crewSweater: 'M 159 356 Q 200 387 241 356', polo: 'M 165 355 L 192 377 L 200 386 L 208 377 L 235 355', vneckTshirt: 'M 165 359 L 200 398 L 235 359', buttonDown: 'M 164 356 L 195 377 L 200 386 L 205 377 L 236 356', tunic: 'M 162 347 Q 200 372 238 347', trackTop: 'M 168 358 L 200 386 L 232 358', denimJacket: 'M 163 352 L 198 380 L 202 380 L 237 352', bomber: 'M 162 352 Q 200 385 238 352', leatherJacket: 'M 160 349 L 202 385 L 240 349', fieldJacket: 'M 161 351 Q 200 384 239 351', puffer: 'M 160 348 Q 200 380 240 348', trenchCoat: 'M 158 346 L 200 396 L 242 346' };
+export const JACKET_EDGE = { blazer: ['M 161 354 L 193 480 L 200 700', 'M 239 354 L 207 480 L 200 700'], openJacket: ['M 158 352 L 172 480 L 168 700', 'M 242 352 L 228 480 L 232 700'], waistcoat: ['M 165 359 L 196 442 L 196 700', 'M 235 359 L 204 442 L 204 700'] }; // the inner edges of the jackets that hang open: they drop a shadow on the shirt
 function cloth(p, ops, style, color, seed) {
   const d = region(ops); if (!d) return ops;
   const rnd = lcg(seed), dark = shade(color, 0.55), neckline = NECKLINES[style], bare = style === 'bare';
@@ -820,7 +841,7 @@ export function portraitOps(options = {}) {
   const seat = crown0 && crown0 < 300 ? Math.max(0, Math.min(HAT_SEAT_MAX, HAIR_LIFT - hairLift([...back, ...front].filter(solid)))) : 0;
   const crown = crown0 === undefined ? crown0 : crown0 + seat;
   const puff = crown && crown < 300 ? Math.min(HAT_PUFF_MAX, Math.max(1, reach([...back, ...front].filter(solid)) / (p.face.width / 2))) : 1;
-  const plainHat = mapXY(fit((HATS[p.hat.style] ?? HATS.none)(p)), scaleAbout(200, puff), (y) => crown0 + seat + (y - crown0) * puff); // the hat before any sheen: what the skirt below is built from, since a sheen's patches are clipped to the garment and a copy of them would leave loose bars on the background
+  const plainHat = mapXY(fit((HATS[p.hat.style] ?? HATS.none)(p)), scaleAbout(200, puff), (y) => (crown0 === undefined ? y : crown0 + seat + (y - crown0) * puff)); // a hat with no crown line (a headband, a veil's comb) sits on the hair as drawn // the hat before any sheen: what the skirt below is built from, since a sheen's patches are clipped to the garment and a copy of them would leave loose bars on the background
   let hat = plainHat; if (p.hat.metal) hat = metalize(hat, p.hat.color, p.seed + 2, [40, 390]);
   const hw = hatWidth(hat.slice(0, 1), crown), under = (ops) => (crown && ops.length ? [clip(`M -100 900 L -100 ${crown + 50} L ${200 + hatDx - hw - 50} ${crown + 50} L ${200 + hatDx - hw} ${crown} L ${200 + hatDx + hw} ${crown} L ${200 + hatDx + hw + 50} ${crown + 50} L 500 ${crown + 50} L 500 900 Z`), ...ops, UNCLIP] : ops); // under a hat the hair stops at the crown line and is pressed in under the hat's edge: the mass above is inside the hat (a cap does not take an afro's shape), and what is below springs out past the brim at a slant, not as a shelf
   // a crown's bottom edge arcs upward, so cutting the hair level with the crown line leaves a crescent of bare
@@ -836,8 +857,10 @@ export function portraitOps(options = {}) {
   const hoodBack = top.filter((o) => o.hood); if (hoodBack.length) top = top.filter((o) => !o.hood); // a hood bunched behind the head goes behind the neck, or it swallows it: the chin ends up resting on a dome of cloth
   // a turtleneck's collar wraps the neck, so it rides in the neck's own group and slides and leans with it; a shirt's collar lies on the chest and stays with the torso
   const collar = top.filter((o) => o.collar), onNeck = collar.filter((o) => o.onNeck); if (onNeck.length) top = top.filter((o) => !o.onNeck); top = cloth(p, top, p.top.style, p.top.style === 'bare' ? p.skin : p.top.color, p.seed + 11);
-  const lifted = p.props.flatMap((n) => PROPS[n]?.lift ?? []); // the sides whose arm a prop raises: the garment's shoulder slope is cut away there and the side under the arm is trimmed to an armpit notch, so the shirt still reaches the arm; the arm's cap and sleeve take the shoulder's place
-  const armpit = lifted.length ? [clip(`M -100 -200 L 500 -200 L 500 700 L -100 700 Z ${lifted.map((sd) => `M ${200 + 54 * sd} 300 L ${200 + 220 * sd} 300 L ${200 + 220 * sd} 600 L ${200 + 96 * sd} 600 L ${200 + 88 * sd} 424 L ${200 + 58 * sd} 392 Z`).join(' ')}`, 'evenodd')] : [];
+  // Every portrait has arms: a prop may place one (`PROPS[n].lift`: the signed sides it raises; `PROPS[n].arms`: the sides it draws low), every other arm hangs from the shoulder joint with its hand at the hip. Nothing is cut per pose: the trunk is always the body's width (TRUNK) and the sleeves make the figure's.
+  const armed = (sd) => p.props.some((n) => (PROPS[n]?.lift ?? []).some((v) => Math.sign(v) === sd) || PROPS[n]?.arms?.includes(sd));
+  const hangs = [-1, 1].flatMap((sd) => (armed(sd) ? [] : arm(p, sd, { lift: 0.3, elbow: [200 + 104 * sd, 540], wrist: [200 + 110 * sd, 690] }))); // lift 0.3: the cap covers the trunk's shoulder corner without the mass a lifted arm gets
+  const legs = (LEGS[p.pants.style] ?? LEGS.trousers)(p);
   let jacket = (JACKETS[p.jacket.style] ?? JACKETS.none)(p); if (p.jacket.metal) jacket = metalize(jacket, p.jacket.color, p.seed + 1); if (jacket.length) jacket = cloth(p, jacket, p.jacket.style, p.jacket.color, p.seed + 12);
   const edge = JACKET_EDGE[p.jacket.style] ? [clip(top[0].d), ...JACKET_EDGE[p.jacket.style].map((d) => path(d, stroke('#000', 14, 0.2, 'butt'))), UNCLIP] : []; // an open jacket's shadow on the shirt beside its edge
   // A neckline is an opening: the neck is drawn once behind the clothes, so every collar covers its base, and once
@@ -855,15 +878,16 @@ export function portraitOps(options = {}) {
     headG, ...tf(under(backHair), 4), POP, // the back hair hangs behind the shoulders, so it goes down before the top
     ...wide(shear(hoodBack)), // a hood hangs behind the neck
     neckG, ...neck(p), ...overlays(p, 'neck', fits), POP, // the neck goes behind every garment, so a collar, a lapel or a neckline covers its base: a collar, a lapel or a neckline covers its base, or the skin reads as a column standing on the shirt
-    ...wide(shear([...armpit, ...top, ...edge])),
+    ...wide(shear(legs)), // the legs under the hem
+    ...wide(shear([clip(TRUNK(640)), ...top, ...edge, UNCLIP])), // a top is the trunk's shape to its hem
     ...(onNeck.length ? [neckG, ...onNeck, POP] : []), // a turtleneck's collar wraps the neck, so it rides in the neck's group and leans with it, over the shirt it belongs to and under any jacket (which shows it again through its own neckline)
-    ...wide(shear([...jacket, ...(armpit.length ? [UNCLIP] : []), ...overlays(p, 'body', fits)])),
+    ...wide(shear([clip(TRUNK(690)), ...jacket, UNCLIP, ...overlays(p, 'body', fits)])), // a jacket, longer
     ...through, // and shows again through the outermost neckline, because a neckline is a hole, not a curve painted on the cloth
     ...accessories(p, 'neck'), ...wide(shear(collar.filter((o) => !o.onNeck))), ...accessories(p, 'tie'), // a chain lies on the shirt, the collar goes back over it, a tie over that
-    headG, ...tf(fit(ears(p, turn)), 4), ...tf(fit(accessories(p, 'ear')), 4), ...tf(head(p), 4), ...tf(masked ? beard : [], 8), ...tf(masked ? stache : [], 12), ...tf(masked ? model : [], 4), ...tf(overlays(p, 'skin', fits), 4), ...tf(masked ? [] : model, 4), ...tf(masked ? [] : details(p, fitFace, fitEyes), 12), // the planes go over paint on the skin (one modelling for a painted face and a bare one); a mask is a shell with its own shading, so they go under it, with the beard
+    headG, ...tf(fit(ears(p, turn)), 4), ...tf(fit(accessories(p, 'ear')), 4), ...tf(head(p), 4), ...tf(masked ? beard : [], 8), ...tf(masked ? stache : [], 12), ...tf(masked ? model : [], 4), ...tf(overlays(p, 'skin', fits, (f) => f !== 'eyes'), 4), ...tf(overlays(p, 'skin', fits, (f) => f === 'eyes'), 12), ...tf(masked ? [] : model, 4), ...tf(masked ? [] : details(p, fitFace, fitEyes), 12), // the planes go over paint on the skin (one modelling for a painted face and a bare one); a mask is a shell with its own shading, so they go under it, with the beard; paint laid out on the eyes (sockets, under-eye) rides with the eyes on a turn (12), the rest with the outline (4)
     ...tf(masked ? [clip(maskHoles(p)), ...eyes(p, false), UNCLIP] : eyes(p), 12), ...tf(masked ? [] : nose(p), 12), ...tf(masked ? [] : mouth(p), 12), ...tf(overlays(p, 'face', fits), 12), ...tf(masked ? [] : beard, 8), ...tf(masked ? [] : stache, 12), // a mask is a rigid thing: none of the wearer's face is drawn on it, no brows, no nose, no mouth, no lines, and the eyes show only through its holes, where they still look about and blink
     ...tf(faceLight(p, facePath(p)), 4), ...tf(hairShadow, 4), ...tf(under(frontHair), 4), ...tf(specShadow, 12), ...tf(specs, 12), ...tf(brim, HAT_TURN), ...tf(skirt, HAT_TURN), ...tf(hat, HAT_TURN), ...tf(fit(accessories(p, 'over')), 4), ...tf(overlays(p, 'over', fits), 4), POP,
-    ...wide(overlays(p, 'front', fits)),
+    ...wide([...hangs, ...overlays(p, 'front', fits)]), // the arms: hanging, then what a prop does with them
     POP,
   ], p.seed);
 }

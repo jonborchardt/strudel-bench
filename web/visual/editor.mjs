@@ -6,10 +6,12 @@
 // generator (constrained to one FAMILIES entry unless family is 'any'), `ov` the edits as flat dotted paths over it,
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
-import { DEFAULTS, COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge } from './portrait.mjs';
+import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge } from './portrait.mjs';
 import { FAMILY_NAMES, characterOf, faceOf, EXPRESSIONS, COSTUMES, COSTUME_FAMILIES } from './cast.mjs';
+import { ZOMBIES, ZOMBIE_NAMES, ZOMBIE_COSTUME_NAMES, ZOMBIE_MAKEUP, ZOMBIE_MARKS, ZOMBIE_PROPS, ZOMBIE_EXPRESSIONS } from './thriller.mjs'; // the theme's parts, offered only when the state's theme is on (groupsFor)
 import { seed as seedState } from './kit.mjs';
 import { prng } from '../../lib/random.mjs';
+const EXPRESSION_NAMES = Object.keys(EXPRESSIONS).filter((e) => !ZOMBIE_EXPRESSIONS[e]); // the editorial expressions: the theme registered its own by name before this module ran
 
 const num = (path, min, max, step = 0.01, o = {}) => ({ kind: 'num', path, min, max, step, ...o });
 const int = (path, min, max, o = {}) => num(path, min, max, 1, o);
@@ -47,6 +49,7 @@ export function setOv(ov, path, value) {
 }
 
 const FAMILIES_PLUS = ['any', ...FAMILY_NAMES];
+export const THEME_NAMES = ['none', 'thriller']; // the themes the editor offers (THEMES below says what each adds)
 /** The character the edits sit on: a random one from the seed, its face constrained to one structural family when asked. */
 export function base(seed = 1, family = 'any') {
   const s = {};
@@ -64,7 +67,7 @@ export function base(seed = 1, family = 'any') {
 export const params = (st) => merge(merge(DEFAULTS, base(st.seed, st.family)), expand(st.ov ?? {}));
 
 /** A blank state. A function, not a constant: its `ov` is written in place, so a shared one would alias every reset. */
-export const blank = () => ({ seed: 1, family: 'any', ov: { background: '#c8102e' } }); // red behind the sitter by default: an edge against the page's beige is invisible
+export const blank = () => ({ seed: 1, family: 'any', theme: 'none', ov: { background: '#c8102e' } }); // red behind the sitter by default: an edge against the page's beige is invisible
 export const encode = (st) => btoa(JSON.stringify(st)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 export function decode(hash) {
   try {
@@ -83,6 +86,7 @@ export const GROUPS = [
   { name: 'base', items: [
     en('$family', FAMILIES_PLUS, { state: 'family' }),
     int('$seed', 0, 999999, { state: 'seed' }),
+    en('$theme', THEME_NAMES, { state: 'theme' }), // a theme widens the menus below with its own parts and adds its presets (groupsFor); none is the editorial editor
   ] },
   { name: 'head', items: [
     preset('shape', Object.keys(FACE_SHAPES), shapePreset),
@@ -96,7 +100,7 @@ export const GROUPS = [
     en('facialHair.style', FACIAL_HAIR_STYLES), col('facialHair.color', 'hair', { nullable: true }), num('facialHair.density', 0, 1, 0.02, { nullable: true }), num('facialHair.cheekLine', 0, 1, 0.02, { nullable: true }), num('facialHair.mustache', 0, 1, 1, { nullable: true }), en('facialHair.mustacheStyle', MUSTACHE_STYLES, { nullable: true }),
   ] },
   { name: 'features', items: [
-    preset('expression', Object.keys(EXPRESSIONS), exprPreset),
+    preset('expression', EXPRESSION_NAMES, exprPreset),
     en('eyes.style', EYE_STYLES), en('eyes.browStyle', BROW_STYLES),
     int('eyes.y', 176, 216), num('eyes.spacing', 36, 76, 0.5), num('eyes.openness', 0, 1.4, 0.02), num('eyes.asym', 0.55, 1.45, 0.02), num('eyes.dy', -6, 6, 0.1),
     num('eyes.depth', 0, 1, 0.02), num('eyes.sclera', 0, 1, 0.02, { nullable: true }), num('eyes.lidWeight', 0, 1, 0.02, { nullable: true }), num('eyes.corner', 0, 1, 0.02, { nullable: true }), num('eyes.bags', 0, 1, 0.02), num('eyes.squint', 0, 1, 0.02),
@@ -112,6 +116,7 @@ export const GROUPS = [
     preset('costume', COSTUME_FAMILIES, costumePreset),
     en('top.style', TOP_STYLES), col('top.color', 'clothing'), col('top.accent', 'clothing', { nullable: true }), en('top.graphic', ['none', ...GRAPHIC_STYLES], { nullable: true }), col('top.graphicColor', null, { nullable: true }), num('top.graphicScale', 0.4, 2, 0.05), int('top.graphicY', -60, 60), bool('top.metal'),
     en('jacket.style', JACKET_STYLES), col('jacket.color', 'clothing'), bool('jacket.metal'),
+    en('pants.style', LEG_STYLES), col('pants.color', 'clothing'), col('shoes.color'),
     en('hat.style', HAT_STYLES), col('hat.color', 'clothing'), col('hat.accent', 'clothing'), bool('hat.metal'),
     en('glasses.style', ['none', ...GLASSES_STYLES], { nullable: true, clears: 'glasses' }), col('glasses.color'),
     multi('accessories', ACCESSORY_STYLES), multi('props', PROP_STYLES),
@@ -127,6 +132,22 @@ export const GROUPS = [
 export const CONTROLS = GROUPS.flatMap((g) => g.items);
 export const PALETTES = COLORS;
 
+// Themes in the editor: a theme is a set of extra options on the menus that already exist (by control path) plus a
+// preset that writes one of its characters over the base. GROUPS and CONTROLS stay the editorial editor, so a test or
+// a page that reads them sees no theme; groupsFor(state) is what a page builds its panel from.
+const on = (x) => x && x !== 'none';
+/** The zombie as edits over the base: the archetype's pins (skin, eyes, teeth, face, neck, body, stance), its hair, beard, rot, grave and the costume it was buried in. */
+const zombiePreset = (name) => { const a = ZOMBIES[name], { props = [], accessories = [], ...garments } = COSTUMES[a.costume](0); return flat({ ...a.set, hairColor: COLORS.hair[a.hairColors?.[0]] ?? '#30231e', hair: { style: a.hair }, facialHair: { style: a.beard ?? 'none' }, makeup: [...a.makeup], marks: [a.marks].flat().filter(on), props, accessories, glasses: null, blush: 0, light: { contrast: 1.9 }, mouth: { ...a.set.mouth, smile: -0.05 }, hat: { style: 'none' }, jacket: { style: 'none' }, ...garments }); }; // the base's own hat, glasses, smile and blush go, as identityOf and dress leave them: the costume says what is worn, the tableau's contrast lights it
+export const THEMES = {
+  thriller: { extras: { 'hair.style': ['mullet', 'bigHair'], 'hat.style': ['headband', 'veil'], 'top.style': ['ruffledTux', 'leotard', 'offShoulderSweat', 'hospitalGown', 'laceGown'], 'jacket.style': ['varsityJacket', 'sweaterShoulders', 'padShoulderBlazer', 'redLeatherChevron'], 'mouth.teeth': ['rotten'], makeup: Object.keys(ZOMBIE_MAKEUP), marks: Object.keys(ZOMBIE_MARKS), props: Object.keys(ZOMBIE_PROPS), costume: ZOMBIE_COSTUME_NAMES, expression: Object.keys(ZOMBIE_EXPRESSIONS) }, presets: [preset('zombie', ZOMBIE_NAMES, zombiePreset)] },
+};
+/** The groups a page builds its panel from: GROUPS, and with a theme on, its options added to the menus they belong to and its presets after the base group's. */
+export function groupsFor(st) {
+  const t = THEMES[st?.theme]; if (!t) return GROUPS;
+  return GROUPS.map((g, i) => ({ ...g, items: [...g.items.map((c) => (t.extras[c.path] ? { ...c, options: [...c.options, ...t.extras[c.path]] } : c)), ...(i === 0 ? t.presets : [])] }));
+}
+export const controlsFor = (st) => groupsFor(st).flatMap((g) => g.items);
+
 /** The label a control shows: its path in words. */
 export const labelOf = (c) => (c.kind === 'preset' ? c.path : c.path.replace(/^\$/, '').split('.').join(' ').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase());
 /** Which preset option (if any) the current portrait matches. */
@@ -139,7 +160,7 @@ export function report(st, note, url) {
   return [
     `portrait issue: ${note || '(say what looks wrong)'}`,
     `link: ${url}`,
-    `seed ${st.seed} · family ${st.family}`,
+    `seed ${st.seed} · family ${st.family}${on(st.theme) ? ` · theme ${st.theme}` : ''}`,
     `head: ${styles(p)}`,
     `features: eyes ${p.eyes.style}/${p.eyes.browStyle} spacing ${p.eyes.spacing.toFixed(1)} · nose ${p.nose.style} ${p.nose.length.toFixed(1)}x${p.nose.width.toFixed(1)} · mouth ${p.mouth.style} w${p.mouth.width.toFixed(1)}`,
     `hair: ${p.hair.style} (${p.hairColor}) hairline ${p.hair.hairline ?? 0}/${p.hair.recession ?? 0} · beard ${p.facialHair.style} (${p.facialHair.color ?? 'hair'}) density ${p.facialHair.density ?? 'style'} cheek ${p.facialHair.cheekLine ?? 'style'} stache ${p.facialHair.mustache ?? 'style'} · glasses ${p.glasses?.style ?? 'none'} · hat ${p.hat.style} (${p.hat.color})`,

@@ -53,9 +53,12 @@ test('the editorial wardrobe draws: every makeup, mark, prop, graphic, the hood,
   assert.ok(at > 0 && printed[at - 1].k === 'clip', 'a print is clipped to the torso');
   assert.equal(portraitOps({ makeup: ['darkEyeSockets'], eyes: { spacing: 68 } }).find((o) => o.fill === '#2b1c26').cx, 166, 'eye makeup follows the eye spacing');
   assert.equal(portraitOps({ makeup: ['darkEyeSockets'], eyes: { spacing: 34 } }).find((o) => o.fill === '#2b1c26').cx, 183);
-  const raised = portraitOps({ props: ['armRaised'] }), cutAt = raised.findIndex((o) => o.k === 'clip' && o.rule === 'evenodd');
-  assert.ok(cutAt >= 0 && raised[cutAt + 1].k === 'path' && raised.slice(cutAt).findIndex((o) => o.k === 'unclip') > 1, 'a raised arm clips the garment\'s shoulder away on its side before the arm is drawn');
-  assert.equal(portraitOps({ props: ['flower'] }).filter((o) => o.k === 'clip' && o.rule === 'evenodd').length, 0, 'an arm held low keeps the shoulder');
+  const raised = portraitOps({ props: ['armRaised'] }), trunks = raised.filter((o) => o.k === 'clip' && o.d.startsWith('M 200 330 L 136 352'));
+  assert.equal(trunks.length, 2, 'the top and the jacket are clipped to the trunk, so a raised arm leaves a body of its own width (the figure, 2026-10-04)');
+  assert.ok(portraitOps({ props: ['flower'] }).some((o) => o.k === 'path' && o.d.startsWith('M 110 596 L 290 596 L 292 700')), 'every portrait has legs: the trousers under the hem');
+  assert.ok(portraitOps({ pants: { style: 'skirt' } }).some((o) => o.k === 'path' && o.d.startsWith('M 110 596 L 290 596 L 338 1052')), 'or a skirt');
+  const bare = portraitOps({}), arms = bare.filter((o) => o.k === 'line' && o.sw === 52).length; assert.equal(arms, 2, 'a portrait with no prop has two arms hanging at its sides (two forearms)');
+  assert.equal(portraitOps({ props: ['flower'] }).filter((o) => o.k === 'line' && o.sw === 52).length, 2, 'a prop that draws the right arm leaves the left hanging and draws no second right');
   const gloved = portraitOps({ props: ['gloves', 'abstractGoldObject'] });
   assert.ok(gloved.some((o) => o.fill === '#161517') && !portraitOps({ props: ['abstractGoldObject'] }).some((o) => o.fill === '#161517'), 'a prop in a gloved hand is held in the glove');
 });

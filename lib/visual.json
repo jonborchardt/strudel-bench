@@ -115,5 +115,8 @@
       "slots": { "impulse": 2, "ground": 1, "line": 1, "counter": 2, "field": 1, "transition": 1 },
       "about": "A night-street dance video after Thriller: a lead in a red jacket, the dead rising in rows behind, one step a beat."
     }
+  },
+  "themes": {
+    "thriller": { "world": "tableau", "about": "The tableau's cast and poses swapped for zombies in 80s clothes doing the Thriller choreography; the sets, the cutting and the dance stay." }
   }
 }

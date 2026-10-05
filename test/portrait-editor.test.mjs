@@ -1,8 +1,9 @@
 ﻿import test from 'node:test';
 import assert from 'node:assert/strict';
 import { renderPortrait, portraitOps, DEFAULTS, NOSES, FACIAL_HAIR, FACIAL_HAIR_STYLES } from '../web/visual/portrait.mjs';
-import { GROUPS, CONTROLS, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../web/visual/editor.mjs';
+import { GROUPS, CONTROLS, THEMES, THEME_NAMES, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../web/visual/editor.mjs';
 import { FAMILIES } from '../web/visual/cast.mjs';
+import { ZOMBIE_NAMES, ZOMBIE_SKINS } from '../web/visual/thriller.mjs';
 
 const state = (ov = {}, over = {}) => ({ ...blank(), ...over, ov });
 const svg = (st) => renderPortrait(params(st)).replace(/c\d+/g, 'c'); // clip ids are document-global, so two renders of one face differ only there
@@ -73,6 +74,28 @@ test('a preset reads back as itself, and the report says what the face is', () =
   assert.match(txt, /hair: bob/);
   assert.match(txt, /edits: hair\.style="bob"/);
   assert.match(txt, /link: http:\/\/x\/#abc/);
+});
+
+test('a theme in the editor: off, the menus are the editorial ones; on, they gain the theme\'s parts and a preset of its characters, every option draws, and the hash carries it', () => {
+  assert.equal(blank().theme, 'none'); assert.deepEqual(THEME_NAMES, ['none', ...Object.keys(THEMES)]);
+  assert.deepEqual(groupsFor(state()), GROUPS, 'no theme: the editorial groups themselves');
+  const zombie = (name) => ['top.style', 'hair.style', 'makeup', 'costume', 'expression', 'mouth.teeth'].map((p) => CONTROLS.find((c) => c.path === p)).every((c) => !c.options.some((o) => Object.values(THEMES.thriller.extras).flat().includes(o)));
+  assert.ok(zombie(), 'CONTROLS lists no theme part'); assert.ok(!CONTROLS.some((c) => c.path === 'zombie'));
+  const on = state({}, { theme: 'thriller' }), cs = controlsFor(on);
+  for (const [path, extra] of Object.entries(THEMES.thriller.extras)) { const c = cs.find((x) => x.path === path); assert.ok(c && extra.every((o) => c.options.includes(o)), `${path} offers ${extra.join(', ')}`); }
+  const zp = cs.find((c) => c.path === 'zombie'); assert.ok(zp && zp.kind === 'preset' && zp.options.length === ZOMBIE_NAMES.length);
+  for (const c of cs) {
+    if (c.kind === 'enum' && !c.state) for (const o of c.options) renderPortrait(params(state({ [c.nullable && o === 'none' ? (c.clears ?? c.path) : c.path]: c.nullable && o === 'none' ? null : o }, { theme: 'thriller' })));
+    if (c.kind === 'multi') for (const o of c.options) renderPortrait(params(state({ [c.path]: [o] }, { theme: 'thriller' })));
+    if (c.kind === 'preset') for (const o of c.options) { const ov = {}; for (const [k, v] of Object.entries(c.apply(o))) setOv(ov, k, v); const svg = renderPortrait(params(state(ov, { theme: 'thriller' }))); assert.ok(svg.startsWith('<svg') && !/NaN/.test(svg), `${c.path} ${o}`); }
+  }
+  const ov = {}; for (const [k, v] of Object.entries(zp.apply('bride'))) setOv(ov, k, v);
+  const p = params(state(ov, { theme: 'thriller' }));
+  assert.ok(ZOMBIE_SKINS.includes(p.skin) && p.mouth.teeth === 'rotten' && p.makeup.includes('rotLips') && p.hat.style === 'veil' && p.top.style === 'laceGown', 'the zombie preset writes the whole person');
+  assert.equal(presetMatch(zp, p), 'bride', 'and reads back');
+  const st = state(ov, { seed: 9, theme: 'thriller' }); assert.deepEqual(decode(encode(st)), st); assert.equal(decode(encode(st)).theme, 'thriller');
+  assert.match(report(st, '', 'http://x/#h'), /theme thriller/);
+  assert.equal(decode(encode(state())).theme, 'none', 'and a plain state stays plain');
 });
 
 test('the idle animation drifts the pose, moves the gaze and blinks, and never leaves the sliders behind', () => {
@@ -146,7 +169,7 @@ test('the hairline, the cheeks, the squint, the print and the gaze', () => {
   assert.equal(temple(1), temple(0), 'and none on the temple, which is bone');
   const aperture = (sq) => { const o = portraitOps({ eyes: { squint: sq } }).find((x) => x.k === 'path' && x.fill?.startsWith('#') && / Q /.test(x.d) && x.d.split('Q').length === 3); return o; };
   assert.notEqual(JSON.stringify(aperture(0)), JSON.stringify(aperture(1)), 'the squint closes the eye from below');
-  const print = (t) => portraitOps({ top: { style: 'crewTshirt', graphic: 'concentric', ...t } }).filter((o) => o.k === 'ellipse' && o.cy > 380);
+  const print = (t) => portraitOps({ top: { style: 'crewTshirt', graphic: 'concentric', ...t } }).filter((o) => o.k === 'ellipse' && o.cy > 380 && o.cy < 600); // on the chest: the shoes are ellipses too, lower down
   assert.equal(print({ graphicColor: '#ff0000' })[0].stroke, '#ff0000');
   assert.ok(print({ graphicScale: 2 })[0].rx > print({})[0].rx * 1.9 && print({ graphicY: 40 })[0].cy - print({})[0].cy === 40, 'the print sizes and moves on the chest');
   const iris = (pose) => portraitOps({ pose, eyes: { iris: '#abcdef' } }).find((o) => o.fill === '#abcdef').cx;

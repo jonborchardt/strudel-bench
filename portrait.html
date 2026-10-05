@@ -80,7 +80,7 @@
 </main>
 <script type="module">
   import { renderPortrait, eyeY, mouthY, CHIN_Y } from './web/visual/portrait.mjs';
-  import { GROUPS, CONTROLS, PALETTES, blank, params, encode, decode, setOv, at, labelOf, presetMatch, report, idle } from './web/visual/editor.mjs';
+  import { groupsFor, PALETTES, blank, params, encode, decode, setOv, at, labelOf, presetMatch, report, idle } from './web/visual/editor.mjs';
 
   const $ = (id) => document.getElementById(id);
   const panel = $('panel');
@@ -102,10 +102,17 @@
     return `<select ${a}>${opts(c)}</select>${nav}`;
   }
   // a row per control, and for the list parameters (details, makeup, marks, accessories, props: the portrait takes several at once) one plain dropdown per slot
-  const row = (c, slot) => `<div class="row" data-p="${esc(c.path)}"><span title="${esc(c.path)}">${esc(labelOf(c))}${slot === undefined ? '' : ' ' + (slot + 1)}</span>${field(c, CONTROLS.indexOf(c), slot)}</div>`;
-  panel.insertAdjacentHTML('beforeend', GROUPS.map((g, gi) => `<details class="grp" ${gi < 3 ? 'open' : ''}><summary>${g.name}</summary>${g.items.map((c) => c.kind === 'multi' ? [0, 1, 2].map((k) => row(c, k)).join('') : row(c)).join('')}</details>`).join(''));
-
   let st = location.hash.length > 1 ? decode(location.hash) : blank(), hash = '';
+  // the panel is built from the state's groups (groupsFor: a theme adds its parts to the menus and a preset of its own), and rebuilt when the theme changes
+  let controls = [], built = null;
+  const row = (c, slot) => `<div class="row" data-p="${esc(c.path)}"><span title="${esc(c.path)}">${esc(labelOf(c))}${slot === undefined ? '' : ' ' + (slot + 1)}</span>${field(c, controls.indexOf(c), slot)}</div>`;
+  function build() {
+    const groups = groupsFor(st), open = Object.fromEntries([...panel.querySelectorAll('details.grp')].map((d, i) => [i, d.open]));
+    controls = groups.flatMap((g) => g.items); built = st.theme;
+    for (const d of panel.querySelectorAll('details.grp')) d.remove();
+    panel.insertAdjacentHTML('beforeend', groups.map((g, gi) => `<details class="grp" ${(open[gi] ?? gi < 3) ? 'open' : ''}><summary>${g.name}</summary>${g.items.map((c) => c.kind === 'multi' ? [0, 1, 2, 3].map((k) => row(c, k)).join('') : row(c)).join('')}</details>`).join(''));
+  }
+  build();
 
   const slots = (i) => [...panel.querySelectorAll(`select[data-i="${i}"]`)]; // a list parameter's dropdowns, in order
   const read = (el, c) => c.kind === 'multi' ? [...new Set(slots(el.dataset.i).map((e) => e.value).filter(Boolean))]
@@ -126,8 +133,9 @@
   }
 
   function sync(p) {
+    if (built !== st.theme) build();
     for (const el of panel.querySelectorAll('[data-i]')) {
-      const c = CONTROLS[+el.dataset.i], v = c.state ? st[c.state] : at(p, c.path);
+      const c = controls[+el.dataset.i], v = c.state ? st[c.state] : at(p, c.path);
       if (el.dataset.auto) { el.checked = v === null || v === undefined; continue; }
       if (c.kind === 'multi') { // a name another slot already wears is greyed out, since the two would collapse into one
         const worn = new Set((v ?? []).filter((_, k) => k !== +el.dataset.slot));
@@ -172,16 +180,16 @@
   }
   const commit = () => { hash = encode(st); location.hash = hash; refresh(); }; // one history entry per committed edit, so Back walks the edits
 
-  panel.addEventListener('input', (e) => { const c = CONTROLS[+e.target.dataset.i]; if (!c) return; apply(e.target, c); refresh(); });
+  panel.addEventListener('input', (e) => { const c = controls[+e.target.dataset.i]; if (!c) return; apply(e.target, c); refresh(); });
   panel.addEventListener('click', (e) => { // the arrows step the dropdown they sit beside, wrapping, skipping a preset's own —
     const d = +(e.target.dataset.nav ?? 0); if (!d) return;
-    const sel = e.target.closest('.row').querySelector('select'), n = sel.options.length, skip = ['preset', 'multi'].includes(CONTROLS[+sel.dataset.i].kind);
+    const sel = e.target.closest('.row').querySelector('select'), n = sel.options.length, skip = ['preset', 'multi'].includes(controls[+sel.dataset.i].kind);
     let i = sel.selectedIndex;
     do { i = (i + d + n) % n; } while (i !== sel.selectedIndex && ((skip && sel.options[i].value === '') || sel.options[i].disabled));
     sel.selectedIndex = i;
     sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true }));
   });
-  panel.addEventListener('change', (e) => { if (CONTROLS[+e.target.dataset.i]) commit(); });
+  panel.addEventListener('change', (e) => { if (controls[+e.target.dataset.i]) commit(); });
   $('note').addEventListener('input', refresh);
   $('anim').onchange = animate;
   $('rand').onclick = () => { st = { ...st, seed: Math.floor(Math.random() * 1e6), ov: {} }; commit(); };
