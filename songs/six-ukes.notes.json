@@ -320,5 +320,36 @@
         }
       ]
     }
-  ]
+  ],
+  "youtube": {
+    "title": "six ukes — six ukuleles, one small room, and a hook in tremolo",
+    "description": "Ukulele ensemble funk: six ukuleles in A minor at 118 BPM, soprano, concert, tenor, baritone, a low-G tenor and a bass uke, recorded as one band in one small room.\nNo drum machine and no synths. The beat is the instruments themselves: palms on the body, a nail on the top, the muted chuck of the soprano's strings on the backbeat and the bass uke's thumb on its lowest string.\n\nAn original song, not an arrangement of anything. It takes the shape of early-eighties minor-key funk and plays it on nylon strings: a ten-bar intro that climbs a step every two bars over a held bass note, a transition that announces the groove, verses on a one-chord vamp with chord stabs on the and of each half, a pre-chorus that lifts, and a chorus whose hook is two long notes and three short ones played in tremolo by three ukuleles at once, which is the only way a ukulele holds a note loud.\n\nEvery strum is written string by string, down low to high and up back again, so the chords are played rather than pasted. Every note of the hook, the bass riff, the picking and the eight-bar solo is hand-written. The strings ring for under a second everywhere, because that is what a ukulele does.\n\nWritten as text, rendered in the browser, no DAW.\n\nChapters\n0:00 Intro, the climb\n0:26 The groove\n0:42 Second verse\n1:07 Chorus\n1:27 Third verse\n1:52 Chorus again\n2:08 Bridge\n2:24 Solo\n2:41 Last chorus and out\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install.\n\nEvery song here is a text file. This one is songs/six-ukes.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+    "tags": [
+      "ukulele",
+      "ukulele ensemble",
+      "ukulele funk",
+      "acoustic funk",
+      "minor funk",
+      "nylon string",
+      "A minor",
+      "118 BPM",
+      "instrumental funk",
+      "acoustic groove",
+      "ukulele orchestra",
+      "body percussion",
+      "generative music",
+      "live coding",
+      "strudel",
+      "tidalcycles",
+      "creative coding",
+      "procedural music",
+      "music video",
+      "original song"
+    ],
+    "hashtags": [
+      "#ukulele",
+      "#acousticfunk",
+      "#livecoding"
+    ]
+  }
 }
