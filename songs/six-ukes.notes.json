@@ -61,6 +61,24 @@
           "why": "why: the fret noise was inaudible at -37 dB"
         }
       ]
+    },
+    {
+      "date": "2026-10-05",
+      "ask": "the high pitch ukes sound wrong, no uke is that sound",
+      "changes": [
+        {
+          "section": "chorus3",
+          "layer": "raw3",
+          "axis": "sound",
+          "why": "gm_acoustic_guitar_steel>gm_acoustic_guitar_nylon why: the soprano voiced at c5-a5 on a steel sample read as a mandolin; it now plays the open reentrant shapes in the c4-a4 octave, brighter and on the right"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw5",
+          "axis": "sound",
+          "why": "gm_banjo>gm_acoustic_guitar_nylon why: the banjolele picking up to g5 was a banjo, not a uke; nylon with the line capped at e5"
+        }
+      ]
     }
   ]
 }
