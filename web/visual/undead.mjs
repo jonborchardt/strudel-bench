@@ -175,7 +175,7 @@ export default {
   },
 
   draw(s, ctx, w, h) {
-    const shot = shotOf(s) ?? { kind: 'line', who: [] }, lit = 1 - 0.7 * s.dark, floor = floorOf(s.u, s.ey), far = floor - 3 * ROW_BACK;
+    const shot = shotOf(s) ?? { kind: 'line', who: [] }, lit = 1 - 0.5 * s.dark, floor = floorOf(s.u, s.ey), far = floor - 3 * ROW_BACK; // lit dims the set and the fog; a figure is always drawn solid (a translucent portrait shows every layer through itself) and the dropout's dark is the overlay at the end
     ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
     graveyard(ctx, w, h, s.stones, { lit, floor, far });
     const k0 = h / s.u, sw = (400 / s.u) * h; // the front row's scale, and a figure's sheet width in canvas units
@@ -188,7 +188,7 @@ export default {
       p.eyes.openness = p.eyes.openness * (1 - f.blink) * (1 - 0.9 * s.dark) + 0.02;
       const ey = eyeY(p), y = feetY - (FEET - ey) * k;
       floorShadow(ctx, x, feetY, (0.2 * h * k / k0) * p.body.width, 0.3 * lit);
-      ctx.save(); ctx.beginPath(); ctx.rect(-w, -h, w * 3, feetY + FOG_CUT * k + h); ctx.clip(); ctx.translate(x, y); ctx.scale(k, k); ctx.translate(-200, -ey); drawOn(ctx, portraitOps(p), lit); ctx.restore(); // cut in the fog, below the feet
+      ctx.save(); ctx.beginPath(); ctx.rect(-w, -h, w * 3, feetY + FOG_CUT * k + h); ctx.clip(); ctx.translate(x, y); ctx.scale(k, k); ctx.translate(-200, -ey); drawOn(ctx, portraitOps(p), 1); ctx.restore(); // cut in the fog, below the feet
     };
     const corpse = (i) => s.figures[1 + ((i + s.variant) % SPOTS.length)]; // a close-up's corpse, the next one on every snare
     const front = floor * h;
@@ -212,7 +212,7 @@ export default {
     if (floor < 1.1) fogAt(ctx, w, h, front, lit, k0);
     vignette(ctx, w, h, 0.45);
     if (s.flash > 0.02) { ctx.fillStyle = '#e8ecf4'; ctx.globalAlpha = 0.6 * s.flash; ctx.fillRect(0, 0, w, h); ctx.globalAlpha = 1; }
-    if (s.dark > 0.01) { ctx.fillStyle = `rgba(0 0 0 / ${0.4 * s.dark})`; ctx.fillRect(0, 0, w, h); }
+    if (s.dark > 0.01) { ctx.fillStyle = `rgba(0 0 0 / ${0.5 * s.dark})`; ctx.fillRect(0, 0, w, h); } // the dropout: the street half dark, everyone still in it
     ctx.restore();
   },
 };
