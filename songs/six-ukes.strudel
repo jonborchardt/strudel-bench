@@ -3,7 +3,7 @@
 // string by string (a down strum low to high, an up strum back) so the chords are played and not pasted.
 // The only drums are the instruments themselves: palms on the body (cajon takes), a nail on the top (woodblock), the
 // muted chuck of the soprano's strings on the backbeat, and the bass uke's thumb on its lowest string. The shape is the
-// old creeping-funk one: a riff that stalks in over picking and body knocks, verses on a one-chord vamp, a pre-chorus that climbs, a four-chord chorus
+// old creeping-funk one: a riff that stalks in over picking and body knocks, a transition that announces the groove, verses on a one-chord vamp with stabs on the and of each half, a pre-chorus that climbs, a four-chord chorus
 // with the baritone's hook, a half-time bridge, a solo where the rap would go, and the chorus once more
 // with everyone in. Every line is written; nothing here is quoted from anywhere.
 const played = { timingMs: 14, velocity: .12, correlation: 'phrase' };
@@ -22,65 +22,86 @@ const baritone = uke('gm_acoustic_guitar_nylon', { level: .7, position: -.45, br
 const bassuke = uke('gm_acoustic_guitar_nylon', { level: .42, brightness: .5, space: .35, humanize: { ...played, correlation: 'bar' } });
 const lowg = uke('gm_acoustic_guitar_nylon', { level: .42, position: .15, brightness: .6, space: .5 });
 // voicings: soprano and tenor the open reentrant shapes (the high g is the uke sound; nothing a uke plays sits above the fifth fret), baritone linear DGBE
-const T = { Am: 'a4 c4 e4 a4', D7: 'a4 c4 fs4 a4', F: 'a4 c4 f4 a4', G: 'g4 d4 g4 b4', Bb: 'as4 d4 f4 as4' };
+const T = { Am: 'a4 c4 e4 a4', Dm: 'a4 d4 f4 a4', F: 'a4 c4 f4 a4', G: 'g4 d4 g4 b4', Bb: 'as4 d4 f4 as4' };
 const B = { Am: 'e3 a3 c4 e4', F: 'f3 a3 c4 f4' };
-const L = { Am: 'a3 c4 e4 a4', D7: 'a3 c4 fs4 a4', F: 'a3 c4 f4 a4', G: 'g3 b3 d4 g4' };
+const L = { Am: 'a3 c4 e4 a4', Dm: 'a3 d4 f4 a4', F: 'a3 c4 f4 a4', G: 'g3 b3 d4 g4' };
 // depth by the vocabulary's closer/farther deltas (brightness +-.12, space -+.18): the hook forward, the chord hits behind it
 const closer = (p) => ({ ...p, brightness: p.brightness + .12, space: p.space - .18 }), farther = (p) => ({ ...p, brightness: p.brightness - .12, space: p.space + .18 });
 // the body: palms (cajon), a nail on the top (woodblock); the groove is the verse, HALF the bridge
 const body = { bd: 'cajon:3', sd: 'cajon:15', hh: 'woodblock:2' };
-const GROOVE = { bd: 'x.......x.x.....', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.x.' };
+const GROOVE = { bd: 'x.....x.....x...', sd: '....x.......x...', hh: 'X.x.X.x.X.x.X.x.' };
 const HALF = { bd: 'x.........x.....', sd: '........x.......', hh: 'x..x..x...x..x..' };
 const knocks = { sounds: body, template: GROOVE, articulation: .6, space: .45, position: -.05, humanize: { ...played, correlation: 'bar' } };
 // strum rhythms, sixteen slots a bar
-const CHUCK = '~ ~ D ~ ~ ~ ~ U ~ ~ D ~ ~ U ~ ~', PUMP = 'D ~ U ~ D ~ U ~ D ~ U ~ D ~ D U';
+const STAB = '~ ~ D ~ ~ ~ ~ ~', stabs = (c1, c2) => strum(c1, STAB) + ' ' + strum(c2, STAB);
+const PUMP = 'D ~ U ~ D ~ U ~ D ~ U ~ D ~ D U';
 // the hook rhythm: two long hits and three short ones, the ring written per slot so the long ones hold and the short ones stop
 const HIT = 'D ~ ~ ~ ~ ~ D ~ ~ ~ ~ ~ D D D ~', HITCLIP = '24 24 24 24 24 24 24 24 24 24 24 24 3 3 3 3', THREE = '~ ~ ~ ~ ~ ~ ~ ~ D ~ ~ ~ ~ ~ ~ ~';
 const HV = '1 1 1 1 1 1 1 1 1 1 1 1 .8 .88 1 1'; // the hook's three short notes lean into the last
-const BACK = '~ ~ ~ ~ D ~ ~ ~ ~ ~ ~ ~ D ~ ~ D', ONE = 'D ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~';
-// the bass uke: a riff per chord (root held, the octave pop, the seventh and fifth, back to the root, a walk up to the fifth)
-const RA = '[a1@3 a2] [~ g2 ~ e2] [~ ~ a1 ~] [c2 d2 ~ e2]', RD = '[d2@3 d3] [~ c3 ~ a2] [~ ~ d2 ~] [fs2 g2 ~ a2]';
-const RF = '[f2@3 f3] [~ e3 ~ c3] [~ ~ f2 ~] [a2 c3 ~ c3]', RG = '[g2@3 g3] [~ f3 ~ d3] [~ ~ g2 ~] [b2 d3 ~ e3]';
+const BACK = '~ ~ ~ ~ D ~ ~ ~ ~ ~ ~ ~ D ~ U ~', ONE = 'D ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~';
+// the bass uke: a riff per chord in straight eighths locked to the kick (root, root, the octave on the and of two, the seventh, root on four, the fifth)
+const RA = 'a1 ~ a1 a2 ~ g2 a1 e2', RD = 'd2 ~ d2 d3 ~ c3 d2 a2';
+const RF = 'f2 ~ f2 f3 ~ e3 f2 c3', RG = 'g2 ~ g2 g3 ~ f3 g2 d3';
 const PF = '[f2 ~ f2 f2] [~ f2 ~ f2] [~ f2 f2 ~] [f2 ~ c3 ~]', PG = '[g2 ~ g2 g2] [~ g2 ~ g2] [~ g2 g2 ~] [g2 ~ d3 ~]';
 // the hook over the chorus chords (baritone, concert and tenor in unison, soprano and low-G hitting its rhythm), and the baritone's answers in the verse
 // the long notes are tremolo (eight picks over five sixteenths, twelve a second), which is how a uke holds a note loud
-const HOOK = ['[e4*8]@5 ~ [g4*8]@5 ~ a4 g4 e4 ~', '[d4*8]@5 ~ [fs4*8]@5 ~ a4 fs4 d4 ~', '[f4*8]@5 ~ [a4*8]@5 ~ c5 a4 f4 ~', '[g4*8]@5 ~ [b4*8]@5 ~ d5 b4 g4 e4'];
+const HOOK = ['[e4*8]@5 ~ [g4*8]@5 ~ a4 g4 e4 ~', '[d4*8]@5 ~ [f4*8]@5 ~ a4 f4 d4 ~', '[f4*8]@5 ~ [a4*8]@5 ~ c5 a4 f4 ~', '[g4*8]@5 ~ [b4*8]@5 ~ d5 b4 g4 e4'];
 // the bass under the hook: the two long hits on the root, the walk on the short ones
-const HA = 'a1@5 ~ a1@5 ~ c2 d2 ~ e2', HD = 'd2@5 ~ d2@5 ~ fs2 g2 ~ a2', HF = 'f2@5 ~ f2@5 ~ a2 c3 ~ c3', HG = 'g2@5 ~ g2@5 ~ b2 d3 ~ e3';
+const HA = 'a1@5 ~ a1@5 ~ c2 d2 ~ e2', HD = 'd2@5 ~ d2@5 ~ f2 g2 ~ a2', HF = 'f2@5 ~ f2@5 ~ a2 c3 ~ c3', HG = 'g2@5 ~ g2@5 ~ b2 d3 ~ e3';
 const ANSWER = ['~', '[~ ~ ~ ~] [~ ~ e3 g3] [a3@2 ~ g3] [e3@2 ~ ~]', '~', '[~ ~ ~ ~] [~ ~ c4 b3] [a3@2 ~ g3] [a3@2 ~ ~]'];
 const CLIMB = ['[f3 ~ a3 ~] [c4@2 ~ ~] [~ ~ ~ ~] [~ ~ ~ ~]', '[g3 ~ b3 ~] [d4@2 ~ ~] [~ ~ ~ ~] [~ ~ ~ ~]',
                '[a3 ~ c4 ~] [f4@2 ~ ~] [~ ~ ~ ~] [~ ~ ~ ~]', '[b3 ~ d4 ~] [g4@2 ~ ~] [~ ~ ~ e4] [d4 ~ b3 ~]'];
 // the low-G tenor's fingerpicking under the chords (thumb on the low string, two fingers above), and the concert's picking in the second verse
-const LOWG = { Am: '[a3 ~ e4 c4] [~ a3 ~ e4] [c4 ~ a3 ~] [e4 ~ ~ c4]', D7: '[d4 ~ fs4 c4] [~ a3 ~ fs4] [c4 ~ a3 ~] [fs4 ~ ~ d4]',
+const LOWG = { Am: '[a3 ~ e4 c4] [~ a3 ~ e4] [c4 ~ a3 ~] [e4 ~ ~ c4]', Dm: '[d4 ~ f4 c4] [~ a3 ~ f4] [c4 ~ a3 ~] [f4 ~ ~ d4]',
                F: '[f3 ~ c4 a3] [~ f3 ~ c4] [a3 ~ f3 ~] [c4 ~ ~ a3]', G: '[g3 ~ d4 b3] [~ g3 ~ d4] [b3 ~ g3 ~] [d4 ~ ~ b3]' };
-const LOWG4 = bars([LOWG.Am, LOWG.D7, LOWG.F, LOWG.G]);
+const LOWG4 = bars([LOWG.Am, LOWG.Dm, LOWG.F, LOWG.G]);
 const PICK2 = ['[a4 ~ ~ e5] [~ c5 ~ ~] [e5 ~ ~ a4] [~ ~ ~ ~]', '[a4 ~ ~ e5] [~ c5 ~ ~] [e5 ~ ~ b4] [~ ~ c5 ~]'];
 // the solo where the rap would go: eight bars over the dorian vamp, pentatonic with the sixth, a question every two bars
-const SOLO = ['[~ ~ a3 c4] [e4@2 d4 c4] [a3@2 ~ g3] [a3@3 ~]', '[~ ~ a3 c4] [d4 ~ fs4 ~] [a4@2 ~ fs4] [d4@2 ~ ~]',
+const SOLO = ['[~ ~ a3 c4] [e4@2 d4 c4] [a3@2 ~ g3] [a3@3 ~]', '[~ ~ a3 c4] [d4 ~ f4 ~] [a4@2 ~ f4] [d4@2 ~ ~]',
               '[e4 g4 a4 ~] [g4 e4 d4 c4] [a3 ~ c4 d4] [e4@3 ~]', '[~ e4 d4 c4] [d4@2 c4 a3] [c4@2 a3 g3] [a3@3 ~]',
-              '[a4@2 g4 e4] [a4@2 g4 e4] [c5@2 a4 g4] [e4@3 ~]', '[~ fs4 a4 c5] [d5@2 c5 a4] [fs4@2 d4 fs4] [a4@3 ~]',
+              '[a4@2 g4 e4] [a4@2 g4 e4] [c5@2 a4 g4] [e4@3 ~]', '[~ f4 a4 c5] [d5@2 c5 a4] [f4@2 d4 f4] [a4@3 ~]',
               '[e5 ~ d5 c5] [a4 ~ g4 e4] [d4 ~ c4 a3] [g3 ~ a3 ~]', '[a3@2 c4 d4] [e4@2 g4 a4] [c5@2 ~ b4] a4'];
-const CH = bars([T.Am, T.D7, T.F, T.G].map((c) => strum(c, HIT))), CHL = bars([L.Am, L.D7, L.F, L.G].map((c) => strum(c, HIT)));
+const CH = bars([T.Am, T.Dm, T.F, T.G].map((c) => strum(c, HIT))), CHL = bars([L.Am, L.Dm, L.F, L.G].map((c) => strum(c, HIT)));
+// the intro: the low-G picks over the bass's pedal, one inner voice climbing a step every two bars
+const RISE = ['a4', 'b3', 'c4', 'd4', 'ds4'].flatMap((x) => ['[a3 ~ ' + x + ' ~] [e4 ~ ' + x + ' ~] [a3 ~ ' + x + ' ~] [e4 ~ ' + x + ' ~]', '[a3 ~ ' + x + ' ~] [e4 ~ ' + x + ' ~] [a3 ~ ' + x + ' e4] [~ ' + x + ' ~ ~]']);
+const PEDAL = 'a1 ~ ~ a1 ~ ~ a1 ~';
+// the transition that announces the groove: a bar of tremolo on the chord, then two short hits and the sixth held, the whole band on it
+const TRM = ['[e4*20]@12 ~ ~ ~ ~', 'a4 ~ g4 ~ [f4*20]@12'];
+const TRS = bars([strum(T.Am, ONE), strum(T.Am, 'D ~ D ~') + ' ' + strum(T.F, 'D ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~')]);
+const TRL = bars([strum(L.Am, ONE), strum(L.Am, 'D ~ D ~') + ' ' + strum(L.F, 'D ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~')]);
+const TRCLIP = '<[24 24 24 24 24 24 24 24 24 24 24 24 24 24 24 24] [3 3 3 3 24 24 24 24 24 24 24 24 24 24 24 24]>';
+const TRB = bars(['a1@4 ~ ~ ~ ~', 'a1 ~ a1 ~ f2@4']);
+const trans = {
+  role: 'develop', progression: 'i VI',
+  drums: { ...knocks, density: .4, level: .34 },
+  raw:   bassuke(TRB, 1),
+  raw2:  { ...closer(tenor(bars(TRM), 1.3)), level: .6 },
+  raw3:  farther(soprano(TRS, TRCLIP)),
+  raw4:  { ...closer(baritone(bars(TRM), 1.3)), level: .9 },
+  raw5:  { ...closer(concert(bars(TRM), 1.3)), level: .8 },
+  raw6:  farther(lowg(TRL, TRCLIP)),
+};
 const fret = { pattern: note('<~ ~ ~ [~ ~ ~ c4]>').s('gm_guitar_fret_noise'), level: 1.4, position: -.2, space: .5 };
 
-song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'undead', composition: 'single' }, packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
-  section('intro', 4, { role: 'establish', progression: 'i i i i',
+song({ cps: .49, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'undead', composition: 'single' }, packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
+  section('intro', 10, { role: 'establish', progression: 'i i i i i i i i i i',
     drums: { ...knocks, density: .35, level: .3 },
-    raw:   lowg(LOWG.Am, 2),
-    raw2:  bassuke(bars(['~', '~', RA, RA]), 1),
-    raw3:  tenor(bars(['~', '~', strum(T.Am, CHUCK), strum(T.Am, CHUCK)]), 3),
+    raw:   lowg(bars(RISE), 2),
+    raw2:  bassuke(bars(['~', '~', PEDAL, PEDAL, PEDAL, PEDAL, PEDAL, PEDAL, PEDAL, PEDAL]), 1),
+    raw3:  chuck(bars(['~', '~', '~', '~', '~', '~', strum(T.Am, BACK), strum(T.Am, BACK), strum(T.Am, BACK), strum(T.Am, BACK)])),
   }),
+  section('trans', 2, trans),
   section('verse', 8, { role: 'develop', progression: 'i i i i',
     drums: { ...knocks, density: .55, level: .32 },
     raw:   bassuke(RA, 1),
-    raw2:  tenor(strum(T.Am, CHUCK), 3),
+    raw2:  tenor(stabs(T.Am, T.G), 3),
     raw3:  chuck(strum(T.Am, BACK)),
     raw4:  fret,
   }),
   section('verse2', 8, { role: 'develop', progression: 'i i i i',
     drums: { ...knocks, density: .6, level: .34, variation: .2 },
     raw:   bassuke(RA, 1),
-    raw2:  tenor(strum(T.Am, CHUCK), 3),
+    raw2:  tenor(stabs(T.Am, T.G), 3),
     raw3:  chuck(strum(T.Am, BACK)),
     raw4:  baritone(bars(ANSWER), 2),
     raw5:  concert(bars(PICK2), 4),
@@ -93,7 +114,7 @@ song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
     raw3:  chuck(bars([strum(T.F, BACK), strum(T.G, BACK), strum(T.F, BACK), strum(T.G, BACK)])),
     raw4:  baritone(bars(CLIMB), 3),
   }),
-  section('chorus', 8, { role: 'develop', progression: 'i IV7 VI VII',
+  section('chorus', 8, { role: 'develop', progression: 'i iv VI VII',
     drums: { ...knocks, density: .7, level: .46, variation: .3 },
     raw:   { ...bassuke(bars([HA, HD, HF, HG]), 1), level: .65 },
     raw2:  { ...closer(tenor(bars(HOOK), 1.3)), level: .6, velocity: HV },
@@ -103,10 +124,11 @@ song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
     raw6:  farther(lowg(CHL, HITCLIP)),
     raw7:  fret,
   }),
+  section('trans2', 2, trans),
   section('verse3', 8, { role: 'develop', progression: 'i i i i',
     drums: { ...knocks, density: .6, level: .34, variation: .25 },
     raw:   bassuke(RA, 1),
-    raw2:  tenor(strum(T.Am, CHUCK), 3),
+    raw2:  tenor(stabs(T.Am, T.G), 3),
     raw3:  chuck(strum(T.Am, BACK)),
     raw4:  baritone(bars(ANSWER), 2),
     raw5:  lowg(LOWG.Am, 2),
@@ -120,7 +142,7 @@ song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
     raw4:  baritone(bars(CLIMB), 3),
     raw5:  concert(bars(['~', '~', '~', '[~ ~ ~ ~] [~ ~ ~ ~] [g4 b4 d5 g4] [b4@3 ~]']), 4),
   }),
-  section('chorus2', 8, { role: 'develop', progression: 'i IV7 VI VII',
+  section('chorus2', 8, { role: 'develop', progression: 'i iv VI VII',
     drums: { ...knocks, density: .75, level: .48, variation: .35 },
     raw:   { ...bassuke(bars([HA, HD, HF, HG]), 1), level: .65 },
     raw2:  { ...closer(tenor(bars(HOOK), 1.3)), level: .6, velocity: HV },
@@ -138,14 +160,14 @@ song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
     raw3:  { ...baritone(bars([strum(B.Am, THREE), strum(B.F, THREE), strum(B.Am, THREE), strum(B.F, THREE)]), 24), level: .5 },
     raw4:  lowg(bars(['[a3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [c4 ~ ~ ~]', '[f3 ~ ~ ~] [~ ~ c4 ~] [~ ~ ~ ~] [a3 ~ ~ ~]', '[a3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [c4 ~ ~ ~]', '[f3 ~ ~ ~] [~ ~ c4 ~] [~ a3 ~ ~] [g3 ~ ~ ~]']), 2),
   }),
-  section('solo', 8, { role: 'develop', progression: 'i IV7 i IV7',
+  section('solo', 8, { role: 'develop', progression: 'i iv i iv',
     drums: { ...knocks, density: .65, level: .34, variation: .3 },
     raw:   bassuke(bars([RA, RD]), 1),
-    raw2:  tenor(bars([strum(T.Am, CHUCK), strum(T.D7, CHUCK)]), 3),
-    raw3:  chuck(bars([strum(T.Am, BACK), strum(T.D7, BACK)])),
+    raw2:  tenor(bars([stabs(T.Am, T.G), stabs(T.Dm, T.Am)]), 3),
+    raw3:  chuck(bars([strum(T.Am, BACK), strum(T.Dm, BACK)])),
     raw4:  { ...closer(baritone(bars(SOLO), 2)), position: -.15 },
   }),
-  section('chorus3', 8, { role: 'climax', progression: 'i IV7 VI VII',
+  section('chorus3', 8, { role: 'climax', progression: 'i iv VI VII',
     drums: { ...knocks, density: .85, level: .5, variation: .45, fill: 2 },
     raw:   { ...bassuke(bars([HA, HD, HF, HG]), 1), level: .65 },
     raw2:  { ...closer(tenor(bars(HOOK), 1.3)), level: .6, velocity: HV },

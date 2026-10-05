@@ -241,6 +241,63 @@
           "why": "why: the lead was hard left"
         }
       ]
+    },
+    {
+      "date": "2026-10-05",
+      "ask": "learn from this sketch: darker, poppier, keep the live real uke feel, this is only about the beat and groove",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "cps",
+          "from": 0.48,
+          "to": 0.49,
+          "why": "why: the sketch's 118 bpm"
+        },
+        {
+          "section": "verse",
+          "layer": "drums",
+          "axis": "template",
+          "why": "groove why: the kick on one, the and of two and the and of three, the snare on two and four, hats accented on every beat, which is the sketch's beat rather than the four-on-the-floor it had"
+        },
+        {
+          "section": "verse",
+          "layer": "raw3",
+          "axis": "rhythm",
+          "why": "backbeat>backbeat with an up-chuck on the and of four why: the sketch's open hat lands there; here it is the soprano's strings, not a cymbal"
+        },
+        {
+          "section": "verse",
+          "layer": "raw2",
+          "axis": "rhythm",
+          "why": "16th chuck pattern>two chord stabs a bar why: the sketch's keyboard stabs on the and of each half; a stab is poppier and leaves the beat room"
+        },
+        {
+          "section": "verse",
+          "layer": "raw",
+          "axis": "notes",
+          "why": "syncopated riff>straight eighths locked to the kick why: the sketch's bass is eighths under the kick, which is what makes it drive"
+        },
+        {
+          "section": "intro",
+          "from": 4,
+          "to": 10,
+          "why": "bars, a rising figure why: the sketch opens on five chords climbing over a pedal; here the low-G picks one inner voice up a step every two bars over the bass's pedal"
+        },
+        {
+          "section": "trans",
+          "why": "new section why: the sketch's connecting bit between the intro and the groove, and again before the last verse: a bar of tremolo, two short hits, the sixth held, the whole band on it"
+        },
+        {
+          "section": "chorus",
+          "layer": "progression",
+          "why": "'i IV7 VI VII'>'i iv VI VII' why: darker, the second chord minor instead of the dominant seventh that was lifting it"
+        },
+        {
+          "section": "solo",
+          "layer": "progression",
+          "why": "'i IV7 i IV7'>'i iv i iv' why: the same darkening under the solo"
+        }
+      ]
     }
   ]
 }
