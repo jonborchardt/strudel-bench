@@ -1,0 +1,66 @@
+{
+  "prompt": "a ukulele sextet (soprano, concert, tenor, baritone, low-G tenor, bass uke) playing an original creeping minor funk groove in a small real room, the only drums the instruments' own bodies",
+  "requests": [
+    {
+      "date": "2026-10-05",
+      "ask": "a new song: six ukuleles of different timbres playing a Thriller-feel groove with no copyrighted material, utter realism, a real room, a deep layered sound, drums only from hitting the uke or its deepest bass, no electronica; then: it sounds like a music box, and no long notes, ukes cannot sustain",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "room ir .9 why: one small room for every part, the realism asked for"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw4",
+          "axis": "level",
+          "from": 0.6,
+          "to": 0.85,
+          "why": "why: the baritone hook is the foreground and measured 10 dB under the mix"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw4",
+          "axis": "compressor",
+          "why": "crest 18>12 why: the strumstick's plucks peaked far over their body"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw6",
+          "axis": "level",
+          "from": 0.4,
+          "to": 0.22,
+          "why": "why: guitar harmonics sat at -8 dB, louder than the hook; then removed altogether as the music-box culprit, a low-G tenor picking in its place"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw5",
+          "axis": "sound",
+          "why": "psaltery>gm_banjo why: the psaltery's long bell decay read as a music box; a banjolele is short and plucky"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw3",
+          "axis": "sound",
+          "why": "nylon>gm_acoustic_guitar_steel why: a brighter top voice so the soprano is its own instrument"
+        },
+        {
+          "section": "bridge",
+          "layer": "raw2",
+          "axis": "clip",
+          "from": 40,
+          "to": 24,
+          "why": "why: a uke chord rings under a second; every ring capped, the bass held notes shortened"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw7",
+          "axis": "level",
+          "from": 0.25,
+          "to": 1.4,
+          "why": "why: the fret noise was inaudible at -37 dB"
+        }
+      ]
+    }
+  ]
+}
