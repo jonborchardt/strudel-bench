@@ -135,7 +135,7 @@ export function layoutOf(pose, n, fr, theme = null) {
 const sameStance = (layout, fx) => { if (fx !== 'split') return; const one = { ...layout[0], dx: 0 }; for (const l of layout) Object.assign(l, one); };
 /** One figure's styling for a shot: the template's costume or the person's own (a metallic one by the phase's odds), makeup restrained or theatrical by the phase, marks, a prop, a hat, an expression. */
 function stylingOf(s, idn, P, tpl, i) {
-  const T = themeOf(s); if (T) return T.styling(s, idn, P, tpl, i); // a theme dresses its own cast (a zombie keeps its outfit and its rot)
+  const T = themeOf(s); if (T?.styling) return T.styling(s, idn, P, tpl, i); // a theme with a dance of its own dresses its own cast (a zombie keeps its outfit and its rot); one on the editorial dance is styled below
   const st = { costume: tpl.costumes?.[i] ?? tpl.costume ?? idn.home.costume, variant: rand(s) < 0.3 ? 1 : 0, expression: tpl.expression ?? pick(s, EXPRESSIONS), smile: (rand(s) - 0.5) * 0.3 };
   if (!tpl.costume && !tpl.costumes && rand(s) < P.gold) st.costume = pick(s, METALLIC.filter((c) => wearable(idn, c))); // no hood on a wide face
   st.makeup = tpl.makeup ?? (rand(s) < P.paint ? [rand(s) < MASK_SHARE ? pick(s, MASKS) : pick(s, PAINTS)] : rand(s) < P.makeup ? [pick(s, RESTRAINED)] : idn.home.makeup !== 'none' && rand(s) < (MASKS.includes(idn.home.makeup) ? HOME_MASK : 0.6) ? [idn.home.makeup] : []);
@@ -147,7 +147,7 @@ function stylingOf(s, idn, P, tpl, i) {
 }
 /** The stylings a mutating shot cuts through: the same pose in other costumes, other hats or other face paint; figure 0 mutates, the others hold. */
 function altsOf(s, base, P, idn) {
-  const T = themeOf(s); if (T) return T.alts(s, base, P, idn);
+  const T = themeOf(s); if (T?.alts) return T.alts(s, base, P, idn);
   const kind = pick(s, ['costume', 'costume', 'hat', 'makeup']), out = [base], fits = STRONG.filter((c) => wearable(idn, c));
   for (let k = 1; k < 4; k++) {
     const st = { ...base[0] };
@@ -174,7 +174,7 @@ function makeShot(s, name, set, at, len, company, P, phase, cascade) {
   const layout = layoutOf(pose, tpl.n, fr, T); sameStance(layout, tpl.fx);
   return {
     at, len, tpl: name, set, framing: tpl.framing ?? 'close', pose, phase, ids, layout,
-    alts: mutate || cascade ? altsOf(s, base, P, s.cast[ids[0]]) : tpl.fx === 'grid' ? [base, [T ? T.odd(s, base[0]) : { ...base[0], makeup: [pick(s, PAINTS.filter((m) => !base[0].makeup.includes(m)))] }]] : [base], mutate, cascade, beat: len / 4, // a grid's odd cell wears paint (a theme says what its odd one does)
+    alts: mutate || cascade ? altsOf(s, base, P, s.cast[ids[0]]) : tpl.fx === 'grid' ? [base, [T?.odd ? T.odd(s, base[0]) : { ...base[0], makeup: [pick(s, PAINTS.filter((m) => !base[0].makeup.includes(m)))] }]] : [base], mutate, cascade, beat: len / 4, // a grid's odd cell wears paint (a theme says what its odd one does)
     cam: { scale: 1 + (rand(s) < 0.2 ? 0.06 : 0), x: tpl.offset ? (rand(s) < 0.5 ? -0.3 : 0.3) : 0, y: 0, rot: rand(s) < 0.08 ? (rand(s) - 0.5) * 0.03 : 0, push: rand(s) < 0.3 ? 0.05 : 0 },
     fx: tpl.fx ?? null, grid: tpl.grid ?? 0, side: rand(s) < 0.5 ? -1 : 1, odd: Math.floor(rand(s) * (tpl.grid ?? 1) ** 2),
     band: tpl.band ? { color: pick(s, [WHITE, RED, GOLD]), dir: rand(s) < 0.5 ? 'h' : 'v', at: 0.15 + rand(s) * 0.65, size: 0.04 + rand(s) * 0.1 } : null,
@@ -193,7 +193,7 @@ export function planSection(s, sec, i, n, phase) {
   const T = themeOf(s), PH = T?.phases ?? PHASES, TP = T?.templates ?? TEMPLATES, SP = T?.special ?? SPECIAL, O = T?.open ?? OPEN, C = T?.close ?? CLOSE, FB = T?.fallback ?? { red: 'redCurtainSoloPortrait', white: 'whiteStudioSolo' };
   const P = PH[phase], bars = sec.bars, shots = [], company = companyOf(s); let b = 0, special = false;
   const closing = i === n - 1 ? Math.min(8, bars) : 0; // the song ends on a long duo of the leads: its bars are set aside here, so a long shot cannot eat them
-  if (i === 0) { const len = Math.min(8, bars); const sh = makeShot(s, O.tpl, O.set, 0, len, company, PH.opening, phase, false); sh.ids = [s.leads[0]]; sh.pose = O.pose; sh.framing = O.framing; sh.layout = layoutOf(O.pose, 1, FRAMING[O.framing], T); sh.alts = [[T ? T.styling(s, s.cast[s.leads[0]], PH.opening, { expression: O.expression }, 0) : { costume: s.cast[s.leads[0]].home.costume, variant: 0, expression: O.expression, makeup: [], marks: [], props: [] }]]; sh.mutate = false; shots.push(sh); b = len; }
+  if (i === 0) { const len = Math.min(8, bars); const sh = makeShot(s, O.tpl, O.set, 0, len, company, PH.opening, phase, false); sh.ids = [s.leads[0]]; sh.pose = O.pose; sh.framing = O.framing; sh.layout = layoutOf(O.pose, 1, FRAMING[O.framing], T); sh.alts = [[T?.styling ? T.styling(s, s.cast[s.leads[0]], PH.opening, { expression: O.expression }, 0) : { costume: s.cast[s.leads[0]].home.costume, variant: 0, expression: O.expression, makeup: [], marks: [], props: [] }]]; sh.mutate = false; shots.push(sh); b = len; }
   while (b < bars - closing - 1e-6) {
     let name = wpick(s, P.tpls); if (special && SP.has(name)) name = FB[s.altSet === 'red' ? 'red' : 'white']; special = SP.has(name);
     const tpl = TP[name]; let len = pick(s, P.lens); if (b + len > bars - closing) len = bars - closing - b; if (len < 0.25) break;
@@ -210,7 +210,7 @@ export function planSection(s, sec, i, n, phase) {
 export function previewShot(s, { pose = 'directFrontal', n = 1, framing = 'medium', set = 'white', ids = null, costumes = [], props = [], expressions = [], fx = null, grid = 0, sculptures = [], band = null, gap = false } = {}) {
   const T = themeOf(s), fr = FRAMING[framing] ?? FRAMING.medium, layout = layoutOf(pose, n, fr, T); sameStance(layout, fx);
   const who = ids ?? [...s.leads, ...s.order.filter((i) => !s.leads.includes(i))].slice(0, n);
-  return { at: 0, len: 4, tpl: 'preview', set, framing, pose, phase: 'opening', ids: who, layout, alts: [who.map((id, i) => ({ costume: costumes[i] ?? s.cast[id].home.costume, variant: 0, ...(T ? {} : { makeup: [], marks: [] }), props: props[i] ?? [], expression: expressions[i] ?? (T ? T.expressions[0] : 'deadpan') }))], mutate: false, cascade: false, beat: 1, cam: { scale: 1, x: 0, y: 0, rot: 0, push: 0 }, fx, grid, side: 1, odd: 0, band, sculptures, gap, emote: false }; // a themed sheet keeps the cast's own paint (a zombie's rot is its face), a plain one shows the pose on a clean face
+  return { at: 0, len: 4, tpl: 'preview', set, framing, pose, phase: 'opening', ids: who, layout, alts: [who.map((id, i) => ({ costume: costumes[i] ?? s.cast[id].home.costume, variant: 0, ...(T ? {} : { makeup: [], marks: [] }), props: props[i] ?? [], expression: expressions[i] ?? T?.expressions?.[0] ?? 'deadpan' }))], mutate: false, cascade: false, beat: 1, cam: { scale: 1, x: 0, y: 0, rot: 0, push: 0 }, fx, grid, side: 1, odd: 0, band, sculptures, gap, emote: false }; // a themed sheet keeps the cast's own paint (a zombie's rot is its face), a plain one shows the pose on a clean face
 }
 const cut = (s, k) => { s.shotIx = k; s.variant = 0; s.punch = 1; s.lastCut = s.t; s.cuts++; const sh = shotOf(s); if (sh?.alts[0][0]) { s.exprTo = exprVals(sh.alts[0][0].expression); s.expr = { ...s.exprTo }; } }; // a cut lands on the shot's expression at once
 const emote = (s, sh) => { if (!sh?.emote || s.t - s.lastEmote < EMOTE_GAP) return; s.exprTo = exprVals(pick(s, themeOf(s)?.emotes ?? EMOTES)); s.lastEmote = s.t; }; // the same actor moves to another expression
@@ -224,7 +224,7 @@ export default {
     const s = { size: { ...size }, slotOf: Object.fromEntries(Object.entries(score.cast ?? {}).map(([n, c]) => [n, c.slot])), cast: [], leads: [], order: [], cursor: 0, pairs: [], altSet: 'red', plan: [], phases: [], section: -1, shotIx: -1, variant: 0, cuts: 0, lastCut: -1, t: 0, prog: 0, energy: 0.5, punch: 1, riser: 0, dark: 0, flash: 0, expr: exprVals('deadpan'), exprTo: exprVals('deadpan'), pulse: 0, tune: 0, bob: 0, sway: 0, swayPhase: 0, swayAmp: 0.3, lastEmote: -1, lastBar: -1, blink: [0, 0, 0], lastBlink: [-BLINK_GAP, -BLINK_GAP, -BLINK_GAP], look: { x: 0, y: 0 }, lookTo: { x: 0, y: 0 }, folds: [] };
     seed(s, rng);
     s.theme = score.theme && THEMES[score.theme] ? score.theme : null; // the song's theme (plain data; themeOf resolves it): another cast and other poses, else the editorial one
-    s.cast = (themeOf(s)?.cast ?? ARCHETYPE_NAMES).map((name, i) => identityOf(s, name, i));
+    const T = themeOf(s); s.cast = (T?.cast ?? ARCHETYPE_NAMES).map((name, i) => (T?.identity ?? identityOf)(s, name, i)); // the theme's cast through its own generator (its families, palettes, pools and build), else the editorial twenty-four
     s.order = s.cast.map((_, i) => i); for (let i = s.order.length - 1; i > 0; i--) { const j = Math.floor(rand(s) * (i + 1)); [s.order[i], s.order[j]] = [s.order[j], s.order[i]]; }
     s.leads = [s.order[0], s.order[1]]; s.cursor = 2;
     let x = -0.02; while (x < 1.02) { const w = 0.07 + rand(s) * 0.09; s.folds.push({ x, w, bright: rand(s) }); x += w * (0.85 + rand(s) * 0.3); }
@@ -289,8 +289,8 @@ export default {
         p.eyes.openness *= 1 + a * (ex.eyes - b.eyes + 0.1 * MUSIC_FACE * s.pulse); p.eyes.browLift += a * BROW_PLAY * (ex.brow - b.brow + (4 * s.tune + 2.5 * s.pulse) * MUSIC_FACE); p.eyes.browSkew += a * BROW_PLAY * (ex.skew - b.skew);
       }
       p.eyes.openness = p.eyes.openness * (1 - (still ? 0 : s.blink[i])) * (1 - 0.9 * s.dark) + 0.02;
-      const k = (h / fr.u) * lay.k;
-      return { p, k, x: w / 2 + lay.dx * h, y: (fr.ey + lay.dy) * h, lay, sleeve: sleeveOf(p) };
+      const k = (h / fr.u) * lay.k, stand = floor < 1.05 ? (FEET - feetY(p)) * k : 0; // where the floor is in shot a figure stands on it: a short build's eyes sit lower in the frame, not its feet in the air
+      return { p, k, x: w / 2 + lay.dx * h, y: (fr.ey + lay.dy) * h + stand, lay, sleeve: sleeveOf(p) };
     });
     const paint = (f, ops = portraitOps(f.p)) => { ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.k, f.k); ctx.translate(-200, -eyeY(f.p)); drawOn(ctx, ops, lit); ctx.restore(); };
     if (sh.fx === 'grid') { // the same person n × n, one cell in the next styling

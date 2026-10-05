@@ -117,6 +117,7 @@
     }
   },
   "themes": {
-    "thriller": { "world": "tableau", "cast": "undead", "packs": ["eighties", "undead"], "dance": "thriller", "about": "The tableau's cast and poses swapped for zombies in 80s clothes doing the Thriller choreography; the sets, the cutting and the dance stay." }
+    "thriller": { "world": "tableau", "cast": "undead", "packs": ["eighties", "undead"], "dance": "thriller", "about": "The tableau's cast and poses swapped for zombies in 80s clothes doing the Thriller choreography; the sets, the cutting and the dance stay." },
+    "dwarves": { "world": "tableau", "cast": "dwarves", "packs": ["dwarf"], "dance": "editorial", "about": "The tableau's own shots and poses on a cast of eight dwarves: broad, built short, bearded, in mail, fur and leather." }
   }
 }

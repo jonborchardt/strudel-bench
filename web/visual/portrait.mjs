@@ -452,7 +452,7 @@ const BEARDS = {
   pencilStache: { band: false, stache: true, pull: LIP_PULL, stacheStyle: 'pencil' },
 };
 /** One style's ops with the character's own dials applied: a density anywhere between a wash and a mass, a beard colour of its own, a moustache added or dropped, and how high the mass climbs the cheek. */
-function beardOps(p, spec) {
+export function beardOps(p, spec) { // exported for a pack that registers a beard of its own (web/visual/parts/dwarf.mjs): a spec shaped like a BEARDS entry
   if (!spec) return [];
   const f = p.facialHair ?? {}, color = f.color ?? p.hairColor, d = f.density == null ? null : unit(f.density);
   // Density is how much hair there is, not how solid the paint is: it is drawn opaque at every setting, thin hair
