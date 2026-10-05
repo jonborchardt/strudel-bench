@@ -15,9 +15,11 @@ const strum = (chord, pat) => pat.split(' ').map((t) => (t === 'D' ? dn(chord) :
 const uke = (sound, mix) => (pat, clip = 6) => ({ pattern: note(pat).s(sound).clip(clip).gain(perlin.range(.72, 1).fast(13)), humanize: played, ...mix });
 const soprano = uke('gm_acoustic_guitar_nylon', { level: .5, position: .5, brightness: .72, space: .55 });
 const tenor   = uke('gm_acoustic_guitar_nylon', { level: .4, position: -.2, brightness: .6, space: .55 });
+// a chuck: the strings strummed while the left hand damps them, so each rings a tenth of a second with the tone dulled
+const chuck = (pat) => ({ ...soprano(pat, 4), brightness: .3 });
 const concert = uke('gm_acoustic_guitar_nylon', { level: .5, position: .3, brightness: .6, space: .55 });
-const baritone = uke('strumstick', { level: .85, position: -.45, brightness: .42, space: .5, compressor: { threshold: -18, ratio: 3 } });
-const bassuke = uke('gm_acoustic_bass', { level: .5, brightness: .45, space: .35, humanize: { ...played, correlation: 'bar' } });
+const baritone = uke('gm_acoustic_guitar_nylon', { level: .7, position: -.45, brightness: .45, space: .5, compressor: { threshold: -18, ratio: 3 } });
+const bassuke = uke('gm_electric_bass_finger', { level: .5, brightness: .4, space: .35, humanize: { ...played, correlation: 'bar' } });
 const lowg = uke('gm_acoustic_guitar_nylon', { level: .42, position: .15, brightness: .6, space: .5 });
 // voicings: soprano and tenor the open reentrant shapes (the high g is the uke sound; nothing a uke plays sits above the fifth fret), baritone linear DGBE
 const T = { Am: 'a4 c4 e4 a4', D7: 'a4 c4 fs4 a4', F: 'a4 c4 f4 a4', G: 'g4 d4 g4 b4', Bb: 'as4 d4 f4 as4' };
@@ -67,14 +69,14 @@ song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', packs: ['rooms'], ro
     drums: { ...knocks, density: .55, level: .32 },
     raw:   bassuke(RA, 1),
     raw2:  tenor(strum(T.Am, CHUCK), 3),
-    raw3:  soprano(strum(S.Am, BACK), 1.2),
+    raw3:  chuck(strum(S.Am, BACK)),
     raw4:  fret,
   }),
   section('verse2', 8, { role: 'develop', progression: 'i i i i',
     drums: { ...knocks, density: .6, level: .34, variation: .2 },
     raw:   bassuke(RA, 1),
     raw2:  tenor(strum(T.Am, CHUCK), 3),
-    raw3:  soprano(strum(S.Am, BACK), 1.2),
+    raw3:  chuck(strum(S.Am, BACK)),
     raw4:  baritone(bars(ANSWER), 2),
     raw5:  concert(bars(PICK2), 4),
     raw6:  fret,
@@ -83,7 +85,7 @@ song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', packs: ['rooms'], ro
     drums: { ...knocks, density: .6, level: .34, variation: .3 },
     raw:   bassuke(bars([PF, PG, PF, PG]), 1),
     raw2:  tenor(bars([strum(T.F, PUMP), strum(T.G, PUMP), strum(T.F, PUMP), strum(T.G, PUMP)]), 3),
-    raw3:  soprano(bars([strum(S.F, BACK), strum(S.G, BACK), strum(S.F, BACK), strum(S.G, BACK)]), 1.2),
+    raw3:  chuck(bars([strum(S.F, BACK), strum(S.G, BACK), strum(S.F, BACK), strum(S.G, BACK)])),
     raw4:  baritone(bars(CLIMB), 3),
   }),
   section('chorus', 8, { role: 'develop', progression: 'i IV7 VI VII',
@@ -100,7 +102,7 @@ song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', packs: ['rooms'], ro
     drums: { ...knocks, density: .6, level: .34, variation: .25 },
     raw:   bassuke(RA, 1),
     raw2:  tenor(strum(T.Am, CHUCK), 3),
-    raw3:  soprano(strum(S.Am, BACK), 1.2),
+    raw3:  chuck(strum(S.Am, BACK)),
     raw4:  baritone(bars(ANSWER), 2),
     raw5:  lowg(LOWG.Am, 2),
     raw6:  fret,
@@ -109,7 +111,7 @@ song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', packs: ['rooms'], ro
     drums: { ...knocks, density: .65, level: .34, variation: .35 },
     raw:   bassuke(bars([PF, PG, PF, PG]), 1),
     raw2:  tenor(bars([strum(T.F, PUMP), strum(T.G, PUMP), strum(T.F, PUMP), strum(T.G, PUMP)]), 3),
-    raw3:  soprano(bars([strum(S.F, BACK), strum(S.G, BACK), strum(S.F, BACK), strum(S.G, BACK)]), 1.2),
+    raw3:  chuck(bars([strum(S.F, BACK), strum(S.G, BACK), strum(S.F, BACK), strum(S.G, BACK)])),
     raw4:  baritone(bars(CLIMB), 3),
     raw5:  concert(bars(['~', '~', '~', '[~ ~ ~ ~] [~ ~ ~ ~] [g4 b4 d5 g4] [b4@3 ~]']), 4),
   }),
@@ -135,7 +137,7 @@ song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', packs: ['rooms'], ro
     drums: { ...knocks, density: .65, level: .34, variation: .3 },
     raw:   bassuke(bars([RA, RD]), 1),
     raw2:  tenor(bars([strum(T.Am, CHUCK), strum(T.D7, CHUCK)]), 3),
-    raw3:  soprano(bars([strum(S.Am, BACK), strum(S.D7, BACK)]), 1.2),
+    raw3:  chuck(bars([strum(S.Am, BACK), strum(S.D7, BACK)])),
     raw4:  baritone(bars(SOLO), 2),
   }),
   section('chorus3', 8, { role: 'climax', progression: 'i IV7 VI VII',

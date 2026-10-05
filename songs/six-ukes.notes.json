@@ -79,6 +79,32 @@
           "why": "gm_banjo>gm_acoustic_guitar_nylon why: the banjolele picking up to g5 was a banjo, not a uke; nylon with the line capped at e5"
         }
       ]
+    },
+    {
+      "date": "2026-10-05",
+      "ask": "verse raw3 does not sound like a uke; verse2 raw sounds too much like an upright bass; pre raw4 sounds like a music box; fix each wherever it is used",
+      "changes": [
+        {
+          "section": "verse",
+          "layer": "raw3",
+          "axis": "clip",
+          "from": 1.2,
+          "to": 4,
+          "why": "why: the soprano's chuck cut each string at 40 ms, a click with a pitch; a damped strum rings a tenth of a second with the tone dulled (brightness .3), one chuck definition for all six backbeat sections"
+        },
+        {
+          "section": "verse2",
+          "layer": "raw",
+          "axis": "sound",
+          "why": "gm_acoustic_bass>gm_electric_bass_finger why: the upright sample was an upright; a bass uke's rubber strings are a round fingered note, every section through the one helper"
+        },
+        {
+          "section": "pre",
+          "layer": "raw4",
+          "axis": "sound",
+          "why": "strumstick>gm_acoustic_guitar_nylon why: the strumstick's thin long decay read as a music box; a baritone uke is a guitar's top four strings, so the nylon sample in that register, every baritone line through the one helper"
+        }
+      ]
     }
   ]
 }
