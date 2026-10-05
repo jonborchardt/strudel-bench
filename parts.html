@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parts</title>
+<meta name="description" content="One part pack on a sheet: every top, jacket, hat, hair style, makeup, mark, prop and set of teeth it registers, drawn on a plain figure.">
+<meta name="robots" content="noindex">
+<style>
+  html, body { margin: 0; background: #1b1a1c; font-family: system-ui, sans-serif; color: #cfcac1; }
+  main { padding: 16px; }
+  h2 { font-size: 14px; font-weight: 500; margin: 20px 0 8px; }
+  p { font-size: 12px; max-width: 70em; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  figure { margin: 0; width: 150px; text-align: center; font-size: 12px; }
+  svg { width: 150px; height: auto; background: #3a3238; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+  code { color: #e9e2d0; }
+</style>
+</head>
+<body>
+<main>
+  <h2>pack <span id="name"></span> <small id="packs"></small></h2>
+  <p>Every part web/visual/parts/<span id="file"></span>.mjs registers, by kind, on a plain figure. A part tagged <code>only:&lt;cast&gt;</code> reaches no pool that does not name it; the other tags (<code>era:80s</code>) are what a cast's pool asks for. Casts are on <a href="casts.html">casts.html</a>, poses on <a href="poses.html">poses.html</a>.</p>
+  <div id="sheet"></div>
+</main>
+<script type="module">
+  import { renderPortrait, parts, tagsOf, REGISTRIES } from './web/visual/portrait.mjs';
+  const pack = new URLSearchParams(location.search).get('pack') || 'eighties';
+  const KNOWN = ['eighties', 'undead', 'dwarf', 'elf'];
+  document.getElementById('name').textContent = pack; document.getElementById('file').textContent = pack;
+  document.getElementById('packs').innerHTML = KNOWN.map((p) => (p === pack ? p : `<a href="?pack=${p}">${p}</a>`)).join(' · ');
+  const mod = await import(`./web/visual/parts/${pack}.mjs`);
+  const names = Object.values(mod).find((v) => v && typeof v === 'object' && !Array.isArray(v) && Object.values(v).every((x) => Array.isArray(x) && x.every((n) => typeof n === 'string'))); // the pack's own name lists, by kind (EIGHTIES, UNDEAD, DWARF, ...)
+  const bg = { background: '#3a3238' };
+  // how a part of each kind goes on the plain figure
+  const WEAR = {
+    tops: (n) => ({ top: { style: n, color: '#c23d8e', accent: '#2fb5b0' } }), jackets: (n) => ({ jacket: { style: n, color: '#2a4f8f', accent: '#e9e2d0' }, top: { style: 'crewTshirt', color: '#eeeae2' } }),
+    hats: (n) => ({ hat: { style: n, color: '#d9c64a', accent: '#2a5fb8' } }), hair: (n) => ({ hair: { style: n } }), beards: (n) => ({ facialHair: { style: n } }),
+    teeth: (n) => ({ mouth: { teeth: n, open: 0.5 } }), makeup: (n) => ({ makeup: [n] }), marks: (n) => ({ marks: [n] }), props: (n) => ({ props: [n] }), glasses: (n) => ({ glasses: { style: n, color: '#2b2927' } }),
+  };
+  const KIND = { tops: 'top', jackets: 'jacket', hats: 'hat', hair: 'hair', beards: 'facialHair', teeth: 'teeth', makeup: 'makeup', marks: 'marks', props: 'props', glasses: 'glasses' };
+  const fig = (svg, label, tags) => `<figure>${svg}<figcaption>${label}<br><small>${tags || 'untagged'}</small></figcaption></figure>`;
+  document.getElementById('sheet').innerHTML = Object.entries(names ?? {}).map(([kind, list]) => {
+    const all = parts(KIND[kind], { any: [...new Set(list.flatMap((n) => [...tagsOf(KIND[kind], n)]))] }).filter((n) => list.includes(n)); // through the query, so a part the query would refuse is missing from its own sheet and says so
+    const missing = list.filter((n) => !all.includes(n));
+    return `<h2>${kind} <small>(${list.length})</small></h2>${missing.length ? `<p>not returned by parts(): ${missing.join(', ')}</p>` : ''}<div class="row">${list.map((n) => fig(REGISTRIES[KIND[kind]][n] ? renderPortrait({ ...WEAR[kind](n), ...bg }) : '<svg viewBox="0 0 400 480"></svg>', n, [...tagsOf(KIND[kind], n)].join(' '))).join('')}</div>`;
+  }).join('');
+</script>
+</body>
+</html>
