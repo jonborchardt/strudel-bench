@@ -6,12 +6,13 @@
 // generator (constrained to one FAMILIES entry unless family is 'any'), `ov` the edits as flat dotted paths over it,
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
-import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge } from './portrait.mjs';
+import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf } from './portrait.mjs';
 import { FAMILY_NAMES, characterOf, faceOf, EXPRESSIONS, COSTUMES, COSTUME_FAMILIES } from './cast.mjs';
-import { ZOMBIES, ZOMBIE_NAMES, ZOMBIE_COSTUME_NAMES, ZOMBIE_MAKEUP, ZOMBIE_MARKS, ZOMBIE_PROPS, ZOMBIE_EXPRESSIONS } from './thriller.mjs'; // the theme's parts, offered only when the state's theme is on (groupsFor)
+import { CASTS, themeNames } from './themes.mjs'; // every theme's cast and parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
+import VISUAL from '../../lib/visual.json' with { type: 'json' };
 import { seed as seedState } from './kit.mjs';
 import { prng } from '../../lib/random.mjs';
-const EXPRESSION_NAMES = Object.keys(EXPRESSIONS).filter((e) => !ZOMBIE_EXPRESSIONS[e]); // the editorial expressions: the theme registered its own by name before this module ran
+const EXPRESSION_NAMES = Object.keys(EXPRESSIONS).filter((e) => !Object.values(CASTS).some((c) => c.expressions?.includes(e))); // the editorial expressions: the casts registered their own by name before this module ran
 
 const num = (path, min, max, step = 0.01, o = {}) => ({ kind: 'num', path, min, max, step, ...o });
 const int = (path, min, max, o = {}) => num(path, min, max, 1, o);
@@ -49,7 +50,7 @@ export function setOv(ov, path, value) {
 }
 
 const FAMILIES_PLUS = ['any', ...FAMILY_NAMES];
-export const THEME_NAMES = ['none', 'thriller']; // the themes the editor offers (THEMES below says what each adds)
+export const THEME_NAMES = ['none', ...themeNames()]; // the themes the editor offers (THEMES below says what each adds)
 /** The character the edits sit on: a random one from the seed, its face constrained to one structural family when asked. */
 export function base(seed = 1, family = 'any') {
   const s = {};
@@ -139,11 +140,22 @@ export const PALETTES = COLORS;
 // preset that writes one of its characters over the base. GROUPS and CONTROLS stay the editorial editor, so a test or
 // a page that reads them sees no theme; groupsFor(state) is what a page builds its panel from.
 const on = (x) => x && x !== 'none';
-/** The zombie as edits over the base: the archetype's pins (skin, eyes, teeth, face, neck, body, stance), its hair, beard, rot, grave and the costume it was buried in. */
-const zombiePreset = (name) => { const a = ZOMBIES[name], { props = [], accessories = [], ...garments } = COSTUMES[a.costume](0); return flat({ ...a.set, hairColor: COLORS.hair[a.hairColors?.[0]] ?? '#30231e', hair: { style: a.hair }, facialHair: { style: a.beard ?? 'none' }, makeup: [...a.makeup], marks: [a.marks].flat().filter(on), props, accessories, glasses: null, blush: 0, light: { contrast: 1.9 }, mouth: { ...a.set.mouth, smile: -0.05 }, hat: { style: 'none' }, jacket: { style: 'none' }, ...garments }); }; // the base's own hat, glasses, smile and blush go, as identityOf and dress leave them: the costume says what is worn, the tableau's contrast lights it
-export const THEMES = {
-  thriller: { extras: { 'hair.style': ['mullet', 'bigHair'], 'hat.style': ['headband', 'veil'], 'top.style': ['ruffledTux', 'leotard', 'offShoulderSweat', 'hospitalGown', 'laceGown'], 'jacket.style': ['varsityJacket', 'sweaterShoulders', 'padShoulderBlazer', 'redLeatherChevron'], 'mouth.teeth': ['rotten'], makeup: Object.keys(ZOMBIE_MAKEUP), marks: Object.keys(ZOMBIE_MARKS), props: Object.keys(ZOMBIE_PROPS), costume: ZOMBIE_COSTUME_NAMES, expression: Object.keys(ZOMBIE_EXPRESSIONS) }, presets: [preset('zombie', ZOMBIE_NAMES, zombiePreset)] },
-};
+/** One of a cast's archetypes as edits over the base: its pins (skin, eyes, teeth, face, neck, body, stance), its hair, beard, home makeup and marks, the cast's build and contrast, and its home costume. */
+const castPreset = (cast, name) => { const a = cast.archetypes[name], { props = [], accessories = [], ...garments } = COSTUMES[a.costume](0); return flat({ ...a.set, hairColor: COLORS.hair[a.hairColors?.[0]] ?? '#30231e', hair: { style: a.hair }, facialHair: { style: a.beard ?? 'none' }, makeup: [a.makeup ?? 'none'].flat().filter(on), marks: [a.marks ?? 'none'].flat().filter(on), props, accessories, glasses: a.glasses ? { style: a.glasses, color: '#1d1b1a' } : null, blush: 0, light: { contrast: cast.contrast }, mouth: { ...(a.set?.mouth ?? {}), smile: -0.05 }, hat: a.hat ?? { style: 'none' }, jacket: { style: 'none' }, ...(cast.build && cast.build !== 'default' ? { build: cast.build } : {}), ...garments }); }; // the base's own hat, glasses, smile and blush go, as identityFrom and dress leave them: the costume says what is worn, the cast's contrast lights it
+// the menu each kind of part lands on, and the pools' keys as kinds
+const MENU = { top: 'top.style', jacket: 'jacket.style', hat: 'hat.style', hair: 'hair.style', facialHair: 'facialHair.style', glasses: 'glasses.style', teeth: 'mouth.teeth', makeup: 'makeup', marks: 'marks', props: 'props' }, POOL_KIND = { tops: 'top', jackets: 'jacket', beards: 'facialHair', hair: 'hair', glasses: 'glasses', details: 'details', graphics: 'graphics' };
+/** A theme's tags: `only:<cast>` and every tag (but `everyday`) on a part in the cast's pools, which is how its packs' shared parts (`era:80s`) reach the menus without a hand-written list. */
+const themeTags = (cast) => [...new Set([`only:${cast.name}`, ...Object.entries(cast.pools ?? {}).flatMap(([k, names]) => names.flatMap((n) => [...tagsOf(POOL_KIND[k], n)]))])].filter((t) => t !== 'everyday');
+const editorial = Object.fromEntries(CONTROLS.filter((c) => c.options).map((c) => [c.path, new Set(c.options)]));
+/** What a theme adds to the editor: every part its tags reach that the editorial menus lack, by control path, plus the cast's costumes and expressions, and one preset of its archetypes named by the cast. */
+function themeEntry(cast) {
+  const tags = themeTags(cast), extras = {};
+  for (const [kind, path] of Object.entries(MENU)) { const add = parts(kind, { any: tags }).filter((n) => !editorial[path]?.has(n)); if (add.length) extras[path] = add; }
+  const costumes = (cast.costumes ?? []).filter((c) => !editorial.costume.has(c)), expressions = [...new Set(cast.expressions ?? [])].filter((e) => !editorial.expression.has(e));
+  if (costumes.length) extras.costume = costumes; if (expressions.length) extras.expression = expressions;
+  return { extras, presets: cast.archetypeNames?.length ? [preset(cast.name, cast.archetypeNames, (n) => castPreset(cast, n))] : [] };
+}
+export const THEMES = Object.fromEntries(themeNames().map((name) => [name, themeEntry(CASTS[VISUAL.themes[name].cast])])); // one entry per bound theme, from the cast its json row names
 /** The groups a page builds its panel from: GROUPS, and with a theme on, its options added to the menus they belong to and its presets after the base group's. */
 export function groupsFor(st) {
   const t = THEMES[st?.theme]; if (!t) return GROUPS;

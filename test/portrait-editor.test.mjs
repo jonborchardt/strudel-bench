@@ -80,10 +80,13 @@ test('a theme in the editor: off, the menus are the editorial ones; on, they gai
   assert.equal(blank().theme, 'none'); assert.deepEqual(THEME_NAMES, ['none', ...Object.keys(THEMES)]);
   assert.deepEqual(groupsFor(state()), GROUPS, 'no theme: the editorial groups themselves');
   const zombie = (name) => ['top.style', 'hair.style', 'makeup', 'costume', 'expression', 'mouth.teeth'].map((p) => CONTROLS.find((c) => c.path === p)).every((c) => !c.options.some((o) => Object.values(THEMES.thriller.extras).flat().includes(o)));
-  assert.ok(zombie(), 'CONTROLS lists no theme part'); assert.ok(!CONTROLS.some((c) => c.path === 'zombie'));
+  assert.ok(zombie(), 'CONTROLS lists no theme part'); assert.ok(!CONTROLS.some((c) => c.path === 'undead' || c.path === 'zombie'));
   const on = state({}, { theme: 'thriller' }), cs = controlsFor(on);
-  for (const [path, extra] of Object.entries(THEMES.thriller.extras)) { const c = cs.find((x) => x.path === path); assert.ok(c && extra.every((o) => c.options.includes(o)), `${path} offers ${extra.join(', ')}`); }
-  const zp = cs.find((c) => c.path === 'zombie'); assert.ok(zp && zp.kind === 'preset' && zp.options.length === ZOMBIE_NAMES.length);
+  for (const [path, extra] of Object.entries(THEMES.thriller.extras)) { const c = cs.find((x) => x.path === path); assert.ok(c && extra.length && extra.every((o) => c.options.includes(o)), `${path} offers ${extra.join(', ')}`); }
+  // the menus are built from the tags, not from a hand-written list: the 80s clothes (era:80s, shared) and the rot (only:undead) reach the menus they belong to
+  assert.ok(cs.find((c) => c.path === 'top.style').options.includes('leotard') && cs.find((c) => c.path === 'makeup').options.includes('rotLips') && cs.find((c) => c.path === 'mouth.teeth').options.includes('rotten') && cs.find((c) => c.path === 'hat.style').options.includes('veil') && cs.find((c) => c.path === 'costume').options.includes('bride') && cs.find((c) => c.path === 'expression').options.includes('hunger'));
+  const zp = cs.find((c) => c.path === 'undead'); assert.ok(zp && zp.kind === 'preset' && zp.options.length === ZOMBIE_NAMES.length, 'one preset per cast archetype, named by the cast');
+  THEMES._bare = { extras: {}, presets: [] }; try { assert.equal(groupsFor(state({}, { theme: '_bare' })).length, GROUPS.length, 'a theme whose cast has no presets still builds a panel'); } finally { delete THEMES._bare; }
   for (const c of cs) {
     if (c.kind === 'enum' && !c.state) for (const o of c.options) renderPortrait(params(state({ [c.nullable && o === 'none' ? (c.clears ?? c.path) : c.path]: c.nullable && o === 'none' ? null : o }, { theme: 'thriller' })));
     if (c.kind === 'multi') for (const o of c.options) renderPortrait(params(state({ [c.path]: [o] }, { theme: 'thriller' })));

@@ -16,6 +16,9 @@ import { composeVisual, describeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
 import { seed } from '../web/visual/kit.mjs';
 import { prng } from '../lib/random.mjs';
+import VISUAL from '../lib/visual.json' with { type: 'json' };
+import { THEMES, CASTS, DANCES } from '../web/visual/themes.mjs';
+import UNDEAD from '../web/visual/casts/undead.mjs';
 
 const clean = (o) => !/NaN|undefined|Infinity/.test(JSON.stringify(o));
 const draws = (o, what) => { const ops = portraitOps(o); assert.ok(ops.length > 20 && clean(ops), what); const ctx = ctxStub(); drawOn(ctx, ops); assert.equal(ctx.calls.save, ctx.calls.restore, `${what} restores every clip`); assert.ok(toSvg(ops).startsWith('<svg')); return ops; };
@@ -114,6 +117,16 @@ test('with the theme on, the tableau casts the dead and plans only Thriller shot
   const a = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state), b = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state), c = JSON.stringify(runWorld(tableau, song(g, THEMED, 4), 4).state);
   assert.equal(a, b); assert.notEqual(a, c);
   assert.notEqual(a, JSON.stringify(runWorld(tableau, song(g, 'tableau'), 4).state), 'the theme is a different world');
+});
+
+test('the binding: lib/visual.json names the theme\'s cast, packs and dance, themes.mjs binds them, and a row missing one is refused at song()', async () => {
+  const g = await ready;
+  assert.deepEqual([VISUAL.themes.thriller.cast, VISUAL.themes.thriller.packs, VISUAL.themes.thriller.dance], ['undead', ['eighties', 'undead'], 'thriller']);
+  assert.deepEqual(THEMES.thriller.cast, UNDEAD.archetypeNames, 'the bound theme\'s cast is the cast file\'s archetypes');
+  assert.ok(CASTS.undead === UNDEAD && DANCES.thriller.templates === TEMPLATES && THEMES.thriller.templates === TEMPLATES);
+  for (const k of Object.keys(VISUAL.themes)) assert.ok(VISUAL.themes[k].cast && VISUAL.themes[k].packs && VISUAL.themes[k].dance && VISUAL.themes[k].world && VISUAL.themes[k].about, `${k} is a whole row`);
+  VISUAL.themes._broken = { world: 'tableau', about: 'a row with no cast' }; // the same json object lib/song.mjs reads (one module instance)
+  try { assert.throws(() => song(g, { world: 'tableau', theme: '_broken' }), /theme _broken in lib\/visual\.json lacks cast/, 'a theme that would draw a blank tableau fails at song() naming the missing thing'); } finally { delete VISUAL.themes._broken; }
 });
 
 test('the themed state is what it was before the theme file was split (test/fixtures/thriller-state.json)', async () => {
