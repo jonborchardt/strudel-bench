@@ -147,6 +147,17 @@
           "why": "'i bII i bII'>'i VI i VI' why: the Neapolitan was the other Spanish thing"
         }
       ]
+    },
+    {
+      "date": "2026-10-05",
+      "ask": "the auto visual for this should be the Thriller one: undead",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "visual",
+          "why": "auto (train)>undead why: the night-street dance video is the song's own reference"
+        }
+      ]
     }
   ]
 }

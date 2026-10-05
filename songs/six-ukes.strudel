@@ -57,7 +57,7 @@ const SOLO = ['[~ ~ a3 c4] [e4@2 d4 c4] [a3@2 ~ g3] [a3@3 ~]', '[~ ~ a3 c4] [d4 
 const CH = bars([T.Am, T.D7, T.F, T.G].map((c) => strum(c, HIT)));
 const fret = { pattern: note('<~ ~ ~ [~ ~ ~ c4]>').s('gm_guitar_fret_noise'), level: 1.4, position: -.2, space: .5 };
 
-song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
+song({ cps: .48, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: 'undead', packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
   section('intro', 4, { role: 'establish', progression: 'i i i i',
     drums: { ...knocks, density: .35, level: .3 },
     raw:   lowg(LOWG.Am, 2),
