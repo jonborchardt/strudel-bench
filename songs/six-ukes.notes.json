@@ -105,6 +105,18 @@
           "why": "strumstick>gm_acoustic_guitar_nylon why: the strumstick's thin long decay read as a music box; a baritone uke is a guitar's top four strings, so the nylon sample in that register, every baritone line through the one helper"
         }
       ]
+    },
+    {
+      "date": "2026-10-05",
+      "ask": "intro raw2, verse raw, verse2 raw: the bass sounds like a keyboard or a low trumpet, not a uke; fix it wherever used",
+      "changes": [
+        {
+          "section": "verse",
+          "layer": "raw",
+          "axis": "sound",
+          "why": "gm_electric_bass_finger>gm_acoustic_guitar_nylon why: the fingered electric read as a keyboard; a U-bass is a nylon string on a uke body, so the nylon sample thumbed in the bass register, every section through the one helper"
+        }
+      ]
     }
   ]
 }

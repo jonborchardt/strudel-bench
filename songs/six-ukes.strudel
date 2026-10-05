@@ -19,7 +19,7 @@ const tenor   = uke('gm_acoustic_guitar_nylon', { level: .4, position: -.2, brig
 const chuck = (pat) => ({ ...soprano(pat, 4), brightness: .3 });
 const concert = uke('gm_acoustic_guitar_nylon', { level: .5, position: .3, brightness: .6, space: .55 });
 const baritone = uke('gm_acoustic_guitar_nylon', { level: .7, position: -.45, brightness: .45, space: .5, compressor: { threshold: -18, ratio: 3 } });
-const bassuke = uke('gm_electric_bass_finger', { level: .5, brightness: .4, space: .35, humanize: { ...played, correlation: 'bar' } });
+const bassuke = uke('gm_acoustic_guitar_nylon', { level: .7, brightness: .5, space: .35, humanize: { ...played, correlation: 'bar' } });
 const lowg = uke('gm_acoustic_guitar_nylon', { level: .42, position: .15, brightness: .6, space: .5 });
 // voicings: soprano and tenor the open reentrant shapes (the high g is the uke sound; nothing a uke plays sits above the fifth fret), baritone linear DGBE
 const T = { Am: 'a4 c4 e4 a4', D7: 'a4 c4 fs4 a4', F: 'a4 c4 f4 a4', G: 'g4 d4 g4 b4', Bb: 'as4 d4 f4 as4' };
