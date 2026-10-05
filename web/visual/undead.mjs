@@ -1,19 +1,22 @@
 // undead: the song as a night-street dance video after Thriller. One lead in a red jacket, alive, stands front and
 // centre; behind them, in rows, the dead (cast.mjs identities over portrait.mjs, with the undead treatment on top)
 // dance the same routine in unison, one step a beat, snapping into each position and holding it, the lead precise
-// and every corpse a little off. The arrangement is the choreography: the song opens close on the lead alone (a
-// sway), the horde rises out of the ground as the sections develop (three, then six, then nine), the loud sections
-// dance the full routine (head snaps, claws up, the shoulder drop), the climax does it at full amplitude in the wide
-// shot, and the release empties the street and pushes back in on the lead, whose face goes the way of the others as
-// the song ends. A kick is a nod, a snare a head snap, a hi-hat a blink somewhere in the horde, the melody moves the
-// lead's eyes, an fx impact is a flash frame, a riser raises the dead (they come up through the ground, clipped at
-// their own floor line), a dropout freezes everyone mid-move and dims the moon. Deterministic: randomness only from
-// the state's own generator.
+// and every corpse a little off. The arrangement is the choreography: a timeline of shots is planned per section at
+// init from its phase (opening, development, escalation, peak, release, tableau's phaseOf), the horde as big as the
+// section is loud (a quiet verse brings four up, a chorus eight, the climax all nine), each section drawing its own
+// routine from the phase's list, and the shots cutting among the line of dancers, a close-up of one corpse (another
+// on every snare), a mirrored pair, a face-off between the lead and one of the dead, a wall of nine faces, the rows
+// with the lead gone, and the lead alone close. The song opens close on the lead with no one behind, and the release
+// empties the street and pushes back in on the lead, whose face goes the way of the others as the song ends. A kick
+// is a nod, a snare a head snap (and the next corpse in a close-up), a hi-hat a blink somewhere in the horde, the
+// melody moves the lead's eyes, an fx impact is a flash frame, a riser raises the dead (they come up through the
+// ground fog, clipped at their own floor line), a dropout freezes everyone mid-move and dims the moon.
+// Deterministic: randomness only from the state's own generator.
 //
-// Two seams are left open for work landing elsewhere (the tableau's `thriller` theme, web/visual/thriller.mjs, in
-// progress on main: zombie faces as makeup layers and poses as layoutOf partials), each one table or function here
-// and nothing else aware of it: UNDEAD/undeadOf (the faces: today a stand-in from the parts that exist) and
-// STEPS/ROUTINES (the poses: today head, shoulders and the two arm props the portrait has). See each seam's comment.
+// Two seams are left open for work landing elsewhere (the tableau's `thriller` theme, web/visual/thriller.mjs:
+// zombie faces as makeup layers and poses as layoutOf partials), each one table or function here and nothing else
+// aware of it: UNDEAD/undeadOf (the faces: today a stand-in from the parts that exist) and STEPS/ROUTINES (the
+// poses: today head, shoulders and the two arm props the portrait has). See each seam's comment.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
 import { portraitOps, drawOn, eyeY, mix } from './portrait.mjs';
 import { identityOf, dress, ARCHETYPE_NAMES } from './cast.mjs';
@@ -25,23 +28,37 @@ const SNAP = 9; // how fast a figure arrives in a step: a dance move lands, then
 const BLINK_GAP = 2.5, MIN_GAP = 0.12; // seconds between blinks in the horde; between two snare snaps
 const LEAD = 'slickGoldRed', LEAD_COSTUME = { costume: 'bomberStreetwear', variant: 1 }; // the red bomber
 /** Framings: sheet units per canvas height and where the eye line sits (a fraction of the height), as the tableau's. */
-export const FRAMING = { close: { u: 330, ey: 0.42 }, full: { u: 640, ey: 0.3 }, wide: { u: 900, ey: 0.3 } };
+export const FRAMING = { close: { u: 330, ey: 0.42 }, medium: { u: 460, ey: 0.36 }, full: { u: 640, ey: 0.3 }, wide: { u: 900, ey: 0.3 } };
 const floorOf = (u, ey) => ey + (FEET - 196) / u; // where the front row's feet land for a framing
 /** Where the horde stands, in filling order: dx in figure widths from the centre, and the row back (0 is just behind the lead). */
 export const SPOTS = [{ dx: -0.9, row: 0 }, { dx: 0.9, row: 0 }, { dx: 0, row: 1 }, { dx: -1.4, row: 1 }, { dx: 1.4, row: 1 }, { dx: -0.7, row: 2 }, { dx: 0.7, row: 2 }, { dx: -2.1, row: 2 }, { dx: 2.1, row: 2 }];
 const ROW_BACK = 0.1, ROW_SHRINK = 0.16; // each row back: higher on the ground by this much of the height, and this much smaller
 /** Ground fog lying on one row's line: the sheet's torso runs on past the feet, so every row stands in fog to the chest rather than ending in a cut. */
-function fogAt(ctx, w, h, y, lit) {
-  const g = ctx.createLinearGradient(0, y - 0.07 * h, 0, y + 0.18 * h); g.addColorStop(0, 'rgba(120 132 142 / 0)'); g.addColorStop(0.3, `rgba(120 132 142 / ${0.85 * lit})`); g.addColorStop(1, `rgba(60 70 76 / ${0.9 * lit})`);
-  ctx.fillStyle = g; ctx.fillRect(-w, y - 0.07 * h, w * 3, 0.25 * h); // runs on below the line in a darker grey, so the sheet's end (a hundred units under the feet) never shows
+const FOG_CUT = 60, FOG_SOLID = 70; // sheet units below a figure's feet: where the figure is clipped, and where the fog is solid (the sheet's torso runs a hundred units past the feet, so it is never seen); in sheet units so a wide shot's fog is as thin as its figures are small
+/** Ground fog on one line, for figures at scale `k` (canvas units per sheet unit): a soft ramp from above the line to solid at FOG_SOLID below it and on past the frame, so the rows dissolve into one bank rather than each standing in a stripe. */
+function fogAt(ctx, w, h, y, lit, k) {
+  const top = y - 40 * k, span = h * 1.4 - top, at = (u) => clamp((u + 40) * k / span);
+  const g = ctx.createLinearGradient(0, top, 0, top + span); g.addColorStop(0, 'rgba(108 120 132 / 0)'); g.addColorStop(at(10), `rgba(108 120 132 / ${0.5 * lit})`); g.addColorStop(at(FOG_SOLID), `rgba(104 116 128 / ${lit})`); g.addColorStop(1, `rgba(96 108 120 / ${lit})`);
+  ctx.fillStyle = g; ctx.fillRect(-w, top, w * 3, span);
 }
-/** How many of the dead are up in each phase (tableau's phaseOf names them from role and energy), which routine the street dances, and how big. */
+
+/** The shot kinds: `line` is the street (the lead and the rows), the rest cut away from it. */
+export const SHOTS = {
+  line: { framing: null }, // full or wide by the horde's size
+  leadClose: { framing: 'close' },
+  corpseClose: { framing: 'close', who: 1 },
+  pair: { framing: 'medium', who: 2 },
+  faceOff: { framing: 'medium', who: 1 },
+  wall: { framing: 'close', who: 9 },
+  noLead: { framing: null },
+};
+/** The phases: the horde's size (a span the section's energy picks inside; opening and release stand the lead alone), the routines a section may draw, how big the dance is, shot lengths in bars, the shot weights, and the odds a snare cuts to the next corpse in a close-up. */
 export const PHASES = {
-  opening: { horde: 0, routine: 'sway', amp: 0.5 },
-  development: { horde: 3, routine: 'shamble', amp: 0.7 },
-  escalation: { horde: 6, routine: 'thriller', amp: 0.85 },
-  peak: { horde: 9, routine: 'thriller', amp: 1 },
-  release: { horde: 0, routine: 'sway', amp: 0.4 },
+  opening: { horde: [0, 0], routines: ['sway'], amp: 0.5, lens: [8, 4], shots: { leadClose: 4, line: 1 } },
+  development: { horde: [3, 7], routines: ['shamble', 'lurch', 'sway'], amp: 0.7, lens: [4, 2, 4, 2, 1], shots: { line: 4, corpseClose: 2, pair: 1, faceOff: 1, leadClose: 1 } },
+  escalation: { horde: [5, 9], routines: ['thriller', 'thriller2', 'lurch'], amp: 0.85, lens: [2, 1, 2, 1, 4], shots: { line: 3, pair: 2, corpseClose: 2, wall: 1, faceOff: 1, noLead: 1 } },
+  peak: { horde: [8, 9], routines: ['thriller', 'thriller2'], amp: 1, lens: [1, 1, 2, 0.5], shots: { line: 3, wall: 2, pair: 2, corpseClose: 2, noLead: 1, leadClose: 1 } },
+  release: { horde: [0, 0], routines: ['sway'], amp: 0.4, lens: [8, 4], shots: { leadClose: 3, line: 1 } },
 };
 
 // ---- SEAM: the zombie faces -----------------------------------------------------------------------------------------
@@ -80,7 +97,9 @@ export const STEPS = {
 export const ROUTINES = {
   sway: ['leanL', 'rest', 'leanR', 'rest'],
   shamble: ['hunch', 'leanL', 'hunch', 'leanR', 'hunch', 'leanL', 'snapR', 'stare'],
+  lurch: ['hunch', 'snapL', 'hunch', 'snapR', 'clawR', 'hunch', 'leanL', 'rest'],
   thriller: ['snapR', 'clawsUp', 'snapL', 'clawsUp', 'leanR', 'leanL', 'clawR', 'hunch'],
+  thriller2: ['clawsUp', 'clawsUp', 'snapL', 'snapR', 'hunch', 'clawR', 'leanL', 'leanR'],
   freeze: ['stare'],
 };
 const POSE_KEYS = ['headX', 'headY', 'tilt', 'bodyTilt', 'turn', 'shoulder'];
@@ -89,13 +108,28 @@ export const stepAt = (routine, clock) => { const r = ROUTINES[routine] ?? ROUTI
 /** A step as numbers to ease and props to wear: every pose field present, zero where the step says nothing. */
 const poseOf = (name) => { const { props = [], ...pose } = STEPS[name] ?? STEPS.rest; return { pose: { headX: 0, headY: 0, tilt: 0, bodyTilt: 0, turn: 0, shoulder: 0, ...pose }, props }; };
 
+const pick = (s, a) => a[Math.floor(rand(s) * a.length)];
+const wpick = (s, w) => { const e = Object.entries(w), t = e.reduce((n, [, v]) => n + v, 0); let x = rand(s) * t; for (const [k, v] of e) { x -= v; if (x <= 0) return k; } return e[e.length - 1][0]; };
 const figure = (id, lead) => ({ id, lead, up: lead ? 1 : 0, cur: poseOf('rest').pose, step: 'rest', props: [], jitter: 0, blink: 0, lastBlink: -BLINK_GAP });
+/** A section's shots back to back in bars from the phase's lengths and weights, never the same cutaway twice in a row; `who` are corpse indices (into SPOTS) for the shots that single some out, drawn from those standing. */
+export function planSection(s, bars, phase, standing) {
+  const P = PHASES[phase], shots = []; let b = 0, last = null;
+  while (b < bars - 1e-6) {
+    let kind = wpick(s, P.shots); if (kind === last && kind !== 'line') kind = 'line'; last = kind;
+    let len = pick(s, P.lens); if (b + len > bars) len = bars - b; if (len < 0.25) break;
+    const n = SHOTS[kind].who ?? 0, pool = Array.from({ length: Math.max(standing, 1) }, (_, i) => i), who = [];
+    for (let i = 0; i < n; i++) who.push(pool.length ? pool.splice(Math.floor(rand(s) * pool.length), 1)[0] : i % SPOTS.length);
+    shots.push({ at: b, len, kind, who }); b += len;
+  }
+  return shots;
+}
+const shotOf = (s) => s.plan[s.section]?.[s.shotIx] ?? null;
 
 export default {
   name: 'undead',
 
   init(score, rng, size) {
-    const s = { size: { ...size }, slotOf: Object.fromEntries(Object.entries(score.cast ?? {}).map(([n, c]) => [n, c.slot])), cast: [], lead: 0, order: [], phases: [], section: -1, phase: 'opening', routine: 'sway', wanted: 0, t: 0, energy: 0.5, amp: 0.5, u: FRAMING.close.u, ey: FRAMING.close.ey, freeze: 0, dark: 0, flash: 0, bob: 0, snap: 0, snapDir: 1, lastSnap: -1, rise: 1, leadDecay: 0, look: { x: 0, y: 0 }, lookTo: { x: 0, y: 0 }, stones: [], figures: [] };
+    const s = { size: { ...size }, slotOf: Object.fromEntries(Object.entries(score.cast ?? {}).map(([n, c]) => [n, c.slot])), cast: [], lead: 0, order: [], phases: [], routines: [], hordes: [], plan: [], section: 0, shotIx: -1, variant: 0, phase: 'opening', routine: 'sway', wanted: 0, t: 0, energy: 0.5, amp: 0.5, u: FRAMING.close.u, ey: FRAMING.close.ey, freeze: 0, dark: 0, flash: 0, bob: 0, snap: 0, snapDir: 1, lastSnap: -1, rise: 1, leadDecay: 0, look: { x: 0, y: 0 }, lookTo: { x: 0, y: 0 }, stones: [], figures: [] };
     seed(s, rng);
     s.cast = ARCHETYPE_NAMES.map((name, i) => identityOf(s, name, i));
     s.lead = ARCHETYPE_NAMES.indexOf(LEAD);
@@ -104,20 +138,26 @@ export default {
     let x = -0.1; while (x < 1.1) { if (rand(s) < 0.7) s.stones.push({ x, w: 0.03 + rand(s) * 0.03, h: 0.07 + rand(s) * 0.08 }); x += 0.06 + rand(s) * 0.1; }
     const sections = score.sections.length ? score.sections : [{ name: null, role: null, energy: 0.5, bars: 64 }];
     s.phases = sections.map((_, i) => phaseOf(sections, i, score.climax));
+    s.hordes = sections.map((sec, i) => { const [lo, hi] = PHASES[s.phases[i]].horde; return Math.round(lerp(lo, hi, sec.energy)); }); // how many stand in each section: the phase's span, the energy's place in it
+    s.routines = sections.map((_, i) => pick(s, PHASES[s.phases[i]].routines)); // each section its own dance, so two choruses differ
+    s.plan = sections.map((sec, i) => planSection(s, sec.bars, s.phases[i], s.hordes[i]));
     return s;
   },
 
   step(s, dt, events, clock) {
     s.t += dt;
     s.energy = ease(s.energy, clock.energy, 2, dt);
-    const ix = Math.max(0, Math.min(clock.index, s.phases.length - 1)); s.section = ix; s.phase = s.phases[ix] ?? 'opening';
-    const P = PHASES[s.phase], local = clock.bar + clock.barPhase;
-    s.routine = P.routine; s.wanted = P.horde;
+    const ix = Math.max(0, Math.min(clock.index, s.phases.length - 1)), local = clock.bar + clock.barPhase;
+    if (ix !== s.section) { s.section = ix; s.shotIx = -1; }
+    s.phase = s.phases[ix] ?? 'opening'; s.routine = s.routines[ix] ?? 'sway'; s.wanted = s.hordes[ix] ?? 0;
+    const plan = s.plan[ix] ?? [], cur = plan[s.shotIx];
+    if (!cur || local < cur.at || local >= cur.at + cur.len) { let k = plan.findIndex((x) => local >= x.at && local < x.at + x.len); if (k < 0) k = plan.length - 1; if (k !== s.shotIx) { s.shotIx = k; s.variant = 0; } }
+    const P = PHASES[s.phase], shot = shotOf(s);
     s.freeze = ease(s.freeze, clock.dropout ? 1 : 0, 6, dt); // a dropout: everyone holds mid-move
     s.dark = ease(s.dark, clock.dropout ? 1 : 0, 3, dt);
     s.rise = clock.riserBars && clock.riser > 0 ? clamp(1 - clock.riser / clock.riserBars) : 1; // a riser: the dead come up through the ground over its bars
     s.leadDecay = ease(s.leadDecay, s.phase === 'release' ? 1 : 0, 0.5, dt); // the ending: the lead's face goes the way of the others
-    const close = (s.phase === 'opening' && local < 4) || (s.phase === 'release' && s.leadDecay > 0.35), fr = close ? FRAMING.close : s.wanted >= 6 ? FRAMING.wide : FRAMING.full;
+    const fr = FRAMING[SHOTS[shot?.kind ?? 'line'].framing ?? (s.wanted >= 6 ? 'wide' : 'full')];
     s.u = ease(s.u, fr.u, 1.5, dt); s.ey = ease(s.ey, fr.ey, 1.5, dt);
     s.amp = ease(s.amp, lerp(0.35, 1, s.energy) * P.amp, 2, dt);
     s.flash = decay(s.flash, 14, dt); s.bob = decay(s.bob, 7, dt); s.snap = decay(s.snap, 6, dt);
@@ -133,7 +173,7 @@ export default {
     for (const e of events) {
       const slot = e.layer ? (s.slotOf?.[e.layer] ?? DEFAULT_SLOT[e.kind] ?? 'grain') : DEFAULT_SLOT[e.kind] ?? 'grain';
       if (slot === 'impulse') {
-        if (e.role === 'impact') { if (s.t - s.lastSnap > MIN_GAP) { s.snap = 1; s.snapDir = -s.snapDir; s.lastSnap = s.t; } }
+        if (e.role === 'impact') { if (s.t - s.lastSnap > MIN_GAP) { s.snap = 1; s.snapDir = -s.snapDir; s.lastSnap = s.t; s.variant++; } } // the snap, and the next corpse in a close-up
         else if (e.role === 'grain') blinkOne(s);
         else s.bob = Math.max(s.bob, clamp(e.gain * e.velocity)); // the kick is a nod
       } else if (slot === 'line' || slot === 'counter') {
@@ -145,30 +185,41 @@ export default {
   },
 
   draw(s, ctx, w, h) {
-    const lit = 1 - 0.7 * s.dark, floor = floorOf(s.u, s.ey), far = floor - 3 * ROW_BACK;
+    const shot = shotOf(s) ?? { kind: 'line', who: [] }, lit = 1 - 0.7 * s.dark, floor = floorOf(s.u, s.ey), far = floor - 3 * ROW_BACK;
     ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
     graveyard(ctx, w, h, s.stones, { lit, floor, far });
     const k0 = h / s.u, sw = (400 / s.u) * h; // the front row's scale, and a figure's sheet width in canvas units
     // ponytail: up to ten portraits built and drawn every frame (portraitOps is a few hundred ops each); cache a figure's ops across frames while its pose holds if the listen wall stutters
-    const paint = (f, x, feetY, k, dead) => {
-      const amp = s.amp * (1 - s.freeze), jit = f.lead ? 0 : 0.4 * Math.sin(s.t * 1.7 + f.jitter), snap = s.snap * s.snapDir * (f.lead ? 1 : 0.7);
-      const p = dress(s.cast[f.id], { ...(f.lead ? LEAD_COSTUME : {}), ...(dead ? { makeup: UNDEAD.makeup, expression: UNDEAD.expression } : { expression: 'deadpan' }), props: f.props, look: f.lead ? s.look : { x: 0, y: 0.2 },
-        pose: { headX: f.cur.headX * amp + 6 * snap, headY: f.cur.headY * amp - 5 * s.bob * amp + 4 * jit, headTilt: f.cur.tilt * amp + 0.02 * jit, bodyX: 0, bodyTilt: f.cur.bodyTilt * amp, turn: f.cur.turn * amp + 0.25 * snap, shoulder: f.cur.shoulder * amp + 0.15 * jit } });
-      if (dead) undeadOf(p, 0.6 + 0.4 * s.energy); else if (s.leadDecay > 0.01) undeadOf(p, s.leadDecay);
+    const paint = (f, x, feetY, k, dead, { mirror = 1, look = null, decayTo = null, turn = 0 } = {}) => {
+      const amp = s.amp * (1 - s.freeze), jit = f.lead ? 0 : 0.4 * Math.sin(s.t * 1.7 + f.jitter), snap = s.snap * s.snapDir * (f.lead ? 1 : 0.7) * mirror, c = f.cur;
+      const p = dress(s.cast[f.id], { ...(f.lead ? LEAD_COSTUME : {}), ...(dead ? { makeup: UNDEAD.makeup, expression: UNDEAD.expression } : { expression: 'deadpan' }), props: f.props, look: look ?? (f.lead ? s.look : { x: 0, y: 0.2 }),
+        pose: { headX: mirror * c.headX * amp + 6 * snap, headY: c.headY * amp - 5 * s.bob * amp + 4 * jit, headTilt: mirror * c.tilt * amp + 0.02 * jit, bodyX: 0, bodyTilt: mirror * c.bodyTilt * amp, turn: mirror * c.turn * amp + 0.25 * snap + turn, shoulder: mirror * c.shoulder * amp + 0.15 * jit } });
+      if (dead) undeadOf(p, decayTo ?? 0.6 + 0.4 * s.energy); else if (s.leadDecay > 0.01) undeadOf(p, s.leadDecay);
       p.eyes.openness = p.eyes.openness * (1 - f.blink) * (1 - 0.9 * s.dark) + 0.02;
       const ey = eyeY(p), y = feetY - (FEET - ey) * k;
       floorShadow(ctx, x, feetY, (0.2 * h * k / k0) * p.body.width, 0.3 * lit);
-      ctx.save(); ctx.translate(x, y); ctx.scale(k, k); ctx.translate(-200, -ey); drawOn(ctx, portraitOps(p), lit); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.rect(-w, -h, w * 3, feetY + FOG_CUT * k + h); ctx.clip(); ctx.translate(x, y); ctx.scale(k, k); ctx.translate(-200, -ey); drawOn(ctx, portraitOps(p), lit); ctx.restore(); // cut in the fog, below the feet
     };
-    for (let row = 2; row >= 0; row--) { // the horde, back row first, each row clipped at its own ground line so the dead rise out of it
-      const rowFloor = (floor - (row + 1) * ROW_BACK) * h, k = k0 * (1 - ROW_SHRINK * (row + 1));
-      ctx.save(); ctx.beginPath(); ctx.rect(-w, -h, w * 3, rowFloor + h); ctx.clip();
-      SPOTS.forEach((sp, i) => { const f = s.figures[i + 1], up = f.up * s.rise; if (sp.row !== row || up < 0.02) return; paint(f, w / 2 + sp.dx * sw * (1 - ROW_SHRINK * (row + 1)), rowFloor + (1 - up) * 0.55 * h * (k / k0), k, true); });
-      ctx.restore();
-      fogAt(ctx, w, h, rowFloor, lit);
+    const corpse = (i) => s.figures[1 + ((i + s.variant) % SPOTS.length)]; // a close-up's corpse, the next one on every snare
+    const front = floor * h;
+    if (shot.kind === 'leadClose') paint(s.figures[0], w / 2, front, k0, false);
+    else if (shot.kind === 'corpseClose') paint(corpse(shot.who[0]), w / 2, front, k0, true, { decayTo: 1 });
+    else if (shot.kind === 'pair') { paint(corpse(shot.who[0]), w / 2 - 0.5 * sw, front, k0, true); paint(corpse(shot.who[1]), w / 2 + 0.5 * sw, front, k0, true, { mirror: -1 }); } // the same step, one of them mirrored
+    else if (shot.kind === 'faceOff') { paint(corpse(shot.who[0]), w / 2 + 0.42 * sw, front, k0, true, { look: { x: -0.9, y: 0.1 }, turn: -0.8, decayTo: 1 }); paint(s.figures[0], w / 2 - 0.42 * sw, front, k0, false, { look: { x: 0.9, y: 0.1 }, turn: 0.8 }); } // eye to eye, heads turned to each other, the lead nearer
+    else if (shot.kind === 'wall') { // nine faces, three by three, each in its own jitter, all snapping together
+      const cw = w / 3, ch = h / 3, k = k0 / 3;
+      for (let c = 0; c < 9; c++) { ctx.save(); ctx.beginPath(); ctx.rect((c % 3) * cw, Math.floor(c / 3) * ch, cw, ch); ctx.clip(); paint(corpse(shot.who[c] ?? c), (c % 3) * cw + cw / 2, Math.floor(c / 3) * ch + ch * floorOf(FRAMING.close.u, FRAMING.close.ey), k, true, { decayTo: 1 }); ctx.restore(); }
+    } else { // the street: the horde back row first, each row clipped at its own ground line so the dead rise out of it, then the lead unless gone
+      for (let row = 2; row >= 0; row--) {
+        const rowFloor = (floor - (row + 1) * ROW_BACK) * h, k = k0 * (1 - ROW_SHRINK * (row + 1));
+        ctx.save(); ctx.beginPath(); ctx.rect(-w, -h, w * 3, rowFloor + FOG_CUT * k + h); ctx.clip(); // the row's own line, so a rising figure comes up through it
+        SPOTS.forEach((sp, i) => { const f = s.figures[i + 1], up = f.up * s.rise; if (sp.row !== row || up < 0.02) return; paint(f, w / 2 + sp.dx * sw * (1 - ROW_SHRINK * (row + 1)), rowFloor + (1 - up) * 0.55 * h * (k / k0), k, true); });
+        ctx.restore();
+        fogAt(ctx, w, h, rowFloor, lit, k);
+      }
+      if (shot.kind !== 'noLead') paint(s.figures[0], w / 2, front, k0, false);
     }
-    paint(s.figures[0], w / 2, floor * h, k0, false);
-    if (floor < 1.05) fogAt(ctx, w, h, floor * h, lit);
+    if (floor < 1.1) fogAt(ctx, w, h, front, lit, k0);
     vignette(ctx, w, h, 0.45);
     if (s.flash > 0.02) { ctx.fillStyle = '#e8ecf4'; ctx.globalAlpha = 0.6 * s.flash; ctx.fillRect(0, 0, w, h); ctx.globalAlpha = 1; }
     if (s.dark > 0.01) { ctx.fillStyle = `rgba(0 0 0 / ${0.4 * s.dark})`; ctx.fillRect(0, 0, w, h); }
