@@ -5,14 +5,16 @@
 // styling on that base (a COSTUMES family, makeup, marks, props, a hat, an expression, a pose) and returns what
 // portraitOps takes, so the same face is recognisable in every outfit. All randomness is rand(s) on the caller's state.
 import { clamp, lerp, rand } from './kit.mjs';
-import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR_STYLES, HAIR, LONG_HAIR, DETAIL_STYLES, shade, merge, parts } from './portrait.mjs';
+import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR, LONG_HAIR, shade, merge, parts } from './portrait.mjs';
 
 // the hats a section role wears: bare or a beanie to establish, a cap or a brim to develop, everyone hatted at the climax
-const WARDROBE = { establish: ['none', 'beanie', 'baseballCap', 'none', 'cuffedBeanie'], develop: ['dadCap', 'flatCap', 'bucketHat', 'none', 'fishermanBeanie', 'snapback', 'beret'], climax: ['wideBrimFelt', 'cowboy', 'sunHat', 'snapback', 'truckerCap', 'bucketHat'], release: ['none', 'sunHat', 'beanie', 'none', 'bucketHat'], none: ['none', 'beanie', 'baseballCap', 'dadCap', 'flatCap', 'wideBrimFelt', 'bucketHat'] };
+export const WARDROBE = { establish: ['none', 'beanie', 'baseballCap', 'none', 'cuffedBeanie'], develop: ['dadCap', 'flatCap', 'bucketHat', 'none', 'fishermanBeanie', 'snapback', 'beret'], climax: ['wideBrimFelt', 'cowboy', 'sunHat', 'snapback', 'truckerCap', 'bucketHat'], release: ['none', 'sunHat', 'beanie', 'none', 'bucketHat'], none: ['none', 'beanie', 'baseballCap', 'dadCap', 'flatCap', 'wideBrimFelt', 'bucketHat'] };
 const vals = (o) => Object.values(o);
 const SKINS = vals(SKIN_COLORS), HAIRS = vals(HAIR_COLORS), IRIS = vals(EYE_COLORS), CLOTHES = vals(CLOTHING_COLORS), NECKS = vals(NECK_TYPES);
+// the editorial pools: explicit queries over the tagged parts (never a registry iterated), what the crowd and the twenty-four have always picked from
 const BEARDS = parts('facialHair', { all: ['everyday'] }), JACKETS = parts('jacket', { all: ['everyday'] });
 const PLAIN_TOPS = parts('top', { all: ['everyday'] }); // the everyday tops a random character wears
+const POOLS = { tops: PLAIN_TOPS, jackets: JACKETS, beards: BEARDS, hair: parts('hair', { all: ['everyday'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: parts('graphics', { all: ['everyday'] }) };
 const notLong = (shape, styles) => (shape === FACE_SHAPES.longOval ? styles.filter((h) => !LONG_HAIR.includes(h)) : styles), pickFrom = (a, t) => a[Math.floor(t * a.length)]; // long hair never on a long oval head
 const ONE_SIDED = ['studEarringLeft', 'studEarringRight', 'hoopLeft', 'hoopRight', 'studRowLeft', 'studRowRight', 'earCuffLeft', 'earCuffRight'], EXTRAS = ['earbuds', 'overEarHeadphones'];
 
@@ -28,7 +30,7 @@ export const FAMILIES = {
 export const FAMILY_NAMES = Object.keys(FAMILIES);
 const between = (s, [lo, hi]) => lo + rand(s) * (hi - lo);
 /** The structure of a face from a family, perturbed by the seed: the shape, the eyes, the nose, the mouth, and three or four coherent asymmetries tied to one side (the fuller cheek's jaw corner is the softer one, the eye over it a little lower, the chin toward it, a temple wider). `a` (an archetype) overrides the family's lists. */
-export function faceOf(s, fam, a = {}) {
+export function faceOf(s, fam, a = {}, irises = IRIS) {
   const f = FAMILIES[fam] ?? FAMILIES.fineBoned, r = () => rand(s), j = (k) => 1 + (r() - 0.5) * k, sd = r() < 0.5 ? -1 : 1;
   const shape = FACE_SHAPES[choose(s, a.faces ?? f.faces, Object.keys(FACE_SHAPES))];
   // the features are tied to each other, not placed each on its own: the eyes sit in the face's width, the nose's wings and the mouth's corners follow the eyes (wings inside the inner corners, corners under the pupils), and the mouth sits a lip's height under the nose tip wherever the nose ends, so a face is one face and not parts
@@ -37,7 +39,7 @@ export function faceOf(s, fam, a = {}) {
   return {
     shape,
     face: { width, height, jaw: clamp(shape.jaw * j(0.1), 0.55, 1), chin: shape.chin, corner: shape.corner ?? 32, skew: (r() - 0.5) * 0.6, fullness: (r() - 0.5) * 1.1, asym: { cheek: sd * (0.4 + r() * 0.6), jaw: -sd * (0.3 + r() * 0.7), temple: (r() < 0.5 ? sd : -sd) * r(), chin: sd * r() * 0.6 } }, // fullness: how much weight this one carries, apart from the skull the shape gives it
-    eyes: { y: eyeY, spacing, openness: 0.85 + r() * 0.3, asym: 0.92 + r() * 0.16, dy: sd * (0.5 + r() * 2.5), depth: between(s, f.depth ?? [0.3, 0.7]), sclera: f.sclera ? between(s, f.sclera) : null, bags: f.bags ? between(s, f.bags) : r() < 0.55 ? 0.15 + r() * 0.6 : 0, squint: r() < 0.4 ? r() * 0.45 : 0, style: choose(s, a.eyes ?? f.eyes, EYE_STYLES), iris: IRIS[Math.floor(r() * IRIS.length)], browStyle: choose(s, a.brows ?? f.brows, BROW_STYLES), browLift: between(s, f.browLift ?? [0, 3]), browSkew: (r() - 0.5) * 0.2 },
+    eyes: { y: eyeY, spacing, openness: 0.85 + r() * 0.3, asym: 0.92 + r() * 0.16, dy: sd * (0.5 + r() * 2.5), depth: between(s, f.depth ?? [0.3, 0.7]), sclera: f.sclera ? between(s, f.sclera) : null, bags: f.bags ? between(s, f.bags) : r() < 0.55 ? 0.15 + r() * 0.6 : 0, squint: r() < 0.4 ? r() * 0.45 : 0, style: choose(s, a.eyes ?? f.eyes, EYE_STYLES), iris: irises[Math.floor(r() * irises.length)], browStyle: choose(s, a.brows ?? f.brows, BROW_STYLES), browLift: between(s, f.browLift ?? [0, 3]), browSkew: (r() - 0.5) * 0.2 },
     nose: { style: choose(s, a.nose ?? f.noses, NOSE_STYLES), width: between(s, f.noseW ?? [16, 24]) * k, length: noseL },
     mouth: { style: choose(s, a.mouth ?? f.mouths ?? MOUTH_STYLES.filter((m) => m !== 'asym'), MOUTH_STYLES), y: eyeY + 10 + noseL + lip, width: between(s, f.mouthW ?? [40, 52]) * k, fullness: between(s, f.full ?? [0.3, 0.7]) },
   };
@@ -48,26 +50,28 @@ const lightOf = (s, amount) => ({ side: rand(s) < 0.5 ? -1 : 1, amount }); // th
 const stanceOf = (s) => { const r = () => rand(s), d = r() < 0.5 ? -1 : 1, lean = (0.3 + r() * 0.7) * STANCE; return { headX: d * 4 * lean, headY: (r() - 0.5) * 8, headTilt: d * 0.08 * lean, bodyX: 0, bodyTilt: -d * 0.03 * lean, turn: (r() - 0.5) * 0.9, shoulder: d * 0.5 * lean }; };
 export const STANCE = 1; // the crowd's stance amplitude: 0 is a passport photo, 1 the resting lean, more is theatrical
 
-/** A new character from the state's generator: a face from one structural family (FAMILIES), hair and wardrobe from the part library, the role picking the hat, the energy the smile; one memorable thing per face (a detail, an earring or a chain, glasses, or a beard), never every detail system at once; a resting pose of its own. */
-export function characterOf(s, role = 'none', energy = 0.5) {
-  const r = () => rand(s), pick = (a) => a[Math.floor(r() * a.length)], hats = WARDROBE[role] ?? WARDROBE.none;
-  const { shape, face, eyes, nose, mouth } = faceOf(s, pick(FAMILY_NAMES)), hair = pick(HAIRS), hat = pick(hats), hairStyle = pick(notLong(shape, hat === 'none' ? parts('hair', { all: ['everyday'] }) : parts('hair', { all: ['everyday'] }).filter((s) => s !== 'highBun')));
+/** A new character of `cast` from the state's generator: a face from one of the cast's structural families (FAMILIES), hair and wardrobe from the cast's pools (tag queries over the part library), the role picking the hat, the energy the smile; one memorable thing per face (a detail, an earring or a chain, glasses, or a beard), never every detail system at once; a resting pose of its own. Every pick consumes one draw whether or not the pool has anything in it (an empty pool gives the registry's default part), so a thinner cast is the same person in plainer clothes. The cast's `base` (its signature: dead eyes, rotten teeth) goes over the result. */
+export function characterFrom(cast, s, role = 'none', energy = 0.5) {
+  const r = () => rand(s), pick = (a, dflt) => { const t = r(); return a?.length ? a[Math.floor(t * a.length)] : dflt; }, hats = (cast.wardrobe ?? WARDROBE)[role] ?? (cast.wardrobe ?? WARDROBE).none, P = cast.pools;
+  const skins = cast.skins?.length ? cast.skins : SKINS, hairs = cast.hairColors?.length ? cast.hairColors : HAIRS, clothes = cast.clothes?.length ? cast.clothes : CLOTHES;
+  const { shape, face, eyes, nose, mouth } = faceOf(s, pick(Object.keys(cast.families), 'fineBoned'), {}, cast.irises?.length ? cast.irises : IRIS), hair = pick(hairs), hat = pick(hats, 'none'), hairStyle = pick(notLong(shape, hat === 'none' ? P.hair : P.hair.filter((s) => s !== 'highBun')), 'sidePart');
   const beard = r() < 0.35 && !LONG_HAIR.includes(hairStyle), sig = beard ? pick(['none', 'none', 'accessory', 'glasses']) : pick(['detail', 'detail', 'accessory', 'glasses', 'none']); // no beard under a bob or long hair
-  return {
-    skin: pick(SKINS), hairColor: hair,
+  const graphic = (g) => (g ? { graphic: g } : {});
+  const out = {
+    skin: pick(skins), hairColor: hair,
     face, ears: { size: 0.85 + r() * 0.3 }, eyes, nose, mouth: { ...mouth, smile: lerp(-0.15, 0.45, energy) },
     hair: { style: hairStyle, hairline: (r() - 0.5) * 0.7, recession: r() < 0.25 ? r() * 0.5 : 0 }, // where this one's hair sits on the forehead, and the quarter of them whose temples have gone back
     // a beard is a style and then how much of it there is: the density and the cheek line are what separate two men
     // with the same beard, and a beard is often a shade off the hair, so the dials are drawn here and not left at their defaults
     facialHair: beard
-      ? { style: pick(BEARDS), density: 0.3 + r() * 0.7, cheekLine: 0.2 + r() * 0.7, color: r() < 0.35 ? shade(hair, 0.85 + r() * 0.5) : null, mustache: r() < 0.25 ? r() < 0.5 : null }
+      ? { style: pick(P.beards, 'none'), density: 0.3 + r() * 0.7, cheekLine: 0.2 + r() * 0.7, color: r() < 0.35 ? shade(hair, 0.85 + r() * 0.5) : null, mustache: r() < 0.25 ? r() < 0.5 : null }
       : { style: 'none' },
-    hat: { style: hat, color: pick(CLOTHES), accent: shade(pick(CLOTHES), 0.75) },
-    top: { style: pick(PLAIN_TOPS), color: pick(CLOTHES), ...(r() < 0.25 ? { graphic: pick(parts('graphics', { all: ['everyday'] })), graphicScale: 0.65 + r() * 0.8, graphicY: (r() - 0.5) * 50 } : {}) }, // a quarter of them wear something printed, at their own size and height on the chest
-    jacket: r() < 0.35 ? { style: pick(JACKETS), color: pick(CLOTHES) } : { style: 'none' },
+    hat: { style: hat, color: pick(clothes), accent: shade(pick(clothes), 0.75) },
+    top: { style: pick(P.tops, 'crewTshirt'), color: pick(clothes), ...(r() < 0.25 ? { ...graphic(pick(P.graphics, null)), graphicScale: 0.65 + r() * 0.8, graphicY: (r() - 0.5) * 50 } : {}) }, // a quarter of them wear something printed, at their own size and height on the chest
+    jacket: r() < 0.35 ? { style: pick(P.jackets, 'none'), color: pick(clothes) } : { style: 'none' },
     pants: { style: 'trousers', color: shade(hair, 1.6) }, // dark trousers off the hair's tone: no draw from the generator, so every seeded face stays the face it was
-    glasses: sig === 'glasses' ? { style: pick(parts('glasses', { all: ['everyday'] })), color: pick(['#2b2927', '#211f1e', '#5c5a57', '#6b4a3a']) } : null,
-    accessories: sig === 'accessory' ? [pick([...ONE_SIDED, ...EXTRAS])] : [], details: sig === 'detail' ? [pick(parts('details', { all: ['everyday'] }))] : [],
+    glasses: sig === 'glasses' ? { style: pick(P.glasses, 'rectangularThin'), color: pick(['#2b2927', '#211f1e', '#5c5a57', '#6b4a3a']) } : null,
+    accessories: sig === 'accessory' ? [pick([...ONE_SIDED, ...EXTRAS])] : [], details: sig === 'detail' ? [pick(P.details, null)].filter(Boolean) : [],
     cheeks: r() < 0.35 ? 0 : 0.3 + r() * 0.7, // how much this face colours: a third not at all (the faces world's key)
     blush: r() < 0.45 ? 0 : 0.2 + r() * 0.7, // and the portrait's own: colour in the cheeks on rather more than half of them
     light: lightOf(s, 0.55 + r() * 0.3), // one lighting language across a crowd: every face modelled, none flat, none harsh
@@ -75,7 +79,10 @@ export function characterOf(s, role = 'none', energy = 0.5) {
     pose: { ...stanceOf(s), gaze: r() < 0.5 ? 'camera' : null }, // how this person holds themself: one stance, not five dice; half of them look back at the viewer through the turn, half let their eyes go with the head
     frame: r() < 0.4 ? 0 : (r() - 0.5) * 0.36, // where they enter the frame: off centre by this much of the frame's height, more often than not
   };
+  return cast.base ? merge(out, cast.base) : out;
 }
+/** A new editorial character (the crowd every world draws): `characterFrom` on the EDITORIAL cast, pinned by test/cast-golden.test.mjs. */
+export const characterOf = (s, role = 'none', energy = 0.5) => characterFrom(EDITORIAL, s, role, energy);
 
 // The editorial palette: five colours that read on velvet and on white
 export const GOLD = '#b8892b', BLACK = '#1a1a1c', WHITE = '#eeeae2', OFFWHITE = '#e4dfd4', RED = '#b3202a', BLUE = '#2b4b8f';
@@ -159,27 +166,31 @@ const TORSOS = { narrow: 0.9, average: 1, broad: 1.14, heavy: 1.22, lanky: 0.92 
 const AGE_DETAILS = { young: [], mid: ['underEyeLines'], old: ['crowsFeet', 'foreheadLines', 'underEyeLines'] };
 const choose = (s, v, all) => (Array.isArray(v) ? v[Math.floor(rand(s) * v.length)] : v ?? all[Math.floor(rand(s) * all.length)]);
 
-/** A stable person from an archetype: `{ id, name, base, home, torso }`, `base` what every portrait of them starts from, `home` the styling they arrive in. The seed jitters the face inside the archetype, so two people of one archetype differ. */
-export function identityOf(s, name, id = 0) {
-  const a = ARCHETYPES[name] ?? ARCHETYPES.plainContrast, r = () => rand(s);
-  const { shape, face, eyes, nose, mouth } = faceOf(s, a.family ?? pickFrom(FAMILY_NAMES, r()), a), skin = SKIN_COLORS[choose(s, a.skins, Object.keys(SKIN_COLORS))], hairColor = HAIR_COLORS[choose(s, a.hairColors, Object.keys(HAIR_COLORS))];
-  for (const k of Object.keys(face.asym)) face.asym[k] *= TABLEAU.asym; // the tableau's faces are more lopsided than a crowd's
-  const age = a.age ?? 'young', torso = a.torso ?? 'average', hairStyle = a.hair ?? pickFrom(notLong(shape, HAIR_STYLES), r()), plain = !a.glasses && !a.accessories?.length; // one memorable thing: a face that already wears glasses or jewellery takes no extra detail
+/** A stable person of `cast` from one of its archetypes: `{ id, name, base, home, torso }`, `base` what every portrait of them starts from, `home` the styling they arrive in. The seed jitters the face inside the archetype, so two people of one archetype differ; the cast's `asym` and `contrast` dials and its `build` (when not 'default') go on the base. An archetype's own `skins`/`hairColors` name SKIN_COLORS/HAIR_COLORS entries; unnamed, the cast's palettes are drawn from. */
+export function identityFrom(cast, s, name, id = 0) {
+  const a = cast.archetypes[name] ?? ARCHETYPES[name] ?? ARCHETYPES.plainContrast, r = () => rand(s), P = cast.pools;
+  const { shape, face, eyes, nose, mouth } = faceOf(s, a.family ?? pickFrom(Object.keys(cast.families), r()), a, cast.irises?.length ? cast.irises : IRIS);
+  const skin = a.skins ? SKIN_COLORS[choose(s, a.skins, Object.keys(SKIN_COLORS))] : pickFrom(cast.skins?.length ? cast.skins : SKINS, r()), hairColor = a.hairColors ? HAIR_COLORS[choose(s, a.hairColors, Object.keys(HAIR_COLORS))] : pickFrom(cast.hairColors?.length ? cast.hairColors : HAIRS, r());
+  for (const k of Object.keys(face.asym)) face.asym[k] *= cast.asym; // the tableau's faces are more lopsided than a crowd's
+  const age = a.age ?? 'young', torso = a.torso ?? 'average', hairStyle = a.hair ?? pickFrom(notLong(shape, P.hair), r()) ?? 'sidePart', plain = !a.glasses && !a.accessories?.length; // one memorable thing: a face that already wears glasses or jewellery takes no extra detail
   const base = merge({
     skin, hairColor,
     face, ears: { size: 0.85 + r() * 0.3 }, eyes, nose, mouth: { ...mouth, smile: -0.05 },
     hair: { style: hairStyle },
-    facialHair: { style: LONG_HAIR.includes(hairStyle) ? 'none' : a.beard ?? (r() < 0.7 ? 'none' : BEARDS[Math.floor(r() * BEARDS.length)]) }, // no beard under a bob or long hair, pinned or drawn
+    facialHair: { style: LONG_HAIR.includes(hairStyle) ? 'none' : a.beard ?? (r() < 0.7 ? 'none' : pickFrom(P.beards, r()) ?? 'none') }, // no beard under a bob or long hair, pinned or drawn
     glasses: a.glasses ? { style: a.glasses, color: '#1d1b1a' } : null,
-    accessories: [...(a.accessories ?? [])], details: [...AGE_DETAILS[age], ...(plain && r() < 0.3 ? [DETAIL_STYLES[Math.floor(r() * DETAIL_STYLES.length)]] : [])],
+    accessories: [...(a.accessories ?? [])], details: [...AGE_DETAILS[age], ...(plain && r() < 0.3 ? [pickFrom(P.details, r())].filter(Boolean) : [])],
     body: { width: TORSOS[torso] ?? 1 },
-    light: { ...lightOf(s, 0.8 + r() * 0.2), contrast: TABLEAU.contrast }, // full light, hard shadow: the tableau's dial, not the renderer's default
+    ...(cast.build && cast.build !== 'default' ? { build: { ...cast.build } } : {}), // the cast's skeleton, carried by dress into every shot
+    light: { ...lightOf(s, 0.8 + r() * 0.2), contrast: cast.contrast }, // full light, hard shadow: the tableau's dial, not the renderer's default
     neck: { ...(NECK_TYPES[a.neck] ?? NECK_TYPES[torso === 'lanky' ? 'long' : torso === 'heavy' ? 'thick' : 'average']) },
     pose: { turn: (r() - 0.5) * 0.5, shoulder: (r() - 0.5) * 0.6 }, // how this person stands: a shot's pose adds to it
   }, a.set ?? {}); // the archetype's pinned numbers over the seed's draw: the art direction
   if (a.set?.mouth?.y === undefined) base.mouth.y = base.eyes.y + 10 + base.nose.length + LIP_GAP[0] + r() * (LIP_GAP[1] - LIP_GAP[0]); // a pinned nose moves the mouth with it, as the seed's draw would have
   return { id, name, torso, base, home: { costume: a.costume ?? 'plainTee', makeup: a.makeup ?? 'none', marks: a.marks ?? 'none', prop: 'none', hat: a.hat ?? null } };
 }
+/** A stable editorial person (the tableau's twenty-four): `identityFrom` on the EDITORIAL cast, pinned by test/cast-golden.test.mjs. */
+export const identityOf = (s, name, id = 0) => identityFrom(EDITORIAL, s, name, id);
 
 // expressions: what the face does, over the identity's own features; deadpan is the default
 export const EXPRESSIONS = {
@@ -218,3 +229,6 @@ export function dress(idn, styling = {}) {
   p.blush = 0;
   return p;
 }
+
+/** The editorial cast: who the crowd and the tableau's twenty-four are. The shape every cast has (web/visual/casts/*.mjs): the structural `families` its faces are built in, its palettes (`skins`, `hairColors`, `irises`, `clothes`), its `pools` (tag queries over the parts, never a registry), the hats a role wears (`wardrobe`), its `archetypes` and their names, its costume families, the expression pools a dance uses (`expressions`/`emotes`, null for the tableau's own), the marks a phase adds (`extraMarks`), its `build` ('default' or a portrait build) and the tableau's dials (`contrast`, `asym`); `base` is a signature merged over every generated character (none here). Defined here, at the bottom, because it is made of this module's own constants; web/visual/casts/editorial.mjs re-exports it. */
+export const EDITORIAL = { name: 'editorial', families: FAMILIES, skins: SKINS, hairColors: HAIRS, irises: IRIS, clothes: CLOTHES, pools: POOLS, wardrobe: WARDROBE, archetypes: ARCHETYPES, archetypeNames: ARCHETYPE_NAMES, costumes: COSTUME_FAMILIES, expressions: null, emotes: null, extraMarks: [], build: 'default', contrast: TABLEAU.contrast, asym: TABLEAU.asym };

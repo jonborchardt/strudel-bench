@@ -6,7 +6,8 @@
 import '../parts/eighties.mjs'; import '../parts/undead.mjs'; // the parts this cast is made of register by name
 import { ZOMBIE_SKINS, DEAD_EYES, EXTRA_MARKS } from '../parts/undead.mjs';
 import { NEON } from '../parts/eighties.mjs';
-import { COSTUMES, ARCHETYPES, EXPRESSIONS, WHITE } from '../cast.mjs';
+import { COSTUMES, ARCHETYPES, EXPRESSIONS, WHITE, FAMILIES, WARDROBE } from '../cast.mjs';
+import { parts, HAIR_COLORS } from '../portrait.mjs';
 
 // --- the wardrobe: what each of them was buried in ---
 export const ZOMBIE_COSTUMES = {
@@ -71,4 +72,11 @@ export const ZOMBIE_EXPRESSIONS = {
 Object.assign(EXPRESSIONS, ZOMBIE_EXPRESSIONS);
 const EXPR_POOL = ['slackJaw', 'slackJaw', 'deadStare', 'hunger', 'snarl', 'moan', 'lidsHalf'], EMOTES = ['slackJaw', 'deadStare', 'hunger', 'moan', 'lidsHalf'];
 
-export default { name: 'undead', archetypes: ZOMBIES, archetypeNames: ZOMBIE_NAMES, costumes: ZOMBIE_COSTUME_NAMES, expressions: EXPR_POOL, emotes: EMOTES, extraMarks: EXTRA_MARKS, build: 'default' };
+// the cast object (the shape cast.mjs's EDITORIAL documents): the dead draw their faces from the editorial families, their skins from the grave, their clothes from the eighties pack beside the everyday ones, and every random one of them has the milky eyes and the rotten teeth (`base`)
+export default {
+  name: 'undead', families: FAMILIES,
+  skins: ZOMBIE_SKINS, hairColors: Object.values(HAIR_COLORS), irises: [DEAD_EYES.iris], clothes: Object.values(NEON),
+  pools: { tops: parts('top', { any: ['era:80s', 'everyday'] }), jackets: parts('jacket', { any: ['era:80s', 'everyday'] }), beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { any: ['era:80s', 'everyday'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: parts('graphics', { all: ['everyday'] }) },
+  wardrobe: WARDROBE, archetypes: ZOMBIES, archetypeNames: ZOMBIE_NAMES, costumes: ZOMBIE_COSTUME_NAMES, expressions: EXPR_POOL, emotes: EMOTES, extraMarks: EXTRA_MARKS, build: 'default', contrast: 1.9, asym: 1.6,
+  base: { eyes: { ...DEAD_EYES }, mouth: { teeth: 'rotten' } },
+};

@@ -6,7 +6,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES, PHASES, FRAMING, phaseOf, layoutOf } from '../web/visual/tableau.mjs';
-import { identityOf, dress, ARCHETYPE_NAMES, COSTUMES, COSTUME_FAMILIES, METALLIC, HOODED, HOOD_MAX_WIDTH, wearable, EXPRESSIONS, exprVals, characterOf } from '../web/visual/cast.mjs';
+import { identityOf, dress, ARCHETYPE_NAMES, COSTUMES, COSTUME_FAMILIES, METALLIC, HOODED, HOOD_MAX_WIDTH, wearable, EXPRESSIONS, exprVals, characterOf, characterFrom, identityFrom } from '../web/visual/cast.mjs';
+import EDITORIAL from '../web/visual/casts/editorial.mjs';
+import UNDEAD from '../web/visual/casts/undead.mjs';
 import { portraitOps, toSvg, drawOn, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, sheen } from '../web/visual/portrait.mjs';
 import { curtain, cyclorama, voidSet, sculpture, SCULPTURES, floorShadow, vignette } from '../web/visual/sets.mjs';
 import { eventOf, clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
@@ -83,6 +85,17 @@ test('the cast: twenty-four stable identities from the archetypes, dressed in ev
   assert.equal(capped.hat.style, 'baseballCap');
   assert.equal(dress(who, {}).costume, undefined); assert.equal(dress(who, {}).top.style, COSTUMES[who.home.costume](0).top.style, 'unset styling is the home costume');
   const rnd = characterOf(s); assert.ok(clean(portraitOps(rnd)), 'the random generator still draws (faces)');
+});
+
+test('a cast drives the generator: the editorial cast is characterOf and identityOf, the undead cast makes the dead, an empty pool falls back', () => {
+  const a = {}, b = {}; seed(a, prng(5)); seed(b, prng(5));
+  assert.deepEqual(JSON.parse(JSON.stringify(characterFrom(EDITORIAL, a))), JSON.parse(JSON.stringify(characterOf(b))));
+  const c = {}, d = {}; seed(c, prng(9)); seed(d, prng(9));
+  assert.deepEqual(JSON.parse(JSON.stringify(identityFrom(EDITORIAL, c, 'goldHood', 3))), JSON.parse(JSON.stringify(identityOf(d, 'goldHood', 3))));
+  const s = {}; seed(s, prng(2)); const z = identityFrom(UNDEAD, s, 'bride', 0); assert.equal(z.base.mouth.teeth, 'rotten'); assert.ok(UNDEAD.skins.includes(z.base.skin));
+  const u = {}; seed(u, prng(4)); const dead = characterFrom(UNDEAD, u); assert.ok(UNDEAD.skins.includes(dead.skin) && UNDEAD.pools.tops.includes(dead.top.style) && !/NaN/.test(JSON.stringify(portraitOps(dead))), 'a random undead character wears the cast\'s skin and a top from its pool, and draws');
+  const thin = { ...EDITORIAL, pools: { ...EDITORIAL.pools, tops: [] } }; const t = {}; seed(t, prng(1)); assert.equal(characterFrom(thin, t).top.style, 'crewTshirt', 'an empty pool gives the registry default');
+  const t3 = {}, t4 = {}; seed(t3, prng(1)); seed(t4, prng(1)); assert.deepEqual({ ...characterFrom(thin, t3), top: null }, { ...characterOf(t4), top: null }, 'and consumes the stream exactly as a full pool does: everything but the top is the same person');
 });
 
 test('the sets paint on a stub context', () => {
