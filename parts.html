@@ -25,11 +25,12 @@
 </main>
 <script type="module">
   import { renderPortrait, parts, tagsOf, REGISTRIES } from './web/visual/portrait.mjs';
+  import { PACKS } from './web/visual/themes.mjs'; // the packs by name, every one loaded
   const pack = new URLSearchParams(location.search).get('pack') || 'eighties';
-  const KNOWN = ['eighties', 'undead', 'dwarf', 'elf'];
   document.getElementById('name').textContent = pack; document.getElementById('file').textContent = pack;
-  document.getElementById('packs').innerHTML = KNOWN.map((p) => (p === pack ? p : `<a href="?pack=${p}">${p}</a>`)).join(' · ');
-  const mod = await import(`./web/visual/parts/${pack}.mjs`);
+  document.getElementById('packs').innerHTML = Object.keys(PACKS).map((p) => (p === pack ? p : `<a href="?pack=${p}">${p}</a>`)).join(' · ');
+  const mod = PACKS[pack] ?? {};
+  if (!PACKS[pack]) document.getElementById('sheet').innerHTML = `<p>no pack named ${pack} (web/visual/themes.mjs PACKS lists them)</p>`;
   const names = Object.values(mod).find((v) => v && typeof v === 'object' && !Array.isArray(v) && Object.values(v).every((x) => Array.isArray(x) && x.every((n) => typeof n === 'string'))); // the pack's own name lists, by kind (EIGHTIES, UNDEAD, DWARF, ...)
   const bg = { background: '#3a3238' };
   // how a part of each kind goes on the plain figure

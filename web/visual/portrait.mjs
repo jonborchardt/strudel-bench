@@ -844,9 +844,10 @@ function cloth(p, ops, style, color, seed) {
 const rough = (ops, seed) => { const rnd = lcg(seed + 29); return ops.map((o) => (o.stroke && o.k !== 'clip' && (o.sw ?? 1) <= 6 ? { ...o, sw: Math.round((o.sw ?? 1) * (0.8 + 0.4 * rnd()) * 100) / 100, op: Math.min(1, Math.round((o.op ?? 1) * (0.88 + 0.24 * rnd()) * 100) / 100) } : o)); };
 
 /** Where the eye line sits on this face: `eyes.y` is authored for the 204-tall head and laid out by the face's height (what a world centres its framing on). */
-export const eyeY = (p) => faceY(p)(p.eyes?.y ?? DEFAULTS.eyes.y) + headDrop(p); // on the sheet: the face's layout, plus how far the head moved on the neck to seat its chin
+const onHead = (p, y) => { const k = bld(p).head; return (k === 1 ? y : NECK_BASE[1] + (y - NECK_BASE[1]) * k) + headDrop(p); }; // a head-local y as the sheet reads it (less HEAD_DY and the pose, the convention every framing shares): the head group scales about the neck base, so a bigger head lifts its features
+export const eyeY = (p) => onHead(p, faceY(p)(p.eyes?.y ?? DEFAULTS.eyes.y)); // on the sheet: the face's layout, the head's scale, plus how far the head moved on the neck to seat its chin
 /** Where the mouth sits on the sheet, laid out the same way: the other line a likeness is judged on (the third, the chin, is `CHIN_Y` on every face). */
-export const mouthY = (p) => faceY(p)(p.mouth?.y ?? DEFAULTS.mouth.y) + headDrop(p);
+export const mouthY = (p) => onHead(p, faceY(p)(p.mouth?.y ?? DEFAULTS.mouth.y));
 /** The drawing, back to front, without the background: a plain list of primitives for `toSvg` or `drawOn`. */
 export function portraitOps(options = {}) {
   const p = merge(DEFAULTS, options), hair = hairOf(p), q = p.pose, turn = q.turn ?? 0, sd = p.light.side || -1, fy = faceY(p);

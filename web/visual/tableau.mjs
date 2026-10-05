@@ -94,6 +94,8 @@ const EXPRESSIONS = ['deadpan', 'deadpan', 'deadpan', 'stare', 'slightSmile', 's
 const EMOTES = ['deadpan', 'deadpan', 'stare', 'slightSmile', 'halfSmile', 'smirk', 'pout', 'squint']; // what an emoting actor moves to, and mostly back to rest: the smile changes, slowly; the loud ones (a grin, wide eyes, a sneer) are a shot's own expression, not something the face does on a snare
 
 const pick = (s, a) => a[Math.floor(rand(s) * a.length)];
+// A cast's list-valued home makeup or marks is its face (pointed ears, the beads down a braid, a zombie's rot), not a styling: it is in every shot and every mutation, under whatever the phase adds. A string home makeup is the editorial kind, worn by the phase's odds.
+const own = (v) => (Array.isArray(v) ? v.filter((x) => x && x !== 'none') : []), ownFace = (idn) => own(idn.home.makeup), ownGrave = (idn) => own(idn.home.marks);
 const wpick = (s, w) => { const e = Object.entries(w), t = e.reduce((n, [, v]) => n + v, 0); let x = rand(s) * t; for (const [k, v] of e) { x -= v; if (x <= 0) return k; } return e[e.length - 1][0]; };
 
 /** A section's phase from its role, else its place and energy. */
@@ -138,9 +140,10 @@ function stylingOf(s, idn, P, tpl, i) {
   const T = themeOf(s); if (T?.styling) return T.styling(s, idn, P, tpl, i); // a theme with a dance of its own dresses its own cast (a zombie keeps its outfit and its rot); one on the editorial dance is styled below
   const st = { costume: tpl.costumes?.[i] ?? tpl.costume ?? idn.home.costume, variant: rand(s) < 0.3 ? 1 : 0, expression: tpl.expression ?? pick(s, EXPRESSIONS), smile: (rand(s) - 0.5) * 0.3 };
   if (!tpl.costume && !tpl.costumes && rand(s) < P.gold) st.costume = pick(s, METALLIC.filter((c) => wearable(idn, c))); // no hood on a wide face
-  st.makeup = tpl.makeup ?? (rand(s) < P.paint ? [rand(s) < MASK_SHARE ? pick(s, MASKS) : pick(s, PAINTS)] : rand(s) < P.makeup ? [pick(s, RESTRAINED)] : idn.home.makeup !== 'none' && rand(s) < (MASKS.includes(idn.home.makeup) ? HOME_MASK : 0.6) ? [idn.home.makeup] : []);
+  const face = ownFace(idn), grave = ownGrave(idn);
+  st.makeup = [...face, ...(tpl.makeup ?? (rand(s) < P.paint ? [rand(s) < MASK_SHARE ? pick(s, MASKS) : pick(s, PAINTS)] : rand(s) < P.makeup ? [pick(s, RESTRAINED)] : !face.length && idn.home.makeup !== 'none' && rand(s) < (MASKS.includes(idn.home.makeup) ? HOME_MASK : 0.6) ? [idn.home.makeup] : []))];
   const bare = st.costume === 'shirtlessTattooed' || st.costume === 'loudGoldRedFashion'; // body marks want skin: on a shirt only the neck and face ones
-  st.marks = tpl.marks?.[i] ?? (rand(s) < P.marks ? [pick(s, bare ? MARKS : SKIN_MARKS)] : st.costume === 'shirtlessTattooed' ? [idn.home.marks] : []);
+  st.marks = [...grave, ...(tpl.marks?.[i] ?? (rand(s) < P.marks ? [pick(s, bare ? MARKS : SKIN_MARKS)] : st.costume === 'shirtlessTattooed' && !grave.length ? [idn.home.marks] : []))];
   st.props = tpl.prop || rand(s) < P.props ? [pick(s, PROPS)] : [];
   if (rand(s) < P.hats && !['goldHoodedMetallic', 'streetPuffer'].includes(st.costume)) st.hat = pick(s, HATS);
   return st;
@@ -151,7 +154,7 @@ function altsOf(s, base, P, idn) {
   const kind = pick(s, ['costume', 'costume', 'hat', 'makeup']), out = [base], fits = STRONG.filter((c) => wearable(idn, c));
   for (let k = 1; k < 4; k++) {
     const st = { ...base[0] };
-    if (kind === 'costume') st.costume = pick(s, fits); else if (kind === 'hat') st.hat = ['none', 'baseballCap', 'beanie', 'bucketHat'][k]; else st.makeup = [[], ['severeContour'], ['geometricEyePaint'], ['asymmetricGraphicPaint']][k];
+    if (kind === 'costume') st.costume = pick(s, fits); else if (kind === 'hat') st.hat = ['none', 'baseballCap', 'beanie', 'bucketHat'][k]; else st.makeup = [...ownFace(idn), ...[[], ['severeContour'], ['geometricEyePaint'], ['asymmetricGraphicPaint']][k]];
     if (st.hat === 'none') delete st.hat;
     out.push([st, ...base.slice(1)]);
   }
@@ -174,7 +177,7 @@ function makeShot(s, name, set, at, len, company, P, phase, cascade) {
   const layout = layoutOf(pose, tpl.n, fr, T); sameStance(layout, tpl.fx);
   return {
     at, len, tpl: name, set, framing: tpl.framing ?? 'close', pose, phase, ids, layout,
-    alts: mutate || cascade ? altsOf(s, base, P, s.cast[ids[0]]) : tpl.fx === 'grid' ? [base, [T?.odd ? T.odd(s, base[0]) : { ...base[0], makeup: [pick(s, PAINTS.filter((m) => !base[0].makeup.includes(m)))] }]] : [base], mutate, cascade, beat: len / 4, // a grid's odd cell wears paint (a theme says what its odd one does)
+    alts: mutate || cascade ? altsOf(s, base, P, s.cast[ids[0]]) : tpl.fx === 'grid' ? [base, [T?.odd ? T.odd(s, base[0]) : { ...base[0], makeup: [...ownFace(s.cast[ids[0]]), pick(s, PAINTS.filter((m) => !base[0].makeup.includes(m)))] }]] : [base], mutate, cascade, beat: len / 4, // a grid's odd cell wears paint (a theme says what its odd one does)
     cam: { scale: 1 + (rand(s) < 0.2 ? 0.06 : 0), x: tpl.offset ? (rand(s) < 0.5 ? -0.3 : 0.3) : 0, y: 0, rot: rand(s) < 0.08 ? (rand(s) - 0.5) * 0.03 : 0, push: rand(s) < 0.3 ? 0.05 : 0 },
     fx: tpl.fx ?? null, grid: tpl.grid ?? 0, side: rand(s) < 0.5 ? -1 : 1, odd: Math.floor(rand(s) * (tpl.grid ?? 1) ** 2),
     band: tpl.band ? { color: pick(s, [WHITE, RED, GOLD]), dir: rand(s) < 0.5 ? 'h' : 'v', at: 0.15 + rand(s) * 0.65, size: 0.04 + rand(s) * 0.1 } : null,
@@ -193,7 +196,7 @@ export function planSection(s, sec, i, n, phase) {
   const T = themeOf(s), PH = T?.phases ?? PHASES, TP = T?.templates ?? TEMPLATES, SP = T?.special ?? SPECIAL, O = T?.open ?? OPEN, C = T?.close ?? CLOSE, FB = T?.fallback ?? { red: 'redCurtainSoloPortrait', white: 'whiteStudioSolo' };
   const P = PH[phase], bars = sec.bars, shots = [], company = companyOf(s); let b = 0, special = false;
   const closing = i === n - 1 ? Math.min(8, bars) : 0; // the song ends on a long duo of the leads: its bars are set aside here, so a long shot cannot eat them
-  if (i === 0) { const len = Math.min(8, bars); const sh = makeShot(s, O.tpl, O.set, 0, len, company, PH.opening, phase, false); sh.ids = [s.leads[0]]; sh.pose = O.pose; sh.framing = O.framing; sh.layout = layoutOf(O.pose, 1, FRAMING[O.framing], T); sh.alts = [[T?.styling ? T.styling(s, s.cast[s.leads[0]], PH.opening, { expression: O.expression }, 0) : { costume: s.cast[s.leads[0]].home.costume, variant: 0, expression: O.expression, makeup: [], marks: [], props: [] }]]; sh.mutate = false; shots.push(sh); b = len; }
+  if (i === 0) { const len = Math.min(8, bars); const sh = makeShot(s, O.tpl, O.set, 0, len, company, PH.opening, phase, false); sh.ids = [s.leads[0]]; sh.pose = O.pose; sh.framing = O.framing; sh.layout = layoutOf(O.pose, 1, FRAMING[O.framing], T); sh.alts = [[T?.styling ? T.styling(s, s.cast[s.leads[0]], PH.opening, { expression: O.expression }, 0) : { costume: s.cast[s.leads[0]].home.costume, variant: 0, expression: O.expression, makeup: ownFace(s.cast[s.leads[0]]), marks: ownGrave(s.cast[s.leads[0]]), props: [] }]]; sh.mutate = false; shots.push(sh); b = len; }
   while (b < bars - closing - 1e-6) {
     let name = wpick(s, P.tpls); if (special && SP.has(name)) name = FB[s.altSet === 'red' ? 'red' : 'white']; special = SP.has(name);
     const tpl = TP[name]; let len = pick(s, P.lens); if (b + len > bars - closing) len = bars - closing - b; if (len < 0.25) break;

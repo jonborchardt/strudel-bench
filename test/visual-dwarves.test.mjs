@@ -72,7 +72,8 @@ test('the theme: the song names it, the score carries it, the tableau casts the 
     assert.ok(s.cast.every((c) => c.base.build.legs < 0.7), 'every identity carries the build');
     const all = s.plan.flat();
     assert.ok(all.length >= 2 && all.every((x) => EDITORIAL[x.tpl]), 'every shot is an editorial template: ' + all.map((x) => x.tpl).join(' '));
-    assert.ok(all.every((x) => x.alts.every((alt) => alt.every((st) => DWARVES.costumes.includes(st.costume) || st.costume in EDITORIAL || true))), 'stylings resolve');
+    const beaded = all.flatMap((x) => x.alts.flatMap((alt) => alt.map((st, i) => [s.cast[x.ids[i]], st]))).filter(([c]) => [c.home.marks].flat().includes('beadedBraids'));
+    assert.ok(beaded.length > 0 && beaded.every(([, st]) => st.marks.includes('beadedBraids')), 'a list-valued home mark (the beads down the braids) is the cast\'s own and stays on in every shot and mutation: ' + JSON.stringify(beaded.find(([, st]) => !st.marks.includes('beadedBraids'))?.[1]?.marks));
     assert.deepEqual(JSON.parse(JSON.stringify(s)), s, 'plain data');
   } finally { for (const u of undo) u(); }
   const a = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state), b = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state);

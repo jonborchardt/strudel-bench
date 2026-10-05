@@ -73,6 +73,8 @@ test('the theme: the song names it, the tableau casts the elves and plans only e
     assert.deepEqual(s.cast.map((c) => c.name), ELVES.archetypeNames);
     assert.ok(s.cast.every((c) => c.base.build.legs > 1.05 && c.base.facialHair.style === 'none'));
     assert.ok(s.plan.flat().every((x) => EDITORIAL[x.tpl]), 'every shot is an editorial template');
+    const stylings = s.plan.flat().flatMap((x) => x.alts.flatMap((alt) => alt)); assert.ok(stylings.length >= 3, `a four-bar song still has a few stylings (${stylings.length})`);
+    assert.ok(stylings.every((st) => Array.isArray(st.makeup) && st.makeup.includes('pointedEars') && st.makeup.every((m) => typeof m === 'string')), 'the cast\'s face (a list-valued home makeup) is in every shot and every mutation, under whatever paint the phase adds: ' + JSON.stringify(stylings.find((st) => !st.makeup.includes('pointedEars'))?.makeup));
     assert.deepEqual(JSON.parse(JSON.stringify(s)), s, 'plain data');
   } finally { for (const u of undo) u(); }
   const a = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state), b = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state);

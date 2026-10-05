@@ -17,7 +17,7 @@ import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
 import { seed } from '../web/visual/kit.mjs';
 import { prng } from '../lib/random.mjs';
 import VISUAL from '../lib/visual.json' with { type: 'json' };
-import { THEMES, CASTS, DANCES } from '../web/visual/themes.mjs';
+import { THEMES, CASTS, DANCES, PACKS, bindTheme } from '../web/visual/themes.mjs';
 import UNDEAD from '../web/visual/casts/undead.mjs';
 
 const clean = (o) => !/NaN|undefined|Infinity/.test(JSON.stringify(o));
@@ -125,6 +125,11 @@ test('the binding: lib/visual.json names the theme\'s cast, packs and dance, the
   assert.deepEqual(THEMES.thriller.cast, UNDEAD.archetypeNames, 'the bound theme\'s cast is the cast file\'s archetypes');
   assert.ok(CASTS.undead === UNDEAD && DANCES.thriller.templates === TEMPLATES && THEMES.thriller.templates === TEMPLATES);
   for (const k of Object.keys(VISUAL.themes)) assert.ok(VISUAL.themes[k].cast && VISUAL.themes[k].packs && VISUAL.themes[k].dance && VISUAL.themes[k].world && VISUAL.themes[k].about, `${k} is a whole row`);
+  // the row's packs are read, not decoration: every pack a theme names is a loaded pack module, and a misspelt one is refused where the cast and the dance are
+  for (const k of Object.keys(VISUAL.themes)) for (const p of VISUAL.themes[k].packs) assert.ok(PACKS[p], `${k} names the pack ${p}, which is loaded`);
+  assert.throws(() => bindTheme('x', { cast: 'undead', packs: ['eightees'], dance: 'thriller' }), /theme x: unknown pack "eightees"/);
+  assert.throws(() => bindTheme('x', { cast: 'nobody', packs: ['eighties'], dance: 'thriller' }), /unknown cast "nobody"/);
+  assert.ok(CASTS.editorial && CASTS.editorial.name === 'editorial', 'the editorial cast is listed with the others (the sheets list casts from here)');
   VISUAL.themes._broken = { world: 'tableau', about: 'a row with no cast' }; // the same json object lib/song.mjs reads (one module instance)
   try { assert.throws(() => song(g, { world: 'tableau', theme: '_broken' }), /theme _broken in lib\/visual\.json lacks cast/, 'a theme that would draw a blank tableau fails at song() naming the missing thing'); } finally { delete VISUAL.themes._broken; }
 });

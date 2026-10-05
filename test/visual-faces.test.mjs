@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import faces, { characterOf } from '../web/visual/faces.mjs';
 import { readFileSync } from 'node:fs';
-import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, feetY, mapXY, hatWidth, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, FACE_SHAPES, tag, tagsOf, parts, REGISTRIES } from '../web/visual/portrait.mjs';
+import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, mouthY, feetY, mapXY, hatWidth, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, FACE_SHAPES, tag, tagsOf, parts, REGISTRIES } from '../web/visual/portrait.mjs';
 import '../web/visual/thriller.mjs'; // for its side effect: the theme's parts are registered and tagged, so the only:* assertions below have something to keep out
 import { eventOf, clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
@@ -228,4 +228,7 @@ test('build: the body\'s proportions, all 1 the figure as it was', () => {
   const ctx = ctxStub(); drawOn(ctx, dwarf); assert.equal(ctx.calls.save, ctx.calls.restore); assert.ok(ctx.calls.scale >= 2, 'the canvas scales the head group (twice: the back hair and the head)');
   const shoulder = (ops) => Math.max(...ops.filter((o) => o.k === 'clip' && o.d.startsWith('M 200 330')).flatMap((o) => o.d.match(/-?[\d.]+/g).map(Number).filter((_, i) => i % 2 === 0))) - 200; // the trunk clip's half width about the centre
   assert.ok(Math.abs(shoulder(dwarf) - shoulder(plain) * 1.3) < 1e-6, 'the trunk is wider by the shoulders build');
+  // the eye line a world frames on is where the eyes draw: the head group scales about the neck base (308), so a bigger head lifts its eyes
+  assert.equal(Math.round(eyeY({ build: { head: 1.15 } }) * 10) / 10, 179.2, 'eyeY follows the head\'s scale about the neck base (308 + (196 - 308) x 1.15)'); assert.equal(eyeY({}), 196);
+  assert.equal(Math.round(mouthY({ build: { head: 1.15 } }) * 10) / 10, Math.round((308 + (260 - 308) * 1.15) * 10) / 10, 'and so does mouthY');
 });

@@ -31,11 +31,11 @@
   import { characterFrom, identityFrom, dress } from './web/visual/cast.mjs';
   import { seed } from './web/visual/kit.mjs';
   import { prng } from './lib/random.mjs';
+  import { CASTS } from './web/visual/themes.mjs'; // the casts by name, the editorial one included
   const name = new URLSearchParams(location.search).get('cast') || 'editorial';
-  const KNOWN = ['editorial', 'undead', 'dwarves', 'elves'];
   document.getElementById('name').textContent = name; document.getElementById('file').textContent = name;
-  document.getElementById('casts').innerHTML = KNOWN.map((c) => (c === name ? c : `<a href="?cast=${c}">${c}</a>`)).join(' · ');
-  const { default: cast } = await import(`./web/visual/casts/${name}.mjs`);
+  document.getElementById('casts').innerHTML = Object.keys(CASTS).map((c) => (c === name ? c : `<a href="?cast=${c}">${c}</a>`)).join(' · ');
+  const cast = CASTS[name] ?? CASTS.editorial;
   const fig = (svg, label) => `<figure>${svg}<figcaption>${label}</figcaption></figure>`;
   const bg = { background: '#3a3238' }, ROLES = ['establish', 'develop', 'climax', 'release'];
   let n = +(location.hash.slice(1) || 1);
