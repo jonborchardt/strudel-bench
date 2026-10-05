@@ -200,6 +200,47 @@
           "why": "undead>{ world: undead, composition: single } why: the bare world, no overlay"
         }
       ]
+    },
+    {
+      "date": "2026-10-05",
+      "ask": "have you done a mix pass?",
+      "changes": [
+        {
+          "section": "verse2",
+          "layer": "raw",
+          "axis": "level",
+          "from": 0.7,
+          "to": 0.42,
+          "why": "why: the bass sat 3 dB under the mix in every non-chorus section, the loudest thing on the record; now 5 to 6 under, the verse's foreground"
+        },
+        {
+          "section": "chorus3",
+          "layer": "drums",
+          "axis": "level",
+          "from": 0.38,
+          "to": 0.5,
+          "why": "why: the body knocks were 14 dB under the climax, now 12, the foundation audible"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw4",
+          "why": "closer why: the hook three take the closer deltas (brightness +.12, space -.18) and a velocity that leans into the last short note; the soprano and low-G hits take farther; code-verified, the render's tail did not move"
+        },
+        {
+          "section": "bridge",
+          "layer": "raw3",
+          "axis": "rhythm",
+          "why": "beat one>beat three, level .5 why: the tenor and baritone strummed the same chord together; a call on one and an answer on three gives the breakdown space"
+        },
+        {
+          "section": "solo",
+          "layer": "raw4",
+          "axis": "position",
+          "from": -0.45,
+          "to": -0.15,
+          "why": "why: the lead was hard left"
+        }
+      ]
     }
   ]
 }
