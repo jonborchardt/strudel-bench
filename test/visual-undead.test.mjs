@@ -6,9 +6,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
-import undead, { STEPS, ROUTINES, PHASES, SHOTS, SPOTS, FRAMING, UNDEAD, undeadOf, stepAt, planSection } from '../web/visual/undead.mjs';
-import { identityOf, dress, ARCHETYPE_NAMES } from '../web/visual/cast.mjs';
-import { portraitOps, PROP_STYLES, MAKEUP_STYLES } from '../web/visual/portrait.mjs';
+import undead, { STEPS, ROUTINES, PHASES, SHOTS, SPOTS, FRAMING, LIVE, aliveOf, stepAt, planSection } from '../web/visual/undead.mjs';
+import { identityOf, dress } from '../web/visual/cast.mjs';
+import { portraitOps, PROPS, MAKEUP, MARKS } from '../web/visual/portrait.mjs';
+import thriller, { ZOMBIE_NAMES } from '../web/visual/thriller.mjs';
 import { graveyard } from '../web/visual/sets.mjs';
 import { clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
@@ -23,16 +24,17 @@ const song = (g, seed = 3) => g.song({ cps: .5, key: 'C:minor', seed, visual: 'u
 const SNARE = { ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' };
 const clean = (o) => !/NaN|undefined|Infinity/.test(JSON.stringify(o));
 
-test('the seams are built from parts the portrait has: every routine step is a STEP, every step prop a PROP, the undead makeup real, and a corpse draws', () => {
+test('the cast and the steps are the thriller theme\'s: every routine step is one of its poses with registered claws, every corpse\'s rot a registered layer, and the lead comes back to life', () => {
   for (const [name, steps] of Object.entries(ROUTINES)) for (const st of steps) assert.ok(STEPS[st], `${name}: unknown step ${st}`);
-  for (const [name, st] of Object.entries(STEPS)) for (const p of st.props ?? []) assert.ok(PROP_STYLES.includes(p), `${name}: unknown prop ${p}`);
-  for (const m of UNDEAD.makeup) assert.ok(MAKEUP_STYLES.includes(m), `unknown makeup ${m}`);
+  for (const [name, st] of Object.entries(STEPS)) { assert.ok(name === 'rest' || Object.keys(st).length, `${name}: an empty step, the theme pose is gone`); for (const p of st.props ?? []) assert.ok(PROPS[p], `${name}: unknown prop ${p}`); assert.ok(!('dx' in st) && !('k' in st), 'placement dropped'); }
   for (const P of Object.values(PHASES)) { for (const r of P.routines) assert.ok(ROUTINES[r]); assert.ok(P.horde[1] <= SPOTS.length && P.horde[0] <= P.horde[1]); for (const k of Object.keys(P.shots)) assert.ok(SHOTS[k], `unknown shot ${k}`); }
-  const s = {}; seed(s, prng(2)); const idn = identityOf(s, ARCHETYPE_NAMES[0], 0);
-  const live = dress(idn, { makeup: UNDEAD.makeup, expression: UNDEAD.expression }), dead = undeadOf(dress(idn, { makeup: UNDEAD.makeup, expression: UNDEAD.expression }), 1);
-  assert.notEqual(dead.skin, live.skin, 'the skin drains'); assert.ok(dead.mouth.open > 0 && dead.eyes.openness > live.eyes.openness, 'the mouth hangs open, the eyes stare');
-  assert.ok(clean(portraitOps(dead)) && portraitOps(dead).length > 20);
-  assert.equal(undeadOf({ skin: '#ffffff', eyes: {}, mouth: {} }, 0).skin, '#ffffff', 'decay 0 is the living face');
+  const s = {}; seed(s, prng(2)); const idn = identityOf(s, ZOMBIE_NAMES[1], 1), st = thriller.styling(s, idn, { marks: 1 }, {}, 0);
+  for (const m of st.makeup) assert.ok(MAKEUP[m], `unknown makeup ${m}`); for (const m of st.marks) assert.ok(MARKS[m], `unknown mark ${m}`);
+  const dead = dress(idn, st); assert.ok(clean(portraitOps(dead)) && portraitOps(dead).length > 20, 'a corpse draws');
+  const lead = identityOf(s, 'thrillerLead', 0), live = aliveOf(dress(lead, { expression: 'deadpan' }), 0, lead), gone = aliveOf(dress(lead, { expression: 'deadpan' }), 1, lead);
+  assert.equal(live.skin, LIVE.skin); assert.equal(live.mouth.teeth, 'even'); assert.deepEqual(live.makeup, [], 'alive: a living skin, even teeth, no rot');
+  assert.equal(gone.skin, lead.base.skin); assert.equal(gone.mouth.teeth, 'rotten'); assert.ok(gone.makeup.length, 'gone: the zombie back through');
+  assert.ok(clean(portraitOps(live)) && clean(portraitOps(gone)));
   const ctx = ctxStub(); graveyard(ctx, 320, 180, [{ x: 0.2, w: 0.04, h: 0.1 }, { x: 0.7, w: 0.05, h: 0.12 }], { floor: 0.9, far: 0.6 });
   assert.ok(ctx.calls.fillRect >= 5 && ctx.calls.arc >= 3 && ctx.calls.createLinearGradient >= 3, 'the set paints: sky, moon, stones, fog, ground');
 });
@@ -69,7 +71,8 @@ test('undead is importable in Node and draws on a stub context with no randomnes
     p.draw(ctx, 320, 180);
     assert.ok(ctx.calls.fill > 30, 'portraits fill');
     assert.equal(ctx.calls.save, ctx.calls.restore, 'every transform and clip restored');
-    assert.equal(p.state.cast.length, 24); assert.equal(p.state.figures.length, SPOTS.length + 1, 'the lead and one corpse per spot');
+    assert.equal(p.state.cast.length, ZOMBIE_NAMES.length); assert.equal(p.state.figures.length, SPOTS.length + 1, 'the lead and one corpse per spot');
+    assert.ok(p.state.figures.slice(1).every((f) => f.st && f.st.makeup.length) && p.state.figures[0].st === null, 'every corpse styled by the theme at init, the lead not');
     assert.deepEqual(p.state.phases, ['opening', 'peak']);
     assert.equal(p.state.phase, 'peak'); assert.ok(p.state.wanted >= 8, 'the climax raises the horde');
     assert.ok(p.state.figures.slice(1, 1 + p.state.wanted).every((f) => f.up > 0.5), 'the horde is up four seconds into the drop');

@@ -13,20 +13,21 @@
 // ground fog, clipped at their own floor line), a dropout freezes everyone mid-move and dims the moon.
 // Deterministic: randomness only from the state's own generator.
 //
-// Two seams are left open for work landing elsewhere (the tableau's `thriller` theme, web/visual/thriller.mjs:
-// zombie faces as makeup layers and poses as layoutOf partials), each one table or function here and nothing else
-// aware of it: UNDEAD/undeadOf (the faces: today a stand-in from the parts that exist) and STEPS/ROUTINES (the
-// poses: today head, shoulders and the two arm props the portrait has). See each seam's comment.
+// The cast and the choreography are the tableau's `thriller` theme's (web/visual/thriller.mjs): the horde is its
+// ZOMBIES in its `styling` (the rot as home makeup, the grave on the clothes), the lead its `thrillerLead` kept
+// alive by `aliveOf` until the release, and every step is one of its POSES (layoutOf partials), so a new pose there
+// is a step here by name. Two places know this and nothing else does: LIVE/aliveOf and STEPS/ROUTINES.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY, mix } from './portrait.mjs';
-import { identityOf, dress, ARCHETYPE_NAMES } from './cast.mjs';
+import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS } from './portrait.mjs';
+import { identityOf, dress } from './cast.mjs';
 import { graveyard, floorShadow, vignette } from './sets.mjs';
 import { phaseOf } from './tableau.mjs';
+import thriller, { POSES as ZOMBIE_POSES, ZOMBIE_NAMES } from './thriller.mjs'; // the cast and the choreography: importing registers the zombie parts by name
 
 const FEET = 600; // the sheet's torso runs to here: where the ground meets a standing figure
 const SNAP = 9; // how fast a figure arrives in a step: a dance move lands, then holds
 const BLINK_GAP = 2.5, MIN_GAP = 0.12; // seconds between blinks in the horde; between two snare snaps
-const LEAD = 'slickGoldRed', LEAD_COSTUME = { costume: 'bomberStreetwear', variant: 1 }; // the red bomber
+const LEAD = 'thrillerLead'; // the one in the red leather jacket, alive until the end
 /** Framings: sheet units per canvas height and where the eye line sits (a fraction of the height), as the tableau's. */
 export const FRAMING = { close: { u: 330, ey: 0.42 }, medium: { u: 460, ey: 0.36 }, full: { u: 640, ey: 0.3 }, wide: { u: 900, ey: 0.3 } };
 const floorOf = (u, ey) => ey + (FEET - 196) / u; // where the front row's feet land for a framing
@@ -61,46 +62,35 @@ export const PHASES = {
   release: { horde: [0, 0], routines: ['sway'], amp: 0.4, lens: [8, 4], shots: { leadClose: 3, line: 1 } },
 };
 
-// ---- SEAM: the zombie faces -----------------------------------------------------------------------------------------
-// What makes a cast member one of the dead, at `decay` 0..1. Today a stand-in from the parts the portrait already
-// has: the skin greyed and drained, dark sockets and heavy under-eyes, the mouth hanging open, the brows down. When
-// the zombie faces land (the theme's own makeup and mark layers, registered into portrait.mjs's MAKEUP/MARKS, and
-// its `styling(s, idn, P, tpl, i)` that dresses a corpse), UNDEAD.makeup takes those layer names and undeadOf keeps
-// only what a dial still needs; the world calls nothing else.
-export const UNDEAD = { makeup: ['darkEyeSockets', 'heavyUnderEye'], expression: 'stare', tint: '#6f7e62', drain: '#d9d6cf' };
-export function undeadOf(p, decay = 1) {
-  if (decay <= 0) return p;
-  p.skin = mix(mix(p.skin, UNDEAD.drain, 0.45 * decay), UNDEAD.tint, 0.35 * decay);
-  p.eyes = { ...p.eyes, openness: p.eyes.openness * (1 + 0.2 * decay), browLift: p.eyes.browLift - 2 * decay };
-  p.mouth = { ...p.mouth, open: Math.max(p.mouth.open ?? 0, 0.3 * decay), smile: p.mouth.smile - 0.2 * decay };
-  p.blush = 0; p.cheeks = 0;
+// ---- the faces: the thriller theme's. The horde is its cast (ZOMBIES: the dead skin, the milky eyes, the rotten teeth
+// and the rot as home makeup, each in what they were buried in), dressed once at init by its `styling`. The lead is
+// its `thrillerLead` brought back to life: `aliveOf` puts a living skin, living eyes, even teeth and a clean face over
+// the zombie identity at decay 0 and lets the zombie back through as decay climbs (the release), so the ending is the
+// same person going the way of the others.
+export const LIVE = { skin: SKIN_COLORS.mediumWarm, iris: EYE_COLORS.darkBrown, pupil: '#1a1412' };
+export function aliveOf(p, decay = 0, idn = null) {
+  const dead = idn?.base ?? p, d = clamp(decay);
+  p.skin = mix(LIVE.skin, dead.skin, d);
+  p.eyes = { ...p.eyes, iris: d < 0.5 ? LIVE.iris : dead.eyes.iris, pupil: d < 0.5 ? LIVE.pupil : dead.eyes.pupil, sclera: d < 0.5 ? null : dead.eyes.sclera, bags: lerp(0.1, dead.eyes.bags ?? 1, d), depth: lerp(0.45, dead.eyes.depth ?? 0.95, d) };
+  p.mouth = { ...p.mouth, teeth: d < 0.5 ? 'even' : 'rotten', open: (p.mouth.open ?? 0) * d };
+  if (d < 0.5) { p.makeup = []; p.marks = []; } // the rot comes back with the face
   return p;
 }
 
-// ---- SEAM: the poses --------------------------------------------------------------------------------------------------
-// A dance is a routine: a list of step names, one step a beat, repeating. A step is written in the tableau's layoutOf
-// fields (headX, headY, tilt, bodyTilt, turn, shoulder, props), so a theme's pose partial (`poses[name](n, sw)[0]`)
-// is a step as it stands. The world eases the numbers toward each step and swaps the arm props on the beat; nothing
-// in it knows what a step contains. The new pose tech (full arms, hips, legs, a hand that interpolates) replaces
-// STEPS' entries and `poseOf`; a routine stays a list of names.
-export const STEPS = {
-  rest: {},
-  stare: { headY: -4 },
-  leanL: { headX: -10, tilt: -0.14, bodyTilt: -0.08, turn: -0.5, shoulder: 0.6 },
-  leanR: { headX: 10, tilt: 0.14, bodyTilt: 0.08, turn: 0.5, shoulder: -0.6 },
-  snapL: { headX: -14, turn: -0.9, shoulder: 0.3 }, // the head snapped to one side, the body square
-  snapR: { headX: 14, turn: 0.9, shoulder: -0.3 },
-  clawsUp: { headY: -6, tilt: 0.05, shoulder: 0.2, props: ['handsUp'] },
-  clawR: { headX: 6, turn: 0.3, shoulder: -0.5, props: ['armRaised'] },
-  hunch: { headY: 14, tilt: 0.1, bodyTilt: 0.04, shoulder: 0.8 }, // the shamble: head forward, one shoulder dropped
-};
+// ---- the poses: the theme's POSES (layoutOf partials) are the steps as they stand; a routine is a list of their names,
+// one step a beat, repeating. The world eases the numbers toward each step and swaps the arm props (the claws) on the
+// beat; nothing in it knows what a step contains, so new pose tech lands in STEPS and `poseOf` alone.
+const stepOf = (name) => { const { dx, dy, k, arm, over, look, ...st } = (ZOMBIE_POSES[name]?.(1, 400) ?? [{}])[0]; return st; }; // a single-figure pose, the layout's placement dropped
+export const STEPS = Object.fromEntries(['deadStill', 'theLean', 'shoulderShimmy', 'zombieShuffle', 'hunchedLurch', 'headSnapLeft', 'headSnapRight', 'thrillerClaw', 'clawSweep', 'clawsUp', 'armsRight', 'armsLeft'].map((n) => [n, stepOf(n)]));
+STEPS.rest = {};
 export const ROUTINES = {
-  sway: ['leanL', 'rest', 'leanR', 'rest'],
-  shamble: ['hunch', 'leanL', 'hunch', 'leanR', 'hunch', 'leanL', 'snapR', 'stare'],
-  lurch: ['hunch', 'snapL', 'hunch', 'snapR', 'clawR', 'hunch', 'leanL', 'rest'],
-  thriller: ['snapR', 'clawsUp', 'snapL', 'clawsUp', 'leanR', 'leanL', 'clawR', 'hunch'],
-  thriller2: ['clawsUp', 'clawsUp', 'snapL', 'snapR', 'hunch', 'clawR', 'leanL', 'leanR'],
-  freeze: ['stare'],
+  sway: ['theLean', 'deadStill', 'shoulderShimmy', 'deadStill'],
+  // the side swing (both claws up beside the head on one side, then the other, a beat each) is the move: the loud routines are built on it
+  shamble: ['zombieShuffle', 'zombieShuffle', 'armsRight', 'armsLeft', 'hunchedLurch', 'headSnapLeft', 'armsRight', 'armsLeft'],
+  lurch: ['hunchedLurch', 'headSnapLeft', 'armsRight', 'armsLeft', 'clawSweep', 'zombieShuffle', 'armsRight', 'armsLeft'],
+  thriller: ['armsRight', 'armsLeft', 'armsRight', 'armsLeft', 'thrillerClaw', 'headSnapRight', 'thrillerClaw', 'headSnapLeft'],
+  thriller2: ['armsRight', 'armsLeft', 'armsRight', 'armsLeft', 'clawsUp', 'clawsUp', 'clawSweep', 'theLean'],
+  freeze: ['deadStill'],
 };
 const POSE_KEYS = ['headX', 'headY', 'tilt', 'bodyTilt', 'turn', 'shoulder'];
 /** The step a routine is on at this moment of the clock: one step a beat, from the song's own bar and beat so live and offline agree. */
@@ -110,7 +100,7 @@ const poseOf = (name) => { const { props = [], ...pose } = STEPS[name] ?? STEPS.
 
 const pick = (s, a) => a[Math.floor(rand(s) * a.length)];
 const wpick = (s, w) => { const e = Object.entries(w), t = e.reduce((n, [, v]) => n + v, 0); let x = rand(s) * t; for (const [k, v] of e) { x -= v; if (x <= 0) return k; } return e[e.length - 1][0]; };
-const figure = (id, lead) => ({ id, lead, up: lead ? 1 : 0, cur: poseOf('rest').pose, step: 'rest', props: [], jitter: 0, blink: 0, lastBlink: -BLINK_GAP });
+const figure = (id, lead, st = null) => ({ id, lead, st, up: lead ? 1 : 0, cur: poseOf('rest').pose, step: 'rest', props: [], jitter: 0, blink: 0, lastBlink: -BLINK_GAP }); // st: the theme's styling of a corpse, drawn once so draw stays pure
 /** A section's shots back to back in bars from the phase's lengths and weights, never the same cutaway twice in a row; `who` are corpse indices (into SPOTS) for the shots that single some out, drawn from those standing. */
 export function planSection(s, bars, phase, standing) {
   const P = PHASES[phase], shots = []; let b = 0, last = null;
@@ -131,10 +121,10 @@ export default {
   init(score, rng, size) {
     const s = { size: { ...size }, slotOf: Object.fromEntries(Object.entries(score.cast ?? {}).map(([n, c]) => [n, c.slot])), cast: [], lead: 0, order: [], phases: [], routines: [], hordes: [], plan: [], section: 0, shotIx: -1, variant: 0, phase: 'opening', routine: 'sway', wanted: 0, t: 0, energy: 0.5, amp: 0.5, u: FRAMING.close.u, ey: FRAMING.close.ey, freeze: 0, dark: 0, flash: 0, bob: 0, snap: 0, snapDir: 1, lastSnap: -1, rise: 1, leadDecay: 0, look: { x: 0, y: 0 }, lookTo: { x: 0, y: 0 }, stones: [], figures: [] };
     seed(s, rng);
-    s.cast = ARCHETYPE_NAMES.map((name, i) => identityOf(s, name, i));
-    s.lead = ARCHETYPE_NAMES.indexOf(LEAD);
+    s.cast = ZOMBIE_NAMES.map((name, i) => identityOf(s, name, i));
+    s.lead = Math.max(0, ZOMBIE_NAMES.indexOf(LEAD));
     s.order = s.cast.map((_, i) => i).filter((i) => i !== s.lead); for (let i = s.order.length - 1; i > 0; i--) { const j = Math.floor(rand(s) * (i + 1)); [s.order[i], s.order[j]] = [s.order[j], s.order[i]]; }
-    s.figures = [figure(s.lead, true), ...SPOTS.map((_, i) => ({ ...figure(s.order[i], false), jitter: rand(s) * Math.PI * 2 }))]; // the lead, then one corpse per spot, each with its own wobble phase
+    s.figures = [figure(s.lead, true), ...SPOTS.map((_, i) => ({ ...figure(s.order[i], false, { ...thriller.styling(s, s.cast[s.order[i]], { marks: 0.5 }, {}, 0), props: [] }), jitter: rand(s) * Math.PI * 2 }))]; // the lead, then one corpse per spot in the theme's styling, each with its own wobble phase
     let x = -0.1; while (x < 1.1) { if (rand(s) < 0.7) s.stones.push({ x, w: 0.03 + rand(s) * 0.03, h: 0.07 + rand(s) * 0.08 }); x += 0.06 + rand(s) * 0.1; }
     const sections = score.sections.length ? score.sections : [{ name: null, role: null, energy: 0.5, bars: 64 }];
     s.phases = sections.map((_, i) => phaseOf(sections, i, score.climax));
@@ -190,11 +180,11 @@ export default {
     graveyard(ctx, w, h, s.stones, { lit, floor, far });
     const k0 = h / s.u, sw = (400 / s.u) * h; // the front row's scale, and a figure's sheet width in canvas units
     // ponytail: up to ten portraits built and drawn every frame (portraitOps is a few hundred ops each); cache a figure's ops across frames while its pose holds if the listen wall stutters
-    const paint = (f, x, feetY, k, dead, { mirror = 1, look = null, decayTo = null, turn = 0 } = {}) => {
+    const paint = (f, x, feetY, k, dead, { mirror = 1, look = null, turn = 0 } = {}) => {
       const amp = s.amp * (1 - s.freeze), jit = f.lead ? 0 : 0.4 * Math.sin(s.t * 1.7 + f.jitter), snap = s.snap * s.snapDir * (f.lead ? 1 : 0.7) * mirror, c = f.cur;
-      const p = dress(s.cast[f.id], { ...(f.lead ? LEAD_COSTUME : {}), ...(dead ? { makeup: UNDEAD.makeup, expression: UNDEAD.expression } : { expression: 'deadpan' }), props: f.props, look: look ?? (f.lead ? s.look : { x: 0, y: 0.2 }),
+      const p = dress(s.cast[f.id], { ...(dead ? f.st : { expression: 'deadpan' }), props: f.props, look: look ?? (f.lead ? s.look : { x: 0, y: 0.2 }),
         pose: { headX: mirror * c.headX * amp + 6 * snap, headY: c.headY * amp - 5 * s.bob * amp + 4 * jit, headTilt: mirror * c.tilt * amp + 0.02 * jit, bodyX: 0, bodyTilt: mirror * c.bodyTilt * amp, turn: mirror * c.turn * amp + 0.25 * snap + turn, shoulder: mirror * c.shoulder * amp + 0.15 * jit } });
-      if (dead) undeadOf(p, decayTo ?? 0.6 + 0.4 * s.energy); else if (s.leadDecay > 0.01) undeadOf(p, s.leadDecay);
+      if (!dead) aliveOf(p, s.leadDecay, s.cast[f.id]); // the lead: alive, until the release lets the zombie through
       p.eyes.openness = p.eyes.openness * (1 - f.blink) * (1 - 0.9 * s.dark) + 0.02;
       const ey = eyeY(p), y = feetY - (FEET - ey) * k;
       floorShadow(ctx, x, feetY, (0.2 * h * k / k0) * p.body.width, 0.3 * lit);
@@ -203,12 +193,12 @@ export default {
     const corpse = (i) => s.figures[1 + ((i + s.variant) % SPOTS.length)]; // a close-up's corpse, the next one on every snare
     const front = floor * h;
     if (shot.kind === 'leadClose') paint(s.figures[0], w / 2, front, k0, false);
-    else if (shot.kind === 'corpseClose') paint(corpse(shot.who[0]), w / 2, front, k0, true, { decayTo: 1 });
-    else if (shot.kind === 'pair') { paint(corpse(shot.who[0]), w / 2 - 0.5 * sw, front, k0, true); paint(corpse(shot.who[1]), w / 2 + 0.5 * sw, front, k0, true, { mirror: -1 }); } // the same step, one of them mirrored
-    else if (shot.kind === 'faceOff') { paint(corpse(shot.who[0]), w / 2 + 0.42 * sw, front, k0, true, { look: { x: -0.9, y: 0.1 }, turn: -0.8, decayTo: 1 }); paint(s.figures[0], w / 2 - 0.42 * sw, front, k0, false, { look: { x: 0.9, y: 0.1 }, turn: 0.8 }); } // eye to eye, heads turned to each other, the lead nearer
+    else if (shot.kind === 'corpseClose') paint(corpse(shot.who[0]), w / 2, front, k0, true);
+    else if (shot.kind === 'pair') { paint(corpse(shot.who[0]), w / 2 - 0.5 * sw, front, k0, true); paint(corpse(shot.who[1]), w / 2 + 0.5 * sw, front, k0, true); } // two of them in unison, the swing going the same way
+    else if (shot.kind === 'faceOff') { paint(corpse(shot.who[0]), w / 2 + 0.42 * sw, front, k0, true, { look: { x: -0.9, y: 0.1 }, turn: -0.8 }); paint(s.figures[0], w / 2 - 0.42 * sw, front, k0, false, { look: { x: 0.9, y: 0.1 }, turn: 0.8 }); } // eye to eye, heads turned to each other, the lead nearer
     else if (shot.kind === 'wall') { // nine faces, three by three, each in its own jitter, all snapping together
       const cw = w / 3, ch = h / 3, k = k0 / 3;
-      for (let c = 0; c < 9; c++) { ctx.save(); ctx.beginPath(); ctx.rect((c % 3) * cw, Math.floor(c / 3) * ch, cw, ch); ctx.clip(); paint(corpse(shot.who[c] ?? c), (c % 3) * cw + cw / 2, Math.floor(c / 3) * ch + ch * floorOf(FRAMING.close.u, FRAMING.close.ey), k, true, { decayTo: 1 }); ctx.restore(); }
+      for (let c = 0; c < 9; c++) { ctx.save(); ctx.beginPath(); ctx.rect((c % 3) * cw, Math.floor(c / 3) * ch, cw, ch); ctx.clip(); paint(corpse(shot.who[c] ?? c), (c % 3) * cw + cw / 2, Math.floor(c / 3) * ch + ch * floorOf(FRAMING.close.u, FRAMING.close.ey), k, true); ctx.restore(); }
     } else { // the street: the horde back row first, each row clipped at its own ground line so the dead rise out of it, then the lead unless gone
       for (let row = 2; row >= 0; row--) {
         const rowFloor = (floor - (row + 1) * ROW_BACK) * h, k = k0 * (1 - ROW_SHRINK * (row + 1));
