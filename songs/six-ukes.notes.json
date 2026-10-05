@@ -158,6 +158,48 @@
           "why": "auto (train)>undead why: the night-street dance video is the song's own reference"
         }
       ]
+    },
+    {
+      "date": "2026-10-05",
+      "ask": "I still do not hear the huge hook; and auto should not be an overlay",
+      "changes": [
+        {
+          "section": "chorus",
+          "layer": "raw4",
+          "axis": "notes",
+          "why": "plucked long notes>tremolo [e4*8]@5 why: a nylon pluck dies in half a second; a uke holds a note loud by tremolo, eight picks over five sixteenths"
+        },
+        {
+          "section": "chorus",
+          "layer": "raw2",
+          "why": "chord hits>the hook in unison, level .6 why: three ukes in unison (tenor, baritone, concert) is the mass; the soprano and the low-G keep the chord hits under them"
+        },
+        {
+          "section": "chorus",
+          "layer": "raw",
+          "axis": "notes",
+          "why": "the riff>a1@5 ~ a1@5 ~ c2 d2 ~ e2 why: the bass pumps on the hook's two long hits and walks on its short ones"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw4",
+          "axis": "level",
+          "from": 0.7,
+          "to": 0.9,
+          "why": "why: the hook leads; the climax mix measured 5.6 dB louder than before with the three hook parts at the top"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw4",
+          "axis": "compressor",
+          "why": "on>off why: the lint flagged a compressor per tremolo pick, 19 nodes a bar"
+        },
+        {
+          "section": "song",
+          "layer": "visual",
+          "why": "undead>{ world: undead, composition: single } why: the bare world, no overlay"
+        }
+      ]
     }
   ]
 }
