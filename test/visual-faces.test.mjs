@@ -197,9 +197,10 @@ test('a plain pattern (no song) runs on the fallback score', async () => {
 
 test('parts are tagged and picked by query; an only:* part never comes without being asked for', () => {
   assert.deepEqual(parts('top', { all: ['everyday'] }), TOP_STYLES.filter((x) => !['bare', 'tunic', 'hoodieBig', 'trackTop', 'openShirt'].includes(x)), 'the everyday tops are exactly what PLAIN_TOPS was, in registry order');
-  assert.ok(parts('top').includes('crewTshirt') && parts('top').includes('tunic') && !parts('top').includes('leotard'), 'a plain query gives the untagged and the shared, never an only:* part');
-  assert.ok(parts('top', { any: ['only:undead'] }).includes('leotard'), 'asked for, it comes');
-  assert.deepEqual(parts('hat', { any: ['only:undead'] }).filter((n) => tagsOf('hat', n).has('only:undead')), ['headband', 'veil'], 'per kind: a tag on a top says nothing about hats');
+  assert.ok(parts('top').includes('crewTshirt') && parts('top').includes('tunic') && parts('top').includes('leotard') && !parts('makeup').includes('rotLips'), 'a plain query gives the untagged and the shared (the 80s clothes carry no only:* tag since the split), never an only:* part (the rot)');
+  assert.ok(!parts('top', { all: ['everyday'] }).includes('leotard') && parts('top', { any: ['era:80s'] }).includes('leotard'), 'a shared part comes when its tag is asked for and not from a pool that asks for another');
+  assert.ok(parts('makeup', { any: ['only:undead'] }).includes('rotLips'), 'asked for, a quarantined part comes');
+  assert.deepEqual(parts('hat', { any: ['era:80s'] }), ['headband', 'veil'], 'per kind: a tag on a top says nothing about hats, and the 80s hats are exactly the two');
   assert.ok(parts('makeup').includes('severeContour') && !parts('makeup').includes('rotLips') && !parts('makeup', { any: ['only:undead'] }).includes('severeContour'), 'any is the tags a part must carry one of: the editorial makeup, untagged, comes with a plain query and not with a tagged one');
   assert.deepEqual(parts('makeup', { all: ['only:undead'] }).sort(), Object.keys(REGISTRIES.makeup).filter((n) => tagsOf('makeup', n).has('only:undead')).sort(), 'all narrows to the tag');
   assert.throws(() => parts('shoes'), /no registry for kind/);
