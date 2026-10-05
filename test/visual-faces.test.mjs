@@ -5,7 +5,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import faces, { characterOf } from '../web/visual/faces.mjs';
-import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, mapXY, hatWidth, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, FACE_SHAPES } from '../web/visual/portrait.mjs';
+import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, mapXY, hatWidth, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, FACE_SHAPES, tag, tagsOf, parts, REGISTRIES } from '../web/visual/portrait.mjs';
+import '../web/visual/thriller.mjs'; // for its side effect: the theme's parts are registered and tagged, so the only:* assertions below have something to keep out
 import { eventOf, clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
@@ -192,4 +193,16 @@ test('a plain pattern (no song) runs on the fallback score', async () => {
   p.push(eventOf(h, null, null, 0.1)); p.advance(0, 0); p.advance(0.5, 0.25);
   assert.ok(p.state.bob > 0 && p.state.faces.length >= 3);
   p.draw(ctxStub(), 320, 180);
+});
+
+test('parts are tagged and picked by query; an only:* part never comes without being asked for', () => {
+  assert.deepEqual(parts('top', { all: ['everyday'] }), TOP_STYLES.filter((x) => !['bare', 'tunic', 'hoodieBig', 'trackTop', 'openShirt'].includes(x)), 'the everyday tops are exactly what PLAIN_TOPS was, in registry order');
+  assert.ok(parts('top').includes('crewTshirt') && parts('top').includes('tunic') && !parts('top').includes('leotard'), 'a plain query gives the untagged and the shared, never an only:* part');
+  assert.ok(parts('top', { any: ['only:undead'] }).includes('leotard'), 'asked for, it comes');
+  assert.deepEqual(parts('hat', { any: ['only:undead'] }).filter((n) => tagsOf('hat', n).has('only:undead')), ['headband', 'veil'], 'per kind: a tag on a top says nothing about hats');
+  assert.ok(parts('makeup').includes('severeContour') && !parts('makeup').includes('rotLips') && !parts('makeup', { any: ['only:undead'] }).includes('severeContour'), 'any is the tags a part must carry one of: the editorial makeup, untagged, comes with a plain query and not with a tagged one');
+  assert.deepEqual(parts('makeup', { all: ['only:undead'] }).sort(), Object.keys(REGISTRIES.makeup).filter((n) => tagsOf('makeup', n).has('only:undead')).sort(), 'all narrows to the tag');
+  assert.throws(() => parts('shoes'), /no registry for kind/);
+  assert.ok(!parts('top', { not: ['everyday'] }).includes('crewTshirt'), 'not excludes');
+  tag('top', 'crewTshirt', 'test:tmp'); assert.ok(tagsOf('top', 'crewTshirt').has('test:tmp')); tagsOf('top', 'crewTshirt').delete('test:tmp');
 });

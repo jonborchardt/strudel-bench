@@ -5,14 +5,14 @@
 // styling on that base (a COSTUMES family, makeup, marks, props, a hat, an expression, a pose) and returns what
 // portraitOps takes, so the same face is recognisable in every outfit. All randomness is rand(s) on the caller's state.
 import { clamp, lerp, rand } from './kit.mjs';
-import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR_STYLES, HAT_HAIR, HAIR, LONG_HAIR, FACIAL_HAIR_STYLES, GLASSES_STYLES, TOP_STYLES, JACKET_STYLES, DETAIL_STYLES, GRAPHIC_STYLES, shade, merge } from './portrait.mjs';
+import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR_STYLES, HAIR, LONG_HAIR, DETAIL_STYLES, shade, merge, parts } from './portrait.mjs';
 
 // the hats a section role wears: bare or a beanie to establish, a cap or a brim to develop, everyone hatted at the climax
 const WARDROBE = { establish: ['none', 'beanie', 'baseballCap', 'none', 'cuffedBeanie'], develop: ['dadCap', 'flatCap', 'bucketHat', 'none', 'fishermanBeanie', 'snapback', 'beret'], climax: ['wideBrimFelt', 'cowboy', 'sunHat', 'snapback', 'truckerCap', 'bucketHat'], release: ['none', 'sunHat', 'beanie', 'none', 'bucketHat'], none: ['none', 'beanie', 'baseballCap', 'dadCap', 'flatCap', 'wideBrimFelt', 'bucketHat'] };
 const vals = (o) => Object.values(o);
 const SKINS = vals(SKIN_COLORS), HAIRS = vals(HAIR_COLORS), IRIS = vals(EYE_COLORS), CLOTHES = vals(CLOTHING_COLORS), NECKS = vals(NECK_TYPES);
-const BEARDS = FACIAL_HAIR_STYLES.filter((x) => x !== 'none'), JACKETS = JACKET_STYLES.filter((x) => x !== 'none' && x !== 'openJacket');
-const PLAIN_TOPS = TOP_STYLES.filter((x) => !['bare', 'tunic', 'hoodieBig', 'trackTop', 'openShirt'].includes(x)); // the everyday tops a random character wears
+const BEARDS = parts('facialHair', { all: ['everyday'] }), JACKETS = parts('jacket', { all: ['everyday'] });
+const PLAIN_TOPS = parts('top', { all: ['everyday'] }); // the everyday tops a random character wears
 const notLong = (shape, styles) => (shape === FACE_SHAPES.longOval ? styles.filter((h) => !LONG_HAIR.includes(h)) : styles), pickFrom = (a, t) => a[Math.floor(t * a.length)]; // long hair never on a long oval head
 const ONE_SIDED = ['studEarringLeft', 'studEarringRight', 'hoopLeft', 'hoopRight', 'studRowLeft', 'studRowRight', 'earCuffLeft', 'earCuffRight'], EXTRAS = ['earbuds', 'overEarHeadphones'];
 
@@ -51,7 +51,7 @@ export const STANCE = 1; // the crowd's stance amplitude: 0 is a passport photo,
 /** A new character from the state's generator: a face from one structural family (FAMILIES), hair and wardrobe from the part library, the role picking the hat, the energy the smile; one memorable thing per face (a detail, an earring or a chain, glasses, or a beard), never every detail system at once; a resting pose of its own. */
 export function characterOf(s, role = 'none', energy = 0.5) {
   const r = () => rand(s), pick = (a) => a[Math.floor(r() * a.length)], hats = WARDROBE[role] ?? WARDROBE.none;
-  const { shape, face, eyes, nose, mouth } = faceOf(s, pick(FAMILY_NAMES)), hair = pick(HAIRS), hat = pick(hats), hairStyle = pick(notLong(shape, hat === 'none' ? HAIR_STYLES : HAT_HAIR));
+  const { shape, face, eyes, nose, mouth } = faceOf(s, pick(FAMILY_NAMES)), hair = pick(HAIRS), hat = pick(hats), hairStyle = pick(notLong(shape, hat === 'none' ? parts('hair', { all: ['everyday'] }) : parts('hair', { all: ['everyday'] }).filter((s) => s !== 'highBun')));
   const beard = r() < 0.35 && !LONG_HAIR.includes(hairStyle), sig = beard ? pick(['none', 'none', 'accessory', 'glasses']) : pick(['detail', 'detail', 'accessory', 'glasses', 'none']); // no beard under a bob or long hair
   return {
     skin: pick(SKINS), hairColor: hair,
@@ -63,11 +63,11 @@ export function characterOf(s, role = 'none', energy = 0.5) {
       ? { style: pick(BEARDS), density: 0.3 + r() * 0.7, cheekLine: 0.2 + r() * 0.7, color: r() < 0.35 ? shade(hair, 0.85 + r() * 0.5) : null, mustache: r() < 0.25 ? r() < 0.5 : null }
       : { style: 'none' },
     hat: { style: hat, color: pick(CLOTHES), accent: shade(pick(CLOTHES), 0.75) },
-    top: { style: pick(PLAIN_TOPS), color: pick(CLOTHES), ...(r() < 0.25 ? { graphic: pick(GRAPHIC_STYLES), graphicScale: 0.65 + r() * 0.8, graphicY: (r() - 0.5) * 50 } : {}) }, // a quarter of them wear something printed, at their own size and height on the chest
+    top: { style: pick(PLAIN_TOPS), color: pick(CLOTHES), ...(r() < 0.25 ? { graphic: pick(parts('graphics', { all: ['everyday'] })), graphicScale: 0.65 + r() * 0.8, graphicY: (r() - 0.5) * 50 } : {}) }, // a quarter of them wear something printed, at their own size and height on the chest
     jacket: r() < 0.35 ? { style: pick(JACKETS), color: pick(CLOTHES) } : { style: 'none' },
     pants: { style: 'trousers', color: shade(hair, 1.6) }, // dark trousers off the hair's tone: no draw from the generator, so every seeded face stays the face it was
-    glasses: sig === 'glasses' ? { style: pick(GLASSES_STYLES), color: pick(['#2b2927', '#211f1e', '#5c5a57', '#6b4a3a']) } : null,
-    accessories: sig === 'accessory' ? [pick([...ONE_SIDED, ...EXTRAS])] : [], details: sig === 'detail' ? [pick(DETAIL_STYLES)] : [],
+    glasses: sig === 'glasses' ? { style: pick(parts('glasses', { all: ['everyday'] })), color: pick(['#2b2927', '#211f1e', '#5c5a57', '#6b4a3a']) } : null,
+    accessories: sig === 'accessory' ? [pick([...ONE_SIDED, ...EXTRAS])] : [], details: sig === 'detail' ? [pick(parts('details', { all: ['everyday'] }))] : [],
     cheeks: r() < 0.35 ? 0 : 0.3 + r() * 0.7, // how much this face colours: a third not at all (the faces world's key)
     blush: r() < 0.45 ? 0 : 0.2 + r() * 0.7, // and the portrait's own: colour in the cheeks on rather more than half of them
     light: lightOf(s, 0.55 + r() * 0.3), // one lighting language across a crowd: every face modelled, none flat, none harsh

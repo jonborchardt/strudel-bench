@@ -773,6 +773,37 @@ export const DETAILS = {
   labretStud: { fit: 'face', ops: () => [ellipse(200, 285, 2.4, 2.4, { fill: '#d6cfbf', stroke: '#7d7466', sw: 0.6 })] }, // under the lip, on the chin's shelf
 };
 export const DETAIL_STYLES = Object.keys(DETAILS);
+
+// Tags: what a part is (`everyday`, `formal`, `era:80s`) and who may take it (`only:undead`). Every generator
+// picks through `parts()`; nothing iterates a registry or a *_STYLES list to choose. A part tagged `only:<x>` is
+// returned only when the query names `only:<x>` (in `any` or `all`), which is the whole of the quarantine: sharing is
+// a tag, quarantine is a pool. Untagged parts are general. Tags are per kind: 'top:leotard' knows nothing of hats.
+export const PART_TAGS = {}; // 'kind:name' -> Set of tags
+export const tag = (kind, name, ...tags) => { const k = `${kind}:${name}`; PART_TAGS[k] ??= new Set(); for (const t of tags) PART_TAGS[k].add(t); };
+export const tagsOf = (kind, name) => PART_TAGS[`${kind}:${name}`] ?? new Set();
+export const REGISTRIES = { top: TOPS, jacket: JACKETS, hat: HATS, hair: HAIR, facialHair: FACIAL_HAIR, glasses: GLASSES, makeup: MAKEUP, marks: MARKS, props: PROPS, teeth: TEETH, accessories: ACCESSORIES, details: DETAILS, graphics: GRAPHICS, legs: LEGS };
+/** The names of `kind` a query may take: every part not tagged only:* (unless asked for by name in any/all), with every `all` tag, at least one `any` tag when any are given, and none of `not`. */
+export function parts(kind, { any = [], all = [], not = [] } = {}) {
+  const reg = REGISTRIES[kind]; if (!reg) throw new Error(`parts: no registry for kind "${kind}"`);
+  const asked = new Set([...any, ...all]);
+  return Object.keys(reg).filter((name) => {
+    const t = tagsOf(kind, name);
+    for (const x of t) if (x.startsWith('only:') && !asked.has(x)) return false;
+    if (not.some((x) => t.has(x))) return false;
+    if (all.some((x) => !t.has(x))) return false;
+    if (any.length && !any.some((x) => t.has(x))) return false;
+    return true;
+  });
+}
+// the editorial tags on today's parts: what characterOf and identityOf have always picked from
+for (const n of ['crewTshirt', 'vneckTshirt', 'heavyweightTshirt', 'polo', 'henley', 'crewSweater', 'turtleneck', 'hoodie', 'buttonDown']) tag('top', n, 'everyday');
+for (const n of Object.keys(JACKETS).filter((x) => x !== 'none' && x !== 'openJacket')) tag('jacket', n, 'everyday');
+for (const n of Object.keys(FACIAL_HAIR).filter((x) => x !== 'none')) tag('facialHair', n, 'everyday');
+for (const n of Object.keys(HAIR)) tag('hair', n, 'everyday');
+for (const n of Object.keys(GLASSES)) tag('glasses', n, 'everyday');
+for (const n of Object.keys(DETAILS)) tag('details', n, 'everyday');
+for (const n of Object.keys(GRAPHICS)) tag('graphics', n, 'everyday');
+
 const details = (p, fitFace, fitEyes) => p.details.flatMap((n) => { const d = DETAILS[n]; return d ? (d.fit === 'eyes' ? fitEyes : fitFace)(d.ops(p)) : []; });
 
 // Cloth is not flat: every garment gets the head's shadow across its chest, folds falling from the shoulders, the

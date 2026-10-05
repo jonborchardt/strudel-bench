@@ -21,7 +21,7 @@
 // every shot. The grave is on the clothes as marks (dirt, moss, blood, tears) that a phase adds more of and a snare
 // cuts through. The dance is the tableau's with the amplitudes up (`motion`): the head lurches further, the kick
 // drops the jaw, and the shots hold a dead stare instead of a smile.
-import { TOPS, JACKETS, HATS, HAIR, MOUTHS, MAKEUP, MARKS, PROPS, TEETH, NECKLINES, JACKET_EDGE, arm, shade, mapXY, scaleAbout, soft, path, ellipse, rect, line, stroke } from './portrait.mjs';
+import { TOPS, JACKETS, HATS, HAIR, MOUTHS, MAKEUP, MARKS, PROPS, TEETH, NECKLINES, JACKET_EDGE, arm, shade, mapXY, scaleAbout, soft, path, ellipse, rect, line, stroke, tag } from './portrait.mjs';
 import { COSTUMES, ARCHETYPES, EXPRESSIONS, WHITE, BLACK } from './cast.mjs';
 import { rand } from './kit.mjs';
 
@@ -78,6 +78,12 @@ Object.assign(HAIR, {
 });
 // no push into HAT_HAIR: that list is what a random character's hat picks hair from, and a mullet must never land on the editorial crowd; dress keeps a theme style under a hat by checking the registry
 TEETH.rotten = (d, cx, w, ty, th) => [path(d, { fill: '#c9b27a' }), ...[-0.2, -0.08, 0.05, 0.18].map((f) => line(cx + w * f, ty - th, cx + w * f + 1.5, ty + th, stroke('#3a2a18', 1.8, 0.7))), rect(cx + w * 0.1, ty - th, w * 0.07, th * 2, fp('#2a1a14', 0.9))]; // yellowed, a gap where one is gone
+// the tags: 80s clothes, and for now every part the dead's alone (`only:undead` keeps them out of every pool until the clothes move to a shareable pack)
+for (const n of ['ruffledTux', 'leotard', 'offShoulderSweat', 'hospitalGown', 'laceGown']) tag('top', n, 'era:80s', 'only:undead');
+for (const n of ['varsityJacket', 'sweaterShoulders', 'padShoulderBlazer', 'redLeatherChevron']) tag('jacket', n, 'era:80s', 'only:undead');
+for (const n of ['headband', 'veil']) tag('hat', n, 'era:80s', 'only:undead');
+for (const n of ['mullet', 'bigHair']) tag('hair', n, 'era:80s', 'only:undead');
+tag('teeth', 'rotten', 'only:undead');
 
 // --- the rot: makeup on the skin (under the features) and the face (over them), laid out by the eyes or the face ---
 const GASH = (d, rim) => [path(d, stroke('#5a1216', 7, 0.92)), path(d, stroke('#1e0608', 2.6, 0.9)), path(rim, stroke('#b2584f', 1.4, 0.5))]; // a slash: the raw flesh, the dark of it, a lighter edge where the skin has pulled
@@ -134,6 +140,9 @@ export const ZOMBIE_PROPS = {
   veilBack: { back: () => [path('M 150 96 C 118 160, 92 260, 74 430 L 326 430 C 308 260, 282 160, 250 96 Z', fp('#f6f2ea', 0.5)), path('M 150 96 C 118 160, 92 260, 74 430', stroke('#fff', 1.5, 0.5)), path('M 250 96 C 282 160, 308 260, 326 430', stroke('#fff', 1.5, 0.5))] }, // the veil's sheet, behind the figure
 };
 Object.assign(PROPS, ZOMBIE_PROPS);
+for (const n of Object.keys(ZOMBIE_MAKEUP)) tag('makeup', n, 'only:undead');
+for (const n of Object.keys(ZOMBIE_MARKS)) tag('marks', n, 'only:undead');
+for (const n of Object.keys(ZOMBIE_PROPS)) tag('props', n, 'only:undead');
 
 // --- the wardrobe: what each of them was buried in ---
 export const ZOMBIE_COSTUMES = {
