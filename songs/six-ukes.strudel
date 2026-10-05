@@ -177,10 +177,11 @@ song({ cps: .49, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
     raw6:  farther(lowg(CHL, HITCLIP)),
     raw7:  fret,
   }),
-  section('outro', 4, { role: 'release', progression: 'i i i i',
+  // the last four bars open into a hall: the same players, the room around them bigger, so the picking trails off behind the chord
+  section('outro', 4, { role: 'release', progression: 'i i i i', room: { ir: 'hall', size: 3.2, damping: 4500 },
     drums: { ...knocks, template: HALF, density: .4, level: .28 },
-    raw:   bassuke(bars(['a1@2 ~ ~', 'a1@2 ~ e2', 'a1@2 ~ ~', 'a1@2 ~ ~']), 1),
-    raw2:  tenor(bars([strum(T.Am, ONE), strum(T.Am, ONE), strum(T.Am, ONE), '[a4 c4 e4 a4]@2 ~ ~ ~ ~ ~ ~']), 12),
-    raw3:  lowg(bars(['[a3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [c4 ~ ~ ~]', '[a3 ~ ~ ~] [~ ~ ~ ~] [e4 ~ ~ ~] [~ ~ ~ ~]', '[a3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [c4 ~ ~ ~]', '[a3 ~ ~ ~] [~ ~ ~ ~] [~ ~ ~ ~] [~ ~ ~ ~]']), 2),
+    raw:   closer(bassuke(bars(['a1@2 ~ ~', 'a1@2 ~ e2', 'a1@2 ~ ~', 'a1@2 ~ ~']), 1)),
+    raw2:  closer(tenor(bars([strum(T.Am, ONE), strum(T.Am, ONE), strum(T.Am, ONE), '[a4 c4 e4 a4]@2 ~ ~ ~ ~ ~ ~']), 12)),
+    raw3:  { ...farther(lowg(bars(['[a3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [c4 ~ ~ ~]', '[a3 ~ ~ ~] [~ ~ ~ ~] [e4 ~ ~ ~] [~ ~ ~ ~]', '[a3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [c4 ~ ~ ~]', '[a3 ~ ~ ~] [~ ~ ~ ~] [~ ~ ~ ~] [~ ~ ~ ~]']), 2)), level: .25, brightness: .33, space: .88 },
   }),
 ])

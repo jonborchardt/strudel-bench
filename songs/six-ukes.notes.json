@@ -298,6 +298,27 @@
           "why": "'i IV7 i IV7'>'i iv i iv' why: the same darkening under the solo"
         }
       ]
+    },
+    {
+      "date": "2026-10-05",
+      "ask": "when done, if you have not, do a full mix",
+      "changes": [
+        {
+          "section": "outro",
+          "layer": "room",
+          "why": "none>hall 3.2 why: the release opens into a bigger room, which also gives the background part a tail the small room could not"
+        },
+        {
+          "section": "outro",
+          "layer": "raw3",
+          "why": "farther, level .3>.25, brightness .33, space .88 why: the picking is the background of the fade, the last thing to go"
+        },
+        {
+          "section": "outro",
+          "layer": "raw",
+          "why": "closer, outro.raw2 closer why: the bass and the final chord are the foreground of the release"
+        }
+      ]
     }
   ]
 }
