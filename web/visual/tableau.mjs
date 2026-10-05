@@ -15,7 +15,7 @@
 // hi-hat blinks one actor every few seconds, an fx impact is a graphic flash frame, a riser is a slow push-in, a
 // dropout holds the shot dark with the eyes shut. Deterministic: randomness only from the state's own generator.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY } from './portrait.mjs';
+import { portraitOps, drawOn, eyeY, feetY } from './portrait.mjs';
 import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, METALLIC, wearable, WHITE, RED, GOLD } from './cast.mjs';
 import { curtain, cyclorama, voidSet, floorShadow, vignette, sculpture, SCULPTURES } from './sets.mjs';
 import { THEMES } from './themes.mjs';
@@ -323,7 +323,7 @@ export default {
       };
       const armed = figures.filter((f) => f.lay.arm !== null && figures[f.lay.arm]);
       for (let i = figures.length - 1; i >= 0; i--) { // back to front
-        const f = figures[i], feet = f.y + (FEET - eyeY(f.p)) * f.k;
+        const f = figures[i], feet = f.y + (feetY(f.p) - eyeY(f.p)) * f.k; // this figure's own feet: a short build stands shorter
         if (sh.set === 'white' && feet < h * 1.3) floorShadow(ctx, f.x + h * 0.03, feet - h * 0.005, 0.26 * h * f.lay.k * f.p.body.width, 0.16 * lit);
         if (sh.set === 'red') { const r = 0.5 * h * f.k * fr.u / 460, g = ctx.createRadialGradient(f.x, f.y + h * 0.12, 0, f.x, f.y + h * 0.12, r); g.addColorStop(0, `rgba(0 0 0 / ${0.32 * lit})`); g.addColorStop(1, 'rgba(0 0 0 / 0)'); ctx.fillStyle = g; ctx.fillRect(f.x - r, f.y + h * 0.12 - r, 2 * r, 2 * r); } // the figure's shadow on the velvet behind it
         paint(f);

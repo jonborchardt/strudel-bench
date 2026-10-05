@@ -33,6 +33,9 @@ const NECK_BOTTOM = 430; // every neck runs to here, below the lowest neckline: 
 const NECK_TOP = 240, NECK_BASE = [200, 300 + HEAD_DY], HIPS = [200, 600];
 export const CHIN_Y = 327.2, NECK_SHOW = 0.2; // where every chin lands on the sheet (the default head's), and how much of a neck type's height shows above the collar (a long neck is a little longer, never a stalk)
 const headDrop = (p) => CHIN_Y + ((p.neck?.height ?? 72) - 72) * NECK_SHOW - (112 + HEAD_DY + (p.face?.height ?? 204) + 16 * (p.face?.chin ?? 0.2)); // the chin, not the crown, is what sits on the neck: the head moves up or down the neck so a short face and a long one show the same neck
+/** The body's build with every dial a finite number in 0.3..3 (a cast's object may leave keys out or write nonsense); 1 everywhere is the figure as drawn. */
+const bld = (p) => { const b = { ...DEFAULTS.build, ...(p.build ?? {}) }; for (const k of Object.keys(b)) { const v = +b[k]; b[k] = Number.isFinite(v) ? Math.max(0.3, Math.min(3, v)) : 1; } return b; };
+const SHOULDER_LINE = 356; // the trunk's height is measured from here: the shoulder line every garment's neckline sits under
 export const DEFAULTS = {
   background: '#d7d0c5', skin: '#c98e68', hairColor: '#30231e',
   face: { ...FACE_SHAPES.oval, skew: 0, fullness: 0, asym: { cheek: 0, jaw: 0, temple: 0, chin: 0 } }, // skew: one side a little lower, the chin off centre, in -1..1; fullness: soft tissue on the cheeks in -1..1, the weight a face carries independently of the skull its jaw width describes; asym: the face's own irregularities, each signed by side (+x is the character's right): one cheek fuller, one jaw corner sharper, one temple wider, the chin toward one side
@@ -46,6 +49,7 @@ export const DEFAULTS = {
   top: { style: 'crewTshirt', color: '#42576c', accent: null, graphic: null, graphicColor: null, graphicScale: 1, graphicY: 0, metal: 0 }, // accent: piping, a tie; graphic: a GRAPHICS name printed on the torso, the print a slot rather than a fixed mark: graphicColor recolours it (null keeps its own inks), graphicScale sizes it about the print's centre and graphicY moves it up or down the chest
   jacket: { style: 'none', color: '#373b3e', metal: 0 },
   body: { width: 1 }, // the shoulders' width against the default torso
+  build: { trunk: 1, legs: 1, shoulders: 1, arms: 1, head: 1 }, // the body's proportions: the trunk's height between the shoulder line and the hem, the legs' length to the floor, the shoulder width (over body.width), the arms' length about the joint, the head's size about the neck base; a cast's build, 1 the figure as drawn
   pants: { style: 'trousers', color: '#2e3136' }, shoes: { color: '#1f1d1b' }, // the legs: LEGS style and its cloth, and the shoes
   glasses: null, // { style, color }
   accessories: [], details: [], makeup: [], marks: [], props: [], blush: 0, // names in ACCESSORIES, DETAILS, MAKEUP, MARKS, PROPS
@@ -67,7 +71,7 @@ const ellipse = (cx, cy, rx, ry, a = {}) => ({ k: 'ellipse', cx, cy, rx, ry, ...
 const rect = (x, y, w, h, a = {}) => ({ k: 'rect', x, y, w, h, ...a });
 const line = (x1, y1, x2, y2, a = {}) => ({ k: 'line', x1, y1, x2, y2, ...a });
 const clip = (d, rule) => ({ k: 'clip', d: d.replace(/\s+/g, ' ').trim(), ...(rule ? { rule } : {}) }), UNCLIP = { k: 'unclip' }; // rule: 'evenodd' for a path with a hole
-const push = (tx, ty, rot, [cx, cy]) => ({ k: 'push', tx, ty, rot, cx, cy }), POP = { k: 'pop' }; // a transform group: shifted by (tx, ty), turned by rot about (cx, cy)
+const push = (tx, ty, rot, [cx, cy], sc = 1) => ({ k: 'push', tx, ty, rot, cx, cy, ...(sc !== 1 ? { sc } : {}) }), POP = { k: 'pop' }; // a transform group: shifted by (tx, ty), turned by rot and scaled by sc about (cx, cy); sc is written only when it does something
 const stroke = (color, sw, op = 1, cap = 'round') => ({ fill: 'none', stroke: color, sw, op, cap });
 export { path, ellipse, rect, line, clip, UNCLIP, stroke }; // for a theme module (thriller.mjs) that registers parts of its own into the registries below
 const ARGS = { M: 2, L: 2, C: 6, Q: 4, Z: 0 };
@@ -663,7 +667,8 @@ const ARM_W = 58, FORE_W = 52, SHOULDER = (side) => [200 + 86 * side, 398];
 const mitten = (p, x, y, a, k = 1) => { const c = Math.cos(a), sn = Math.sin(a), at = (dx, dy) => [x + (dx * c - dy * sn) * k, y + (dx * sn + dy * c) * k], col = handColor(p), f = at(11, 0), t = at(2, -14); return [ellipse(x, y, 15 * k, 17 * k, { fill: col }), ellipse(f[0], f[1], 12 * k, 12 * k, { fill: col }), ellipse(t[0], t[1], 6.5 * k, 8 * k, { fill: col })]; };
 /** An arm from the shoulder on `side` through `elbow` to `wrist` (sheet points), with a hand unless `hand` is false. The upper arm and the forearm are round tubes from the joint; over the joint sits the deltoid, a soft bulge that continues the trunk's own shoulder curve out over the top of the arm and fades into it, so the arm grows out of a shoulder rather than hanging off a corner. No outline: a highlight along the top of the shoulder, a soft shadow where the upper arm meets the chest, and a soft edge under the forearm so a sleeve the colour of the shirt still reads against the body. `lift` moves the joint up and out as the arm rises. */
 export function arm(p, side, { lift = 0, elbow, wrist, hand = true }) {
-  const [sx0, sy0] = SHOULDER(side), sx = sx0 - (16 - 24 * lift) * side, sy = sy0 - 8 * lift, col = sleeveColor(p), [ex, ey] = elbow, [wx, wy] = wrist, dark = shade(col, 0.5);
+  const [sx0, sy0] = SHOULDER(side), sx = sx0 - (16 - 24 * lift) * side, sy = sy0 - 8 * lift, col = sleeveColor(p), ak = bld(p).arms, dark = shade(col, 0.5);
+  const [ex, ey] = ak === 1 ? elbow : [sx + (elbow[0] - sx) * ak, sy + (elbow[1] - sy) * ak], [wx, wy] = ak === 1 ? wrist : [sx + (wrist[0] - sx) * ak, sy + (wrist[1] - sy) * ak]; // the arm's length is the build's, about the joint
   const dx = wx - ex, dy = wy - ey, L = Math.hypot(dx, dy) || 1, a = Math.atan2(dy, dx), hx = wx + (dx / L) * 16, hy = wy + (dy / L) * 16;
   const ux0 = ex - sx, uy0 = ey - sy, UL = Math.hypot(ux0, uy0) || 1, ux = ux0 / UL, uy = uy0 / UL; let nx = -uy, ny = ux; if (nx * side < 0) { nx = -nx; ny = -ny; } // along the upper arm, and its outward normal
   const P = (x, y) => `${Math.round(x * 10) / 10} ${Math.round(y * 10) / 10}`;
@@ -705,12 +710,16 @@ export const PROP_STYLES = Object.keys(PROPS);
 // arms from the shoulder joints, legs from the hips. Every garment is clipped to the trunk (a top to the hem at 640,
 // a jacket to 690) instead of drawing its own wide torso, so the shirt is the body's width and the sleeves make the
 // figure's width; the legs are drawn under the hem in the trousers' cloth, the shoes under them.
-export const TRUNK = (bottom) => `M 200 330 L 136 352 C 112 362, 100 380, 100 404 L 102 520 C 102 580, 108 620, 112 ${bottom} L 288 ${bottom} C 292 620, 298 580, 298 520 L 300 404 C 300 380, 288 362, 264 352 Z`;
-export const FEET_Y = 1078; // where the shoes meet the floor
-const shoes = (p) => [-1, 1].flatMap((s) => [ellipse(200 + s * 44, 1066, 36, 14, { fill: p.shoes.color }), ellipse(200 + s * 52, 1064, 14, 6, { fill: '#fff', op: 0.08 })]);
+export const TRUNK = (bottom, k = 1) => { const t = (y) => SHOULDER_LINE + (y - SHOULDER_LINE) * k; return `M 200 330 L 136 352 C 112 362, 100 380, 100 ${t(404)} L 102 ${t(520)} C 102 ${t(580)}, 108 ${t(620)}, 112 ${t(bottom)} L 288 ${t(bottom)} C 292 ${t(620)}, 298 ${t(580)}, 298 ${t(520)} L 300 ${t(404)} C 300 380, 288 362, 264 352 Z`; }; // k: the trunk's height below the shoulder line (build.trunk)
+export const FEET_Y = 1078; // where the shoes meet the floor, on the figure as drawn
+const LEG_TOP = 596; // the legs start under the hem (the trousers' waist)
+/** Where this figure's shoes meet the floor: the hem by the trunk's build, then the legs' length by theirs (FEET_Y on a build of all 1). */
+export const feetY = (p) => { const b = bld(p); const hem = SHOULDER_LINE + (640 - SHOULDER_LINE) * b.trunk; return hem + (FEET_Y - 640) * b.legs; };
+const legY = (p) => { const b = bld(p), hem = SHOULDER_LINE + (LEG_TOP - SHOULDER_LINE) * b.trunk; return (y) => hem + (y - LEG_TOP) * b.legs; }; // a leg's y on this build: authored for the figure as drawn, hung from this trunk's hem, stretched by the legs' length
+const shoes = (p, ly) => [-1, 1].flatMap((s) => [ellipse(200 + s * 44, ly(1066), 36, 14, { fill: p.shoes.color }), ellipse(200 + s * 52, ly(1064), 14, 6, { fill: '#fff', op: 0.08 })]);
 export const LEGS = {
-  trousers: (p) => [...shoes(p), path('M 110 596 L 290 596 L 292 700 L 266 1062 L 216 1062 L 200 770 L 184 1062 L 134 1062 L 108 700 Z', { fill: p.pants.color }), path('M 200 700 L 200 772', stroke('#000', 7, 0.18)), ...[-1, 1].map((s) => path(`M ${200 + s * 50} 724 Q ${200 + s * 54} 900 ${200 + s * 58} 1050`, stroke('#000', 3, 0.1))), ...[-1, 1].map((s) => path(`M ${200 + s * 24} 724 Q ${200 + s * 22} 900 ${200 + s * 28} 1050`, stroke('#fff', 3, 0.06)))], // two legs from the hips, a crease down each
-  skirt: (p) => [...shoes(p), path('M 110 596 L 290 596 L 338 1052 Q 200 1072 62 1052 Z', { fill: p.pants.color }), ...[-60, -20, 20, 60].map((d) => path(`M ${200 + d * 0.6} 640 Q ${200 + d * 0.9} 850 ${200 + d * 1.3} 1050`, stroke('#000', 3, 0.1)))], // a long skirt to the floor, folds falling from the waist
+  trousers: (p) => { const ly = legY(p); return [...shoes(p, ly), path(`M 110 ${ly(596)} L 290 ${ly(596)} L 292 ${ly(700)} L 266 ${ly(1062)} L 216 ${ly(1062)} L 200 ${ly(770)} L 184 ${ly(1062)} L 134 ${ly(1062)} L 108 ${ly(700)} Z`, { fill: p.pants.color }), path(`M 200 ${ly(700)} L 200 ${ly(772)}`, stroke('#000', 7, 0.18)), ...[-1, 1].map((s) => path(`M ${200 + s * 50} ${ly(724)} Q ${200 + s * 54} ${ly(900)} ${200 + s * 58} ${ly(1050)}`, stroke('#000', 3, 0.1))), ...[-1, 1].map((s) => path(`M ${200 + s * 24} ${ly(724)} Q ${200 + s * 22} ${ly(900)} ${200 + s * 28} ${ly(1050)}`, stroke('#fff', 3, 0.06)))]; }, // two legs from the hips, a crease down each
+  skirt: (p) => { const ly = legY(p); return [...shoes(p, ly), path(`M 110 ${ly(596)} L 290 ${ly(596)} L 338 ${ly(1052)} Q 200 ${ly(1072)} 62 ${ly(1052)} Z`, { fill: p.pants.color }), ...[-60, -20, 20, 60].map((d) => path(`M ${200 + d * 0.6} ${ly(640)} Q ${200 + d * 0.9} ${ly(850)} ${200 + d * 1.3} ${ly(1050)}`, stroke('#000', 3, 0.1)))]; }, // a long skirt to the floor, folds falling from the waist
 };
 export const LEG_STYLES = Object.keys(LEGS);
 const ink = (p) => (p.top.color && parseInt(p.top.color.slice(1, 3), 16) > 150 ? '#1a1719' : '#ece8e0'); // a print in the colour that shows on this top
@@ -848,7 +857,7 @@ export function portraitOps(options = {}) {
   const fitEyes = (ops) => mapXY(ops, scaleAbout(200, p.eyes.spacing / 68), (y) => y + p.eyes.y - 196);
   const tf = (ops, k) => (turn ? mapX(ops, (x) => x + k * turn) : ops); // the turn: the features slide across the head further than the head's own outline and hair, a cheap quarter turn
   const hatDx = (HAT_TURN - 4) * turn; // the hair's cut rides with the hat, not with the head: where the hat vacates, hair fills it instead of scalp
-  const headG = push(q.headX, HEAD_DY + headDrop(p) + q.headY, q.headTilt, NECK_BASE); // the head sits HEAD_DY down the neck and moves about its base; the back hair rides with it but sits behind the neck, so the group opens twice
+  const b = bld(p), headG = push(q.headX, HEAD_DY + headDrop(p) + q.headY, q.headTilt, NECK_BASE, b.head); // the head sits HEAD_DY down the neck and moves about its base, at the build's size; the back hair rides with it but sits behind the neck, so the group opens twice
   const neckG = push(q.headX * 0.3, 0, q.headTilt * NECK_FOLLOW, [200, 302 + p.neck.height]); // the neck slides a third of the head's way and turns less: the skull pivots on the neck, the neck does not bend under it
   // the hairline: the style's own cut raised or lowered on the forehead, and the temples retreating while the centre
   // holds (a widow's peak). The crown never moves, so the silhouette above the head is the style's; only its edge goes.
@@ -881,7 +890,7 @@ export function portraitOps(options = {}) {
   const skirt = crown && crown < 300 && plainHat.length ? [clip(`M -100 -200 L 500 -200 L 500 ${crown} L -100 ${crown} Z`), ...mapXY(plainHat.filter(solid), (x) => x, (y) => y + HAT_TUCK).map((o) => ({ ...o, fill: p.hat.color, op: 1 })), UNCLIP] : []; // only a hat that sits on the skull has a crescent to fill: a hood covers the whole head, and shifting its face opening down would lay a band across the face
   const brim = crown && crown < 300 ? [clip(facePath(p)), ...soft(200, crown, hw + 20, 34, '#000', 0.26), UNCLIP] : []; // the hat's shadow on the forehead: a wash centred on the crown line, half of it under the hat, and on the face alone. A band of two rects stood a hard-edged rectangle on the temples wherever the head was wider than the crown, and taking the hair into the clip as a second subpath punched a hole through the wash where the two wound against each other.
   const specs = glasses(p), specShadow = specs.length ? [clip(facePath(p)), ...mapXY(specs.filter((o) => o.stroke), (x) => x - 2 * sd, (y) => y + 4).map((o) => ({ ...o, stroke: '#000', op: 0.16 })), UNCLIP] : []; // the frames drop a shadow on the face, away from the light
-  const fits = { face: fitFace, eyes: fitEyes }, wide = (ops) => (p.body.width === 1 ? ops : mapX(ops, scaleAbout(200, p.body.width))); // the torso, its print and the arms follow the body's width
+  const fits = { face: fitFace, eyes: fitEyes }, bw = p.body.width * b.shoulders, wide = (ops) => (bw === 1 ? ops : mapX(ops, scaleAbout(200, bw))); // the torso, its print and the arms follow the body's width, and the build's shoulders over it
   const shear = (ops) => (q.shoulder ? mapPts(ops, (x, y) => [x, y + q.shoulder * 0.1 * (x - 200)]) : ops); // one shoulder dropped: the torso sheared about its centre
   let top = (TOPS[p.top.style] ?? TOPS.crewTshirt)(p); if (p.top.metal) top = metalize(top, p.top.color, p.seed);
   if (p.top.graphic && GRAPHICS[p.top.graphic]) top = [...top, clip(top[0].d), ...printed(p), UNCLIP]; // every top's first op is its torso, and the print is a slot on it: sized and moved about the chest's centre, recoloured when asked
@@ -890,7 +899,7 @@ export function portraitOps(options = {}) {
   const collar = top.filter((o) => o.collar), onNeck = collar.filter((o) => o.onNeck); if (onNeck.length) top = top.filter((o) => !o.onNeck); top = cloth(p, top, p.top.style, p.top.style === 'bare' ? p.skin : p.top.color, p.seed + 11);
   // Every portrait has arms: a prop may place one (`PROPS[n].lift`: the signed sides it raises; `PROPS[n].arms`: the sides it draws low), every other arm hangs from the shoulder joint with its hand at the hip. Nothing is cut per pose: the trunk is always the body's width (TRUNK) and the sleeves make the figure's.
   const armed = (sd) => p.props.some((n) => (PROPS[n]?.lift ?? []).some((v) => Math.sign(v) === sd) || PROPS[n]?.arms?.includes(sd));
-  const hangs = [-1, 1].flatMap((sd) => (armed(sd) ? [] : arm(p, sd, { lift: 0.3, elbow: [200 + 104 * sd, 540], wrist: [200 + 110 * sd, 690] }))); // lift 0.3: the cap covers the trunk's shoulder corner without the mass a lifted arm gets
+  const ty = (y) => SHOULDER_LINE + (y - SHOULDER_LINE) * b.trunk, hangs = [-1, 1].flatMap((sd) => (armed(sd) ? [] : arm(p, sd, { lift: 0.3, elbow: [200 + 104 * sd, ty(540)], wrist: [200 + 110 * sd, ty(690)] }))); // lift 0.3: the cap covers the trunk's shoulder corner without the mass a lifted arm gets; the hands hang to this trunk's hip
   const legs = (LEGS[p.pants.style] ?? LEGS.trousers)(p);
   let jacket = (JACKETS[p.jacket.style] ?? JACKETS.none)(p); if (p.jacket.metal) jacket = metalize(jacket, p.jacket.color, p.seed + 1); if (jacket.length) jacket = cloth(p, jacket, p.jacket.style, p.jacket.color, p.seed + 12);
   const edge = JACKET_EDGE[p.jacket.style] ? [clip(top[0].d), ...JACKET_EDGE[p.jacket.style].map((d) => path(d, stroke('#000', 14, 0.2, 'butt'))), UNCLIP] : []; // an open jacket's shadow on the shirt beside its edge
@@ -910,9 +919,9 @@ export function portraitOps(options = {}) {
     ...wide(shear(hoodBack)), // a hood hangs behind the neck
     neckG, ...neck(p), ...overlays(p, 'neck', fits), POP, // the neck goes behind every garment, so a collar, a lapel or a neckline covers its base: a collar, a lapel or a neckline covers its base, or the skin reads as a column standing on the shirt
     ...wide(shear(legs)), // the legs under the hem
-    ...wide(shear([clip(TRUNK(640)), ...top, ...edge, UNCLIP])), // a top is the trunk's shape to its hem
+    ...wide(shear([clip(TRUNK(640, b.trunk)), ...top, ...edge, UNCLIP])), // a top is the trunk's shape to its hem
     ...(onNeck.length ? [neckG, ...onNeck, POP] : []), // a turtleneck's collar wraps the neck, so it rides in the neck's group and leans with it, over the shirt it belongs to and under any jacket (which shows it again through its own neckline)
-    ...wide(shear([clip(TRUNK(690)), ...jacket, UNCLIP, ...overlays(p, 'body', fits)])), // a jacket, longer
+    ...wide(shear([clip(TRUNK(690, b.trunk)), ...jacket, UNCLIP, ...overlays(p, 'body', fits)])), // a jacket, longer
     ...through, // and shows again through the outermost neckline, because a neckline is a hole, not a curve painted on the cloth
     ...accessories(p, 'neck'), ...wide(shear(collar.filter((o) => !o.onNeck))), ...accessories(p, 'tie'), // a chain lies on the shirt, the collar goes back over it, a tie over that
     headG, ...tf(fit(ears(p, turn)), 4), ...tf(fit(accessories(p, 'ear')), 4), ...tf(head(p), 4), ...tf(masked ? beard : [], 8), ...tf(masked ? stache : [], 12), ...tf(masked ? model : [], 4), ...tf(overlays(p, 'skin', fits, (f) => f !== 'eyes'), 4), ...tf(overlays(p, 'skin', fits, (f) => f === 'eyes'), 12), ...tf(masked ? [] : model, 4), ...tf(masked ? [] : details(p, fitFace, fitEyes), 12), // the planes go over paint on the skin (one modelling for a painted face and a bare one); a mask is a shell with its own shading, so they go under it, with the beard; paint laid out on the eyes (sockets, under-eye) rides with the eyes on a turn (12), the rest with the outline (4)
@@ -927,7 +936,7 @@ const attrs = (o) => [o.fill !== undefined ? `fill="${o.fill}"` : '', o.stroke ?
 let clipN = 0; // clip ids are unique across every svg printed, since a page shows many portraits and ids are document-wide
 export function toSvg(ops, background = null) {
   let n = 0;
-  const body = ops.map((o) => o.k === 'push' ? `<g transform="translate(${o.tx} ${o.ty}) rotate(${(o.rot * 180) / Math.PI} ${o.cx} ${o.cy})">` : o.k === 'pop' ? '</g>' : o.k === 'clip' ? `<clipPath id="c${(n = ++clipN)}"><path d="${o.d}"${o.rule ? ` clip-rule="${o.rule}"` : ''}/></clipPath><g clip-path="url(#c${n})">` : o.k === 'unclip' ? '</g>' : o.k === 'path' ? `<path d="${o.d}" ${attrs(o)}/>` : o.k === 'ellipse' ? `<ellipse cx="${o.cx}" cy="${o.cy}" rx="${o.rx}" ry="${o.ry}" ${attrs({ ...o, rx: 0 })}/>` : o.k === 'rect' ? `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" ${attrs(o)}/>` : `<line x1="${o.x1}" y1="${o.y1}" x2="${o.x2}" y2="${o.y2}" ${attrs(o)}/>`).join('\n');
+  const body = ops.map((o) => o.k === 'push' ? `<g transform="translate(${o.tx} ${o.ty}) rotate(${(o.rot * 180) / Math.PI} ${o.cx} ${o.cy})${o.sc && o.sc !== 1 ? ` translate(${o.cx} ${o.cy}) scale(${o.sc}) translate(${-o.cx} ${-o.cy})` : ''}">` : o.k === 'pop' ? '</g>' : o.k === 'clip' ? `<clipPath id="c${(n = ++clipN)}"><path d="${o.d}"${o.rule ? ` clip-rule="${o.rule}"` : ''}/></clipPath><g clip-path="url(#c${n})">` : o.k === 'unclip' ? '</g>' : o.k === 'path' ? `<path d="${o.d}" ${attrs(o)}/>` : o.k === 'ellipse' ? `<ellipse cx="${o.cx}" cy="${o.cy}" rx="${o.rx}" ry="${o.ry}" ${attrs({ ...o, rx: 0 })}/>` : o.k === 'rect' ? `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" ${attrs(o)}/>` : `<line x1="${o.x1}" y1="${o.y1}" x2="${o.x2}" y2="${o.y2}" ${attrs(o)}/>`).join('\n');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" role="img">\n${background ? `<rect width="400" height="480" fill="${background}"/>` : ''}\n${body}\n</svg>`;
 }
 /** The whole portrait as SVG, background included. */
@@ -949,7 +958,7 @@ export function drawOn(ctx, ops, alpha = 1) {
   for (const o of ops) {
     if (o.k === 'clip') { ctx.save(); ctx.beginPath(); tracePath(ctx, o.d); ctx.clip(o.rule ?? 'nonzero'); continue; }
     if (o.k === 'unclip' || o.k === 'pop') { ctx.restore(); continue; }
-    if (o.k === 'push') { ctx.save(); ctx.translate(o.cx + o.tx, o.cy + o.ty); ctx.rotate(o.rot); ctx.translate(-o.cx, -o.cy); continue; }
+    if (o.k === 'push') { ctx.save(); ctx.translate(o.cx + o.tx, o.cy + o.ty); ctx.rotate(o.rot); if (o.sc && o.sc !== 1) ctx.scale(o.sc, o.sc); ctx.translate(-o.cx, -o.cy); continue; }
     ctx.globalAlpha = (o.op ?? 1) * alpha;
     ctx.beginPath();
     if (o.k === 'path') tracePath(ctx, o.d);

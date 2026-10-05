@@ -121,6 +121,9 @@ export const GROUPS = [
     en('glasses.style', ['none', ...GLASSES_STYLES], { nullable: true, clears: 'glasses' }), col('glasses.color'),
     multi('accessories', ACCESSORY_STYLES), multi('props', PROP_STYLES),
   ] },
+  { name: 'build', items: [ // the body's proportions, 1 the figure as drawn: a cast's build (a dwarf is a different skeleton, not a scaled pose)
+    num('build.trunk', 0.5, 1.5, 0.01), num('build.legs', 0.3, 1.5, 0.01), num('build.shoulders', 0.6, 1.6, 0.01), num('build.arms', 0.6, 1.4, 0.01), num('build.head', 0.7, 1.4, 0.01),
+  ] },
   { name: 'pose & light', items: [
     num('pose.headX', -25, 25, 0.5), num('pose.headY', -25, 25, 0.5), num('pose.headTilt', -0.4, 0.4, 0.01),
     num('pose.bodyX', -25, 25, 0.5), num('pose.bodyTilt', -0.15, 0.15, 0.005),
