@@ -13,16 +13,19 @@
 // ground fog, clipped at their own floor line), a dropout freezes everyone mid-move and dims the moon.
 // Deterministic: randomness only from the state's own generator.
 //
-// The cast and the choreography are the tableau's `thriller` theme's (web/visual/thriller.mjs): the horde is its
+// The cast and the choreography are the tableau's `thriller` theme's (THEMES.thriller, bound in themes.mjs): the horde is its
 // ZOMBIES in its `styling` (the rot as home makeup, the grave on the clothes), the lead its `thrillerLead` kept
-// alive by `aliveOf` until the release, and every step is one of its POSES (layoutOf partials), so a new pose there
-// is a step here by name. Two places know this and nothing else does: LIVE/aliveOf and STEPS/ROUTINES.
+// alive by `aliveOf` until the release, and every step is one of limner's `STANCES.undead` (one body, no placement),
+// so a new stance in that pack is a step here by name. Two places know this and nothing else does: LIVE/aliveOf and
+// STEPS/ROUTINES.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
 import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS, STANCES } from './limner.mjs';
 import { identityOf, dress } from './limner.mjs';
 import { graveyard, floorShadow, vignette } from './sets.mjs';
 import { phaseOf } from './tableau.mjs';
-import thriller, { ZOMBIE_NAMES } from './thriller.mjs'; // the cast and the choreography: importing registers the zombie parts by name
+import { THEMES } from './themes.mjs'; // the bound theme: limner's undead cast and this repo's thriller dance, already tied together
+import { CAST_MODULES } from './limner.mjs'; // and the cast module itself, for its names; importing either registers the zombie parts
+const thriller = THEMES.thriller, { ZOMBIE_NAMES } = CAST_MODULES.undead;
 
 const FEET = 600; // the sheet's torso runs to here: where the ground meets a standing figure
 const SNAP = 9; // how fast a figure arrives in a step: a dance move lands, then holds

@@ -14,7 +14,7 @@ rather than an almond, noses modelled in shadow instead of outlined, irregular p
 faces built in structural families and then perturbed, so two people differ in the bone and not only in the hair. It
 knows anatomy, wardrobe, expressions and stances, and it can invent a plausible person of a given people from a seed.
 
-No dependencies. No build step. ~110 kB packed, pure ESM, runs in Node, in a browser and inside a Worker.
+No dependencies. No build step. ~125 kB packed, pure ESM, runs in Node, in a browser and inside a Worker.
 
 ---
 
@@ -244,7 +244,7 @@ Grouped by what you reach for. `DEFAULTS` and the `*_STYLES` arrays are the auth
 
 **Measure** — `eyeY`, `mouthY`, `feetY`, `headBox`, `CHIN_Y`, `FEET_Y`
 
-**Stances** — `STANCES`, `SPREAD_STANCES`, `stanceOf`, `stanceNames`
+**Stances** — `STANCES`, `stanceOf`, `stanceNames`
 
 **Registries** — `CASTS`, `PACKS`, `CAST_MODULES`, `parts`, `tag`, `tagsOf`, `REGISTRIES`, `PART_TAGS`
 
@@ -275,7 +275,7 @@ Semver from 1.0. Until then, pin the patch.
 ## Developing
 
 ```sh
-npm test                                           # 37 tests, both goldens
+npm test                                           # the whole suite, both goldens
 node scripts/portrait.mjs '{"seed":11}'            # one face -> renders/portrait.svg
 node scripts/portrait.mjs <hash> --out face.png    # a png, via playwright-core
 node scripts/portrait.mjs <hash> --sweep "facialHair.density=0.2,0.5,0.9"

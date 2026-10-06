@@ -15,7 +15,7 @@
 // hi-hat blinks one actor every few seconds, an fx impact is a graphic flash frame, a riser is a slow push-in, a
 // dropout holds the shot dark with the eyes shut. Deterministic: randomness only from the state's own generator.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY, feetY, stanceOf, STANCES, SPREAD_STANCES } from './limner.mjs';
+import { portraitOps, drawOn, eyeY, feetY, stanceOf, STANCES } from './limner.mjs';
 import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, METALLIC, wearable, WHITE, RED, GOLD } from './limner.mjs';
 import { curtain, cyclorama, voidSet, floorShadow, vignette, sculpture, SCULPTURES } from './sets.mjs';
 import { THEMES } from './themes.mjs';
@@ -110,6 +110,12 @@ export function phaseOf(sections, i, climax) {
 }
 
 /** Where each figure stands for a pose: dx (canvas heights from the centre), dy (from the eye line), k (scale), the head's tilt and lean, `turn` (the head off the torso), `shoulder` (one dropped), `headY` (craned forward or tilted back), props the pose adds, a look, `arm` (the index of the figure this one puts an arm on) and `over` (that arm goes over their shoulders, not linked at the hip). Index 0 is nearest the camera. Nothing here is a passport photo: every pose leans, turns or drops a shoulder. */
+/** The stances a shot spreads across every figure rather than placing once: the three that were the `stance` table,
+ * reached through the default case below, which lays n figures out evenly. The other five editorial stances return
+ * exactly one figure however many were asked for, which is what test/fixtures/layout-golden.json pins. This is blocking
+ * -- a fact about how a composition uses a stance, not about the body -- so it is here and not in limner's stances.mjs. */
+const SPREAD_STANCES = ['directFrontal', 'statueStill', 'handsAtSides'];
+
 export function layoutOf(pose, n, fr, theme = null) {
   const sw = 400 / fr.u, F = (o = {}) => ({ dx: 0, dy: 0, k: 1, tilt: 0, bodyTilt: 0, headX: 0, headY: 0, turn: 0, shoulder: 0, props: [], look: null, arm: null, over: false, ...o });
   const tp = theme?.poses?.[pose]; if (tp) { const list = tp(n, sw); return (list.length >= n ? list : Array.from({ length: n }, (_, i) => ({ dx: n === 1 ? 0 : (i - (n - 1) / 2) * sw * 0.7, ...list[0] }))).map((o) => F(o)); } // a theme's own pose: the same fields, written as partials; a single-figure one stands every figure the same way (a split face is two)

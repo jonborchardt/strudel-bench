@@ -1,4 +1,5 @@
-// web/visual/thriller.mjs: the tableau's zombie theme. What it promises: it is off unless a song writes
+// The tableau's zombie theme (THEMES.thriller: limner's undead cast and parts, this repo's thriller dance, bound in
+// web/visual/themes.mjs). What it promises: it is off unless a song writes
 // `visual: { world: 'tableau', theme: 'thriller' }` (the general cast, costumes, poses and part lists are untouched by
 // its being loaded), every zombie part draws, the cast is dead in the ways the file says (ashen skin, milky eyes,
 // rotten teeth, rot as home makeup in every shot), and with it on the tableau plans only its own templates and poses,
@@ -8,7 +9,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES as EDITORIAL, layoutOf, FRAMING, previewShot } from '../web/visual/tableau.mjs';
-import thriller, { ZOMBIES, ZOMBIE_NAMES, ZOMBIE_COSTUMES, ZOMBIE_COSTUME_NAMES, ZOMBIE_MAKEUP, ZOMBIE_MARKS, ZOMBIE_PROPS, ZOMBIE_EXPRESSIONS, ZOMBIE_SKINS, POSES, TEMPLATES, PHASES, SPECIAL, claw } from '../web/visual/thriller.mjs';
+// the theme's three halves, each from where it actually lives: the cast and the zombie parts are limner's, the dance
+// is this repo's, and themes.mjs is what ties them together.
+import { POSES, TEMPLATES, PHASES, SPECIAL } from '../web/visual/dances/thriller.mjs';
+import { CAST_MODULES } from 'limner';
+const thriller = THEMES.thriller;
+const { ZOMBIES, ZOMBIE_NAMES, ZOMBIE_COSTUMES, ZOMBIE_COSTUME_NAMES, ZOMBIE_EXPRESSIONS } = CAST_MODULES.undead;
+const { ZOMBIE_MAKEUP, ZOMBIE_MARKS, ZOMBIE_PROPS, ZOMBIE_SKINS, claw } = PACKS.undead;
 import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, EXPRESSIONS } from 'limner';
 import { portraitOps, toSvg, drawOn, TOP_STYLES, JACKET_STYLES, HAT_STYLES, HAIR_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, TEETH_STYLES, TOPS, JACKETS, HATS, HAIR, MAKEUP, MARKS, PROPS, TEETH } from 'limner';
 import { clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';

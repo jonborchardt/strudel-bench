@@ -6,6 +6,10 @@
 //
 // Two entries still carry a blocking field: `swaggerLean.dx` and `graveReach.dy`. They carried it before the split and
 // phase 1 changes no output, so they keep it; they are the two to clean up when blocking becomes a table of its own.
+//
+// Which of these a shot spreads across every figure rather than placing once is not here either, for the same reason:
+// that is a fact about how a composition uses a stance, not about the stance, so it lives with whatever composes the
+// shot (this repo's host keeps it in web/visual/tableau.mjs, beside the rest of its blocking).
 
 export const STANCES = {
   // the editorial stances, in the order the editor has always offered them (POSE_NAMES reads Object.keys of this)
@@ -37,11 +41,6 @@ export const STANCES = {
     deadStill: { headY: 2 },
   },
 };
-
-/** The stances a shot spreads across every figure rather than placing once: the three that were the `stance` table,
- * reached through layoutOf's default case, which lays n figures out evenly. The other five return exactly one figure
- * however many were asked for, which is behaviour the layout golden pins. */
-export const SPREAD_STANCES = ['directFrontal', 'statueStill', 'handsAtSides'];
 
 /** One stance by name, searching the named pack first and then the editorial set; null when no pack has it, so a caller
  * can tell "no such stance" from "a stance with no fields set". */

@@ -25,7 +25,7 @@ precedent, and the four duplicated lines are cheaper than the dependency.
 | `parts/<name>.mjs` | drawable parts, registered **by name** into `portrait.mjs`'s registries and **tagged**. |
 | `registry.mjs` | `CASTS`, `PACKS`, `CAST_MODULES`. Importing it registers every part. |
 | `stances.mjs` | named single-body stances. One body only — see below. |
-| `schema.mjs` | the editor's spec: every parameter with the control that fits it, the presets, the hash codec. Internal. |
+| `schema.mjs` | the editor's spec: every parameter with the control that fits it, the presets, the hash codec. Not an entry: it is in `files`, so it ships and a path import finds it, but it is out of `exports`, so `limner/schema.mjs` is refused and its shape is not a promise. |
 | `rng.mjs` | the seeded generators, copied verbatim from the host. Do not touch. |
 | `index.mjs` | the published barrel, plus the `person`/`archetype` sugar. |
 | `primitives.mjs` | the second entry: drawing primitives a host may reuse for its own scenery. |
@@ -70,6 +70,10 @@ keys `dress(idn, { pose })` already takes. It does **not** hold where a body is 
 reaching an arm around a neighbour are *blocking*, facts about a composition rather than a body, and they belong to
 whatever is composing the shot. Two entries still carry a blocking field (`swaggerLean.dx`, `graveReach.dy`) because
 they did before the split; they are the two to clean up if blocking ever becomes a table of its own.
+
+Which stances a shot *spreads* across every figure rather than placing once was a `SPREAD_STANCES` list here and is
+not any more, for the same reason: it says how a composition uses a stance, not how a body stands. The host keeps its
+own list (strudel-bench has one in `web/visual/tableau.mjs`, beside `layoutOf`).
 
 If you find yourself wanting a second figure in here, the answer is that the host calls limner twice and places the two
 boxes.
@@ -120,7 +124,7 @@ this is on npm. Narrowing it is a breaking change worth making before 1.0, not a
 
 Nobody can review a face from a description. Render it.
 
-    npm test                                     # from here: 37 tests, both goldens
+    npm test                                     # from here: the whole suite, both goldens
     node scripts/portrait.mjs "<hash|url|{json}>" # one face -> renders/portrait.svg
     node scripts/portrait.mjs <hash> --out x.png  # a png, through playwright-core's chromium
     node scripts/portrait.mjs <hash> --photo p.png --crop "95 105 210 220"

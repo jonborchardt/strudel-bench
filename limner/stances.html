@@ -26,7 +26,7 @@
 </main>
 <script type="module">
   import { renderPortrait, dress, identityFrom, CASTS } from './index.mjs';
-  import { STANCES, SPREAD_STANCES } from './stances.mjs';
+  import { STANCES } from './stances.mjs';
   import { seed, prng } from './rng.mjs';
 
   const BLOCKING = ['dx', 'dy', 'k', 'arm', 'over'];
@@ -49,7 +49,7 @@
         props: st.props ?? [],
       });
       const carried = BLOCKING.filter((k) => k in st);
-      const note = [carried.length ? `carries ${carried.join(', ')}` : '', SPREAD_STANCES.includes(name) ? 'spreads' : ''].filter(Boolean).join(' &middot; ');
+      const note = carried.length ? `carries ${carried.join(', ')}` : ''; // whether a shot spreads one stance over several figures is the host's business and no longer shown here
       const f = document.createElement('figure');
       f.innerHTML = `${renderPortrait(p)}<figcaption>${name}${note ? `<div class="fields">${note}</div>` : ''}</figcaption>`;
       row.append(f);

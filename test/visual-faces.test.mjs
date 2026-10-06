@@ -7,7 +7,7 @@ import { ready } from './_scope.mjs';
 import faces, { characterOf } from '../web/visual/faces.mjs';
 import { readFileSync } from 'node:fs';
 import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, mouthY, feetY, mapXY, hatWidth, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, EAR_POINT, FACE_SHAPES, tag, tagsOf, parts, REGISTRIES } from 'limner';
-import '../web/visual/thriller.mjs'; // for its side effect: the theme's parts are registered and tagged, so the only:* assertions below have something to keep out
+import 'limner'; // for its side effect: every cast and pack registers and tags its parts, so the only:* assertions below have something to keep out
 import { eventOf, clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
