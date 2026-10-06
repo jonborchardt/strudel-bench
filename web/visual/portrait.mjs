@@ -39,7 +39,7 @@ const SHOULDER_LINE = 356; // the trunk's height is measured from here: the shou
 export const DEFAULTS = {
   background: '#d7d0c5', skin: '#c98e68', hairColor: '#30231e',
   face: { ...FACE_SHAPES.oval, skew: 0, fullness: 0, asym: { cheek: 0, jaw: 0, temple: 0, chin: 0 } }, // skew: one side a little lower, the chin off centre, in -1..1; fullness: soft tissue on the cheeks in -1..1, the weight a face carries independently of the skull its jaw width describes; asym: the face's own irregularities, each signed by side (+x is the character's right): one cheek fuller, one jaw corner sharper, one temple wider, the chin toward one side
-  ears: { size: 1 },
+  ears: { size: 1, pointed: 0 }, // pointed: the helix drawn on past the top into a point (0 a round ear, 1 an elf's); a cast's, like build
   eyes: { y: 196, spacing: 52, openness: 1, asym: 1, dy: 0, depth: 0.5, sclera: null, lidWeight: null, corner: null, bags: 0, squint: 0, style: 'almond', iris: '#604839', pupil: '#171716', browStyle: 'softArch', browLift: 0, browSkew: 0, look: { x: 0, y: 0 } }, // asym: the left eye's openness against the right's; dy: the left eye lower by this much; depth: how far under the brow the eyes sit; sclera: how much white shows (null: the style's); lidWeight: the upper lid's weight (null: the style's); corner: the inner corner drawn out to a point (null: the style's); bags: the lower socket; squint: the lower lid pushed up, what a real smile does to the eye
   nose: { style: 'straight', length: 38, width: 20 },
   mouth: { style: 'plain', y: 260, width: 48, smile: 0.05, fullness: 0.45, color: null, open: 0, teeth: 'even' }, // color: the lips; null is a lip tone under the skin. teeth: what shows between them when the mouth is parted or smiling broadly
@@ -142,12 +142,26 @@ function neck(p) {
   ];
 }
 
+export const EAR_POINT = 32; // how far a fully pointed ear's tip rises above the round shell's top, before ears.size
+/** The ear's shell. `t` (ears.pointed) draws the same ear as one blade instead: the lobe and the bowl where they were,
+ *  the helix carrying on past the top into a point that leans out and back. One shape from lobe to tip, never a tip
+ *  laid over a round ear, which reads as a shard taped to the temple; the head is drawn after the ears, so the blade's
+ *  front edge may run inside the outline and the face covers it, and the point stands free above the temple. */
+const earShell = (cx, sd, t, fill) => {
+  if (!t) return ellipse(cx, 212, 15, 27, { fill });
+  const X = (d) => cx - d * sd; // d away from the face
+  return path(`M ${X(-15)} 212 C ${X(-15)} 227, ${X(-8)} 239, ${X(0)} 239 C ${X(8)} 239, ${X(15)} 227, ${X(15)} 212`
+    + ` C ${X(15 + t)} ${196 - 4 * t}, ${X(8 + 5 * t)} ${185 - 23 * t}, ${X(9 * t)} ${185 - EAR_POINT * t}` // up the helix, bowing out and then drawing in to the tip
+    + ` C ${X(-8 + 10 * t)} ${185 - 17 * t}, ${X(-15)} ${196 - 4 * t}, ${X(-15)} 212 Z`, { fill, ear: true }); // and down the front edge, into the head: both edges converge, so the point is a point and not a corner
+};
 // the ears: both, always; a turned head slides the far one behind the outline until only a sliver shows
 function ears(p, turn = 0) {
-  const s = stroke(underSkin(p.skin, '#7f5140', 0.5), 2.2, 0.48), k = p.ears.size;
+  const s = stroke(underSkin(p.skin, '#7f5140', 0.5), 2.2, 0.48), k = p.ears.size, t = Math.max(0, Math.min(1, p.ears.pointed ?? 0));
   // the ear is one thing: the shell, its bowl in shadow, the lobe's light and the rim of the helix are drawn at size
   // 1 and scaled about the ear's own centre, so a small ear is a small ear and not a shell with a full-size rim beside it
-  const one = (cx, sd, rim) => mapXY([ellipse(cx, 212, 15, 27, { fill: p.skin }), ...soft(cx + 2 * sd, 215, 6, 11, TONE, 0.3), ellipse(cx - 4 * sd, 226, 5, 4, { fill: '#fff', op: 0.08 }), path(`M ${cx - 3 * sd} 187 C ${cx - 14 * sd} 190, ${cx - 17 * sd} 206, ${cx - 12 * sd} 222`, stroke('#fff', 2, 0.14)), path(rim, s)], scaleAbout(cx, k), scaleAbout(212, k));
+  const one = (cx, sd, rim) => mapXY([earShell(cx, sd, t, p.skin), ...soft(cx + 2 * sd, 215, 6, 11, TONE, 0.3), ellipse(cx - 4 * sd, 226, 5, 4, { fill: '#fff', op: 0.08 }),
+    ...(t ? [path(`M ${cx - 9 * sd} 207 C ${cx - 12 * sd} ${194 - 10 * t}, ${cx - 12 * sd} ${182 - 14 * t}, ${cx - (9 + t) * sd} ${182 - 20 * t}`, { ...s, sw: 1.7, op: 0.3 })] : []), // the fold carried up into the point, so the blade is a cupped surface and not a flat shard
+    path(`M ${cx - (3 + 5 * t) * sd} ${187 - 32 * t} C ${cx - 14 * sd} ${190 - 10 * t}, ${cx - 17 * sd} 206, ${cx - 12 * sd} 222`, stroke('#fff', 2, 0.14)), path(rim, s)], scaleAbout(cx, k), scaleAbout(212, k));
   const left = one(122, 1, 'M 119 199 C 109 205, 111 224, 121 227 C 129 222, 127 211, 120 211'), right = one(278, -1, 'M 281 199 C 291 205, 289 224, 279 227 C 271 222, 273 211, 280 211');
   return mapXY([...mapX(left, (x) => x + Math.max(0, -14 * turn)), ...mapX(right, (x) => x - Math.max(0, 14 * turn))], (x) => x, (y) => y + p.eyes.y - 196); // turned toward +x, the +x ear slides behind the head (drawn under it) with a sliver still showing past the outline; drawn for the eye line at 196, they ride with this face's
 }
@@ -809,6 +823,7 @@ for (const n of ['crewTshirt', 'vneckTshirt', 'heavyweightTshirt', 'polo', 'henl
 for (const n of Object.keys(JACKETS).filter((x) => x !== 'none' && x !== 'openJacket')) tag('jacket', n, 'everyday');
 for (const n of Object.keys(FACIAL_HAIR).filter((x) => x !== 'none')) tag('facialHair', n, 'everyday');
 for (const n of Object.keys(HAIR)) tag('hair', n, 'everyday');
+for (const n of ['wavyMedium', 'longStraight']) tag('hair', n, 'overEars'); // the two whose mass hangs over the ear itself: a cast whose ears are the point of it (the elves) asks for the rest
 for (const n of Object.keys(GLASSES)) tag('glasses', n, 'everyday');
 for (const n of Object.keys(DETAILS)) tag('details', n, 'everyday');
 for (const n of Object.keys(GRAPHICS)) tag('graphics', n, 'everyday');

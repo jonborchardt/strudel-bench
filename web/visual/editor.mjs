@@ -94,7 +94,7 @@ export const GROUPS = [
     int('face.width', 118, 205), int('face.height', 158, 245), num('face.jaw', 0.45, 1.05), num('face.chin', 0, 0.5), int('face.corner', 0, 64),
     num('face.skew', -1, 1, 0.02), num('face.fullness', -1, 1, 0.02),
     num('face.asym.cheek', -2, 2, 0.05), num('face.asym.jaw', -2, 2, 0.05), num('face.asym.temple', -2, 2, 0.05), num('face.asym.chin', -2, 2, 0.05),
-    num('ears.size', 0.5, 1.6, 0.02),
+    num('ears.size', 0.5, 1.6, 0.02), num('ears.pointed', 0, 1, 0.02),
     preset('neck', Object.keys(NECK_TYPES), neckPreset), int('neck.width', 34, 98), int('neck.height', 44, 102),
     num('body.width', 0.7, 1.6), col('skin', 'skin'),
     col('hairColor', 'hair'), en('hair.style', HAIR_STYLES), num('hair.hairline', -1, 1, 0.02), num('hair.recession', 0, 1, 0.02),

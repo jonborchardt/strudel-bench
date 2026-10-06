@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import faces, { characterOf } from '../web/visual/faces.mjs';
 import { readFileSync } from 'node:fs';
-import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, mouthY, feetY, mapXY, hatWidth, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, FACE_SHAPES, tag, tagsOf, parts, REGISTRIES } from '../web/visual/portrait.mjs';
+import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, mouthY, feetY, mapXY, hatWidth, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, EAR_POINT, FACE_SHAPES, tag, tagsOf, parts, REGISTRIES } from '../web/visual/portrait.mjs';
 import '../web/visual/thriller.mjs'; // for its side effect: the theme's parts are registered and tagged, so the only:* assertions below have something to keep out
 import { eventOf, clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
@@ -94,6 +94,26 @@ test('every part style draws finite numbers, as SVG and on a canvas', () => {
   const pc = ctxStub(); drawOn(pc, posed); assert.equal(pc.calls.save, pc.calls.restore, 'every push and clip is restored');
   const ctx = ctxStub(); tracePath(ctx, 'M 1 2 L 3 4 C 1 2 3 4 5 6 Q 1 2 3 4 Z');
   assert.deepEqual([ctx.calls.moveTo, ctx.calls.lineTo, ctx.calls.bezierCurveTo, ctx.calls.quadraticCurveTo, ctx.calls.closePath], [1, 1, 1, 1, 1]);
+});
+
+test('a pointed ear is the ear, not a tip stuck beside it: one blade from the lobe to the point, and 0 is the round ear as it was', () => {
+  const round = portraitOps({}), pointed = portraitOps({ ears: { pointed: 1 } });
+  const shell = (ops) => ops.find((o) => o.k === 'ellipse' && o.rx === 15 && o.ry === 27);
+  assert.ok(shell(round) && !shell(pointed), 'the round shell is an ellipse; a pointed ear replaces it, so there is no seam where a tip was stuck on');
+  const blades = pointed.filter((o) => o.ear);
+  assert.equal(blades.length, 2, 'one blade per ear');
+  assert.equal(round.filter((o) => o.ear).length, 0, 'and none when the ears are round');
+  const ys = (o) => o.d.match(/-?[\d.]+/g).map(Number).filter((_, i) => i % 2);
+  for (const b of blades) { assert.equal(Math.min(...ys(b)), 185 - EAR_POINT, 'the tip rises EAR_POINT above the round ear\'s top of 185'); assert.ok(Math.max(...ys(b)) >= 239, 'and the lobe is still the ear\'s own bottom'); }
+  assert.equal(Math.min(...ys(blades[0])), Math.min(...ys(blades[1])), 'both ears point as high as each other');
+  const xs = (o) => o.d.match(/-?[\d.]+/g).map(Number).filter((_, i) => i % 2 === 0);
+  assert.ok(Math.min(...xs(blades[0])) <= 107 && Math.max(...xs(blades[1])) >= 293, 'and each reaches at least as far out as the round ear did');
+  const half = portraitOps({ ears: { pointed: 0.5 } }).filter((o) => o.ear);
+  assert.ok(Math.min(...ys(half[0])) > Math.min(...ys(blades[0])) && Math.min(...ys(half[0])) < 185, 'the dial is continuous: half as pointed is half as tall');
+  assert.ok(!/NaN|Infinity/.test(JSON.stringify([...pointed, ...half])));
+  const big = portraitOps({ ears: { pointed: 1, size: 1.4 } }).filter((o) => o.ear);
+  assert.ok(Math.min(...ys(big[0])) < Math.min(...ys(blades[0])), 'a bigger ear points higher: the blade scales with the ear, as the round shell does');
+  const ctx = ctxStub(); drawOn(ctx, pointed); assert.equal(ctx.calls.save, ctx.calls.restore);
 });
 
 test('every hairline meets the head: no background between the front hair and the face on any face shape', () => {

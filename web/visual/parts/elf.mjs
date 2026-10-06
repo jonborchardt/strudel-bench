@@ -1,8 +1,9 @@
 // The elf pack: what the elves cast (casts/elves.mjs) wears that nobody else does, registered by name into the
-// portrait's registries and tagged `only:elf`. The pointed ears are makeup on the `over` slot (drawn after the hair,
-// so the tips poke through it), laid out by the face's width so they sit on the ears of any head; the vine marks a
-// tracery at one temple; a leaf circlet that sits on the hair (no HAT_CROWN); a high-collared tunic with leaves
-// embroidered along the neckline; a travelling cloak open at the front with a leaf clasp. parts.html?pack=elf is the sheet.
+// portrait's registries and tagged `only:elf`. The ears themselves are not here: a pointed ear is the portrait's own
+// `ears.pointed`, the helix drawn on into a point rather than a shard laid over a round ear, and the cast pins it.
+// Here: the vine marks, a tracery at one temple; a leaf circlet that sits on the hair (no HAT_CROWN); a high-collared
+// tunic with leaves embroidered along the neckline; a travelling cloak open at the front with a leaf clasp.
+// parts.html?pack=elf is the sheet.
 import { HATS, TOPS, JACKETS, MAKEUP, NECKLINES, shade, path, ellipse, line, stroke, tag } from '../portrait.mjs';
 
 const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
@@ -10,8 +11,6 @@ const leaf = (x, y, s, fill, op = 1) => path(`M ${x} ${y} Q ${x + 6 * s} ${y - 9
 const GOLD = '#c9a03c';
 
 // --- the face ---
-/** Pointed ears: a tip rising from each ear's top and leaning outward, in the skin with a shadow along its inner edge. Drawn for the default head (ears at 122 and 278, tops at 185) and fitted to this face's width. */
-MAKEUP.pointedEars = { fit: 'face', over: (p) => [-1, 1].flatMap((sd) => { const cx = 200 + sd * 78; return [path(`M ${cx - sd * 12} 194 L ${cx + sd * 9} 144 L ${cx + sd * 15} 192 Z`, { fill: p.skin, ear: true }), path(`M ${cx - sd * 6} 190 L ${cx + sd * 8} 150`, stroke(shade(p.skin, 0.72), 2.2, 0.5)), path(`M ${cx + sd * 9} 148 L ${cx + sd * 12} 186`, stroke('#fff', 1.5, 0.16))]; }) };
 /** A vine up the left temple with three leaves, laid out by the eyes. */
 MAKEUP.vineMarks = { fit: 'eyes', face: () => [path('M 136 232 C 128 212, 140 196, 132 176 C 128 166, 134 160, 138 152', stroke('#3f5a3f', 1.6, 0.75)), leaf(134, 214, -1, '#4f6e49', 0.85), leaf(136, 190, 1, '#4f6e49', 0.85), leaf(134, 168, -1, '#4f6e49', 0.85)] };
 
@@ -24,7 +23,7 @@ NECKLINES.elvenTunic = 'M 166 352 Q 200 376 234 352';
 JACKETS.travelCloak = (p) => { const c = p.jacket.color, dark = shade(c, 0.6); return [path('M 60 700 L 56 430 C 60 380, 110 352, 164 348 L 152 700 Z', { fill: c }), path('M 340 700 L 344 430 C 340 380, 290 352, 236 348 L 248 700 Z', { fill: c }), path('M 164 348 Q 200 372 236 348', stroke(dark, 4, 0.5)), ...[-1, 1].flatMap((s) => [path(`M ${200 + s * 100} 420 Q ${200 + s * 96} 540 ${200 + s * 102} 690`, stroke(dark, 3, 0.25)), path(`M ${200 + s * 70} 380 Q ${200 + s * 74} 520 ${200 + s * 78} 690`, stroke('#fff', 2, 0.05))]), leaf(200, 362, -1, GOLD), leaf(200, 362, 1, GOLD), ellipse(200, 362, 3, 3, { fill: shade(GOLD, 0.7) })]; }; // two panels hanging from the shoulders, open down the front, a leaf clasp at the throat
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
-export const ELF = { makeup: ['pointedEars', 'vineMarks'], hats: ['leafCirclet'], tops: ['elvenTunic'], jackets: ['travelCloak'] };
+export const ELF = { makeup: ['vineMarks'], hats: ['leafCirclet'], tops: ['elvenTunic'], jackets: ['travelCloak'] };
 for (const n of ELF.makeup) tag('makeup', n, 'only:elf');
 for (const n of ELF.hats) tag('hat', n, 'only:elf');
 for (const n of ELF.tops) tag('top', n, 'only:elf');

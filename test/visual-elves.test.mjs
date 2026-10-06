@@ -28,16 +28,18 @@ const KIND = { makeup: 'makeup', hats: 'hat', tops: 'top', jackets: 'jacket' };
 const WEAR = { makeup: (n) => ({ makeup: [n] }), hats: (n) => ({ hat: { style: n, color: '#b9b8b3', accent: '#405547' } }), tops: (n) => ({ top: { style: n, color: '#405547' } }), jackets: (n) => ({ jacket: { style: n, color: '#2f4a3a' } }) };
 
 test('the elf pack is quarantined and draws: no part of it comes without only:elf, every one does when asked, each draws on the plain figure', () => {
-  assert.ok(ELF.makeup.includes('pointedEars') && ELF.hats.length >= 1 && ELF.tops.length >= 1 && ELF.jackets.length >= 1);
+  assert.ok(ELF.makeup.length >= 1 && ELF.hats.length >= 1 && ELF.tops.length >= 1 && ELF.jackets.length >= 1);
+  assert.ok(!Object.values(ELF).flat().some((n) => /ear/i.test(n)), 'the ears are not a part: a pointed ear is the portrait\'s own ears.pointed, drawn as the ear, not a shard laid over a round one');
   for (const [kind, names] of Object.entries(ELF)) for (const n of names) {
     assert.ok(tagsOf(KIND[kind], n).has('only:elf'), `${n} is tagged only:elf`);
     assert.ok(!parts(KIND[kind]).includes(n) && !parts(KIND[kind], { any: ['only:dwarf', 'only:undead', 'everyday', 'era:80s'] }).includes(n), `${n} reaches no other cast's pool`);
     assert.ok(parts(KIND[kind], { any: ['only:elf'] }).includes(n), `${n} comes when asked for`);
     draws(WEAR[kind](n), n);
   }
-  const wide = portraitOps({ makeup: ['pointedEars'], face: { width: 190 } }), narrow = portraitOps({ makeup: ['pointedEars'], face: { width: 140 } }), tip = (ops) => ops.filter((o) => o.ear).map((o) => Math.max(...o.d.match(/-?[\d.]+/g).map(Number).filter((_, i) => i % 2 === 0)));
-  assert.equal(tip(wide).length, 2, 'two ear tips, marked');
-  assert.ok(Math.max(...tip(wide)) > Math.max(...tip(narrow)), 'the ear tips follow the face\'s width, so they sit on the ears of any head');
+  const tips = (ops) => ops.filter((o) => o.ear).map((o) => Math.max(...o.d.match(/-?[\d.]+/g).map(Number).filter((_, i) => i % 2 === 0)));
+  const wide = portraitOps({ ears: { pointed: 1 }, face: { width: 190 } }), narrow = portraitOps({ ears: { pointed: 1 }, face: { width: 140 } });
+  assert.equal(tips(wide).length, 2, 'two ears, each one blade');
+  assert.ok(Math.max(...tips(wide)) > Math.max(...tips(narrow)), 'and they follow the face\'s width, so they sit where the ears sit on any head');
 });
 
 test('the elves cast: six archetypes, tall and slight by the build, narrow-faced and long-necked, beardless because the pool is empty, pointed-eared in every shot', () => {
@@ -45,19 +47,21 @@ test('the elves cast: six archetypes, tall and slight by the build, narrow-faced
   assert.equal(ELVES.name, 'elves'); assert.equal(ELVES.archetypeNames.length, 6); assert.ok(ELVES.archetypeNames.every((n) => !ARCHETYPE_NAMES.includes(n)));
   assert.ok(ELVES.build.legs > 1.05 && ELVES.build.trunk > 1.02 && ELVES.build.shoulders < 0.95, 'the build is an elf');
   assert.deepEqual(ELVES.pools.beards, [], 'no beard pool: beardless by the empty-pool fallback, which is the Review Focus pin exercised by a real cast');
+  assert.ok(!ELVES.pools.hair.some((h) => tagsOf('hair', h).has('overEars')) && ELVES.pools.hair.length > 15, 'and the hair is every everyday style but the two whose mass hangs over the ears: on this cast the ears are the point');
   const cast = ELVES.archetypeNames.map((n, i) => identityFrom(ELVES, s, n, i));
   assert.equal(new Set(cast.map((c) => JSON.stringify(c.base))).size, cast.length, 'no two alike');
   for (const c of cast) {
     assert.ok(c.base.build && c.base.build.legs > 1.05, `${c.name}: built tall`);
     assert.ok(c.base.face.width <= 152 && c.base.neck.height >= 92 && c.base.body.width <= 0.92, `${c.name}: narrow face, long neck, slight body`);
     assert.equal(c.base.facialHair.style, 'none', `${c.name}: beardless`);
-    const p = dress(c); draws(p, c.name);
-    assert.ok(p.makeup.includes('pointedEars'), `${c.name}: pointed ears in the home styling`);
+    const p = dress(c); const ops = draws(p, c.name);
+    assert.equal(p.ears.pointed, 1, `${c.name}: the cast's signature, pointed ears`);
+    assert.equal(ops.filter((o) => o.ear).length, 2, `${c.name}: and both are drawn as one blade each`);
     assert.ok(feetY(p) > 1100, `${c.name}: stands tall (feet at ${feetY(p)})`);
     assert.ok(ELVES.costumes.includes(c.home.costume));
   }
   const crowd = Array.from({ length: 12 }, (_, i) => characterFrom(ELVES, s, ['establish', 'develop', 'climax', 'release'][i % 4], (i % 4) / 3));
-  for (const k of crowd) assert.ok(clean(portraitOps(k)) && k.facialHair.style === 'none' && k.makeup.includes('pointedEars') && ELVES.pools.tops.includes(k.top.style) && ELVES.skins.includes(k.skin), 'a random elf is beardless, pointed-eared, pale, in the cast\'s tops');
+  for (const k of crowd) assert.ok(clean(portraitOps(k)) && k.facialHair.style === 'none' && k.ears.pointed === 1 && portraitOps(k).filter((o) => o.ear).length === 2 && ELVES.pools.tops.includes(k.top.style) && ELVES.skins.includes(k.skin), 'a random elf is beardless, pointed-eared, pale, in the cast\'s tops');
 });
 
 test('the theme: the song names it, the tableau casts the elves and plans only editorial shots, deterministically, with no clock or randomness of its own', async () => {
@@ -71,10 +75,10 @@ test('the theme: the song names it, the tableau casts the elves and plans only e
     p.draw(ctx, 320, 180);
     assert.ok(ctx.calls.fill > 30 && ctx.calls.save === ctx.calls.restore);
     assert.deepEqual(s.cast.map((c) => c.name), ELVES.archetypeNames);
-    assert.ok(s.cast.every((c) => c.base.build.legs > 1.05 && c.base.facialHair.style === 'none'));
+    assert.ok(s.cast.every((c) => c.base.build.legs > 1.05 && c.base.facialHair.style === 'none' && c.base.ears.pointed === 1), 'every one of them is built tall, beardless and pointed-eared, in every shot: it is on the person, not the styling');
     assert.ok(s.plan.flat().every((x) => EDITORIAL[x.tpl]), 'every shot is an editorial template');
-    const stylings = s.plan.flat().flatMap((x) => x.alts.flatMap((alt) => alt)); assert.ok(stylings.length >= 3, `a four-bar song still has a few stylings (${stylings.length})`);
-    assert.ok(stylings.every((st) => Array.isArray(st.makeup) && st.makeup.includes('pointedEars') && st.makeup.every((m) => typeof m === 'string')), 'the cast\'s face (a list-valued home makeup) is in every shot and every mutation, under whatever paint the phase adds: ' + JSON.stringify(stylings.find((st) => !st.makeup.includes('pointedEars'))?.makeup));
+    const worn = s.plan.flat().flatMap((x) => x.alts.flatMap((alt) => alt.map((st, i) => [s.cast[x.ids[i]], st]))).filter(([c]) => Array.isArray(c.home.makeup));
+    assert.ok(worn.length > 0 && worn.every(([c, st]) => c.home.makeup.every((m) => st.makeup.includes(m)) && st.makeup.every((m) => typeof m === 'string')), 'a list-valued home makeup (an elf\'s vine) is the cast\'s face: in every shot and every mutation, under whatever paint the phase adds');
     assert.deepEqual(JSON.parse(JSON.stringify(s)), s, 'plain data');
   } finally { for (const u of undo) u(); }
   const a = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state), b = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state);

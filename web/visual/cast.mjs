@@ -173,7 +173,7 @@ export function identityFrom(cast, s, name, id = 0) {
   const skin = a.skins ? SKIN_COLORS[choose(s, a.skins, Object.keys(SKIN_COLORS))] : pickFrom(cast.skins?.length ? cast.skins : SKINS, r()), hairColor = a.hairColors ? HAIR_COLORS[choose(s, a.hairColors, Object.keys(HAIR_COLORS))] : pickFrom(cast.hairColors?.length ? cast.hairColors : HAIRS, r());
   for (const k of Object.keys(face.asym)) face.asym[k] *= cast.asym; // the tableau's faces are more lopsided than a crowd's
   const age = a.age ?? 'young', torso = a.torso ?? 'average', hairStyle = a.hair ?? pickFrom(notLong(shape, P.hair), r()) ?? 'sidePart', plain = !a.glasses && !a.accessories?.length; // one memorable thing: a face that already wears glasses or jewellery takes no extra detail
-  const base = merge({
+  const base = merge(merge({
     skin, hairColor,
     face, ears: { size: 0.85 + r() * 0.3 }, eyes, nose, mouth: { ...mouth, smile: -0.05 },
     hair: { style: hairStyle },
@@ -185,7 +185,7 @@ export function identityFrom(cast, s, name, id = 0) {
     light: { ...lightOf(s, 0.8 + r() * 0.2), contrast: cast.contrast }, // full light, hard shadow: the tableau's dial, not the renderer's default
     neck: { ...(NECK_TYPES[a.neck] ?? NECK_TYPES[torso === 'lanky' ? 'long' : torso === 'heavy' ? 'thick' : 'average']) },
     pose: { turn: (r() - 0.5) * 0.5, shoulder: (r() - 0.5) * 0.6 }, // how this person stands: a shot's pose adds to it
-  }, a.set ?? {}); // the archetype's pinned numbers over the seed's draw: the art direction
+  }, cast.base ?? {}), a.set ?? {}); // the cast's signature (the undead's milky eyes, an elf's pointed ears) over the seed's draw, then the archetype's pinned numbers over both: the art direction
   if (a.set?.mouth?.y === undefined) base.mouth.y = base.eyes.y + 10 + base.nose.length + LIP_GAP[0] + r() * (LIP_GAP[1] - LIP_GAP[0]); // a pinned nose moves the mouth with it, as the seed's draw would have
   return { id, name, torso, base, home: { costume: a.costume ?? 'plainTee', makeup: a.makeup ?? 'none', marks: a.marks ?? 'none', prop: 'none', hat: a.hat ?? null } };
 }
