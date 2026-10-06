@@ -7,12 +7,13 @@
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
 import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf, REGISTRIES } from './portrait.mjs';
-import { FAMILY_NAMES, characterFrom, faceOf, EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from './cast.mjs';
-import { CASTS, themeNames } from './themes.mjs'; // every theme's cast and parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
+import { FAMILY_NAMES, characterFrom, faceOf, EXPRESSIONS, EDITORIAL_EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from './cast.mjs';
+import { CASTS, themeNames, THEMES as BOUND } from './themes.mjs'; // every theme's cast and parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
+import { layoutOf, FRAMING } from './tableau.mjs'; // the poses are the tableau's, so the editor's pose pick is the world's own stance and not a second list
 import VISUAL from '../../lib/visual.json' with { type: 'json' };
 import { seed as seedState, rand } from './kit.mjs';
 import { prng } from '../../lib/random.mjs';
-const EXPRESSION_NAMES = Object.keys(EXPRESSIONS).filter((e) => !Object.values(CASTS).some((c) => c.expressions?.includes(e))); // the editorial expressions: the casts registered their own by name before this module ran
+const EXPRESSION_NAMES = EDITORIAL_EXPRESSIONS; // cast.mjs's own snapshot, taken before any cast adds to the registry: a cast that pools an editorial expression beside its own no longer deletes it from this menu
 
 const num = (path, min, max, step = 0.01, o = {}) => ({ kind: 'num', path, min, max, step, ...o });
 const int = (path, min, max, o = {}) => num(path, min, max, 1, o);
@@ -89,7 +90,7 @@ export function base(seed = 1, family = 'any', theme = 'none') {
   const cast = castFor(theme);
   const c = characterFrom(cast, s, 'none', 0.5);
   if (family !== 'any' && FAMILY_NAMES.includes(family)) {
-    const { shape, ...f } = faceOf(s, family, {}, cast.irises);
+    const { shape, ...f } = faceOf(s, family, {}, cast.irises?.length ? cast.irises : undefined); // an empty palette is the portrait's own, as characterFrom and identityFrom read it
     Object.assign(c, f);
     if (cast.base) Object.assign(c, merge(c, signatureOf(cast, s))); // the cast's signature back over the chosen skull: a zombie keeps its milky eyes and its teeth
     if (shape === FACE_SHAPES.longOval && LONG_HAIR.includes(c.hair.style)) c.hair = { style: 'sidePart' }; // long hair never on a long oval head
@@ -115,6 +116,15 @@ export function decode(hash) {
 const shapePreset = (v) => ({ 'face.width': FACE_SHAPES[v].width, 'face.height': FACE_SHAPES[v].height, 'face.jaw': FACE_SHAPES[v].jaw, 'face.chin': FACE_SHAPES[v].chin, 'face.corner': FACE_SHAPES[v].corner ?? 32 });
 const neckPreset = (v) => ({ 'neck.width': NECK_TYPES[v].width, 'neck.height': NECK_TYPES[v].height });
 const costumePreset = (v) => flat(COSTUMES[v](0));
+// The poses are the tableau's own (layoutOf): the single-figure stances, and with a theme on, its dance's (themeEntry
+// adds those names to this menu). A pose is the whole stance — the head's tilt and lean, the turn, the dropped
+// shoulder and the hands it puts up — so it writes the pose keys and the props together, and nothing else.
+export const POSE_NAMES = ['directFrontal', 'slightLeanLeft', 'slightLeanRight', 'swaggerLean', 'statueStill', 'handsAtSides', 'handHeart', 'handsUp'];
+const posePreset = (v) => {
+  const t = Object.values(BOUND).find((x) => x.poses?.[v]) ?? null; // a dance's pose, drawn for one figure (a line's first)
+  const l = layoutOf(v, 1, FRAMING.figure, t)[0];
+  return { 'pose.headX': l.headX, 'pose.headY': l.headY, 'pose.headTilt': l.tilt, 'pose.bodyTilt': l.bodyTilt, 'pose.turn': l.turn, 'pose.shoulder': l.shoulder, props: l.props };
+};
 const exprPreset = (v) => { const e = EXPRESSIONS[v]; return { 'mouth.smile': e.mouth.smile, 'mouth.open': e.mouth.open ?? 0, 'mouth.style': e.mouth.style ?? 'plain', 'eyes.openness': e.eyes.openness ?? 1, 'eyes.browLift': e.eyes.browLift ?? 0, 'eyes.browSkew': e.eyes.browSkew ?? 0 }; };
 
 /** Every parameter, grouped in build order: what the face is, then the head it is on (hair and beard included), its features, what it wears (glasses among the clothes), and how it stands. */
@@ -143,7 +153,7 @@ export const GROUPS = [
     col('eyes.iris', 'eyes'), col('eyes.pupil'),
     num('eyes.browLift', -6, 8, 0.1), num('eyes.browSkew', -0.6, 0.6, 0.02),
     num('eyes.look.x', -1, 1, 0.02), num('eyes.look.y', -1, 1, 0.02),
-    en('nose.style', NOSE_STYLES), num('nose.length', 22, 58, 0.5), num('nose.width', 7, 36, 0.5),
+    en('nose.style', NOSE_STYLES), num('nose.length', 22, 58, 0.5), num('nose.width', 7, 36, 0.5), int('nose.muzzle', 0, 1), // a muzzle is either the face's nose or it is not: `nose` in portrait.mjs swaps the whole drawing at any value over 0, so the in-between was a face with no nose on it. Still a number, so a cast's `limits` narrow it
     en('mouth.style', MOUTH_STYLES), en('mouth.teeth', TEETH_STYLES), int('mouth.y', 232, 298), num('mouth.width', 26, 70, 0.5), num('mouth.smile', -1, 1, 0.02), num('mouth.fullness', 0, 1, 0.02), num('mouth.open', 0, 1, 0.02), col('mouth.color', null, { nullable: true }),
     num('blush', 0, 1, 0.02),
     multi('details', DETAIL_STYLES), multi('makeup', MAKEUP_STYLES), multi('marks', MARK_STYLES),
@@ -158,9 +168,10 @@ export const GROUPS = [
     multi('accessories', ACCESSORY_STYLES), multi('props', PROP_STYLES),
   ] },
   { name: 'build', items: [ // the body's proportions, 1 the figure as drawn: a cast's build (a dwarf is a different skeleton, not a scaled pose)
-    num('build.trunk', 0.5, 1.5, 0.01), num('build.legs', 0.3, 1.5, 0.01), num('build.shoulders', 0.6, 1.6, 0.01), num('build.arms', 0.6, 1.4, 0.01), num('build.head', 0.7, 1.4, 0.01),
+    num('build.trunk', 0.45, 1.6, 0.01), num('build.legs', 0.3, 1.5, 0.01), num('build.shoulders', 0.5, 1.75, 0.01), num('build.arms', 0.35, 1.4, 0.01), num('build.hands', 0.4, 1.6, 0.01), num('build.feet', 0.4, 1.6, 0.01), num('build.head', 0.65, 1.4, 0.01),
   ] },
   { name: 'pose & light', items: [
+    preset('pose', POSE_NAMES, posePreset),
     num('pose.headX', -25, 25, 0.5), num('pose.headY', -25, 25, 0.5), num('pose.headTilt', -0.4, 0.4, 0.01),
     num('pose.bodyX', -25, 25, 0.5), num('pose.bodyTilt', -0.15, 0.15, 0.005),
     num('pose.turn', -1, 1, 0.02), num('pose.shoulder', -1, 1, 0.02), en('pose.gaze', ['none', 'camera'], { nullable: true }),
@@ -192,19 +203,51 @@ const MENU = { top: 'top.style', jacket: 'jacket.style', hat: 'hat.style', hair:
 /** A theme's tags: `only:<cast>` and every tag (but `everyday`) on a part in the cast's pools, which is how its packs' shared parts (`era:80s`) reach the menus without a hand-written list. */
 const themeTags = (cast) => [...new Set([`only:${cast.name}`, ...Object.entries(cast.pools ?? {}).flatMap(([k, names]) => names.flatMap((n) => [...tagsOf(POOL_KIND[k], n)]))])].filter((t) => t !== 'everyday');
 const editorial = Object.fromEntries(CONTROLS.filter((c) => c.options).map((c) => [c.path, new Set(c.options)]));
-/** What a theme adds to the editor: every part its tags reach that the editorial menus lack, by control path, plus the cast's costumes and expressions, and one preset of its archetypes named by the cast. */
-function themeEntry(cast) {
+/** What a theme takes away. Adding options was never enough: with every editorial part still on the menu and every
+ *  slider still at its full range, a theme was a suggestion rather than a kind of person, and the editor would hand a
+ *  dragonborn a bob and straight human legs. A cast already says what its people may be — its `pools` are the menus,
+ *  its `wardrobe` the hats, its `costumes` and `expressions` the presets — and `cast.limits` (an optional map of
+ *  control path to [min, max] for a number or a list of names for a menu) says the rest, the few dials that are the
+ *  race rather than the wardrobe: an ear's point, a muzzle, the legs' length. Every garment a costume of the cast puts
+ *  on is allowed too, so a preset can never write a value its own menu refuses. */
+function limitsOf(cast) {
+  const l = {}, pool = (k) => cast.pools?.[k] ?? [], worn = { top: [], jacket: [], hat: [], pants: [] };
+  for (const c of cast.costumes ?? []) { const g = COSTUMES[c]?.(0) ?? {}; for (const k of Object.keys(worn)) if (g[k]?.style) worn[k].push(g[k].style); }
+  const put = (path, names, none) => { const v = [...new Set([...(none ? ['none'] : []), ...names])].filter(Boolean); if (v.length) l[path] = { options: v }; };
+  put('top.style', [...pool('tops'), ...worn.top]);
+  put('jacket.style', [...pool('jackets'), ...worn.jacket], true);
+  put('hat.style', [...new Set(Object.values(cast.wardrobe ?? {}).flat()), ...worn.hat], true);
+  put('hair.style', pool('hair')); put('facialHair.style', pool('beards'), true); put('glasses.style', pool('glasses'), true);
+  if (worn.pants.length) put('pants.style', worn.pants);
+  if (cast.costumes?.length) l.costume = { options: [...cast.costumes] };
+  if (cast.expressions?.length) l.expression = { options: [...new Set(cast.expressions)] };
+  for (const [path, v] of Object.entries(cast.limits ?? {})) l[path] = Array.isArray(v) && typeof v[0] === 'number' ? { min: v[0], max: v[1] } : { options: [...v] };
+  return l;
+}
+/** What a theme adds to the editor: every part its tags reach that the editorial menus lack, by control path, its dance's poses, plus the cast's costumes and expressions, one preset of its archetypes named by the cast, and the limits above. */
+function themeEntry(cast, bound) {
   const tags = themeTags(cast), extras = {};
+  const poses = Object.keys(bound?.poses ?? {}); if (poses.length) extras.pose = poses; // the dance's own choreography on the pose menu
   for (const [kind, path] of Object.entries(MENU)) { const add = parts(kind, { any: tags }).filter((n) => !editorial[path]?.has(n)); if (add.length) extras[path] = add; }
   const costumes = (cast.costumes ?? []).filter((c) => !editorial.costume.has(c)), expressions = [...new Set(cast.expressions ?? [])].filter((e) => !editorial.expression.has(e));
   if (costumes.length) extras.costume = costumes; if (expressions.length) extras.expression = expressions;
-  return { extras, presets: cast.archetypeNames?.length ? [preset(cast.name, cast.archetypeNames, (n) => castPreset(cast, n))] : [] };
+  return { extras, limits: limitsOf(cast), presets: cast.archetypeNames?.length ? [preset(cast.name, cast.archetypeNames, (n) => castPreset(cast, n))] : [] };
 }
-export const THEMES = Object.fromEntries(themeNames().map((name) => [name, themeEntry(CASTS[VISUAL.themes[name].cast])])); // one entry per bound theme, from the cast its json row names
-/** The groups a page builds its panel from: GROUPS, and with a theme on, its options added to the menus they belong to and its presets after the base group's. */
+export const THEMES = Object.fromEntries(themeNames().map((name) => [name, themeEntry(CASTS[VISUAL.themes[name].cast], BOUND[name])])); // one entry per bound theme, from the cast its json row names
+/** One control under a theme: the theme's own options added to its menu, then the theme's limits taken off it — the
+ *  menu narrowed to what this cast may wear and a slider's range narrowed to what this race may be. A limit that would
+ *  empty a menu is ignored, since a control with nothing in it is worse than one that offers too much. */
+function themed(c, t) {
+  let out = t.extras[c.path] ? { ...c, options: [...c.options, ...t.extras[c.path]] } : c;
+  const lim = t.limits?.[c.path]; if (!lim) return out; // a theme entry may carry no limits at all
+  if (lim.options && out.options) { const keep = out.options.filter((o) => lim.options.includes(o)); if (keep.length) out = { ...out, options: keep }; }
+  if (out.kind === 'num' && (lim.min !== undefined || lim.max !== undefined)) { const min = Math.max(out.min, lim.min ?? out.min), max = Math.min(out.max, lim.max ?? out.max); if (min <= max) out = { ...out, min, max }; }
+  return out;
+}
+/** The groups a page builds its panel from: GROUPS, and with a theme on, its options added, its limits applied and its presets after the base group's. */
 export function groupsFor(st) {
   const t = THEMES[st?.theme]; if (!t) return GROUPS;
-  return GROUPS.map((g, i) => ({ ...g, items: [...g.items.map((c) => (t.extras[c.path] ? { ...c, options: [...c.options, ...t.extras[c.path]] } : c)), ...(i === 0 ? t.presets : [])] }));
+  return GROUPS.map((g, i) => ({ ...g, items: [...g.items.map((c) => themed(c, t)), ...(i === 0 ? t.presets : [])] }));
 }
 export const controlsFor = (st) => groupsFor(st).flatMap((g) => g.items);
 
@@ -249,9 +292,11 @@ export function idle(p, t) {
   const sigh = Math.max(0, wave(t, 13.7, 0.8)) ** 3; // now and then the lips part
   return merge(p, {
     pose: {
-      headX: p.pose.headX + 6 * wave(t, 11, 0.1), headY: p.pose.headY + 3 * wave(t, 17, 0.4), headTilt: p.pose.headTilt + 0.05 * wave(t, 13, 0.7),
-      bodyX: p.pose.bodyX + 3 * wave(t, 23, 0.2), bodyTilt: p.pose.bodyTilt + 0.02 * wave(t, 19, 0.9),
-      turn: cl(p.pose.turn + 0.3 * wave(t, 29, 0.3) + 0.1 * wave(t, 8.5, 0), -1, 1), shoulder: cl(p.pose.shoulder + 0.1 * wave(t, 31, 0.6), -1, 1),
+      // the stance drifts, not just the head: on the whole figure a 0.1 shoulder was invisible, so the slow swings are
+      // wide enough to read as the sitter shifting their weight and changing pose, over half a minute
+      headX: p.pose.headX + 10 * wave(t, 11, 0.1), headY: p.pose.headY + 5 * wave(t, 17, 0.4), headTilt: p.pose.headTilt + 0.09 * wave(t, 13, 0.7),
+      bodyX: p.pose.bodyX + 7 * wave(t, 23, 0.2), bodyTilt: cl(p.pose.bodyTilt + 0.05 * wave(t, 19, 0.9), -0.15, 0.15),
+      turn: cl(p.pose.turn + 0.45 * wave(t, 29, 0.3) + 0.1 * wave(t, 8.5, 0), -1, 1), shoulder: cl(p.pose.shoulder + 0.5 * wave(t, 31, 0.6), -1, 1),
     },
     eyes: {
       openness: cl((p.eyes.openness + 0.1 * Math.max(0, brow)) * lid, 0, 1.4), // interest opens them a little, and the blink still shuts them all the way

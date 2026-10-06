@@ -42,7 +42,7 @@ test('the dwarf pack is quarantined and draws: no part of it comes without only:
 test('the dwarves cast: eight archetypes, each broad, short-necked and built short, bearded, drawn from the editorial families and the dwarf wardrobe', () => {
   const s = {}; seed(s, prng(7));
   assert.equal(DWARVES.name, 'dwarves'); assert.equal(DWARVES.archetypeNames.length, 8); assert.ok(DWARVES.archetypeNames.every((n) => !ARCHETYPE_NAMES.includes(n)), 'none of them is an editorial archetype');
-  assert.ok(DWARVES.build.legs < 0.7 && DWARVES.build.shoulders > 1.1 && DWARVES.build.head > 1, 'the build is a dwarf');
+  assert.ok(DWARVES.build.legs < 0.7 && DWARVES.build.shoulders > 1.05 && DWARVES.build.trunk > DWARVES.build.legs + 0.2 && DWARVES.build.head > 0.9, 'the build is a dwarf: short legs under a long broad torso, and a near-human head on all of it (1:6 of four and a half foot)');
   const cast = DWARVES.archetypeNames.map((n, i) => identityFrom(DWARVES, s, n, i));
   assert.equal(new Set(cast.map((c) => JSON.stringify(c.base))).size, cast.length, 'no two alike');
   for (const c of cast) {

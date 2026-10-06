@@ -1,7 +1,8 @@
 // web/visual/casts/elves.mjs + web/visual/parts/elf.mjs: the third theme, added to prove the character system is
 // done: a kind of person is a part pack, a cast with a build and a row in lib/visual.json, nothing else touched. What
-// it promises: the elf parts are quarantined (`only:elf`) and every one draws; the cast is tall and slight by its
-// build, narrow-faced, long-necked, beardless because its beard pool is empty (the fallback, not a rule), pointed-eared
+// it promises: the elf parts are quarantined (`only:elf`) and every one draws; the cast is slight and long-legged by
+// its build (ANATOMY, cast.mjs), narrow-faced, long-necked, beardless because its beard pool is empty (the fallback,
+// not a rule), pointed-eared
 // in every shot; with the theme on the tableau casts the elves in editorial shots and poses, deterministically.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -11,7 +12,7 @@ import ELVES, { ELF_EARS } from '../web/visual/casts/elves.mjs';
 import { ELF } from '../web/visual/parts/elf.mjs';
 import { THEMES } from '../web/visual/themes.mjs';
 import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES } from '../web/visual/cast.mjs';
-import { portraitOps, toSvg, drawOn, parts, tagsOf, feetY } from '../web/visual/portrait.mjs';
+import { portraitOps, toSvg, drawOn, parts, tagsOf, feetY, headBox } from '../web/visual/portrait.mjs';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid } from './_visual.mjs';
 import { seed } from '../web/visual/kit.mjs';
@@ -42,22 +43,22 @@ test('the elf pack is quarantined and draws: no part of it comes without only:el
   assert.ok(Math.max(...tips(wide)) > Math.max(...tips(narrow)), 'and they follow the face\'s width, so they sit where the ears sit on any head');
 });
 
-test('the elves cast: six archetypes, tall and slight by the build, narrow-faced and long-necked, beardless because the pool is empty, pointed-eared in every shot', () => {
+test('the elves cast: six archetypes, slight and long-legged by the build, narrow-faced and long-necked, beardless because the pool is empty, pointed-eared in every shot', () => {
   const s = {}; seed(s, prng(7));
   assert.equal(ELVES.name, 'elves'); assert.equal(ELVES.archetypeNames.length, 6); assert.ok(ELVES.archetypeNames.every((n) => !ARCHETYPE_NAMES.includes(n)));
-  assert.ok(ELVES.build.legs > 1.05 && ELVES.build.trunk > 1.02 && ELVES.build.shoulders < 0.95, 'the build is an elf');
+  assert.ok(ELVES.build.legs > ELVES.build.trunk + 0.08 && ELVES.build.shoulders < 0.95 && ELVES.build.hands < 1, 'the build is an elf: taller than a human with all of it in the leg, narrow shoulders, slight hands');
   assert.deepEqual(ELVES.pools.beards, [], 'no beard pool: beardless by the empty-pool fallback, which is the Review Focus pin exercised by a real cast');
   assert.ok(!ELVES.pools.hair.some((h) => tagsOf('hair', h).has('overEars')) && ELVES.pools.hair.length > 15, 'and the hair is every everyday style but the two whose mass hangs over the ears: on this cast the ears are the point');
   const cast = ELVES.archetypeNames.map((n, i) => identityFrom(ELVES, s, n, i));
   assert.equal(new Set(cast.map((c) => JSON.stringify(c.base))).size, cast.length, 'no two alike');
   for (const c of cast) {
-    assert.ok(c.base.build && c.base.build.legs > 1.05, `${c.name}: built tall`);
+    assert.ok(c.base.build && c.base.build.legs > c.base.build.trunk, `${c.name}: built long-legged`);
     assert.ok(c.base.face.width <= 152 && c.base.neck.height >= 92 && c.base.body.width <= 0.92, `${c.name}: narrow face, long neck, slight body`);
     assert.equal(c.base.facialHair.style, 'none', `${c.name}: beardless`);
     const p = dress(c); const ops = draws(p, c.name);
     assert.ok(p.ears.pointed >= ELF_EARS[0], `${c.name}: the cast's signature, ears pointed by its own rule`);
     assert.equal(ops.filter((o) => o.ear).length, 2, `${c.name}: and both are drawn as one blade each`);
-    assert.ok(feetY(p) > 1100, `${c.name}: stands tall (feet at ${feetY(p)})`);
+    const H = feetY(p) - headBox(p).top; assert.ok(H > 990 && H < 1050, `${c.name}: stands taller than a human (958 crown to floor) and all of it in the leg (${H.toFixed(0)})`);
     assert.ok(ELVES.costumes.includes(c.home.costume));
   }
   const crowd = Array.from({ length: 12 }, (_, i) => characterFrom(ELVES, s, ['establish', 'develop', 'climax', 'release'][i % 4], (i % 4) / 3));
@@ -89,7 +90,7 @@ test('the theme: the song names it, the tableau casts the elves and plans only e
     p.draw(ctx, 320, 180);
     assert.ok(ctx.calls.fill > 30 && ctx.calls.save === ctx.calls.restore);
     assert.deepEqual(s.cast.map((c) => c.name), ELVES.archetypeNames);
-    assert.ok(s.cast.every((c) => c.base.build.legs > 1.05 && c.base.facialHair.style === 'none' && c.base.ears.pointed >= ELF_EARS[0]), 'every one of them is built tall, beardless and pointed-eared, in every shot: it is on the person, not the styling');
+    assert.ok(s.cast.every((c) => c.base.build.legs > c.base.build.trunk && c.base.facialHair.style === 'none' && c.base.ears.pointed >= ELF_EARS[0]), 'every one of them is built long-legged, beardless and pointed-eared, in every shot: it is on the person, not the styling');
     assert.ok(s.plan.flat().every((x) => EDITORIAL[x.tpl]), 'every shot is an editorial template');
     // over a song long enough to cast most of them: everyone who owns a vine wears it in every shot and every mutation
     const big = runWorld(tableau, g.song({ cps: .5, key: 'C:minor', seed: 5, visual: THEMED }, [

@@ -1,5 +1,5 @@
-// The elves cast: six of them, tall and slight (`build`: a longer trunk and legs, narrower shoulders, longer arms, a
-// smaller head), their faces from the fine-boned and long-midface families with narrow heads (138 to 150 wide, 220
+// The elves cast: six of them, slight and long-legged (`build`, solved from `ANATOMY` in cast.mjs: taller than a
+// human and slighter with it, the extra height all in the leg, narrow shoulders, more heads tall), their faces from the fine-boned and long-midface families with narrow heads (138 to 150 wide, 220
 // to 236 tall) on long necks and slight bodies pinned in `set`, pale, light-eyed, pointed-eared (the cast's `base`
 // puts the portrait's own `ears.pointed` on every one of them, archetype and crowd alike, so the ear is drawn as one
 // blade where an ear is drawn and the hair falls over it like hair), and beardless not by rule but because the beard
@@ -7,7 +7,7 @@
 // (parts/elf.mjs) and dance the tableau's own shots (lib/visual.json: dance `editorial`). The third theme, added to
 // prove the system: a pack, a cast and a row, nothing else touched.
 import '../parts/elf.mjs'; // the parts this cast is made of register by name
-import { COSTUMES, FAMILIES } from '../cast.mjs';
+import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
 import { parts, SKIN_COLORS, HAIR_COLORS, EYE_COLORS } from '../portrait.mjs';
 import { rand } from '../kit.mjs';
 
@@ -19,7 +19,7 @@ export const ELF_COSTUMES = {
   nightWalker: () => ({ top: { style: 'turtleneck', color: NIGHT }, jacket: { style: 'travelCloak', color: '#1f2630' }, pants: { style: 'trousers', color: NIGHT } }),
 };
 Object.assign(COSTUMES, ELF_COSTUMES);
-export const ELF_BUILD = { trunk: 1.1, legs: 1.15, shoulders: 0.85, arms: 1.1, head: 0.95 };
+export const ELF_BUILD = buildOf('elf'); // the anatomy table in cast.mjs: taller than a human, all of it in the leg, narrow of shoulder, more heads tall
 export const ELF_EARS = [0.72, 1]; // how far an elf's ear comes to a point: the cast's own range, drawn per person, so no two of them have the same ear and none of them is round
 const slender = (width, height, face = {}) => ({ face: { width, height, ...face }, neck: { width: 48, height: 100 } }); // every elf: a narrow head on a long neck
 /** The six, by what tells them apart: the hair's length and colour, the circlet, the cloak, the vine. */
@@ -40,4 +40,5 @@ export default {
   wardrobe: { establish: ['none', 'leafCirclet'], develop: ['none', 'leafCirclet', 'none'], climax: ['leafCirclet'], release: ['none'], none: ['none', 'leafCirclet'] },
   archetypes: ELVES, archetypeNames: Object.keys(ELVES), costumes: Object.keys(ELF_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: ELF_BUILD, contrast: 1.4, asym: 1.2,
   base: (s) => ({ ears: { pointed: ELF_EARS[0] + rand(s) * (ELF_EARS[1] - ELF_EARS[0]) } }), // the cast's signature as a rule, on its archetypes and its crowd alike: the ear itself comes to a point (portrait's ears.pointed), by this much on this one, and an archetype may pin its own
+  limits: { 'ears.pointed': [0.7, 1], 'nose.muzzle': [0, 0] }, // an elf's ear is the elf: the editor may not round it off (groupsFor)
 };

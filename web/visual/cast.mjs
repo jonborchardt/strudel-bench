@@ -5,7 +5,7 @@
 // styling on that base (a COSTUMES family, makeup, marks, props, a hat, an expression, a pose) and returns what
 // portraitOps takes, so the same face is recognisable in every outfit. All randomness is rand(s) on the caller's state.
 import { clamp, lerp, rand } from './kit.mjs';
-import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR, LONG_HAIR, shade, merge, parts } from './portrait.mjs';
+import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR, LONG_HAIR, shade, merge, parts, feetY, headBox } from './portrait.mjs';
 
 // the hats a section role wears: bare or a beanie to establish, a cap or a brim to develop, everyone hatted at the climax
 export const WARDROBE = { establish: ['none', 'beanie', 'baseballCap', 'none', 'cuffedBeanie'], develop: ['dadCap', 'flatCap', 'bucketHat', 'none', 'fishermanBeanie', 'snapback', 'beret'], climax: ['wideBrimFelt', 'cowboy', 'sunHat', 'snapback', 'truckerCap', 'bucketHat'], release: ['none', 'sunHat', 'beanie', 'none', 'bucketHat'], none: ['none', 'beanie', 'baseballCap', 'dadCap', 'flatCap', 'wideBrimFelt', 'bucketHat'] };
@@ -212,6 +212,8 @@ export const EXPRESSIONS = {
   wideEyed: { eyes: { openness: 1.28, browLift: 6 }, mouth: { smile: 0.05, open: 0 } },
   squint: { eyes: { openness: 0.6, browLift: -3 }, mouth: { smile: 0.1, open: 0 } },
 };
+/** The editorial expressions: a snapshot taken here, before any cast assigns its own into EXPRESSIONS (a cast imports this module, so this line runs first), the way HAIR_STYLES snapshots the hair. The editor's own menu, so a cast is free to pool an editorial expression beside its own without deleting it from the editor. */
+export const EDITORIAL_EXPRESSIONS = Object.keys(EXPRESSIONS);
 /** An expression as the five numbers a world animates between: smile, open, eyes (an openness factor), brow (a lift), skew. */
 export const exprVals = (name) => { const e = EXPRESSIONS[name] ?? EXPRESSIONS.deadpan; return { smile: e.mouth.smile, open: e.mouth.open ?? 0, eyes: e.eyes.openness ?? 1, brow: e.eyes.browLift ?? 0, skew: e.eyes.browSkew ?? 0 }; };
 /** The identity dressed for a shot: `styling` = { costume, variant, makeup: [names], marks: [names], props: [names], hat: { style, color, accent } | name, expression, pose, look, stance }; unset keys fall back to the identity's home styling. Returns portraitOps' options. */
@@ -234,6 +236,52 @@ export function dress(idn, styling = {}) {
   p.blush = 0;
   return p;
 }
+
+/** The anatomy every fantasy cast is built from, exactly as published: every figure in **head heights** (the head
+ *  itself is 1), and every one of them a *range* rather than a value. `height` is the one column that is not in the
+ *  table, because a table in head heights cannot state it: how tall the race stands against a human, as a fraction.
+ *  Without it the columns are only proportions — a halfling at 5.2 heads and a human at 7.5 would be 69% of a human
+ *  if their heads were the same size, which is not a halfling. `height` is what sets the head, and so the scale.
+ *
+ *  `halfOrc` has no cast yet; it is here because it is in the table, and `buildOf('halfOrc')` works the day one exists.
+ *
+ *  The two things pull against each other, because the drawing is stylized: this portrait's human stands 4.6 heads,
+ *  not 7.5, the head being authored first and the body added under it. So a head-to-body ratio and an absolute height
+ *  do not both land at a range's midpoint. The ranges are the slack `buildOf` needs to make both land.
+ */
+export const ANATOMY = {
+  //            height  totalHeight  shoulderWidth  torsoLength    armLength    legLength    handSize      footLength
+  human: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
+  elf: { height: 1.04, totalHeight: [7.5, 8.3], shoulderWidth: [1.8, 2.2], torsoLength: [2.2, 2.5], armLength: [3, 3.3], legLength: [3.9, 4.4], handSize: [0.68, 0.76], footLength: [0.9, 1] },
+  dwarf: { height: 0.78, totalHeight: [5.5, 6.5], shoulderWidth: [2.3, 2.9], torsoLength: [2.1, 2.5], armLength: [2.5, 3], legLength: [2.3, 3], handSize: [0.8, 0.95], footLength: [1, 1.15] },
+  halfling: { height: 0.52, totalHeight: [4.8, 5.6], shoulderWidth: [1.8, 2.2], torsoLength: [1.8, 2.2], armLength: [1.8, 2.2], legLength: [2, 2.6], handSize: [0.7, 0.82], footLength: [1.05, 1.25] },
+  gnome: { height: 0.52, totalHeight: [4.7, 5.5], shoulderWidth: [1.7, 2], torsoLength: [1.7, 2.1], armLength: [1.8, 2.2], legLength: [2, 2.5], handSize: [0.72, 0.85], footLength: [0.95, 1.1] },
+  orc: { height: 1.1, totalHeight: [6.5, 7.5], shoulderWidth: [2.4, 3], torsoLength: [2.4, 2.8], armLength: [3, 3.5], legLength: [3.1, 3.7], handSize: [0.82, 1], footLength: [1, 1.2] },
+  halfOrc: { height: 1.06, totalHeight: [6.8, 7.6], shoulderWidth: [2.3, 2.8], torsoLength: [2.3, 2.7], armLength: [3, 3.3], legLength: [3.3, 3.9], handSize: [0.78, 0.92], footLength: [1, 1.12] },
+  dragonborn: { height: 1.13, totalHeight: [6.5, 7.5], shoulderWidth: [2.5, 3.1], torsoLength: [2.5, 2.9], armLength: [2.8, 3.3], legLength: [3.1, 3.7], handSize: [0.82, 1], footLength: [1, 1.2] },
+  tiefling: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.82], footLength: [0.95, 1.08] },
+};
+/** `build` keys by their column, in the order the portrait lists them. */
+const COLUMN = { trunk: 'torsoLength', legs: 'legLength', shoulders: 'shoulderWidth', arms: 'armLength', hands: 'handSize', feet: 'footLength' };
+const mid = (r) => (r[0] + r[1]) / 2;
+const humanHeight = () => feetY({}) - headBox({}).top; // the figure as drawn, crown to floor: the human this table is read against
+/** A race's `build`: the table solved against this drawing's own human, on one parameter `u` walked across every
+ *  range at once. `u` takes the tall end of `totalHeight` (which is a smaller head) together with the short end of every
+ *  length, or the reverse, and the solver moves it until the figure actually stands at the race's own `height` — which
+ *  is the only way both land, since neither does at the midpoints. The head is the height over the height in heads
+ *  (a dwarf is short with a human's head on it, a halfling short with a child's) and each length is the table's ratio
+ *  to a human times that head, because the table measures in heads and a build multiplies the figure as drawn. */
+export const buildOf = (race) => {
+  const t = ANATOMY[race], h = ANATOMY.human, want = t.height / h.height, H = humanHeight();
+  const at = (u) => { const head = want / ((t.totalHeight[0] + u * (t.totalHeight[1] - t.totalHeight[0])) / mid(h.totalHeight));
+    const b = { head }; for (const [k, col] of Object.entries(COLUMN)) b[k] = ((t[col][1] - u * (t[col][1] - t[col][0])) / mid(h[col])) * head;
+    return b; };
+  const tall = (b) => (feetY({ build: b }) - headBox({ build: b }).top) / H; // this build's figure against a human's, through the drawing itself
+  let lo = 0, hi = 1; for (let i = 0; i < 20; i++) { const u = (lo + hi) / 2; if (tall(at(u)) > want) lo = u; else hi = u; } // tall(at(u)) falls as u rises: a smaller head on shorter limbs
+  const b = at((lo + hi) / 2);
+  if (Math.abs(tall(b) - want) > 0.01) throw new Error(`buildOf(${race}): the table does not reach its own height — ${want.toFixed(3)} of a human wanted, its ranges give ${tall(b).toFixed(3)}; widen totalHeight or the lengths`); // a row whose two halves cannot both land would otherwise ship a silently wrong skeleton
+  return Object.fromEntries(Object.entries(b).map(([k, v]) => [k, +v.toFixed(2)]));
+};
 
 /** The editorial cast: who the crowd and the tableau's twenty-four are. The shape every cast has (web/visual/casts/*.mjs): the structural `families` its faces are built in, its palettes (`skins`, `hairColors`, `irises`, `clothes`), its `pools` (tag queries over the parts, never a registry), the hats a role wears (`wardrobe`), its `archetypes` and their names, its costume families, the expression pools a dance uses (`expressions`/`emotes`, null for the tableau's own), the marks a phase adds (`extraMarks`), its `build` ('default' or a portrait build) and the tableau's dials (`contrast`, `asym`); `base` is a signature merged over every generated character (none here). Defined here, at the bottom, because it is made of this module's own constants; web/visual/casts/editorial.mjs re-exports it. */
 export const EDITORIAL = { name: 'editorial', families: FAMILIES, skins: SKINS, hairColors: HAIRS, irises: IRIS, clothes: CLOTHES, pools: POOLS, wardrobe: WARDROBE, archetypes: ARCHETYPES, archetypeNames: ARCHETYPE_NAMES, costumes: COSTUME_FAMILIES, expressions: null, emotes: null, extraMarks: [], build: 'default', contrast: TABLEAU.contrast, asym: TABLEAU.asym };

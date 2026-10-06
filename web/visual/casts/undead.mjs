@@ -79,4 +79,5 @@ export default {
   pools: { tops: parts('top', { any: ['era:80s', 'everyday'] }), jackets: parts('jacket', { any: ['era:80s', 'everyday'] }), beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { any: ['era:80s', 'everyday'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: parts('graphics', { all: ['everyday'] }) },
   wardrobe: WARDROBE, archetypes: ZOMBIES, archetypeNames: ZOMBIE_NAMES, costumes: ZOMBIE_COSTUME_NAMES, expressions: EXPR_POOL, emotes: EMOTES, extraMarks: EXTRA_MARKS, build: 'default', contrast: 1.9, asym: 1.6,
   base: { eyes: { ...DEAD_EYES }, mouth: { teeth: 'rotten' } },
+  limits: { 'nose.muzzle': [0, 0] },
 };

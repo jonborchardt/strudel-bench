@@ -12,6 +12,7 @@
   #panel { max-height: calc(100vh - 24px); overflow: auto; background: #f3f1ec; border: 1px solid #cfcac1; border-radius: 6px; padding: 8px; }
   #view { position: sticky; top: 12px; }
   svg { height: min(calc(100vh - 190px), 720px); width: auto; box-shadow: 0 10px 30px rgba(0,0,0,.16); }
+  #sheets { display: flex; gap: 10px; align-items: flex-start; } /* the bust and the whole standing figure, the same height, so a short people reads as short */
   .bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
   button, select, input, textarea { font: inherit; font-size: 12px; }
   button { padding: 4px 10px; cursor: pointer; }
@@ -51,12 +52,15 @@
     </div>
   </aside>
   <section id="view">
-    <div id="stack">
-      <div id="art"></div>
-      <img id="refimg" alt="">
-      <div class="guide" data-g="eye"><span>eyes</span></div>
-      <div class="guide" data-g="mouth"><span>mouth</span></div>
-      <div class="guide" data-g="chin"><span>chin</span></div>
+    <div id="sheets">
+      <div id="stack">
+        <div id="art"></div>
+        <img id="refimg" alt="">
+        <div class="guide" data-g="eye"><span>eyes</span></div>
+        <div class="guide" data-g="mouth"><span>mouth</span></div>
+        <div class="guide" data-g="chin"><span>chin</span></div>
+      </div>
+      <div id="figure"></div> <!-- the whole figure, feet on the bottom edge: the build's height, not a scaled bust -->
     </div>
     <details id="refcard">
       <summary>reference photo</summary>
@@ -79,7 +83,7 @@
   </section>
 </main>
 <script type="module">
-  import { renderPortrait, eyeY, mouthY, CHIN_Y } from './web/visual/portrait.mjs';
+  import { renderPortrait, renderFigure, eyeY, mouthY, CHIN_Y } from './web/visual/portrait.mjs';
   import { groupsFor, PALETTES, blank, params, encode, decode, setOv, at, labelOf, presetMatch, report, idle } from './web/visual/editor.mjs';
 
   const $ = (id) => document.getElementById(id);
@@ -155,7 +159,8 @@
 
   // the animate toggle: the sitter drifts as if bored (idle()), on top of whatever the controls say and writing nothing back
   let raf = 0, t0 = 0;
-  const tick = (ms) => { if (!$('anim').checked) return; $('art').innerHTML = renderPortrait(idle(params(st), (ms - t0) / 1000)); raf = requestAnimationFrame(tick); };
+  const paint = (p) => { $('art').innerHTML = renderPortrait(p); $('figure').innerHTML = renderFigure(p); };
+  const tick = (ms) => { if (!$('anim').checked) return; paint(idle(params(st), (ms - t0) / 1000)); raf = requestAnimationFrame(tick); };
   const animate = () => { cancelAnimationFrame(raf); if ($('anim').checked) { t0 = performance.now(); raf = requestAnimationFrame(tick); } else refresh(); };
 
   // the reference photo: a picture of the person laid over the drawing at a fade, moved and sized onto it, with the
@@ -173,7 +178,7 @@
 
   function refresh() {
     const p = params(st);
-    if (!$('anim').checked) $('art').innerHTML = renderPortrait(p);
+    if (!$('anim').checked) paint(p);
     sync(p);
     guides(p);
     $('rep').textContent = report(st, $('note').value, location.href.split('#')[0] + '#' + encode(st));

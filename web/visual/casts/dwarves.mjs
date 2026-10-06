@@ -1,10 +1,10 @@
-// The dwarves cast: eight of them, built short and broad (`build`: a shorter trunk, legs half the length, shoulders a
-// third wider, shorter arms, a bigger head), their faces from the heavy, square and round families with broad heads
+// The dwarves cast: eight of them, built short and broad (`build`, solved from `ANATOMY` in cast.mjs: four and a
+// half foot, a human's own head on it, shoulders a sixth wider than a human's, legs two thirds the length), their faces from the heavy, square and round families with broad heads
 // (178 to 192 wide), short thick necks and wide bodies pinned in `set`, every one bearded, in mail, fur and leather
 // from the dwarf pack (parts/dwarf.mjs) beside the everyday clothes. They dance the tableau's own shots and poses
 // (lib/visual.json: dance `editorial`), which is the proof that a kind of person is a pack, a cast and a row.
 import '../parts/dwarf.mjs'; // the parts this cast is made of register by name
-import { COSTUMES, FAMILIES } from '../cast.mjs';
+import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
 import { parts, SKIN_COLORS, HAIR_COLORS } from '../portrait.mjs';
 import { rand } from '../kit.mjs';
 
@@ -17,7 +17,7 @@ export const DWARF_COSTUMES = {
   helmAndMail: () => ({ top: { style: 'mailShirt', color: STEEL }, jacket: { style: 'none' }, hat: { style: 'hornlessHelm', color: '#9aa0a6', accent: FUR }, pants: { style: 'trousers', color: '#2e2a26' } }),
 };
 Object.assign(COSTUMES, DWARF_COSTUMES);
-export const DWARF_BUILD = { trunk: 0.8, legs: 0.55, shoulders: 1.3, arms: 0.8, head: 1.15 };
+export const DWARF_BUILD = buildOf('dwarf'); // the anatomy table in cast.mjs: four and a half foot, a human's head on it, very broad, the legs short and the arms long for the height
 export const DWARF_EARS = [0, 0.2]; // a dwarf's ear is round, a few of them with the hint of a point: their own range, so a face that came from another cast is set back to it and not left with elf ears
 const stout = (width, height, face = {}) => ({ face: { width, height, ...face }, neck: { width: 90, height: 44 } }); // every dwarf: a broad head on a short thick neck
 /** The eight, by what tells them apart at a hundred pixels: the hair's mass or its absence, the beard's shape, the hat, the costume's colour block. */
@@ -40,4 +40,5 @@ export default {
   wardrobe: { establish: ['none', 'leatherCap', 'none'], develop: ['leatherCap', 'hornlessHelm', 'none'], climax: ['hornlessHelm', 'hornlessHelm', 'leatherCap'], release: ['none', 'leatherCap'], none: ['none', 'leatherCap', 'hornlessHelm'] },
   archetypes: DWARVES, archetypeNames: Object.keys(DWARVES), costumes: Object.keys(DWARF_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: DWARF_BUILD, contrast: 1.6, asym: 1.4,
   base: (s) => ({ ears: { pointed: DWARF_EARS[0] + rand(s) * (DWARF_EARS[1] - DWARF_EARS[0]) } }), // the cast's signature as a rule: mostly round, now and then a little drawn out
+  limits: { 'ears.pointed': [0, 0.15], 'nose.muzzle': [0, 0], 'build.legs': [0.55, 0.85], 'build.shoulders': [1.05, 1.35], 'build.head': [0.88, 1.08] }, // what a dwarf may not be: tall, long-legged, narrow or pointed of ear. The build bands are the table's row either side of DWARF_BUILD (groupsFor)
 };
