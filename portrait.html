@@ -82,10 +82,9 @@
     </details>
   </section>
 </main>
-<script type="importmap">{"imports":{"limner":"./limner/index.mjs","limner/primitives":"./limner/primitives.mjs","limner/schema.mjs":"./limner/schema.mjs"}}</script>
 <script type="module">
-  import { renderPortrait, renderFigure, eyeY, mouthY, CHIN_Y } from 'limner';
-  import { groupsFor, PALETTES, blank, params, encode, decode, setOv, at, labelOf, presetMatch, report, idle } from 'limner/schema.mjs';
+  import { renderPortrait, renderFigure, eyeY, mouthY, CHIN_Y } from './limner/index.mjs';
+  import { groupsFor, PALETTES, blank, params, encode, decode, setOv, at, labelOf, presetMatch, report, idle } from './limner/schema.mjs';
 
   const $ = (id) => document.getElementById(id);
   const panel = $('panel');

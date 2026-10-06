@@ -1,5 +1,5 @@
 // Writes limner/test/fixtures/portrait-ops-golden.json: portraitOps for four portraits as it drew them on 2026-10-05, before
-// `build` existed. A build of all 1 must draw these byte-for-byte; regenerate only on purpose: `node scripts/opsgolden.mjs --update`.
+// `build` existed. A build of all 1 must draw these byte-for-byte; regenerate only on purpose: `node limner/scripts/opsgolden.mjs --update`.
 import { writeFileSync, existsSync } from 'node:fs';
 import { portraitOps } from '../portrait.mjs';
 const out = new URL('../test/fixtures/portrait-ops-golden.json', import.meta.url);

@@ -2,7 +2,7 @@
 // parts and the undead cast are limner's (reached through its PACKS and CAST_MODULES registries, so nothing here
 // reaches past the published surface), the dance is this repo's, and themes.mjs binds them. Importing this module
 // registers and tags the zombie parts, which is the side effect web/visual/undead.mjs wants.
-import { PACKS, CAST_MODULES, CASTS } from 'limner';
+import { PACKS, CAST_MODULES, CASTS } from './limner.mjs';
 import { THEMES } from './themes.mjs';
 
 const { undead: parts, eighties } = PACKS;

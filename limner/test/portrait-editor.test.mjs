@@ -1,7 +1,7 @@
 ﻿import test from 'node:test';
 import assert from 'node:assert/strict';
 import { renderPortrait, portraitOps, DEFAULTS, NOSES, FACIAL_HAIR, FACIAL_HAIR_STYLES } from '../index.mjs';
-import { GROUPS, CONTROLS, POSE_NAMES, posePreset, THEMES, THEME_NAMES, JITTER, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../schema.mjs';
+import { GROUPS, CONTROLS, POSE_NAMES, posePreset, themeName, THEMES, THEME_NAMES, JITTER, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../schema.mjs';
 import { CASTS, CAST_MODULES } from '../registry.mjs';
 const ELVES = CASTS.elves, { ELF_EARS, ELF_BUILD } = CAST_MODULES.elves;
 import { FAMILIES } from '../people.mjs';
@@ -80,7 +80,7 @@ test('a preset reads back as itself, and the report says what the face is', () =
 });
 
 test('a theme in the editor: off, the menus are the editorial ones; on, they gain the theme\'s parts and a preset of its characters, every option draws, and the hash carries it', () => {
-  assert.equal(blank().theme, 'none'); assert.deepEqual(THEME_NAMES, ['none', ...Object.keys(THEMES)]);
+  assert.equal(blank().theme, 'none'); assert.deepEqual(THEME_NAMES, ['none', ...Object.keys(THEMES).filter((n) => n !== 'editorial')]); // THEMES has an editorial entry; the menu does not offer it, because that is what 'none' means
   assert.deepEqual(groupsFor(state()), GROUPS, 'no theme: the editorial groups themselves');
   const zombie = (name) => ['top.style', 'hair.style', 'makeup', 'costume', 'expression', 'mouth.teeth'].map((p) => CONTROLS.find((c) => c.path === p)).every((c) => !c.options.some((o) => Object.values(THEMES.undead.extras).flat().includes(o)));
   assert.ok(zombie(), 'CONTROLS lists no theme part'); assert.ok(!CONTROLS.some((c) => c.path === 'undead' || c.path === 'zombie'));
@@ -241,4 +241,34 @@ test('a themed stance is offered and writable: the claw is a pose the editor can
   assert.ok(!UNDEAD_THEME.extras.pose.includes('hordeLine'), 'and not its dance\'s blocking');
   assert.deepEqual(posePreset('thrillerClaw').props, ['clawHands']);
   assert.equal(posePreset('thrillerClaw')['pose.turn'], 0.2);
+});
+
+// The hash IS the face, and the themes were keyed by theme name before they were keyed by the cast that wears the parts.
+// Normalising only inside decode left scripts/portrait.mjs's `{json}` form -- a state straight from the command line,
+// which never decodes -- silently drawing an editorial face where a zombie was asked for: wrong picture, no error.
+test('a legacy theme spelling resolves at every entry, not only through decode', () => {
+  assert.equal(themeName('thriller'), 'undead');
+  assert.equal(themeName('undead'), 'undead', 'and a current name is left alone');
+  assert.equal(themeName('elves'), 'elves');
+  const legacy = { seed: 5, family: 'squareJaw', theme: 'thriller', ov: {} };
+  const current = { ...legacy, theme: 'undead' };
+  assert.equal(base(5, 'squareJaw', 'thriller').mouth.teeth, 'rotten', 'base() takes the old spelling');
+  assert.deepEqual(params(legacy), params(current), 'and draws exactly the person the new spelling draws');
+  assert.ok(groupsFor(legacy).length > 0 && groupsFor(legacy).length === groupsFor(current).length, 'and gets the same panel');
+  assert.equal(decode(encode(legacy)).theme, 'undead', 'decode still normalises too');
+});
+
+// 'editorial' is what 'none' already means. Offering it as a theme put STANCES.editorial on a pose menu that already
+// listed those eight names, and ran limitsOf(CASTS.editorial) over the menus, which took openJacket off the jacket one.
+test('the theme menu offers the casts that change something, and not the default one', () => {
+  assert.ok(!THEME_NAMES.includes('editorial'), 'editorial is not a theme');
+  assert.equal(THEME_NAMES[0], 'none');
+  assert.deepEqual([...THEME_NAMES].slice(1).sort(), Object.keys(CASTS).filter((n) => n !== 'editorial').sort());
+  const off = controlsFor({ seed: 1, family: 'any', theme: 'none', ov: {} });
+  const jackets = off.find((c) => c.path === 'jacket.style').options;
+  assert.ok(jackets.includes('openJacket'), 'and with no theme the editorial menus are whole');
+  for (const t of THEME_NAMES.slice(1)) {
+    const poses = controlsFor({ seed: 1, family: 'any', theme: t, ov: {} }).find((c) => c.path === 'pose').options;
+    assert.equal(new Set(poses).size, poses.length, `${t}: the pose menu lists nothing twice`);
+  }
 });

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Draw a portrait from the editor's own hash, headless: the half of portrait.html that Node can do.
 //
-//   node scripts/portrait.mjs "<hash|url|{json}>"                      -> renders/portrait.svg
-//   node scripts/portrait.mjs <hash> --out renders/me.png              -> a png (through playwright-core's chromium)
-//   node scripts/portrait.mjs <hash> --photo photo.png                 -> the photo beside it, for judging a likeness
-//   node scripts/portrait.mjs <hash> --crop "95 105 210 220"           -> the same, cropped to a viewBox (head, eyes, mouth)
-//   node scripts/portrait.mjs <hash> --sweep "facialHair.density=0.2,0.5,0.9" [--sweep "eyes.squint=0,.5"]
+//   node limner/scripts/portrait.mjs "<hash|url|{json}>"                      -> renders/portrait.svg
+//   node limner/scripts/portrait.mjs <hash> --out renders/me.png              -> a png (through playwright-core's chromium)
+//   node limner/scripts/portrait.mjs <hash> --photo photo.png                 -> the photo beside it, for judging a likeness
+//   node limner/scripts/portrait.mjs <hash> --crop "95 105 210 220"           -> the same, cropped to a viewBox (head, eyes, mouth)
+//   node limner/scripts/portrait.mjs <hash> --sweep "facialHair.density=0.2,0.5,0.9" [--sweep "eyes.squint=0,.5"]
 //                                                                      -> a contact sheet of every combination, labelled
 //
 // A sweep prints the hash of every cell, so the one that looks right is a link back into the editor.

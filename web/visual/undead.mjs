@@ -18,11 +18,11 @@
 // alive by `aliveOf` until the release, and every step is one of its POSES (layoutOf partials), so a new pose there
 // is a step here by name. Two places know this and nothing else does: LIVE/aliveOf and STEPS/ROUTINES.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS, STANCES } from 'limner';
-import { identityOf, dress } from 'limner';
+import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS, STANCES } from './limner.mjs';
+import { identityOf, dress } from './limner.mjs';
 import { graveyard, floorShadow, vignette } from './sets.mjs';
 import { phaseOf } from './tableau.mjs';
-import thriller, { POSES as ZOMBIE_POSES, ZOMBIE_NAMES } from './thriller.mjs'; // the cast and the choreography: importing registers the zombie parts by name
+import thriller, { ZOMBIE_NAMES } from './thriller.mjs'; // the cast and the choreography: importing registers the zombie parts by name
 
 const FEET = 600; // the sheet's torso runs to here: where the ground meets a standing figure
 const SNAP = 9; // how fast a figure arrives in a step: a dance move lands, then holds

@@ -6,7 +6,7 @@
 // limner's registries and DANCES is this file's; between them they are the names a row may use; `bindTheme` refuses an unknown one at import, naming it, so a misspelt row
 // never draws a blank stage. The sheets (parts.html, casts.html, poses.html) list packs, casts and themes from here.
 import VISUAL from '../../lib/visual.json' with { type: 'json' };
-import { identityFrom, CASTS, PACKS } from 'limner'; // the casts and the part packs are limner's; the dances and the binding are this repo's
+import { identityFrom, CASTS, PACKS } from './limner.mjs'; // the casts and the part packs are limner's; the dances and the binding are this repo's
 import thriller from './dances/thriller.mjs';
 export { CASTS, PACKS }; // re-exported so a consumer of the themes still finds all three names in one place
 export const DANCES = { thriller, editorial: null };

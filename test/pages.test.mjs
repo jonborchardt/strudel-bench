@@ -92,24 +92,55 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
 });
 
 // limner's part registries (TOPS, HATS, MAKEUP, ...) are module-level objects filled by import side effects, so two
-// instances of the module means `parts()` returns half the parts and a costume quietly loses its hat -- no error, just a
-// missing thing. A path import beside the package import is the only way that happens, so once a module has moved into
-// limner, nothing outside it may reach the old path. MOVED grows as the extraction proceeds; a module still living under
-// web/visual/ is legitimately imported by path until the task that moves it.
-const MOVED = ['portrait', 'cast', 'editor'];
-const SCOPE = /\.(mjs|html)$/; // the pages reach limner through an import map now, so they are held to the same rule
-test('no module reaches a moved limner module by path: two instances would split the part registries', () => {
+// instances of a module means `parts()` returns half the parts and a costume quietly loses its hat -- no error, just a
+// missing thing. Today each module exists at exactly one path and Node resolves the node_modules symlink to it, so a
+// second instance cannot be made; the day limner is installed from npm rather than linked, it can again. Either way the
+// rule is the same and is the point of having a published surface: from outside, limner is reachable only at its
+// entries, never past them.
+const ENTRIES = ['index.mjs', 'primitives.mjs', 'schema.mjs']; // schema is internal by the spec but portrait.html reaches it; see the ledger
+test('nothing outside limner reaches past its entries: two instances would split the part registries', () => {
   const walk = (dir) => fs.readdirSync(dir).flatMap((f) => {
     const p = path.join(dir, f);
     if (['node_modules', 'dist', '.git', 'limner', '.superpowers', 'renders', 'out'].includes(f) || f.startsWith('_t_')) return [];
-    return fs.statSync(p).isDirectory() ? walk(p) : SCOPE.test(f) ? [p] : [];
+    return fs.statSync(p).isDirectory() ? walk(p) : /\.(mjs|html)$/.test(f) ? [p] : [];
   });
-  // any specifier that is a path (starts with . or /) and ends in a moved module's filename, however it is spelled:
-  // './portrait.mjs', '../web/visual/portrait.mjs' and '../../limner/portrait.mjs' are all the same mistake.
-  // anchored on the separator, so web/cm-editor.mjs (CodeMirror, nothing to do with limner) is not caught by 'editor'
-  const re = new RegExp(`from\\s+'[.~/][^']*/(${MOVED.join('|')})\\.mjs'`);
-  const bad = walk(ROOT).filter((p) => re.test(fs.readFileSync(p, 'utf8')));
-  assert.deepEqual(bad.map((p) => path.relative(ROOT, p).replace(/\\/g, '/')), [], 'these still import by path; they must import "limner"');
+  // every spelling: `from`, bare side-effect `import`, and dynamic `import(`; single and double quotes. A path into
+  // limner is legal only when what it names is an entry -- limner/portrait.mjs, limner/parts/orc.mjs and
+  // limner/registry.mjs are all the same mistake, and so is the bare specifier `limner/portrait.mjs`.
+  const deep = [];
+  for (const file of walk(ROOT)) {
+    if (file === import.meta.filename) continue; // this file carries the guard's own fixture strings, which look exactly like the thing it forbids
+    const src = stripComments(fs.readFileSync(file, 'utf8'));
+    for (const m of src.matchAll(/(?:\bfrom|\bimport)\s*\(?\s*['"]([^'"]*limner\/[^'"]+)['"]/g)) {
+      const after = m[1].slice(m[1].indexOf('limner/') + 'limner/'.length);
+      if (!ENTRIES.includes(after)) deep.push(`${path.relative(ROOT, file).split(path.sep).join('/')}: ${m[1]}`);
+    }
+  }
+  assert.deepEqual([...new Set(deep)].sort(), [], 'these reach past limner\'s published entries');
+});
+
+test('the guard above would catch every spelling of a deep import', () => {
+  // the regex is the whole test, so it gets its own fixtures rather than being trusted
+  const re = /(?:\bfrom|\bimport)\s*\(?\s*['"]([^'"]*limner\/[^'"]+)['"]/g;
+  const deep = (src) => [...stripComments(src).matchAll(re)].map((m) => m[1]).filter((spec) => !ENTRIES.includes(spec.slice(spec.indexOf('limner/') + 7)));
+  for (const bad of [
+    "import { parts } from '../limner/portrait.mjs';",
+    'import { parts } from "../limner/portrait.mjs";',
+    "import '../limner/parts/eighties.mjs';",
+    "const m = await import('../limner/portrait.mjs');",
+    "import { CASTS } from '../limner/registry.mjs';",
+    "import { STANCES } from '../../limner/stances.mjs';",
+    "import { rand } from '../limner/rng.mjs';",
+    "import { dress } from '../limner/people.mjs';",
+  ]) assert.equal(deep(bad).length, 1, `missed: ${bad}`);
+  for (const ok of [
+    "export * from '../../limner/index.mjs';",
+    "import { renderPortrait } from './limner/index.mjs';",
+    "import { groupsFor } from './limner/schema.mjs';",
+    "import { tracePath } from './limner/primitives.mjs';",
+    "import { portraitOps } from 'limner';",
+    "// import { parts } from '../limner/portrait.mjs' -- a comment, not an import",
+  ]) assert.deepEqual(deep(ok), [], `false positive: ${ok}`);
 });
 
 // limner ships because portrait.html imports it, but only the library: not its suite (the ops golden alone is 163 KB of
@@ -122,10 +153,13 @@ test('the build ships limner the library, and none of its workshop', () => {
       assert.ok(fs.existsSync(path.join(out, f)), `${f} ships`);
     for (const f of ['limner/test', 'limner/scripts', 'limner/faces.html', 'limner/parts.html', 'limner/casts.html', 'limner/stances.html'])
       assert.ok(!fs.existsSync(path.join(out, f)), `${f} must not ship`);
-    // the import map resolves under /<repo>/, so every entry is relative: a leading slash would 404 on a project page
-    const map = JSON.parse(fs.readFileSync(path.join(out, 'portrait.html'), 'utf8').match(/<script type="importmap">([^<]+)<\/script>/)[1]);
-    for (const [k, v] of Object.entries(map.imports)) assert.ok(v.startsWith('./'), `${k} maps to ${v}, which must be relative`);
-    assert.equal(map.imports.limner, './limner/index.mjs');
+    // the page reaches limner by a relative path, not through an import map: relative because a project page lives under
+    // /<repo>/, and by path because an import map is a document's and cannot be given to the workers that load the worlds
+    const shipped = fs.readFileSync(path.join(out, 'portrait.html'), 'utf8');
+    assert.ok(!/<script type="importmap">/.test(shipped), 'no import map to go stale');
+    for (const m of shipped.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]*limner[^'"]*)['"]/g))
+      assert.ok(m[1].startsWith('./limner/'), `${m[1]} must be a relative path into limner`);
+    assert.match(shipped, /from '\.\/limner\/index\.mjs'/);
   } finally { fs.rmSync(out, { recursive: true, force: true }); }
 });
 
@@ -138,4 +172,81 @@ test('npm test names both suites explicitly: glob discovery would walk the node_
   assert.match(scripts.test, /"limner\/test\/\*\.test\.mjs"/, "and limner's, so a beard change cannot stop being tested by accident");
   assert.match(scripts.test, /--test-concurrency=1/, 'serially, because the host suite writes _t_ fixtures into shared directories');
   assert.ok(fs.existsSync(path.join(ROOT, 'limner', 'test', 'ops-golden.test.mjs')), 'and the suite it names exists');
+});
+
+// --- module resolution, which the rest of the suite cannot see ---
+//
+// A bare specifier resolves in three places on different terms. Node resolves it through package.json. A browser
+// resolves it only through the document's import map. A module Worker has its own realm and **cannot be handed that
+// map at all** -- there is no API for it -- so inside a worker a bare specifier is unresolvable by construction, and
+// the failure is silent: web/listen/show.mjs imports a world dynamically with no catch, so the tile just stays blank.
+// web/listen/ runs every world in a worker, which makes this a rule about the worlds and everything they pull in.
+const stripComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+const specifiers = (src) => [...stripComments(src).matchAll(/(?:\bfrom|\bimport)\s*\(?\s*['"]([^'"]+)['"]/g)].map((m) => m[1]);
+const isBare = (spec) => !spec.startsWith('.') && !spec.startsWith('/') && !spec.startsWith('node:');
+
+/** Every module reachable from `entry` by relative import, as repo-relative posix paths. */
+function graphFrom(entry) {
+  const seen = new Set();
+  const walk = (file) => {
+    const rel = path.relative(ROOT, file).split(path.sep).join('/');
+    if (seen.has(rel) || !fs.existsSync(file)) return;
+    seen.add(rel);
+    for (const spec of specifiers(fs.readFileSync(file, 'utf8'))) {
+      if (!isBare(spec) && !spec.endsWith('.json')) walk(path.resolve(path.dirname(file), spec));
+    }
+  };
+  walk(entry);
+  return seen;
+}
+
+test('nothing a worker loads uses a bare specifier: a worker cannot be handed an import map', () => {
+  // web/listen/show.mjs loads a world by a computed specifier -- `import(`../visual/${n}.mjs`)` over every world in
+  // lib/visual.json -- which no static walk can follow, so the worlds are added as roots by name.
+  const worlds = Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT, 'lib', 'visual.json'), 'utf8')).worlds);
+  assert.ok(worlds.length > 10, `expected the world list, got ${worlds.length}`);
+  const graph = graphFrom(path.join(ROOT, 'web', 'listen', 'worker.mjs'));
+  for (const w of worlds) for (const g of graphFrom(path.join(ROOT, 'web', 'visual', `${w}.mjs`))) graph.add(g);
+  assert.ok(graph.size > 20, `expected the worker to pull in the worlds, got ${graph.size} modules`);
+  assert.ok(graph.has('web/visual/tableau.mjs') && graph.has('web/visual/faces.mjs'), 'and the worlds that draw people');
+  const bare = [];
+  for (const rel of graph) for (const spec of specifiers(fs.readFileSync(path.join(ROOT, rel), 'utf8'))) {
+    if (isBare(spec)) bare.push(`${rel}: ${spec}`);
+  }
+  assert.deepEqual(bare.sort(), [], 'these resolve in Node and nowhere else; import the file by path');
+});
+
+// One file under web/ crosses into limner, and it crosses to the published entry, so there is exactly one line to
+// change if limner moves or is installed from npm -- and one place to look to see that the surface is respected.
+test('web/visual/limner.mjs is the only crossing, and it reaches the barrel rather than an internal', () => {
+  const shim = path.join(ROOT, 'web', 'visual', 'limner.mjs');
+  assert.ok(fs.existsSync(shim), 'the shim exists');
+  assert.match(stripComments(fs.readFileSync(shim, 'utf8')), /from '\.\.\/\.\.\/limner\/index\.mjs'/, 'and reaches index.mjs, the published barrel');
+  const walk = (dir) => fs.readdirSync(dir).flatMap((f) => {
+    const p = path.join(dir, f);
+    return fs.statSync(p).isDirectory() ? walk(p) : f.endsWith('.mjs') ? [p] : [];
+  });
+  const others = walk(path.join(ROOT, 'web')).filter((p) => p !== shim && specifiers(fs.readFileSync(p, 'utf8')).some((s) => /(^|\/)limner(\/|$)/.test(s)));
+  assert.deepEqual(others.map((p) => path.relative(ROOT, p).split(path.sep).join('/')), [], 'nothing else under web/ names limner');
+});
+
+// index.html is one module script: an unresolvable specifier anywhere in its graph takes the whole page, editor and all.
+// It is also the one page whose graph legitimately holds bare specifiers, because its import map provides them -- so the
+// rule here is that the map covers every one of them, which is exactly what was missed when limner became a package.
+test('every bare specifier in a page\'s module graph is in that page\'s import map', () => {
+  for (const page of ['index.html', 'examples.html', 'portrait.html', 'poses.html', 'listen.html', 'samples.html']) {
+    const file = path.join(ROOT, page);
+    if (!fs.existsSync(file)) continue;
+    const html = fs.readFileSync(file, 'utf8');
+    const m = html.match(/<script type="importmap">([\s\S]*?)<\/script>/);
+    const mapped = new Set(m ? Object.keys(JSON.parse(m[1]).imports) : []);
+    const entries = [...html.matchAll(/(?:from|import)\s*\(?\s*['"](\.[^'"]+)['"]/g)].map((x) => x[1]);
+    const graph = new Set();
+    for (const e of entries) for (const g of graphFrom(path.resolve(ROOT, e))) graph.add(g);
+    const unresolvable = [];
+    for (const rel of graph) for (const spec of specifiers(fs.readFileSync(path.join(ROOT, rel), 'utf8'))) {
+      if (isBare(spec) && !mapped.has(spec) && ![...mapped].some((k) => k.endsWith('/') && spec.startsWith(k))) unresolvable.push(`${rel}: ${spec}`);
+    }
+    assert.deepEqual([...new Set(unresolvable)].sort(), [], `${page}: these would throw "Failed to resolve module specifier" and take the page with them`);
+  }
 });

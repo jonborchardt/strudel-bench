@@ -49,11 +49,19 @@ export function setOv(ov, path, value) {
 }
 
 const FAMILIES_PLUS = ['any', ...FAMILY_NAMES];
-export const THEME_NAMES = ['none', ...Object.keys(CASTS)]; // the themes the editor offers (THEMES below says what each adds)
-/** The cast a theme draws its people from (lib/visual.json's row), else the editorial one: with a theme on, a random character is a random one of that cast, in its clothes and with its signature. */
-// The editor's themes are its casts, so this is a lookup rather than a hop through the host's json: it used to read
-// lib/visual.json to learn which cast a theme row named, which is a fact about a song's world and not about a face.
-const castFor = (theme) => (on(theme) && CASTS[theme]) || CASTS.editorial;
+export const THEME_NAMES = ['none', ...Object.keys(CASTS).filter((n) => n !== 'editorial')]; // the themes the editor
+// offers (THEMES below says what each adds). 'editorial' is not among them: it is what 'none' already means, and
+// offering it put the editorial stances on the pose menu twice and took openJacket off the jacket menu.
+/** The cast a theme draws its people from, else the editorial one: with a theme on, a random character is a random one
+ *  of that cast, in its clothes and with its signature. A theme here IS a cast -- it used to read lib/visual.json to
+ *  learn which cast a theme row named, which is a fact about a song's world and not about a face. */
+/** A theme name as it is spelled now. These were keyed by theme ('thriller') before they were keyed by the cast that
+ *  wears the parts ('undead'), and the hash IS the face, so the old spellings go on resolving -- at every entry, not
+ *  only in `decode`: `scripts/portrait.mjs` takes a `{json}` state straight from the command line and never decodes,
+ *  and before this it silently drew an editorial face instead of a zombie. */
+const THEME_ALIAS = { thriller: 'undead' };
+export const themeName = (t) => THEME_ALIAS[t] ?? t;
+const castFor = (theme) => (on(theme) && CASTS[themeName(theme)]) || CASTS.editorial;
 const pickOf = (r, a) => (a.length ? a[Math.floor(r() * a.length)] : null);
 const castTags = (cast) => (cast === CASTS.editorial ? [] : themeTags(cast));
 /** The layers a random one of this cast may wear: its own pack's with a theme on, else exactly what the editorial menu lists, so a pack that registers a part without tagging it never turns up on an editorial face. */
@@ -106,13 +114,10 @@ export const params = (st) => merge(merge(DEFAULTS, base(st.seed, st.family, st.
 /** A blank state. A function, not a constant: its `ov` is written in place, so a shared one would alias every reset. */
 export const blank = () => ({ seed: 1, family: 'any', theme: 'none', ov: { background: '#c8102e' } }); // red behind the sitter by default: an edge against the page's beige is invisible
 export const encode = (st) => btoa(JSON.stringify(st)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-/** A hash saved when the themes were keyed by theme name rather than by the cast that wears the parts. The hash IS the
- *  face, and people keep links to faces, so the old spellings go on opening. */
-const THEME_ALIAS = { thriller: 'undead' };
 export function decode(hash) {
   try {
     const st = JSON.parse(atob(String(hash).replace(/^#/, '').replace(/-/g, '+').replace(/_/g, '/')));
-    if (st.theme && THEME_ALIAS[st.theme]) st.theme = THEME_ALIAS[st.theme];
+    if (st.theme) st.theme = themeName(st.theme); // normalised here too, so a decoded state reads back as what it is
     return { ...blank(), ...st, ov: { ...(st.ov ?? {}) } };
   } catch { return blank(); }
 }
@@ -258,7 +263,7 @@ function themed(c, t) {
 }
 /** The groups a page builds its panel from: GROUPS, and with a theme on, its options added, its limits applied and its presets after the base group's. */
 export function groupsFor(st) {
-  const t = THEMES[st?.theme]; if (!t) return GROUPS;
+  const t = THEMES[themeName(st?.theme)]; if (!t) return GROUPS;
   return GROUPS.map((g, i) => ({ ...g, items: [...g.items.map((c) => themed(c, t)), ...(i === 0 ? t.presets : [])] }));
 }
 export const controlsFor = (st) => groupsFor(st).flatMap((g) => g.items);

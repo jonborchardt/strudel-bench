@@ -71,7 +71,7 @@ someone's dependency.
 A part registers itself by name into a registry and carries tags: `everyday` and `era:80s` say what a part *is*,
 `only:undead` says who may wear it. Every generator picks through `parts(kind, { any, all, not })`, and a part tagged
 `only:<x>` comes back only when the query names `only:<x>`. A cast's `pools` are those queries. Sharing is a tag;
-quarantine is a pool. That is how nine casts share one wardrobe without a zombie's rot turning up on an editorial face.
+quarantine is a pool. That is how ten casts share one wardrobe without a zombie's rot turning up on an editorial face.
 
 ## Tests
 
@@ -81,7 +81,7 @@ npm test            # from this directory
 
 Two of them are goldens and are the library's real contract: `test/fixtures/cast-golden.json` pins what the generators
 invent, and `test/fixtures/portrait-ops-golden.json` pins what the figure draws. Regenerate either only on purpose
-(`node scripts/castgolden.mjs`, `node scripts/opsgolden.mjs`), and check that only the faces you expected moved.
+(`node scripts/castgolden.mjs`, `node scripts/opsgolden.mjs` from this directory), and check that only the faces you expected moved.
 
 `scripts/portrait.mjs` draws a face headless from the editor's own hash — an SVG, a PNG, or a labelled contact sheet
 sweeping any parameter — which is how a change to the drawing gets judged.
