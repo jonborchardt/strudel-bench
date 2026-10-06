@@ -1,7 +1,7 @@
 ﻿import test from 'node:test';
 import assert from 'node:assert/strict';
 import { renderPortrait, portraitOps, DEFAULTS, NOSES, FACIAL_HAIR, FACIAL_HAIR_STYLES } from 'limner';
-import { GROUPS, CONTROLS, POSE_NAMES, posePreset, THEMES, THEME_NAMES, JITTER, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../web/visual/editor.mjs';
+import { GROUPS, CONTROLS, POSE_NAMES, posePreset, THEMES, THEME_NAMES, JITTER, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../limner/schema.mjs';
 import { CASTS, CAST_MODULES } from 'limner';
 const ELVES = CASTS.elves, { ELF_EARS, ELF_BUILD } = CAST_MODULES.elves;
 import { FAMILIES } from 'limner';
@@ -81,25 +81,28 @@ test('a preset reads back as itself, and the report says what the face is', () =
 test('a theme in the editor: off, the menus are the editorial ones; on, they gain the theme\'s parts and a preset of its characters, every option draws, and the hash carries it', () => {
   assert.equal(blank().theme, 'none'); assert.deepEqual(THEME_NAMES, ['none', ...Object.keys(THEMES)]);
   assert.deepEqual(groupsFor(state()), GROUPS, 'no theme: the editorial groups themselves');
-  const zombie = (name) => ['top.style', 'hair.style', 'makeup', 'costume', 'expression', 'mouth.teeth'].map((p) => CONTROLS.find((c) => c.path === p)).every((c) => !c.options.some((o) => Object.values(THEMES.thriller.extras).flat().includes(o)));
+  const zombie = (name) => ['top.style', 'hair.style', 'makeup', 'costume', 'expression', 'mouth.teeth'].map((p) => CONTROLS.find((c) => c.path === p)).every((c) => !c.options.some((o) => Object.values(THEMES.undead.extras).flat().includes(o)));
   assert.ok(zombie(), 'CONTROLS lists no theme part'); assert.ok(!CONTROLS.some((c) => c.path === 'undead' || c.path === 'zombie'));
-  const on = state({}, { theme: 'thriller' }), cs = controlsFor(on);
-  for (const [path, extra] of Object.entries(THEMES.thriller.extras)) { const c = cs.find((x) => x.path === path); assert.ok(c && extra.length && extra.every((o) => c.options.includes(o)), `${path} offers ${extra.join(', ')}`); }
+  const on = state({}, { theme: 'undead' }), cs = controlsFor(on);
+  for (const [path, extra] of Object.entries(THEMES.undead.extras)) { const c = cs.find((x) => x.path === path); assert.ok(c && extra.length && extra.every((o) => c.options.includes(o)), `${path} offers ${extra.join(', ')}`); }
   // the menus are built from the tags, not from a hand-written list: the 80s clothes (era:80s, shared) and the rot (only:undead) reach the menus they belong to
   assert.ok(cs.find((c) => c.path === 'top.style').options.includes('leotard') && cs.find((c) => c.path === 'makeup').options.includes('rotLips') && cs.find((c) => c.path === 'mouth.teeth').options.includes('rotten') && cs.find((c) => c.path === 'hat.style').options.includes('veil') && cs.find((c) => c.path === 'costume').options.includes('bride') && cs.find((c) => c.path === 'expression').options.includes('hunger'));
   const zp = cs.find((c) => c.path === 'undead'); assert.ok(zp && zp.kind === 'preset' && zp.options.length === ZOMBIE_NAMES.length, 'one preset per cast archetype, named by the cast');
   THEMES._bare = { extras: {}, presets: [] }; try { assert.equal(groupsFor(state({}, { theme: '_bare' })).length, GROUPS.length, 'a theme whose cast has no presets still builds a panel'); } finally { delete THEMES._bare; }
   for (const c of cs) {
-    if (c.kind === 'enum' && !c.state) for (const o of c.options) renderPortrait(params(state({ [c.nullable && o === 'none' ? (c.clears ?? c.path) : c.path]: c.nullable && o === 'none' ? null : o }, { theme: 'thriller' })));
-    if (c.kind === 'multi') for (const o of c.options) renderPortrait(params(state({ [c.path]: [o] }, { theme: 'thriller' })));
-    if (c.kind === 'preset') for (const o of c.options) { const ov = {}; for (const [k, v] of Object.entries(c.apply(o))) setOv(ov, k, v); const svg = renderPortrait(params(state(ov, { theme: 'thriller' }))); assert.ok(svg.startsWith('<svg') && !/NaN/.test(svg), `${c.path} ${o}`); }
+    if (c.kind === 'enum' && !c.state) for (const o of c.options) renderPortrait(params(state({ [c.nullable && o === 'none' ? (c.clears ?? c.path) : c.path]: c.nullable && o === 'none' ? null : o }, { theme: 'undead' })));
+    if (c.kind === 'multi') for (const o of c.options) renderPortrait(params(state({ [c.path]: [o] }, { theme: 'undead' })));
+    if (c.kind === 'preset') for (const o of c.options) { const ov = {}; for (const [k, v] of Object.entries(c.apply(o))) setOv(ov, k, v); const svg = renderPortrait(params(state(ov, { theme: 'undead' }))); assert.ok(svg.startsWith('<svg') && !/NaN/.test(svg), `${c.path} ${o}`); }
   }
   const ov = {}; for (const [k, v] of Object.entries(zp.apply('bride'))) setOv(ov, k, v);
-  const p = params(state(ov, { theme: 'thriller' }));
+  const p = params(state(ov, { theme: 'undead' }));
   assert.ok(ZOMBIE_SKINS.includes(p.skin) && p.mouth.teeth === 'rotten' && p.makeup.includes('rotLips') && p.hat.style === 'veil' && p.top.style === 'laceGown', 'the zombie preset writes the whole person');
   assert.equal(presetMatch(zp, p), 'bride', 'and reads back');
-  const st = state(ov, { seed: 9, theme: 'thriller' }); assert.deepEqual(decode(encode(st)), st); assert.equal(decode(encode(st)).theme, 'thriller');
-  assert.match(report(st, '', 'http://x/#h'), /theme thriller/);
+  const st = state(ov, { seed: 9, theme: 'undead' }); assert.deepEqual(decode(encode(st)), st); assert.equal(decode(encode(st)).theme, 'undead');
+  assert.match(report(st, '', 'http://x/#h'), /theme undead/);
+  // a hash saved when the editor keyed its themes by theme name still opens: the hash is the face, and people keep links to faces
+  assert.equal(decode(encode({ ...st, theme: 'thriller' })).theme, 'undead', "the old spelling aliases to the cast that wears the parts");
+  assert.equal(decode(encode({ ...st, theme: 'thriller' })).ov['mouth.teeth'] ?? st.ov['mouth.teeth'], st.ov['mouth.teeth'] ?? undefined, 'and the rest of the state survives the alias');
   assert.equal(decode(encode(state())).theme, 'none', 'and a plain state stays plain');
 });
 
@@ -111,7 +114,7 @@ test('randomize is of the theme that is on, and moves every parameter that makes
   assert.deepEqual(base(11, 'any', 'elves'), elf, 'the same seed and theme is the same person');
   assert.notDeepEqual(base(12, 'any', 'elves'), elf, 'the next seed is another');
   assert.notDeepEqual(base(11, 'any', 'dwarves'), elf, 'and another theme is another cast');
-  assert.equal(base(5, 'squareJaw', 'thriller').mouth.teeth, 'rotten', 'choosing a skull does not cost a cast its signature');
+  assert.equal(base(5, 'squareJaw', 'undead').mouth.teeth, 'rotten', 'choosing a skull does not cost a cast its signature');
   // what the generators leave at the portrait's default, randomize draws: every one of them moves between seeds
   for (const path of Object.keys(JITTER)) {
     const seen = new Set();
@@ -128,7 +131,7 @@ test('randomize is of the theme that is on, and moves every parameter that makes
 test('a cast preset writes the whole person, so picking one cast after another sets back what the last one left: its ears and its build, always', () => {
   const presetFor = (theme, path) => controlsFor(state({}, { theme })).find((c) => c.path === path);
   const applied = (c, option) => { const ov = {}; for (const [k, v] of Object.entries(c.apply(option))) setOv(ov, k, v); return ov; };
-  const elf = applied(presetFor('elves', 'elves'), 'moonsinger'), dwarf = applied(presetFor('dwarves', 'dwarves'), 'ironBrow'), zombie = applied(presetFor('thriller', 'undead'), 'bride');
+  const elf = applied(presetFor('elves', 'elves'), 'moonsinger'), dwarf = applied(presetFor('dwarves', 'dwarves'), 'ironBrow'), zombie = applied(presetFor('undead', 'undead'), 'bride');
   for (const [who, ov] of [['an elf', elf], ['a dwarf', dwarf], ['a zombie', zombie]]) { assert.ok('ears.pointed' in ov, `${who} writes its ears`); assert.ok('build.legs' in ov, `${who} writes its build`); }
   assert.ok(elf['ears.pointed'] >= 0.7, 'an elf is pointed-eared');
   assert.ok(dwarf['ears.pointed'] <= 0.2 && zombie['ears.pointed'] === 0, 'a dwarf and a zombie are not: elf ears do not survive the switch');
@@ -232,7 +235,7 @@ test('a pose preset writes the whole stance and nothing else -- never a blocking
 });
 
 test('a themed stance is offered and writable: the claw is a pose the editor can set', () => {
-  const UNDEAD_THEME = THEMES.undead ?? THEMES.thriller; // keyed by theme name until T6 re-keys the editor's themes by cast
+  const UNDEAD_THEME = THEMES.undead ?? THEMES.undead; // keyed by theme name until T6 re-keys the editor's themes by cast
   assert.ok(UNDEAD_THEME.extras.pose.includes('thrillerClaw'), 'the undead cast puts its stances on the menu');
   assert.ok(!UNDEAD_THEME.extras.pose.includes('hordeLine'), 'and not its dance\'s blocking');
   assert.deepEqual(posePreset('thrillerClaw').props, ['clawHands']);

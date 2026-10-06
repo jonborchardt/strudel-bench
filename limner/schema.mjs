@@ -6,12 +6,11 @@
 // generator (constrained to one FAMILIES entry unless family is 'any'), `ov` the edits as flat dotted paths over it,
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
-import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf, REGISTRIES , STANCES, stanceOf } from 'limner';
-import { FAMILY_NAMES, characterFrom, faceOf, EXPRESSIONS, EDITORIAL_EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from 'limner';
-import { CASTS, themeNames, THEMES as BOUND } from './themes.mjs'; // every theme's cast and parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
-import VISUAL from '../../lib/visual.json' with { type: 'json' };
-import { seed as seedState, rand } from './kit.mjs';
-import { prng } from '../../lib/random.mjs';
+import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf, REGISTRIES } from './portrait.mjs';
+import { STANCES, stanceOf } from './stances.mjs';
+import { FAMILY_NAMES, characterFrom, faceOf, EXPRESSIONS, EDITORIAL_EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from './people.mjs';
+import { CASTS } from './registry.mjs'; // every cast's parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
+import { seed as seedState, rand, prng } from './rng.mjs';
 const EXPRESSION_NAMES = EDITORIAL_EXPRESSIONS; // cast.mjs's own snapshot, taken before any cast adds to the registry: a cast that pools an editorial expression beside its own no longer deletes it from this menu
 
 const num = (path, min, max, step = 0.01, o = {}) => ({ kind: 'num', path, min, max, step, ...o });
@@ -50,9 +49,11 @@ export function setOv(ov, path, value) {
 }
 
 const FAMILIES_PLUS = ['any', ...FAMILY_NAMES];
-export const THEME_NAMES = ['none', ...themeNames()]; // the themes the editor offers (THEMES below says what each adds)
+export const THEME_NAMES = ['none', ...Object.keys(CASTS)]; // the themes the editor offers (THEMES below says what each adds)
 /** The cast a theme draws its people from (lib/visual.json's row), else the editorial one: with a theme on, a random character is a random one of that cast, in its clothes and with its signature. */
-const castFor = (theme) => (on(theme) && VISUAL.themes[theme] && CASTS[VISUAL.themes[theme].cast]) || CASTS.editorial;
+// The editor's themes are its casts, so this is a lookup rather than a hop through the host's json: it used to read
+// lib/visual.json to learn which cast a theme row named, which is a fact about a song's world and not about a face.
+const castFor = (theme) => (on(theme) && CASTS[theme]) || CASTS.editorial;
 const pickOf = (r, a) => (a.length ? a[Math.floor(r() * a.length)] : null);
 const castTags = (cast) => (cast === CASTS.editorial ? [] : themeTags(cast));
 /** The layers a random one of this cast may wear: its own pack's with a theme on, else exactly what the editorial menu lists, so a pack that registers a part without tagging it never turns up on an editorial face. */
@@ -105,9 +106,13 @@ export const params = (st) => merge(merge(DEFAULTS, base(st.seed, st.family, st.
 /** A blank state. A function, not a constant: its `ov` is written in place, so a shared one would alias every reset. */
 export const blank = () => ({ seed: 1, family: 'any', theme: 'none', ov: { background: '#c8102e' } }); // red behind the sitter by default: an edge against the page's beige is invisible
 export const encode = (st) => btoa(JSON.stringify(st)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+/** A hash saved when the themes were keyed by theme name rather than by the cast that wears the parts. The hash IS the
+ *  face, and people keep links to faces, so the old spellings go on opening. */
+const THEME_ALIAS = { thriller: 'undead' };
 export function decode(hash) {
   try {
     const st = JSON.parse(atob(String(hash).replace(/^#/, '').replace(/-/g, '+').replace(/_/g, '/')));
+    if (st.theme && THEME_ALIAS[st.theme]) st.theme = THEME_ALIAS[st.theme];
     return { ...blank(), ...st, ov: { ...(st.ov ?? {}) } };
   } catch { return blank(); }
 }
@@ -229,15 +234,18 @@ function limitsOf(cast) {
   return l;
 }
 /** What a theme adds to the editor: every part its tags reach that the editorial menus lack, by control path, its dance's poses, plus the cast's costumes and expressions, one preset of its archetypes named by the cast, and the limits above. */
-function themeEntry(cast, bound) {
+function themeEntry(cast) {
   const tags = themeTags(cast), extras = {};
-  const poses = Object.keys(STANCES[bound?.stances] ?? {}); if (poses.length) extras.pose = poses; // the cast's own stances; a dance's poses are blocking, which belongs to the world and not to a one-face editor
+  const poses = Object.keys(STANCES[cast.name] ?? {}); if (poses.length) extras.pose = poses; // the cast's own stances, keyed by its name; a dance's poses are blocking, which belongs to a world and not to a one-face editor
   for (const [kind, path] of Object.entries(MENU)) { const add = parts(kind, { any: tags }).filter((n) => !editorial[path]?.has(n)); if (add.length) extras[path] = add; }
   const costumes = (cast.costumes ?? []).filter((c) => !editorial.costume.has(c)), expressions = [...new Set(cast.expressions ?? [])].filter((e) => !editorial.expression.has(e));
   if (costumes.length) extras.costume = costumes; if (expressions.length) extras.expression = expressions;
   return { extras, limits: limitsOf(cast), presets: cast.archetypeNames?.length ? [preset(cast.name, cast.archetypeNames, (n) => castPreset(cast, n))] : [] };
 }
-export const THEMES = Object.fromEntries(themeNames().map((name) => [name, themeEntry(CASTS[VISUAL.themes[name].cast], BOUND[name])])); // one entry per bound theme, from the cast its json row names
+// One entry per cast. These were keyed by theme name while the editor still read a bound theme; it does not any more --
+// the only thing it wanted from one was the name of a stance pack, and a pack belongs to the cast that wears it. So the
+// key is the cast, which is also what the control writes, and `decode` keeps the old spellings opening (THEME_ALIAS).
+export const THEMES = Object.fromEntries(Object.keys(CASTS).map((name) => [name, themeEntry(CASTS[name])]));
 /** One control under a theme: the theme's own options added to its menu, then the theme's limits taken off it — the
  *  menu narrowed to what this cast may wear and a slider's range narrowed to what this race may be. A limit that would
  *  empty a menu is ignored, since a control with nothing in it is worse than one that offers too much. */

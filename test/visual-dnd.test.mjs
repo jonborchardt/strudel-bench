@@ -15,7 +15,7 @@ const { FANTASY } = LIMNER_PACKS.fantasy;
 import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES, ANATOMY, buildOf, COSTUMES } from 'limner';
 import { portraitOps, toSvg, drawOn, parts, tagsOf, feetY, headBox } from 'limner';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
-import { GROUPS, groupsFor, controlsFor } from '../web/visual/editor.mjs';
+import { GROUPS, groupsFor, controlsFor } from '../limner/schema.mjs';
 import { ctxStub, run as runWorld, forbid } from './_visual.mjs';
 import { seed } from '../web/visual/kit.mjs';
 import { prng } from '../lib/random.mjs';

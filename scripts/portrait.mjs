@@ -12,7 +12,7 @@
 import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { renderPortrait } from 'limner';
-import { params, decode, encode, setOv } from '../web/visual/editor.mjs';
+import { params, decode, encode, setOv } from '../limner/schema.mjs';
 
 const argv = process.argv.slice(2);
 const flag = (name, dflt) => { const i = argv.indexOf('--' + name); return i < 0 ? dflt : argv[i + 1]; };
