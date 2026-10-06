@@ -16,11 +16,11 @@ const uke = (sound, mix) => (pat, clip = 6) => ({ pattern: note(pat).s(sound).cl
 const soprano = uke('gm_acoustic_guitar_nylon', { level: .5, position: .5, brightness: .72, space: .55 });
 const tenor   = uke('gm_acoustic_guitar_nylon', { level: .4, position: -.2, brightness: .6, space: .55 });
 // a chuck: the strings strummed while the left hand damps them, so each rings a tenth of a second with the tone dulled
-const chuck = (pat) => ({ ...soprano(pat, 4), brightness: .3 });
-const concert = uke('gm_acoustic_guitar_nylon', { level: .5, position: .4, brightness: .6, space: .55 });
-const baritone = uke('gm_acoustic_guitar_nylon', { level: .7, position: -.45, brightness: .45, space: .5 });
-const bassuke = uke('gm_acoustic_guitar_nylon', { level: .42, brightness: .5, space: .35, humanize: { ...played, correlation: 'bar' } });
-const lowg = uke('gm_acoustic_guitar_nylon', { level: .42, position: .15, brightness: .6, space: .5 });
+const chuck = (pat) => ({ ...soprano(pat, 4), brightness: .3, position: .3, level: .36 });
+const concert = uke('gm_acoustic_guitar_nylon', { level: .5, position: -.4, brightness: .6, space: .55 });
+const baritone = uke('gm_acoustic_guitar_nylon', { level: .7, position: .02, brightness: .45, space: .5 });
+const bassuke = uke('gm_acoustic_guitar_nylon', { level: .42, position: .02, brightness: .5, space: .35, humanize: { ...played, correlation: 'bar' } });
+const lowg = uke('gm_acoustic_guitar_nylon', { level: .42, position: .2, brightness: .6, space: .5 });
 // voicings: soprano and tenor the open reentrant shapes (the high g is the uke sound; nothing a uke plays sits above the fifth fret), baritone linear DGBE
 // Em (0432) is the minor v, held back for the chorus answer and the verse hinge; E7 (1202) brings the one G#
 // in the song and is played once, at the end of the bridge, so the return actually turns
@@ -148,7 +148,7 @@ song({ cps: .49, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
     raw2:  tenor(hinge(stabs(T.Am, T.G), ...HS), hinge('3', ...HSCLIP)),
     raw3:  chuck(hinge(strum(T.Am, BACK), '~', '~')),
     raw4:  baritone(hinge(ANSWER, ...TAG), 2),
-    raw5:  concert(hinge(PICK2, '~', '~'), 4),
+    raw5:  { ...concert(hinge(PICK2, '~', '~'), 4), level: .34 },
     raw6:  fret,
   }),
   section('pre', 4, { role: 'develop', progression: 'VI VII VI VII',
@@ -160,12 +160,12 @@ song({ cps: .49, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
   }),
   section('chorus', 8, { role: 'develop', progression: 'i iv VI VII iv VII v i',
     drums: { ...knocks, density: .7, level: .46, variation: .3 },
-    raw:   { ...bassuke(bars(CHB), 1), level: .65 },
+    raw:   { ...bassuke(bars(CHB), 1), level: .85 },
     raw2:  { ...closer(tenor(bars(CHPUNCH), 1.3)), level: .6, velocity: CHV },
-    raw3:  farther(soprano(CH, CHCLIP)),
+    raw3:  { ...farther(soprano(CH, CHCLIP)), level: .34 },
     raw4:  { ...closer(baritone(bars(CHOOK), 1.3)), level: .9, velocity: CHV },
-    raw5:  { ...closer(concert(bars(CHPUNCH), 1.3)), level: .8, velocity: CHV },
-    raw6:  farther(lowg(CHL, CHCLIP)),
+    raw5:  { ...closer(concert(bars(CHPUNCH), 1.3)), level: .62, velocity: CHV },
+    raw6:  { ...farther(lowg(CHL, CHCLIP)), level: .3 },
     raw7:  fret,
   }),
   section('trans2', 2, trans),
@@ -175,7 +175,7 @@ song({ cps: .49, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
     raw2:  tenor(hinge(stabs(T.Am, T.G), ...HS), hinge('3', ...HSCLIP)),
     raw3:  chuck(hinge(strum(T.Am, BACK), '~', '~')),
     raw4:  baritone(hinge(ANSWER, ...TAG), 2),
-    raw5:  lowg(hinge(LOWG.Am, '~', '~'), 2),
+    raw5:  { ...lowg(hinge(LOWG.Am, '~', '~'), 2), level: .32 },
     raw6:  fret,
   }),
   section('pre2', 4, { role: 'develop', progression: 'VI VII VI VII',
@@ -188,12 +188,12 @@ song({ cps: .49, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
   }),
   section('chorus2', 8, { role: 'develop', progression: 'i iv VI VII iv VII v i',
     drums: { ...knocks, density: .75, level: .48, variation: .35 },
-    raw:   { ...bassuke(bars(CHB), 1), level: .65 },
+    raw:   { ...bassuke(bars(CHB), 1), level: .85 },
     raw2:  { ...closer(tenor(bars(CHPUNCH), 1.3)), level: .6, velocity: CHV },
-    raw3:  farther(soprano(CH, CHCLIP)),
+    raw3:  { ...farther(soprano(CH, CHCLIP)), level: .34 },
     raw4:  { ...closer(baritone(bars(CHOOK), 1.3)), level: .9, velocity: CHV },
-    raw5:  { ...closer(concert(bars(CHPUNCH), 1.3)), level: .8, velocity: CHV },
-    raw6:  farther(lowg(CHL, CHCLIP)),
+    raw5:  { ...closer(concert(bars(CHPUNCH), 1.3)), level: .62, velocity: CHV },
+    raw6:  { ...farther(lowg(CHL, CHCLIP)), level: .3 },
     raw7:  fret,
   }),
   // the creak: half time, the bass alone on its lowest string, the tenor's chord on one and the baritone's answer on three, the low-G tenor picking
@@ -215,12 +215,12 @@ song({ cps: .49, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
   }),
   section('chorus3', 8, { role: 'climax', progression: 'i iv VI VII iv VII [v VI] [VII i]',
     drums: { ...knocks, density: .85, level: .5, variation: .45, fill: 2 },
-    raw:   { ...bassuke(bars(CHB3), 1), level: .65 },
+    raw:   { ...bassuke(bars(CHB3), 1), level: .85 },
     raw2:  { ...closer(tenor(bars(CHPUNCH3), 1.3)), level: .6, velocity: CHV },
-    raw3:  farther(soprano(CH3, CHCLIP)),
+    raw3:  { ...farther(soprano(CH3, CHCLIP)), level: .34 },
     raw4:  { ...closer(baritone(bars(CHOOK3), 1.3)), level: .9, velocity: CHV },
-    raw5:  { ...closer(concert(bars(CHPUNCH3), 1.3)), level: .8, velocity: CHV },
-    raw6:  farther(lowg(CHL3, CHCLIP)),
+    raw5:  { ...closer(concert(bars(CHPUNCH3), 1.3)), level: .62, velocity: CHV },
+    raw6:  { ...farther(lowg(CHL3, CHCLIP)), level: .3 },
     raw7:  fret,
   }),
   // the last four bars open into a hall: the same players, the room around them bigger, so the picking trails off behind the chord

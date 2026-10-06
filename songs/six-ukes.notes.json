@@ -417,6 +417,45 @@
           "why": "the chucks follow the half-bar chord changes in the last two bars (Em F, G Am)"
         }
       ]
+    },
+    {
+      "date": "2026-10-06",
+      "ask": "do the final mix",
+      "changes": [
+        {
+          "section": "song",
+          "why": "every part now names its seat: position 0 or none writes no pan at all (lib/song.mjs panned), so the bass uke and anything centred was summing at unity in both channels, 3 dB over every part that did name one - the bass measured as the loudest thing in every section for that reason alone"
+        },
+        {
+          "section": "song",
+          "why": "the room is re-seated once for the whole band: baritone .02 (the lead voice in the middle), tenor -.2 and concert -.4 on the left, the soprano .5 and the low-G .2 on the right. The low-G and the soprano are the only right-hand voices in the bridge, the outro and the intro, which is why neither can sit on the left"
+        },
+        {
+          "section": "song",
+          "layer": "chuck",
+          "why": "position .5>.3 level .5>.36: the damped backbeat is this song's snare and it was hard right at .87 and the loudest part of every verse"
+        },
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw3",
+          "why": "level .5>.34 and raw6 .42>.3: the strum bed rang as loud as the hook, so the five ukes sat inside 3 dB of each other"
+        },
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw5",
+          "why": "level .8>.62: the concert doubling was 1 dB off the lead"
+        },
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw",
+          "why": "level .65>.85: the bass back level with the kit after it lost its 3 dB of missing pan"
+        },
+        {
+          "section": "verse2",
+          "layer": "raw5",
+          "why": "level .5>.34 and verse3.raw5 .42>.32: the picking is decoration behind the answers, and it measured 1 dB off the lead"
+        }
+      ]
     }
   ],
   "youtube": {
