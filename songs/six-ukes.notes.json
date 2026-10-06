@@ -366,6 +366,31 @@
           "why": "the pre's last three sixteenths walk up into the hook's first note instead of falling away, so the chorus line starts before the bar"
         }
       ]
+    },
+    {
+      "date": "2026-10-06",
+      "ask": "the chorus is too flamenco; there is too much pause between bridge and solo",
+      "changes": [
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw2/4/5",
+          "why": "the hook's long notes were an even eight-pick tremolo, which on nylon strings is the one unmistakable classical/flamenco gesture; they are now struck and struck again on the dotted eighth, which is how a funk player holds a note"
+        },
+        {
+          "section": "trans/trans2",
+          "layer": "raw2/4/5",
+          "why": "the same, twenty picks a bar down to four: the transition pulses the chord instead of trembling on it"
+        },
+        {
+          "section": "bridge",
+          "why": "dropout 1>none: the last bar was masked to silence and the solo had to start cold, so the bar now plays - the bass walks the E7 up (e gs b d) into the solo's root, the tenor re-strums the chord on three, the low-G picks it"
+        },
+        {
+          "section": "bridge",
+          "layer": "drums",
+          "why": "fill true: a half-bar palm roll on the cajon over that last bar, so the band leads into the solo instead of the song stopping"
+        }
+      ]
     }
   ],
   "youtube": {

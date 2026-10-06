@@ -46,8 +46,10 @@ const RA = 'a1 ~ a1 a2 ~ g2 a1 e2', RD = 'd2 ~ d2 d3 ~ c3 d2 a2';
 const RF = 'f2 ~ f2 f3 ~ e3 f2 c3', RG = 'g2 ~ g2 g3 ~ f3 g2 d3', RE = 'e2 ~ e2 e3 ~ d3 e2 b2';
 const PF = '[f2 ~ f2 f2] [~ f2 ~ f2] [~ f2 f2 ~] [f2 ~ c3 ~]', PG = '[g2 ~ g2 g2] [~ g2 ~ g2] [~ g2 g2 ~] [g2 ~ d3 ~]';
 // the hook over the chorus chords (baritone, concert and tenor in unison, soprano and low-G hitting its rhythm), and the baritone's answers in the verse
-// the long notes are tremolo (eight picks over five sixteenths, twelve a second), which is how a uke holds a note loud
-const HOOK = ['[e4*8]@5 ~ [g4*8]@5 ~ a4 g4 e4 ~', '[d4*8]@5 ~ [f4*8]@5 ~ a4 f4 d4 ~', '[f4*8]@5 ~ [a4*8]@5 ~ c5 a4 f4 ~', '[g4*8]@5 ~ [b4*8]@5 ~ d5 b4 g4 e4'];
+// the long notes are struck and struck again on the dotted eighth -- how a funk player holds one, not the even
+// tremolo a classical or flamenco player would use (eight picks a note read as Spanish guitar, which this is not)
+const HOOK = ['[e4@3 e4@2]@5 ~ [g4@3 g4@2]@5 ~ a4 g4 e4 ~', '[d4@3 d4@2]@5 ~ [f4@3 f4@2]@5 ~ a4 f4 d4 ~',
+              '[f4@3 f4@2]@5 ~ [a4@3 a4@2]@5 ~ c5 a4 f4 ~', '[g4@3 g4@2]@5 ~ [b4@3 b4@2]@5 ~ d5 b4 g4 e4'];
 // the bass under the hook: the two long hits on the root, the walk on the short ones
 const HA = 'a1@5 ~ a1@5 ~ c2 d2 ~ e2', HD = 'd2@5 ~ d2@5 ~ f2 g2 ~ a2', HF = 'f2@5 ~ f2@5 ~ a2 c3 ~ c3', HG = 'g2@5 ~ g2@5 ~ b2 d3 ~ e3';
 const ANSWER = ['~', '[~ ~ ~ ~] [~ ~ e3 g3] [a3@2 ~ g3] [e3@2 ~ ~]', '~', '[~ ~ ~ ~] [~ ~ c4 b3] [a3@2 ~ g3] [a3@2 ~ ~]'];
@@ -100,8 +102,9 @@ const HS = [strum(T.F, ONE), strum(T.Em, ONE)], HSCLIP = ['24', '24'];
 // the intro: the low-G picks over the bass's pedal, one inner voice climbing a step every two bars
 const RISE = ['a4', 'b3', 'c4', 'd4', 'ds4'].flatMap((x) => ['[a3 ~ ' + x + ' ~] [e4 ~ ' + x + ' ~] [a3 ~ ' + x + ' ~] [e4 ~ ' + x + ' ~]', '[a3 ~ ' + x + ' ~] [e4 ~ ' + x + ' ~] [a3 ~ ' + x + ' e4] [~ ' + x + ' ~ ~]']);
 const PEDAL = 'a1 ~ ~ a1 ~ ~ a1 ~';
-// the transition that announces the groove: a bar of tremolo on the chord, then two short hits and the sixth held, the whole band on it
-const TRM = ['[e4*20]@12 ~ ~ ~ ~', 'a4 ~ g4 ~ [f4*20]@12'];
+// the transition that announces the groove: a bar of the chord re-struck every dotted eighth, then two short hits
+// and the sixth held, the whole band on it
+const TRM = ['[e4@3 e4@3 e4@3 e4@3]@12 ~ ~ ~ ~', 'a4 ~ g4 ~ [f4@3 f4@3 f4@3 f4@3]@12'];
 const TRS = bars([strum(T.Am, ONE), strum(T.Am, 'D ~ D ~') + ' ' + strum(T.F, 'D ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~')]);
 const TRL = bars([strum(L.Am, ONE), strum(L.Am, 'D ~ D ~') + ' ' + strum(L.F, 'D ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~')]);
 const TRCLIP = '<[24 24 24 24 24 24 24 24 24 24 24 24 24 24 24 24] [3 3 3 3 24 24 24 24 24 24 24 24 24 24 24 24]>';
@@ -191,12 +194,12 @@ song({ cps: .49, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
   // the creak: half time, the bass alone on its lowest string, the tenor's chord on one and the baritone's answer on three, the low-G tenor picking
   // the seventh bar is the only dominant in the song (E7, the one G#), left to ring into the dropout bar, so the
   // bridge turns instead of fading; everything else here is the same two chords creeping
-  section('bridge', 8, { role: 'breakdown', progression: 'i VI i VI i VI V7@2', dropout: 1,
-    drums: { ...knocks, template: HALF, density: .45, level: .3 },
-    raw:   bassuke(hinge(['a1@2 ~ [~ ~ ~ e2]', 'f2@2 ~ [~ ~ ~ c2]', 'a1@2 ~ [~ ~ ~ e2]', 'f2@2 [~ ~ f2 ~] [~ ~ g2 ~]'], 'e2@2 ~ [~ gs2 ~ b2]', '~'), 1),
-    raw2:  tenor(hinge([strum(T.Am, ONE), strum(T.F, ONE)], strum(T.E7, ONE), '~'), 24),
+  section('bridge', 8, { role: 'breakdown', progression: 'i VI i VI i VI V7@2',
+    drums: { ...knocks, template: HALF, density: .45, level: .3, fill: true },
+    raw:   bassuke(hinge(['a1@2 ~ [~ ~ ~ e2]', 'f2@2 ~ [~ ~ ~ c2]', 'a1@2 ~ [~ ~ ~ e2]', 'f2@2 [~ ~ f2 ~] [~ ~ g2 ~]'], 'e2@2 ~ [~ gs2 ~ b2]', 'e2 ~ gs2 ~ b2 ~ d3 ~'), 1),
+    raw2:  tenor(hinge([strum(T.Am, ONE), strum(T.F, ONE)], strum(T.E7, ONE), strum(T.E7, THREE)), 24),
     raw3:  { ...baritone(hinge([strum(B.Am, THREE), strum(B.F, THREE)], strum(B.E7, THREE), '~'), 24), level: .5 },
-    raw4:  lowg(hinge(['[a3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [c4 ~ ~ ~]', '[f3 ~ ~ ~] [~ ~ c4 ~] [~ ~ ~ ~] [a3 ~ ~ ~]', '[a3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [c4 ~ ~ ~]', '[f3 ~ ~ ~] [~ ~ c4 ~] [~ a3 ~ ~] [g3 ~ ~ ~]'], '[gs3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [b3 ~ ~ ~]', '~'), 2),
+    raw4:  lowg(hinge(['[a3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [c4 ~ ~ ~]', '[f3 ~ ~ ~] [~ ~ c4 ~] [~ ~ ~ ~] [a3 ~ ~ ~]', '[a3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [c4 ~ ~ ~]', '[f3 ~ ~ ~] [~ ~ c4 ~] [~ a3 ~ ~] [g3 ~ ~ ~]'], '[gs3 ~ ~ ~] [~ ~ e4 ~] [~ ~ ~ ~] [b3 ~ ~ ~]', '[gs3 ~ ~ ~] [~ ~ b3 ~] [~ ~ ~ ~] [d4 ~ ~ ~]'), 2),
   }),
   section('solo', 8, { role: 'develop', progression: 'i iv i iv',
     drums: { ...knocks, density: .65, level: .34, variation: .3 },
