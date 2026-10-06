@@ -2,7 +2,8 @@
 import assert from 'node:assert/strict';
 import { renderPortrait, portraitOps, DEFAULTS, NOSES, FACIAL_HAIR, FACIAL_HAIR_STYLES } from 'limner';
 import { GROUPS, CONTROLS, THEMES, THEME_NAMES, JITTER, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../web/visual/editor.mjs';
-import ELVES, { ELF_EARS, ELF_BUILD } from '../web/visual/casts/elves.mjs';
+import { CASTS, CAST_MODULES } from 'limner';
+const ELVES = CASTS.elves, { ELF_EARS, ELF_BUILD } = CAST_MODULES.elves;
 import { FAMILIES } from 'limner';
 import { ZOMBIE_NAMES, ZOMBIE_SKINS } from '../web/visual/thriller.mjs';
 

@@ -14,4 +14,5 @@
 // canvas, and rasterising an SVG string per frame would not keep up.
 export * from './portrait.mjs';
 export * from './people.mjs';
+export { CASTS, PACKS, CAST_MODULES } from './registry.mjs';
 export { seed, rand, prng, pick, clamp, lerp } from './rng.mjs';

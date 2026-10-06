@@ -2,7 +2,7 @@
 // `only:halfling`; the tapered ears, the tunic and the cloak it shares with the other fantasy casts are
 // parts/fantasy.mjs. A patchwork waistcoat over a shirt (squares of other cloth, horn buttons), a quilted coat
 // stitched in diamonds, and a straw cap with a short brim. parts.html?pack=halfling is the sheet.
-import { TOPS, JACKETS, HATS, HAT_CROWN, NECKLINES, shade, path, ellipse, rect, stroke, tag } from 'limner';
+import { TOPS, JACKETS, HATS, HAT_CROWN, NECKLINES, shade, path, ellipse, rect, stroke, tag } from '../portrait.mjs';
 
 const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 

@@ -18,7 +18,8 @@ import { seed } from '../web/visual/kit.mjs';
 import { prng } from '../lib/random.mjs';
 import VISUAL from '../lib/visual.json' with { type: 'json' };
 import { THEMES, CASTS, DANCES, PACKS, bindTheme } from '../web/visual/themes.mjs';
-import UNDEAD from '../web/visual/casts/undead.mjs';
+import { CASTS as LIMNER_CASTS } from 'limner';
+const UNDEAD = LIMNER_CASTS.undead;
 
 const clean = (o) => !/NaN|undefined|Infinity/.test(JSON.stringify(o));
 const draws = (o, what) => { const ops = portraitOps(o); assert.ok(ops.length > 20 && clean(ops), what); const ctx = ctxStub(); drawOn(ctx, ops); assert.equal(ctx.calls.save, ctx.calls.restore, `${what} restores every clip`); assert.ok(toSvg(ops).startsWith('<svg')); return ops; };

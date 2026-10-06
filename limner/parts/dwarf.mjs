@@ -4,7 +4,7 @@
 // down the braids as a mark on the `over` slot (drawn after the beard's mass, or they would be under it), two hats
 // (a hornless steel helm with a nasal, a leather cap with ear flaps), a mail shirt (a ring texture over the chest)
 // and a fur mantle over the shoulders with a clasp. parts.html?pack=dwarf is the sheet.
-import { FACIAL_HAIR, HATS, HAT_CROWN, TOPS, JACKETS, MARKS, NECKLINES, beardOps, shade, path, ellipse, rect, stroke, tag } from 'limner';
+import { FACIAL_HAIR, HATS, HAT_CROWN, TOPS, JACKETS, MARKS, NECKLINES, beardOps, shade, path, ellipse, rect, stroke, tag } from '../portrait.mjs';
 
 const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const GOLD = '#c9a03c';

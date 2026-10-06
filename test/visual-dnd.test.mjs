@@ -10,7 +10,8 @@ import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES as EDITORIAL } from '../web/visual/tableau.mjs';
 import { CASTS, THEMES, PACKS } from '../web/visual/themes.mjs';
-import { FANTASY } from '../web/visual/parts/fantasy.mjs';
+import { PACKS as LIMNER_PACKS } from 'limner';
+const { FANTASY } = LIMNER_PACKS.fantasy;
 import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES, ANATOMY, buildOf, COSTUMES } from 'limner';
 import { portraitOps, toSvg, drawOn, parts, tagsOf, feetY, headBox } from 'limner';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
@@ -164,4 +165,18 @@ test('every cast carries the build the table solves for it, so no cast drifts of
   const slider = Object.fromEntries(GROUPS.flatMap((g) => g.items).filter((c) => c.path.startsWith('build.')).map((c) => [c.path.slice(6), c]));
   for (const cast of Object.values(CASTS)) for (const [k, v] of Object.entries(cast.build === 'default' ? {} : cast.build))
     assert.ok(v >= slider[k].min && v <= slider[k].max, `${cast.name}: build.${k} = ${v} is on the editor's own slider (${slider[k].min}..${slider[k].max}), or the page cannot show the figure it draws`);
+});
+
+// The casts and the part packs are limner's registries now, and a theme row names one of each. The error a misspelt row
+// raises has to keep naming what it got and listing what exists, or a typo in lib/visual.json becomes a blank stage with
+// no clue where to look.
+test('a theme naming a cast limner does not have fails with that cast named and the real ones listed', async () => {
+  const { bindTheme } = await import('../web/visual/themes.mjs');
+  assert.throws(() => bindTheme('bad', { cast: 'wizards', dance: 'editorial', packs: [] }), (e) => {
+    assert.match(e.message, /unknown cast "wizards"/, 'names the cast that was asked for');
+    assert.match(e.message, /editorial/, "and lists one that exists, from limner's registry");
+    return true;
+  });
+  assert.throws(() => bindTheme('bad', { cast: 'editorial', dance: 'editorial', packs: ['sorcery'] }), /unknown pack "sorcery"/);
+  assert.throws(() => bindTheme('bad', { cast: 'editorial', dance: 'moonwalk', packs: [] }), /unknown dance "moonwalk"/);
 });

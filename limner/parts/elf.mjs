@@ -4,7 +4,7 @@
 // Here: the vine marks, a tracery at one temple; a leaf circlet that sits on the hair (no HAT_CROWN); a high-collared
 // tunic with leaves embroidered along the neckline; a travelling cloak open at the front with a leaf clasp.
 // parts.html?pack=elf is the sheet.
-import { HATS, TOPS, JACKETS, MAKEUP, NECKLINES, shade, path, ellipse, line, stroke, tag } from 'limner';
+import { HATS, TOPS, JACKETS, MAKEUP, NECKLINES, shade, path, ellipse, line, stroke, tag } from '../portrait.mjs';
 
 const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const leaf = (x, y, s, fill, op = 1) => path(`M ${x} ${y} Q ${x + 6 * s} ${y - 9} ${x + 15 * s} ${y - 2} Q ${x + 7 * s} ${y + 6} ${x} ${y} Z`, { fill, op }); // one leaf from (x, y) toward +x (s 1) or -x (s -1)

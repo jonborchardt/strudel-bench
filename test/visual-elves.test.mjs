@@ -1,4 +1,4 @@
-// web/visual/casts/elves.mjs + web/visual/parts/elf.mjs: the third theme, added to prove the character system is
+// limner/casts/elves.mjs + limner/parts/elf.mjs: the third theme, added to prove the character system is
 // done: a kind of person is a part pack, a cast with a build and a row in lib/visual.json, nothing else touched. What
 // it promises: the elf parts are quarantined (`only:elf`) and every one draws; the cast is slight and long-legged by
 // its build (ANATOMY, cast.mjs), narrow-faced, long-necked, beardless because its beard pool is empty (the fallback,
@@ -8,8 +8,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES as EDITORIAL } from '../web/visual/tableau.mjs';
-import ELVES, { ELF_EARS } from '../web/visual/casts/elves.mjs';
-import { ELF } from '../web/visual/parts/elf.mjs';
+import { CASTS, CAST_MODULES, PACKS } from 'limner';
+const ELVES = CASTS.elves, { ELF_EARS } = CAST_MODULES.elves, { ELF } = PACKS.elf;
 import { THEMES } from '../web/visual/themes.mjs';
 import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES } from 'limner';
 import { portraitOps, toSvg, drawOn, parts, tagsOf, feetY, headBox } from 'limner';

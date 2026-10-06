@@ -6,8 +6,8 @@
 // from the halfling pack (parts/halfling.mjs) over the shared kit (parts/fantasy.mjs), on the tableau's own shots.
 import '../parts/halfling.mjs'; // the parts this cast is made of register by name
 import '../parts/fantasy.mjs'; // the shared pack beside them
-import { COSTUMES, FAMILIES, buildOf } from 'limner';
-import { parts, SKIN_COLORS, HAIR_COLORS, EYE_COLORS } from 'limner';
+import { COSTUMES, FAMILIES, buildOf } from '../people.mjs';
+import { parts, SKIN_COLORS, HAIR_COLORS, EYE_COLORS } from '../portrait.mjs';
 
 const WHEAT = '#c2a86a', BERRY = '#8d4a52', LEAF = '#5f7a4a', OAK = '#6b4a33', CREAM = '#d9cdb0', PLUM = '#5e4257';
 /** What they wear: a patchwork waistcoat, the waistcoat under a quilted coat, a straw cap over homespun, a cloak for the road. */

@@ -3,7 +3,7 @@
 // hat leaning off the crown with a floppy tip, a tinker's leather apron over a shirt with pockets and a strap, and
 // brass goggles (a GLASSES entry, so the generator's own "one memorable thing" can hand them out).
 // parts.html?pack=gnome is the sheet.
-import { TOPS, HATS, HAT_CROWN, GLASSES, NECKLINES, shade, path, ellipse, line, rect, stroke, tag } from 'limner';
+import { TOPS, HATS, HAT_CROWN, GLASSES, NECKLINES, shade, path, ellipse, line, rect, stroke, tag } from '../portrait.mjs';
 
 const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const BRASS = '#b08d3c', LEATHER = '#6b4a30';
