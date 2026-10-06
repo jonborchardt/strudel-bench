@@ -12,9 +12,10 @@
   "engines": { "node": ">=18" },
   "exports": {
     ".": "./index.mjs",
-    "./primitives": "./primitives.mjs"
+    "./primitives": "./primitives.mjs",
+    "./package.json": "./package.json"
   },
-  "files": ["index.mjs", "primitives.mjs", "portrait.mjs", "people.mjs", "registry.mjs", "stances.mjs", "rng.mjs", "casts", "parts", "README.md", "LICENSE"],
+  "files": ["index.mjs", "primitives.mjs", "portrait.mjs", "people.mjs", "registry.mjs", "stances.mjs", "rng.mjs", "schema.mjs", "casts", "parts", "README.md", "LICENSE"],
   "scripts": {
     "test": "node --test \"test/*.test.mjs\""
   }

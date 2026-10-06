@@ -119,7 +119,11 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
 // second instance cannot be made; the day limner is installed from npm rather than linked, it can again. Either way the
 // rule is the same and is the point of having a published surface: from outside, limner is reachable only at its
 // entries, never past them.
-const ENTRIES = ['index.mjs', 'primitives.mjs', 'schema.mjs']; // schema is internal by the spec but portrait.html reaches it; see the ledger
+// The paths this repo may name. Note `schema.mjs`: it is deliberately NOT in limner's `exports`, so a bare
+// `limner/schema.mjs` is refused (limner/test/exports.test.mjs pins that) -- this list governs *path* imports from
+// in-tree, which is a different mechanism, and limner.html reaches the editor spec that way because it is the one
+// page that ships with limner beside it. It is in the package's `files`, so an npm install has it on disk too.
+const ENTRIES = ['index.mjs', 'primitives.mjs', 'schema.mjs'];
 test('nothing outside limner reaches past its entries: two instances would split the part registries', () => {
   const walk = (dir) => fs.readdirSync(dir).flatMap((f) => {
     const p = path.join(dir, f);

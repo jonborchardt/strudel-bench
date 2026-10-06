@@ -72,7 +72,7 @@ export const ZOMBIE_EXPRESSIONS = {
 Object.assign(EXPRESSIONS, ZOMBIE_EXPRESSIONS);
 const EXPR_POOL = ['slackJaw', 'slackJaw', 'deadStare', 'hunger', 'snarl', 'moan', 'lidsHalf'], EMOTES = ['slackJaw', 'deadStare', 'hunger', 'moan', 'lidsHalf'];
 
-// the cast object (the shape cast.mjs's EDITORIAL documents): the dead draw their faces from the editorial families, their skins from the grave, their clothes from the eighties pack beside the everyday ones, and every random one of them has the milky eyes and the rotten teeth (`base`)
+// the cast object (the shape people.mjs's EDITORIAL documents): the dead draw their faces from the editorial families, their skins from the grave, their clothes from the eighties pack beside the everyday ones, and every random one of them has the milky eyes and the rotten teeth (`base`)
 export default {
   name: 'undead', families: FAMILIES,
   skins: ZOMBIE_SKINS, hairColors: Object.values(HAIR_COLORS), irises: [DEAD_EYES.iris], clothes: Object.values(NEON),

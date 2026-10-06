@@ -1,4 +1,4 @@
-// The orcs cast: six of them, built heavy and tall (`build`, solved from `ANATOMY` in cast.mjs: six foot four, a
+// The orcs cast: six of them, built heavy and tall (`build`, solved from `ANATOMY` in people.mjs: six foot four, a
 // long thick torso, shoulders half again as wide, long arms, legs short for the height), their faces from the heavy-browed and square-jawed families with broad heads on thick necks, green and
 // grey-skinned, amber-eyed, tusked in every shot (the `tusks` makeup is each archetype's and the cast's `base`, so a
 // random one in the crowd has them too) and lightly pointed of ear. They wear hide, pelt and bone from the orc pack
@@ -17,7 +17,7 @@ export const ORC_COSTUMES = {
   strippedToTheWaist: () => ({ top: { style: 'bare', color: '#000' }, jacket: { style: 'none' }, pants: { style: 'trousers', color: '#2e2622' } }),
 };
 Object.assign(COSTUMES, ORC_COSTUMES);
-export const ORC_BUILD = buildOf('orc'); // the anatomy table in cast.mjs: tall, heavy of shoulder, long-armed, the legs short for the height
+export const ORC_BUILD = buildOf('orc'); // the anatomy table in people.mjs: tall, heavy of shoulder, long-armed, the legs short for the height
 /** An orc's hide: green through moss, olive and grey-green to stone and ash, light to dark, because a camp is not one colour. */
 export const ORC_SKINS = ['#7d8f63', '#6b7d57', '#8a9a6e', '#5f7350', '#9aa882', '#4e6147', '#6e7d6a', '#8d8d84', '#747a6c', '#5c5f58', '#a4a893', '#6b6355'];
 const heavy = (width, height, face = {}) => ({ face: { width, height, ...face }, neck: { width: 96, height: 56 }, ears: { pointed: 0.4 } }); // every orc: a broad head on a thick neck, the ear drawn to a slight point
@@ -31,7 +31,7 @@ export const ORCS = {
   marshWitch: { family: 'heavyBrow', hair: 'boxBraids', hairColors: ['softBlack'], costume: 'orcScout', makeup: ['tusks', 'warPaint'], marks: ['clanTattoo'], set: { ...heavy(182, 206, { chin: 0.1 }), eyes: { style: 'round', spacing: 58, openness: 1.1 }, nose: { style: 'roundedTip', width: 28, length: 38 }, mouth: { style: 'full', width: 50, fullness: 0.6 }, body: { width: 1.16 }, pose: { headTilt: 0.12, turn: -0.4 } } },
 };
 const pool = (kind, own) => parts(kind, { any: [own, 'era:fantasy'] }); // its own tag and the shared pack, never a registry
-// the cast object (the shape cast.mjs's EDITORIAL documents): two of the editorial families, green and grey skins, dark hair, amber eyes, the orc tops and pelts beside the shared kit, a helm on the loud roles, the build, the tusks on everyone
+// the cast object (the shape people.mjs's EDITORIAL documents): two of the editorial families, green and grey skins, dark hair, amber eyes, the orc tops and pelts beside the shared kit, a helm on the loud roles, the build, the tusks on everyone
 export default {
   name: 'orcs', families: { heavyBrow: FAMILIES.heavyBrow, squareJaw: FAMILIES.squareJaw },
   skins: ORC_SKINS, hairColors: ['jetBlack', 'softBlack', 'espresso', 'gray'].map((k) => HAIR_COLORS[k]), irises: ['amber', 'hazel', 'brown'].map((k) => EYE_COLORS[k]), clothes: [HIDE, FUR, IRON, BLOOD, MOSS, '#3a2e24'],

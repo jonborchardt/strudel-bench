@@ -4,12 +4,9 @@
 // grown up around a world that only happened to draw portraits.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, mouthY, feetY, mapXY, hatWidth, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, EAR_POINT, FACE_SHAPES, tag, tagsOf, parts, REGISTRIES } from '../index.mjs';
+import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, mouthY, feetY, mapXY, hatWidth, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, EAR_POINT, FACE_SHAPES, tag, tagsOf, parts, REGISTRIES, CASTS, identityFrom, dress, seed, prng } from '../index.mjs';
 import '../registry.mjs'; // every cast and pack registers and tags its parts, so the only:* assertions have something to keep out
 import { ctxStub } from './_stub.mjs';
-import { CASTS } from '../registry.mjs';
-import { identityFrom, dress } from '../people.mjs';
-import { seed, prng } from '../rng.mjs';
 
 // an eye's lid clip: a Q curve up on the face, not the neckline opening's own Q curve down on the chest
 const isLid = (o) => o.k === 'clip' && /^M [\d.]+ [\d.]+ Q/.test(o.d) && +o.d.split(' ')[2] < 300;

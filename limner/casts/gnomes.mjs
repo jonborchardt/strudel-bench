@@ -1,4 +1,4 @@
-// The gnomes cast: five of them, the smallest build in the set (`build`, solved from `ANATOMY` in cast.mjs: a halfling's
+// The gnomes cast: five of them, the smallest build in the set (`build`, solved from `ANATOMY` in people.mjs: a halfling's
 // height exactly, and the slighter of the two — narrower, a shorter torso, a larger head and larger hands on it) with big round eyes, long tapered ears (`ears.pointed` well past a
 // halfling's) and hair that goes everywhere. They wear the tinker's apron, the tall pointed hat and brass goggles
 // from the gnome pack (parts/gnome.mjs) over the shared kit (parts/fantasy.mjs), on the tableau's own shots.
@@ -16,7 +16,7 @@ export const GNOME_COSTUMES = {
   burrowCloak: (v) => ({ top: { style: 'roughTunic', color: v ? WINE : TEAL }, jacket: { style: 'hoodedCloak', color: LOAM }, pants: { style: 'trousers', color: '#4a3f33' } }),
 };
 Object.assign(COSTUMES, GNOME_COSTUMES);
-export const GNOME_BUILD = buildOf('gnome'); // the anatomy table in cast.mjs: a halfling's height, the slighter of the two, with the larger head and hands
+export const GNOME_BUILD = buildOf('gnome'); // the anatomy table in people.mjs: a halfling's height, the slighter of the two, with the larger head and hands
 const tiny = (width, height, face = {}) => ({ face: { width, height, ...face }, neck: { width: 66, height: 42 }, ears: { pointed: 0.75, size: 1.15 } }); // every gnome: a small head on a short neck, the ear long and drawn to a point
 /** The five, by the hair's and beard's mass, the hat, the goggles and the costume's colour block. */
 export const GNOMES = {
@@ -27,7 +27,7 @@ export const GNOMES = {
   lanternquill: { family: 'wideCheek', hair: 'pixie', hairColors: ['chestnut', 'darkBlond'], costume: 'burrowCloak', set: { ...tiny(162, 170), eyes: { style: 'upturned', spacing: 60, openness: 1.1 }, nose: { style: 'narrow', width: 18, length: 28 }, mouth: { width: 40, fullness: 0.55 }, body: { width: 0.84 }, pose: { turn: -0.45, shoulder: 0.5 } } },
 };
 const pool = (kind, own) => parts(kind, { any: [own, 'era:fantasy'] }); // its own tag and the shared pack, never a registry
-// the cast object (the shape cast.mjs's EDITORIAL documents): three of the editorial families, fair and warm skins, bright and white hair, blue and green eyes, the gnome apron beside the shared kit, the goggles its own glasses pool, the pointed hat on most roles, the build, the long ear on everyone
+// the cast object (the shape people.mjs's EDITORIAL documents): three of the editorial families, fair and warm skins, bright and white hair, blue and green eyes, the gnome apron beside the shared kit, the goggles its own glasses pool, the pointed hat on most roles, the build, the long ear on everyone
 export default {
   name: 'gnomes', families: { roundSoft: FAMILIES.roundSoft, wideCheek: FAMILIES.wideCheek, fineBoned: FAMILIES.fineBoned },
   skins: ['porcelain', 'fair', 'lightWarm', 'lightOlive', 'mediumWarm', 'mediumOlive', 'tan', 'brown'].map((k) => SKIN_COLORS[k]), hairColors: ['copper', 'auburn', 'white', 'platinum', 'lightBlond', 'chestnut'].map((k) => HAIR_COLORS[k]), irises: ['lightBlue', 'blue', 'green', 'hazel'].map((k) => EYE_COLORS[k]), clothes: [RUST, TEAL, BRASS, LOAM, SKY, WINE],

@@ -1,4 +1,4 @@
-// The elves cast: six of them, slight and long-legged (`build`, solved from `ANATOMY` in cast.mjs: taller than a
+// The elves cast: six of them, slight and long-legged (`build`, solved from `ANATOMY` in people.mjs: taller than a
 // human and slighter with it, the extra height all in the leg, narrow shoulders, more heads tall), their faces from the fine-boned and long-midface families with narrow heads (138 to 150 wide, 220
 // to 236 tall) on long necks and slight bodies pinned in `set`, pale, light-eyed, pointed-eared (the cast's `base`
 // puts the portrait's own `ears.pointed` on every one of them, archetype and crowd alike, so the ear is drawn as one
@@ -19,7 +19,7 @@ export const ELF_COSTUMES = {
   nightWalker: () => ({ top: { style: 'turtleneck', color: NIGHT }, jacket: { style: 'travelCloak', color: '#1f2630' }, pants: { style: 'trousers', color: NIGHT } }),
 };
 Object.assign(COSTUMES, ELF_COSTUMES);
-export const ELF_BUILD = buildOf('elf'); // the anatomy table in cast.mjs: taller than a human, all of it in the leg, narrow of shoulder, more heads tall
+export const ELF_BUILD = buildOf('elf'); // the anatomy table in people.mjs: taller than a human, all of it in the leg, narrow of shoulder, more heads tall
 export const ELF_EARS = [0.72, 1]; // how far an elf's ear comes to a point: the cast's own range, drawn per person, so no two of them have the same ear and none of them is round
 const slender = (width, height, face = {}) => ({ face: { width, height, ...face }, neck: { width: 48, height: 100 } }); // every elf: a narrow head on a long neck
 /** The six, by what tells them apart: the hair's length and colour, the circlet, the cloak, the vine. */
@@ -32,7 +32,7 @@ export const ELVES = {
   dawnherald: { family: 'longMidface', hair: 'bluntBob', hairColors: ['white', 'silver'], costume: 'nightWalker', makeup: ['vineMarks'], set: { ...slender(144, 228, { chin: 0.22 }), eyes: { style: 'almond', spacing: 54, depth: 0.5, browLift: 2 }, nose: { style: 'narrow', width: 15, length: 48 }, mouth: { style: 'full', width: 40, fullness: 0.75 }, body: { width: 0.84 }, pose: { headTilt: -0.12, turn: -0.3, shoulder: -0.4 } } },
 };
 const pickKeys = (o, ks) => Object.fromEntries(ks.map((k) => [k, o[k]]));
-// the cast object (the shape cast.mjs's EDITORIAL documents): two of the editorial families, pale skins, light hair and eyes, the elf tops and cloak and nothing else, an empty beard pool, a circlet on some roles, the build, the ears on everyone
+// the cast object (the shape people.mjs's EDITORIAL documents): two of the editorial families, pale skins, light hair and eyes, the elf tops and cloak and nothing else, an empty beard pool, a circlet on some roles, the build, the ears on everyone
 export default {
   name: 'elves', families: pickKeys(FAMILIES, ['fineBoned', 'longMidface']),
   skins: ['porcelain', 'fair', 'lightWarm', 'lightOlive'].map((k) => SKIN_COLORS[k]), hairColors: ['platinum', 'white', 'silver', 'lightBlond', 'jetBlack', 'copper'].map((k) => HAIR_COLORS[k]), irises: ['green', 'grayGreen', 'lightBlue', 'blueGray'].map((k) => EYE_COLORS[k]), clothes: [MOSS, BARK, SILVER, MIST, FERN, NIGHT],

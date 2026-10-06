@@ -766,7 +766,7 @@ const LEG_TOP = 596; // the legs start under the hem (the trousers' waist)
 export const feetY = (p) => { const b = bld(p); const hem = SHOULDER_LINE + (640 - SHOULDER_LINE) * b.trunk; return hem + (FEET_Y - 640) * b.legs; };
 /** The head on the sheet: the top of the skull and the chin, which the head's build scales about the neck base and
  *  `headDrop` slides down the neck. With `feetY`, what a figure's height and its head-to-body ratio are measured
- *  from (`ANATOMY` in cast.mjs is the table the fantasy builds are solved from; the hair and a hat rise above `top`). */
+ *  from (`ANATOMY` in people.mjs is the table the fantasy builds are solved from; the hair and a hat rise above `top`). */
 export const headBox = (p) => { const k = bld(p).head, dy = HEAD_DY + headDrop(p), at = (y) => NECK_BASE[1] + (y - NECK_BASE[1]) * k + dy; return { top: at(112), chin: at(112 + (p.face?.height ?? DEFAULTS.face.height) + 16 * (p.face?.chin ?? DEFAULTS.face.chin)) }; };
 const legY = (p) => { const b = bld(p), hem = SHOULDER_LINE + (LEG_TOP - SHOULDER_LINE) * b.trunk; return (y) => hem + (y - LEG_TOP) * b.legs; }; // a leg's y on this build: authored for the figure as drawn, hung from this trunk's hem, stretched by the legs' length
 const shoes = (p, ly) => { const k = bld(p).feet; return [-1, 1].flatMap((s) => [ellipse(200 + s * 44, ly(1066), 36 * k, 14, { fill: p.shoes.color }), ellipse(200 + s * (44 + 8 * k), ly(1064), 14 * k, 6, { fill: '#fff', op: 0.08 })]); }; // the shoe is as long as the build's feet say; its width is the leg standing in it

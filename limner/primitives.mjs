@@ -3,5 +3,8 @@
 // `ellipse`.
 //
 // Of these, `tracePath` is the one strudel-bench actually uses (web/visual/sets.mjs draws its curtain and cyclorama with
-// it). The rest are published because an op list is only useful to a host that can make ops of its own.
+// it) -- though it reaches it through the main entry, because `index.mjs` still re-exports everything portrait.mjs
+// exports. Nothing imports `limner/primitives` today, which is to say this entry is not yet load-bearing: it becomes
+// the only way to these the day that `export *` is narrowed (see README, *Stability*). The rest are published because
+// an op list is only useful to a host that can make ops of its own.
 export { tracePath, path, ellipse, rect, line, soft, stroke, shade, mix, merge } from './portrait.mjs';

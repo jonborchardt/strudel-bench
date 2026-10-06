@@ -1,4 +1,4 @@
-// The tieflings cast: six of them, built as a human is (`build`, solved from `ANATOMY` in cast.mjs: a human's
+// The tieflings cast: six of them, built as a human is (`build`, solved from `ANATOMY` in people.mjs: a human's
 // height and a human's proportions, the horns and the slightly larger hands and feet the only difference), red- and violet-skinned, gold- and ember-eyed,
 // horned in every shot (the `curvedHorns` makeup is each archetype's and the cast's `base`) and pointed of ear more
 // than a halfling and less than an elf. They wear the brocade robe and the sigil from the tiefling pack
@@ -17,7 +17,7 @@ export const TIEFLING_COSTUMES = {
   blackAndGold: () => ({ top: { style: 'brocadeRobe', color: INK, accent: GOLD }, jacket: { style: 'none' }, pants: { style: 'trousers', color: INK } }),
 };
 Object.assign(COSTUMES, TIEFLING_COSTUMES);
-export const TIEFLING_BUILD = buildOf('tiefling'); // the anatomy table in cast.mjs: a human's height and a human's proportions; the horns are the difference
+export const TIEFLING_BUILD = buildOf('tiefling'); // the anatomy table in people.mjs: a human's height and a human's proportions; the horns are the difference
 const horned = (width, height, face = {}) => ({ face: { width, height, ...face }, neck: { width: 54, height: 82 }, ears: { pointed: 0.6 } }); // every tiefling: a narrow head on a long neck, the ear drawn to a point
 /** The six, by the hair's colour and mass, the sigil, the robe's colour block and how the horns sit over it. */
 export const TIEFLINGS = {
@@ -29,7 +29,7 @@ export const TIEFLINGS = {
   silkmoth: { family: 'longMidface', hair: 'highBun', hairColors: ['darkBrown', 'jetBlack'], costume: 'brocade', makeup: ['curvedHorns', 'infernalSigil'], set: { ...horned(148, 230, { chin: 0.26 }), eyes: { style: 'upturned', spacing: 56, openness: 1.05, browLift: 3 }, nose: { style: 'long', width: 16, length: 50 }, mouth: { width: 42, fullness: 0.5 }, body: { width: 0.88 }, pose: { turn: 0.5, shoulder: 0.5 } } },
 };
 const pool = (kind, own) => parts(kind, { any: [own, 'era:fantasy'] }); // its own tag and the shared pack, never a registry
-// the cast object (the shape cast.mjs's EDITORIAL documents): three of the editorial families, red and violet skins, dark and white hair, gold and ember eyes, the tiefling robe beside the shared kit, no hats (the horns have the crown), the build, the horns on everyone
+// the cast object (the shape people.mjs's EDITORIAL documents): three of the editorial families, red and violet skins, dark and white hair, gold and ember eyes, the tiefling robe beside the shared kit, no hats (the horns have the crown), the build, the horns on everyone
 export default {
   name: 'tieflings', families: { longMidface: FAMILIES.longMidface, fineBoned: FAMILIES.fineBoned, squareJaw: FAMILIES.squareJaw, heavyBrow: FAMILIES.heavyBrow },
   // red through rust and plum to violet, slate blue and a dusky pale: a tiefling is not one colour

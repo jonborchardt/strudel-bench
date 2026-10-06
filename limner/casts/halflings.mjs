@@ -1,4 +1,4 @@
-// The halflings cast: six of them, built small (`build`, solved from `ANATOMY` in cast.mjs: half a human's
+// The halflings cast: six of them, built small (`build`, solved from `ANATOMY` in people.mjs: half a human's
 // height, a head to match since 1:5 of three feet is a child's head, and the stockier of the two small folk —
 // broader and longer in the torso than a gnome of the same height, with bigger feet under it), their faces round
 // and soft and wide-cheeked with short necks, warm-skinned, curly-haired, slightly pointed of ear
@@ -18,7 +18,7 @@ export const HALFLING_COSTUMES = {
   footpathCloak: (v) => ({ top: { style: 'roughTunic', color: v ? LEAF : WHEAT }, jacket: { style: 'hoodedCloak', color: '#55603f' }, pants: { style: 'trousers', color: OAK } }),
 };
 Object.assign(COSTUMES, HALFLING_COSTUMES);
-export const HALFLING_BUILD = buildOf('halfling'); // the anatomy table in cast.mjs: half a human's height, 1:5 of that being a child's head, and the stockier of the two small folk
+export const HALFLING_BUILD = buildOf('halfling'); // the anatomy table in people.mjs: half a human's height, 1:5 of that being a child's head, and the stockier of the two small folk
 const small = (width, height, face = {}) => ({ face: { width, height, ...face }, neck: { width: 72, height: 44 }, ears: { pointed: 0.32 } }); // every halfling: a round head on a short neck, the ear tapered a little
 /** The six, by the hair's curl and colour, the cap, the waistcoat's patches and the costume's colour block. */
 export const HALFLINGS = {
@@ -30,7 +30,7 @@ export const HALFLINGS = {
   oldBramble: { family: 'roundSoft', hair: 'horseshoe', hairColors: ['white', 'gray'], beard: 'garibaldi', age: 'old', costume: 'quiltedSunday', set: { ...small(174, 170, { jaw: 0.94 }), eyes: { style: 'hooded', spacing: 60, bags: 1, openness: 0.82 }, nose: { style: 'broad', width: 26, length: 32 }, mouth: { style: 'thin', width: 42, fullness: 0.3 }, body: { width: 1.18 }, pose: { turn: 0.2, shoulder: -0.4, headTilt: 0.05 } } },
 };
 const pool = (kind, own) => parts(kind, { any: [own, 'era:fantasy'] }); // its own tag and the shared pack, never a registry
-// the cast object (the shape cast.mjs's EDITORIAL documents): three of the editorial families, warm skins, brown and copper hair, green and hazel eyes, the halfling tops and coats beside the shared kit, a straw cap on most roles, the build, the tapered ear on everyone
+// the cast object (the shape people.mjs's EDITORIAL documents): three of the editorial families, warm skins, brown and copper hair, green and hazel eyes, the halfling tops and coats beside the shared kit, a straw cap on most roles, the build, the tapered ear on everyone
 export default {
   name: 'halflings', families: { roundSoft: FAMILIES.roundSoft, wideCheek: FAMILIES.wideCheek, fineBoned: FAMILIES.fineBoned },
   skins: ['fair', 'lightWarm', 'lightOlive', 'mediumWarm', 'mediumOlive', 'tan', 'brown', 'deepBrown'].map((k) => SKIN_COLORS[k]), hairColors: ['chestnut', 'auburn', 'copper', 'lightBrown', 'darkBlond', 'white'].map((k) => HAIR_COLORS[k]), irises: ['green', 'hazel', 'brown', 'amber'].map((k) => EYE_COLORS[k]), clothes: [WHEAT, BERRY, LEAF, OAK, CREAM, PLUM],

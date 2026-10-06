@@ -1,5 +1,5 @@
 // Writes limner/test/fixtures/cast-golden.json: the editorial generator's output for fixed seeds. Run ONCE (it exists now);
-// regenerate only on purpose, when a change to cast.mjs is meant to change the faces: `node limner/scripts/castgolden.mjs --update`.
+// regenerate only on purpose, when a change to people.mjs is meant to change the faces: `node limner/scripts/castgolden.mjs --update`.
 import { writeFileSync, existsSync } from 'node:fs';
 import { characterOf, identityOf, ARCHETYPE_NAMES } from '../people.mjs';
 import { seed, prng } from '../rng.mjs';

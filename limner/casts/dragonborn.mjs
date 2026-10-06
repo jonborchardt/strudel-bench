@@ -1,4 +1,4 @@
-// The dragonborn cast: five of them, the heaviest build in the set (`build`, solved from `ANATOMY` in cast.mjs:
+// The dragonborn cast: five of them, the heaviest build in the set (`build`, solved from `ANATOMY` in people.mjs:
 // six foot six, the longest torso and the broadest shoulders of the eight), scaled in the chromatic and metallic hides, and drawn with a muzzle, scale rows and backswept horns in
 // every shot (the three makeups are each archetype's and the cast's `base`). They have no hair worth drawing, so
 // the hair pool is the shaved styles alone and the beard pool is empty; they wear scale mail and a wing mantle from
@@ -17,7 +17,7 @@ export const DRAGONBORN_COSTUMES = {
   clanTunic: (v) => ({ top: { style: 'roughTunic', color: v ? BONE : MOSS }, jacket: { style: 'hoodedCloak', color: MOSS }, pants: { style: 'trousers', color: '#3a3128' } }),
 };
 Object.assign(COSTUMES, DRAGONBORN_COSTUMES);
-export const DRAGONBORN_BUILD = buildOf('dragonborn'); // the anatomy table in cast.mjs: the tallest and heaviest, the broadest shoulders and the longest torso in the set
+export const DRAGONBORN_BUILD = buildOf('dragonborn'); // the anatomy table in people.mjs: the tallest and heaviest, the broadest shoulders and the longest torso in the set
 const FACE = ['scaleHide', 'hornCrest']; // what the head wears: the scales and the horns. The muzzle is not worn, it is the face: nose.muzzle below
 const drake = (width, height, face = {}) => ({ face: { width, height, ...face }, neck: { width: 100, height: 60 }, ears: { size: 0.6, pointed: 0 }, nose: { muzzle: 1 }, mouth: { teeth: 'fangs' } }); // every dragonborn: a long head on a thick neck, no ear to speak of, and the nose drawn as a muzzle with fangs in it (the portrait's own dials, not something worn)
 /** The five, by the scale's colour, the head's length and the costume's colour block. */
@@ -29,7 +29,7 @@ export const DRAGONBORN = {
   greenhide: { family: 'squareJaw', hair: 'buzz', costume: 'clanTunic', makeup: FACE, set: { ...drake(184, 210), eyes: { spacing: 54, openness: 1.05 }, nose: { style: 'broad', width: 30, length: 44 }, mouth: { width: 52, fullness: 0.35 }, body: { width: 1.26 }, pose: { turn: 0.5, shoulder: 0.5 } } },
 };
 const pool = (kind, own) => parts(kind, { any: [own, 'era:fantasy'] }); // its own tag and the shared pack, never a registry
-// the cast object (the shape cast.mjs's EDITORIAL documents): two of the editorial families, scale hues for skin, no hair colour that matters, amber eyes, the dragonborn mail and mantle beside the shared kit, the shaved hair styles alone, an empty beard pool, no hats (the crest has the crown), the build, the head on everyone
+// the cast object (the shape people.mjs's EDITORIAL documents): two of the editorial families, scale hues for skin, no hair colour that matters, amber eyes, the dragonborn mail and mantle beside the shared kit, the shaved hair styles alone, an empty beard pool, no hats (the crest has the crown), the build, the head on everyone
 export default {
   name: 'dragonborn', families: { squareJaw: FAMILIES.squareJaw, heavyBrow: FAMILIES.heavyBrow },
   // the chromatic and metallic hides: bronze, gold, copper, green, red, blue, white, silver and black

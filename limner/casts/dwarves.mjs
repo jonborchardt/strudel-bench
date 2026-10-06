@@ -1,4 +1,4 @@
-// The dwarves cast: eight of them, built short and broad (`build`, solved from `ANATOMY` in cast.mjs: four and a
+// The dwarves cast: eight of them, built short and broad (`build`, solved from `ANATOMY` in people.mjs: four and a
 // half foot, a human's own head on it, shoulders a sixth wider than a human's, legs two thirds the length), their faces from the heavy, square and round families with broad heads
 // (178 to 192 wide), short thick necks and wide bodies pinned in `set`, every one bearded, in mail, fur and leather
 // from the dwarf pack (parts/dwarf.mjs) beside the everyday clothes. They dance the tableau's own shots and poses
@@ -17,7 +17,7 @@ export const DWARF_COSTUMES = {
   helmAndMail: () => ({ top: { style: 'mailShirt', color: STEEL }, jacket: { style: 'none' }, hat: { style: 'hornlessHelm', color: '#9aa0a6', accent: FUR }, pants: { style: 'trousers', color: '#2e2a26' } }),
 };
 Object.assign(COSTUMES, DWARF_COSTUMES);
-export const DWARF_BUILD = buildOf('dwarf'); // the anatomy table in cast.mjs: four and a half foot, a human's head on it, very broad, the legs short and the arms long for the height
+export const DWARF_BUILD = buildOf('dwarf'); // the anatomy table in people.mjs: four and a half foot, a human's head on it, very broad, the legs short and the arms long for the height
 export const DWARF_EARS = [0, 0.2]; // a dwarf's ear is round, a few of them with the hint of a point: their own range, so a face that came from another cast is set back to it and not left with elf ears
 const stout = (width, height, face = {}) => ({ face: { width, height, ...face }, neck: { width: 90, height: 44 } }); // every dwarf: a broad head on a short thick neck
 /** The eight, by what tells them apart at a hundred pixels: the hair's mass or its absence, the beard's shape, the hat, the costume's colour block. */
@@ -32,7 +32,7 @@ export const DWARVES = {
   copperBard: { family: 'roundSoft', hair: 'wavyMedium', hairColors: ['copper'], beard: 'circleBeard', costume: 'helmAndMail', set: { ...stout(178, 192, { chin: 0.1, jaw: 0.9 }), eyes: { style: 'round', spacing: 56, openness: 1.1 }, nose: { style: 'upturned', width: 24, length: 30 }, mouth: { style: 'wide', width: 50, fullness: 0.6 }, body: { width: 1.28 }, pose: { headTilt: 0.14, turn: -0.35, bodyTilt: -0.05 } } },
 };
 const pickKeys = (o, ks) => Object.fromEntries(ks.map((k) => [k, o[k]]));
-// the cast object (the shape cast.mjs's EDITORIAL documents): three of the editorial families, the editorial skins, the hair of the hills, the dwarf tops and the dwarf beards beside the everyday ones, a hat on most roles, the build
+// the cast object (the shape people.mjs's EDITORIAL documents): three of the editorial families, the editorial skins, the hair of the hills, the dwarf tops and the dwarf beards beside the everyday ones, a hat on most roles, the build
 export default {
   name: 'dwarves', families: pickKeys(FAMILIES, ['heavyBrow', 'squareJaw', 'roundSoft']),
   skins: Object.values(SKIN_COLORS), hairColors: ['auburn', 'copper', 'chestnut', 'saltPepper', 'white'].map((k) => HAIR_COLORS[k]), clothes: [STEEL, IRON, LEATHER, FUR, WOOL, MOSS, OAK, '#3a2f26'],

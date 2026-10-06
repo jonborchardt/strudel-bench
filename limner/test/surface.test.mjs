@@ -49,7 +49,11 @@ test('the registries are the only way to the parts, and a build comes from the p
   assert.equal(Object.keys(CASTS).length, Object.keys(CAST_MODULES).length);
   assert.ok(Object.keys(PACKS).length >= 10);
   assert.ok(parts('top', { any: ['everyday'] }).length > 0, 'a pool query returns parts');
-  assert.ok(!parts('top', { any: ['everyday'] }).some((n) => parts('top', { any: ['only:undead'] }).includes(n) && !parts('top', { any: ['everyday'] }).includes(n)), 'quarantine holds');
+  // the quarantine, asked where it bites: makeup is where the rot lives, and nothing tagged only:undead may reach a
+  // query that does not name it. Asked of `top` this proves nothing -- the undead pack registers no top of its own.
+  const rot = parts('makeup', { any: ['only:undead'] });
+  assert.ok(rot.length > 0, 'the undead pack registered its rot, so there is something to keep out');
+  assert.deepEqual(rot.filter((n) => parts('makeup', { any: ['everyday'] }).includes(n)), [], 'and no query that fails to name it returns any of it');
   for (const race of Object.keys(ANATOMY)) assert.ok(buildOf(race).trunk > 0, `${race} solves to a build`);
   assert.ok(STANCES.editorial.directFrontal, 'and the stances are published');
 });

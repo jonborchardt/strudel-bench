@@ -11,7 +11,7 @@ import { STANCES, stanceOf } from './stances.mjs';
 import { FAMILY_NAMES, characterFrom, faceOf, EXPRESSIONS, EDITORIAL_EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from './people.mjs';
 import { CASTS } from './registry.mjs'; // every cast's parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
 import { seed as seedState, rand, prng } from './rng.mjs';
-const EXPRESSION_NAMES = EDITORIAL_EXPRESSIONS; // cast.mjs's own snapshot, taken before any cast adds to the registry: a cast that pools an editorial expression beside its own no longer deletes it from this menu
+const EXPRESSION_NAMES = EDITORIAL_EXPRESSIONS; // people.mjs's own snapshot, taken before any cast adds to the registry: a cast that pools an editorial expression beside its own no longer deletes it from this menu
 
 const num = (path, min, max, step = 0.01, o = {}) => ({ kind: 'num', path, min, max, step, ...o });
 const int = (path, min, max, o = {}) => num(path, min, max, 1, o);

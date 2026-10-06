@@ -26,7 +26,7 @@ export const HUMANS = {
   villageElder: { family: 'wideCheek', hair: 'lowBun', hairColors: ['gray', 'white'], age: 'old', costume: 'villager', set: { face: { width: 160, height: 200 }, eyes: { spacing: 58, bags: 1, openness: 0.85 }, nose: { style: 'short', width: 22, length: 34 }, mouth: { width: 44, fullness: 0.3 }, body: { width: 1 }, pose: { turn: -0.25, shoulder: 0.3, headTilt: 0.06 } } },
 };
 const pool = (kind, own) => parts(kind, { any: [own, 'era:fantasy'] }); // every fantasy cast picks from its own tag and the shared pack, never a registry
-// the cast object (the shape cast.mjs's EDITORIAL documents): all six families, every skin and hair colour, the shared tops and cloaks, the everyday beards and hair, a brimmed hat or none, the default build
+// the cast object (the shape people.mjs's EDITORIAL documents): all six families, every skin and hair colour, the shared tops and cloaks, the everyday beards and hair, a brimmed hat or none, the default build
 export default {
   name: 'humans', families: FAMILIES,
   skins: Object.values(SKIN_COLORS), hairColors: Object.values(HAIR_COLORS), clothes: [BARK, OLIVE, MOSS, LINEN, CLAY, STONE, SLATE, DARK],
