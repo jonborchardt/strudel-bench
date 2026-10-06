@@ -76,11 +76,15 @@ const stroke = (color, sw, op = 1, cap = 'round') => ({ fill: 'none', stroke: co
 export { path, ellipse, rect, line, clip, UNCLIP, stroke }; // for a theme module (thriller.mjs) that registers parts of its own into the registries below
 const ARGS = { M: 2, L: 2, C: 6, Q: 4, Z: 0 };
 const tokens = (d) => d.match(/[MLCQZ]|-?\d*\.?\d+(?:e-?\d+)?/gi) ?? [];
-/** The ops with every x through `fx` and every y through `fy`: how a part drawn for the default head follows this one. */
+/** The ops with every x through `fx` and every y through `fy`: how a part drawn for the default head follows this one.
+ *  An ellipse's radius is remapped as the mapped half-width, `fx(cx + rx) - fx(cx)`, and a strong turn can map the far
+ *  edge to the left of the centre -- so the radius is clamped at zero. A negative one is invalid SVG (the browser
+ *  refuses the attribute and the feature silently does not draw) and throws IndexSizeError on a canvas; zero is what
+ *  the geometry means there anyway, which is the far eye gone at a near profile. */
 export function mapXY(ops, fx, fy = (y) => y) {
   const r = (v) => Math.round(v * 100) / 100;
   const px = (d) => { let cmd = 'M', i = 0; return tokens(d).map((t) => { if (/[a-z]/i.test(t)) { cmd = t.toUpperCase(); i = 0; return t; } const n = ARGS[cmd] || 2, v = i % n % 2 === 0 ? fx(+t) : fy(+t); i++; return String(r(v)); }).join(' '); };
-  return ops.map((o) => o.k === 'path' || o.k === 'clip' ? { ...o, d: px(o.d) } : o.k === 'ellipse' ? { ...o, cx: r(fx(o.cx)), cy: r(fy(o.cy)), rx: r(fx(o.cx + o.rx) - fx(o.cx)), ry: r(fy(o.cy + o.ry) - fy(o.cy)) } : o.k === 'rect' ? { ...o, x: r(fx(o.x)), y: r(fy(o.y)), w: r(fx(o.x + o.w) - fx(o.x)), h: r(fy(o.y + o.h) - fy(o.y)) } : o.k === 'line' ? { ...o, x1: r(fx(o.x1)), x2: r(fx(o.x2)), y1: r(fy(o.y1)), y2: r(fy(o.y2)) } : o);
+  return ops.map((o) => o.k === 'path' || o.k === 'clip' ? { ...o, d: px(o.d) } : o.k === 'ellipse' ? { ...o, cx: r(fx(o.cx)), cy: r(fy(o.cy)), rx: Math.max(0, r(fx(o.cx + o.rx) - fx(o.cx))), ry: Math.max(0, r(fy(o.cy + o.ry) - fy(o.cy))) } : o.k === 'rect' ? { ...o, x: r(fx(o.x)), y: r(fy(o.y)), w: r(fx(o.x + o.w) - fx(o.x)), h: r(fy(o.y + o.h) - fy(o.y)) } : o.k === 'line' ? { ...o, x1: r(fx(o.x1)), x2: r(fx(o.x2)), y1: r(fy(o.y1)), y2: r(fy(o.y2)) } : o);
 }
 export const mapX = (ops, fx) => mapXY(ops, fx);
 export const scaleAbout = (c, k) => (v) => c + (v - c) * k;

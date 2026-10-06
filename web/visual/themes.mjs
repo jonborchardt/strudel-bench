@@ -4,7 +4,7 @@
 // a cast, maybe a dance, and a row in the json; the dance `editorial` is the tableau's own templates, poses, phases
 // and rules (a null here: every dance field stays undefined and the tableau's fallbacks take over). PACKS and CASTS are
 // limner's registries and DANCES is this file's; between them they are the names a row may use; `bindTheme` refuses an unknown one at import, naming it, so a misspelt row
-// never draws a blank stage. The sheets (parts.html, casts.html, poses.html) list packs, casts and themes from here.
+// never draws a blank stage. The sheets (parts.html, casts.html, limner.html#poses) list packs, casts and themes from here.
 import VISUAL from '../../lib/visual.json' with { type: 'json' };
 import { identityFrom, CASTS, PACKS } from './limner.mjs'; // the casts and the part packs are limner's; the dances and the binding are this repo's
 import thriller from './dances/thriller.mjs';

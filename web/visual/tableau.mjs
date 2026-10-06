@@ -211,7 +211,7 @@ export function planSection(s, sec, i, n, phase) {
   return shots;
 }
 
-/** A shot built by hand for a sheet (poses.html) or a test: a pose on a set with these people in these costumes and props, still, no effects unless asked. */
+/** A shot built by hand for a sheet (limner.html#poses) or a test: a pose on a set with these people in these costumes and props, still, no effects unless asked. */
 export function previewShot(s, { pose = 'directFrontal', n = 1, framing = 'medium', set = 'white', ids = null, costumes = [], props = [], expressions = [], fx = null, grid = 0, sculptures = [], band = null, gap = false } = {}) {
   const T = themeOf(s), fr = FRAMING[framing] ?? FRAMING.medium, layout = layoutOf(pose, n, fr, T); sameStance(layout, fx);
   const who = ids ?? [...s.leads, ...s.order.filter((i) => !s.leads.includes(i))].slice(0, n);

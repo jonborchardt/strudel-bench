@@ -44,13 +44,19 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
       assert.ok(!fs.existsSync(path.join(out, f)), `${f} must not ship`);
     // the pages reach limner by a relative path, not through an import map: relative because a project page lives under
     // /<repo>/, and by path because an import map belongs to a document and cannot be given to a worker
-    for (const page of ['portrait.html', 'limner.html']) {
+    for (const page of ['limner.html']) {
       const shipped = fs.readFileSync(path.join(out, page), 'utf8');
       assert.ok(!/<script type="importmap">/.test(shipped), `${page}: no import map to go stale`);
       for (const m of shipped.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]*limner[^'"]*)['"]/g))
         assert.ok(m[1].startsWith('./limner/'), `${page}: ${m[1]} must be a relative path into limner`);
       assert.match(shipped, /from '\.\/limner\/index\.mjs'/, `${page} imports the barrel by path`);
     }
+    // portrait.html is a stub: the editor moved into the explorer, and renders/portrait-match/links.md is full of
+    // links to faces, so a saved #hash has to arrive at the same face rather than at a 404
+    const stub = fs.readFileSync(path.join(out, 'portrait.html'), 'utf8');
+    assert.match(stub, /limner\.html#editor/, 'the stub sends a saved hash to the editor tab');
+    assert.match(stub, /location\.hash\.slice\(1\)/, 'and carries the hash across rather than dropping it');
+    assert.ok(!fs.existsSync(path.join(out, 'poses.html')), 'the pose-arrangement sheet is gone, on purpose');
     const list = JSON.parse(fs.readFileSync(path.join(out, 'songs/index.json'), 'utf8')).map((s) => s.name);
     assert.ok(list.includes('demo.strudel'));
     assert.ok(list.includes('ping.strudel'), 'a song on a deployed pack ships');
@@ -227,7 +233,7 @@ test('web/visual/limner.mjs is the only crossing, and it reaches the barrel rath
 // It is also the one page whose graph legitimately holds bare specifiers, because its import map provides them -- so the
 // rule here is that the map covers every one of them, which is exactly what was missed when limner became a package.
 test('every bare specifier in a page\'s module graph is in that page\'s import map', () => {
-  for (const page of ['index.html', 'examples.html', 'portrait.html', 'poses.html', 'limner.html', 'listen.html', 'samples.html']) {
+  for (const page of ['index.html', 'examples.html', 'limner.html', 'listen.html', 'samples.html']) {
     const file = path.join(ROOT, page);
     if (!fs.existsSync(file)) continue;
     const html = fs.readFileSync(file, 'utf8');

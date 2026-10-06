@@ -8,7 +8,8 @@
 //   node limner/scripts/portrait.mjs <hash> --sweep "facialHair.density=0.2,0.5,0.9" [--sweep "eyes.squint=0,.5"]
 //                                                                      -> a contact sheet of every combination, labelled
 //
-// A sweep prints the hash of every cell, so the one that looks right is a link back into the editor.
+// A sweep prints the hash of every cell, so the one that looks right is a link back into the editor
+// (limner.html#editor/<hash>, the explorer's editor tab).
 import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { renderPortrait } from '../portrait.mjs';
@@ -62,4 +63,4 @@ if (out.endsWith('.png')) {
 } else if (out.endsWith('.html')) writeFileSync(out, page());
 else writeFileSync(out, svgOf(list[0].st));
 console.log(out);
-for (const c of list) console.log(`  ${c.label || 'portrait'}\tportrait.html#${encode(c.st)}`);
+for (const c of list) console.log(`  ${c.label || 'portrait'}\tlimner.html#editor/${encode(c.st)}`);

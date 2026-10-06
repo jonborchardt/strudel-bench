@@ -7,6 +7,9 @@ import assert from 'node:assert/strict';
 import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, mouthY, feetY, mapXY, hatWidth, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, EAR_POINT, FACE_SHAPES, tag, tagsOf, parts, REGISTRIES } from '../index.mjs';
 import '../registry.mjs'; // every cast and pack registers and tags its parts, so the only:* assertions have something to keep out
 import { ctxStub } from './_stub.mjs';
+import { CASTS } from '../registry.mjs';
+import { identityFrom, dress } from '../people.mjs';
+import { seed, prng } from '../rng.mjs';
 
 // an eye's lid clip: a Q curve up on the face, not the neckline opening's own Q curve down on the chest
 const isLid = (o) => o.k === 'clip' && /^M [\d.]+ [\d.]+ Q/.test(o.d) && +o.d.split(' ')[2] < 300;
@@ -144,4 +147,22 @@ test('parts are tagged and picked by query; an only:* part never comes without b
   assert.throws(() => parts('shoes'), /no registry for kind/);
   assert.ok(!parts('top', { not: ['everyday'] }).includes('crewTshirt'), 'not excludes');
   tag('top', 'crewTshirt', 'test:tmp'); assert.ok(tagsOf('top', 'crewTshirt').has('test:tmp')); tagsOf('top', 'crewTshirt').delete('test:tmp');
+});
+
+// A radius is never negative. A feature's width passes through zero as the head turns -- the far eye at a near profile
+// -- and a negative one is invalid SVG: the browser refuses the attribute with a console error and the feature simply
+// does not draw. Found by drawing every stance on every cast, which is what the explorer's poses tab does.
+test('no radius is ever negative, at any turn, for any cast', () => {
+  const bad = [];
+  for (const cast of Object.keys(CASTS)) {
+    const sitter = identityFrom(CASTS[cast], (() => { const s = {}; seed(s, prng(7)); return s; })(), CASTS[cast].archetypeNames[0], 0);
+    for (const turn of [-1, -0.95, -0.5, 0, 0.5, 0.95, 1]) {
+      const ops = portraitOps(dress(sitter, { pose: { turn } }));
+      for (const o of ops) {
+        if (o.k === 'ellipse' && (o.rx < 0 || o.ry < 0)) bad.push(`${cast} turn=${turn} ellipse rx=${o.rx} ry=${o.ry}`);
+        if (o.k === 'rect' && (o.w < 0 || o.h < 0)) bad.push(`${cast} turn=${turn} rect w=${o.w} h=${o.h}`);
+      }
+    }
+  }
+  assert.deepEqual([...new Set(bad)].slice(0, 5), [], 'these would be refused by the SVG parser and the feature would vanish');
 });

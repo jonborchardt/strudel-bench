@@ -129,7 +129,7 @@ Nobody can review a face from a description. Render it.
 A `--sweep` prints each cell's own hash, so the one that looks right is a link straight back into the editor. The
 sheets, served by the parent repo's dev server, are the other half: `stances.html` (every stance on one body),
 `parts.html?pack=<name>` (one pack by kind, with tags), `casts.html?cast=<name>` (archetypes and a crowd of sixteen),
-`faces.html` (everything), and `../portrait.html` (the editor; its `#hash` *is* the face).
+`faces.html` (everything), and `../limner.html` (the explorer: its **editor** tab is every parameter, and `#editor/<hash>` *is* the face).
 
 `scripts/` and `test/` are not published (`files` excludes them), so they may use the parent's dev dependencies —
 `scripts/portrait.mjs` reaches for `playwright-core` for the png path. The published library itself has **no
