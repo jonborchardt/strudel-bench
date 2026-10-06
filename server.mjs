@@ -93,7 +93,7 @@ const readBody = (req) => new Promise((resolve, reject) => {
 
 function serveStatic(res, urlPath) {
   const file = path.resolve(ROOT, '.' + decodeURIComponent(urlPath));
-  const allowed = [path.join(ROOT, 'node_modules'), path.join(ROOT, 'samples'), path.join(ROOT, 'lib'), path.join(ROOT, 'web')];
+  const allowed = [path.join(ROOT, 'node_modules'), path.join(ROOT, 'samples'), path.join(ROOT, 'lib'), path.join(ROOT, 'web'), path.join(ROOT, 'limner')];
   if (!allowed.some((d) => file.startsWith(d + path.sep)) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
     return send(res, 404, 'not found');
   }
@@ -259,7 +259,7 @@ export function createServer() {
     if (p === '/samples/user/packs.json') return json(res, userPacks()); // the pack index: what the page shows as deployed / local-only
     // strudel's UMD build resolves its clock SharedWorker against the page URL, so /assets/ must alias dist/assets
     if (p.startsWith('/assets/')) return serveStatic(res, '/node_modules/@strudel/web/dist' + p);
-    if (p.startsWith('/node_modules/') || p.startsWith('/samples/') || p.startsWith('/lib/') || p.startsWith('/web/')) return serveStatic(res, p);
+    if (p.startsWith('/node_modules/') || p.startsWith('/samples/') || p.startsWith('/lib/') || p.startsWith('/web/') || p.startsWith('/limner/')) return serveStatic(res, p);
     // anything else a browser navigates to gets the same 404 page github pages serves; fetches keep the plain text
     if (req.headers.accept?.includes('text/html')) return send(res, 404, fs.readFileSync(path.join(ROOT, '404.html')), 'text/html');
     send(res, 404, 'not found');

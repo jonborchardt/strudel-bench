@@ -20,6 +20,8 @@
     "dump": "node scripts/dump.mjs",
     "note": "node scripts/note.mjs",
     "verify": "node scripts/verify.mjs",
+    "portrait": "node limner/scripts/portrait.mjs",
+    "test:limner": "node --test \"limner/test/*.test.mjs\"",
     "vocab": "node scripts/vocab.mjs > .claude/skills/strudel/reference/vocab.md",
     "lint": "node scripts/lint.mjs",
     "measure": "node scripts/measure.mjs",

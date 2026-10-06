@@ -11,8 +11,8 @@
 // A sweep prints the hash of every cell, so the one that looks right is a link back into the editor.
 import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { renderPortrait } from 'limner';
-import { params, decode, encode, setOv } from '../limner/schema.mjs';
+import { renderPortrait } from '../portrait.mjs';
+import { params, decode, encode, setOv } from '../schema.mjs';
 
 const argv = process.argv.slice(2);
 const flag = (name, dflt) => { const i = argv.indexOf('--' + name); return i < 0 ? dflt : argv[i + 1]; };

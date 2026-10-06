@@ -96,8 +96,8 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
 // missing thing. A path import beside the package import is the only way that happens, so once a module has moved into
 // limner, nothing outside it may reach the old path. MOVED grows as the extraction proceeds; a module still living under
 // web/visual/ is legitimately imported by path until the task that moves it.
-const MOVED = ['portrait', 'cast'];
-const SCOPE = /\.mjs$/; // the .html pages reach limner through an import map, which arrives with the pages; widen to /\.(mjs|html)$/ then
+const MOVED = ['portrait', 'cast', 'editor'];
+const SCOPE = /\.(mjs|html)$/; // the pages reach limner through an import map now, so they are held to the same rule
 test('no module reaches a moved limner module by path: two instances would split the part registries', () => {
   const walk = (dir) => fs.readdirSync(dir).flatMap((f) => {
     const p = path.join(dir, f);
@@ -106,7 +106,25 @@ test('no module reaches a moved limner module by path: two instances would split
   });
   // any specifier that is a path (starts with . or /) and ends in a moved module's filename, however it is spelled:
   // './portrait.mjs', '../web/visual/portrait.mjs' and '../../limner/portrait.mjs' are all the same mistake.
-  const re = new RegExp(`from\\s+'[.~/][^']*(${MOVED.join('|')})\\.mjs'`);
+  // anchored on the separator, so web/cm-editor.mjs (CodeMirror, nothing to do with limner) is not caught by 'editor'
+  const re = new RegExp(`from\\s+'[.~/][^']*/(${MOVED.join('|')})\\.mjs'`);
   const bad = walk(ROOT).filter((p) => re.test(fs.readFileSync(p, 'utf8')));
   assert.deepEqual(bad.map((p) => path.relative(ROOT, p).replace(/\\/g, '/')), [], 'these still import by path; they must import "limner"');
+});
+
+// limner ships because portrait.html imports it, but only the library: not its suite (the ops golden alone is 163 KB of
+// fixture), not its CLIs, and not its sheets, which were never deployed before it had a folder of its own.
+test('the build ships limner the library, and none of its workshop', () => {
+  const out = path.join(ROOT, 'test', '_t_dist_limner');
+  try {
+    build(out);
+    for (const f of ['limner/index.mjs', 'limner/portrait.mjs', 'limner/people.mjs', 'limner/schema.mjs', 'limner/stances.mjs', 'limner/registry.mjs', 'limner/rng.mjs', 'limner/primitives.mjs', 'limner/package.json', 'limner/casts/undead.mjs', 'limner/parts/undead.mjs', 'portrait.html'])
+      assert.ok(fs.existsSync(path.join(out, f)), `${f} ships`);
+    for (const f of ['limner/test', 'limner/scripts', 'limner/faces.html', 'limner/parts.html', 'limner/casts.html', 'limner/stances.html'])
+      assert.ok(!fs.existsSync(path.join(out, f)), `${f} must not ship`);
+    // the import map resolves under /<repo>/, so every entry is relative: a leading slash would 404 on a project page
+    const map = JSON.parse(fs.readFileSync(path.join(out, 'portrait.html'), 'utf8').match(/<script type="importmap">([^<]+)<\/script>/)[1]);
+    for (const [k, v] of Object.entries(map.imports)) assert.ok(v.startsWith('./'), `${k} maps to ${v}, which must be relative`);
+    assert.equal(map.imports.limner, './limner/index.mjs');
+  } finally { fs.rmSync(out, { recursive: true, force: true }); }
 });

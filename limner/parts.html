@@ -20,17 +20,17 @@
 <body>
 <main>
   <h2>pack <span id="name"></span> <small id="packs"></small></h2>
-  <p>Every part web/visual/parts/<span id="file"></span>.mjs registers, by kind, on a plain figure. A part tagged <code>only:&lt;cast&gt;</code> reaches no pool that does not name it; the other tags (<code>era:80s</code>) are what a cast's pool asks for. Casts are on <a href="casts.html">casts.html</a>, poses on <a href="poses.html">poses.html</a>.</p>
+  <p>Every part limner/parts/<span id="file"></span>.mjs registers, by kind, on a plain figure. A part tagged <code>only:&lt;cast&gt;</code> reaches no pool that does not name it; the other tags (<code>era:80s</code>) are what a cast's pool asks for. Casts are on <a href="casts.html">casts.html</a>, poses on <a href="poses.html">poses.html</a>.</p>
   <div id="sheet"></div>
 </main>
 <script type="module">
-  import { renderPortrait, parts, tagsOf, REGISTRIES } from './web/visual/portrait.mjs';
-  import { PACKS } from './web/visual/themes.mjs'; // the packs by name, every one loaded
+  import { renderPortrait, parts, tagsOf, REGISTRIES } from './index.mjs';
+  import { PACKS } from './registry.mjs'; // the packs by name, every one loaded
   const pack = new URLSearchParams(location.search).get('pack') || 'eighties';
   document.getElementById('name').textContent = pack; document.getElementById('file').textContent = pack;
   document.getElementById('packs').innerHTML = Object.keys(PACKS).map((p) => (p === pack ? p : `<a href="?pack=${p}">${p}</a>`)).join(' · ');
   const mod = PACKS[pack] ?? {};
-  if (!PACKS[pack]) document.getElementById('sheet').innerHTML = `<p>no pack named ${pack} (web/visual/themes.mjs PACKS lists them)</p>`;
+  if (!PACKS[pack]) document.getElementById('sheet').innerHTML = `<p>no pack named ${pack} (limner/registry.mjs PACKS lists them)</p>`;
   const names = Object.values(mod).find((v) => v && typeof v === 'object' && !Array.isArray(v) && Object.values(v).every((x) => Array.isArray(x) && x.every((n) => typeof n === 'string'))); // the pack's own name lists, by kind (EIGHTIES, UNDEAD, DWARF, ...)
   const bg = { background: '#3a3238' };
   // how a part of each kind goes on the plain figure

@@ -44,6 +44,16 @@ const copy = (rel, to = rel) => fs.cpSync(path.join(ROOT, rel), path.join(OUT, t
 const PAGES = ['index.html', 'examples.html', 'about.html', 'legal.html', 'listen.html']; // the sitemap; 404.html ships too but is not a destination
 for (const p of [...PAGES, '404.html', 'portrait.html']) copy(p); // portrait.html ships but stays out of the sitemap: it is noindex, a tool, not a destination
 copy('web');
+// limner, minus its own suite and CLIs: its ops golden alone is 163 KB of fixture that no visitor needs
+// limner, minus its own suite, its CLIs and its sheets. The ops golden alone is 163 KB of fixture no visitor needs, and
+// the sheets (faces, parts, casts, stances) are dev tools that were never deployed; portrait.html, the one page of it
+// that ships, sits at the root with the other pages and is copied above.
+const NOT_SHIPPED = new Set(['test', 'scripts', 'node_modules']);
+const shipsFromLimner = (src) => {
+  const rel = path.relative(path.join(ROOT, 'limner'), src);
+  return !NOT_SHIPPED.has(rel.split(path.sep)[0]) && !rel.endsWith('.html');
+};
+fs.cpSync(path.join(ROOT, 'limner'), path.join(OUT, 'limner'), { recursive: true, filter: shipsFromLimner });
 copy('lib');
 copy('songs');
 for (const s of hidden) for (const f of [s, s.replace(/\.strudel$/, '.notes.json')]) fs.rmSync(path.join(OUT, 'songs', f), { force: true });

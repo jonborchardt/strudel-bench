@@ -20,17 +20,17 @@
 <body>
 <main>
   <h2>poses <button id="seedup">seed +1</button> <span id="seedlbl"></span> · framing <select id="framing"><option>medium</option><option selected>full</option><option>wide</option><option>figure</option></select> · set <select id="set"><option>white</option><option>red</option><option>void</option></select> · theme <select id="theme"><option>none</option></select></h2>
-  <p style="font-size:12px;max-width:70em">Each frame is the tableau world's own draw of one still shot (web/visual/tableau.mjs: <code>layoutOf</code> places the figures, <code>previewShot</code> builds the shot). Arms between two figures are drawn by the world in canvas space (a sleeve from one figure's shoulder to the other, the hand at its end); arms and hands on one figure are portrait props (web/visual/portrait.mjs <code>PROPS</code>). A theme (web/visual/themes.mjs: a cast, its part packs and a dance, bound from lib/visual.json) swaps in its cast, its dance's poses and the hands they name, as a song gets with <code>visual: { world: 'tableau', theme: 'thriller' }</code>; with none, this is the editorial sheet as it always was. The casts are on <a href="casts.html">casts.html</a>, the packs on <a href="parts.html">parts.html</a>.</p>
+  <p style="font-size:12px;max-width:70em">Each frame is the tableau world's own draw of one still shot (web/visual/tableau.mjs: <code>layoutOf</code> places the figures, <code>previewShot</code> builds the shot). Arms between two figures are drawn by the world in canvas space (a sleeve from one figure's shoulder to the other, the hand at its end); arms and hands on one figure are portrait props (limner <code>PROPS</code>). A theme (web/visual/themes.mjs: a limner cast, its part packs, a limner stance pack and a dance, bound from lib/visual.json) swaps in its cast, its blocking and the stances and hands they name, as a song gets with <code>visual: { world: 'tableau', theme: 'thriller' }</code>; with none, this is the editorial sheet as it always was. This sheet is the blocking, which is this repo's; one body's stance is limner's, on limner/stances.html. The casts are on <a href="limner/casts.html">casts.html</a>, the packs on <a href="limner/parts.html">parts.html</a>.</p>
   <h2>solo</h2><div class="row" id="solo"></div>
   <h2>duo</h2><div class="row" id="duo"></div>
   <h2>group</h2><div class="row" id="group"></div>
   <h2>props: arms and hands on one figure (portrait sheet, no set)</h2><div class="row" id="props"></div>
 </main>
+<script type="importmap">{"imports":{"limner":"./limner/index.mjs","limner/primitives":"./limner/primitives.mjs","limner/schema.mjs":"./limner/schema.mjs"}}</script>
 <script type="module">
   import tableau, { previewShot } from './web/visual/tableau.mjs';
   import { THEMES, themeNames } from './web/visual/themes.mjs';
-  import { renderPortrait, PROP_STYLES } from './web/visual/portrait.mjs';
-  import { dress } from './web/visual/cast.mjs';
+  import { renderPortrait, PROP_STYLES, dress } from 'limner';
   import { fallbackScore, clockOf, STEP } from './web/visual/host.mjs';
   import { prng } from './lib/random.mjs';
   const SOLO = ['directFrontal', 'slightLeanLeft', 'slightLeanRight', 'swaggerLean', 'statueStill', 'handsAtSides', 'handHeart', 'handsUp', 'propPresentation'];

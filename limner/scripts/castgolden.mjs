@@ -1,9 +1,8 @@
 // Writes test/fixtures/cast-golden.json: the editorial generator's output for fixed seeds. Run ONCE (it exists now);
 // regenerate only on purpose, when a change to cast.mjs is meant to change the faces: `node scripts/castgolden.mjs --update`.
 import { writeFileSync, existsSync } from 'node:fs';
-import { characterOf, identityOf, ARCHETYPE_NAMES } from 'limner';
-import { seed } from '../web/visual/kit.mjs';
-import { prng } from '../lib/random.mjs';
+import { characterOf, identityOf, ARCHETYPE_NAMES } from '../people.mjs';
+import { seed, prng } from '../rng.mjs';
 const out = 'test/fixtures/cast-golden.json';
 if (existsSync(out) && !process.argv.includes('--update')) { console.log(out + ' exists; pass --update to regenerate on purpose'); process.exit(1); }
 const ROLES = ['establish', 'develop', 'climax', 'release'];

@@ -20,7 +20,7 @@
 <main>
   <h2>crowd <button id="reroll">reroll</button> <button id="seedup">seed +1</button> <span id="seedlbl"></span></h2>
   <div class="row" id="crowd"></div>
-  <h2>families <small>(the structural families a face is built in, web/visual/cast.mjs, three seeds each)</small></h2><div class="row" id="families"></div>
+  <h2>families <small>(the structural families a face is built in, limner/people.mjs, three seeds each)</small></h2><div class="row" id="families"></div>
   <h2>face shapes</h2><div class="row" id="faces"></div>
   <h2>eyes</h2><div class="row" id="eyes"></div>
   <h2>brows</h2><div class="row" id="brows"></div>
@@ -35,7 +35,7 @@
   <h2>jackets</h2><div class="row" id="jackets"></div>
   <h2>accessories</h2><div class="row" id="accessories"></div>
   <h2>details</h2><div class="row" id="details"></div>
-  <h2>tableau cast <small>(the twenty-four archetypes in their home styling, web/visual/cast.mjs)</small></h2><div class="row" id="cast"></div>
+  <h2>tableau cast <small>(the twenty-four archetypes in their home styling, limner/people.mjs)</small></h2><div class="row" id="cast"></div>
   <h2>costume families</h2><div class="row" id="costumes"></div>
   <h2>makeup</h2><div class="row" id="makeup"></div>
   <h2>marks</h2><div class="row" id="marks"></div>
@@ -44,10 +44,9 @@
   <h2>expressions and poses</h2><div class="row" id="expressions"></div>
 </main>
 <script type="module">
-  import { renderPortrait, HAIR_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, FACE_SHAPES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES } from './web/visual/portrait.mjs';
-  import { characterOf, identityOf, dress, ARCHETYPE_NAMES, COSTUME_FAMILIES, EXPRESSIONS, FAMILY_NAMES, ARCHETYPES } from './web/visual/cast.mjs';
-  import { seed } from './web/visual/kit.mjs';
-  import { prng } from './lib/random.mjs';
+  import { renderPortrait, HAIR_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, FACE_SHAPES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES } from './index.mjs';
+  import { characterOf, identityOf, dress, ARCHETYPE_NAMES, COSTUME_FAMILIES, EXPRESSIONS, FAMILY_NAMES, ARCHETYPES } from './people.mjs';
+  import { seed, prng } from './rng.mjs';
   const fig = (svg, label) => `<figure>${svg}<figcaption>${label}</figcaption></figure>`;
   const bald = { hair: { style: 'bald' } };
   const sheet = (id, styles, make) => { document.getElementById(id).innerHTML = styles.map((s) => fig(renderPortrait(make(s)), s)).join(''); };

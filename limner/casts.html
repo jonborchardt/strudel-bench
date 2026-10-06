@@ -21,17 +21,16 @@
 <body>
 <main>
   <h2>cast <span id="name"></span> <small id="casts"></small> <button id="seedup">seed +1</button> <span id="seedlbl"></span></h2>
-  <p>web/visual/casts/<span id="file"></span>.mjs: who the people are. The archetypes are <code>identityFrom(cast, s, name, i)</code> dressed in their home styling; the crowd is <code>characterFrom(cast, s, role, energy)</code>, a new person per cut from the cast's families, palettes and pools. Parts are on <a href="parts.html">parts.html</a>, poses on <a href="poses.html">poses.html</a>.</p>
+  <p>limner/casts/<span id="file"></span>.mjs: who the people are. The archetypes are <code>identityFrom(cast, s, name, i)</code> dressed in their home styling; the crowd is <code>characterFrom(cast, s, role, energy)</code>, a new person per cut from the cast's families, palettes and pools. Parts are on <a href="parts.html">parts.html</a>, poses on <a href="poses.html">poses.html</a>.</p>
   <h2>archetypes <small>(each in their home costume, makeup and marks)</small></h2><div class="row" id="cast"></div>
   <h2>costumes <small>(on the first archetype, no paint)</small></h2><div class="row" id="costumes"></div>
   <h2>crowd <small>(sixteen random people of this cast)</small></h2><div class="row" id="crowd"></div>
 </main>
 <script type="module">
-  import { renderPortrait } from './web/visual/portrait.mjs';
-  import { characterFrom, identityFrom, dress } from './web/visual/cast.mjs';
-  import { seed } from './web/visual/kit.mjs';
-  import { prng } from './lib/random.mjs';
-  import { CASTS } from './web/visual/themes.mjs'; // the casts by name, the editorial one included
+  import { renderPortrait } from './index.mjs';
+  import { characterFrom, identityFrom, dress } from './people.mjs';
+  import { seed, prng } from './rng.mjs';
+  import { CASTS } from './registry.mjs'; // the casts by name, the editorial one included
   const name = new URLSearchParams(location.search).get('cast') || 'editorial';
   document.getElementById('name').textContent = name; document.getElementById('file').textContent = name;
   document.getElementById('casts').innerHTML = Object.keys(CASTS).map((c) => (c === name ? c : `<a href="?cast=${c}">${c}</a>`)).join(' · ');
