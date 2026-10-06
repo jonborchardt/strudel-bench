@@ -6,6 +6,7 @@
 import '../parts/dwarf.mjs'; // the parts this cast is made of register by name
 import { COSTUMES, FAMILIES } from '../cast.mjs';
 import { parts, SKIN_COLORS, HAIR_COLORS } from '../portrait.mjs';
+import { rand } from '../kit.mjs';
 
 const STEEL = '#8d939a', IRON = '#5f6670', LEATHER = '#5a3d2a', FUR = '#5a4634', WOOL = '#7a6a4a', MOSS = '#5b6b4a', OAK = '#6b4a33';
 /** What they wear: mail under a fur mantle, leather with a cap, a plain wool tunic, a helm over mail. */
@@ -17,6 +18,7 @@ export const DWARF_COSTUMES = {
 };
 Object.assign(COSTUMES, DWARF_COSTUMES);
 export const DWARF_BUILD = { trunk: 0.8, legs: 0.55, shoulders: 1.3, arms: 0.8, head: 1.15 };
+export const DWARF_EARS = [0, 0.2]; // a dwarf's ear is round, a few of them with the hint of a point: their own range, so a face that came from another cast is set back to it and not left with elf ears
 const stout = (width, height, face = {}) => ({ face: { width, height, ...face }, neck: { width: 90, height: 44 } }); // every dwarf: a broad head on a short thick neck
 /** The eight, by what tells them apart at a hundred pixels: the hair's mass or its absence, the beard's shape, the hat, the costume's colour block. */
 export const DWARVES = {
@@ -37,4 +39,5 @@ export default {
   pools: { tops: parts('top', { any: ['only:dwarf'] }), jackets: parts('jacket', { any: ['only:dwarf', 'everyday'] }), beards: parts('facialHair', { any: ['only:dwarf', 'everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: parts('graphics', { all: ['everyday'] }) },
   wardrobe: { establish: ['none', 'leatherCap', 'none'], develop: ['leatherCap', 'hornlessHelm', 'none'], climax: ['hornlessHelm', 'hornlessHelm', 'leatherCap'], release: ['none', 'leatherCap'], none: ['none', 'leatherCap', 'hornlessHelm'] },
   archetypes: DWARVES, archetypeNames: Object.keys(DWARVES), costumes: Object.keys(DWARF_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: DWARF_BUILD, contrast: 1.6, asym: 1.4,
+  base: (s) => ({ ears: { pointed: DWARF_EARS[0] + rand(s) * (DWARF_EARS[1] - DWARF_EARS[0]) } }), // the cast's signature as a rule: mostly round, now and then a little drawn out
 };

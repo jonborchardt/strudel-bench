@@ -101,6 +101,18 @@ test('a theme in the editor: off, the menus are the editorial ones; on, they gai
   assert.equal(decode(encode(state())).theme, 'none', 'and a plain state stays plain');
 });
 
+test('a cast preset writes the whole person, so picking one cast after another sets back what the last one left: its ears and its build, always', () => {
+  const presetFor = (theme, path) => controlsFor(state({}, { theme })).find((c) => c.path === path);
+  const applied = (c, option) => { const ov = {}; for (const [k, v] of Object.entries(c.apply(option))) setOv(ov, k, v); return ov; };
+  const elf = applied(presetFor('elves', 'elves'), 'moonsinger'), dwarf = applied(presetFor('dwarves', 'dwarves'), 'ironBrow'), zombie = applied(presetFor('thriller', 'undead'), 'bride');
+  for (const [who, ov] of [['an elf', elf], ['a dwarf', dwarf], ['a zombie', zombie]]) { assert.ok('ears.pointed' in ov, `${who} writes its ears`); assert.ok('build.legs' in ov, `${who} writes its build`); }
+  assert.ok(elf['ears.pointed'] >= 0.7, 'an elf is pointed-eared');
+  assert.ok(dwarf['ears.pointed'] <= 0.2 && zombie['ears.pointed'] === 0, 'a dwarf and a zombie are not: elf ears do not survive the switch');
+  assert.ok(elf['build.legs'] > 1 && dwarf['build.legs'] < 0.7 && zombie['build.legs'] === 1, 'and a cast with no build of its own writes the portrait\'s back');
+  assert.deepEqual(applied(presetFor('elves', 'elves'), 'moonsinger'), elf, 'a preset is the same person every time, so a signature drawn by a rule still reads back as itself');
+  assert.equal(presetMatch(presetFor('elves', 'elves'), params(state(elf, { theme: 'elves' }))), 'moonsinger');
+});
+
 test('the idle animation drifts the pose, moves the gaze and blinks, and never leaves the sliders behind', () => {
   const p = params(state()), lim = CONTROLS.filter((c) => c.kind === 'num' && /^(pose|eyes\.look|eyes\.brow|mouth\.(smile|open|fullness))/.test(c.path));
   assert.deepEqual(idle(p, 3.7), idle(p, 3.7)); // deterministic: the same second is the same face

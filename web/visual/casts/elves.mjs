@@ -9,6 +9,7 @@
 import '../parts/elf.mjs'; // the parts this cast is made of register by name
 import { COSTUMES, FAMILIES } from '../cast.mjs';
 import { parts, SKIN_COLORS, HAIR_COLORS, EYE_COLORS } from '../portrait.mjs';
+import { rand } from '../kit.mjs';
 
 const MOSS = '#405547', BARK = '#4a3a2e', SILVER = '#b9b8b3', MIST = '#8da0a8', FERN = '#5f7a56', NIGHT = '#2a3340', GOLD = '#c9a03c';
 /** What they wear: a green tunic under a bark cloak, silver with a circlet, night colours under a dark cloak. */
@@ -19,13 +20,14 @@ export const ELF_COSTUMES = {
 };
 Object.assign(COSTUMES, ELF_COSTUMES);
 export const ELF_BUILD = { trunk: 1.1, legs: 1.15, shoulders: 0.85, arms: 1.1, head: 0.95 };
+export const ELF_EARS = [0.72, 1]; // how far an elf's ear comes to a point: the cast's own range, drawn per person, so no two of them have the same ear and none of them is round
 const slender = (width, height, face = {}) => ({ face: { width, height, ...face }, neck: { width: 48, height: 100 } }); // every elf: a narrow head on a long neck
 /** The six, by what tells them apart: the hair's length and colour, the circlet, the cloak, the vine. */
 export const ELVES = {
   silverleaf: { family: 'fineBoned', hair: 'lowBun', hairColors: ['platinum', 'white'], costume: 'silverCourt', makeup: ['vineMarks'], set: { ...slender(142, 226, { chin: 0.3 }), eyes: { spacing: 60, sclera: 0.9, openness: 1.1 }, nose: { style: 'narrow', width: 14, length: 46 }, mouth: { width: 38, fullness: 0.5 }, body: { width: 0.8 }, pose: { turn: 0.3, headTilt: 0.08 } } },
-  nightbrook: { family: 'longMidface', hair: 'sweptBack', hairColors: ['jetBlack'], costume: 'nightWalker', makeup: 'none', set: { ...slender(146, 232, { chin: 0.26 }), eyes: { style: 'narrow', spacing: 50, depth: 0.7, browLift: -2 }, nose: { style: 'long', width: 15, length: 52 }, mouth: { style: 'thin', width: 40, fullness: 0.2 }, body: { width: 0.9 }, pose: { turn: -0.4, shoulder: 0.4 } } },
+  nightbrook: { family: 'longMidface', hair: 'sweptBack', hairColors: ['jetBlack'], costume: 'nightWalker', makeup: 'none', set: { ears: { pointed: 0.78 }, ...slender(146, 232, { chin: 0.26 }), eyes: { style: 'narrow', spacing: 50, depth: 0.7, browLift: -2 }, nose: { style: 'long', width: 15, length: 52 }, mouth: { style: 'thin', width: 40, fullness: 0.2 }, body: { width: 0.9 }, pose: { turn: -0.4, shoulder: 0.4 } } },
   ashwarden: { family: 'longMidface', hair: 'ponytailLow', hairColors: ['silver', 'platinum'], age: 'mid', costume: 'greenwood', makeup: 'none', set: { ...slender(148, 230, { chin: 0.24 }), eyes: { style: 'almond', spacing: 52, depth: 0.6 }, nose: { style: 'aquiline', width: 16, length: 50 }, mouth: { style: 'thin', width: 40, fullness: 0.25 }, body: { width: 0.92 }, pose: { turn: 0.2, shoulder: -0.3, headTilt: -0.04 } } },
-  moonsinger: { family: 'fineBoned', hair: 'highBun', hairColors: ['lightBlond', 'platinum'], costume: 'silverCourt', makeup: ['vineMarks'], set: { ...slender(138, 236, { chin: 0.34 }), eyes: { style: 'round', spacing: 62, sclera: 0.95, openness: 1.15 }, nose: { style: 'upturned', width: 14, length: 44 }, mouth: { style: 'cupidBow', width: 36, fullness: 0.7 }, body: { width: 0.76 }, pose: { headTilt: 0.14, turn: 0.35 } } },
+  moonsinger: { family: 'fineBoned', hair: 'highBun', hairColors: ['lightBlond', 'platinum'], costume: 'silverCourt', makeup: ['vineMarks'], set: { ears: { pointed: 1 }, ...slender(138, 236, { chin: 0.34 }), eyes: { style: 'round', spacing: 62, sclera: 0.95, openness: 1.15 }, nose: { style: 'upturned', width: 14, length: 44 }, mouth: { style: 'cupidBow', width: 36, fullness: 0.7 }, body: { width: 0.76 }, pose: { headTilt: 0.14, turn: 0.35 } } },
   fernstrider: { family: 'fineBoned', hair: 'middlePart', hairColors: ['copper', 'lightBlond'], costume: 'greenwood', makeup: 'none', set: { ...slender(150, 222, { chin: 0.28 }), eyes: { style: 'upturned', spacing: 58, openness: 1.05 }, nose: { style: 'straight', width: 16, length: 44 }, mouth: { width: 42, fullness: 0.55 }, body: { width: 0.88 }, pose: { turn: 0.5, shoulder: 0.5, bodyTilt: -0.04 } } },
   dawnherald: { family: 'longMidface', hair: 'bluntBob', hairColors: ['white', 'silver'], costume: 'nightWalker', makeup: ['vineMarks'], set: { ...slender(144, 228, { chin: 0.22 }), eyes: { style: 'almond', spacing: 54, depth: 0.5, browLift: 2 }, nose: { style: 'narrow', width: 15, length: 48 }, mouth: { style: 'full', width: 40, fullness: 0.75 }, body: { width: 0.84 }, pose: { headTilt: -0.12, turn: -0.3, shoulder: -0.4 } } },
 };
@@ -37,5 +39,5 @@ export default {
   pools: { tops: parts('top', { any: ['only:elf'] }), jackets: parts('jacket', { any: ['only:elf'] }), beards: parts('facialHair', { all: ['only:elf'] }), hair: parts('hair', { all: ['everyday'], not: ['overEars'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: parts('graphics', { all: ['everyday'] }) },
   wardrobe: { establish: ['none', 'leafCirclet'], develop: ['none', 'leafCirclet', 'none'], climax: ['leafCirclet'], release: ['none'], none: ['none', 'leafCirclet'] },
   archetypes: ELVES, archetypeNames: Object.keys(ELVES), costumes: Object.keys(ELF_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: ELF_BUILD, contrast: 1.4, asym: 1.2,
-  base: { ears: { pointed: 1 } }, // the cast's signature, on its archetypes and its crowd alike: the ear itself comes to a point (portrait's ears.pointed), never a shard laid over a round one
+  base: (s) => ({ ears: { pointed: ELF_EARS[0] + rand(s) * (ELF_EARS[1] - ELF_EARS[0]) } }), // the cast's signature as a rule, on its archetypes and its crowd alike: the ear itself comes to a point (portrait's ears.pointed), by this much on this one, and an archetype may pin its own
 };

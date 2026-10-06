@@ -171,8 +171,8 @@ function idsOf(s, tpl, company) {
   if (n === 2 && !s.pairs.some((p) => p[0] === out[0] && p[1] === out[1])) { s.pairs.push([out[0], out[1]]); if (s.pairs.length > 6) s.pairs.shift(); }
   return out.slice(0, n);
 }
-function makeShot(s, name, set, at, len, company, P, phase, cascade) {
-  const T = themeOf(s), tpl = (T?.templates ?? TEMPLATES)[name], pose = tpl.n ? pick(s, tpl.poses) : 'none', fr = FRAMING[tpl.framing ?? 'close'], ids = tpl.n ? idsOf(s, tpl, company) : [];
+function makeShot(s, name, set, at, len, company, P, phase, cascade, only = null) {
+  const T = themeOf(s), tpl = (T?.templates ?? TEMPLATES)[name], pose = tpl.n ? pick(s, tpl.poses) : 'none', fr = FRAMING[tpl.framing ?? 'close'], ids = only ?? (tpl.n ? idsOf(s, tpl, company) : []); // `only`: the people this shot holds, when the shot names them (the song's closing duo is the leads). They are chosen before their stylings, or each would wear the face of whoever idsOf picked instead
   const base = ids.map((id, i) => stylingOf(s, s.cast[id], P, tpl, i)), mutate = !!tpl.n && !tpl.fx && rand(s) < P.mutate;
   const layout = layoutOf(pose, tpl.n, fr, T); sameStance(layout, tpl.fx);
   return {
@@ -205,7 +205,7 @@ export function planSection(s, sec, i, n, phase) {
     shots.push(makeShot(s, name, set, b, len, company, P, phase, cascade));
     b += len;
   }
-  if (closing && b < bars - 1e-6) { const sh = makeShot(s, C.tpl, C.set, b, bars - b, company, PH.release, 'release', false); sh.ids = [...s.leads]; sh.pose = C.pose; sh.framing = C.framing; sh.layout = layoutOf(C.pose, 2, FRAMING[C.framing], T); sh.mutate = false; sh.cam = { scale: 1, x: 0, y: 0, rot: 0, push: 0 }; shots.push(sh); }
+  if (closing && b < bars - 1e-6) { const sh = makeShot(s, C.tpl, C.set, b, bars - b, company, PH.release, 'release', false, [...s.leads]); sh.pose = C.pose; sh.framing = C.framing; sh.layout = layoutOf(C.pose, 2, FRAMING[C.framing], T); sh.mutate = false; sh.cam = { scale: 1, x: 0, y: 0, rot: 0, push: 0 }; shots.push(sh); }
   return shots;
 }
 

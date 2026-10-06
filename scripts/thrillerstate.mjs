@@ -1,5 +1,7 @@
 // test/fixtures/thriller-state.json: the tableau's whole state after 8 s of the test song with theme thriller. Captured
-// before the theme file was split (2026-10-05) so the split is proved pure; regenerate only on purpose with --update.
+// before the theme file was split (2026-10-05) so the split is proved pure, and re-captured the same day when the
+// closing shot was fixed to style the people it actually holds (its two stylings and the stream after them moved, the
+// cast and every other shot stayed); regenerate only on purpose with --update, and diff the state before you do.
 import { writeFileSync, existsSync } from 'node:fs';
 import tableau from '../web/visual/tableau.mjs';
 import { ready } from '../test/_scope.mjs';

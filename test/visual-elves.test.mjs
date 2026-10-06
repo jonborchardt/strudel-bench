@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES as EDITORIAL } from '../web/visual/tableau.mjs';
-import ELVES from '../web/visual/casts/elves.mjs';
+import ELVES, { ELF_EARS } from '../web/visual/casts/elves.mjs';
 import { ELF } from '../web/visual/parts/elf.mjs';
 import { THEMES } from '../web/visual/themes.mjs';
 import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES } from '../web/visual/cast.mjs';
@@ -55,13 +55,27 @@ test('the elves cast: six archetypes, tall and slight by the build, narrow-faced
     assert.ok(c.base.face.width <= 152 && c.base.neck.height >= 92 && c.base.body.width <= 0.92, `${c.name}: narrow face, long neck, slight body`);
     assert.equal(c.base.facialHair.style, 'none', `${c.name}: beardless`);
     const p = dress(c); const ops = draws(p, c.name);
-    assert.equal(p.ears.pointed, 1, `${c.name}: the cast's signature, pointed ears`);
+    assert.ok(p.ears.pointed >= ELF_EARS[0], `${c.name}: the cast's signature, ears pointed by its own rule`);
     assert.equal(ops.filter((o) => o.ear).length, 2, `${c.name}: and both are drawn as one blade each`);
     assert.ok(feetY(p) > 1100, `${c.name}: stands tall (feet at ${feetY(p)})`);
     assert.ok(ELVES.costumes.includes(c.home.costume));
   }
   const crowd = Array.from({ length: 12 }, (_, i) => characterFrom(ELVES, s, ['establish', 'develop', 'climax', 'release'][i % 4], (i % 4) / 3));
-  for (const k of crowd) assert.ok(clean(portraitOps(k)) && k.facialHair.style === 'none' && k.ears.pointed === 1 && portraitOps(k).filter((o) => o.ear).length === 2 && ELVES.pools.tops.includes(k.top.style) && ELVES.skins.includes(k.skin), 'a random elf is beardless, pointed-eared, pale, in the cast\'s tops');
+  for (const k of crowd) assert.ok(clean(portraitOps(k)) && k.facialHair.style === 'none' && k.ears.pointed >= ELF_EARS[0] && portraitOps(k).filter((o) => o.ear).length === 2 && ELVES.pools.tops.includes(k.top.style) && ELVES.skins.includes(k.skin), 'a random elf is beardless, pointed-eared, pale, in the cast\'s tops');
+});
+
+test('the ears are a rule, not a number: every elf is pointed, no two of them alike, an archetype may pin its own, and the same seed draws the same ears', () => {
+  const of = (sd) => { const s = {}; seed(s, prng(sd)); return ELVES.archetypeNames.map((n, i) => identityFrom(ELVES, s, n, i)); };
+  const cast = of(7), vals = cast.map((c) => c.base.ears.pointed);
+  assert.ok(ELF_EARS[0] > 0.5 && ELF_EARS[1] <= 1 && ELF_EARS[0] < ELF_EARS[1], 'the rule is a range, and its floor still reads as an elf');
+  for (const c of cast) assert.ok(c.base.ears.pointed >= ELF_EARS[0] && c.base.ears.pointed <= ELF_EARS[1], `${c.name}: ${c.base.ears.pointed} inside the cast's range`);
+  assert.ok(new Set(vals).size >= 4, `six elves, ${new Set(vals).size} different ears: the rule draws, it does not pin`);
+  assert.equal(cast.find((c) => c.name === 'moonsinger').base.ears.pointed, 1, 'and an archetype that pins its own wins over the rule');
+  assert.deepEqual(of(7).map((c) => c.base.ears.pointed), vals, 'the same seed draws the same ears');
+  assert.notDeepEqual(of(8).map((c) => c.base.ears.pointed), vals, 'another seed draws others');
+  const c = {}; seed(c, prng(3)); const crowd = Array.from({ length: 12 }, () => characterFrom(ELVES, c));
+  assert.ok(new Set(crowd.map((k) => k.ears.pointed)).size >= 8, 'and a random elf draws its own too');
+  for (const k of crowd) assert.ok(k.ears.pointed >= ELF_EARS[0] && k.ears.pointed <= ELF_EARS[1]);
 });
 
 test('the theme: the song names it, the tableau casts the elves and plans only editorial shots, deterministically, with no clock or randomness of its own', async () => {
@@ -75,10 +89,15 @@ test('the theme: the song names it, the tableau casts the elves and plans only e
     p.draw(ctx, 320, 180);
     assert.ok(ctx.calls.fill > 30 && ctx.calls.save === ctx.calls.restore);
     assert.deepEqual(s.cast.map((c) => c.name), ELVES.archetypeNames);
-    assert.ok(s.cast.every((c) => c.base.build.legs > 1.05 && c.base.facialHair.style === 'none' && c.base.ears.pointed === 1), 'every one of them is built tall, beardless and pointed-eared, in every shot: it is on the person, not the styling');
+    assert.ok(s.cast.every((c) => c.base.build.legs > 1.05 && c.base.facialHair.style === 'none' && c.base.ears.pointed >= ELF_EARS[0]), 'every one of them is built tall, beardless and pointed-eared, in every shot: it is on the person, not the styling');
     assert.ok(s.plan.flat().every((x) => EDITORIAL[x.tpl]), 'every shot is an editorial template');
-    const worn = s.plan.flat().flatMap((x) => x.alts.flatMap((alt) => alt.map((st, i) => [s.cast[x.ids[i]], st]))).filter(([c]) => Array.isArray(c.home.makeup));
+    // over a song long enough to cast most of them: everyone who owns a vine wears it in every shot and every mutation
+    const big = runWorld(tableau, g.song({ cps: .5, key: 'C:minor', seed: 5, visual: THEMED }, [
+      g.section('a', 16, { role: 'establish', drums: { density: .3 } }), g.section('b', 16, { role: 'develop', drums: { density: .6 }, melody: { notes: '0 2' } }), g.section('c', 16, { role: 'climax', drums: { density: 1 }, bass: {} }), g.section('d', 16, { role: 'release', pad: {} }),
+    ]).strudel, 4).state;
+    const worn = big.plan.flat().flatMap((x) => x.alts.flatMap((alt) => alt.map((st, i) => [big.cast[x.ids[i]], st]))).filter(([c]) => Array.isArray(c.home.makeup));
     assert.ok(worn.length > 0 && worn.every(([c, st]) => c.home.makeup.every((m) => st.makeup.includes(m)) && st.makeup.every((m) => typeof m === 'string')), 'a list-valued home makeup (an elf\'s vine) is the cast\'s face: in every shot and every mutation, under whatever paint the phase adds');
+    assert.ok(worn.length >= 4 && big.plan.flat().length > 10, 'and the long song casts enough of them to mean it');
     assert.deepEqual(JSON.parse(JSON.stringify(s)), s, 'plain data');
   } finally { for (const u of undo) u(); }
   const a = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state), b = JSON.stringify(runWorld(tableau, song(g, THEMED), 4).state);

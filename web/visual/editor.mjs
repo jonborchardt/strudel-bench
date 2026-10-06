@@ -7,7 +7,7 @@
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
 import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf } from './portrait.mjs';
-import { FAMILY_NAMES, characterOf, faceOf, EXPRESSIONS, COSTUMES, COSTUME_FAMILIES } from './cast.mjs';
+import { FAMILY_NAMES, characterOf, faceOf, EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from './cast.mjs';
 import { CASTS, themeNames } from './themes.mjs'; // every theme's cast and parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
 import VISUAL from '../../lib/visual.json' with { type: 'json' };
 import { seed as seedState } from './kit.mjs';
@@ -140,8 +140,18 @@ export const PALETTES = COLORS;
 // preset that writes one of its characters over the base. GROUPS and CONTROLS stay the editorial editor, so a test or
 // a page that reads them sees no theme; groupsFor(state) is what a page builds its panel from.
 const on = (x) => x && x !== 'none';
-/** One of a cast's archetypes as edits over the base: its pins (skin, eyes, teeth, face, neck, body, stance), its hair, beard, home makeup and marks, the cast's build and contrast, and its home costume. */
-const castPreset = (cast, name) => { const a = cast.archetypes[name], { props = [], accessories = [], ...garments } = COSTUMES[a.costume](0); return flat({ ...a.set, hairColor: COLORS.hair[a.hairColors?.[0]] ?? '#30231e', hair: { style: a.hair }, facialHair: { style: a.beard ?? 'none' }, makeup: [a.makeup ?? 'none'].flat().filter(on), marks: [a.marks ?? 'none'].flat().filter(on), props, accessories, glasses: a.glasses ? { style: a.glasses, color: '#1d1b1a' } : null, blush: 0, light: { contrast: cast.contrast }, mouth: { ...(a.set?.mouth ?? {}), smile: -0.05 }, hat: a.hat ?? { style: 'none' }, jacket: { style: 'none' }, ...(cast.build && cast.build !== 'default' ? { build: cast.build } : {}), ...garments }); }; // the base's own hat, glasses, smile and blush go, as identityFrom and dress leave them: the costume says what is worn, the cast's contrast lights it
+/** One of a cast's archetypes as edits over the base: the cast's signature (its ears, a dead eye), its pins (skin, eyes,
+ *  teeth, face, neck, body, stance), its hair, beard, home makeup and marks, the cast's build and contrast, and its home
+ *  costume. The build and the ears are always written, the cast's own or the portrait's defaults, so picking a person of
+ *  one cast sets back what a person of the last one left on the face; a signature that is a rule is drawn once per
+ *  archetype, so the preset is the same person every time and reads back as itself. */
+const castPreset = (cast, name) => {
+  const a = cast.archetypes[name], { props = [], accessories = [], ...garments } = COSTUMES[a.costume](0);
+  const s = {}; seedState(s, prng(1 + cast.archetypeNames.indexOf(name)));
+  const sig = signatureOf(cast, s);
+  return flat({ ...sig, ...a.set, hairColor: COLORS.hair[a.hairColors?.[0]] ?? '#30231e', hair: { style: a.hair }, facialHair: { style: a.beard ?? 'none' }, makeup: [a.makeup ?? 'none'].flat().filter(on), marks: [a.marks ?? 'none'].flat().filter(on), props, accessories, glasses: a.glasses ? { style: a.glasses, color: '#1d1b1a' } : null, blush: 0, light: { contrast: cast.contrast }, mouth: { ...(sig.mouth ?? {}), ...(a.set?.mouth ?? {}), smile: -0.05 }, hat: a.hat ?? { style: 'none' }, jacket: { style: 'none' },
+    ears: { pointed: a.set?.ears?.pointed ?? sig.ears?.pointed ?? DEFAULTS.ears.pointed }, build: cast.build && cast.build !== 'default' ? cast.build : DEFAULTS.build, ...garments });
+}; // the base's own hat, glasses, smile and blush go, as identityFrom and dress leave them: the costume says what is worn, the cast's contrast lights it
 // the menu each kind of part lands on, and the pools' keys as kinds
 const MENU = { top: 'top.style', jacket: 'jacket.style', hat: 'hat.style', hair: 'hair.style', facialHair: 'facialHair.style', glasses: 'glasses.style', teeth: 'mouth.teeth', makeup: 'makeup', marks: 'marks', props: 'props' }, POOL_KIND = { tops: 'top', jackets: 'jacket', beards: 'facialHair', hair: 'hair', glasses: 'glasses', details: 'details', graphics: 'graphics' };
 /** A theme's tags: `only:<cast>` and every tag (but `everyday`) on a part in the cast's pools, which is how its packs' shared parts (`era:80s`) reach the menus without a hand-written list. */

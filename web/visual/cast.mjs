@@ -79,8 +79,12 @@ export function characterFrom(cast, s, role = 'none', energy = 0.5) {
     pose: { ...stanceOf(s), gaze: r() < 0.5 ? 'camera' : null }, // how this person holds themself: one stance, not five dice; half of them look back at the viewer through the turn, half let their eyes go with the head
     frame: r() < 0.4 ? 0 : (r() - 0.5) * 0.36, // where they enter the frame: off centre by this much of the frame's height, more often than not
   };
-  return cast.base ? merge(out, cast.base) : out;
+  return cast.base ? merge(out, signatureOf(cast, s)) : out;
 }
+/** A cast's signature as values: `base` is the portrait keys that go on every one of its people, written out
+ *  (the undead's milky eyes) or, as a rule, drawn from the state's own generator (`(s) => ({ ears: { pointed: … } })`),
+ *  so a cast varies within itself instead of stamping one number on everybody. An archetype's `set` wins over it. */
+export const signatureOf = (cast, s) => (typeof cast.base === 'function' ? cast.base(s) : cast.base ?? {});
 /** A new editorial character (the crowd every world draws): `characterFrom` on the EDITORIAL cast, pinned by test/cast-golden.test.mjs. */
 export const characterOf = (s, role = 'none', energy = 0.5) => characterFrom(EDITORIAL, s, role, energy);
 
@@ -185,7 +189,7 @@ export function identityFrom(cast, s, name, id = 0) {
     light: { ...lightOf(s, 0.8 + r() * 0.2), contrast: cast.contrast }, // full light, hard shadow: the tableau's dial, not the renderer's default
     neck: { ...(NECK_TYPES[a.neck] ?? NECK_TYPES[torso === 'lanky' ? 'long' : torso === 'heavy' ? 'thick' : 'average']) },
     pose: { turn: (r() - 0.5) * 0.5, shoulder: (r() - 0.5) * 0.6 }, // how this person stands: a shot's pose adds to it
-  }, cast.base ?? {}), a.set ?? {}); // the cast's signature (the undead's milky eyes, an elf's pointed ears) over the seed's draw, then the archetype's pinned numbers over both: the art direction
+  }, signatureOf(cast, s)), a.set ?? {}); // the cast's signature (the undead's milky eyes, an elf's pointed ears) over the seed's draw, then the archetype's pinned numbers over both: the art direction
   if (a.set?.mouth?.y === undefined) base.mouth.y = base.eyes.y + 10 + base.nose.length + LIP_GAP[0] + r() * (LIP_GAP[1] - LIP_GAP[0]); // a pinned nose moves the mouth with it, as the seed's draw would have
   return { id, name, torso, base, home: { costume: a.costume ?? 'plainTee', makeup: a.makeup ?? 'none', marks: a.marks ?? 'none', prop: 'none', hat: a.hat ?? null } };
 }
