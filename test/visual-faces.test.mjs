@@ -77,8 +77,15 @@ test('every part style draws finite numbers, as SVG and on a canvas', () => {
   assert.equal(nostril(portraitOps({ skin: '#452d27' })).fill, '#1d1310', 'the nostril on deep skin is darker than the skin, not the light-skin brown');
   assert.equal(ops.filter((o) => o.k === 'clip').length, 12, 'each iris is clipped to its lids, the neck\'s shading to the neck (twice: behind the clothes and through the neckline), the neckline opening, the cloth to the shirt, the planes, the light and the hair shadow to the face, the strands to the hair'); assert.ok(toSvg(ops).includes('<clipPath'));
   const cc = ctxStub(); drawOn(cc, ops); assert.equal(cc.calls.clip, 12); // the trunk clips for the top and the jacket, since the portrait is a figure (2026-10-04)
-  const turned = portraitOps({ pose: { turn: 0.8 } }), ears = turned.filter((o) => o.k === 'ellipse' && o.ry === 27);
-  assert.deepEqual(ears.map((o) => o.cx), [125.2, 270], 'turned toward +x the +x ear slides in behind the head, a sliver left past the outline, the other rides with the outline'); assert.ok(turned.some((o) => o.k === 'clip' && o.d.startsWith('M 197.6 196')), 'the features slide further than the outline');
+  const shells = (o) => { const e = portraitOps(o).filter((x) => x.k === 'ellipse' && x.ry === 27); return { near: { out: 200 - (e[0].cx - e[0].rx), w: e[0].rx }, far: { out: e[1].cx + e[1].rx - 200, w: e[1].rx } }; }; // each ear's reach past the centre and its drawn width
+  const square = shells({}), swung = shells({ pose: { turn: 0.8 } });
+  const half = FACE_SHAPES.oval.width / 2; // where the outline runs: an ear inside it is covered by the head, which is drawn after
+  assert.ok(square.far.out > half && swung.far.out < half, 'square on, an ear shows past the outline; turned toward +x the +x one swings in behind the head');
+  assert.ok(swung.far.w < square.far.w * 0.7, 'and foreshortens as it goes, instead of staying a full ear beside the outline');
+  assert.ok(swung.near.out > square.near.out && swung.near.w > square.near.w, 'while the near one comes forward: clear of the outline and a little fuller');
+  const tip = (o) => Math.max(...portraitOps({ ...o, ears: { pointed: 1 } }).filter((x) => x.ear).flatMap((x) => x.d.match(/-?[\d.]+/g).map(Number).filter((_, i) => i % 2 === 0))) - 200;
+  assert.ok(tip({ pose: { turn: 1 } }) < 60, `a pointed ear tucks its tip away too, where the head is narrow (${tip({ pose: { turn: 1 } })})`);
+  assert.ok(portraitOps({ pose: { turn: 0.8 } }).some((o) => o.k === 'clip' && o.d.startsWith('M 197.6 196')), 'the features slide further than the outline');
   const sheared = portraitOps({ pose: { shoulder: 1 } }), torsoOf = (o) => o.find((x) => x.k === 'path' && x.d.endsWith('L 60 600 Z') || (x.k === 'path' && x.d.includes('L 340 ')));
   assert.notEqual(torsoOf(sheared).d, torsoOf(portraitOps({})).d, 'a dropped shoulder shears the torso');
   const tied = portraitOps({ top: { style: 'buttonDown' }, accessories: ['tie'] });

@@ -143,6 +143,7 @@ function neck(p) {
 }
 
 export const EAR_POINT = 32; // how far a fully pointed ear's tip rises above the round shell's top, before ears.size
+export const EAR_TURN = 14, EAR_TURN_POINT = 12, EAR_TURN_OUT = 3; // how far a fully turned head takes the far ear behind it, how much further a fully pointed one must go, and how far the near one stands out
 /** The ear's shell. `t` (ears.pointed) draws the same ear as one blade instead: the lobe and the bowl where they were,
  *  the helix carrying on past the top into a point that leans out and back. One shape from lobe to tip, never a tip
  *  laid over a round ear, which reads as a shard taped to the temple; the head is drawn after the ears, so the blade's
@@ -162,8 +163,18 @@ function ears(p, turn = 0) {
   const one = (cx, sd, rim) => mapXY([earShell(cx, sd, t, p.skin), ...soft(cx + 2 * sd, 215, 6, 11, TONE, 0.3), ellipse(cx - 4 * sd, 226, 5, 4, { fill: '#fff', op: 0.08 }),
     ...(t ? [path(`M ${cx - 9 * sd} 207 C ${cx - 12 * sd} ${194 - 10 * t}, ${cx - 12 * sd} ${182 - 14 * t}, ${cx - (9 + t) * sd} ${182 - 20 * t}`, { ...s, sw: 1.7, op: 0.3 })] : []), // the fold carried up into the point, so the blade is a cupped surface and not a flat shard
     path(`M ${cx - (3 + 5 * t) * sd} ${187 - 32 * t} C ${cx - 14 * sd} ${190 - 10 * t}, ${cx - 17 * sd} 206, ${cx - 12 * sd} 222`, stroke('#fff', 2, 0.14)), path(rim, s)], scaleAbout(cx, k), scaleAbout(212, k));
+  // The turn, about the ear's own attachment to the head: the ear on the side the nose goes to swings behind the head
+  // (it is drawn under it) and foreshortens on the way, the other comes forward, stands a little clear of the outline
+  // and reads a touch fuller. A pointed ear tucks further than a round one: its tip is up where the head is narrow, so
+  // the slide that hides a round ear leaves a crescent of blade past the temple, which reads as a mark, not an ear.
+  const swing = (ops, cx) => {
+    if (!turn) return ops;
+    const o = cx < 200 ? -1 : 1, a = turn * turn, far = o === Math.sign(turn), piv = cx - 15 * o; // a: how far round, as the projection goes (cos falls away as the square), so a half turn still shows the far ear and a hard one has tucked it away
+    const squash = far ? 1 - 0.55 * a : 1 + 0.2 * a, dx = far ? -o * (EAR_TURN + EAR_TURN_POINT * t) * a : o * EAR_TURN_OUT * a;
+    return mapX(ops, (x) => piv + (x - piv) * squash + dx);
+  };
   const left = one(122, 1, 'M 119 199 C 109 205, 111 224, 121 227 C 129 222, 127 211, 120 211'), right = one(278, -1, 'M 281 199 C 291 205, 289 224, 279 227 C 271 222, 273 211, 280 211');
-  return mapXY([...mapX(left, (x) => x + Math.max(0, -14 * turn)), ...mapX(right, (x) => x - Math.max(0, 14 * turn))], (x) => x, (y) => y + p.eyes.y - 196); // turned toward +x, the +x ear slides behind the head (drawn under it) with a sliver still showing past the outline; drawn for the eye line at 196, they ride with this face's
+  return mapXY([...swing(left, 122), ...swing(right, 278)], (x) => x, (y) => y + p.eyes.y - 196); // drawn for the eye line at 196, they ride with this face's
 }
 
 // the head: the face and its planes, then a faint blush on the cheeks when `blush` is up; the soft light comes over the features (faceLight)
