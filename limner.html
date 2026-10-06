@@ -21,6 +21,13 @@
   main > section[data-open] { display: block; }
   h2 { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
   h2 + p { margin: 0 0 12px; max-width: 76em; color: var(--dim); }
+  h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #6b655c; margin: 18px 0 2px; }
+  h3 + p { margin: 0 0 8px; max-width: 76em; color: var(--dim); }
+  /* every tab ends with the code for what it just drew, so the page reads as the manual and not only as a contact sheet */
+  .ex { position: relative; max-width: 76em; margin-top: 18px; }
+  .ex > pre { margin: 0; }
+  .ex > button { position: absolute; top: 5px; right: 5px; font: inherit; font-size: 10px; padding: 1px 6px; border: 1px solid var(--line); background: var(--paper); color: var(--dim); border-radius: 3px; cursor: pointer; }
+  .ex > button:hover { color: var(--ink); }
   .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
   figure { margin: 0; text-align: center; }
   figure svg { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 3px; }
@@ -82,13 +89,14 @@
   <p class="lede">
     limner draws one person: parameters in, an op list out, SVG or canvas from the ops. Nothing on this page knows about
     music, songs or worlds &mdash; it imports <code>./limner/index.mjs</code> and <code>./limner/schema.mjs</code> and
-    nothing else from this repo, which is the point. The editor's URL <em>is</em> the face: the same link always draws
-    the same portrait.
+    nothing else from this repo, which is the point. Every tab ends with the code that draws what it shows.
   </p>
 </header>
 <nav id="tabs"></nav>
 <main>
   <section id="t-editor">
+    <h2>Every parameter, and the face in the URL</h2>
+    <p>The whole space, each parameter on the control that fits it. The hash <em>is</em> the face &mdash; the same link always draws the same portrait, every committed edit is a history entry, and <code>[</code> / <code>]</code> step the seed. Drop a photo anywhere to lay it over the drawing.</p>
     <div id="ed">
       <aside id="panel">
         <div class="bar">
@@ -129,6 +137,7 @@
           <div class="bar"><button id="copyrep">copy report</button></div>
           <pre id="rep"></pre>
         </details>
+        <div class="ex"><button>copy</button><pre id="edex"></pre></div><!-- the face above, as code: the hash is the only thing you have to carry -->
       </section>
     </div>
   </section>
@@ -154,6 +163,36 @@ const $ = (id) => document.getElementById(id);
 const el = (tag, props = {}, html = '') => { const n = document.createElement(tag); Object.assign(n, props); if (html) n.innerHTML = html; return n; };
 const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
 const fig = (svg, label, sub = '') => `<figure>${svg}<figcaption><b>${esc(label)}</b>${sub ? `<span>${esc(sub)}</span>` : ''}</figcaption></figure>`;
+// Every tab is laid out the same way: a title, one paragraph of what it is for, the controls, the gallery, and then the
+// code that draws it. `head`/`sub`/`ex` are that shape, so no tab invents its own.
+const head = (s, title, lede) => { s.append(el('h2', {}, title), el('p', {}, lede)); return s; };
+const sub = (s, title, lede = '') => { s.append(el('h3', {}, title)); if (lede) s.append(el('p', {}, lede)); return s; };
+// The examples are what an *npm consumer* writes: the bare specifier. This page itself imports limner by path, because
+// a page under /<repo>/ has no import map to resolve a bare one, and the build guard (test/pages.test.mjs) is a text
+// scan for an import of anything but a path -- so the specifier is interpolated below: the example reads right and the
+// guard sees no import. `schema.mjs` is not in limner's `exports` at all, so there the honest line is a path.
+const LIB = 'limner', SPEC = './node_modules/limner/schema.mjs';
+const imp = (names, from = LIB) => `import { ${names} } from '${from}';`;
+// a returned value, printed as the JavaScript that would have made it, since an example full of JSON double quotes is
+// not the code anybody would write
+const list = (xs, n = 5) => `[ ${xs.slice(0, n).map((x) => `'${x}'`).join(', ')}${xs.length > n ? `, … ` : ' '}]`;
+const key = (k) => (/^[A-Za-z_$][\w$]*$/.test(k) ? k : `'${k}'`); // an override path is dotted: 'eyes.style', not eyes.style
+const js = (v) => Array.isArray(v) ? `[${v.map(js).join(', ')}]`
+  : v && typeof v === 'object' ? `{ ${Object.entries(v).map(([k, x]) => `${key(k)}: ${js(x)}`).join(', ')} }`
+  : typeof v === 'string' ? `'${v}'` : String(v);
+/** A copy-pasteable example, appended last. Returns the `pre`, so a tab whose controls change the call can rewrite it. */
+function ex(s, code) {
+  const box = el('div', { className: 'ex' }), pre = el('pre');
+  pre.textContent = code;
+  box.append(el('button', {}, 'copy'), pre);
+  s.append(box);
+  return pre;
+}
+addEventListener('click', (e) => { // one handler for every copy button, the editor's included
+  const b = e.target.closest('.ex > button'); if (!b) return;
+  navigator.clipboard.writeText(b.nextElementSibling.textContent);
+  b.textContent = 'copied'; setTimeout(() => { b.textContent = 'copy'; }, 900);
+});
 const castNames = Object.keys(CASTS);
 // One sitter for every tab that shows a thing *on* somebody: the expressions, the parts, the ops. Defined once, because
 // three copies of a seed is how they drifted apart. `afroStudio` wears no hat, no glasses, no facial hair and no jacket,
@@ -174,10 +213,12 @@ function sitterPicker(onPick) {
   };
   fillWho();
   const current = () => archetype({ cast: castSel.value, seed: MODEL.seed, name: whoSel.value });
+  // the call that made the sitter, printed into the tab's example, so the snippet is the picture and not a generic one
+  const call = () => `archetype({ cast: '${castSel.value}', seed: ${MODEL.seed}, name: '${whoSel.value}' })`;
   castSel.onchange = () => { fillWho(); onPick(current()); };
   whoSel.onchange = () => onPick(current());
   wrap.append(el('span', { className: 'tags' }, 'sitter:'), castSel, whoSel);
-  return { node: wrap, current };
+  return { node: wrap, current, call };
 }
 const stream = (n) => { const s = {}; seed(s, prng(n)); return s; };
 
@@ -186,12 +227,12 @@ const stream = (n) => { const s = {}; seed(s, prng(n)); return s; };
 const TABS = [
   ['editor', 'Editor', paintEditor],
   ['poses', 'Poses', paintPoses],
-  ['peoples', 'Ten peoples', paintPeoples],
-  ['crowd', 'A seeded crowd', paintCrowd],
+  ['peoples', 'Peoples', paintPeoples],
+  ['crowd', 'Crowd', paintCrowd],
   ['anatomy', 'Anatomy', paintAnatomy],
   ['faces', 'Expressions', paintFaces],
   ['costumes', 'Costumes', paintCostumes],
-  ['parts', 'Parts & tags', paintParts],
+  ['parts', 'Parts', paintParts],
   ['ops', 'Ops', paintOps],
 ];
 const painted = new Set();
@@ -290,6 +331,22 @@ function refresh() {
   sync(p);
   guides(p);
   $('rep').textContent = report(st, $('note').value, location.href.split('#')[0] + '#editor/' + encode(st));
+  const ovs = Object.entries(st.ov), wide = Math.max(0, ...ovs.map(([k]) => key(k).length));
+  $('edex').textContent = `${imp('renderPortrait, renderFigure')}
+${imp('decode, params', SPEC)}   // not in limner's exports: the editor spec is reached by path
+
+// This very face, from the hash in the URL above.
+const p = params(decode('${encode(st)}'));
+renderPortrait(p);   // the bust, viewBox "0 0 400 480"
+renderFigure(p);     // the whole standing body, feet on the floor
+
+// The hash is that state and nothing else, base64'd, and it decodes to exactly this — a seed, a
+// face family, a people, and the ${ovs.length} value${ovs.length === 1 ? '' : 's'} edited away from what that seed gives${ovs.length ? '' : ' (none yet: move a control)'}.
+// Written out it carries no hash at all, and params() expands it into the full parameter tree.
+const same = params({
+  seed: ${st.seed}, family: '${st.family}', theme: '${st.theme}',
+  ov: {${ovs.length ? '\n' + ovs.map(([k, v]) => `    ${(key(k) + ':').padEnd(wide + 1)} ${js(v)},`).join('\n') + '\n  ' : ''}},
+});`;
 }
 const commit = () => { hash = encode(st); location.hash = `editor/${hash}`; refresh(); }; // one history entry per committed edit, so Back walks the edits
 
@@ -348,16 +405,18 @@ addEventListener('hashchange', () => {
 // =====================================================================================================
 function paintPoses() {
   const s = $('t-poses');
-  s.append(el('h2', {}, 'Poses: one body, and nothing about placement'));
-  s.append(el('p', {}, 'A stance is how one body stands — the head’s tilt and lean, the turn off the torso, a dropped shoulder, the hands it puts up. Drawn as whole figures, because the arms are half of a pose. It deliberately says nothing about where that body is in a frame: where several figures stand relative to each other is blocking, which belongs to whatever composes a shot and is not limner’s to know.'));
+  const packs = Object.entries(STANCES), total = packs.reduce((n, [, set]) => n + Object.keys(set).length, 0);
+  head(s, `Poses: one body, and nothing about placement (${total} in ${packs.length} packs)`,
+    'A stance is how one body stands — the head’s tilt and lean, the turn off the torso, a dropped shoulder, the hands it puts up. Drawn as whole figures, because the arms are half of a pose. It deliberately says nothing about where that body is in a frame: where several figures stand relative to each other is blocking, which belongs to whatever composes a shot and is not limner’s to know.');
   const body = el('div');
   const picker = sitterPicker(() => go());
   s.append(picker.node, body);
+  let code;
   const go = () => {
     body.innerHTML = '';
     const sitter = picker.current();
-    for (const [pack, set] of Object.entries(STANCES)) {
-      body.append(el('h2', { style: 'margin-top:14px' }, `${pack} stances (${Object.keys(set).length})`));
+    for (const [pack, set] of packs) {
+      sub(body, `${pack} stances (${Object.keys(set).length})`);
       const row = el('div', { className: 'row tall' });
       for (const [name, stance] of Object.entries(set)) {
         const p = dress(sitter, {
@@ -369,8 +428,7 @@ function paintPoses() {
       }
       body.append(row);
     }
-    body.append(el('h2', { style: 'margin-top:14px' }, 'arms and hands'));
-    body.append(el('p', {}, 'A prop places the arms. Every other arm hangs from its shoulder with the hand at the hip; a raised hand’s fingers point up and curl forward, and never hang.'));
+    sub(body, 'arms and hands', 'A prop places the arms. Every other arm hangs from its shoulder with the hand at the hip; a raised hand’s fingers point up and curl forward, and never hang.');
     const row = el('div', { className: 'row tall' });
     for (const prop of PROP_STYLES.filter((p) => p !== 'none' && p !== 'handsAtSides')) {
       let svg = '';
@@ -378,6 +436,22 @@ function paintPoses() {
       row.insertAdjacentHTML('beforeend', fig(svg, prop));
     }
     body.append(row);
+    const [pack, set] = packs[0], name = Object.keys(set)[0];
+    const text = `${imp('archetype, dress, renderFigure, stanceOf')}
+
+const sitter = ${picker.call()};
+const st = stanceOf('${name}');${packs[1] ? `          // or stanceOf('${Object.keys(packs[1][1])[0]}', '${packs[1][0]}')` : ''}
+
+// A stance is fields, not a call: spread it onto the pose yourself, so you stay free to
+// take the lean and leave the hands, or hold two figures in exactly the same one.
+renderFigure(dress(sitter, {
+  pose: { headX: st.headX, headY: st.headY, headTilt: st.tilt, bodyTilt: st.bodyTilt, turn: st.turn, shoulder: st.shoulder },
+  props: st.props,
+}));
+
+// dx / dy / k, where a stance carries them, are blocking: yours to apply, not limner's.
+renderFigure(dress(sitter, { props: ['${PROP_STYLES.find((p) => p !== 'none' && p !== 'handsAtSides')}'] }));   // a prop alone places the arms`;
+    if (code) code.textContent = text; else code = ex(s, text);
   };
   go();
 }
@@ -385,21 +459,37 @@ function paintPoses() {
 // ---- ten peoples ----
 function paintPeoples() {
   const s = $('t-peoples');
-  s.append(el('h2', {}, 'Ten peoples'));
-  s.append(el('p', {}, 'One archetype from each cast, in its home styling. A cast is a signature merged over every member — the ears, the muzzle, the build itself — plus the pools of parts it may wear and its own palettes. None of them is a filter over a human: they are built differently.'));
+  head(s, `Peoples (${castNames.length} casts, ${castNames.reduce((n, c) => n + CASTS[c].archetypeNames.length, 0)} archetypes)`,
+    'One archetype from each cast, in its home styling. A cast is a signature merged over every member — the ears, the muzzle, the build itself — plus the pools of parts it may wear and its own palettes. None of them is a filter over a human: they are built differently. Step the archetype to see that a cast is a people and not one face.');
   const row = el('div', { className: 'row w160' });
-  for (const name of castNames) {
-    const cast = CASTS[name], who = archetype({ cast: name, seed: 5, name: cast.archetypeNames[0] });
-    row.insertAdjacentHTML('beforeend', fig(renderPortrait(dress(who, {})), name, `${cast.archetypeNames[0]} · ${cast.archetypeNames.length} archetypes`));
-  }
-  s.append(row);
+  const picks = el('div', { className: 'picks' });
+  let i = 0, code; // the same index into every cast's archetype list, wrapped: one row is one cross-section of the ten
+  const go = () => {
+    row.innerHTML = castNames.map((name) => {
+      const cast = CASTS[name], who = cast.archetypeNames[i % cast.archetypeNames.length];
+      return fig(renderPortrait(dress(archetype({ cast: name, seed: 5, name: who }), {})), name, `${who} · ${i % cast.archetypeNames.length + 1} of ${cast.archetypeNames.length}`);
+    }).join('');
+    const text = `${imp('CASTS, archetype, dress, renderPortrait')}
+
+Object.keys(CASTS);                  // ${list(castNames, 10)}
+CASTS.${castNames[1]}.archetypeNames;${' '.repeat(Math.max(1, 15 - castNames[1].length))}// ${list(CASTS[castNames[1]].archetypeNames, 3)} (${CASTS[castNames[1]].archetypeNames.length})
+
+// An archetype is an *identity* — a face plus the wardrobe it owns — so it has to be dressed
+// before it can be drawn. dress(who, {}) is "in its own clothes, nothing added".
+const who = archetype({ cast: '${castNames[1]}', seed: 5, name: '${CASTS[castNames[1]].archetypeNames[i % CASTS[castNames[1]].archetypeNames.length]}' });
+renderPortrait(dress(who, {}));`;
+    if (code) code.textContent = text; else code = ex(s, text);
+  };
+  picks.append(el('button', { onclick: () => { i++; go(); } }, 'next archetype'));
+  s.append(picks, row);
+  go();
 }
 
 // ---- a seeded crowd ----
 function paintCrowd() {
   const s = $('t-crowd');
-  s.append(el('h2', {}, 'A seeded crowd'));
-  s.append(el('p', {}, 'Sixteen people out of one generator stream. The seed is the whole crowd: the same seed gives the same sixteen in the same order, which is what makes a scene reproducible together rather than person by person. Another seed or another people puts sixteen more at the top \u2014 nothing is cleared, so the list grows downward and everything drawn stays below it.'));
+  head(s, 'A seeded crowd',
+    'Sixteen people out of one generator stream. The seed is the whole crowd: the same seed gives the same sixteen in the same order, which is what makes a scene reproducible together rather than person by person. Another seed or another people puts sixteen more at the top \u2014 nothing is cleared, so the list grows downward and everything drawn stays below it.');
   const picks = el('div', { className: 'picks' });
   const pick = el('select');
   for (const n of castNames) pick.append(el('option', { value: n }, n));
@@ -408,23 +498,38 @@ function paintCrowd() {
   // One flat list, newest first. Nothing is ever cleared: another seed or another people puts sixteen more at the top
   // and everything already drawn keeps its place below it. Each figure carries where it came from, so the list stays
   // legible once it is long.
+  let code;
   const add = () => {
     const stt = stream(sd), cast = pick.value;
     out.insertAdjacentHTML('afterbegin', Array.from({ length: 16 }, () => characterFrom(CASTS[cast], stt))
       .map((c) => fig(renderPortrait(c), cast, `seed ${sd}`)).join(''));
     out.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const text = `${imp('CASTS, characterFrom, seed, prng, renderPortrait, person')}
+
+// The row above. One state object, sixteen draws out of it: that is the contract, and it is
+// why a crowd is reproducible *together* rather than person by person.
+const s = {}; seed(s, prng(${sd}));
+const crowd = Array.from({ length: 16 }, () => characterFrom(CASTS.${cast}, s));
+crowd.map(renderPortrait);          // a character is already drawable — no dress() needed
+
+// person() is the same thing for one person with no stream of your own:
+person({ cast: '${cast}', seed: ${sd} });     // always this exact person`;
+    if (code) code.textContent = text; else code = ex(exHost, text);
   };
   pick.onchange = add;
   picks.append(pick, el('button', { onclick: () => { sd++; add(); } }, 'next seed'));
-  s.append(picks, out);
+  // the example sits above the gallery here, alone among the tabs: this list only ever grows, so the bottom of the
+  // section is wherever the oldest crowd happens to have ended up
+  const exHost = el('div');
+  s.append(picks, exHost, out);
   add();
 }
 
 // ---- anatomy ----
 function paintAnatomy() {
   const s = $('t-anatomy');
-  s.append(el('h2', {}, 'Anatomy is solved, not stated'));
-  s.append(el('p', {}, 'ANATOMY gives each people a stature relative to a human and then the figure in head heights, every measure a range. buildOf() walks one parameter across all of those ranges at once and bisects until the figure actually stands at the right stature — so the human row solves to all 1s, which is what ties the published table to this drawing. Drawn to one scale, feet on one floor.'));
+  head(s, `Anatomy is solved, not stated (${Object.keys(ANATOMY).length} rows)`,
+    'ANATOMY gives each people a stature relative to a human and then the figure in head heights, every measure a range. buildOf() walks one parameter across all of those ranges at once and bisects until the figure actually stands at the right stature — so the human row solves to all 1s, which is what ties the published table to this drawing. Drawn to one scale, feet on one floor.');
   const order = Object.keys(ANATOMY).sort((a, b) => ANATOMY[a].height - ANATOMY[b].height);
   const row = el('div', { className: 'row ground' });
   for (const race of order) {
@@ -434,16 +539,43 @@ function paintAnatomy() {
     row.insertAdjacentHTML('beforeend', fig(renderFigure({ ...p, build: b }), race, `stature ${ANATOMY[race].height} · ${ANATOMY[race].totalHeight.join('–')} heads`));
   }
   s.append(row);
-  s.append(el('pre', {}, esc(`ANATOMY.dwarf\n// ${JSON.stringify(ANATOMY.dwarf)}\n\nbuildOf('dwarf')\n// ${JSON.stringify(buildOf('dwarf'))}`)));
+  ex(s, `${imp('ANATOMY, buildOf, person, renderFigure')}
+
+Object.keys(ANATOMY);   // ${list(Object.keys(ANATOMY), 9)}
+ANATOMY.dwarf
+// ${js(ANATOMY.dwarf)}
+
+// Two halves of that row pull against each other: a stature and a head-to-body ratio do not both
+// land at a range's midpoint. buildOf walks one parameter across every range at once and bisects
+// until the figure actually stands at the stature. The human row solves to all 1s.
+buildOf('dwarf')
+// ${js(buildOf('dwarf'))}
+buildOf('human')
+// ${js(buildOf('human'))}
+
+// A build is just one more parameter, so a row of the table can be put on anybody:
+renderFigure({ ...person({ cast: 'editorial', seed: 3 }), build: buildOf('halfling') });`);
 }
 
 // ---- expressions ----
 function paintFaces() {
   const s = $('t-faces');
-  s.append(el('h2', {}, 'Every expression, on one face'));
-  s.append(el('p', {}, 'An expression moves the lids, the brows and the mouth together. `smile` is a separate offset on top, so two deadpans need not be identical.'));
+  const names = Object.keys(EXPRESSIONS);
+  head(s, `Every expression, on one face (${names.length})`,
+    'An expression moves the lids, the brows and the mouth together. `smile` is a separate offset on top, so two deadpans need not be identical. Pick another sitter to see the same eighteen read differently on a different skull — an expression is an offset, not a sticker.');
   const row = el('div', { className: 'row w120' });
-  const draw = (who) => { row.innerHTML = Object.keys(EXPRESSIONS).map((name) => fig(renderPortrait(dress(who, { expression: name })), name)).join(''); };
+  let code;
+  const draw = (who) => {
+    row.innerHTML = names.map((name) => fig(renderPortrait(dress(who, { expression: name })), name)).join('');
+    const text = `${imp('EXPRESSIONS, archetype, dress, renderPortrait')}
+
+Object.keys(EXPRESSIONS);     // ${list(names, 6)} (${names.length})
+
+const sitter = ${picker.call()};
+renderPortrait(dress(sitter, { expression: '${names[1] ?? names[0]}' }));
+renderPortrait(dress(sitter, { expression: '${names[0]}', smile: 0.25 }));   // a ${names[0]} that is not quite one`;
+    if (code) code.textContent = text; else code = ex(s, text);
+  };
   const picker = sitterPicker(draw);
   s.append(picker.node, row);
   draw(picker.current());
@@ -452,11 +584,29 @@ function paintFaces() {
 // ---- costumes ----
 function paintCostumes() {
   const s = $('t-costumes');
-  s.append(el('h2', {}, `Costume families (${COSTUME_FAMILIES.length})`));
-  s.append(el('p', {}, 'A costume family dresses a figure in one go — top, jacket, hat, accessories, sometimes a prop — and each has variants. One sitter wears all of them, so the only thing changing is the clothes.'));
+  head(s, `Costume families (${COSTUME_FAMILIES.length})`,
+    'A costume family dresses a figure in one go — top, jacket, hat, accessories, sometimes a prop. One sitter wears all of them, so the only thing changing is the clothes. A variant is a second cut of the same family: another print, a jacket on or off, and it also moves the sitter’s own seed, so a variant is a different day and not a different person.');
   const row = el('div', { className: 'row w120' });
-  const draw = (who) => { row.innerHTML = COSTUME_FAMILIES.map((name) => fig(renderPortrait(dress(who, { costume: name })), name)).join(''); };
+  const vSel = el('select');
+  for (const v of [0, 1, 2, 3]) vSel.append(el('option', { value: v }, 'variant ' + v));
+  let code;
+  const draw = (who) => {
+    const v = +vSel.value;
+    row.innerHTML = COSTUME_FAMILIES.map((name) => fig(renderPortrait(dress(who, { costume: name, variant: v })), name)).join('');
+    const text = `${imp('COSTUME_FAMILIES, archetype, dress, renderPortrait')}
+
+COSTUME_FAMILIES;     // ${list(COSTUME_FAMILIES, 4)} (${COSTUME_FAMILIES.length})
+
+// An identity keeps its own home styling; every key of the second argument overrides one part
+// of it. Dress the same sitter twice and it is the same face on two days.
+const sitter = ${picker.call()};
+renderPortrait(dress(sitter, { costume: '${COSTUME_FAMILIES[0]}', variant: ${v} }));
+renderPortrait(dress(sitter, { costume: '${COSTUME_FAMILIES[0]}', variant: ${v}, hat: 'bucketHat', expression: 'smirk' }));`;
+    if (code) code.textContent = text; else code = ex(s, text);
+  };
   const picker = sitterPicker(draw);
+  vSel.onchange = () => draw(picker.current());
+  picker.node.append(vSel);
   s.append(picker.node, row);
   draw(picker.current());
 }
@@ -484,8 +634,9 @@ const WEAR = {
 };
 function paintParts() {
   const s = $('t-parts');
-  s.append(el('h2', {}, 'Parts are reached by tag, never by iterating a registry'));
-  s.append(el('p', {}, 'A part registers itself by name and carries tags. `everyday` and `era:80s` say what a part is; `only:x` says who may wear it, and a part tagged that way comes back only when a query names it. Sharing is a tag; quarantine is a pool — which is how ten casts share one wardrobe without a zombie’s rot reaching an ordinary face.'));
+  const nParts = Object.keys(REGISTRIES).reduce((n, k) => n + Object.keys(REGISTRIES[k]).length, 0);
+  head(s, `Parts are reached by tag, never by iterating a registry (${nParts} across ${Object.keys(REGISTRIES).length} kinds)`,
+    'A part registers itself by name and carries tags. `everyday` and `era:80s` say what a part is; `only:x` says who may wear it, and a part tagged that way comes back only when a query names it. Sharing is a tag; quarantine is a pool — which is how ten casts share one wardrobe without a zombie’s rot reaching an ordinary face.');
   const lines = [];
   for (const kind of Object.keys(REGISTRIES)) {
     const names = Object.keys(REGISTRIES[kind]), counts = new Map();
@@ -497,14 +648,15 @@ function paintParts() {
   s.append(el('p', { className: 'note' }, `packs that ship: ${Object.keys(PACKS).join(', ')} — plus the shared fantasy pack every D&D cast reaches, which is why humans needs no pack of its own.`));
 
   // the query, drawn: a part tagged only:x appears only when the query names it, which is far easier to believe seen
-  const picks = el('div', { className: 'picks', style: 'margin-top:14px' });
+  sub(s, 'the query, drawn', 'Pick a kind and a tag: the call and its result are printed, and every part that came back is drawn on the sitter. A part the query could not reach is simply not here.');
+  const picks = el('div', { className: 'picks' });
   const kindSel = el('select'); for (const k of Object.keys(REGISTRIES)) kindSel.append(el('option', { value: k }, k));
   const tagSel = el('select');
   const out = el('div');
   const gallery = el('div', { style: 'margin-top:8px' });
   // the sitter wears none of what is on show, so a cell is the part and nothing else; pick another and the whole
   // gallery redraws on them, which is how a part is checked against the people who will actually wear it
-  let base = dress(model(), { makeup: [], marks: [], props: [] });
+  let base = dress(model(), { makeup: [], marks: [], props: [] }), code;
   const show = () => {
     const kind = kindSel.value, t = tagSel.value;
     // Some kinds carry no tags at all (legs, accessories): a tag query can never reach them, so the whole kind is what
@@ -522,6 +674,21 @@ function paintParts() {
       try { svg = (whole ? renderFigure : renderPortrait)({ ...base, ...wear(n) }); } catch { return ''; }
       return fig(svg, n, [...(tagsOf(kind, n) ?? [])].join(' '));
     }).join('');
+    const one = got[0] ?? 'none';
+    const text = `${imp('parts, tagsOf, tag, archetype, dress, renderPortrait')}
+
+// A generator never iterates a registry; it asks. The gallery above is this one call.
+${call};
+// -> ${list(got)}   (${got.length} of ${Object.keys(REGISTRIES[kind]).length})
+tagsOf('${kind}', '${one}');   // ${list([...(tagsOf(kind, one) ?? [])])}
+
+// Sharing is a tag; quarantine is a pool. Register your own the same way:
+tag('${kind}', 'myPart', 'everyday');          // anyone may wear it
+tag('${kind}', 'myRot', 'only:undead');        // reached only by a query that names it
+
+// A part is worn by naming it in the parameters — this is the ${kind} cell above:
+renderPortrait({ ...dress(${sitter.call()}, {}), ${js(wear ? wear(one) : {}).replace(/^\{ | \}$/g, '')} });`;
+    if (code) code.textContent = text; else code = ex(s, text);
   };
   const refreshTags = () => {
     const all = new Set();
@@ -541,29 +708,52 @@ function paintParts() {
 // ---- ops ----
 function paintOps() {
   const s = $('t-ops');
-  s.append(el('h2', {}, 'Ops are the output; SVG and canvas are two renderers'));
-  s.append(el('p', {}, 'portraitOps() is the one computation and returns a flat list of drawing ops. toSvg() prints them, drawOn() paints them. The same list, both ways, below. If you are drawing many frames, keep the ops and paint them: rasterising an SVG string per frame will not keep up.'));
-  const p = dress(model(), { expression: 'slightSmile' });
-  const ops = portraitOps(p);
+  head(s, 'Ops are the output; SVG and canvas are two renderers',
+    'portraitOps() is the one computation and returns a flat list of drawing ops. toSvg() prints them, drawOn() paints them. The same list, both ways, below — pick another sitter and both sides move together, because there is only one computation to move. If you are drawing many frames, keep the ops and paint them: rasterising an SVG string per frame will not keep up at 1080p30.');
   const pair = el('div', { className: 'pair' });
-  const a = el('div'); a.innerHTML = toSvg(ops, '#f3f1ec'); a.append(el('div', { className: 'tags' }, `toSvg(ops) — ${toSvg(ops).length.toLocaleString()} characters`));
-  const b = el('div');
-  const cv = el('canvas', { width: 400, height: 480 });
-  b.append(cv, el('div', { className: 'tags' }, `drawOn(ctx, ops) — ${ops.length} ops`));
+  const a = el('div'), aTag = el('div', { className: 'tags' });
+  const b = el('div'), bTag = el('div', { className: 'tags' });
+  const cv = el('canvas', { width: 400, height: 480 }), ctx = cv.getContext('2d');
+  a.append(el('div'), aTag); b.append(cv, bTag);
   pair.append(a, b);
-  s.append(pair);
-  const ctx = cv.getContext('2d');
-  ctx.fillStyle = '#f3f1ec'; ctx.fillRect(0, 0, 400, 480);
-  drawOn(ctx, ops);
-  const kinds = {}; for (const o of ops) kinds[o.k] = (kinds[o.k] ?? 0) + 1;
-  s.append(el('p', { className: 'note', style: 'margin-top:10px' },
+  const note = el('p', { className: 'note' },
     'An op is a shape and how to paint it. Only two kinds are not: push/pop opens and closes a transform, and '
     + 'clip/unclip a clipping region — that pair is how a part drawn for the default head follows this one, and why '
-    + 'the first few ops of any figure are bookkeeping rather than drawing. One of each kind from the figure above:'));
-  const first = Object.keys(kinds).map((k) => ops.find((o) => o.k === k && Object.keys(o).length > 1) ?? ops.find((o) => o.k === k));
+    + 'the first few ops of any figure are bookkeeping rather than drawing. One of each kind from the figure above:');
+  const tallyPre = el('pre');
+  let code;
   const trim = (o) => { const t = JSON.stringify(o); return t.length <= 160 ? t : JSON.stringify({ ...o, d: String(o.d).slice(0, 80) + ' …' }); };
-  const tally = Object.entries(kinds).map(([k, n]) => `${k}×${n}`).join(', ');
-  s.append(el('pre', {}, esc(`${ops.length} ops: ${tally}\n\n${first.map(trim).join('\n')}`)));
+  const draw = (who) => {
+    const p = dress(who, { expression: 'slightSmile' });
+    const ops = portraitOps(p), svg = toSvg(ops, '#f3f1ec');
+    a.firstChild.innerHTML = svg;
+    aTag.textContent = `toSvg(ops, '#f3f1ec') — ${svg.length.toLocaleString()} characters of SVG`;
+    bTag.textContent = `drawOn(ctx, ops) — ${ops.length} ops, no string at all`;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#f3f1ec'; ctx.fillRect(0, 0, 400, 480);
+    drawOn(ctx, ops);
+    const kinds = {}; for (const o of ops) kinds[o.k] = (kinds[o.k] ?? 0) + 1;
+    const first = Object.keys(kinds).map((k) => ops.find((o) => o.k === k && Object.keys(o).length > 1) ?? ops.find((o) => o.k === k));
+    tallyPre.textContent = `${ops.length} ops: ${Object.entries(kinds).map(([k, n]) => `${k}×${n}`).join(', ')}\n\n${first.map(trim).join('\n')}`;
+    const text = `${imp('archetype, dress, portraitOps, toSvg, drawOn, renderPortrait')}
+
+const p = dress(${picker.call()}, { expression: 'slightSmile' });
+
+const ops = portraitOps(p);     // ${ops.length} flat ops — the one computation
+toSvg(ops, '#f3f1ec');          // a string, with a background
+drawOn(ctx, ops);               // the same list, at the canvas's current transform
+drawOn(ctx, ops, 0.4);          // ...and at an alpha, for a figure fading in
+
+renderPortrait(p);              // the one-liner: toSvg(portraitOps(p))
+
+// Animating or exporting video: compute the ops once per frame and paint them. Rasterising
+// an SVG string per frame will not hold thirty frames a second at 1080p.
+for (const o of ops) if (o.k === 'push') { /* a transform opens here, and a pop closes it */ }`;
+    if (code) code.textContent = text; else code = ex(s, text);
+  };
+  const picker = sitterPicker(draw);
+  s.append(picker.node, pair, note, tallyPre);
+  draw(picker.current());
 }
 
 // ---- open ----
