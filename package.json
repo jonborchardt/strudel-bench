@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.mjs",
     "stop": "node scripts/stop.mjs",
-    "test": "node --test --test-concurrency=1",
+    "test": "node --test --test-concurrency=1 \"test/*.test.mjs\" \"limner/test/*.test.mjs\"",
     "check": "node scripts/check.mjs",
     "samples": "node scripts/samples.mjs",
     "pages": "node scripts/pages.mjs",

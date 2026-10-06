@@ -4,9 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { characterOf, identityOf, ARCHETYPE_NAMES } from 'limner';
-import { seed } from '../web/visual/kit.mjs';
-import { prng } from '../lib/random.mjs';
+import { characterOf, identityOf, ARCHETYPE_NAMES } from '../index.mjs';
+import { seed, prng } from '../rng.mjs';
 const golden = JSON.parse(readFileSync(new URL('./fixtures/cast-golden.json', import.meta.url), 'utf8'));
 test('the editorial crowd is what it was', () => {
   for (const g of golden.crowd) { const s = {}; seed(s, prng(g.seed)); assert.deepEqual(JSON.parse(JSON.stringify(characterOf(s, g.role, (g.seed % 4) / 3))), g.character, `seed ${g.seed}`); }

@@ -128,3 +128,14 @@ test('the build ships limner the library, and none of its workshop', () => {
     assert.equal(map.imports.limner, './limner/index.mjs');
   } finally { fs.rmSync(out, { recursive: true, force: true }); }
 });
+
+// npm test names both suites, rather than letting node --test glob for them. node_modules/limner is a symlink to
+// ./limner (the file: dependency), so bare discovery can reach limner's tests twice, or -- once someone moves a file --
+// not at all, and a suite that silently stops running looks exactly like a suite that passes.
+test('npm test names both suites explicitly: glob discovery would walk the node_modules/limner symlink', () => {
+  const { scripts } = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  assert.match(scripts.test, /"test\/\*\.test\.mjs"/, 'the host suite is named');
+  assert.match(scripts.test, /"limner\/test\/\*\.test\.mjs"/, "and limner's, so a beard change cannot stop being tested by accident");
+  assert.match(scripts.test, /--test-concurrency=1/, 'serially, because the host suite writes _t_ fixtures into shared directories');
+  assert.ok(fs.existsSync(path.join(ROOT, 'limner', 'test', 'ops-golden.test.mjs')), 'and the suite it names exists');
+});

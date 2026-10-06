@@ -1,11 +1,12 @@
 ﻿import test from 'node:test';
 import assert from 'node:assert/strict';
-import { renderPortrait, portraitOps, DEFAULTS, NOSES, FACIAL_HAIR, FACIAL_HAIR_STYLES } from 'limner';
-import { GROUPS, CONTROLS, POSE_NAMES, posePreset, THEMES, THEME_NAMES, JITTER, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../limner/schema.mjs';
-import { CASTS, CAST_MODULES } from 'limner';
+import { renderPortrait, portraitOps, DEFAULTS, NOSES, FACIAL_HAIR, FACIAL_HAIR_STYLES } from '../index.mjs';
+import { GROUPS, CONTROLS, POSE_NAMES, posePreset, THEMES, THEME_NAMES, JITTER, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../schema.mjs';
+import { CASTS, CAST_MODULES } from '../registry.mjs';
 const ELVES = CASTS.elves, { ELF_EARS, ELF_BUILD } = CAST_MODULES.elves;
-import { FAMILIES } from 'limner';
-import { ZOMBIE_NAMES, ZOMBIE_SKINS } from '../web/visual/thriller.mjs';
+import { FAMILIES } from '../people.mjs';
+import { ZOMBIE_NAMES } from '../casts/undead.mjs';
+import { ZOMBIE_SKINS } from '../parts/undead.mjs'; // the host's thriller.mjs shim stayed behind; a library does not reach into its consumer
 
 const state = (ov = {}, over = {}) => ({ ...blank(), ...over, ov });
 const svg = (st) => renderPortrait(params(st)).replace(/c\d+/g, 'c'); // clip ids are document-global, so two renders of one face differ only there
