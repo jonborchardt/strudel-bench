@@ -319,6 +319,53 @@
           "why": "closer, outro.raw2 closer why: the bass and the final chord are the foreground of the release"
         }
       ]
+    },
+    {
+      "date": "2026-10-06",
+      "ask": "Thriller's chord chart as a lesson in how a melody moves - not a copy",
+      "changes": [
+        {
+          "section": "chorus",
+          "layer": "raw2/4/5",
+          "why": "the hook plays once and is answered: bars 5-8 are a new busy line falling to the root over iv VII v i, where before the 4-bar hook simply repeated"
+        },
+        {
+          "section": "chorus",
+          "why": "the band holds one chord a bar under the answer (clip 24) so the line stands alone in front of it"
+        },
+        {
+          "section": "chorus",
+          "layer": "raw",
+          "why": "the bass walks the answer's chords (RD RG RE) and lands with it instead of repeating the hook's pedal"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw2/4/5",
+          "why": "the climax answers a third higher and peaks on e5, the song's highest note, which the first two choruses never reach"
+        },
+        {
+          "section": "chorus3",
+          "why": "the last two bars take a chord every half bar (Em F, G Am) so the harmony accelerates into the landing"
+        },
+        {
+          "section": "verse/verse2/verse3",
+          "why": "progression i i i i>i@6 VI v: the last two bars leave the one-chord vamp for VI and the minor v, the band stops, and the baritone sings a four-note tag down to e3 - the verse ends a sentence instead of running out"
+        },
+        {
+          "section": "verse",
+          "layer": "raw4",
+          "why": "the lead voice now enters on that tag, its first appearance in the song"
+        },
+        {
+          "section": "bridge",
+          "why": "progression i VI i VI>i VI i VI i VI V7@2: the seventh bar is the only dominant in the song (E7, the one G#), left ringing into the dropout bar, so the bridge turns instead of fading"
+        },
+        {
+          "section": "pre",
+          "layer": "raw4",
+          "why": "the pre's last three sixteenths walk up into the hook's first note instead of falling away, so the chorus line starts before the bar"
+        }
+      ]
     }
   ],
   "youtube": {
