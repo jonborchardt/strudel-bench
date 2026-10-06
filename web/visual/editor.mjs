@@ -7,10 +7,10 @@
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
 import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf } from './portrait.mjs';
-import { FAMILY_NAMES, characterOf, faceOf, EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from './cast.mjs';
+import { FAMILY_NAMES, characterFrom, faceOf, EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from './cast.mjs';
 import { CASTS, themeNames } from './themes.mjs'; // every theme's cast and parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
 import VISUAL from '../../lib/visual.json' with { type: 'json' };
-import { seed as seedState } from './kit.mjs';
+import { seed as seedState, rand } from './kit.mjs';
 import { prng } from '../../lib/random.mjs';
 const EXPRESSION_NAMES = Object.keys(EXPRESSIONS).filter((e) => !Object.values(CASTS).some((c) => c.expressions?.includes(e))); // the editorial expressions: the casts registered their own by name before this module ran
 
@@ -51,21 +51,56 @@ export function setOv(ov, path, value) {
 
 const FAMILIES_PLUS = ['any', ...FAMILY_NAMES];
 export const THEME_NAMES = ['none', ...themeNames()]; // the themes the editor offers (THEMES below says what each adds)
-/** The character the edits sit on: a random one from the seed, its face constrained to one structural family when asked. */
-export function base(seed = 1, family = 'any') {
-  const s = {};
+/** The cast a theme draws its people from (lib/visual.json's row), else the editorial one: with a theme on, a random character is a random one of that cast, in its clothes and with its signature. */
+const castFor = (theme) => (on(theme) && VISUAL.themes[theme] && CASTS[VISUAL.themes[theme].cast]) || CASTS.editorial;
+const pickOf = (r, a) => (a.length ? a[Math.floor(r() * a.length)] : null);
+const castTags = (cast) => (cast === CASTS.editorial ? [] : themeTags(cast));
+/** The layers a random one of this cast may wear: its own pack's with a theme on, else exactly what the editorial menu lists, so a pack that registers a part without tagging it never turns up on an editorial face. */
+const layerPool = (kind, listed, cast) => { const tags = castTags(cast); return tags.length ? parts(kind, { any: tags }) : parts(kind).filter((n) => listed.includes(n)); };
+/** What randomize draws that no generator sets. A cast's character leaves most of the panel on the portrait's own
+ *  default for ever (the whole body, the lips, the lids, the light's contrast, what is worn under the clothes), so a
+ *  reroll moved half the sliders and left the rest. Each entry draws inside its control's range from the state's own
+ *  generator, and only where the cast does not decide it, so an elf's build and a zombie's teeth are the cast's and
+ *  the rest is the seed's. Order is the draw order: deterministic, the seed is still the whole face. */
+export const JITTER = {
+  'mouth.smile': (r) => -0.25 + r() * 0.8, 'mouth.open': (r) => (r() < 0.22 ? 0.06 + r() * 0.36 : 0),
+  'mouth.teeth': (r) => (r() < 0.3 ? pickOf(r, ['gapped', 'crooked', 'even']) : 'even'),
+  'mouth.color': (r) => (r() < 0.22 ? pickOf(r, ['#8a4a46', '#a05a52', '#6e3a38', '#b07068']) : null),
+  'eyes.lidWeight': (r) => (r() < 0.35 ? 0.2 + r() * 0.75 : null), 'eyes.corner': (r) => (r() < 0.3 ? 0.2 + r() * 0.75 : null),
+  'eyes.look.x': (r) => (r() - 0.5) * 0.7, 'eyes.look.y': (r) => (r() - 0.5) * 0.5,
+  'light.contrast': (r) => 0.85 + r() * 0.6, 'pose.bodyX': (r) => (r() - 0.5) * 12,
+  'body.width': (r) => 0.82 + r() * 0.46, // the figure: a crowd of one width is a crowd of paper dolls
+  'build.trunk': (r) => 0.94 + r() * 0.12, 'build.legs': (r) => 0.92 + r() * 0.16, 'build.shoulders': (r) => 0.9 + r() * 0.2, 'build.arms': (r) => 0.94 + r() * 0.12, 'build.head': (r) => 0.95 + r() * 0.1,
+  'pants.style': (r) => (r() < 0.25 ? 'skirt' : 'trousers'), 'shoes.color': (r) => pickOf(r, ['#1f1d1b', '#2b2622', '#3a2f26', '#4a4038']),
+  'top.accent': (r) => (r() < 0.3 ? pickOf(r, Object.values(COLORS.clothing)) : null),
+  'facialHair.mustacheStyle': (r) => (r() < 0.3 ? pickOf(r, MUSTACHE_STYLES) : null),
+  'top.metal': (r) => (r() < 0.06 ? 1 : 0), 'jacket.metal': (r) => (r() < 0.06 ? 1 : 0), 'hat.metal': (r) => (r() < 0.06 ? 1 : 0),
+  seed: (r) => Math.floor(r() * 100), // the portrait's own seed: where the metallic sheen's folds fall
+  makeup: (r, cast) => (r() < 0.2 ? [pickOf(r, layerPool('makeup', MAKEUP_STYLES, cast))].filter(Boolean) : []),
+  marks: (r, cast) => (r() < 0.12 ? [pickOf(r, layerPool('marks', MARK_STYLES, cast).filter((n) => n !== 'none'))].filter(Boolean) : []),
+  props: (r, cast) => (r() < 0.1 ? [pickOf(r, layerPool('props', PROP_STYLES, cast).filter((n) => !['none', 'handsAtSides', 'gloves'].includes(n)))].filter(Boolean) : []),
+};
+/** Which parameters a cast decides for everyone in it: its build and its signature's keys (the values are a throwaway draw; only the shape is read, so this costs the character's own stream nothing). */
+const pinnedBy = (cast) => { const t = {}; seedState(t, prng(1)); return merge(cast.build && cast.build !== 'default' ? { build: cast.build } : {}, signatureOf(cast, t)); };
+/** The character the edits sit on: a random one from the seed, of the theme's cast, its face constrained to one structural family when asked, and everything the cast leaves at the portrait's default drawn by JITTER. */
+export function base(seed = 1, family = 'any', theme = 'none') {
+  const s = {}, r = () => rand(s);
   seedState(s, prng(seed));
-  const c = characterOf(s, 'none', 0.5);
+  const cast = castFor(theme);
+  const c = characterFrom(cast, s, 'none', 0.5);
   if (family !== 'any' && FAMILY_NAMES.includes(family)) {
-    const { shape, ...f } = faceOf(s, family);
+    const { shape, ...f } = faceOf(s, family, {}, cast.irises);
     Object.assign(c, f);
+    if (cast.base) Object.assign(c, merge(c, signatureOf(cast, s))); // the cast's signature back over the chosen skull: a zombie keeps its milky eyes and its teeth
     if (shape === FACE_SHAPES.longOval && LONG_HAIR.includes(c.hair.style)) c.hair = { style: 'sidePart' }; // long hair never on a long oval head
   }
+  const theirs = pinnedBy(cast), drawn = {};
+  for (const [path, draw] of Object.entries(JITTER)) if (at(theirs, path) === undefined) drawn[path] = draw(r, cast);
   delete c.cheeks; delete c.frame; // the faces world's own keys, not the portrait's
-  return c;
+  return merge(c, expand(drawn));
 }
-/** The portrait options a state draws: the defaults, the seed's character, then the edits. */
-export const params = (st) => merge(merge(DEFAULTS, base(st.seed, st.family)), expand(st.ov ?? {}));
+/** The portrait options a state draws: the defaults, the seed's character of its theme's cast, then the edits. */
+export const params = (st) => merge(merge(DEFAULTS, base(st.seed, st.family, st.theme)), expand(st.ov ?? {}));
 
 /** A blank state. A function, not a constant: its `ov` is written in place, so a shared one would alias every reset. */
 export const blank = () => ({ seed: 1, family: 'any', theme: 'none', ov: { background: '#c8102e' } }); // red behind the sitter by default: an edge against the page's beige is invisible

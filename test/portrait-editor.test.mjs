@@ -1,7 +1,8 @@
 ﻿import test from 'node:test';
 import assert from 'node:assert/strict';
 import { renderPortrait, portraitOps, DEFAULTS, NOSES, FACIAL_HAIR, FACIAL_HAIR_STYLES } from '../web/visual/portrait.mjs';
-import { GROUPS, CONTROLS, THEMES, THEME_NAMES, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../web/visual/editor.mjs';
+import { GROUPS, CONTROLS, THEMES, THEME_NAMES, JITTER, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../web/visual/editor.mjs';
+import ELVES, { ELF_EARS, ELF_BUILD } from '../web/visual/casts/elves.mjs';
 import { FAMILIES } from '../web/visual/cast.mjs';
 import { ZOMBIE_NAMES, ZOMBIE_SKINS } from '../web/visual/thriller.mjs';
 
@@ -99,6 +100,28 @@ test('a theme in the editor: off, the menus are the editorial ones; on, they gai
   const st = state(ov, { seed: 9, theme: 'thriller' }); assert.deepEqual(decode(encode(st)), st); assert.equal(decode(encode(st)).theme, 'thriller');
   assert.match(report(st, '', 'http://x/#h'), /theme thriller/);
   assert.equal(decode(encode(state())).theme, 'none', 'and a plain state stays plain');
+});
+
+test('randomize is of the theme that is on, and moves every parameter that makes sense', () => {
+  const plain = base(11), elf = base(11, 'any', 'elves');
+  assert.equal(plain.ears?.pointed ?? 0, 0, 'with no theme it is a random person: round ears');
+  assert.ok(elf.ears.pointed >= ELF_EARS[0] && ELVES.pools.tops.includes(elf.top.style), 'with the elves on it is a random elf: the cast\'s ears, the cast\'s clothes');
+  assert.deepEqual(elf.build, ELF_BUILD, 'and the cast\'s build, which the draw leaves alone');
+  assert.deepEqual(base(11, 'any', 'elves'), elf, 'the same seed and theme is the same person');
+  assert.notDeepEqual(base(12, 'any', 'elves'), elf, 'the next seed is another');
+  assert.notDeepEqual(base(11, 'any', 'dwarves'), elf, 'and another theme is another cast');
+  assert.equal(base(5, 'squareJaw', 'thriller').mouth.teeth, 'rotten', 'choosing a skull does not cost a cast its signature');
+  // what the generators leave at the portrait's default, randomize draws: every one of them moves between seeds
+  for (const path of Object.keys(JITTER)) {
+    const seen = new Set();
+    for (let s = 1; s <= 40; s++) seen.add(JSON.stringify(at(base(s), path)));
+    assert.ok(seen.size > 1, `${path} is the same on all forty faces`);
+  }
+  // and nothing it draws leaves its slider's range
+  for (let s = 1; s <= 40; s++) { const p = params({ ...blank(), seed: s, ov: {} });
+    for (const c of CONTROLS) { if (c.state || c.kind !== 'num') continue; const v = at(p, c.path); if (typeof v === 'number') assert.ok(v >= c.min && v <= c.max, `seed ${s}: ${c.path} = ${v} outside ${c.min}..${c.max}`); }
+    for (const c of CONTROLS) if (c.kind === 'multi') assert.ok((at(p, c.path) ?? []).every((x) => c.options.includes(x)), `seed ${s}: ${c.path} has an unlisted name`);
+  }
 });
 
 test('a cast preset writes the whole person, so picking one cast after another sets back what the last one left: its ears and its build, always', () => {

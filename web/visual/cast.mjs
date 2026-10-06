@@ -70,6 +70,7 @@ export function characterFrom(cast, s, role = 'none', energy = 0.5) {
     top: { style: pick(P.tops, 'crewTshirt'), color: pick(clothes), ...(r() < 0.25 ? { ...graphic(pick(P.graphics, null)), graphicScale: 0.65 + r() * 0.8, graphicY: (r() - 0.5) * 50 } : {}) }, // a quarter of them wear something printed, at their own size and height on the chest
     jacket: r() < 0.35 ? { style: pick(P.jackets, 'none'), color: pick(clothes) } : { style: 'none' },
     pants: { style: 'trousers', color: shade(hair, 1.6) }, // dark trousers off the hair's tone: no draw from the generator, so every seeded face stays the face it was
+    ...(cast.build && cast.build !== 'default' ? { build: { ...cast.build } } : {}), // a random one of a cast is built like the cast, as its archetypes are (no draw: the editorial crowd is the figure as drawn)
     glasses: sig === 'glasses' ? { style: pick(P.glasses, 'rectangularThin'), color: pick(['#2b2927', '#211f1e', '#5c5a57', '#6b4a3a']) } : null,
     accessories: sig === 'accessory' ? [pick([...ONE_SIDED, ...EXTRAS])] : [], details: sig === 'detail' ? [pick(P.details, null)].filter(Boolean) : [],
     cheeks: r() < 0.35 ? 0 : 0.3 + r() * 0.7, // how much this face colours: a third not at all (the faces world's key)
