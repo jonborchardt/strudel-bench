@@ -42,6 +42,7 @@
     "@strudel/transpiler": "^1.2.6",
     "@strudel/web": "^1.3.0",
     "acorn": "^8.18.0",
+    "limner": "file:./limner",
     "mp4-muxer": "^5.2.2",
     "webm-muxer": "^5.1.4"
   },

@@ -90,3 +90,23 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
     assert.throws(() => build(out), /needs a "license"/);
   } finally { clean(); fs.rmSync(out, { recursive: true, force: true }); }
 });
+
+// limner's part registries (TOPS, HATS, MAKEUP, ...) are module-level objects filled by import side effects, so two
+// instances of the module means `parts()` returns half the parts and a costume quietly loses its hat -- no error, just a
+// missing thing. A path import beside the package import is the only way that happens, so once a module has moved into
+// limner, nothing outside it may reach the old path. MOVED grows as the extraction proceeds; a module still living under
+// web/visual/ is legitimately imported by path until the task that moves it.
+const MOVED = ['portrait'];
+const SCOPE = /\.mjs$/; // the .html pages reach limner through an import map, which arrives with the pages; widen to /\.(mjs|html)$/ then
+test('no module reaches a moved limner module by path: two instances would split the part registries', () => {
+  const walk = (dir) => fs.readdirSync(dir).flatMap((f) => {
+    const p = path.join(dir, f);
+    if (['node_modules', 'dist', '.git', 'limner', '.superpowers', 'renders', 'out'].includes(f) || f.startsWith('_t_')) return [];
+    return fs.statSync(p).isDirectory() ? walk(p) : SCOPE.test(f) ? [p] : [];
+  });
+  // any specifier that is a path (starts with . or /) and ends in a moved module's filename, however it is spelled:
+  // './portrait.mjs', '../web/visual/portrait.mjs' and '../../limner/portrait.mjs' are all the same mistake.
+  const re = new RegExp(`from\\s+'[.~/][^']*(${MOVED.join('|')})\\.mjs'`);
+  const bad = walk(ROOT).filter((p) => re.test(fs.readFileSync(p, 'utf8')));
+  assert.deepEqual(bad.map((p) => path.relative(ROOT, p).replace(/\\/g, '/')), [], 'these still import by path; they must import "limner"');
+});

@@ -5,7 +5,7 @@
 import '../parts/gnome.mjs'; // the parts this cast is made of register by name
 import '../parts/fantasy.mjs'; // the shared pack beside them
 import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
-import { parts, SKIN_COLORS, HAIR_COLORS, EYE_COLORS } from '../portrait.mjs';
+import { parts, SKIN_COLORS, HAIR_COLORS, EYE_COLORS } from 'limner';
 
 const RUST = '#a4532c', TEAL = '#3f6b6b', BRASS = '#b08d3c', LOAM = '#5c4631', SKY = '#6f8ea8', WINE = '#6b3246';
 /** What they wear: the apron over a shirt, the apron under the pointed hat, a bright tunic, a cloak for the road. */

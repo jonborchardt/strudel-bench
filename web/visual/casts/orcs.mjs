@@ -6,7 +6,7 @@
 import '../parts/orc.mjs'; // the parts this cast is made of register by name
 import '../parts/fantasy.mjs'; // the shared pack beside them
 import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
-import { parts, HAIR_COLORS, EYE_COLORS } from '../portrait.mjs';
+import { parts, HAIR_COLORS, EYE_COLORS } from 'limner';
 
 const HIDE = '#6b4a30', FUR = '#4b3b2a', IRON = '#6c7278', BONE = '#cfc3a4', BLOOD = '#6e2a24', MOSS = '#48553f';
 /** What they wear: hide under a wolf pelt, hide under a bone helm, a scout's leather and cloak, stripped to the waist. */

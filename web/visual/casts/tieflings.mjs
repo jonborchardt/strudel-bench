@@ -6,7 +6,7 @@
 import '../parts/tiefling.mjs'; // the parts this cast is made of register by name
 import '../parts/fantasy.mjs'; // the shared pack beside them
 import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
-import { parts, HAIR_COLORS } from '../portrait.mjs';
+import { parts, HAIR_COLORS } from 'limner';
 
 const INK = '#1f1a24', WINE = '#5e1f2a', GOLD = '#c9a03c', ASH = '#3d3642', EMBER = '#8d3a22', VIOLET = '#4a3357';
 /** What they wear: the brocade robe, the robe under a cloak, leather for the road, black with gold at the collar. */

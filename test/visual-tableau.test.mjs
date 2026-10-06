@@ -9,7 +9,7 @@ import tableau, { TEMPLATES, PHASES, FRAMING, phaseOf, layoutOf } from '../web/v
 import { identityOf, dress, ARCHETYPE_NAMES, COSTUMES, COSTUME_FAMILIES, METALLIC, HOODED, HOOD_MAX_WIDTH, wearable, EXPRESSIONS, exprVals, characterOf, characterFrom, identityFrom } from '../web/visual/cast.mjs';
 import EDITORIAL from '../web/visual/casts/editorial.mjs';
 import UNDEAD from '../web/visual/casts/undead.mjs';
-import { portraitOps, toSvg, drawOn, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, sheen } from '../web/visual/portrait.mjs';
+import { portraitOps, toSvg, drawOn, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, sheen } from 'limner';
 import { curtain, cyclorama, voidSet, sculpture, SCULPTURES, floorShadow, vignette } from '../web/visual/sets.mjs';
 import { eventOf, clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';

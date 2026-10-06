@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import undead, { STEPS, ROUTINES, PHASES, SHOTS, SPOTS, FRAMING, LIVE, aliveOf, stepAt, planSection } from '../web/visual/undead.mjs';
 import { identityOf, dress } from '../web/visual/cast.mjs';
-import { portraitOps, PROPS, MAKEUP, MARKS } from '../web/visual/portrait.mjs';
+import { portraitOps, PROPS, MAKEUP, MARKS } from 'limner';
 import thriller, { ZOMBIE_NAMES } from '../web/visual/thriller.mjs';
 import { graveyard } from '../web/visual/sets.mjs';
 import { clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';

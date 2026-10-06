@@ -3,7 +3,7 @@
 // makeup on the skin and face slots (bruised sockets, gaunt cheeks, grey cracked lips, veins, gashes, the jaw torn
 // open to the teeth, stitches, peeling skin, drool, blood), the grave as marks on the clothes, and the clawed hands
 // on portrait.mjs's `arm`. The undead cast (casts/undead.mjs) wears them; parts.html?pack=undead is the sheet.
-import { MOUTHS, MAKEUP, MARKS, PROPS, TEETH, arm, soft, path, ellipse, rect, line, stroke, tag } from '../portrait.mjs';
+import { MOUTHS, MAKEUP, MARKS, PROPS, TEETH, arm, soft, path, ellipse, rect, line, stroke, tag } from 'limner';
 
 const fp = (fill, op = 1) => ({ fill, op });
 

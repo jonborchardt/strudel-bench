@@ -13,7 +13,7 @@
 // impact flashes, a dropout shuts the eyes and dims the room. Deterministic: randomness only from the
 // state's own generator (kit.mjs).
 import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY } from './portrait.mjs';
+import { portraitOps, drawOn, eyeY } from 'limner';
 import { characterOf } from './cast.mjs';
 export { characterOf }; // the generator lives in cast.mjs (shared with tableau); faces.html and the test still read it here
 

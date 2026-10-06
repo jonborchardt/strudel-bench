@@ -5,7 +5,7 @@
 // (lib/visual.json: dance `editorial`), which is the proof that a kind of person is a pack, a cast and a row.
 import '../parts/dwarf.mjs'; // the parts this cast is made of register by name
 import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
-import { parts, SKIN_COLORS, HAIR_COLORS } from '../portrait.mjs';
+import { parts, SKIN_COLORS, HAIR_COLORS } from 'limner';
 import { rand } from '../kit.mjs';
 
 const STEEL = '#8d939a', IRON = '#5f6670', LEATHER = '#5a3d2a', FUR = '#5a4634', WOOL = '#7a6a4a', MOSS = '#5b6b4a', OAK = '#6b4a33';

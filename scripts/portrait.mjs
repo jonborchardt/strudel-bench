@@ -11,7 +11,7 @@
 // A sweep prints the hash of every cell, so the one that looks right is a link back into the editor.
 import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { renderPortrait } from '../web/visual/portrait.mjs';
+import { renderPortrait } from 'limner';
 import { params, decode, encode, setOv } from '../web/visual/editor.mjs';
 
 const argv = process.argv.slice(2);

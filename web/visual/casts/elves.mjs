@@ -8,7 +8,7 @@
 // prove the system: a pack, a cast and a row, nothing else touched.
 import '../parts/elf.mjs'; // the parts this cast is made of register by name
 import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
-import { parts, SKIN_COLORS, HAIR_COLORS, EYE_COLORS } from '../portrait.mjs';
+import { parts, SKIN_COLORS, HAIR_COLORS, EYE_COLORS } from 'limner';
 import { rand } from '../kit.mjs';
 
 const MOSS = '#405547', BARK = '#4a3a2e', SILVER = '#b9b8b3', MIST = '#8da0a8', FERN = '#5f7a56', NIGHT = '#2a3340', GOLD = '#c9a03c';

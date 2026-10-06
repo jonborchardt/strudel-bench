@@ -5,7 +5,7 @@
 // A pack may only register parts, and a nose is not a part. What is here: the fangs that muzzle shows (a TEETH entry),
 // scale rows over the brow and the cheeks, and two horns swept back off the temples on the `over` slot. A dragonborn
 // has no hair worth drawing, so the cast's hair pool is the shaved styles alone. parts.html?pack=dragonborn is the sheet.
-import { TOPS, JACKETS, MAKEUP, TEETH, NECKLINES, shade, path, ellipse, line, stroke, tag } from '../portrait.mjs';
+import { TOPS, JACKETS, MAKEUP, TEETH, NECKLINES, shade, path, ellipse, line, stroke, tag } from 'limner';
 
 const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const SPIKE = '#4a4038';

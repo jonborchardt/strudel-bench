@@ -3,7 +3,7 @@
 // the portrait's own `ears.pointed`, which the cast pins. Two horns rising from the temples and curving back (on the
 // `over` slot, so they come through the hair and over a hat), a sigil burned between the brows wherever this face
 // carries them, and a brocade robe with a standing collar. parts.html?pack=tiefling is the sheet.
-import { TOPS, MAKEUP, NECKLINES, shade, path, ellipse, line, stroke, tag } from '../portrait.mjs';
+import { TOPS, MAKEUP, NECKLINES, shade, path, ellipse, line, stroke, tag } from 'limner';
 
 const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const HORN = '#4a3b39', EMBER = '#8d1f22', GOLD = '#c9a03c';

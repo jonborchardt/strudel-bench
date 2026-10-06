@@ -7,7 +7,7 @@ import '../parts/eighties.mjs'; import '../parts/undead.mjs'; // the parts this 
 import { ZOMBIE_SKINS, DEAD_EYES, EXTRA_MARKS } from '../parts/undead.mjs';
 import { NEON } from '../parts/eighties.mjs';
 import { COSTUMES, ARCHETYPES, EXPRESSIONS, WHITE, FAMILIES, WARDROBE } from '../cast.mjs';
-import { parts, HAIR_COLORS } from '../portrait.mjs';
+import { parts, HAIR_COLORS } from 'limner';
 
 // --- the wardrobe: what each of them was buried in ---
 export const ZOMBIE_COSTUMES = {

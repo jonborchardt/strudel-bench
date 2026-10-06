@@ -6,7 +6,7 @@
 // generator (constrained to one FAMILIES entry unless family is 'any'), `ov` the edits as flat dotted paths over it,
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
-import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf, REGISTRIES } from './portrait.mjs';
+import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf, REGISTRIES } from 'limner';
 import { FAMILY_NAMES, characterFrom, faceOf, EXPRESSIONS, EDITORIAL_EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from './cast.mjs';
 import { CASTS, themeNames, THEMES as BOUND } from './themes.mjs'; // every theme's cast and parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
 import { layoutOf, FRAMING } from './tableau.mjs'; // the poses are the tableau's, so the editor's pose pick is the world's own stance and not a second list

@@ -18,7 +18,7 @@
 // alive by `aliveOf` until the release, and every step is one of its POSES (layoutOf partials), so a new pose there
 // is a step here by name. Two places know this and nothing else does: LIVE/aliveOf and STEPS/ROUTINES.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS } from './portrait.mjs';
+import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS } from 'limner';
 import { identityOf, dress } from './cast.mjs';
 import { graveyard, floorShadow, vignette } from './sets.mjs';
 import { phaseOf } from './tableau.mjs';

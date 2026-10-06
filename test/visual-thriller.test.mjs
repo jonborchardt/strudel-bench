@@ -10,7 +10,7 @@ import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES as EDITORIAL, layoutOf, FRAMING, previewShot } from '../web/visual/tableau.mjs';
 import thriller, { ZOMBIES, ZOMBIE_NAMES, ZOMBIE_COSTUMES, ZOMBIE_COSTUME_NAMES, ZOMBIE_MAKEUP, ZOMBIE_MARKS, ZOMBIE_PROPS, ZOMBIE_EXPRESSIONS, ZOMBIE_SKINS, POSES, TEMPLATES, PHASES, SPECIAL, claw } from '../web/visual/thriller.mjs';
 import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, EXPRESSIONS } from '../web/visual/cast.mjs';
-import { portraitOps, toSvg, drawOn, TOP_STYLES, JACKET_STYLES, HAT_STYLES, HAIR_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, TEETH_STYLES, TOPS, JACKETS, HATS, HAIR, MAKEUP, MARKS, PROPS, TEETH } from '../web/visual/portrait.mjs';
+import { portraitOps, toSvg, drawOn, TOP_STYLES, JACKET_STYLES, HAT_STYLES, HAIR_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, TEETH_STYLES, TOPS, JACKETS, HATS, HAIR, MAKEUP, MARKS, PROPS, TEETH } from 'limner';
 import { clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';

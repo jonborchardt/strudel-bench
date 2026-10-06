@@ -3,7 +3,7 @@
 // { all: ['era:80s'] })`, or `any: ['era:80s', 'everyday']` beside the everyday clothes) may dress in them, and no
 // pool that does not ask ever sees them. The undead cast (casts/undead.mjs) was buried in these. parts.html?pack=eighties
 // is the sheet.
-import { TOPS, JACKETS, HATS, HAIR, NECKLINES, JACKET_EDGE, shade, mapXY, scaleAbout, path, ellipse, rect, line, stroke, tag } from '../portrait.mjs';
+import { TOPS, JACKETS, HATS, HAIR, NECKLINES, JACKET_EDGE, shade, mapXY, scaleAbout, path, ellipse, rect, line, stroke, tag } from 'limner';
 
 const fp = (fill, op = 1) => ({ fill, op });
 const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom

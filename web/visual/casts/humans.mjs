@@ -5,7 +5,7 @@
 // They dance the tableau's own shots (lib/visual.json: dance `editorial`).
 import '../parts/fantasy.mjs'; // the shared pack: every fantasy cast reaches it through its pools
 import { COSTUMES, FAMILIES } from '../cast.mjs';
-import { parts, SKIN_COLORS, HAIR_COLORS } from '../portrait.mjs';
+import { parts, SKIN_COLORS, HAIR_COLORS } from 'limner';
 
 const BARK = '#4a3a2e', OLIVE = '#5e6342', MOSS = '#48553f', LINEN = '#b3a287', CLAY = '#9c6f4e', STONE = '#8d8f96', SLATE = '#54585f', DARK = '#2e2622';
 /** What they wear: leather and a cloak on the road, homespun at home, a brimmed hat over leather, grey robes for an order. */

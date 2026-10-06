@@ -1,6 +1,6 @@
 ﻿import test from 'node:test';
 import assert from 'node:assert/strict';
-import { renderPortrait, portraitOps, DEFAULTS, NOSES, FACIAL_HAIR, FACIAL_HAIR_STYLES } from '../web/visual/portrait.mjs';
+import { renderPortrait, portraitOps, DEFAULTS, NOSES, FACIAL_HAIR, FACIAL_HAIR_STYLES } from 'limner';
 import { GROUPS, CONTROLS, THEMES, THEME_NAMES, JITTER, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../web/visual/editor.mjs';
 import ELVES, { ELF_EARS, ELF_BUILD } from '../web/visual/casts/elves.mjs';
 import { FAMILIES } from '../web/visual/cast.mjs';

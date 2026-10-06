@@ -5,7 +5,7 @@
 // styling on that base (a COSTUMES family, makeup, marks, props, a hat, an expression, a pose) and returns what
 // portraitOps takes, so the same face is recognisable in every outfit. All randomness is rand(s) on the caller's state.
 import { clamp, lerp, rand } from './kit.mjs';
-import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR, LONG_HAIR, shade, merge, parts, feetY, headBox } from './portrait.mjs';
+import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR, LONG_HAIR, shade, merge, parts, feetY, headBox } from 'limner';
 
 // the hats a section role wears: bare or a beanie to establish, a cap or a brim to develop, everyone hatted at the climax
 export const WARDROBE = { establish: ['none', 'beanie', 'baseballCap', 'none', 'cuffedBeanie'], develop: ['dadCap', 'flatCap', 'bucketHat', 'none', 'fishermanBeanie', 'snapback', 'beret'], climax: ['wideBrimFelt', 'cowboy', 'sunHat', 'snapback', 'truckerCap', 'bucketHat'], release: ['none', 'sunHat', 'beanie', 'none', 'bucketHat'], none: ['none', 'beanie', 'baseballCap', 'dadCap', 'flatCap', 'wideBrimFelt', 'bucketHat'] };

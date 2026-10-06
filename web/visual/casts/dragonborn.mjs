@@ -6,7 +6,7 @@
 import '../parts/dragonborn.mjs'; // the parts this cast is made of register by name
 import '../parts/fantasy.mjs'; // the shared pack beside them
 import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
-import { parts } from '../portrait.mjs';
+import { parts } from 'limner';
 
 const BRONZE = '#9a7b46', SLATE = '#4a5560', OXIDE = '#7a4232', MOSS = '#48553f', BONE = '#cfc3a4', NIGHT = '#232a30';
 /** What they wear: scale mail, scale mail under a wing mantle, leather and the mantle, a clan tunic and cloak. */
