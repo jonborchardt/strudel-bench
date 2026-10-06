@@ -4,7 +4,7 @@
 // nothing modern — which is the point: a cast with no part pack of its own, dressed entirely out of the shared one.
 // They dance the tableau's own shots (lib/visual.json: dance `editorial`).
 import '../parts/fantasy.mjs'; // the shared pack: every fantasy cast reaches it through its pools
-import { COSTUMES, FAMILIES } from '../cast.mjs';
+import { COSTUMES, FAMILIES } from 'limner';
 import { parts, SKIN_COLORS, HAIR_COLORS } from 'limner';
 
 const BARK = '#4a3a2e', OLIVE = '#5e6342', MOSS = '#48553f', LINEN = '#b3a287', CLAY = '#9c6f4e', STONE = '#8d8f96', SLATE = '#54585f', DARK = '#2e2622';

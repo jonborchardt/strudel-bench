@@ -7,7 +7,7 @@
 // (parts/elf.mjs) and dance the tableau's own shots (lib/visual.json: dance `editorial`). The third theme, added to
 // prove the system: a pack, a cast and a row, nothing else touched.
 import '../parts/elf.mjs'; // the parts this cast is made of register by name
-import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
+import { COSTUMES, FAMILIES, buildOf } from 'limner';
 import { parts, SKIN_COLORS, HAIR_COLORS, EYE_COLORS } from 'limner';
 import { rand } from '../kit.mjs';
 

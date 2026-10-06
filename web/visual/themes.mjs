@@ -6,7 +6,7 @@
 // DANCES are the names a row may use; `bindTheme` refuses an unknown one at import, naming it, so a misspelt row
 // never draws a blank stage. The sheets (parts.html, casts.html, poses.html) list packs, casts and themes from here.
 import VISUAL from '../../lib/visual.json' with { type: 'json' };
-import { identityFrom } from './cast.mjs';
+import { identityFrom } from 'limner';
 import * as eighties from './parts/eighties.mjs';
 import * as undeadPack from './parts/undead.mjs';
 import * as dwarf from './parts/dwarf.mjs';

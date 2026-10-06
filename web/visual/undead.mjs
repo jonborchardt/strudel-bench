@@ -19,7 +19,7 @@
 // is a step here by name. Two places know this and nothing else does: LIVE/aliveOf and STEPS/ROUTINES.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
 import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS } from 'limner';
-import { identityOf, dress } from './cast.mjs';
+import { identityOf, dress } from 'limner';
 import { graveyard, floorShadow, vignette } from './sets.mjs';
 import { phaseOf } from './tableau.mjs';
 import thriller, { POSES as ZOMBIE_POSES, ZOMBIE_NAMES } from './thriller.mjs'; // the cast and the choreography: importing registers the zombie parts by name

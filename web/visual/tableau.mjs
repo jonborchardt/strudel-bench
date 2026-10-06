@@ -16,7 +16,7 @@
 // dropout holds the shot dark with the eyes shut. Deterministic: randomness only from the state's own generator.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
 import { portraitOps, drawOn, eyeY, feetY } from 'limner';
-import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, METALLIC, wearable, WHITE, RED, GOLD } from './cast.mjs';
+import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, METALLIC, wearable, WHITE, RED, GOLD } from 'limner';
 import { curtain, cyclorama, voidSet, floorShadow, vignette, sculpture, SCULPTURES } from './sets.mjs';
 import { THEMES } from './themes.mjs';
 

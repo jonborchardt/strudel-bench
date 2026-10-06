@@ -9,7 +9,7 @@ import tableau, { TEMPLATES as EDITORIAL } from '../web/visual/tableau.mjs';
 import DWARVES from '../web/visual/casts/dwarves.mjs';
 import { DWARF } from '../web/visual/parts/dwarf.mjs';
 import { THEMES } from '../web/visual/themes.mjs';
-import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES } from '../web/visual/cast.mjs';
+import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES } from 'limner';
 import { portraitOps, toSvg, drawOn, parts, tagsOf, feetY, HAT_CROWN } from 'limner';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid } from './_visual.mjs';

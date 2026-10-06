@@ -4,7 +4,7 @@
 // from the gnome pack (parts/gnome.mjs) over the shared kit (parts/fantasy.mjs), on the tableau's own shots.
 import '../parts/gnome.mjs'; // the parts this cast is made of register by name
 import '../parts/fantasy.mjs'; // the shared pack beside them
-import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
+import { COSTUMES, FAMILIES, buildOf } from 'limner';
 import { parts, SKIN_COLORS, HAIR_COLORS, EYE_COLORS } from 'limner';
 
 const RUST = '#a4532c', TEAL = '#3f6b6b', BRASS = '#b08d3c', LOAM = '#5c4631', SKY = '#6f8ea8', WINE = '#6b3246';

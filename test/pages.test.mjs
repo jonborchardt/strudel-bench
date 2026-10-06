@@ -96,7 +96,7 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
 // missing thing. A path import beside the package import is the only way that happens, so once a module has moved into
 // limner, nothing outside it may reach the old path. MOVED grows as the extraction proceeds; a module still living under
 // web/visual/ is legitimately imported by path until the task that moves it.
-const MOVED = ['portrait'];
+const MOVED = ['portrait', 'cast'];
 const SCOPE = /\.mjs$/; // the .html pages reach limner through an import map, which arrives with the pages; widen to /\.(mjs|html)$/ then
 test('no module reaches a moved limner module by path: two instances would split the part registries', () => {
   const walk = (dir) => fs.readdirSync(dir).flatMap((f) => {

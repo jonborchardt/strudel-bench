@@ -6,7 +6,7 @@
 import '../parts/eighties.mjs'; import '../parts/undead.mjs'; // the parts this cast is made of register by name
 import { ZOMBIE_SKINS, DEAD_EYES, EXTRA_MARKS } from '../parts/undead.mjs';
 import { NEON } from '../parts/eighties.mjs';
-import { COSTUMES, ARCHETYPES, EXPRESSIONS, WHITE, FAMILIES, WARDROBE } from '../cast.mjs';
+import { COSTUMES, ARCHETYPES, EXPRESSIONS, WHITE, FAMILIES, WARDROBE } from 'limner';
 import { parts, HAIR_COLORS } from 'limner';
 
 // --- the wardrobe: what each of them was buried in ---

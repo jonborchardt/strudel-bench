@@ -5,7 +5,7 @@
 // the dragonborn pack (parts/dragonborn.mjs) over the shared kit (parts/fantasy.mjs), on the tableau's own shots.
 import '../parts/dragonborn.mjs'; // the parts this cast is made of register by name
 import '../parts/fantasy.mjs'; // the shared pack beside them
-import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
+import { COSTUMES, FAMILIES, buildOf } from 'limner';
 import { parts } from 'limner';
 
 const BRONZE = '#9a7b46', SLATE = '#4a5560', OXIDE = '#7a4232', MOSS = '#48553f', BONE = '#cfc3a4', NIGHT = '#232a30';

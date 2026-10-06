@@ -5,7 +5,7 @@
 // (parts/orc.mjs) over the shared adventurer's kit (parts/fantasy.mjs), and dance the tableau's own shots.
 import '../parts/orc.mjs'; // the parts this cast is made of register by name
 import '../parts/fantasy.mjs'; // the shared pack beside them
-import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
+import { COSTUMES, FAMILIES, buildOf } from 'limner';
 import { parts, HAIR_COLORS, EYE_COLORS } from 'limner';
 
 const HIDE = '#6b4a30', FUR = '#4b3b2a', IRON = '#6c7278', BONE = '#cfc3a4', BLOOD = '#6e2a24', MOSS = '#48553f';

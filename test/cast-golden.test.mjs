@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { characterOf, identityOf, ARCHETYPE_NAMES } from '../web/visual/cast.mjs';
+import { characterOf, identityOf, ARCHETYPE_NAMES } from 'limner';
 import { seed } from '../web/visual/kit.mjs';
 import { prng } from '../lib/random.mjs';
 const golden = JSON.parse(readFileSync(new URL('./fixtures/cast-golden.json', import.meta.url), 'utf8'));

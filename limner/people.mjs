@@ -1,11 +1,11 @@
-// The character generators every world shares, over portrait.mjs. `characterOf(s, role, energy)` is a random
+// The people generators: who a figure is, over portrait.mjs, which draws them. `characterOf(s, role, energy)` is a random
 // character from the state's seeded generator (faces: a new one on every cut). `identityOf(s, archetype, id)` is a
 // stable person: the base a portrait keeps across scenes (skin, face, features, hair, beard, glasses, build) plus a
 // home styling (costume, makeup, marks, prop) the archetype suggests; `dress(identity, styling)` puts a shot's
 // styling on that base (a COSTUMES family, makeup, marks, props, a hat, an expression, a pose) and returns what
 // portraitOps takes, so the same face is recognisable in every outfit. All randomness is rand(s) on the caller's state.
-import { clamp, lerp, rand } from './kit.mjs';
-import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR, LONG_HAIR, shade, merge, parts, feetY, headBox } from 'limner';
+import { clamp, lerp, rand } from './rng.mjs';
+import { SKIN_COLORS, HAIR_COLORS, EYE_COLORS, CLOTHING_COLORS, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, HAIR, LONG_HAIR, shade, merge, parts, feetY, headBox } from './portrait.mjs';
 
 // the hats a section role wears: bare or a beanie to establish, a cap or a brim to develop, everyone hatted at the climax
 export const WARDROBE = { establish: ['none', 'beanie', 'baseballCap', 'none', 'cuffedBeanie'], develop: ['dadCap', 'flatCap', 'bucketHat', 'none', 'fishermanBeanie', 'snapback', 'beret'], climax: ['wideBrimFelt', 'cowboy', 'sunHat', 'snapback', 'truckerCap', 'bucketHat'], release: ['none', 'sunHat', 'beanie', 'none', 'bucketHat'], none: ['none', 'beanie', 'baseballCap', 'dadCap', 'flatCap', 'wideBrimFelt', 'bucketHat'] };

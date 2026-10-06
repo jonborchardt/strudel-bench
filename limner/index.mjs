@@ -13,4 +13,5 @@
 // Ops, not SVG, are the published output type. A video export pushes 1920x1080 at thirty frames a second through a
 // canvas, and rasterising an SVG string per frame would not keep up.
 export * from './portrait.mjs';
+export * from './people.mjs';
 export { seed, rand, prng, pick, clamp, lerp } from './rng.mjs';

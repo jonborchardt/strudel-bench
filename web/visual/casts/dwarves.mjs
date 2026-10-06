@@ -4,7 +4,7 @@
 // from the dwarf pack (parts/dwarf.mjs) beside the everyday clothes. They dance the tableau's own shots and poses
 // (lib/visual.json: dance `editorial`), which is the proof that a kind of person is a pack, a cast and a row.
 import '../parts/dwarf.mjs'; // the parts this cast is made of register by name
-import { COSTUMES, FAMILIES, buildOf } from '../cast.mjs';
+import { COSTUMES, FAMILIES, buildOf } from 'limner';
 import { parts, SKIN_COLORS, HAIR_COLORS } from 'limner';
 import { rand } from '../kit.mjs';
 
