@@ -18,7 +18,7 @@
 // alive by `aliveOf` until the release, and every step is one of its POSES (layoutOf partials), so a new pose there
 // is a step here by name. Two places know this and nothing else does: LIVE/aliveOf and STEPS/ROUTINES.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS } from 'limner';
+import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS, STANCES } from 'limner';
 import { identityOf, dress } from 'limner';
 import { graveyard, floorShadow, vignette } from './sets.mjs';
 import { phaseOf } from './tableau.mjs';
@@ -77,10 +77,10 @@ export function aliveOf(p, decay = 0, idn = null) {
   return p;
 }
 
-// ---- the poses: the theme's POSES (layoutOf partials) are the steps as they stand; a routine is a list of their names,
+// ---- the steps: limner's stances for this cast (STANCES.undead) are the steps as they stand; a routine is a list of their names,
 // one step a beat, repeating. The world eases the numbers toward each step and swaps the arm props (the claws) on the
 // beat; nothing in it knows what a step contains, so new pose tech lands in STEPS and `poseOf` alone.
-const stepOf = (name) => { const { dx, dy, k, arm, over, look, ...st } = (ZOMBIE_POSES[name]?.(1, 400) ?? [{}])[0]; return st; }; // a single-figure pose, the layout's placement dropped
+const stepOf = (name) => STANCES.undead[name] ?? {}; // a step IS a stance: one body, no placement. It used to be a dance pose with its dx/k/arm destructured off, which was this by a longer road
 export const STEPS = Object.fromEntries(['deadStill', 'theLean', 'shoulderShimmy', 'zombieShuffle', 'hunchedLurch', 'headSnapLeft', 'headSnapRight', 'thrillerClaw', 'clawSweep', 'clawsUp', 'armsRight', 'armsLeft'].map((n) => [n, stepOf(n)]));
 STEPS.rest = {};
 export const ROUTINES = {

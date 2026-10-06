@@ -15,7 +15,7 @@
 // hi-hat blinks one actor every few seconds, an fx impact is a graphic flash frame, a riser is a slow push-in, a
 // dropout holds the shot dark with the eyes shut. Deterministic: randomness only from the state's own generator.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY, feetY } from 'limner';
+import { portraitOps, drawOn, eyeY, feetY, stanceOf, STANCES, SPREAD_STANCES } from 'limner';
 import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, METALLIC, wearable, WHITE, RED, GOLD } from 'limner';
 import { curtain, cyclorama, voidSet, floorShadow, vignette, sculpture, SCULPTURES } from './sets.mjs';
 import { THEMES } from './themes.mjs';
@@ -113,13 +113,15 @@ export function phaseOf(sections, i, climax) {
 export function layoutOf(pose, n, fr, theme = null) {
   const sw = 400 / fr.u, F = (o = {}) => ({ dx: 0, dy: 0, k: 1, tilt: 0, bodyTilt: 0, headX: 0, headY: 0, turn: 0, shoulder: 0, props: [], look: null, arm: null, over: false, ...o });
   const tp = theme?.poses?.[pose]; if (tp) { const list = tp(n, sw); return (list.length >= n ? list : Array.from({ length: n }, (_, i) => ({ dx: n === 1 ? 0 : (i - (n - 1) / 2) * sw * 0.7, ...list[0] }))).map((o) => F(o)); } // a theme's own pose: the same fields, written as partials; a single-figure one stands every figure the same way (a split face is two)
-  const stance = { directFrontal: { turn: 0.15, shoulder: 0.3, tilt: 0.02 }, statueStill: { turn: -0.2, shoulder: -0.25, headY: 4 }, handsAtSides: { turn: -0.3, shoulder: 0.4, tilt: -0.04 } }[pose] ?? {}; // the single-figure poses, for any count of figures (a split face is two)
+  // One body's stance is limner's; where the bodies go is this function's. Two kinds spread across every figure asked
+  // for: a theme's own stances (a themed pose always did, through the branch above, so a split shot of two gets two)
+  // and the three editorial ones that were the `stance` table. The other five editorial stances place exactly one
+  // figure however many were asked for, which is what they did before and what the layout golden pins.
+  const stance = stanceOf(pose, theme?.stances);
+  const themed = !!(theme?.stances && STANCES[theme.stances]?.[pose]);
+  if (stance && !themed && !SPREAD_STANCES.includes(pose)) return [F(stance)];
+  if (stance) return Array.from({ length: n }, (_, i) => F({ dx: n === 1 ? 0 : (i - (n - 1) / 2) * sw * 0.7, ...stance }));
   switch (pose) {
-    case 'slightLeanLeft': return [F({ tilt: -0.12, bodyTilt: -0.06, headX: -8, turn: -0.4, shoulder: 0.5 })];
-    case 'slightLeanRight': return [F({ tilt: 0.12, bodyTilt: 0.06, headX: 8, turn: 0.4, shoulder: -0.5 })];
-    case 'swaggerLean': return [F({ tilt: 0.16, bodyTilt: 0.12, headX: 14, dx: -0.06, turn: 0.6, shoulder: 0.7, headY: -6 })];
-    case 'handHeart': return [F({ props: ['handHeartGesture'], headY: 8, tilt: 0.06, turn: 0.2 })];
-    case 'handsUp': return [F({ props: ['handsUp'], headY: -6, tilt: -0.05 })];
     case 'pairFrontal': return [F({ dx: -sw * 0.36, turn: 0.35, tilt: 0.05, shoulder: -0.3 }), F({ dx: sw * 0.36, turn: -0.35, tilt: -0.05, shoulder: 0.3 })];
     case 'linkedArmDuo': return [F({ dx: -sw * 0.3, tilt: 0.06, arm: 1, turn: 0.4, shoulder: 0.4 }), F({ dx: sw * 0.3, tilt: -0.06, turn: -0.3, shoulder: -0.4 })];
     case 'shoulderLeanDuo': return [F({ dx: -sw * 0.34, turn: 0.3, shoulder: -0.4 }), F({ dx: sw * 0.3, tilt: -0.22, headX: -14, dy: 0.02, turn: -0.5, shoulder: 0.6 })];
@@ -129,7 +131,7 @@ export function layoutOf(pose, n, fr, theme = null) {
     case 'dominantForeground': return [F({ dx: -sw * 0.2, dy: 0.08, k: 1.25, turn: 0.6, tilt: 0.08, shoulder: 0.6 }), F({ dx: sw * 0.34, dy: -0.1, k: 0.7, turn: -0.3 })];
     case 'smallGroupCluster': return [F({ dy: 0.02, turn: 0.2, shoulder: 0.3 }), F({ dx: -sw * 0.42, dy: -0.05, k: 0.95, tilt: 0.1, turn: 0.5, bodyTilt: 0.05 }), F({ dx: sw * 0.42, dy: -0.05, k: 0.95, tilt: -0.1, turn: -0.5, bodyTilt: -0.05 })];
     case 'rowFrontal': return [F({ turn: 0.15 }), F({ dx: -sw * 0.75, turn: 0.5, tilt: 0.06, shoulder: 0.4 }), F({ dx: sw * 0.75, turn: -0.5, tilt: -0.06, shoulder: -0.4 })];
-    default: return Array.from({ length: n }, (_, i) => F({ dx: n === 1 ? 0 : (i - (n - 1) / 2) * sw * 0.7, ...stance }));
+    default: return Array.from({ length: n }, (_, i) => F({ dx: n === 1 ? 0 : (i - (n - 1) / 2) * sw * 0.7, ...(stance ?? {}) }));
   }
 }
 

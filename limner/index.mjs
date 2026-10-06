@@ -15,4 +15,5 @@
 export * from './portrait.mjs';
 export * from './people.mjs';
 export { CASTS, PACKS, CAST_MODULES } from './registry.mjs';
+export { STANCES, SPREAD_STANCES, stanceOf, stanceNames } from './stances.mjs';
 export { seed, rand, prng, pick, clamp, lerp } from './rng.mjs';

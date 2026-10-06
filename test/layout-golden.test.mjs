@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { layoutOf, FRAMING, TEMPLATES } from '../web/visual/tableau.mjs';
 import { THEMES } from '../web/visual/themes.mjs';
+import { STANCES } from 'limner';
 
 const FILE = new URL('./fixtures/layout-golden.json', import.meta.url);
 
@@ -13,7 +14,13 @@ export function cases() {
   const out = [];
   const editorial = new Set(['directFrontal', 'statueStill', 'handsAtSides', 'slightLeanLeft', 'slightLeanRight', 'swaggerLean', 'handHeart', 'handsUp', 'none', 'unknownPose']);
   for (const p of editorial) for (const n of [1, 2, 3]) for (const f of ['close', 'figure']) out.push({ pose: p, n, framing: f, theme: null });
-  for (const [name, t] of Object.entries(THEMES)) for (const p of Object.keys(t.poses ?? {})) for (const n of [1, 2, 3]) for (const f of ['close', 'figure']) out.push({ pose: p, n, framing: f, theme: name });
+  // a theme's pose names come from two places now: its dance's own blocking (`poses`) and the limner stance pack it
+  // names (`stances`). Both have to be swept, or lifting a name from one to the other would quietly drop its coverage
+  // and the golden would still pass on a smaller set.
+  for (const [name, t] of Object.entries(THEMES)) {
+    const names = [...Object.keys(t.poses ?? {}), ...Object.keys(STANCES[t.stances] ?? {})];
+    for (const p of names) for (const n of [1, 2, 3]) for (const f of ['close', 'figure']) out.push({ pose: p, n, framing: f, theme: name });
+  }
   for (const tpl of Object.values(TEMPLATES)) for (const p of tpl.poses ?? []) for (const f of ['close', 'figure']) out.push({ pose: p, n: tpl.n ?? 1, framing: f, theme: null });
   return out;
 }

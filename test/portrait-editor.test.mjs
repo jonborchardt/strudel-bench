@@ -1,7 +1,7 @@
 ﻿import test from 'node:test';
 import assert from 'node:assert/strict';
 import { renderPortrait, portraitOps, DEFAULTS, NOSES, FACIAL_HAIR, FACIAL_HAIR_STYLES } from 'limner';
-import { GROUPS, CONTROLS, THEMES, THEME_NAMES, JITTER, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../web/visual/editor.mjs';
+import { GROUPS, CONTROLS, POSE_NAMES, posePreset, THEMES, THEME_NAMES, JITTER, groupsFor, controlsFor, blank, base, params, encode, decode, setOv, at, expand, flat, report, presetMatch, idle } from '../web/visual/editor.mjs';
 import { CASTS, CAST_MODULES } from 'limner';
 const ELVES = CASTS.elves, { ELF_EARS, ELF_BUILD } = CAST_MODULES.elves;
 import { FAMILIES } from 'limner';
@@ -216,3 +216,25 @@ test('the hairline, the cheeks, the squint, the print and the gaze', () => {
   assert.equal(iris({ gaze: 'camera' }), iris({}), 'and changes nothing on a square head');
 });
 
+
+// The pose menu is limner's stances now, not the tableau's layoutOf -- the editor used to import a world to find out
+// how a body stands, which was the one backwards edge in the visual graph.
+test('the pose menu is limner\'s editorial stances, in the order it always offered them', () => {
+  assert.deepEqual(POSE_NAMES, ['directFrontal', 'slightLeanLeft', 'slightLeanRight', 'swaggerLean', 'statueStill', 'handsAtSides', 'handHeart', 'handsUp']);
+});
+
+test('a pose preset writes the whole stance and nothing else -- never a blocking field', () => {
+  assert.deepEqual(Object.keys(posePreset('handsUp')).sort(), ['pose.bodyTilt', 'pose.headTilt', 'pose.headX', 'pose.headY', 'pose.shoulder', 'pose.turn', 'props']);
+  assert.deepEqual(posePreset('handsUp').props, ['handsUp']);
+  assert.equal(posePreset('swaggerLean')['pose.headX'], 14, 'the stance comes through');
+  assert.ok(!('dx' in posePreset('swaggerLean')), 'but its dx does not: this editor draws one figure, so blocking is meaningless here');
+  assert.deepEqual(posePreset('directFrontal'), { 'pose.headX': 0, 'pose.headY': 0, 'pose.headTilt': 0.02, 'pose.bodyTilt': 0, 'pose.turn': 0.15, 'pose.shoulder': 0.3, props: [] });
+});
+
+test('a themed stance is offered and writable: the claw is a pose the editor can set', () => {
+  const UNDEAD_THEME = THEMES.undead ?? THEMES.thriller; // keyed by theme name until T6 re-keys the editor's themes by cast
+  assert.ok(UNDEAD_THEME.extras.pose.includes('thrillerClaw'), 'the undead cast puts its stances on the menu');
+  assert.ok(!UNDEAD_THEME.extras.pose.includes('hordeLine'), 'and not its dance\'s blocking');
+  assert.deepEqual(posePreset('thrillerClaw').props, ['clawHands']);
+  assert.equal(posePreset('thrillerClaw')['pose.turn'], 0.2);
+});

@@ -22,6 +22,7 @@ export const THEMES = Object.fromEntries(Object.entries(VISUAL.themes).map(([nam
 export const themeNames = () => Object.keys(THEMES);
 function bind(name, cast, dance) {
   const d = dance ?? {};
-  return { name, cast: cast.archetypeNames, identity: (s, n, i) => identityFrom(cast, s, n, i), templates: d.templates, phases: d.phases, special: d.special, fallback: d.fallback, open: d.open, close: d.close, poses: d.poses, still: d.still, motion: d.motion, expressions: cast.expressions, emotes: cast.emotes,
+  // `stances` names a limner pack of single-body stances; `poses` is the dance's own blocking, where several of them stand
+  return { name, cast: cast.archetypeNames, identity: (s, n, i) => identityFrom(cast, s, n, i), templates: d.templates, phases: d.phases, special: d.special, fallback: d.fallback, open: d.open, close: d.close, poses: d.poses, still: d.still, stances: d.stances, motion: d.motion, expressions: cast.expressions, emotes: cast.emotes,
     styling: dance ? (s, idn, P, tpl, i) => dance.styling(cast, s, idn, P, tpl, i) : undefined, alts: dance ? (s, base, P, idn) => dance.alts(cast, s, base, P, idn) : undefined, odd: dance ? (s, st) => dance.odd(cast, s, st) : undefined };
 }

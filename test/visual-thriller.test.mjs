@@ -18,7 +18,7 @@ import { seed } from '../web/visual/kit.mjs';
 import { prng } from '../lib/random.mjs';
 import VISUAL from '../lib/visual.json' with { type: 'json' };
 import { THEMES, CASTS, DANCES, PACKS, bindTheme } from '../web/visual/themes.mjs';
-import { CASTS as LIMNER_CASTS } from 'limner';
+import { CASTS as LIMNER_CASTS, STANCES } from 'limner';
 const UNDEAD = LIMNER_CASTS.undead;
 
 const clean = (o) => !/NaN|undefined|Infinity/.test(JSON.stringify(o));
@@ -43,7 +43,7 @@ test('the theme is off by default: its parts are registered by name only, and no
   assert.equal(plain.theme, null);
   assert.deepEqual(plain.cast.map((c) => c.name), ARCHETYPE_NAMES, 'a plain tableau casts the archetypes');
   const names = new Set(plain.plan.flat().map((x) => x.tpl)), poses = new Set(plain.plan.flat().map((x) => x.pose));
-  assert.ok([...names].every((t) => EDITORIAL[t]) && [...poses].every((p) => !POSES[p]), 'and plans only editorial shots and poses');
+  assert.ok([...names].every((t) => EDITORIAL[t]) && [...poses].every((p) => !POSES[p] && !STANCES.undead[p]), 'and plans only editorial shots and poses'); // neither the dance's blocking nor the cast's stances
   assert.ok(!JSON.stringify(plain.plan).includes('clawHands') && !JSON.stringify(plain.cast).includes('rotLips'), 'no zombie hand or rot anywhere in it');
   assert.ok(Object.keys(ZOMBIE_EXPRESSIONS).every((e) => EXPRESSIONS[e]) && exprVals('slackJaw').open > 0.3, 'the zombie expressions resolve by name, with the jaw open');
 });
@@ -108,7 +108,7 @@ test('with the theme on, the tableau casts the dead and plans only Thriller shot
     assert.equal(s.theme, 'thriller');
     assert.deepEqual(s.cast.map((c) => c.name), ZOMBIE_NAMES);
     const all = s.plan.flat();
-    assert.ok(all.length >= 2 && all.every((x) => TEMPLATES[x.tpl] && (POSES[x.pose] || x.pose === 'none')), 'every shot is a theme template in a theme pose: ' + all.map((x) => `${x.tpl}/${x.pose}`).join(' '));
+    assert.ok(all.length >= 2 && all.every((x) => TEMPLATES[x.tpl] && (POSES[x.pose] || STANCES.undead[x.pose] || x.pose === 'none')), 'every shot is a theme template in a theme pose: ' + all.map((x) => `${x.tpl}/${x.pose}`).join(' '));
     assert.ok(all[0].tpl === 'riseSolo' && all[0].pose === 'graveReach' && all[0].ids[0] === s.leads[0] && all[0].alts[0][0].expression === 'slackJaw' && all[0].alts[0][0].makeup.length >= 2, 'the song opens on a lead rising, its rot on');
     const last = s.plan.at(-1).at(-1); assert.ok(last.tpl === 'clawDuo' && last.pose === 'clawDuo' && last.ids.length === 2, 'and closes on the leads clawing');
     assert.ok(all.every((x) => x.alts.every((alt) => alt.every((st) => st.makeup.length >= 2 && st.props.length === 0 && ZOMBIE_COSTUMES[st.costume]))), 'in every shot and mutation the rot is on, the hands are the pose\'s, the outfit is the grave\'s');
@@ -147,7 +147,7 @@ test('every theme template draws in every pose it allows, on every set, and the 
   for (const ph of Object.values(PHASES)) for (const t of Object.keys(ph.tpls)) assert.ok(TEMPLATES[t], `phase template ${t} exists`);
   for (const t of SPECIAL) assert.ok(TEMPLATES[t]); assert.ok(TEMPLATES[thriller.fallback.red] && TEMPLATES[thriller.fallback.white] && !SPECIAL.has(thriller.fallback.red));
   for (const [name, tpl] of Object.entries(TEMPLATES)) {
-    assert.ok(tpl.n > 0 && tpl.poses.every((p) => POSES[p]) && (!tpl.expression || ZOMBIE_EXPRESSIONS[tpl.expression]), name);
+    assert.ok(tpl.n > 0 && tpl.poses.every((p) => POSES[p] || STANCES.undead[p]) && (!tpl.expression || ZOMBIE_EXPRESSIONS[tpl.expression]), name); // a template's pose is either the dance's blocking or one of the cast's stances
     for (const pose of tpl.poses) for (const set of tpl.set === 'any' ? ['white', 'red'] : [tpl.set]) {
       assert.equal(layoutOf(pose, tpl.n, FRAMING.full, thriller).length, tpl.n, `${pose} places ${tpl.n}`);
       const st = fresh(); st.plan = [[{ ...st.plan[0][0], tpl: name, set, framing: tpl.framing ?? 'close', pose, ids: st.plan[0][0].ids.concat([1, 2]).slice(0, tpl.n), layout: layoutOf(pose, tpl.n, FRAMING[tpl.framing ?? 'close'], thriller), alts: [Array.from({ length: tpl.n }, () => ({ costume: 'thrillerRed', makeup: ['rotLips'], marks: [], props: [], expression: tpl.expression ?? 'slackJaw' }))], fx: tpl.fx ?? null, grid: tpl.grid ?? 0, band: tpl.band ? { color: '#fff', dir: 'v', at: 0.3, size: 0.1 } : null, sculptures: [], gap: false }]];
@@ -162,4 +162,22 @@ test('every theme template draws in every pose it allows, on every set, and the 
   assert.ok(layoutOf('thrillerClaw', 1, FRAMING.full, thriller)[0].props.includes('clawHands') && layoutOf('thrillerClaw', 1, FRAMING.full, thriller)[0].dx === 0 && layoutOf('thrillerClaw', 1, FRAMING.full).length === 1 && !layoutOf('thrillerClaw', 1, FRAMING.full)[0].props.length, 'a theme pose lays out through the theme and is the default stance without it');
   assert.ok(thriller.motion.jaw > 0 && thriller.motion.sway > 1, 'the lurch is bigger than the editorial sway and the kick drops the jaw');
   const plain = createPerformance(tableau, fallbackScore(0.5), { w: 16, h: 9 }).state; assert.equal(plain.theme, null, 'the fallback score has no theme');
+});
+
+// A stance says how one body stands; how many bodies stand that way is the shot's business, and the two paths through
+// layoutOf were never symmetric. A theme's stance spreads across every figure asked for -- splitZombie wants two of
+// deadStill and would otherwise get layout[1] === undefined, a missing half-face -- while five of the editorial stances
+// place exactly one figure however many are asked for. Lifting the stances out of the world nearly flattened that.
+test('a theme stance spreads across the figures a shot asks for; an editorial one does not', async () => {
+  const { layoutOf, FRAMING, TEMPLATES } = await import('../web/visual/tableau.mjs');
+  const { THEMES } = await import('../web/visual/themes.mjs');
+  const T = THEMES.thriller;
+  assert.equal(TEMPLATES ? 1 : 1, 1);
+  assert.equal(layoutOf('deadStill', 2, FRAMING.close, T).length, 2, 'splitZombie gets both halves');
+  assert.equal(layoutOf('deadStill', 3, FRAMING.close, T).length, 3);
+  assert.equal(layoutOf('thrillerClaw', 1, FRAMING.full, T).length, 1);
+  const two = layoutOf('deadStill', 2, FRAMING.close, T);
+  assert.ok(two[0].dx < 0 && two[1].dx > 0, 'and they stand either side of centre');
+  assert.equal(layoutOf('handsUp', 2, FRAMING.close, null).length, 1, 'an editorial single-figure stance stays one');
+  assert.equal(layoutOf('statueStill', 3, FRAMING.close, null).length, 3, 'the three that were the stance table spread');
 });

@@ -6,10 +6,9 @@
 // generator (constrained to one FAMILIES entry unless family is 'any'), `ov` the edits as flat dotted paths over it,
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
-import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf, REGISTRIES } from 'limner';
+import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf, REGISTRIES , STANCES, stanceOf } from 'limner';
 import { FAMILY_NAMES, characterFrom, faceOf, EXPRESSIONS, EDITORIAL_EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from 'limner';
 import { CASTS, themeNames, THEMES as BOUND } from './themes.mjs'; // every theme's cast and parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
-import { layoutOf, FRAMING } from './tableau.mjs'; // the poses are the tableau's, so the editor's pose pick is the world's own stance and not a second list
 import VISUAL from '../../lib/visual.json' with { type: 'json' };
 import { seed as seedState, rand } from './kit.mjs';
 import { prng } from '../../lib/random.mjs';
@@ -116,13 +115,18 @@ export function decode(hash) {
 const shapePreset = (v) => ({ 'face.width': FACE_SHAPES[v].width, 'face.height': FACE_SHAPES[v].height, 'face.jaw': FACE_SHAPES[v].jaw, 'face.chin': FACE_SHAPES[v].chin, 'face.corner': FACE_SHAPES[v].corner ?? 32 });
 const neckPreset = (v) => ({ 'neck.width': NECK_TYPES[v].width, 'neck.height': NECK_TYPES[v].height });
 const costumePreset = (v) => flat(COSTUMES[v](0));
-// The poses are the tableau's own (layoutOf): the single-figure stances, and with a theme on, its dance's (themeEntry
+// The poses are limner's single-figure stances (STANCES), and with a theme on, its cast's pack as well (themeEntry
 // adds those names to this menu). A pose is the whole stance — the head's tilt and lean, the turn, the dropped
 // shoulder and the hands it puts up — so it writes the pose keys and the props together, and nothing else.
-export const POSE_NAMES = ['directFrontal', 'slightLeanLeft', 'slightLeanRight', 'swaggerLean', 'statueStill', 'handsAtSides', 'handHeart', 'handsUp'];
-const posePreset = (v) => {
-  const t = Object.values(BOUND).find((x) => x.poses?.[v]) ?? null; // a dance's pose, drawn for one figure (a line's first)
-  const l = layoutOf(v, 1, FRAMING.figure, t)[0];
+//
+// A dance's own poses are not offered here and never meant anything on this page: they are blocking, where several
+// figures stand relative to each other, and this editor draws one face. It used to list them and quietly draw a line's
+// first figure.
+export const POSE_NAMES = Object.keys(STANCES.editorial);
+/** Which stance pack a name came from, so a themed pose resolves without the caller naming its theme. */
+const STANCE_PACK_OF = Object.fromEntries(Object.entries(STANCES).flatMap(([pack, set]) => Object.keys(set).map((n) => [n, pack])));
+export const posePreset = (v) => {
+  const l = { headX: 0, headY: 0, tilt: 0, bodyTilt: 0, turn: 0, shoulder: 0, props: [], ...(stanceOf(v, STANCE_PACK_OF[v]) ?? {}) };
   return { 'pose.headX': l.headX, 'pose.headY': l.headY, 'pose.headTilt': l.tilt, 'pose.bodyTilt': l.bodyTilt, 'pose.turn': l.turn, 'pose.shoulder': l.shoulder, props: l.props };
 };
 const exprPreset = (v) => { const e = EXPRESSIONS[v]; return { 'mouth.smile': e.mouth.smile, 'mouth.open': e.mouth.open ?? 0, 'mouth.style': e.mouth.style ?? 'plain', 'eyes.openness': e.eyes.openness ?? 1, 'eyes.browLift': e.eyes.browLift ?? 0, 'eyes.browSkew': e.eyes.browSkew ?? 0 }; };
@@ -227,7 +231,7 @@ function limitsOf(cast) {
 /** What a theme adds to the editor: every part its tags reach that the editorial menus lack, by control path, its dance's poses, plus the cast's costumes and expressions, one preset of its archetypes named by the cast, and the limits above. */
 function themeEntry(cast, bound) {
   const tags = themeTags(cast), extras = {};
-  const poses = Object.keys(bound?.poses ?? {}); if (poses.length) extras.pose = poses; // the dance's own choreography on the pose menu
+  const poses = Object.keys(STANCES[bound?.stances] ?? {}); if (poses.length) extras.pose = poses; // the cast's own stances; a dance's poses are blocking, which belongs to the world and not to a one-face editor
   for (const [kind, path] of Object.entries(MENU)) { const add = parts(kind, { any: tags }).filter((n) => !editorial[path]?.has(n)); if (add.length) extras[path] = add; }
   const costumes = (cast.costumes ?? []).filter((c) => !editorial.costume.has(c)), expressions = [...new Set(cast.expressions ?? [])].filter((e) => !editorial.expression.has(e));
   if (costumes.length) extras.costume = costumes; if (expressions.length) extras.expression = expressions;

@@ -1,6 +1,7 @@
-// The thriller dance: the Thriller choreography as the tableau's poses (the claw with both hands up, the stiff-legged
-// shuffle with the arms out, the head snapped to one side, the lean, the shoulder shimmy, the line clawing in step,
-// the horde closing on the camera), its shot templates and phases on the same three sets, the opening and closing
+// The thriller dance: the Thriller choreography as the tableau's shots. The single-body stances -- the claw, the
+// stiff-legged shuffle, the head snapped to one side, the lean, the shimmy -- are limner's now (STANCES.undead, named
+// by `stances` below); what is left here is blocking: the line clawing in step, the duos, the horde closing on the
+// camera. Its shot templates and phases on the same three sets, the opening and closing
 // shots, the motion dials (the head lurches further, the kick drops the jaw) and the styling rules its shots use. What
 // a cast does in it comes from the cast: `styling`, `alts` and `odd` take the cast first (its expression pool, its
 // extra marks), and themes.mjs closes them over the bound cast.
@@ -10,22 +11,10 @@ const pick = (s, a) => a[Math.floor(rand(s) * a.length)];
 
 // --- the poses: the Thriller choreography as it reads on a bust (tableau's layout fields, partial; `sw` is the stage's width in sheet units) ---
 export const POSES = {
-  thrillerClaw: () => [{ props: ['clawHands'], turn: 0.2, tilt: 0.1, headY: 6, shoulder: 0.3 }], // both hands up beside the shoulders, hooked
-  clawSweep: () => [{ props: ['clawRaisedRight'], turn: -0.5, tilt: -0.14, shoulder: -0.6, headY: 4 }], // one arm over the head, the body under it
-  clawsUp: () => [{ props: ['clawsUp'], headY: -4, tilt: 0.06, turn: 0.1 }],
-  armsRight: () => [{ props: ['clawsRight'], tilt: 0.12, headX: 6, turn: 0.5, shoulder: -0.4, bodyTilt: 0.03 }], // the side swing: both hands up on the right, the head going with them
-  armsLeft: () => [{ props: ['clawsLeft'], tilt: -0.12, headX: -6, turn: -0.5, shoulder: 0.4, bodyTilt: -0.03 }], // and then the left
   swingDuoRight: (n, sw) => [{ dx: -sw * 0.34, props: ['clawsRight'], tilt: 0.1, turn: 0.4, shoulder: -0.3 }, { dx: sw * 0.34, props: ['clawsRight'], tilt: 0.1, turn: 0.4, shoulder: -0.3 }],
   swingDuoLeft: (n, sw) => [{ dx: -sw * 0.34, props: ['clawsLeft'], tilt: -0.1, turn: -0.4, shoulder: 0.3 }, { dx: sw * 0.34, props: ['clawsLeft'], tilt: -0.1, turn: -0.4, shoulder: 0.3 }],
   swingLineRight: (n, sw) => [{ props: ['clawsRight'], tilt: 0.1, turn: 0.45, shoulder: -0.3 }, { dx: -sw * 0.74, props: ['clawsRight'], tilt: 0.12, turn: 0.5, shoulder: -0.35, k: 0.96 }, { dx: sw * 0.74, props: ['clawsRight'], tilt: 0.08, turn: 0.4, shoulder: -0.25, k: 0.96 }], // the line, every pair of hands to the right in step
   swingLineLeft: (n, sw) => [{ props: ['clawsLeft'], tilt: -0.1, turn: -0.45, shoulder: 0.3 }, { dx: -sw * 0.74, props: ['clawsLeft'], tilt: -0.08, turn: -0.4, shoulder: 0.25, k: 0.96 }, { dx: sw * 0.74, props: ['clawsLeft'], tilt: -0.12, turn: -0.5, shoulder: 0.35, k: 0.96 }],
-  zombieShuffle: () => [{ props: ['armsForward'], bodyTilt: 0.05, headY: 14, tilt: 0.12, turn: 0.3, shoulder: 0.5 }], // the stiff walk: arms out at the camera, the head forward
-  hunchedLurch: () => [{ props: ['reachRight'], headY: 18, tilt: 0.2, turn: -0.4, shoulder: 0.8, bodyTilt: -0.06, headX: -6 }],
-  graveReach: () => [{ props: ['clawsUp'], headY: 10, tilt: -0.16, turn: 0.5, dy: 0.08 }], // rising: lower in the frame, the arms up first
-  headSnapLeft: () => [{ turn: -0.95, tilt: 0.02 }], headSnapRight: () => [{ turn: 0.95, tilt: -0.02 }], // the head snapped round, the shoulders square
-  theLean: () => [{ props: ['clawHands'], bodyTilt: 0.13, tilt: -0.18, headX: 10, turn: 0.35, shoulder: -0.8 }],
-  shoulderShimmy: () => [{ shoulder: 0.95, tilt: -0.06, turn: 0.1 }],
-  deadStill: () => [{ headY: 2 }], // the moment they all stop and look: nothing moves (the theme's still pose)
   clawDuo: (n, sw) => [{ dx: -sw * 0.34, props: ['clawHands'], turn: 0.3, tilt: 0.08, shoulder: 0.3 }, { dx: sw * 0.34, props: ['clawHands'], turn: -0.3, tilt: -0.08, shoulder: -0.3 }],
   stalkingPair: (n, sw) => [{ dx: -sw * 0.1, dy: 0.04, props: ['armsForward'], turn: 0.4, headY: 10, tilt: 0.1 }, { dx: sw * 0.28, dy: -0.1, k: 0.86, props: ['clawRaisedLeft'], turn: -0.5, tilt: -0.1 }],
   faceOff: (n, sw) => [{ dx: -sw * 0.3, turn: 0.9, props: ['reachRight'], tilt: 0.1 }, { dx: sw * 0.3, turn: -0.9, tilt: -0.1, props: ['clawHands'] }], // turned on each other
@@ -71,7 +60,7 @@ export default {
   templates: TEMPLATES, phases: PHASES, special: SPECIAL, fallback: { red: 'lurchSolo', white: 'clawSolo' },
   open: { tpl: 'riseSolo', set: 'void', pose: 'graveReach', framing: 'medium', expression: 'slackJaw' }, // the song opens on one rising out of the ground
   close: { tpl: 'clawDuo', set: 'white', pose: 'clawDuo', framing: 'full' }, // and ends on the two leads clawing at the camera
-  poses: POSES, still: 'deadStill',
+  poses: POSES, still: 'deadStill', stances: 'undead', // the single-body stances are limner's (limner/stances.mjs STANCES.undead); POSES is what is left: the lines and duos, which are blocking
   motion: { sway: 1.6, tilt: 2.2, nod: 1.8, jaw: 0.35 }, // the lurch: the head rides further, the kick drops the jaw
   /** A dancer keeps its outfit and its home makeup in every shot; a phase adds the cast's extra marks by its odds, the template its own expression. */
   styling(cast, s, idn, P, tpl, i) {
