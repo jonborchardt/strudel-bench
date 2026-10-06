@@ -19,3 +19,6 @@ renders/
 
 # test fixtures: the suite writes _t_-prefixed files into test/, songs/ and samples/user/ and deletes them after; an interrupted run leaves them, and they are never to be committed
 _t_*
+
+# the superpowers plan workspace: ledger and review packages, scratch that must never be committed
+.superpowers/
