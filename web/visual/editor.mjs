@@ -6,7 +6,7 @@
 // generator (constrained to one FAMILIES entry unless family is 'any'), `ov` the edits as flat dotted paths over it,
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
-import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf } from './portrait.mjs';
+import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf, REGISTRIES } from './portrait.mjs';
 import { FAMILY_NAMES, characterFrom, faceOf, EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from './cast.mjs';
 import { CASTS, themeNames } from './themes.mjs'; // every theme's cast and parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
 import VISUAL from '../../lib/visual.json' with { type: 'json' };
@@ -76,7 +76,7 @@ export const JITTER = {
   'facialHair.mustacheStyle': (r) => (r() < 0.3 ? pickOf(r, MUSTACHE_STYLES) : null),
   'top.metal': (r) => (r() < 0.06 ? 1 : 0), 'jacket.metal': (r) => (r() < 0.06 ? 1 : 0), 'hat.metal': (r) => (r() < 0.06 ? 1 : 0),
   seed: (r) => Math.floor(r() * 100), // the portrait's own seed: where the metallic sheen's folds fall
-  makeup: (r, cast) => (r() < 0.2 ? [pickOf(r, layerPool('makeup', MAKEUP_STYLES, cast))].filter(Boolean) : []),
+  makeup: (r, cast) => (r() < 0.16 ? [pickOf(r, layerPool('makeup', MAKEUP_STYLES, cast).filter((n) => !REGISTRIES.makeup[n]?.mask))].filter(Boolean) : []), // never a mask: a rigid shell over the face is a choice, not something a reroll hands you
   marks: (r, cast) => (r() < 0.12 ? [pickOf(r, layerPool('marks', MARK_STYLES, cast).filter((n) => n !== 'none'))].filter(Boolean) : []),
   props: (r, cast) => (r() < 0.1 ? [pickOf(r, layerPool('props', PROP_STYLES, cast).filter((n) => !['none', 'handsAtSides', 'gloves'].includes(n)))].filter(Boolean) : []),
 };
