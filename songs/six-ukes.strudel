@@ -68,18 +68,22 @@ const SOLO = ['[~ ~ a3 c4] [e4@2 d4 c4] [a3@2 ~ g3] [a3@3 ~]', '[~ ~ a3 c4] [d4 
               '[e4 g4 a4 ~] [g4 e4 d4 c4] [a3 ~ c4 d4] [e4@3 ~]', '[~ e4 d4 c4] [d4@2 c4 a3] [c4@2 a3 g3] [a3@3 ~]',
               '[a4@2 g4 e4] [a4@2 g4 e4] [c5@2 a4 g4] [e4@3 ~]', '[~ f4 a4 c5] [d5@2 c5 a4] [f4@2 d4 f4] [a4@3 ~]',
               '[e5 ~ d5 c5] [a4 ~ g4 e4] [d4 ~ c4 a3] [g3 ~ a3 ~]', '[a3@2 c4 d4] [e4@2 g4 a4] [c5@2 ~ b4] a4'];
-// the chorus is a sentence, not a loop: bars 1-4 ask in two long notes and three short ones (HOOK), bars 5-8 answer
-// in a busy line that falls and lands on the root, over chords the call never touches (iv VII v i). The band holds
-// one chord a bar under the answer so the line is alone in front of it.
-const ANS  = ['[~ a4 g4 f4] [e4 ~ d4 e4] [f4@2 ~ e4] [d4@2 ~ ~]',
-              '[~ b4 a4 g4] [f4 ~ e4 f4] [g4@2 ~ f4] [e4@2 ~ ~]',
-              '[~ e4 e4 e4] [~ e4 ~ e4] [g4@2 ~ f4] [e4 ~ b4 ~]',
-              '[c5@2 ~ b4] [a4@2 ~ ~] [~ ~ ~ ~] [~ ~ ~ ~]'];
-// the climax answers a third higher, ends on the song's highest note, and takes a chord every half bar to get there
-const ANS3 = ['[~ c5 b4 a4] [g4 ~ f4 g4] [a4@2 ~ g4] [f4@2 ~ ~]',
-              '[~ d5 c5 b4] [a4 ~ g4 a4] [b4@2 ~ a4] [g4@2 ~ ~]',
-              '[~ b4 b4 b4] [~ b4 ~ b4] [c5@2 ~ b4] [a4 ~ c5 ~]',
-              '[d5@2 ~ e5] [c5@2 ~ a4] [~ ~ ~ ~] [~ ~ ~ ~]'];
+// the chorus is a sentence, not a loop: bars 1-4 ask in a struck-and-restruck note and three short ones (HOOK),
+// bars 5-8 answer. The answer is a riff, not a tune: one syncopated cell in the minor pentatonic held against all
+// four chords, starting off the downbeat and falling to the low root -- no scale runs, no major thirds, no walk
+// down to the tonic to cheer the chorus off. The baritone has it alone; the tenor and concert chuck the chords on
+// the and of each half behind it, so the answer is one voice with the band punctuating, not three ukes in unison.
+const ANS  = ['[~ ~ a3 c4] [d4 ~ ~ c4] [a3@3 ~] [~ ~ ~ ~]',
+              '[~ ~ a3 c4] [d4 ~ ~ e4] [d4@3 ~] [~ ~ a3 ~]',
+              '[~ ~ c4 d4] [e4 ~ ~ d4] [c4@3 ~] [~ ~ ~ ~]',
+              '[~ ~ e4 d4] [c4 ~ ~ ~] [a3@2 ~ ~] [~ ~ ~ ~]'];
+// the climax takes the same riff a fourth up and lets it reach e5, the song's highest note, before it falls back
+const ANS3 = ['[~ ~ d4 e4] [g4 ~ ~ e4] [d4@3 ~] [~ ~ ~ ~]',
+              '[~ ~ d4 e4] [g4 ~ ~ a4] [g4@3 ~] [~ ~ d4 ~]',
+              '[~ ~ g4 a4] [c5 ~ ~ a4] [g4@3 ~] [~ ~ a4 ~]',
+              '[~ ~ c5 d5] [e5@2 ~ d5] [c5@2 ~ a4] [~ ~ ~ ~]'];
+const ASTAB = [stabs(T.Dm, T.Dm), stabs(T.G, T.G), stabs(T.Em, T.Em), stabs(T.Am, T.Am)];
+const ASTAB3 = [stabs(T.Dm, T.Dm), stabs(T.G, T.G), stabs(T.Em, T.F), stabs(T.G, T.Am)];
 const AV = '1 1 .92 .96 1 1 .92 .96 1 1 1 1 1 1 1 1'; // the answer's sixteenths breathe where the hook leans
 const LONG = '24 24 24 24 24 24 24 24 24 24 24 24 24 24 24 24';
 const hits = (V) => [V.Am, V.Dm, V.F, V.G].map((c) => strum(c, HIT));
@@ -90,6 +94,7 @@ const CH3 = bars([...hits(T), ...held3(T)]), CHL3 = bars([...hits(L), ...held3(L
 const CHCLIP = bars([HITCLIP, HITCLIP, HITCLIP, HITCLIP, LONG, LONG, LONG, LONG]);
 const CHV = bars([HV, HV, HV, HV, AV, AV, AV, AV]);
 const CHOOK = [...HOOK, ...ANS], CHOOK3 = [...HOOK, ...ANS3];
+const CHPUNCH = [...HOOK, ...ASTAB], CHPUNCH3 = [...HOOK, ...ASTAB3];
 // the bass walks the answer's chords and lands with it; in the climax it walks the half-bar changes
 const CHB = [HA, HD, HF, HG, RD, RG, RE, 'a1 ~ a1 a2 ~ ~ ~ ~'];
 const CHB3 = [HA, HD, HF, HG, RD, RG, 'e2 ~ e2 ~ f2 ~ f2 ~', 'g2 ~ g2 ~ a1 ~ a1 a2'];
@@ -156,10 +161,10 @@ song({ cps: .49, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
   section('chorus', 8, { role: 'develop', progression: 'i iv VI VII iv VII v i',
     drums: { ...knocks, density: .7, level: .46, variation: .3 },
     raw:   { ...bassuke(bars(CHB), 1), level: .65 },
-    raw2:  { ...closer(tenor(bars(CHOOK), 1.3)), level: .6, velocity: CHV },
+    raw2:  { ...closer(tenor(bars(CHPUNCH), 1.3)), level: .6, velocity: CHV },
     raw3:  farther(soprano(CH, CHCLIP)),
     raw4:  { ...closer(baritone(bars(CHOOK), 1.3)), level: .9, velocity: CHV },
-    raw5:  { ...closer(concert(bars(CHOOK), 1.3)), level: .8, velocity: CHV },
+    raw5:  { ...closer(concert(bars(CHPUNCH), 1.3)), level: .8, velocity: CHV },
     raw6:  farther(lowg(CHL, CHCLIP)),
     raw7:  fret,
   }),
@@ -184,10 +189,10 @@ song({ cps: .49, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
   section('chorus2', 8, { role: 'develop', progression: 'i iv VI VII iv VII v i',
     drums: { ...knocks, density: .75, level: .48, variation: .35 },
     raw:   { ...bassuke(bars(CHB), 1), level: .65 },
-    raw2:  { ...closer(tenor(bars(CHOOK), 1.3)), level: .6, velocity: CHV },
+    raw2:  { ...closer(tenor(bars(CHPUNCH), 1.3)), level: .6, velocity: CHV },
     raw3:  farther(soprano(CH, CHCLIP)),
     raw4:  { ...closer(baritone(bars(CHOOK), 1.3)), level: .9, velocity: CHV },
-    raw5:  { ...closer(concert(bars(CHOOK), 1.3)), level: .8, velocity: CHV },
+    raw5:  { ...closer(concert(bars(CHPUNCH), 1.3)), level: .8, velocity: CHV },
     raw6:  farther(lowg(CHL, CHCLIP)),
     raw7:  fret,
   }),
@@ -211,10 +216,10 @@ song({ cps: .49, key: 'A:minor', seed: 23, kit: 'RolandR8', visual: { world: 'un
   section('chorus3', 8, { role: 'climax', progression: 'i iv VI VII iv VII [v VI] [VII i]',
     drums: { ...knocks, density: .85, level: .5, variation: .45, fill: 2 },
     raw:   { ...bassuke(bars(CHB3), 1), level: .65 },
-    raw2:  { ...closer(tenor(bars(CHOOK3), 1.3)), level: .6, velocity: CHV },
+    raw2:  { ...closer(tenor(bars(CHPUNCH3), 1.3)), level: .6, velocity: CHV },
     raw3:  farther(soprano(CH3, CHCLIP)),
     raw4:  { ...closer(baritone(bars(CHOOK3), 1.3)), level: .9, velocity: CHV },
-    raw5:  { ...closer(concert(bars(CHOOK3), 1.3)), level: .8, velocity: CHV },
+    raw5:  { ...closer(concert(bars(CHPUNCH3), 1.3)), level: .8, velocity: CHV },
     raw6:  farther(lowg(CHL3, CHCLIP)),
     raw7:  fret,
   }),

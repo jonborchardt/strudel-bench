@@ -391,6 +391,32 @@
           "why": "fill true: a half-bar palm roll on the cajon over that last bar, so the band leads into the solo instead of the song stopping"
         }
       ]
+    },
+    {
+      "date": "2026-10-06",
+      "ask": "the end of chorus 1 2 and 3, raw4 and raw5: the last half sounds too happy and odd - rework those plucks",
+      "changes": [
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw4",
+          "why": "the answer was a scale: stepwise sixteenths walking down to the tonic (c5 b4 a4), which is the most sing-song cadence there is, and the b naturals sat on top of every bar. It is now a riff - one syncopated cell in the minor pentatonic (a c d e g, no major thirds, no b, no f) held against all four chords, entering off the downbeat and falling to the low root"
+        },
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw2",
+          "why": "and raw5 the odd part was three ukes playing that busy line in unison, three humanized nylon attacks smearing every sixteenth; the tenor and concert now chuck the answer's chords on the and of each half instead, so the answer is one voice with the band punctuating"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw4",
+          "why": "the climax riff is the same cell a fourth up and still reaches e5, the song's highest note, but by leap inside the pentatonic rather than by walking the scale"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw2/raw5",
+          "why": "the chucks follow the half-bar chord changes in the last two bars (Em F, G Am)"
+        }
+      ]
     }
   ],
   "youtube": {
