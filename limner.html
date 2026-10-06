@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>limner explorer</title>
+<meta name="description" content="What limner can draw: one person from parameters, ten peoples, a seeded crowd, the anatomy table, every stance, expression and costume, and the part quarantine.">
+<meta name="robots" content="noindex">
+<style>
+  :root { --paper: #e7e4df; --card: #f3f1ec; --line: #cfcac1; --ink: #2e2c29; --dim: #7d7871; --sitter: #c8102e; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); font: 13px/1.5 system-ui, sans-serif; }
+  header { padding: 14px 16px 0; }
+  h1 { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  h1 small { font-weight: 400; color: var(--dim); }
+  p.lede { margin: 0 0 10px; max-width: 72em; color: var(--dim); }
+  nav { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 16px 10px; border-bottom: 1px solid var(--line); }
+  nav button { font: inherit; padding: 4px 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 3px; cursor: pointer; }
+  nav button[aria-selected=true] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  main { padding: 14px 16px 40px; }
+  section { display: none; }
+  section[data-open] { display: block; }
+  h2 { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
+  h2 + p { margin: 0 0 12px; max-width: 72em; color: var(--dim); }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+  figure { margin: 0; text-align: center; }
+  figure svg { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 3px; }
+  figcaption { font-size: 11px; padding-top: 3px; }
+  figcaption b { font-weight: 600; }
+  figcaption span { color: var(--dim); display: block; font-size: 10px; }
+  .w160 svg { width: 160px; height: auto; }
+  .w120 svg { width: 120px; height: auto; }
+  .w96 svg { width: 96px; height: auto; }
+  .ground { align-items: flex-end; }
+  .ground svg { width: auto; height: 300px; }
+  #one { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; }
+  #dials { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 10px; }
+  label { display: grid; grid-template-columns: 92px 1fr; gap: 8px; align-items: center; margin-bottom: 6px; }
+  label > span { color: var(--dim); }
+  select, input[type=number] { font: inherit; width: 100%; background: #fff; border: 1px solid var(--line); border-radius: 3px; padding: 2px 4px; color: var(--ink); }
+  input[type=range] { width: 100%; }
+  .btns { display: flex; gap: 6px; margin-top: 8px; }
+  .btns button { font: inherit; flex: 1; padding: 4px; border: 1px solid var(--line); background: #fff; border-radius: 3px; cursor: pointer; }
+  #stage svg { width: 100%; max-width: 420px; height: auto; background: var(--card); border: 1px solid var(--line); border-radius: 4px; }
+  code { background: var(--card); border: 1px solid var(--line); border-radius: 2px; padding: 0 3px; font-size: 11px; }
+  pre { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; overflow: auto; font-size: 11px; max-width: 72em; }
+  .tags { color: var(--dim); font-size: 10px; }
+  .only { color: var(--sitter); }
+  .pair { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+  .pair > div { text-align: center; }
+  .pair canvas, .pair svg { width: 260px; height: auto; background: var(--card); border: 1px solid var(--line); border-radius: 3px; }
+  .note { color: var(--dim); font-size: 11px; max-width: 72em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>limner <small>— what it draws, on its own</small></h1>
+  <p class="lede">
+    limner draws one person: parameters in, an op list out, SVG or canvas from the ops. Nothing on this page knows about
+    music, songs or worlds &mdash; it imports <code>./limner/index.mjs</code> and nothing else from this repo, which is
+    the point. For the parameter-by-parameter editor see <a href="portrait.html">portrait.html</a>; for how several
+    figures get arranged into a shot, which is <em>not</em> limner's job, see <a href="poses.html">poses.html</a>.
+  </p>
+</header>
+<nav id="tabs"></nav>
+<main>
+  <section id="t-one"><div id="one"><div id="dials"></div><div id="stage"></div></div><p class="note" id="onenote"></p></section>
+  <section id="t-peoples"></section>
+  <section id="t-crowd"></section>
+  <section id="t-anatomy"></section>
+  <section id="t-stances"></section>
+  <section id="t-faces"></section>
+  <section id="t-costumes"></section>
+  <section id="t-parts"></section>
+  <section id="t-ops"></section>
+</main>
+
+<script type="module">
+import {
+  person, archetype, dress, renderPortrait, renderFigure, portraitOps, toSvg, drawOn,
+  CASTS, ANATOMY, buildOf, STANCES, stanceOf, EXPRESSIONS, COSTUME_FAMILIES,
+  PACKS, REGISTRIES, parts, tagsOf, characterFrom, seed, prng, eyeY, feetY,
+} from './limner/index.mjs';
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, props = {}, html = '') => { const n = document.createElement(tag); Object.assign(n, props); if (html) n.innerHTML = html; return n; };
+const fig = (svg, label, sub = '') => `<figure>${svg}<figcaption><b>${label}</b>${sub ? `<span>${sub}</span>` : ''}</figcaption></figure>`;
+const castNames = Object.keys(CASTS);
+const stream = (n) => { const s = {}; seed(s, prng(n)); return s; };
+
+// ---- tabs: each panel renders once, the first time it is opened ----
+const TABS = [
+  ['one', 'One person', paintOne],
+  ['peoples', 'Ten peoples', paintPeoples],
+  ['crowd', 'A seeded crowd', paintCrowd],
+  ['anatomy', 'Anatomy', paintAnatomy],
+  ['stances', 'Stances', paintStances],
+  ['faces', 'Expressions', paintFaces],
+  ['costumes', 'Costumes', paintCostumes],
+  ['parts', 'Parts & tags', paintParts],
+  ['ops', 'Ops', paintOps],
+];
+const painted = new Set();
+function open(id) {
+  for (const [k] of TABS) {
+    const on = k === id;
+    $('t-' + k).toggleAttribute('data-open', on);
+    $('tab-' + k).setAttribute('aria-selected', String(on));
+  }
+  if (!painted.has(id)) { painted.add(id); TABS.find(([k]) => k === id)[2](); }
+  if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id);
+}
+for (const [id, label] of TABS) $('tabs').append(el('button', { id: 'tab-' + id, onclick: () => open(id) }, label));
+
+// ---- one person: the headline, with the dials that read best ----
+const state = { cast: 'editorial', seed: 7, expression: 'deadpan', costume: '', stance: 'none', figure: false };
+function paintOne() {
+  const d = $('dials');
+  const sel = (key, options, label) => {
+    const l = el('label'); l.append(el('span', {}, label));
+    const s = el('select', { onchange: (e) => { state[key] = e.target.value; drawOne(); } });
+    for (const o of options) s.append(el('option', { value: o.v ?? o, selected: (o.v ?? o) === state[key] }, o.t ?? o));
+    l.append(s); return l;
+  };
+  d.append(sel('cast', castNames, 'cast'));
+  d.append(sel('expression', Object.keys(EXPRESSIONS), 'expression'));
+  d.append(sel('costume', [{ v: '', t: 'their own' }, ...COSTUME_FAMILIES], 'costume'));
+  d.append(sel('stance', ['none', ...Object.keys(STANCES).flatMap((p) => Object.keys(STANCES[p]))], 'stance'));
+  const sl = el('label'); sl.append(el('span', {}, 'seed'));
+  sl.append(el('input', { type: 'number', value: state.seed, min: 0, oninput: (e) => { state.seed = +e.target.value || 0; drawOne(); } }));
+  d.append(sl);
+  const fl = el('label'); fl.append(el('span', {}, 'whole figure'));
+  fl.append(el('input', { type: 'checkbox', checked: state.figure, onchange: (e) => { state.figure = e.target.checked; drawOne(); } }));
+  d.append(fl);
+  const b = el('div', { className: 'btns' });
+  b.append(el('button', { onclick: () => { state.seed++; d.querySelector('input[type=number]').value = state.seed; drawOne(); } }, 'next seed'));
+  b.append(el('button', { onclick: copyOne }, 'copy svg'));
+  d.append(b);
+  drawOne();
+}
+function paramsOne() {
+  const cast = CASTS[state.cast];
+  const sitter = archetype({ cast: state.cast, seed: state.seed, name: cast.archetypeNames[state.seed % cast.archetypeNames.length] });
+  const styling = { expression: state.expression };
+  if (state.costume) styling.costume = state.costume;
+  if (state.stance !== 'none') {
+    const st = stanceOf(state.stance, state.cast) ?? stanceOf(state.stance) ?? {};
+    styling.pose = { headX: st.headX ?? 0, headY: st.headY ?? 0, headTilt: st.tilt ?? 0, bodyTilt: st.bodyTilt ?? 0, turn: st.turn ?? 0, shoulder: st.shoulder ?? 0 };
+    styling.props = st.props ?? [];
+  }
+  return dress(sitter, styling);
+}
+function drawOne() {
+  const p = paramsOne();
+  $('stage').innerHTML = state.figure ? renderFigure(p) : renderPortrait(p);
+  const ops = portraitOps(p);
+  $('onenote').innerHTML = `${ops.length} ops &middot; eyes at y=${eyeY(p).toFixed(1)}, feet at y=${feetY(p).toFixed(1)} `
+    + `&middot; a host frames on those, never on the defaults. The same dials give the same face every time.`;
+}
+async function copyOne() {
+  const svg = state.figure ? renderFigure(paramsOne()) : renderPortrait(paramsOne());
+  try { await navigator.clipboard.writeText(svg); $('onenote').textContent = 'svg copied to the clipboard.'; }
+  catch { $('onenote').textContent = 'the clipboard refused; the svg is in the page source.'; }
+}
+
+// ---- ten peoples ----
+function paintPeoples() {
+  const s = $('t-peoples');
+  s.append(el('h2', {}, 'Ten peoples'));
+  s.append(el('p', {}, 'One archetype from each cast, in its home styling. A cast is a signature merged over every member — the ears, the muzzle, the build itself — plus the pools of parts it may wear and its own palettes. None of them is a filter over a human: they are built differently.'));
+  const row = el('div', { className: 'row w160' });
+  for (const name of castNames) {
+    const cast = CASTS[name], who = archetype({ cast: name, seed: 5, name: cast.archetypeNames[0] });
+    row.insertAdjacentHTML('beforeend', fig(renderPortrait(dress(who, {})), name, `${cast.archetypeNames[0]} · ${cast.archetypeNames.length} archetypes`));
+  }
+  s.append(row);
+}
+
+// ---- a seeded crowd ----
+function paintCrowd() {
+  const s = $('t-crowd');
+  s.append(el('h2', {}, 'A seeded crowd'));
+  s.append(el('p', {}, 'Sixteen people out of one generator stream. The seed is the whole crowd: the same seed gives the same sixteen in the same order, which is what makes a scene reproducible together rather than person by person.'));
+  const bar = el('div', { className: 'btns', style: 'max-width:320px' });
+  const out = el('div', { className: 'row w96' });
+  let which = 'editorial', sd = 11;
+  const pick = el('select', { onchange: (e) => { which = e.target.value; go(); } });
+  for (const n of castNames) pick.append(el('option', { value: n }, n));
+  bar.append(pick, el('button', { onclick: () => { sd++; go(); } }, 'next seed'));
+  const go = () => {
+    const st = stream(sd);
+    out.innerHTML = Array.from({ length: 16 }, () => characterFrom(CASTS[which], st))
+      .map((c, i) => fig(renderPortrait(c), '#' + (i + 1))).join('');
+    lbl.textContent = `cast ${which}, seed ${sd}`;
+  };
+  const lbl = el('p', { className: 'note' });
+  s.append(bar, lbl, out);
+  go();
+}
+
+// ---- anatomy ----
+function paintAnatomy() {
+  const s = $('t-anatomy');
+  s.append(el('h2', {}, 'Anatomy is solved, not stated'));
+  s.append(el('p', {}, 'ANATOMY gives each people a stature relative to a human and then the figure in head heights, every measure a range. buildOf() walks one parameter across all of those ranges at once and bisects until the figure actually stands at the right stature — so the human row solves to all 1s, which is what ties the published table to this drawing. Drawn to the same scale, feet on one floor.'));
+  const order = Object.keys(ANATOMY).sort((a, b) => ANATOMY[a].height - ANATOMY[b].height);
+  const row = el('div', { className: 'row ground' });
+  for (const race of order) {
+    const b = buildOf(race);
+    const cast = castNames.find((c) => CASTS[c].build && JSON.stringify(CASTS[c].build) === JSON.stringify(b));
+    const who = archetype({ cast: cast ?? 'humans', seed: 3 });
+    const p = dress(who, {});
+    row.insertAdjacentHTML('beforeend', fig(renderFigure({ ...p, build: b }), race, `stature ${ANATOMY[race].height} · ${ANATOMY[race].totalHeight.join('–')} heads`));
+  }
+  s.append(row);
+  s.append(el('pre', {}, `ANATOMY.dwarf\n// ${JSON.stringify(ANATOMY.dwarf)}\n\nbuildOf('dwarf')\n// ${JSON.stringify(buildOf('dwarf'))}`));
+}
+
+// ---- stances ----
+function paintStances() {
+  const s = $('t-stances');
+  s.append(el('h2', {}, 'Stances: one body, and nothing about placement'));
+  s.append(el('p', {}, 'A stance is how one body stands — the head\'s tilt and lean, the turn off the torso, a dropped shoulder, the hands it puts up. It deliberately says nothing about where that body is in a frame: dx, scale and reaching an arm around a neighbour are blocking, and blocking belongs to whatever composes the shot.'));
+  for (const [pack, set] of Object.entries(STANCES)) {
+    s.append(el('h2', { style: 'margin-top:14px' }, `${pack} (${Object.keys(set).length})`));
+    const cast = CASTS[pack] ?? CASTS.editorial;
+    const who = archetype({ cast: CASTS[pack] ? pack : 'editorial', seed: 7, name: cast.archetypeNames[0] });
+    const row = el('div', { className: 'row w120' });
+    for (const [name, st] of Object.entries(set)) {
+      const p = dress(who, {
+        pose: { headX: st.headX ?? 0, headY: st.headY ?? 0, headTilt: st.tilt ?? 0, bodyTilt: st.bodyTilt ?? 0, turn: st.turn ?? 0, shoulder: st.shoulder ?? 0 },
+        props: st.props ?? [],
+      });
+      const carries = ['dx', 'dy', 'k'].filter((k) => k in st);
+      row.insertAdjacentHTML('beforeend', fig(renderPortrait(p), name, carries.length ? `still carries ${carries.join(', ')}` : ''));
+    }
+    s.append(row);
+  }
+}
+
+// ---- expressions ----
+function paintFaces() {
+  const s = $('t-faces');
+  s.append(el('h2', {}, 'Every expression, on one face'));
+  s.append(el('p', {}, 'An expression moves the lids, the brows and the mouth together. `smile` is a separate offset on top, so two deadpans need not be identical.'));
+  const who = archetype({ cast: 'editorial', seed: 9 });
+  const row = el('div', { className: 'row w120' });
+  for (const name of Object.keys(EXPRESSIONS)) row.insertAdjacentHTML('beforeend', fig(renderPortrait(dress(who, { expression: name })), name));
+  s.append(row);
+}
+
+// ---- costumes ----
+function paintCostumes() {
+  const s = $('t-costumes');
+  s.append(el('h2', {}, `Costume families (${COSTUME_FAMILIES.length})`));
+  s.append(el('p', {}, 'A costume family dresses a figure in one go — top, jacket, hat, accessories, sometimes a prop — and each has variants. The same sitter wears all of them, so what changes is only the clothes.'));
+  const who = archetype({ cast: 'editorial', seed: 2 });
+  const row = el('div', { className: 'row w120' });
+  for (const name of COSTUME_FAMILIES) row.insertAdjacentHTML('beforeend', fig(renderPortrait(dress(who, { costume: name })), name));
+  s.append(row);
+}
+
+// ---- parts and tags ----
+function paintParts() {
+  const s2 = $('t-parts');
+  s2.append(el('h2', {}, 'Parts are reached by tag, never by iterating a registry'));
+  s2.append(el('p', {}, 'A part registers itself by name and carries tags. `everyday` and `era:80s` say what a part is; `only:x` says who may wear it, and a part tagged that way comes back only when a query names it. Sharing is a tag; quarantine is a pool — which is how ten casts share one wardrobe without a zombie\'s rot reaching an ordinary face.'));
+  const table = el('pre');
+  const lines = [];
+  for (const kind of Object.keys(REGISTRIES)) {
+    const names = Object.keys(REGISTRIES[kind]);
+    const counts = new Map();
+    for (const n of names) for (const t of (tagsOf(kind, n) ?? [])) counts.set(t, (counts.get(t) ?? 0) + 1);
+    const tags = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([t, c]) => `${t}:${c}`).join('  ');
+    lines.push(`${kind.padEnd(12)} ${String(names.length).padStart(3)} parts   ${tags || '(untagged)'}`);
+  }
+  table.textContent = lines.join('\n');
+  s2.append(table);
+  s2.append(el('p', { className: 'note' }, `packs that ship: ${Object.keys(PACKS).join(', ')} — plus the shared fantasy pack every D&D cast reaches, which is why humans needs no pack of its own.`));
+  // the query, drawn: pick a kind and a tag and see what comes back, on a plain figure. A part tagged only:x appears
+  // only when the query names it, which is the whole quarantine and is far easier to believe when you can see it.
+  const WEAR = {
+    top: (n) => ({ top: { style: n, color: '#c23d8e', accent: '#2fb5b0' } }),
+    jacket: (n) => ({ jacket: { style: n, color: '#2a4f8f', accent: '#e9e2d0' }, top: { style: 'crewTshirt', color: '#6e7278' } }),
+    hat: (n) => ({ hat: { style: n, color: '#d9c64a', accent: '#2a5fb8' } }),
+    hair: (n) => ({ hair: { style: n } }),
+    facialHair: (n) => ({ facialHair: { style: n } }),
+    glasses: (n) => ({ glasses: { style: n } }),
+    teeth: (n) => ({ mouth: { teeth: n, open: 0.5 } }),
+    makeup: (n) => ({ makeup: [n] }),
+    marks: (n) => ({ marks: [n] }),
+    props: (n) => ({ props: [n] }),
+    accessories: (n) => ({ accessories: [n] }),
+    details: (n) => ({ details: [n] }),
+    graphics: (n) => ({ top: { style: 'crewTshirt', color: '#2e2c29', graphic: n } }),
+    legs: (n) => ({ pants: { style: n } }),
+  };
+  const probe = el('div', { style: 'margin-top:14px' });
+  const bar = el('div', { className: 'btns', style: 'max-width:460px' });
+  const kindSel = el('select'); for (const k of Object.keys(REGISTRIES)) kindSel.append(el('option', { value: k }, k));
+  const tagSel = el('select');
+  const out = el('div', { style: 'margin-top:6px' });
+  const gallery = el('div', { className: 'row w120', style: 'margin-top:8px' });
+  const base = dress(archetype({ cast: 'editorial', seed: 6 }), { makeup: [], marks: [], props: [] });
+  const show = () => {
+    const kind = kindSel.value, t = tagSel.value;
+    const got = t ? parts(kind, { any: [t] }) : [];
+    const quarantined = t && t.startsWith('only:');
+    out.innerHTML = `<code>parts('${kind}', { any: ['${t}'] })</code> &rarr; ${got.length} of ${Object.keys(REGISTRIES[kind]).length}`
+      + (quarantined ? ' <span class="only">— reached only because the query named it</span>' : '')
+      + (got.length ? '' : '<div class="tags">nothing: no part of this kind carries that tag</div>');
+    const wear = WEAR[kind];
+    gallery.innerHTML = !wear ? '' : got.slice(0, 40).map((n) => {
+      let svg = '';
+      try { svg = renderPortrait({ ...base, ...wear(n) }); } catch { return ''; }
+      return fig(svg, n, [...(tagsOf(kind, n) ?? [])].join(' '));
+    }).join('');
+  };
+  const refresh = () => {
+    const kind = kindSel.value;
+    const all = new Set();
+    for (const n of Object.keys(REGISTRIES[kind])) for (const t of (tagsOf(kind, n) ?? [])) all.add(t);
+    tagSel.innerHTML = '';
+    for (const t of [...all].sort()) tagSel.append(el('option', { value: t }, t));
+    if (!all.size) tagSel.append(el('option', { value: '' }, '(no tags)'));
+    show();
+  };
+  kindSel.onchange = refresh; tagSel.onchange = show;
+  bar.append(kindSel, tagSel);
+  probe.append(bar, out, gallery);
+  s2.append(probe);
+  refresh();
+}
+
+// ---- ops ----
+function paintOps() {
+  const s = $('t-ops');
+  s.append(el('h2', {}, 'Ops are the output; SVG and canvas are two renderers'));
+  s.append(el('p', {}, 'portraitOps() is the one computation and returns a flat list of drawing ops. toSvg() prints them, drawOn() paints them. The same list, both ways, below. If you are drawing many frames, keep the ops and paint them: rasterising an SVG string per frame will not keep up.'));
+  const p = dress(archetype({ cast: 'editorial', seed: 12 }), { expression: 'smirk' });
+  const ops = portraitOps(p);
+  const pair = el('div', { className: 'pair' });
+  const a = el('div'); a.innerHTML = toSvg(ops, '#f3f1ec'); a.append(el('div', { className: 'tags' }, `toSvg(ops) — ${toSvg(ops).length.toLocaleString()} characters`));
+  const b = el('div');
+  const cv = el('canvas', { width: 400, height: 480 });
+  b.append(cv); b.append(el('div', { className: 'tags' }, `drawOn(ctx, ops) — ${ops.length} ops`));
+  pair.append(a, b);
+  s.append(pair);
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#f3f1ec'; ctx.fillRect(0, 0, 400, 480);
+  drawOn(ctx, ops);
+  const kinds = {}; for (const o of ops) kinds[o.k] = (kinds[o.k] ?? 0) + 1;
+  s.append(el('pre', {}, `${ops.length} ops: ${Object.entries(kinds).map(([k, n]) => `${k}×${n}`).join(', ')}\n\n${JSON.stringify(ops.slice(0, 3), null, 1)}`));
+}
+
+open(TABS.some(([k]) => k === location.hash.slice(1)) ? location.hash.slice(1) : 'one');
+addEventListener('hashchange', () => { const id = location.hash.slice(1); if (TABS.some(([k]) => k === id)) open(id); });
+</script>
+</body>
+</html>

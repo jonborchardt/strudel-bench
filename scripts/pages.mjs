@@ -42,7 +42,7 @@ for (const s of songs.filter((s) => !hidden.includes(s) && declared[s].length)) 
 fs.rmSync(OUT, { recursive: true, force: true });
 const copy = (rel, to = rel) => fs.cpSync(path.join(ROOT, rel), path.join(OUT, to), { recursive: true });
 const PAGES = ['index.html', 'examples.html', 'about.html', 'legal.html', 'listen.html']; // the sitemap; 404.html ships too but is not a destination
-for (const p of [...PAGES, '404.html', 'portrait.html']) copy(p); // portrait.html ships but stays out of the sitemap: it is noindex, a tool, not a destination
+for (const p of [...PAGES, '404.html', 'portrait.html', 'limner.html']) copy(p); // portrait.html and limner.html ship but stay out of the sitemap: noindex, tools, not destinations
 copy('web');
 // limner, minus its own suite, its CLIs and its sheets. The ops golden alone is 163 KB of fixture no visitor needs, and
 // the sheets (faces, parts, casts, stances) are dev tools that were never deployed; portrait.html, the one page of it

@@ -32,9 +32,25 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
   const clean = fixtures();
   try {
     build(out);
-    for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', '404.html', 'sitemap.xml', 'robots.txt', 'web/icon.svg', 'web/og.png', 'web/strudel.css', 'web/boot.mjs', 'web/mp3.mjs', '.nojekyll', 'lib/index.mjs', 'lib/packs.json', 'lib/packs.mjs', 'songs/demo.strudel', 'songs/demo.notes.json', 'node_modules/@strudel/web/dist/index.js', 'node_modules/@breezystack/lamejs/dist/lamejs.js', 'node_modules/acorn/dist/acorn.mjs', 'node_modules/@codemirror/view/dist/index.js', 'node_modules/@codemirror/lang-javascript/dist/index.js', 'node_modules/@lezer/javascript/dist/index.js', 'node_modules/style-mod/src/style-mod.js', 'node_modules/@marijn/find-cluster-break/src/index.js', 'web/cm-editor.mjs', 'web/cm-controls.mjs', 'web/hll-schema.mjs', 'lib/resolve.mjs', 'lib/analyze.mjs', 'assets', 'listen.html', 'web/listen/page.mjs', 'web/listen/show.mjs', 'web/listen/pool.mjs', 'web/listen/worker.mjs', 'listen/demo.strudel.json', 'listen/audio.json', 'portrait.html', 'limner/schema.mjs'])
+    for (const f of ['index.html', 'examples.html', 'about.html', 'legal.html', '404.html', 'sitemap.xml', 'robots.txt', 'web/icon.svg', 'web/og.png', 'web/strudel.css', 'web/boot.mjs', 'web/mp3.mjs', '.nojekyll', 'lib/index.mjs', 'lib/packs.json', 'lib/packs.mjs', 'songs/demo.strudel', 'songs/demo.notes.json', 'node_modules/@strudel/web/dist/index.js', 'node_modules/@breezystack/lamejs/dist/lamejs.js', 'node_modules/acorn/dist/acorn.mjs', 'node_modules/@codemirror/view/dist/index.js', 'node_modules/@codemirror/lang-javascript/dist/index.js', 'node_modules/@lezer/javascript/dist/index.js', 'node_modules/style-mod/src/style-mod.js', 'node_modules/@marijn/find-cluster-break/src/index.js', 'web/cm-editor.mjs', 'web/cm-controls.mjs', 'web/hll-schema.mjs', 'lib/resolve.mjs', 'lib/analyze.mjs', 'assets', 'listen.html', 'web/listen/page.mjs', 'web/listen/show.mjs', 'web/listen/pool.mjs', 'web/listen/worker.mjs', 'listen/demo.strudel.json', 'listen/audio.json', 'portrait.html', 'limner.html', 'limner/schema.mjs'])
       assert.ok(fs.existsSync(path.join(out, f)), f);
     assert.ok(!fs.existsSync(path.join(out, 'samples.html')), 'the workshop is not deployed');
+    // limner ships because portrait.html and limner.html import it, but only the library: not its suite (the ops golden
+    // alone is 163 KB of fixture), not its CLIs, and not its sheets, which were never deployed before it had a folder.
+    // Asserted against the build above rather than a second one: a full build is ~340s, and this needs no new one.
+    for (const f of ['limner/index.mjs', 'limner/portrait.mjs', 'limner/people.mjs', 'limner/stances.mjs', 'limner/registry.mjs', 'limner/rng.mjs', 'limner/primitives.mjs', 'limner/package.json', 'limner/casts/undead.mjs', 'limner/parts/undead.mjs'])
+      assert.ok(fs.existsSync(path.join(out, f)), `${f} ships`);
+    for (const f of ['limner/test', 'limner/scripts', 'limner/faces.html', 'limner/parts.html', 'limner/casts.html', 'limner/stances.html'])
+      assert.ok(!fs.existsSync(path.join(out, f)), `${f} must not ship`);
+    // the pages reach limner by a relative path, not through an import map: relative because a project page lives under
+    // /<repo>/, and by path because an import map belongs to a document and cannot be given to a worker
+    for (const page of ['portrait.html', 'limner.html']) {
+      const shipped = fs.readFileSync(path.join(out, page), 'utf8');
+      assert.ok(!/<script type="importmap">/.test(shipped), `${page}: no import map to go stale`);
+      for (const m of shipped.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]*limner[^'"]*)['"]/g))
+        assert.ok(m[1].startsWith('./limner/'), `${page}: ${m[1]} must be a relative path into limner`);
+      assert.match(shipped, /from '\.\/limner\/index\.mjs'/, `${page} imports the barrel by path`);
+    }
     const list = JSON.parse(fs.readFileSync(path.join(out, 'songs/index.json'), 'utf8')).map((s) => s.name);
     assert.ok(list.includes('demo.strudel'));
     assert.ok(list.includes('ping.strudel'), 'a song on a deployed pack ships');
@@ -143,29 +159,6 @@ test('the guard above would catch every spelling of a deep import', () => {
   ]) assert.deepEqual(deep(ok), [], `false positive: ${ok}`);
 });
 
-// limner ships because portrait.html imports it, but only the library: not its suite (the ops golden alone is 163 KB of
-// fixture), not its CLIs, and not its sheets, which were never deployed before it had a folder of its own.
-test('the build ships limner the library, and none of its workshop', () => {
-  const out = path.join(ROOT, 'test', '_t_dist_limner');
-  try {
-    build(out);
-    for (const f of ['limner/index.mjs', 'limner/portrait.mjs', 'limner/people.mjs', 'limner/schema.mjs', 'limner/stances.mjs', 'limner/registry.mjs', 'limner/rng.mjs', 'limner/primitives.mjs', 'limner/package.json', 'limner/casts/undead.mjs', 'limner/parts/undead.mjs', 'portrait.html'])
-      assert.ok(fs.existsSync(path.join(out, f)), `${f} ships`);
-    for (const f of ['limner/test', 'limner/scripts', 'limner/faces.html', 'limner/parts.html', 'limner/casts.html', 'limner/stances.html'])
-      assert.ok(!fs.existsSync(path.join(out, f)), `${f} must not ship`);
-    // the page reaches limner by a relative path, not through an import map: relative because a project page lives under
-    // /<repo>/, and by path because an import map is a document's and cannot be given to the workers that load the worlds
-    const shipped = fs.readFileSync(path.join(out, 'portrait.html'), 'utf8');
-    assert.ok(!/<script type="importmap">/.test(shipped), 'no import map to go stale');
-    for (const m of shipped.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]*limner[^'"]*)['"]/g))
-      assert.ok(m[1].startsWith('./limner/'), `${m[1]} must be a relative path into limner`);
-    assert.match(shipped, /from '\.\/limner\/index\.mjs'/);
-  } finally { fs.rmSync(out, { recursive: true, force: true }); }
-});
-
-// npm test names both suites, rather than letting node --test glob for them. node_modules/limner is a symlink to
-// ./limner (the file: dependency), so bare discovery can reach limner's tests twice, or -- once someone moves a file --
-// not at all, and a suite that silently stops running looks exactly like a suite that passes.
 test('npm test names both suites explicitly: glob discovery would walk the node_modules/limner symlink', () => {
   const { scripts } = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
   assert.match(scripts.test, /"test\/\*\.test\.mjs"/, 'the host suite is named');
@@ -234,7 +227,7 @@ test('web/visual/limner.mjs is the only crossing, and it reaches the barrel rath
 // It is also the one page whose graph legitimately holds bare specifiers, because its import map provides them -- so the
 // rule here is that the map covers every one of them, which is exactly what was missed when limner became a package.
 test('every bare specifier in a page\'s module graph is in that page\'s import map', () => {
-  for (const page of ['index.html', 'examples.html', 'portrait.html', 'poses.html', 'listen.html', 'samples.html']) {
+  for (const page of ['index.html', 'examples.html', 'portrait.html', 'poses.html', 'limner.html', 'listen.html', 'samples.html']) {
     const file = path.join(ROOT, page);
     if (!fs.existsSync(file)) continue;
     const html = fs.readFileSync(file, 'utf8');
