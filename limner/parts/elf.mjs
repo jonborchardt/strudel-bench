@@ -4,9 +4,9 @@
 // Here: the vine marks, a tracery at one temple; a leaf circlet that sits on the hair (no HAT_CROWN); a high-collared
 // tunic with leaves embroidered along the neckline; a travelling cloak open at the front with a leaf clasp.
 // parts.html?pack=elf is the sheet.
-import { HATS, TOPS, JACKETS, MAKEUP, NECKLINES, shade, path, ellipse, line, stroke, tag } from '../portrait.mjs';
+import { HATS, TOPS, JACKETS, MAKEUP, NECKLINES, shade, path, ellipse, line, stroke } from '../portrait.mjs';
+import { tagPack, torso } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const leaf = (x, y, s, fill, op = 1) => path(`M ${x} ${y} Q ${x + 6 * s} ${y - 9} ${x + 15 * s} ${y - 2} Q ${x + 7 * s} ${y + 6} ${x} ${y} Z`, { fill, op }); // one leaf from (x, y) toward +x (s 1) or -x (s -1)
 const GOLD = '#c9a03c';
 
@@ -24,7 +24,4 @@ JACKETS.travelCloak = (p) => { const c = p.jacket.color, dark = shade(c, 0.6); r
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const ELF = { makeup: ['vineMarks'], hats: ['leafCirclet'], tops: ['elvenTunic'], jackets: ['travelCloak'] };
-for (const n of ELF.makeup) tag('makeup', n, 'only:elf');
-for (const n of ELF.hats) tag('hat', n, 'only:elf');
-for (const n of ELF.tops) tag('top', n, 'only:elf');
-for (const n of ELF.jackets) tag('jacket', n, 'only:elf');
+tagPack(ELF, 'only:elf');

@@ -38,7 +38,7 @@ export default {
   skins: Object.values(SKIN_COLORS), hairColors: ['auburn', 'copper', 'chestnut', 'saltPepper', 'white'].map((k) => HAIR_COLORS[k]), clothes: [STEEL, IRON, LEATHER, FUR, WOOL, MOSS, OAK, '#3a2f26'],
   pools: { tops: parts('top', { any: ['only:dwarf'] }), jackets: parts('jacket', { any: ['only:dwarf', 'everyday'] }), beards: parts('facialHair', { any: ['only:dwarf', 'everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: parts('graphics', { all: ['everyday'] }) },
   wardrobe: { establish: ['none', 'leatherCap', 'none'], develop: ['leatherCap', 'hornlessHelm', 'none'], climax: ['hornlessHelm', 'hornlessHelm', 'leatherCap'], release: ['none', 'leatherCap'], none: ['none', 'leatherCap', 'hornlessHelm'] },
-  archetypes: DWARVES, archetypeNames: Object.keys(DWARVES), costumes: Object.keys(DWARF_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: DWARF_BUILD, contrast: 1.6, asym: 1.4,
+  archetypes: DWARVES, archetypeNames: Object.keys(DWARVES), costumes: Object.keys(DWARF_COSTUMES), build: DWARF_BUILD, contrast: 1.6, asym: 1.4,
   base: (s) => ({ ears: { pointed: DWARF_EARS[0] + rand(s) * (DWARF_EARS[1] - DWARF_EARS[0]) } }), // the cast's signature as a rule: mostly round, now and then a little drawn out
   limits: { 'ears.pointed': [0, 0.15], 'nose.muzzle': [0, 0], 'build.legs': [0.55, 0.85], 'build.shoulders': [1.05, 1.35], 'build.head': [0.88, 1.08] }, // what a dwarf may not be: tall, long-legged, narrow or pointed of ear. The build bands are the table's row either side of DWARF_BUILD (groupsFor)
 };

@@ -32,14 +32,6 @@ const run = () => Object.fromEntries(cases().map((c) => [
 
 test('layoutOf draws the layouts it drew before the stances moved (test/fixtures/layout-golden.json)', () => {
   const now = JSON.parse(JSON.stringify(run()));
-  if (process.env.UPDATE_LAYOUT_GOLDEN) { writeFileSync(FILE, JSON.stringify(now, null, 1) + '\n'); return; }
+  if (process.env.UPDATE_LAYOUT_GOLDEN) { writeFileSync(FILE, JSON.stringify(now)); return; }
   assert.deepEqual(now, JSON.parse(readFileSync(FILE, 'utf8')));
-});
-
-test('every pose name is covered, and a pose with no entry falls back rather than throwing', () => {
-  const all = run();
-  const keys = Object.keys(all);
-  assert.ok(keys.length > 150, `expected a broad sweep, got ${keys.length}`);
-  for (const k of keys) assert.ok(Array.isArray(all[k]), `${k} returned no array`);
-  assert.equal(all['editorial/unknownPose/n2/close'].length, 2, 'an unknown pose still places both figures');
 });

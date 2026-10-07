@@ -15,8 +15,7 @@
 // hi-hat blinks one actor every few seconds, an fx impact is a graphic flash frame, a riser is a slow push-in, a
 // dropout holds the shot dark with the eyes shut. Deterministic: randomness only from the state's own generator.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY, feetY, stanceOf, STANCES } from './limner.mjs';
-import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, METALLIC, wearable, WHITE, RED, GOLD } from './limner.mjs';
+import { portraitOps, drawOn, eyeY, feetY, stanceOf, STANCES, identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, METALLIC, wearable, WHITE, RED, GOLD } from './limner.mjs';
 import { curtain, cyclorama, voidSet, floorShadow, vignette, sculpture, SCULPTURES } from './sets.mjs';
 import { THEMES } from './themes.mjs';
 

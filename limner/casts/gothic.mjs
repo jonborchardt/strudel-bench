@@ -43,6 +43,6 @@ export default {
   skins: PALE, hairColors: ['jetBlack', 'softBlack', 'auburn', 'platinum', 'silver', 'white'].map((k) => HAIR_COLORS[k]), irises: ['#3a2a22', '#4a5a6a', '#2a2a2a'], clothes: [BLACK, OXBLOOD, IVORY, PLUM, ASH],
   pools: { tops: own('top'), jackets: own('jacket'), beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: [], accessories: ['studEarringLeft', 'studEarringRight', 'hoopLeft', 'hoopRight', 'earCuffLeft', 'earCuffRight', 'velvetChoker'], details: parts('details', { all: ['everyday'] }), graphics: [] },
   wardrobe: { establish: ['none'], develop: ['none', 'mourningHat'], climax: ['none'], release: ['none', 'mourningHat'], none: ['none'] },
-  archetypes: GOTHS, archetypeNames: Object.keys(GOTHS), costumes: Object.keys(GOTHIC_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: buildOf('gothicHuman'), contrast: 1.7, asym: 1,
+  archetypes: GOTHS, archetypeNames: Object.keys(GOTHS), costumes: Object.keys(GOTHIC_COSTUMES), build: buildOf('human'), contrast: 1.7, asym: 1,
   base,
 };

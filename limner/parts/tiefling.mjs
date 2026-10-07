@@ -3,9 +3,9 @@
 // the portrait's own `ears.pointed`, which the cast pins. Two horns rising from the temples and curving back (on the
 // `over` slot, so they come through the hair and over a hat), a sigil burned between the brows wherever this face
 // carries them, and a brocade robe with a standing collar. parts.html?pack=tiefling is the sheet.
-import { TOPS, MAKEUP, NECKLINES, shade, path, ellipse, line, stroke, tag } from '../portrait.mjs';
+import { TOPS, MAKEUP, NECKLINES, shade, path, ellipse, line, stroke } from '../portrait.mjs';
+import { tagPack, torso } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const HORN = '#4a3b39', EMBER = '#8d1f22', GOLD = '#c9a03c';
 
 /** A horn from each temple, up and back over the skull, ridged; laid out for the default head and fitted to this face's width. */
@@ -27,5 +27,4 @@ NECKLINES.brocadeRobe = 'M 164 350 Q 200 374 236 350';
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const TIEFLING = { makeup: ['curvedHorns', 'infernalSigil'], tops: ['brocadeRobe'] };
-for (const n of TIEFLING.makeup) tag('makeup', n, 'only:tiefling');
-for (const n of TIEFLING.tops) tag('top', n, 'only:tiefling');
+tagPack(TIEFLING, 'only:tiefling');

@@ -2,9 +2,9 @@
 // `only:halfling`; the tapered ears, the tunic and the cloak it shares with the other fantasy casts are
 // parts/fantasy.mjs. A patchwork waistcoat over a shirt (squares of other cloth, horn buttons), a quilted coat
 // stitched in diamonds, and a straw cap with a short brim. parts.html?pack=halfling is the sheet.
-import { TOPS, JACKETS, HATS, HAT_CROWN, NECKLINES, shade, path, ellipse, rect, stroke, tag } from '../portrait.mjs';
+import { TOPS, JACKETS, HATS, HAT_CROWN, NECKLINES, shade, path, ellipse, rect, stroke } from '../portrait.mjs';
+import { tagPack, torso } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 
 TOPS.patchworkVest = (p) => { const c = p.top.color, shirt = shade(c, 1.45); return [
   torso('M 72 480 C 86 394, 130 366, 166 352 L 234 352 C 270 366, 314 394, 328 480 Z', shirt),
@@ -26,6 +26,4 @@ HAT_CROWN.strawCap = 138;
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const HALFLING = { tops: ['patchworkVest'], jackets: ['quiltedCoat'], hats: ['strawCap'] };
-for (const n of HALFLING.tops) tag('top', n, 'only:halfling');
-for (const n of HALFLING.jackets) tag('jacket', n, 'only:halfling');
-for (const n of HALFLING.hats) tag('hat', n, 'only:halfling');
+tagPack(HALFLING, 'only:halfling');

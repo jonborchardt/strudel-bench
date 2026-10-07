@@ -34,8 +34,7 @@ precedent, and the four duplicated lines are cheaper than the dependency.
 
 Everything here is reproducible from a seed, and three fixtures say so. **Never regenerate a golden to make a test
 pass.** A moved golden means the drawing or a generator changed; find out why, and regenerate only when the change was
-the point (`node scripts/castgolden.mjs`, `node scripts/opsgolden.mjs`, then read the diff and confirm only the faces
-you expected moved).
+the point (`UPDATE_GOLDEN=1 node --test test/`, then read the diff and confirm only the faces you expected moved).
 
 - `test/fixtures/cast-golden.json` — what the generators invent, for fixed seeds.
 - `test/fixtures/portrait-ops-golden.json` — what the figure draws, for four portraits.
@@ -136,9 +135,8 @@ Nobody can review a face from a description. Render it.
     node scripts/portrait.mjs <hash> --sweep "facialHair.density=0.2,0.6" --sweep "eyes.squint=0,.5"
 
 A `--sweep` prints each cell's own hash, so the one that looks right is a link straight back into the editor. The
-sheets, served by the parent repo's dev server, are the other half: `stances.html` (every stance on one body),
-`parts.html?pack=<name>` (one pack by kind, with tags), `casts.html?cast=<name>` (archetypes and a crowd of sixteen),
-`faces.html` (everything), and `../limner.html` (the explorer: its **editor** tab is every parameter, and `#editor/<hash>` *is* the face).
+sheets, served by the parent repo's dev server, are the other half: `parts.html?pack=<name>` (one pack by kind, with tags), `casts.html?cast=<name>` (archetypes and a crowd of sixteen),
+`faces.html` (everything), and `../limner.html` (the explorer: its **editor** tab is every parameter, its **poses** tab every stance on one body, and `#editor/<hash>` *is* the face).
 
 `scripts/` and `test/` are not published (`files` excludes them), so they may use the parent's dev dependencies —
 `scripts/portrait.mjs` reaches for `playwright-core` for the png path. The published library itself has **no

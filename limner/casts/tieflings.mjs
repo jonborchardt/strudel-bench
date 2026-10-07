@@ -35,8 +35,8 @@ export default {
   // red through rust and plum to violet, slate blue and a dusky pale: a tiefling is not one colour
   skins: ['#a84a3f', '#8d3a3a', '#b05a4a', '#c06a52', '#6e4258', '#8a5a6b', '#5f4a6b', '#4a5570', '#7a8a9a', '#9a6a52', '#6b3a3a', '#b98a74'], hairColors: ['jetBlack', 'softBlack', 'white', 'platinum', 'auburn', 'darkBrown'].map((k) => HAIR_COLORS[k]), irises: ['#d9a22a', '#b3202a', '#2b2220', '#c9a03c'], clothes: [INK, WINE, GOLD, ASH, EMBER, VIOLET],
   pools: { tops: pool('top', 'only:tiefling'), jackets: pool('jacket', 'only:tiefling'), beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: [] },
-  wardrobe: { establish: ['none'], develop: ['none'], climax: ['none'], release: ['none'], none: ['none'] },
-  archetypes: TIEFLINGS, archetypeNames: Object.keys(TIEFLINGS), costumes: Object.keys(TIEFLING_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: TIEFLING_BUILD, contrast: 1.7, asym: 1.3,
+  wardrobe: { none: ['none'] }, // every role
+  archetypes: TIEFLINGS, archetypeNames: Object.keys(TIEFLINGS), costumes: Object.keys(TIEFLING_COSTUMES), build: TIEFLING_BUILD, contrast: 1.7, asym: 1.3,
   base: { makeup: ['curvedHorns'], ears: { pointed: 0.6 }, build: TIEFLING_BUILD }, // the signature every random one in a crowd carries too, the skeleton with it (an identity takes the build from the cast)
   limits: { 'ears.pointed': [0.4, 0.8], 'nose.muzzle': [0, 0] },
 };

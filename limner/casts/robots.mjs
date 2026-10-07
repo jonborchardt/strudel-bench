@@ -6,7 +6,7 @@
 // robot pack (parts/robot.mjs) gives every one the plating's light and some the faceplate, the jaw piece, cheek vents
 // and a status light, and a plated torso. The heads are not skulls: flat-topped boxes, a tall can, a round pod.
 import '../parts/robot.mjs'; // the parts this cast is made of register by name
-import { COSTUMES, FAMILIES, buildOf } from '../people.mjs';
+import { COSTUMES, FAMILIES, buildOf, pickIn } from '../people.mjs';
 import { parts, merge } from '../portrait.mjs';
 import { rand } from '../rng.mjs';
 
@@ -33,15 +33,14 @@ export const ROBOTS = {
   herald: { family: 'squareJaw', costume: 'plated', makeup: ['plating', 'panelSeams', 'cheekVents'], set: merge(machine(CHROME, LIGHTS[0], 'visor', 'matrix', 'fin', 'ridge'), { face: { width: 168, height: 220, corner: 50, jaw: 1, chin: 0.05 }, mouth: { width: 52 }, body: { width: 1.1 }, pose: { turn: -0.15, headTilt: -0.05 } }) },
   tinker: { family: 'wideCheek', costume: 'coated', makeup: ['plating', 'jawSeam', 'statusLight'], set: merge(machine(OLIVE, LIGHTS[3], 'lens', 'slot', 'antenna', 'vent'), { face: { width: 186, height: 190, corner: 52, jaw: 0.97, chin: 0 }, eyes: { spacing: 64, size: 1.2 }, mouth: { width: 50 }, body: { width: 1.05 }, pose: { turn: 0.25, headTilt: 0.12 } }) },
 };
-const pick = (s, a) => a[Math.floor(rand(s) * a.length)];
 /** A random one in a crowd: a metal, a light and a mode for each feature, all from the state's own draws, and the plating's light. */
-const base = (s) => ({ ...machine(pick(s, [GUNMETAL, ENAMEL, BRASS, CHROME, OXIDE, OLIVE]), pick(s, LIGHTS), pick(s, ['lens', 'led', 'visor']), pick(s, ['grille', 'slot', 'speaker', 'matrix']), pick(s, ['none', 'disc', 'antenna', 'bolt', 'fin']), pick(s, ['none', 'vent', 'ridge'])),
+const base = (s) => ({ ...machine(pickIn(s, [GUNMETAL, ENAMEL, BRASS, CHROME, OXIDE, OLIVE]), pickIn(s, LIGHTS), pickIn(s, ['lens', 'led', 'visor']), pickIn(s, ['grille', 'slot', 'speaker', 'matrix']), pickIn(s, ['none', 'disc', 'antenna', 'bolt', 'fin']), pickIn(s, ['none', 'vent', 'ridge'])),
   face: { corner: 40 + rand(s) * 20, jaw: 0.94 + rand(s) * 0.06 }, makeup: ['plating', ...(rand(s) < 0.6 ? ['panelSeams'] : [])] });
 export default {
   name: 'robots', families: FAMILIES,
   skins: [GUNMETAL, ENAMEL, BRASS, CHROME, OXIDE, OLIVE], hairColors: ['#2a2e34'], irises: LIGHTS, clothes: [GUNMETAL, ENAMEL, BRASS, CHROME],
   pools: { tops: parts('top', { any: ['only:robot'] }), jackets: ['trenchCoat', 'fieldJacket'], beards: ['none'], hair: ['bald'], glasses: [], details: [], graphics: [] },
-  wardrobe: { establish: ['none'], develop: ['none'], climax: ['none'], release: ['none'], none: ['none'] },
-  archetypes: ROBOTS, archetypeNames: Object.keys(ROBOTS), costumes: Object.keys(ROBOT_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: buildOf('robot'), contrast: 0.45, asym: 0.4,
+  wardrobe: { none: ['none'] }, // every role
+  archetypes: ROBOTS, archetypeNames: Object.keys(ROBOTS), costumes: Object.keys(ROBOT_COSTUMES), build: buildOf('human'), contrast: 0.45, asym: 0.4,
   base,
 };

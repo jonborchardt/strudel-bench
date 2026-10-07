@@ -36,7 +36,7 @@ export default {
   skins: ['fair', 'lightWarm', 'lightOlive', 'mediumWarm', 'mediumOlive', 'tan', 'brown', 'deepBrown'].map((k) => SKIN_COLORS[k]), hairColors: ['chestnut', 'auburn', 'copper', 'lightBrown', 'darkBlond', 'white'].map((k) => HAIR_COLORS[k]), irises: ['green', 'hazel', 'brown', 'amber'].map((k) => EYE_COLORS[k]), clothes: [WHEAT, BERRY, LEAF, OAK, CREAM, PLUM],
   pools: { tops: pool('top', 'only:halfling'), jackets: pool('jacket', 'only:halfling'), beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: [] },
   wardrobe: { establish: ['none', 'strawCap'], develop: ['strawCap', 'none', 'feltTravelHat'], climax: ['strawCap', 'feltTravelHat'], release: ['none', 'strawCap'], none: ['none', 'strawCap', 'feltTravelHat'] },
-  archetypes: HALFLINGS, archetypeNames: Object.keys(HALFLINGS), costumes: Object.keys(HALFLING_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: HALFLING_BUILD, contrast: 1.3, asym: 1.2,
+  archetypes: HALFLINGS, archetypeNames: Object.keys(HALFLINGS), costumes: Object.keys(HALFLING_COSTUMES), build: HALFLING_BUILD, contrast: 1.3, asym: 1.2,
   base: { ears: { pointed: 0.32 }, build: HALFLING_BUILD }, // the signature every random one in a crowd carries too, the skeleton with it (an identity takes the build from the cast)
   limits: { 'ears.pointed': [0.15, 0.5], 'nose.muzzle': [0, 0], 'build.legs': [0.32, 0.5], 'build.trunk': [0.46, 0.66], 'build.head': [0.62, 0.82], 'build.shoulders': [0.5, 0.72] }, // the build bands are the table's row either side of HALFLING_BUILD: a halfling stands a gnome's height and is the stockier of the two
 };

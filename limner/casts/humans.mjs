@@ -32,6 +32,6 @@ export default {
   skins: Object.values(SKIN_COLORS), hairColors: Object.values(HAIR_COLORS), clothes: [BARK, OLIVE, MOSS, LINEN, CLAY, STONE, SLATE, DARK],
   pools: { tops: pool('top', 'only:human'), jackets: pool('jacket', 'only:human'), beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: [] },
   wardrobe: { establish: ['none', 'none', 'feltTravelHat'], develop: ['none', 'feltTravelHat'], climax: ['feltTravelHat', 'none'], release: ['none'], none: ['none', 'feltTravelHat'] },
-  archetypes: HUMANS, archetypeNames: Object.keys(HUMANS), costumes: Object.keys(HUMAN_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: 'default', contrast: 1.5, asym: 1.3,
+  archetypes: HUMANS, archetypeNames: Object.keys(HUMANS), costumes: Object.keys(HUMAN_COSTUMES), build: 'default', contrast: 1.5, asym: 1.3,
   limits: { 'ears.pointed': [0, 0.15], 'nose.muzzle': [0, 0] }, // what a human may not be: a pointed ear or a muzzle. The editor's menus and sliders are narrowed to this (groupsFor)
 };

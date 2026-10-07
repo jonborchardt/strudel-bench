@@ -5,9 +5,8 @@
 // breastplate, a respirator under dust goggles, a shemagh with goggles pushed up on it over a goggle tan -- in rags,
 // wraps and whatever everyday clothes survived, patched and dirty, in dust, rust and oil.
 import '../parts/wasteland.mjs'; // the parts this cast is made of register by name
-import { COSTUMES, FAMILIES, buildOf } from '../people.mjs';
+import { COSTUMES, FAMILIES, buildOf, pickIn } from '../people.mjs';
 import { parts, HAIR_COLORS } from '../portrait.mjs';
-import { rand } from '../rng.mjs';
 
 const DUST = '#9a8466', RUST = '#8a4a2a', OIL = '#2e2a26', KHAKI = '#6e6448', LEATHER = '#4a3527', OLIVE = '#5e6248', BLEACH = '#b3a684';
 /** What they wear: rags under the tyre-shouldered vest, rags alone, a surviving field jacket, a road sign strapped over a shirt, a shemagh over rags. */
@@ -34,7 +33,7 @@ const pool = (kind) => parts(kind, { any: ['only:wasteland', 'everyday'] }); // 
 const FACE_MARKS = [['sunweathered'], ['sunweathered'], ['sunweathered', 'goggleTan'], ['sootBand'], ['fingerStripes'], ['scarStitched'], ['sunweathered', 'fingerStripes']];
 const CLOTH_MARKS = [['clothGrime'], ['patched'], ['clothGrime', 'patched'], []];
 const TROUSERS = [OIL, KHAKI, LEATHER, OLIVE, '#3e3a32'];
-const signature = (s) => { const a = FACE_MARKS[Math.floor(rand(s) * FACE_MARKS.length)], b = CLOTH_MARKS[Math.floor(rand(s) * CLOTH_MARKS.length)], t = TROUSERS[Math.floor(rand(s) * TROUSERS.length)];
+const signature = (s) => { const a = pickIn(s, FACE_MARKS), b = pickIn(s, CLOTH_MARKS), t = pickIn(s, TROUSERS);
   return { makeup: [...a.filter((n) => n === 'sunweathered' || n === 'goggleTan'), 'grime', ...a.filter((n) => n !== 'sunweathered' && n !== 'goggleTan')], marks: b, pants: { style: 'trousers', color: t }, build: WASTELAND_BUILD }; }; // the sun and the tan under the dirt, paint and soot over it; trousers in the road's colours (a crowd's otherwise follow the hair, and a white-haired one would wear white)
 const HEADS = ['none', 'none', 'none', 'shemagh', 'shemagh', 'scrapHelmet']; // a crowd's heads: mostly bare, a wrap, now and then a helmet
 export default {
@@ -42,7 +41,7 @@ export default {
   skins: ['#d29a74', '#c98f68', '#b9845e', '#b77a55', '#a86a48', '#9a5f40', '#87543a', '#7c4e36', '#6e4430', '#57372a'], // every one of them sun-darkened: no pale skin survives out there
   hairColors: ['jetBlack', 'softBlack', 'darkBrown', 'copper', 'gray', 'white', 'saltPepper'].map((k) => HAIR_COLORS[k]), irises: ['#3a2a22', '#5a6a4a', '#6a7a8a'], clothes: [DUST, RUST, OIL, KHAKI, LEATHER, OLIVE, BLEACH],
   pools: { tops: pool('top'), jackets: pool('jacket'), beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: parts('glasses', { any: ['only:wasteland'], not: ['workshop'] }), details: parts('details', { all: ['everyday'] }), graphics: [] },
-  wardrobe: { establish: HEADS, develop: HEADS, climax: HEADS, release: HEADS, none: HEADS },
-  archetypes: WASTELANDERS, archetypeNames: Object.keys(WASTELANDERS), costumes: Object.keys(WASTELAND_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: WASTELAND_BUILD, contrast: 1.8, asym: 1.3,
+  wardrobe: { none: HEADS }, // every role
+  archetypes: WASTELANDERS, archetypeNames: Object.keys(WASTELANDERS), costumes: Object.keys(WASTELAND_COSTUMES), build: WASTELAND_BUILD, contrast: 1.8, asym: 1.3,
   base: signature,
 };

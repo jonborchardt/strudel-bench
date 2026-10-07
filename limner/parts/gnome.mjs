@@ -3,9 +3,9 @@
 // hat leaning off the crown with a floppy tip, a tinker's leather apron over a shirt with pockets and a strap, and
 // brass goggles (a GLASSES entry, so the generator's own "one memorable thing" can hand them out).
 // parts.html?pack=gnome is the sheet.
-import { TOPS, HATS, HAT_CROWN, GLASSES, NECKLINES, shade, path, ellipse, line, rect, stroke, tag } from '../portrait.mjs';
+import { TOPS, HATS, HAT_CROWN, GLASSES, NECKLINES, shade, path, ellipse, line, rect, stroke } from '../portrait.mjs';
+import { tagPack, torso } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const BRASS = '#b08d3c', LEATHER = '#6b4a30';
 
 // one closed outline, left edge up to the tip and the right edge back down: the old path doubled back through its own
@@ -32,6 +32,4 @@ GLASSES.brassGoggles = () => [ellipse(166, 196, 24, 22, { fill: '#2c3a40', op: 0
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const GNOME = { tops: ['tinkerApron'], hats: ['pointedFeltHat'], glasses: ['brassGoggles'] };
-for (const n of GNOME.tops) tag('top', n, 'only:gnome');
-for (const n of GNOME.hats) tag('hat', n, 'only:gnome');
-for (const n of GNOME.glasses) tag('glasses', n, 'only:gnome');
+tagPack(GNOME, 'only:gnome');

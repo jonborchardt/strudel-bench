@@ -12,9 +12,8 @@
 // pinned per kind in KINDS; what is drawn on and what is worn is the alien pack (parts/alien.mjs). An archetype is one
 // kind; a random one in a crowd draws its kind, body and all, from the cast's own `base`.
 import '../parts/alien.mjs'; // the parts this cast is made of register by name
-import { COSTUMES, FAMILIES, buildOf } from '../people.mjs';
+import { COSTUMES, FAMILIES, buildOf, pickIn } from '../people.mjs';
 import { parts, merge } from '../portrait.mjs';
-import { rand } from '../rng.mjs';
 
 const SILVER = '#a9b2b8', VOID = '#1e2230', VIOLET = '#4a3a6a', MOSS = '#3e5a3a', GOLD = '#c9a03c', BONE = '#d8d4cc', RUST = '#7a3b2a', CYAN = '#6fe0ff';
 /** What they wear: the silver suit, the envoy's robe, a flight crew's one-piece, a warrior's banded plate and the nordic's high collar, each in two colourings. */
@@ -67,12 +66,12 @@ export const ALIENS = {
   nordicEmissary: { family: 'longMidface', costume: 'nordicWhite', makeup: KINDS.nordic.makeup, set: { ...withKind('nordic'), skin: SKINS.nordic[0], body: { width: 0.92 }, pose: { turn: 0.2 } } },
 };
 /** A random one in a crowd: a kind, its head, its body, its skin and what it carries, all from the state's own draws. */
-const base = (s) => { const k = KIND_NAMES[Math.floor(rand(s) * KIND_NAMES.length)], sk = SKINS[k], hs = HAIRS[k]; return { ...withKind(k), skin: sk[Math.floor(rand(s) * sk.length)], ...(hs ? { hairColor: hs[Math.floor(rand(s) * hs.length)] } : {}) }; };
+const base = (s) => { const k = pickIn(s, KIND_NAMES), sk = SKINS[k], hs = HAIRS[k]; return { ...withKind(k), skin: pickIn(s, sk), ...(hs ? { hairColor: pickIn(s, hs) } : {}) }; };
 export default {
   name: 'aliens', families: { fineBoned: FAMILIES.fineBoned, roundSoft: FAMILIES.roundSoft, heavyBrow: FAMILIES.heavyBrow, longMidface: FAMILIES.longMidface },
   skins: Object.values(SKINS).flat(), hairColors: HAIRS.nordic, irises: ['#0b0b0f', '#1a1a1a', '#d9b02a', '#9cc8e0'], clothes: [SILVER, VOID, VIOLET, MOSS, GOLD, BONE, RUST],
   pools: { tops: parts('top', { any: ['only:alien'] }), jackets: [], beards: ['none'], hair: ['bald'], glasses: [], details: [], graphics: [] },
-  wardrobe: { establish: ['none'], develop: ['none'], climax: ['none'], release: ['none'], none: ['none'] },
-  archetypes: ALIENS, archetypeNames: Object.keys(ALIENS), costumes: Object.keys(ALIEN_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: ALIEN_BUILDS.green, contrast: 1.5, asym: 0.6,
+  wardrobe: { none: ['none'] }, // every role
+  archetypes: ALIENS, archetypeNames: Object.keys(ALIENS), costumes: Object.keys(ALIEN_COSTUMES), build: ALIEN_BUILDS.green, contrast: 1.5, asym: 0.6,
   base,
 };

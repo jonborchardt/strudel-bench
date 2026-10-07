@@ -155,9 +155,9 @@
 import {
   archetype, dress, renderPortrait, renderFigure, portraitOps, toSvg, drawOn,
   CASTS, ANATOMY, buildOf, STANCES, stanceOf, EXPRESSIONS, COSTUME_FAMILIES, PROP_STYLES,
-  PACKS, REGISTRIES, parts, tagsOf, characterFrom, seed, prng, eyeY, mouthY, feetY, CHIN_Y,
+  PACKS, REGISTRIES, parts, tagsOf, characterFrom, seed, prng, eyeY, mouthY, feetY, CHIN_Y, COLORS,
 } from './limner/index.mjs';
-import { groupsFor, PALETTES, blank, params, encode, decode, setOv, at, labelOf, presetMatch, report, idle } from './limner/schema.mjs';
+import { groupsFor, blank, params, encode, decode, setOv, at, labelOf, presetMatch, report, idle } from './limner/schema.mjs';
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, props = {}, html = '') => { const n = document.createElement(tag); Object.assign(n, props); if (html) n.innerHTML = html; return n; };
@@ -256,7 +256,7 @@ for (const [id, label] of TABS) $('tabs').append(el('button', { id: 'tab-' + id,
 // =====================================================================================================
 const numeric = (c) => typeof c.options?.[0] === 'number';
 let st = blank(), hash = '', controls = [], built = null, raf = 0, t0 = 0;
-document.body.insertAdjacentHTML('beforeend', Object.entries(PALETTES).map(([k, v]) => `<datalist id="pal-${k}">${Object.values(v).map((h) => `<option value="${h}">`).join('')}</datalist>`).join(''));
+document.body.insertAdjacentHTML('beforeend', Object.entries(COLORS).map(([k, v]) => `<datalist id="pal-${k}">${Object.values(v).map((h) => `<option value="${h}">`).join('')}</datalist>`).join(''));
 
 const opts = (c) => (c.options ?? []).filter((o) => !(c.kind === 'multi' && o === 'none')).map((o, i) => `<option value="${esc(o)}">${esc(c.labels?.[i] ?? o)}</option>`).join('');
 const navBtns = '<span class="nav"><button data-nav="-1" tabindex="-1">&lsaquo;</button><button data-nav="1" tabindex="-1">&rsaquo;</button></span>'; // previous / next through the list, wrapping
@@ -533,11 +533,10 @@ function paintAnatomy() {
   const order = Object.keys(ANATOMY).sort((a, b) => ANATOMY[a].height - ANATOMY[b].height);
   const row = el('div', { className: 'row ground' });
   // Who stands in for each row, named: finding the cast whose build equals the row's put a sci-fi crewman on the human
-  // and hologram rows (every all-1s build is equal, and the humans' build is 'default') and a human on any row no cast
+  // row (every all-1s build is equal, and the humans' build is 'default') and a human on any row no cast
   // builds on (the half-orc, the grey and reptilian kinds, whose cast's own build is the green one's).
   const SITTER = { human: ['humans'], elf: ['elves'], dwarf: ['dwarves'], halfling: ['halflings'], gnome: ['gnomes'], orc: ['orcs'], halfOrc: ['orcs', 'campRunner'], dragonborn: ['dragonborn'], tiefling: ['tieflings'],
-    scifiHuman: ['scifi'], cyborg: ['cyborgs'], greyAlien: ['aliens', 'greyWatcher'], greenAlien: ['aliens', 'greenScout'], reptilianAlien: ['aliens', 'reptilianWarlord'], hologram: ['holograms'], postApocalypticHuman: ['wastelanders'], steampunkHuman: ['steampunks'],
-    gothicHuman: ['gothic', 'count'], noirHuman: ['noir'], synthwaveHuman: ['synthwave'], punkHuman: ['punks'], robot: ['robots', 'sentinel'] };
+    cyborg: ['cyborgs'], greyAlien: ['aliens', 'greyWatcher'], greenAlien: ['aliens', 'greenScout'], reptilianAlien: ['aliens', 'reptilianWarlord'], postApocalypticHuman: ['wastelanders'], steampunkHuman: ['steampunks'] };
   for (const race of order) {
     const b = buildOf(race);
     const [cast, name] = SITTER[race] ?? ['humans'];

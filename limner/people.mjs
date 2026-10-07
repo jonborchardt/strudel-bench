@@ -172,6 +172,8 @@ export const ARCHETYPES = {
 export const ARCHETYPE_NAMES = Object.keys(ARCHETYPES);
 const TORSOS = { narrow: 0.9, average: 1, broad: 1.14, heavy: 1.22, lanky: 0.92 };
 const AGE_DETAILS = { young: [], mid: ['underEyeLines'], old: ['crowsFeet', 'foreheadLines', 'underEyeLines'] };
+/** One of `list`, on one draw from the state's generator: what every cast's own signature picks with. */
+export const pickIn = (s, list) => pickFrom(list, rand(s));
 const choose = (s, v, all) => (Array.isArray(v) ? v[Math.floor(rand(s) * v.length)] : v ?? all[Math.floor(rand(s) * all.length)]);
 
 /** A stable person of `cast` from one of its archetypes: `{ id, name, base, home, torso }`, `base` what every portrait of them starts from, `home` the styling they arrive in. The seed jitters the face inside the archetype, so two people of one archetype differ; the cast's `asym` and `contrast` dials and its `build` (when not 'default') go on the base. An archetype's own `skins`/`hairColors` name SKIN_COLORS/HAIR_COLORS entries; unnamed, the cast's palettes are drawn from. */
@@ -248,7 +250,6 @@ export function dress(idn, styling = {}) {
  *  person's own, `figure` over theirs (saturation grades every colour toward grey, keeping its value). */
 export const LOOKS = {
   noir: { light: { amount: 1, contrast: 2 }, figure: { saturation: 0.08 }, makeup: ['noirKey'] }, // hard light, nearly black and white; the dials alone only grey a face, so the look brings the noir pack's key (half the face in hard shadow, a brim's shadow over the eyes, a rim on the dark jaw), which draws nothing if that pack is not loaded
-  noirRed: { light: { amount: 1, contrast: 2 }, figure: { saturation: 0.3 }, makeup: ['noirKey'] }, // the same, with a little blood left in the colour
 };
 
 /** The anatomy every fantasy cast is built from, exactly as published: every figure in **head heights** (the head
@@ -274,20 +275,12 @@ export const ANATOMY = {
   halfOrc: { height: 1.06, totalHeight: [6.8, 7.6], shoulderWidth: [2.3, 2.8], torsoLength: [2.3, 2.7], armLength: [3, 3.3], legLength: [3.3, 3.9], handSize: [0.78, 0.92], footLength: [1, 1.12] },
   dragonborn: { height: 1.13, totalHeight: [6.5, 7.5], shoulderWidth: [2.5, 3.1], torsoLength: [2.5, 2.9], armLength: [2.8, 3.3], legLength: [3.1, 3.7], handSize: [0.82, 1], footLength: [1, 1.2] },
   tiefling: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.82], footLength: [0.95, 1.08] },
-  scifiHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
   cyborg: { height: 1.03, totalHeight: [7, 8], shoulderWidth: [2.1, 2.6], torsoLength: [2.2, 2.7], armLength: [2.8, 3.3], legLength: [3.5, 4.2], handSize: [0.72, 0.9], footLength: [0.95, 1.15] },
   greyAlien: { height: 0.92, totalHeight: [7.5, 9], shoulderWidth: [1.4, 1.8], torsoLength: [1.8, 2.2], armLength: [3.3, 4], legLength: [3.4, 4.2], handSize: [0.65, 0.8], footLength: [0.8, 0.95] },
   greenAlien: { height: 0.95, totalHeight: [6.8, 8], shoulderWidth: [1.8, 2.3], torsoLength: [2.1, 2.5], armLength: [2.9, 3.5], legLength: [3.3, 4], handSize: [0.7, 0.85], footLength: [0.9, 1.05] },
   reptilianAlien: { height: 1.08, totalHeight: [6.5, 7.5], shoulderWidth: [2.3, 2.9], torsoLength: [2.4, 2.9], armLength: [2.9, 3.4], legLength: [3.1, 3.8], handSize: [0.8, 1], footLength: [1, 1.2] },
-  hologram: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
   postApocalypticHuman: { height: 1, totalHeight: [6.8, 7.8], shoulderWidth: [1.9, 2.4], torsoLength: [2.2, 2.6], armLength: [2.7, 3.2], legLength: [3.4, 4], handSize: [0.68, 0.8], footLength: [0.95, 1.08] },
   steampunkHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.5], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.82], footLength: [0.95, 1.08] },
-  // the genre casts, every one sized against the human: a row of their own so each stands in the lineup as itself
-  gothicHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
-  noirHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
-  synthwaveHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
-  punkHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
-  robot: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
 };
 /** `build` keys by their column, in the order the portrait lists them. */
 const COLUMN = { trunk: 'torsoLength', legs: 'legLength', shoulders: 'shoulderWidth', arms: 'armLength', hands: 'handSize', feet: 'footLength' };

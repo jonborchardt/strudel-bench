@@ -9,9 +9,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES as EDITORIAL } from '../web/visual/tableau.mjs';
-import { CASTS, THEMES, PACKS } from '../web/visual/themes.mjs';
-import { PACKS as LIMNER_PACKS } from 'limner';
-const { FANTASY } = LIMNER_PACKS.fantasy;
+import { THEMES } from '../web/visual/themes.mjs';
+import { CASTS, PACKS } from 'limner';
+const { FANTASY } = PACKS.fantasy;
 import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES, ANATOMY, buildOf, COSTUMES } from 'limner';
 import { portraitOps, toSvg, drawOn, parts, tagsOf, feetY, headBox } from 'limner';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
@@ -155,7 +155,7 @@ test('every race is built to the anatomy table: its height against a human\'s, a
   assert.ok(Math.abs(tall('human') - tall('tiefling')) < 8, 'a tiefling stands as a human does');
   assert.ok(tall('elf') > tall('human'), 'an elf is taller than a human, not shorter');
   const order = Object.keys(ANATOMY).sort((a, c) => Math.round(tall(a) / 10) - Math.round(tall(c) / 10) || a.localeCompare(c)); // the two ties are real, so they sort by name rather than by a unit of rounding
-  assert.deepEqual(order, ['gnome', 'halfling', 'dwarf', 'greyAlien', 'greenAlien', 'gothicHuman', 'hologram', 'human', 'noirHuman', 'postApocalypticHuman', 'punkHuman', 'robot', 'scifiHuman', 'steampunkHuman', 'synthwaveHuman', 'tiefling', 'cyborg', 'elf', 'halfOrc', 'reptilianAlien', 'orc', 'dragonborn'], 'and the rest line up shortest to tallest (the human-statured rows tie, by name)');
+  assert.deepEqual(order, ['gnome', 'halfling', 'dwarf', 'greyAlien', 'greenAlien', 'human', 'postApocalypticHuman', 'steampunkHuman', 'tiefling', 'cyborg', 'elf', 'halfOrc', 'reptilianAlien', 'orc', 'dragonborn'], 'and the rest line up shortest to tallest (the human-statured rows tie, by name)');
 });
 
 test('every cast carries the build the table solves for it, so no cast drifts off ANATOMY by hand', () => {

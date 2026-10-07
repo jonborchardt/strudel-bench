@@ -3,9 +3,9 @@
 // corners, so a wide mouth carries them wide and a smile lifts them with it; a riveted iron cap with cheek plates
 // and a bone ridge over the crown; a hide shirt with fur at the shoulders and a strap across the chest; a clan
 // tattoo of chevrons down the chest. parts.html?pack=orc is the sheet.
-import { TOPS, JACKETS, HATS, HAT_CROWN, MAKEUP, MARKS, NECKLINES, shade, path, ellipse, stroke, tag } from '../portrait.mjs';
+import { TOPS, JACKETS, HATS, HAT_CROWN, MAKEUP, MARKS, NECKLINES, shade, path, ellipse, stroke } from '../portrait.mjs';
+import { tagPack, torso } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const BONE = '#e8dcc0', INK = '#1f2a22';
 
 /** Two tusks, rooted on the mouth's own parting and rising in front of the upper lip. The root is not placed beside
@@ -43,8 +43,4 @@ MARKS.clanTattoo = { body: () => [path('M 150 400 L 200 388 L 250 400', stroke(I
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const ORC = { makeup: ['tusks'], hats: ['boneHelm'], tops: ['hideArmor'], jackets: ['wolfPelt'], marks: ['clanTattoo'] };
-for (const n of ORC.makeup) tag('makeup', n, 'only:orc');
-for (const n of ORC.hats) tag('hat', n, 'only:orc');
-for (const n of ORC.tops) tag('top', n, 'only:orc');
-for (const n of ORC.jackets) tag('jacket', n, 'only:orc');
-for (const n of ORC.marks) tag('marks', n, 'only:orc');
+tagPack(ORC, 'only:orc');

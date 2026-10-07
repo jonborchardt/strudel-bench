@@ -6,12 +6,11 @@
 // Then the wardrobe: a fedora with a pinched crown and its brim snapped down, a patrolman's cap, a double-breasted
 // pinstripe, a trench with its collar up, a patrol tunic, an evening gown under a fur stole, pearls, a loosened tie,
 // and a cigarette whose smoke curls. parts.html?pack=noir is the sheet.
-import { TOPS, JACKETS, HATS, HAT_CROWN, MAKEUP, PROPS, ACCESSORIES, NECKLINES, facePath, mapX, mapXY, shade, path, ellipse, rect, line, stroke, clip, UNCLIP, tag } from '../portrait.mjs';
+import { TOPS, JACKETS, HATS, HAT_CROWN, MAKEUP, PROPS, ACCESSORIES, NECKLINES, facePath, mapX, mapXY, shade, path, ellipse, rect, line, stroke, clip, UNCLIP } from '../portrait.mjs';
+import { tagPack, torso, sideOf } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const SHOULDERS = 'M 62 480 C 76 386, 122 356, 160 346 L 240 346 C 278 356, 324 386, 338 480 Z';
 const SHIRT = '#e8e4dc', INK = '#120c0a', BRASS = '#b89a52';
-const far = (p) => -(p.light?.side || -1); // the side the shadow falls on: the planes light the `side` cheek
 
 // --- the key light ----------------------------------------------------------------------------------------------
 // Hard light from one side: a single shadow shape over the far half of the face, its edge running down the forehead,
@@ -23,20 +22,20 @@ const far = (p) => -(p.light?.side || -1); // the side the shadow falls on: the 
 const BRIMMED = new Set(['fedora', 'noirCap', 'wideBrimFelt', 'cowboy', 'bucketHat', 'sunHat', 'feltTravelHat', 'flatCap', 'baseballCap', 'dadCap', 'snapback', 'truckerCap']);
 const headOutline = (p) => mapX([path(facePath(p))], (x) => x - 8 * (p.pose?.turn ?? 0))[0].d;
 const keyShadow = (p) => {
-  const f = far(p), X = (d) => 200 + f * d, ey = p.eyes.y, my = p.mouth.y, nt = ey + 8 + p.nose.length, bot = 112 + p.face.height + 16 * p.face.chin + 30;
+  const f = -sideOf(p), X = (d) => 200 + f * d, ey = p.eyes.y, my = p.mouth.y, nt = ey + 8 + p.nose.length, bot = 112 + p.face.height + 16 * p.face.chin + 30;
   const edge = `M ${X(20)} 60 C ${X(14)} 100, ${X(4)} ${ey - 44}, ${X(3)} ${ey - 22} C ${X(2)} ${ey - 12}, ${X(9)} ${ey - 6}, ${X(7)} ${ey + 8} C ${X(5)} ${ey + 22}, ${X(9)} ${nt - 16}, ${X(13)} ${nt - 4} C ${X(15)} ${nt + 4}, ${X(-4)} ${nt + 4}, ${X(-14)} ${nt + 9} C ${X(-6)} ${nt + 14}, ${X(4)} ${my - 8}, ${X(4)} ${my} C ${X(4)} ${my + 16}, ${X(10)} ${my + 34}, ${X(22)} ${bot}`; // the terminator: bowed round the forehead, round the far brow and down the nose's far side, the nose's own shadow thrown across the upper lip, and out again round the chin
   return [path(`${edge} L ${X(240)} ${bot} L ${X(240)} 60 Z`, { fill: INK, op: 0.52 }), path(`${edge} L ${X(-240)} ${bot} L ${X(-240)} 60 Z`, { fill: '#ffffff', op: 0.07 })]; // the dark side, and the lit side a step brighter
 };
 const brimShadow = (p) => { const ey = p.eyes.y; return [path(`M 0 40 L 400 40 L 400 ${ey - 4} C 300 ${ey - 6}, 260 ${ey + 9}, 200 ${ey + 9} C 140 ${ey + 9}, 100 ${ey - 6}, 0 ${ey - 4} Z`, { fill: INK, op: 0.42 })]; };
-const rim = (p) => { const f = far(p), w = p.face.width / 2, ey = p.eyes.y, X = (d) => 200 + f * d; return [clip(`M ${X(w * 0.5)} ${ey + 4} L ${X(260)} ${ey + 4} L ${X(260)} 480 L ${X(w * 0.5)} 480 Z`), path(headOutline(p), stroke('#ffffff', 5, 0.5)), UNCLIP]; };
+const rim = (p) => { const f = -sideOf(p), w = p.face.width / 2, ey = p.eyes.y, X = (d) => 200 + f * d; return [clip(`M ${X(w * 0.5)} ${ey + 4} L ${X(260)} ${ey + 4} L ${X(260)} 480 L ${X(w * 0.5)} 480 Z`), path(headOutline(p), stroke('#ffffff', 5, 0.5)), UNCLIP]; };
 // the far ear is outside the outline's clip, so it gets its own shade, put where ears() puts it on a turn (the ears ride
 // 4 and swing behind the head; this slot rides 12)
 const earShade = (p, o, dy = 0, ry = 27) => { const t = p.pose?.turn ?? 0, a = t * t, k = p.face.width / 156, z = p.ears?.size ?? 1, back = o === Math.sign(t), squash = back ? 1 - 0.55 * a : 1 + 0.2 * a, cx = 200 + o * 78 - 15 * o * (1 - squash) + (back ? -o * 14 * a : o * 3 * a); return ellipse(200 + k * (cx - 200) - 8 * t, 212 + p.eyes.y - 196 + dy, 15 * k * squash * z, ry * z, { fill: INK, op: 0.5 }); }; // where ears() puts the ear on side o, fitted to the face
 const outside = (p, ops) => [clip(`M -100 -100 L 500 -100 L 500 600 L -100 600 Z ${headOutline(p)}`, 'evenodd'), ...ops, UNCLIP]; // only what shows past the head: an ear swung behind it is not shaded through the cheek
-const farEar = (p) => outside(p, [earShade(p, far(p))]);
+const farEar = (p) => outside(p, [earShade(p, -sideOf(p))]);
 MAKEUP.noirKey = {
   face: (p) => [...farEar(p), clip(headOutline(p)), ...keyShadow(p), ...(BRIMMED.has(p.hat?.style) ? brimShadow(p) : []), ...rim(p), UNCLIP],
-  neck: (p) => { const f = far(p), w = Math.min(p.neck.width, p.face.width * p.face.jaw * 0.8) / 2; return [path(`M ${200 + f * 2} 260 L ${200 + f * w} 260 L ${200 + f * w} 346 L ${200 + f * (w + 14)} 400 L ${200 + f * 2} 400 Z`, { fill: INK, op: 0.45 })]; }, // the neck's far half, flaring with it into the shoulder: garments come over its base
+  neck: (p) => { const f = -sideOf(p), w = Math.min(p.neck.width, p.face.width * p.face.jaw * 0.8) / 2; return [path(`M ${200 + f * 2} 260 L ${200 + f * w} 260 L ${200 + f * w} 346 L ${200 + f * (w + 14)} 400 L ${200 + f * 2} 400 Z`, { fill: INK, op: 0.45 })]; }, // the neck's far half, flaring with it into the shoulder: garments come over its base
 };
 // The light through a venetian blind: the room in shadow and slanted bars of light across the figure and the wall behind.
 MAKEUP.noirBlinds = { front: () => { const bars = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => { const y = 30 + i * 62; return `M -60 ${y + 60} L 460 ${y - 50} L 460 ${y - 20} L -60 ${y + 90} Z`; }).join(' '); return [path(`M -60 -60 L 460 -60 L 460 560 L -60 560 Z ${bars}`, { fill: INK, op: 0.3, rule: 'evenodd' })]; } }; // the room dark, and the bars of light through the slats
@@ -63,7 +62,7 @@ MAKEUP.cigarette = {
 /** A fedora: a crown that tapers to a teardrop pinch with a crease down its top, a grosgrain band with its bow at
  *  the side, and a wide brim snapped down at the front (its front edge dips below the crown) and turned up at the
  *  sides. The crown's far side is in shadow, the brim's top edge catches the light. */
-HATS.fedora = (p) => { const c = p.hat.color, dark = shade(c, 0.55), f = far(p); return mapXY([ // authored 8 high, worn low
+HATS.fedora = (p) => { const c = p.hat.color, dark = shade(c, 0.55), f = -sideOf(p); return mapXY([ // authored 8 high, worn low
   path('M 140 134 C 138 110, 148 88, 162 78 C 170 71, 184 68, 192 72 Q 200 80 208 72 C 216 68, 230 71, 238 78 C 252 88, 262 110, 260 134 Z', { fill: c }), // the crown, pinched in at the top front
   path(`M ${200 + f * 4} 76 Q ${200 + f * 30} 66 ${200 + f * 38} 78 C ${200 + f * 52} 88, ${200 + f * 62} 110, ${200 + f * 60} 134 L ${200 + f * 4} 134 Z`, { fill: '#000000', op: 0.3 }), // its far side, out of the light
   path('M 192 74 Q 200 82 208 74 Q 204 98 200 104 Q 196 98 192 74 Z', { fill: dark, op: 0.8 }), // the crease down the top
@@ -88,7 +87,7 @@ HATS.noirCap = (p) => { const c = p.hat.color, band = p.hat.accent ?? shade(c, 0
 HAT_CROWN.noirCap = 134;
 /** A little tilted hat perched on one side of the head, and its net veil falling over the eyes: no crown line, it sits
  *  on the hair as drawn. The net is two sets of fine diagonals clipped to the veil, with a dot at every other crossing. */
-HATS.noirVeil = (p) => { const c = p.hat.color, f = -far(p), X = (d) => 200 + f * d, ey = p.eyes.y, veil = `M ${X(-6)} 96 C ${X(-44)} 100, ${X(-74)} 128, ${X(-76)} 168 C ${X(-78)} ${ey + 4}, ${X(-60)} ${ey + 20}, ${X(-40)} ${ey + 24} Q ${X(20)} ${ey + 34} ${X(80)} ${ey + 14} L ${X(78)} 100 Z`;
+HATS.noirVeil = (p) => { const c = p.hat.color, f = sideOf(p), X = (d) => 200 + f * d, ey = p.eyes.y, veil = `M ${X(-6)} 96 C ${X(-44)} 100, ${X(-74)} 128, ${X(-76)} 168 C ${X(-78)} ${ey + 4}, ${X(-60)} ${ey + 20}, ${X(-40)} ${ey + 24} Q ${X(20)} ${ey + 34} ${X(80)} ${ey + 14} L ${X(78)} 100 Z`;
   const net = []; for (let i = -20; i < 30; i++) { const x = 60 + i * 9; net.push(line(x, 60, x + 200, 260, stroke('#101010', 0.8, 0.5)), line(x + 200, 60, x, 260, stroke('#101010', 0.8, 0.5))); }
   return [
     path(`M ${X(-8)} 94 C ${X(-4)} 74, ${X(58)} 62, ${X(76)} 78 L ${X(80)} 96 C ${X(62)} 106, ${X(8)} 110, ${X(-8)} 104 Z`, { fill: c }), // the hat, tipped toward the light
@@ -134,7 +133,7 @@ TOPS.noirGown = (p) => { const c = p.top.color, bodice = 'M 98 700 L 104 440 C 1
 // --- jackets ------------------------------------------------------------------------------------------------------
 /** A trench coat with its collar turned up against the rain: the collar standing either side of the neck, wide
  *  lapels, the storm flap over one side of the chest, epaulettes, a belt with its buckle. */
-JACKETS.noirTrench = (p) => { const c = p.jacket.color, dark = shade(c, 0.6), lit = shade(c, 1.2), f = far(p); return [
+JACKETS.noirTrench = (p) => { const c = p.jacket.color, dark = shade(c, 0.6), lit = shade(c, 1.2), f = -sideOf(p); return [
   torso('M 56 480 C 66 386, 114 356, 158 346 L 242 346 C 286 356, 334 386, 344 480 Z', c),
   path('M 158 347 L 202 400 L 172 456 L 132 364 Z', { fill: lit }), path('M 242 347 L 198 400 L 228 456 L 268 364 Z', { fill: lit }), // the lapels
   path('M 158 347 L 202 400 L 172 456', stroke(dark, 2.5, 0.9, 'butt')), path('M 242 347 L 198 400 L 228 456', stroke(dark, 2.5, 0.9, 'butt')),
@@ -163,4 +162,4 @@ ACCESSORIES.noirLooseTie = { at: 'tie', ops: (p) => [path('M 192 376 L 200 396 L
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const NOIR = { hats: ['fedora', 'noirCap', 'noirVeil'], tops: ['noirDoubleBreasted', 'noirTunic', 'noirGown'], jackets: ['noirTrench'], makeup: ['noirKey', 'noirBlinds', 'noirEyeLight', 'cigarette'], props: ['noirStole', 'noirCollarUp'], accessories: ['noirPearls', 'noirLooseTie'] };
-for (const [kind, names] of [['hat', NOIR.hats], ['top', NOIR.tops], ['jacket', NOIR.jackets], ['makeup', NOIR.makeup], ['props', NOIR.props], ['accessories', NOIR.accessories]]) for (const n of names) tag(kind, n, 'only:noir');
+tagPack(NOIR, 'only:noir');

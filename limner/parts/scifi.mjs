@@ -6,22 +6,21 @@
 // the diagonal, a padded armour shell with chest plates and a power cell. One hat, an open-face flight helmet with
 // its visor raised; a HUD visor band; a comm link over the ear; and a temple implant strip, the one face detail.
 // parts.html?pack=scifi is the sheet.
-import { TOPS, JACKETS, HATS, HAT_CROWN, GLASSES, ACCESSORIES, MAKEUP, NECKLINES, JACKET_EDGE, shade, mix, soft, path, rect, ellipse, stroke, tag } from '../portrait.mjs';
+import { TOPS, JACKETS, HATS, HAT_CROWN, GLASSES, ACCESSORIES, MAKEUP, NECKLINES, JACKET_EDGE, shade, mix, soft, path, rect, ellipse, stroke } from '../portrait.mjs';
+import { tagPack, torso, f1 } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const GLOW = '#7fe3ff', AMBER = '#ffc45a', PALE = '#d8dde3', METAL = '#9aa3ad';
 const SHOULDERS = 'M 64 480 C 78 386, 124 356, 160 346 L 240 346 C 276 356, 322 386, 336 480 Z';
-const r1 = (v) => Math.round(v * 10) / 10;
 /** An ellipse as a path (M/C only, so it maps and clips like any other outline). */
-const oval = (cx, cy, rx, ry) => { const k = 0.5523, P = (x, y) => `${r1(x)} ${r1(y)}`; return `M ${P(cx - rx, cy)} C ${P(cx - rx, cy - k * ry)}, ${P(cx - k * rx, cy - ry)}, ${P(cx, cy - ry)} C ${P(cx + k * rx, cy - ry)}, ${P(cx + rx, cy - k * ry)}, ${P(cx + rx, cy)} C ${P(cx + rx, cy + k * ry)}, ${P(cx + k * rx, cy + ry)}, ${P(cx, cy + ry)} C ${P(cx - k * rx, cy + ry)}, ${P(cx - rx, cy + k * ry)}, ${P(cx - rx, cy)} Z`; };
+const oval = (cx, cy, rx, ry) => { const k = 0.5523, P = (x, y) => `${f1(x)} ${f1(y)}`; return `M ${P(cx - rx, cy)} C ${P(cx - rx, cy - k * ry)}, ${P(cx - k * rx, cy - ry)}, ${P(cx, cy - ry)} C ${P(cx + k * rx, cy - ry)}, ${P(cx + rx, cy - k * ry)}, ${P(cx + rx, cy)} C ${P(cx + rx, cy + k * ry)}, ${P(cx + k * rx, cy + ry)}, ${P(cx, cy + ry)} C ${P(cx - k * rx, cy + ry)}, ${P(cx - rx, cy + k * ry)}, ${P(cx - rx, cy)} Z`; };
 /** A point light: a halo, the lamp, a hot core. */
 const glow = (cx, cy, r, c) => [...soft(cx, cy, r * 3.2, r * 3.2, c, 0.5), ellipse(cx, cy, r, r, { fill: c }), ellipse(cx - r * 0.25, cy - r * 0.25, r * 0.45, r * 0.45, { fill: '#ffffff', op: 0.85 })];
 /** A light strip along `d`: a wide faint halo, the tube, a white-hot line down its middle. */
 const strip = (d, c, w = 1) => [path(d, stroke(c, 9 * w, 0.14)), path(d, stroke(c, 3.4 * w, 0.6)), path(d, stroke('#ffffff', 1.2 * w, 0.85))];
 /** A seam: a dark valley and the lit lip beside it (dx, dy away from the light). */
-const seam = (d, dark, op = 0.5, dx = 1.6, dy = 1.2) => [path(d, stroke(dark, 2.2, op, 'butt')), path(d.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g, (_, x, y) => `${r1(+x + dx)} ${r1(+y + dy)}`), stroke('#ffffff', 1, op * 0.35, 'butt'))];
+const seam = (d, dark, op = 0.5, dx = 1.6, dy = 1.2) => [path(d, stroke(dark, 2.2, op, 'butt')), path(d.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g, (_, x, y) => `${f1(+x + dx)} ${f1(+y + dy)}`), stroke('#ffffff', 1, op * 0.35, 'butt'))];
 /** A plate: its face, a lit top edge, a shadow under it on what it sits on. */
-const plate = (d, fill, dark) => [path(d.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g, (_, x, y) => `${r1(+x + 2)} ${r1(+y + 4)}`), { fill: '#000000', op: 0.22 }), path(d, { fill }), path(d, stroke(dark, 1.6, 0.7)), path(d, stroke('#ffffff', 1, 0.18))];
+const plate = (d, fill, dark) => [path(d.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g, (_, x, y) => `${f1(+x + 2)} ${f1(+y + 4)}`), { fill: '#000000', op: 0.22 }), path(d, { fill }), path(d, stroke(dark, 1.6, 0.7)), path(d, stroke('#ffffff', 1, 0.18))];
 
 // --- tops ---
 /** A one-piece flight suit: a high ribbed collar, a quilted yoke across the shoulders, the zip from the collar to the hip, a chest panel with three lights. */
@@ -108,9 +107,4 @@ MAKEUP.templeLight = { fit: 'face', face: () => [path('M 133 176 Q 129 194 133 2
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const SCIFI = { tops: ['crewSuit', 'uniformTunic', 'pressureSuit'], jackets: ['shellJacket', 'commandCoat', 'padArmour'], hats: ['flightHelmet'], glasses: ['visorBand'], accessories: ['commLink'], makeup: ['templeLight'] };
-for (const n of SCIFI.tops) tag('top', n, 'only:scifi');
-for (const n of SCIFI.jackets) tag('jacket', n, 'only:scifi');
-for (const n of SCIFI.hats) tag('hat', n, 'only:scifi');
-for (const n of SCIFI.glasses) tag('glasses', n, 'only:scifi');
-for (const n of SCIFI.accessories) tag('accessories', n, 'only:scifi');
-for (const n of SCIFI.makeup) tag('makeup', n, 'only:scifi');
+tagPack(SCIFI, 'only:scifi');

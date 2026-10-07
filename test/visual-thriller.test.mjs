@@ -24,9 +24,9 @@ import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
 import { seed } from '../web/visual/kit.mjs';
 import { prng } from '../lib/random.mjs';
 import VISUAL from '../lib/visual.json' with { type: 'json' };
-import { THEMES, CASTS, DANCES, PACKS, bindTheme } from '../web/visual/themes.mjs';
-import { CASTS as LIMNER_CASTS, STANCES } from 'limner';
-const UNDEAD = LIMNER_CASTS.undead;
+import { THEMES, DANCES, bindTheme } from '../web/visual/themes.mjs';
+import { CASTS, PACKS, STANCES } from 'limner';
+const UNDEAD = CASTS.undead;
 
 const clean = (o) => !/NaN|undefined|Infinity/.test(JSON.stringify(o));
 const draws = (o, what) => { const ops = portraitOps(o); assert.ok(ops.length > 20 && clean(ops), what); const ctx = ctxStub(); drawOn(ctx, ops); assert.equal(ctx.calls.save, ctx.calls.restore, `${what} restores every clip`); assert.ok(toSvg(ops).startsWith('<svg')); return ops; };
@@ -131,7 +131,7 @@ test('the binding: lib/visual.json names the theme\'s cast, packs and dance, the
   const g = await ready;
   assert.deepEqual([VISUAL.themes.thriller.cast, VISUAL.themes.thriller.packs, VISUAL.themes.thriller.dance], ['undead', ['eighties', 'undead'], 'thriller']);
   assert.deepEqual(THEMES.thriller.cast, UNDEAD.archetypeNames, 'the bound theme\'s cast is the cast file\'s archetypes');
-  assert.ok(CASTS.undead === UNDEAD && DANCES.thriller.templates === TEMPLATES && THEMES.thriller.templates === TEMPLATES);
+  assert.ok(DANCES.thriller.templates === TEMPLATES && THEMES.thriller.templates === TEMPLATES);
   for (const k of Object.keys(VISUAL.themes)) assert.ok(VISUAL.themes[k].cast && VISUAL.themes[k].packs && VISUAL.themes[k].dance && VISUAL.themes[k].world && VISUAL.themes[k].about, `${k} is a whole row`);
   // the row's packs are read, not decoration: every pack a theme names is a loaded pack module, and a misspelt one is refused where the cast and the dance are
   for (const k of Object.keys(VISUAL.themes)) for (const p of VISUAL.themes[k].packs) assert.ok(PACKS[p], `${k} names the pack ${p}, which is loaded`);
@@ -177,10 +177,7 @@ test('every theme template draws in every pose it allows, on every set, and the 
 // deadStill and would otherwise get layout[1] === undefined, a missing half-face -- while five of the editorial stances
 // place exactly one figure however many are asked for. Lifting the stances out of the world nearly flattened that.
 test('a theme stance spreads across the figures a shot asks for; an editorial one does not', async () => {
-  const { layoutOf, FRAMING, TEMPLATES } = await import('../web/visual/tableau.mjs');
-  const { THEMES } = await import('../web/visual/themes.mjs');
   const T = THEMES.thriller;
-  assert.equal(TEMPLATES ? 1 : 1, 1);
   assert.equal(layoutOf('deadStill', 2, FRAMING.close, T).length, 2, 'splitZombie gets both halves');
   assert.equal(layoutOf('deadStill', 3, FRAMING.close, T).length, 3);
   assert.equal(layoutOf('thrillerClaw', 1, FRAMING.full, T).length, 1);

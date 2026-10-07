@@ -37,7 +37,7 @@ export default {
   skins: ORC_SKINS, hairColors: ['jetBlack', 'softBlack', 'espresso', 'gray'].map((k) => HAIR_COLORS[k]), irises: ['amber', 'hazel', 'brown'].map((k) => EYE_COLORS[k]), clothes: [HIDE, FUR, IRON, BLOOD, MOSS, '#3a2e24'],
   pools: { tops: pool('top', 'only:orc'), jackets: pool('jacket', 'only:orc'), beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: [] },
   wardrobe: { establish: ['none', 'none', 'boneHelm'], develop: ['boneHelm', 'none', 'feltTravelHat'], climax: ['boneHelm', 'boneHelm', 'none'], release: ['none', 'boneHelm'], none: ['none', 'boneHelm', 'feltTravelHat'] },
-  archetypes: ORCS, archetypeNames: Object.keys(ORCS), costumes: Object.keys(ORC_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: ORC_BUILD, contrast: 1.7, asym: 1.5,
+  archetypes: ORCS, archetypeNames: Object.keys(ORCS), costumes: Object.keys(ORC_COSTUMES), build: ORC_BUILD, contrast: 1.7, asym: 1.5,
   base: { makeup: ['tusks'], ears: { pointed: 0.4 }, build: ORC_BUILD }, // the signature every random one in a crowd carries too, the skeleton with it (an identity takes the build from the cast)
   limits: { 'ears.pointed': [0.2, 0.6], 'nose.muzzle': [0, 0], 'build.shoulders': [1.3, 1.65], 'build.trunk': [1.15, 1.45], 'build.legs': [0.9, 1.25] }, // the build bands are the table's row either side of ORC_BUILD: an orc is never narrow or short in the torso
 };

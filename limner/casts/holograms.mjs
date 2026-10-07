@@ -1,4 +1,4 @@
-// The holograms cast: five people projected in light, built as a human is (`hologram` in ANATOMY). Most of what makes
+// The holograms cast: five people projected in light, built as a human is (the `human` row). Most of what makes
 // a hologram is the palette: every skin, hair and cloth a tint of one light, the eyes pale, the lips the cloth's
 // colour. The light is per person -- the messenger in cyan, the archivist in phosphor green, the lecturer in the amber
 // of old film, the guide in rose, the echo in a failing violet -- and a crowd member draws one, mostly cyan. The
@@ -6,9 +6,8 @@
 // the interlace and the torn rows over, the colour split and the rim; every one of them carries all four (the cast's
 // `base`, and each archetype's makeup).
 import '../parts/hologram.mjs'; // the parts this cast is made of register by name
-import { COSTUMES, FAMILIES, buildOf } from '../people.mjs';
+import { COSTUMES, FAMILIES, buildOf, pickIn } from '../people.mjs';
 import { parts, shade, mix } from '../portrait.mjs';
-import { rand } from '../rng.mjs';
 
 /** The lights, and everything a person is coloured from one of them. */
 export const HOLO_LIGHTS = { cyan: '#45cfe8', green: '#4fe08a', amber: '#f0a83c', rose: '#f07aa6', violet: '#9c86ff' };
@@ -21,7 +20,6 @@ export const HOLOGRAM_COSTUMES = Object.fromEntries(Object.entries(T).flatMap(([
   [`holoTunic${sfx}`, (v) => ({ top: { style: 'gridTunic', color: v ? c4 : c2 }, jacket: { style: 'none' }, pants: { style: 'trousers', color: c4 } })],
   [`holoSuit${sfx}`, (v) => ({ top: { style: v ? 'buttonDown' : 'crewSweater', color: v ? c3 : c1 }, jacket: { style: 'blazer', color: c4 }, pants: { style: 'trousers', color: c4 } })]]; }));
 Object.assign(COSTUMES, HOLOGRAM_COSTUMES);
-export const HOLOGRAM_BUILD = buildOf('hologram');
 /** One person's colouring in a light: skin, hair, the eyes and lips in it. No glasses, no jewellery, no headset: a projection carries nothing extra. */
 const lit = (n) => { const t = T[n]; return { skin: t.skin, hairColor: t.hair, eyes: { white: t.white, iris: t.iris, pupil: t.pupil }, mouth: { color: t.cloth[1] }, glasses: null, accessories: [], figure: { opacity: 0.84 } }; }; // figure.opacity: the projection is see-through as a whole, the beam behind it at full strength
 const set = (n, o) => { const l = lit(n); return { ...l, ...o, eyes: { ...l.eyes, ...o.eyes }, mouth: { ...l.mouth, ...o.mouth } }; };
@@ -35,12 +33,12 @@ export const HOLOGRAMS = {
 };
 /** A crowd member's light: one draw, mostly cyan. Its clothes go over the crowd's own draw, so the whole figure is in it. */
 const LIGHT_ODDS = ['cyan', 'cyan', 'cyan', 'green', 'amber', 'rose', 'violet'];
-const base = (s) => { const n = LIGHT_ODDS[Math.floor(rand(s) * LIGHT_ODDS.length)], t = T[n]; return { makeup: HOLO, ...lit(n), facialHair: { color: null }, top: { color: t.cloth[1] }, jacket: { color: t.cloth[3] }, pants: { color: t.cloth[3] }, hat: { color: t.cloth[3], accent: t.cloth[0] } }; };
+const base = (s) => { const n = pickIn(s, LIGHT_ODDS), t = T[n]; return { makeup: HOLO, ...lit(n), facialHair: { color: null }, top: { color: t.cloth[1] }, jacket: { color: t.cloth[3] }, pants: { color: t.cloth[3] }, hat: { color: t.cloth[3], accent: t.cloth[0] } }; };
 export default {
   name: 'holograms', families: FAMILIES,
   skins: [T.cyan.skin], hairColors: [T.cyan.hair], irises: [T.cyan.iris], clothes: T.cyan.cloth, // the draws before the light is chosen; `base` recolours every one of them
   pools: { tops: parts('top', { any: ['only:hologram', 'everyday'] }), jackets: parts('jacket', { all: ['everyday'] }), beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: [], details: [], graphics: [] },
-  wardrobe: { establish: ['none'], develop: ['none'], climax: ['none'], release: ['none'], none: ['none'] },
-  archetypes: HOLOGRAMS, archetypeNames: Object.keys(HOLOGRAMS), costumes: Object.keys(HOLOGRAM_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: HOLOGRAM_BUILD, contrast: 0.8, asym: 0.8,
+  wardrobe: { none: ['none'] }, // every role
+  archetypes: HOLOGRAMS, archetypeNames: Object.keys(HOLOGRAMS), costumes: Object.keys(HOLOGRAM_COSTUMES), build: buildOf('human'), contrast: 0.8, asym: 0.8,
   base,
 };

@@ -8,24 +8,13 @@
 // studded dog collar, a padlock on a chain, a bullet belt slung across the chest. Ear and nose hardware that rides with
 // the ear's own swing on a turned head and with this face's own nose. Heavy liner, smudged. No words, no logos.
 // parts.html?pack=punk is the sheet.
-import { TOPS, JACKETS, HAIR, ACCESSORIES, MAKEUP, MARKS, NOSES, EAR_TURN, CHIN_Y, facePath, shade, mix, soft, lcg, mapXY, scaleAbout, path, ellipse, line, clip, UNCLIP, stroke, tag, eyeShape } from '../portrait.mjs';
+import { TOPS, JACKETS, HAIR, ACCESSORIES, MAKEUP, MARKS, NOSES, EAR_TURN, CHIN_Y, facePath, shade, mix, soft, mapXY, scaleAbout, path, ellipse, line, clip, UNCLIP, stroke, eyeShape } from '../portrait.mjs';
+import { tagPack, torso, f1, poly, fp, sideOf, own, taper } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
-const f1 = (v) => Math.round(v * 10) / 10;
-const poly = (pts) => `M ${pts.map(([x, y]) => `${f1(x)} ${f1(y)}`).join(' L ')} Z`;
 const at = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-const fp = (fill, op = 1) => ({ fill, op });
-const sideOf = (p) => p.light?.side || -1; // where the light comes from: -1 the viewer's left, as portrait.mjs reads it
 const D = Math.PI / 180;
 const STEEL = '#b4b9c1', STEEL_HI = '#f3f5f7', STEEL_LO = '#4e535b', BRASS = '#b08a3a', BRASS_HI = '#f0dc9a', BRASS_LO = '#5e4618';
-/** One person's own generator (wasteland.mjs's `own`): from what a turn of the head does not change, so a rip or a patch stays put while the head moves, and two people who share a seed still differ. */
-const own = (p, k = 0) => { let h = 7 + k; for (const ch of `${p.skin}${p.hairColor}${p.face?.height}${p.mouth?.width}`) h = (h * 31 + ch.charCodeAt(0)) % 1000003; return lcg((p.seed ?? 1) * 17 + h); };
 const rootOf = (c) => mix(c, '#1e1813', 0.72); // the hair as it grows, under the dye
-/** A stroke as a shape: a band along `pts`, `w` wide at its start narrowing to `w * end` (a highlight on leather, a strap). */
-const taper = (pts, w, end = 0.1) => {
-  const n = pts.length, side = (sgn) => pts.map(([x, y], i) => { const [ax, ay] = pts[Math.max(0, i - 1)], [bx, by] = pts[Math.min(n - 1, i + 1)], dx = bx - ax, dy = by - ay, l = Math.hypot(dx, dy) || 1, h = (w / 2) * (1 - (1 - end) * (i / (n - 1))); return [x - (dy / l) * h * sgn, y + (dx / l) * h * sgn]; });
-  return poly([...side(1), ...side(-1).reverse()]);
-};
 /** A quadratic's points, so a curve can be walked (studs along an edge, links down a chain). */
 const qpts = (a, c, b, n) => Array.from({ length: n + 1 }, (_, i) => { const t = i / n, u = 1 - t; return [u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]]; });
 /** Points every `gap` along a polyline, starting `gap / 2` in. */
@@ -247,9 +236,4 @@ MAKEUP.punkLiner = {
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const PUNK = { hair: ['libertySpikes', 'mohawkFin', 'chelsea', 'leopardCrop'], jackets: ['studdedLeather'], tops: ['rippedBandTee', 'tartanShirt'], accessories: ['safetyPinEar', 'helixRings', 'lobeTunnels'], makeup: ['punkLiner'], marks: ['punkSeptum', 'punkNostril', 'studCollar', 'padlockChain', 'bandolier'] };
-for (const n of PUNK.hair) tag('hair', n, 'only:punk');
-for (const n of PUNK.jackets) tag('jacket', n, 'only:punk');
-for (const n of PUNK.tops) tag('top', n, 'only:punk');
-for (const n of PUNK.accessories) tag('accessories', n, 'only:punk');
-for (const n of PUNK.makeup) tag('makeup', n, 'only:punk');
-for (const n of PUNK.marks) tag('marks', n, 'only:punk');
+tagPack(PUNK, 'only:punk');

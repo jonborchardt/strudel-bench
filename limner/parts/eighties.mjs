@@ -3,10 +3,9 @@
 // { all: ['era:80s'] })`, or `any: ['era:80s', 'everyday']` beside the everyday clothes) may dress in them, and no
 // pool that does not ask ever sees them. The undead cast (casts/undead.mjs) was buried in these. parts.html?pack=eighties
 // is the sheet.
-import { TOPS, JACKETS, HATS, HAIR, NECKLINES, JACKET_EDGE, shade, mapXY, scaleAbout, path, ellipse, rect, line, stroke, tag } from '../portrait.mjs';
+import { TOPS, JACKETS, HATS, HAIR, NECKLINES, JACKET_EDGE, shade, mapXY, scaleAbout, path, ellipse, rect, line, stroke } from '../portrait.mjs';
+import { tagPack, torso, fp } from './pen.mjs';
 
-const fp = (fill, op = 1) => ({ fill, op });
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const dk = (op) => ({ fill: '#000', op });
 
 // --- the 80s palette, as it comes out of the ground: every colour a shade duller than it was sold ---
@@ -54,9 +53,6 @@ Object.assign(HAIR, {
   bigHair: { back: (p) => mapXY(HAIR.afroMedium.back(p), scaleAbout(200, 1.08), scaleAbout(112, 1.12)), front: (p) => HAIR.wavyMedium(p) },
 });
 // no push into HAT_HAIR: that list is what a random character's hat picks hair from, and a mullet must never land on the editorial crowd; dress keeps a theme style under a hat by checking the registry
-for (const n of ['ruffledTux', 'leotard', 'offShoulderSweat', 'hospitalGown', 'laceGown']) tag('top', n, 'era:80s');
-for (const n of ['varsityJacket', 'sweaterShoulders', 'padShoulderBlazer', 'redLeatherChevron']) tag('jacket', n, 'era:80s');
-for (const n of ['headband', 'veil']) tag('hat', n, 'era:80s');
-for (const n of ['mullet', 'bigHair']) tag('hair', n, 'era:80s');
 /** The pack's own names, by kind: what its sheet shows. */
 export const EIGHTIES = { tops: ['ruffledTux', 'leotard', 'offShoulderSweat', 'hospitalGown', 'laceGown'], jackets: ['varsityJacket', 'sweaterShoulders', 'padShoulderBlazer', 'redLeatherChevron'], hats: ['headband', 'veil'], hair: ['mullet', 'bigHair'] };
+tagPack(EIGHTIES, 'era:80s');

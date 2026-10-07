@@ -13,25 +13,23 @@
 //    lit red from inside, and fangs (`vampireFangs`, a TEETH entry, so they show only when the mouth parts, with their
 //    tips over the lower lip from `fangTips` on the mouth slot).
 // parts.html?pack=gothic is the sheet.
-import { TOPS, JACKETS, HATS, HAT_CROWN, MAKEUP, TEETH, ACCESSORIES, MOUTHS, facePath, shade, mix, soft, path, ellipse, line, clip, UNCLIP, stroke, tag, eyeShape } from '../portrait.mjs';
+import { TOPS, JACKETS, HATS, HAT_CROWN, MAKEUP, TEETH, ACCESSORIES, MOUTHS, facePath, shade, mix, soft, path, ellipse, line, clip, UNCLIP, stroke, eyeShape } from '../portrait.mjs';
+import { tagPack, torso, SHOULDERS, f1, sideOf } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill });
-const SHOULDERS = 'M 66 480 C 80 388, 126 358, 162 348 L 238 348 C 274 358, 320 388, 334 480 Z';
 const IVORY = '#e9e2d6', LACE = '#f2ede4', SILVER = '#b9bcc2', SILVER_LIT = '#eef0f4', SILVER_DK = '#5e6168', GARNET = '#6e0c1a', JET = '#0e0c0e';
-const r1 = (v) => Math.round(v * 10) / 10;
 const lit = (c, k = 0.3) => mix(c, '#ffffff', k); // a light on a dark cloth: toward white, since black times anything stays black
 const hood = (ops) => ops.map((o) => ({ ...o, hood: true }));
 const collar = (ops) => ops.map((o) => ({ ...o, collar: true }));
 /** A point on the quadratic a -> c -> b at t. */
 const q = (a, c, b, t) => [(1 - t) ** 2 * a[0] + 2 * t * (1 - t) * c[0] + t * t * b[0], (1 - t) ** 2 * a[1] + 2 * t * (1 - t) * c[1] + t * t * b[1]];
 /** Scallops hanging off the curve a -> c -> b: n half-moons of depth `dp`, filled, each with its shadow under it. */
-const scallops = (a, c, b, n, dp, fill, shadowOp = 0.3) => { const pts = Array.from({ length: n + 1 }, (_, i) => q(a, c, b, i / n)), one = (dy) => pts.slice(0, -1).map((p0, i) => { const p1 = pts[i + 1], mx = (p0[0] + p1[0]) / 2, my = (p0[1] + p1[1]) / 2 + dp * 2; return `M ${r1(p0[0])} ${r1(p0[1] + dy)} Q ${r1(mx)} ${r1(my + dy)} ${r1(p1[0])} ${r1(p1[1] + dy)} Z`; }).join(' ');
-  return [path(one(3), { fill: '#000', op: shadowOp }), path(one(0), { fill }), ...pts.slice(0, -1).map((p0, i) => ellipse(r1((p0[0] + pts[i + 1][0]) / 2), r1((p0[1] + pts[i + 1][1]) / 2 + dp * 0.55), 1.3, 1.3, { fill: '#000', op: 0.45 }))]; }; // each scallop pierced once, so it is lace and not a ruffle
+const scallops = (a, c, b, n, dp, fill, shadowOp = 0.3) => { const pts = Array.from({ length: n + 1 }, (_, i) => q(a, c, b, i / n)), one = (dy) => pts.slice(0, -1).map((p0, i) => { const p1 = pts[i + 1], mx = (p0[0] + p1[0]) / 2, my = (p0[1] + p1[1]) / 2 + dp * 2; return `M ${f1(p0[0])} ${f1(p0[1] + dy)} Q ${f1(mx)} ${f1(my + dy)} ${f1(p1[0])} ${f1(p1[1] + dy)} Z`; }).join(' ');
+  return [path(one(3), { fill: '#000', op: shadowOp }), path(one(0), { fill }), ...pts.slice(0, -1).map((p0, i) => ellipse(f1((p0[0] + pts[i + 1][0]) / 2), f1((p0[1] + pts[i + 1][1]) / 2 + dp * 0.55), 1.3, 1.3, { fill: '#000', op: 0.45 }))]; }; // each scallop pierced once, so it is lace and not a ruffle
 /** Lace over a sheer ground: a fine mesh both ways, and in it rows of small flowers, five petals round a heart, each throwing a shadow on the skin under it. */
 const rosettes = (x0, x1, y0, rows, step, c) => [
   ...Array.from({ length: 24 }, (_, i) => [line(x0 - 60 + i * 7, y0 - 20, x0 + 20 + i * 7, y0 + 80, stroke(c, 0.6, 0.6)), line(x0 + 20 + i * 7, y0 - 20, x0 - 60 + i * 7, y0 + 80, stroke(c, 0.6, 0.6))]).flat(),
   ...Array.from({ length: rows }, (_, j) => Array.from({ length: Math.floor((x1 - x0) / step) + 1 }, (_, i) => { const x = x0 + i * step + (j % 2) * step / 2, y = y0 + j * step * 0.9, pr = step * 0.17;
-    const petals = (dx, dy, fill, op) => Array.from({ length: 5 }, (_, k) => { const a = k * 1.2566 - 1.5708; return ellipse(r1(x + dx + Math.cos(a) * pr), r1(y + dy + Math.sin(a) * pr), pr * 0.62, pr * 0.62, { fill, op }); });
+    const petals = (dx, dy, fill, op) => Array.from({ length: 5 }, (_, k) => { const a = k * 1.2566 - 1.5708; return ellipse(f1(x + dx + Math.cos(a) * pr), f1(y + dy + Math.sin(a) * pr), pr * 0.62, pr * 0.62, { fill, op }); });
     return [...petals(0.8, 1.4, '#000', 0.22), ...petals(0, 0, c, 0.95), ellipse(x, y, pr * 0.45, pr * 0.45, { fill: lit(c, 0.25) })]; }).flat()).flat()];
 
 // --- the cape behind ----------------------------------------------------------------------------------------------
@@ -39,13 +37,13 @@ const DRAPE = 'M 200 338 C 146 338, 92 350, 66 398 C 44 470, 34 600, 26 700 L 37
 const COLLAR = 'M 154 356 C 104 348, 76 300, 60 160 C 88 192, 118 236, 160 258 Q 200 268 240 258 C 282 236, 312 192, 340 160 C 324 300, 296 348, 246 356 Z';
 const LINING = 'M 158 352 C 112 342, 86 298, 72 182 C 96 210, 124 246, 162 266 Q 200 276 238 266 C 276 246, 304 210, 328 182 C 314 298, 288 342, 242 352 Z';
 /** What a cape puts behind the figure: its back hanging past the arms, and the standing collar framing the head, its lining toward us, lit on the light's side, the head's shadow across it, stiffened with ribs. Every gothic top draws it when the jacket is the cape, since a jacket is cut to the trunk and a top's `hood` ops are not. */
-const capeBack = (p) => { if (p.jacket?.style !== 'highCollarCape') return []; const c = p.jacket.color, ln = p.jacket.accent ?? '#6a1424', sd = p.light?.side || -1; return hood([
+const capeBack = (p) => { if (p.jacket?.style !== 'highCollarCape') return []; const c = p.jacket.color, ln = p.jacket.accent ?? '#6a1424', sd = sideOf(p); return hood([
   path(DRAPE, { fill: shade(c, 0.9) }),
   ...[[54, -1], [80, -1], [320, 1], [346, 1]].flatMap(([x, s]) => [path(`M ${x} 420 Q ${x + s * 6} 560 ${x + s * 14} 700`, stroke('#000', 7, 0.35)), path(`M ${x + 5} 420 Q ${x + 5 + s * 6} 560 ${x + 5 + s * 14} 700`, stroke(lit(c, 0.25), 2.4, 0.35))]), // the folds it hangs in
   path(COLLAR, { fill: c }), path(LINING, { fill: ln }),
   clip(LINING), ...soft(200 + sd * 108, 236, 34, 90, lit(ln, 0.45), 0.7), ...soft(200 - sd * 100, 260, 40, 100, '#000', 0.35), ...soft(200, 300, 120, 80, '#000', 0.6), // lit on one wing, shaded on the other, the head's shadow in the middle
   ...[-1, 1].flatMap((s) => [0.3, 0.6, 0.88].flatMap((k) => { const bx = 200 + s * (48 + k * 56), by = 350 - k * 14, tx = 200 + s * (42 + k * 96), ty = 262 - k * 92;
-    return [path(`M ${r1(bx)} ${r1(by)} Q ${r1((bx + tx) / 2 + s * 10)} ${r1((by + ty) / 2)} ${r1(tx)} ${r1(ty)}`, stroke('#000', 2.6, 0.35)), path(`M ${r1(bx - s * 3)} ${r1(by)} Q ${r1((bx + tx) / 2 + s * 7)} ${r1((by + ty) / 2)} ${r1(tx - s * 3)} ${r1(ty)}`, stroke(lit(ln, 0.5), 1.4, 0.3))]; })), // the ribs that hold it up
+    return [path(`M ${f1(bx)} ${f1(by)} Q ${f1((bx + tx) / 2 + s * 10)} ${f1((by + ty) / 2)} ${f1(tx)} ${f1(ty)}`, stroke('#000', 2.6, 0.35)), path(`M ${f1(bx - s * 3)} ${f1(by)} Q ${f1((bx + tx) / 2 + s * 7)} ${f1((by + ty) / 2)} ${f1(tx - s * 3)} ${f1(ty)}`, stroke(lit(ln, 0.5), 1.4, 0.3))]; })), // the ribs that hold it up
   UNCLIP,
   path('M 72 182 C 96 210, 124 246, 162 266', stroke(lit(ln, 0.55), 1.6, 0.6)), path('M 328 182 C 304 210, 276 246, 238 266', stroke(lit(ln, 0.55), 1.6, 0.6)), // its top edge catching the light
   path('M 60 160 C 76 300, 104 348, 154 356', stroke(lit(c, 0.3), 1.4, 0.5)), path('M 340 160 C 324 300, 296 348, 246 356', stroke(lit(c, 0.3), 1.4, 0.5))]); };
@@ -71,9 +69,9 @@ TOPS.laceHighCollar = (p) => { const c = p.top.color, dark = shade(c, 0.6), lace
   ...capeBack(p)]; };
 const BODICE = 'M 152 362 Q 174 404 200 410 Q 226 404 248 362';
 /** A mourning gown: a boned satin bodice with a sweetheart neckline edged in lace, the collarbones and the throat bare, the satin's light running down the boning. */
-TOPS.mourningGown = (p) => { const c = p.top.color, dark = shade(c, 0.55), sd = p.light?.side || -1, sk = p.skin; return [
+TOPS.mourningGown = (p) => { const c = p.top.color, dark = shade(c, 0.55), sd = sideOf(p), sk = p.skin; return [
   torso(SHOULDERS, c),
-  ...[[152, 0.3, 378], [174, 0.15, 406], [226, -0.15, 406], [248, -0.3, 378]].flatMap(([x, k, y0]) => { return [path(`M ${x} ${r1(y0)} Q ${r1(x + k * 30)} 500 ${r1(x + k * 60)} 700`, stroke(dark, 2.4, 0.7)), path(`M ${x + 3} ${r1(y0)} Q ${r1(x + 3 + k * 30)} 500 ${r1(x + 3 + k * 60)} 700`, stroke(lit(c, 0.4), 1.6, 0.45))]; }), // the boning, each seam's lit edge
+  ...[[152, 0.3, 378], [174, 0.15, 406], [226, -0.15, 406], [248, -0.3, 378]].flatMap(([x, k, y0]) => { return [path(`M ${x} ${f1(y0)} Q ${f1(x + k * 30)} 500 ${f1(x + k * 60)} 700`, stroke(dark, 2.4, 0.7)), path(`M ${x + 3} ${f1(y0)} Q ${f1(x + 3 + k * 30)} 500 ${f1(x + 3 + k * 60)} 700`, stroke(lit(c, 0.4), 1.6, 0.45))]; }), // the boning, each seam's lit edge
   ...soft(200 + sd * 52, 470, 18, 80, lit(c, 0.5), 0.5), ...soft(200 - sd * 60, 480, 30, 120, '#000', 0.3), // the satin's sheen and its far side
   ...collar([ // the bare chest goes on with the collars, over the cloth's own shading and the cape's fronts, so it is shaded as skin and not as satin
     path('M 156 348 Q 200 343 244 348 L 250 360 Q 226 404 200 410 Q 174 404 150 360 Z', { fill: sk }), clip('M 156 348 Q 200 343 244 348 L 250 360 Q 226 404 200 410 Q 174 404 150 360 Z'),
@@ -86,7 +84,7 @@ TOPS.mourningGown = (p) => { const c = p.top.color, dark = shade(c, 0.55), sd = 
 
 // --- coats ----------------------------------------------------------------------------------------------------------
 /** A velvet frock coat worn open: velvet is dark across its face and lit where it turns away, so each panel is a broad light along its edges and a deep core; satin lapels with a lit roll, jet buttons. */
-JACKETS.velvetFrock = (p) => { const c = p.jacket.color, sat = shade(c, 0.5), sd = p.light?.side || -1;
+JACKETS.velvetFrock = (p) => { const c = p.jacket.color, sat = shade(c, 0.5), sd = sideOf(p);
   const panel = (s) => `M ${200 + s * 150} 700 L ${200 + s * 152} 450 C ${200 + s * 144} 392, ${200 + s * 88} 356, ${200 + s * 32} 350 L ${200 + s * 24} 700 Z`;
   return [...[-1, 1].flatMap((s) => [path(panel(s), { fill: c }), clip(panel(s)),
     ...soft(200 + s * 98, 470, 18, 200, lit(c, 0.4), s === sd ? 0.9 : 0.45), ...soft(200 + s * 34, 520, 14, 180, lit(c, 0.3), 0.5), ...soft(200 + s * 66, 500, 26, 180, '#000', 0.4), // the pile: lit at both turns, dark across the face
@@ -97,7 +95,7 @@ JACKETS.velvetFrock = (p) => { const c = p.jacket.color, sat = shade(c, 0.5), sd
     path(`M ${200 + s * 25} 494 L ${200 + s * 24} 700`, stroke('#000', 8, 0.2))]),
   ...[514, 548, 582].flatMap((y) => [-1, 1].flatMap((s) => [ellipse(200 + s * 34, y, 4.2, 4.2, { fill: JET }), ellipse(200 + s * 34 - 1.3, y - 1.3, 1.3, 1.3, { fill: '#fff', op: 0.55 })]))]; };
 /** A cape over the shoulders, open down the front: its fronts with the lining turned back along the edge, a silver clasp and chain at the throat. The collar and the back are drawn behind the figure by the top (`capeBack`). */
-JACKETS.highCollarCape = (p) => { const c = p.jacket.color, ln = p.jacket.accent ?? '#6a1424', sd = p.light?.side || -1;
+JACKETS.highCollarCape = (p) => { const c = p.jacket.color, ln = p.jacket.accent ?? '#6a1424', sd = sideOf(p);
   const front = (s) => `M ${200 + s * 104} 700 L ${200 + s * 104} 404 C ${200 + s * 102} 378, ${200 + s * 88} 360, ${200 + s * 62} 352 L ${200 + s * 40} 350 C ${200 + s * 50} 420, ${200 + s * 54} 560, ${200 + s * 58} 700 Z`;
   return [...[-1, 1].flatMap((s) => [path(front(s), { fill: c }), clip(front(s)), ...soft(200 + s * 84, 450, 16, 150, lit(c, 0.3), s === sd ? 0.7 : 0.3), UNCLIP,
     path(`M ${200 + s * 40} 350 C ${200 + s * 50} 420, ${200 + s * 54} 560, ${200 + s * 58} 700 L ${200 + s * 70} 700 C ${200 + s * 66} 560, ${200 + s * 62} 420, ${200 + s * 54} 352 Z`, { fill: ln }), // the lining turned back down the edge
@@ -130,7 +128,7 @@ MAKEUP.gothLiner = { face: (p) => [-1, 1].flatMap((s) => { const E = eyeShape(p,
 /** A trickle of blood from the corner of the mouth down the chin. */
 MAKEUP.bloodTrickle = { mouth: (p) => { const x = 200 + p.mouth.width * 0.32, y = p.mouth.y + 2; return [path(`M ${x - 2} ${y} Q ${x + 1} ${y + 18} ${x - 1} ${y + 34} Q ${x + 3} ${y + 38} ${x + 3} ${y + 32} Q ${x + 3} ${y + 16} ${x + 2} ${y}`, { fill: '#7a0c16', op: 0.9 }), ellipse(x + 1, y + 34, 2.4, 3, { fill: '#7a0c16' }), ellipse(x - 0.4, y + 12, 0.8, 4, { fill: '#fff', op: 0.35 })]; } };
 /** A vampire's pallor: the shadows go cold. Violet in the sockets, under the cheekbones and down the shadow side, a cold light on the brow; the face's own modelling goes on over it. */
-MAKEUP.vampirePallor = { skin: (p) => { const sd = p.light?.side || -1, ex = p.eyes.spacing / 2, ey = p.eyes.y, w = p.face.width / 156; return [clip(facePath(p)),
+MAKEUP.vampirePallor = { skin: (p) => { const sd = sideOf(p), ex = p.eyes.spacing / 2, ey = p.eyes.y, w = p.face.width / 156; return [clip(facePath(p)),
   ...soft(200 - sd * 62 * w, 250, 34 * w, 90, '#3e3a6a', 0.4), // the shadow side, cooled
   ...[-1, 1].flatMap((s) => [...soft(200 + s * ex, ey + 2, 28, 19, '#3a2448', 0.55), ]), // the sockets bruised violet
   ...soft(200, 140, 50 * w, 22, '#f4f6ff', 0.3), ...soft(200 + sd * 40 * w, ey + 40, 16, 12, '#f4f6ff', 0.2), UNCLIP]; } };
@@ -141,7 +139,7 @@ MAKEUP.fangTips = { mouth: (p) => { const m = p.mouth, sm = m.smile ?? 0, o = m.
   const w = m.width * (MOUTHS[m.style]?.wide ?? 1) * (1 + 0.14 * Math.max(0, sm) - 0.16 * o - 0.08 * pr), lift = 9 * sm, yl = m.y - lift, mid = m.y + 9 * sm - 14 * o, inside = o > 0.08 ? mid + 6 + 50 * o : mid + 16 * Math.max(0, Math.min(1, (sm - 0.6) / 0.4));
   const band = o > 0.08 ? Math.min(8, (inside - mid) * 0.3) : inside - 1 - mid, len = band + 6;
   return [-1, 1].flatMap((s) => { const t = 0.5 + s * 0.22, x = 200 + s * w * 0.22, y = (1 - t) ** 2 * yl + 2 * t * (1 - t) * mid + t * t * yl + 1;
-    return [path(`M ${r1(x - 3.4)} ${r1(y)} L ${r1(x + 3.4)} ${r1(y)} L ${r1(x + s * 0.6)} ${r1(y + len)} Z`, { fill: '#f6f1e8' }), path(`M ${r1(x + s * 3.4)} ${r1(y)} L ${r1(x + s * 0.6)} ${r1(y + len)}`, stroke('#8a6a60', 0.8, 0.5))]; }); } };
+    return [path(`M ${f1(x - 3.4)} ${f1(y)} L ${f1(x + 3.4)} ${f1(y)} L ${f1(x + s * 0.6)} ${f1(y + len)} Z`, { fill: '#f6f1e8' }), path(`M ${f1(x + s * 3.4)} ${f1(y)} L ${f1(x + s * 0.6)} ${f1(y + len)}`, stroke('#8a6a60', 0.8, 0.5))]; }); } };
 /** A vampire's teeth: an even pale row, the canines longer and pointed with dark gaps beside them. Clipped to the band by the caller; `fangTips` carries them past it. */
 TEETH.vampireFangs = (d, cx, w, ty, th) => [path(d, { fill: '#efe8dc' }), ...[-0.22, 0.22].flatMap((f) => [path(`M ${cx + w * f - 6} ${ty - th} L ${cx + w * f - 3} ${ty + th} M ${cx + w * f + 6} ${ty - th} L ${cx + w * f + 3} ${ty + th}`, stroke('#3a1f1c', 1.2, 0.45))]), ...[-0.1, 0, 0.1].map((f) => line(cx + w * f, ty - th, cx + w * f, ty + th, stroke('#3a1f1c', 1, 0.25)))];
 
@@ -155,15 +153,10 @@ ACCESSORIES.velvetChoker = { at: 'tie', /* over the collars: the gown's bare che
 ACCESSORIES.cravatPin = { at: 'tie', ops: () => [...[3, 2, 1, 0].flatMap((k) => { const y = 352 + k * 20, w = 26 - k * 3;
   return [path(`M ${200 - w + 4} ${y} L ${200 - w} ${y + 24} L ${200 + w} ${y + 24} L ${200 + w - 4} ${y} Z`, { fill: '#000', op: 0.2 }), path(`M ${200 - w + 4} ${y - 2} L ${200 - w} ${y + 20} L ${200 + w} ${y + 20} L ${200 + w - 4} ${y - 2} Z`, { fill: LACE }),
     ...scallops([200 - w, y + 20], [200, y + 23], [200 + w, y + 20], 6, 2.6, LACE, 0.25),
-    ...[-0.5, 0, 0.5].map((f) => path(`M ${r1(200 + w * f * 0.8)} ${y} Q ${r1(200 + w * f)} ${y + 12} ${r1(200 + w * f * 1.1)} ${y + 22}`, stroke('#8a8278', 1, 0.4))), // its gathers
+    ...[-0.5, 0, 0.5].map((f) => path(`M ${f1(200 + w * f * 0.8)} ${y} Q ${f1(200 + w * f)} ${y + 12} ${f1(200 + w * f * 1.1)} ${y + 22}`, stroke('#8a8278', 1, 0.4))), // its gathers
     path(`M ${200 + w - 6} ${y} L ${200 + w - 2} ${y + 20}`, stroke('#000', 4, 0.12))]; }),
   line(193, 360, 208, 374, stroke(SILVER_DK, 1.4)), ellipse(200, 366, 4.4, 5.2, { fill: SILVER }), ellipse(200, 366, 3, 3.8, { fill: GARNET }), ellipse(199, 364.6, 1, 1.3, { fill: '#fff', op: 0.7 })] };
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const GOTHIC = { tops: ['laceHighCollar', 'mourningGown'], jackets: ['velvetFrock', 'highCollarCape'], hats: ['mourningHat'], makeup: ['gothLiner', 'bloodTrickle', 'vampirePallor', 'vampireEyes', 'fangTips'], teeth: ['vampireFangs'], accessories: ['velvetChoker', 'cravatPin'] };
-for (const n of GOTHIC.tops) tag('top', n, 'only:gothic');
-for (const n of GOTHIC.jackets) tag('jacket', n, 'only:gothic');
-for (const n of GOTHIC.hats) tag('hat', n, 'only:gothic');
-for (const n of GOTHIC.makeup) tag('makeup', n, 'only:gothic');
-for (const n of GOTHIC.teeth) tag('teeth', n, 'only:gothic');
-for (const n of GOTHIC.accessories) tag('accessories', n, 'only:gothic');
+tagPack(GOTHIC, 'only:gothic');

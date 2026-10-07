@@ -19,13 +19,11 @@
 // so a new stance in that pack is a step here by name. Two places know this and nothing else does: LIVE/aliveOf and
 // STEPS/ROUTINES.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS, STANCES } from './limner.mjs';
-import { identityOf, dress } from './limner.mjs';
+import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS, STANCES, identityOf, dress } from './limner.mjs';
 import { graveyard, floorShadow, vignette } from './sets.mjs';
 import { phaseOf } from './tableau.mjs';
-import { THEMES } from './themes.mjs'; // the bound theme: limner's undead cast and this repo's thriller dance, already tied together
-import { CAST_MODULES } from './limner.mjs'; // and the cast module itself, for its names; importing either registers the zombie parts
-const thriller = THEMES.thriller, { ZOMBIE_NAMES } = CAST_MODULES.undead;
+import { THEMES } from './themes.mjs'; // the bound theme: limner's undead cast and this repo's thriller dance, already tied together; importing it registers the zombie parts
+const thriller = THEMES.thriller, ZOMBIE_NAMES = thriller.cast;
 
 const FEET = 600; // the sheet's torso runs to here: where the ground meets a standing figure
 const SNAP = 9; // how fast a figure arrives in a step: a dance move lands, then holds

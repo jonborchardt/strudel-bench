@@ -11,47 +11,34 @@
 // a holographic lid with glitter on it, chrome drop earrings lit on their outer face, and black vinyl that throws the
 // two lights back as long slivers. The cast also reaches the eighties pack (`era:80s`). parts.html?pack=synthwave is the
 // sheet. The clipping to the figure's own shapes (the hair's and the beard's zones, the face outline) is the hologram
-// pack's trick (parts/hologram.mjs), copied here rather than imported: one pack does not reach into another.
-import { TOPS, JACKETS, MAKEUP, GLASSES, ACCESSORIES, HAIR, FACIAL_HAIR, PROPS, JACKET_EDGE, TRUNK, facePath, shade, mix, mapX, scaleAbout, path, ellipse, rect, clip, UNCLIP, stroke, soft, tag, eyeShape } from '../portrait.mjs';
+// pack's trick (parts/hologram.mjs), shared through parts/pen.mjs: one pack does not reach into another.
+import { TOPS, JACKETS, MAKEUP, GLASSES, ACCESSORIES, PROPS, JACKET_EDGE, TRUNK, facePath, shade, mix, path, ellipse, rect, clip, UNCLIP, stroke, soft, eyeShape } from '../portrait.mjs';
+import { tagPack, f1, torso, SHOULDERS, keyOf, hairZones, beardZones } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill });
-const SHOULDERS = 'M 66 480 C 80 388, 126 358, 162 348 L 238 348 C 274 358, 320 388, 334 480 Z';
 const MAGENTA = '#ff2fa8', CYAN = '#2fe6ff', SUN = '#ffb03a', GOLD = '#ffe14a', VIOLET = '#5a2a8a', NIGHT = '#1c0c34', CHROME = '#c9ccd6';
 const KEY = [[-1, MAGENTA], [1, CYAN]]; // [side, light]: the two lights of the one club
-const R = (v) => Math.round(v * 10) / 10;
 
-// --- where the figure is: the hologram pack's zones, copied ---
-/** An ellipse as four cubics: a clip is a path, and the renderers trace M/L/C/Q only. */
-const ell = (cx, cy, rx, ry) => { const a = rx * 0.5523, b = ry * 0.5523; return `M ${cx - rx} ${cy} C ${cx - rx} ${cy - b}, ${cx - a} ${cy - ry}, ${cx} ${cy - ry} C ${cx + a} ${cy - ry}, ${cx + rx} ${cy - b}, ${cx + rx} ${cy} C ${cx + rx} ${cy + b}, ${cx + a} ${cy + ry}, ${cx} ${cy + ry} C ${cx - a} ${cy + ry}, ${cx - rx} ${cy + b}, ${cx - rx} ${cy} Z`; };
-/** A part's solid shapes as clip stacks: each run of filled shapes under the same clips is one zone. */
-const zonesOf = (ops) => { const zones = [], stack = []; let run = null;
-  for (const o of ops) {
-    if (o.k === 'clip') { stack.push(o.d); run = null; } else if (o.k === 'unclip') { stack.pop(); run = null; }
-    else if (o.fill && o.fill !== 'none' && (o.op ?? 1) >= 0.5 && (o.k === 'path' || o.k === 'ellipse')) { const d = o.k === 'path' ? o.d : ell(o.cx, o.cy, o.rx, o.ry); if (run) run.push(d); else { run = [d]; zones.push([...stack, run]); } }
-  }
-  return zones.map((z) => z.map((d) => (Array.isArray(d) ? d.join(' ') : d))); };
-const hairZones = (p) => { const r = HAIR[p.hair?.style] ?? (() => []), h = typeof r === 'function' ? r(p) : [...r.back(p), ...r.front(p)]; return zonesOf(p.face.width === 156 ? h : mapX(h, scaleAbout(200, p.face.width / 156))); };
-const beardZones = (p) => zonesOf((FACIAL_HAIR[p.facialHair?.style] ?? (() => []))(p));
+// --- where the figure is: the zones in pen.mjs (hairZones, beardZones), shared with the hologram pack ---
 
 // --- the key light ---
 /** One side's light on the face: a plane whose inner edge follows the bone (in at the temple, out over the cheekbone's
  *  front, in under it, then along the jaw to the chin), and a brighter rim inside the outline. `k` widens it. */
 const facePlane = (p, s, k) => {
-  const w = p.face.width / 2, y = p.eyes.y, top = 100, bot = 112 + p.face.height + 16 * p.face.chin + 6, X = (f) => R(200 + s * w * f);
+  const w = p.face.width / 2, y = p.eyes.y, top = 100, bot = 112 + p.face.height + 16 * p.face.chin + 6, X = (f) => f1(200 + s * w * f);
   return `M ${X(0.5 / k)} ${top} C ${X(0.56 / k)} ${y - 40}, ${X(0.6 / k)} ${y - 6}, ${X(0.5 / k)} ${y + 22} C ${X(0.44 / k)} ${y + 40}, ${X(0.62 / k)} ${y + 52}, ${X(0.64 / k)} ${y + 72} C ${X(0.62 / k)} ${bot - 30}, ${X(0.42 / k)} ${bot - 6}, ${X(0.14 / k)} ${bot} L ${X(1.5)} ${bot} L ${X(1.5)} ${top} Z`;
 };
 /** Where an ear landed: the portrait's own swing on a turned head (portrait.mjs `ears`), then the head's width. */
 const earAt = (p, o) => { const t = p.pose?.turn ?? 0, a = t * t, far = o === Math.sign(t), cx = o < 0 ? 122 : 278, piv = cx - 15 * o, sq = !t ? 1 : far ? 1 - 0.55 * a : 1 + 0.2 * a, dx = !t ? 0 : far ? -o * 14 * a : o * 3 * a, k = p.face.width / 156, sz = p.ears?.size ?? 1;
-  return { x: R(200 + (piv + (cx - piv) * sq + dx - 200) * k), y: R(212 + p.eyes.y - 196), rx: R(15 * sq * k * sz), ry: R(27 * sz) }; };
+  return { x: f1(200 + (piv + (cx - piv) * sq + dx - 200) * k), y: f1(212 + p.eyes.y - 196), rx: f1(15 * sq * k * sz), ry: f1(27 * sz) }; };
 const neckX = (p) => Math.min(p.neck?.width ?? 63, p.face.width * p.face.jaw * 0.8) / 2;
 const OUTSIDE = (d) => clip(`M -50 -50 L 450 -50 L 450 760 L -50 760 Z ${d}`, 'evenodd');
 /** The arm's lit stripe down its outside, on the arm the portrait hangs (portrait.mjs `arm`, lift 0.3); none on an arm a prop has taken. */
 const ARM = (sd) => ({ s: [200 + 77.2 * sd, 395.6], e: [200 + 104 * sd, 540], w: [200 + 110 * sd, 690] });
 const armed = (p, sd) => (p.props ?? []).some((n) => (PROPS[n]?.lift ?? []).some((v) => Math.sign(v) === sd) || PROPS[n]?.arms?.includes(sd));
-const offset = ([x0, y0], [x1, y1], d) => { const L = Math.hypot(x1 - x0, y1 - y0), nx = -(y1 - y0) / L, ny = (x1 - x0) / L, sg = Math.sign(nx) || 1; return `M ${R(x0 + nx * d * sg)} ${R(y0 + ny * d * sg)} L ${R(x1 + nx * d * sg)} ${R(y1 + ny * d * sg)}`; };
+const offset = ([x0, y0], [x1, y1], d) => { const L = Math.hypot(x1 - x0, y1 - y0), nx = -(y1 - y0) / L, ny = (x1 - x0) / L, sg = Math.sign(nx) || 1; return `M ${f1(x0 + nx * d * sg)} ${f1(y0 + ny * d * sg)} L ${f1(x1 + nx * d * sg)} ${f1(y1 + ny * d * sg)}`; };
 
 /** The half of the sheet one light reaches: beyond a line from near the centre at the crown out to the jaw, so the light wraps the temple and the cheek and leaves the chin and the front of the face. */
-const sideOf = (s, xTop, xBot, top = -50, bot = 760) => clip(`M ${R(200 + s * xTop)} ${top} L ${200 + s * 300} ${top} L ${200 + s * 300} ${bot} L ${R(200 + s * xBot)} ${bot} Z`);
+const sideOf = (s, xTop, xBot, top = -50, bot = 760) => clip(`M ${f1(200 + s * xTop)} ${top} L ${200 + s * 300} ${top} L ${200 + s * 300} ${bot} L ${f1(200 + s * xBot)} ${bot} Z`);
 /** A rim that follows a shape's own edge: the outline stroked inside a clip to the shape, wide and faint, then narrow and hot. */
 const rim = (d, c, k = 1) => [path(d, stroke(c, 30 * k, 0.26)), path(d, stroke(c, 12 * k, 0.42)), path(d, stroke(mix(c, '#ffffff', 0.55), 3.5 * k, 0.7))];
 MAKEUP.neonKey = {
@@ -64,8 +51,8 @@ MAKEUP.neonKey = {
     UNCLIP,
     OUTSIDE(d), ...KEY.flatMap(([s, c]) => { const e = earAt(p, s); return e.rx > 1 ? [ellipse(e.x, e.y, e.rx, e.ry, { fill: c, op: 0.4 }), ellipse(e.x + s * e.rx * 0.35, e.y - 2, e.rx * 0.5, e.ry * 0.8, { fill: mix(c, '#ffffff', 0.4), op: 0.35 })] : []; }), UNCLIP]; }, // the ears face the lights square on: the brightest skin there is
   face: (p) => { const y0 = p.eyes.y + 12, yt = p.eyes.y + 8 + p.nose.length, my = p.mouth.y, mw = p.mouth.width / 2; return KEY.flatMap(([s, c]) => [
-    path(`M ${200 + s * 4} ${y0} L ${200 + s * 7} ${y0} L ${200 + s * 13} ${R(yt - 4)} L ${200 + s * 6} ${R(yt)} Z`, { fill: c, op: 0.4 }), // the flank of the nose facing this light
-    path(`M ${R(200 + s * mw * 0.25)} ${R(my + 4)} Q ${R(200 + s * mw * 0.6)} ${R(my + 6)} ${R(200 + s * mw * 0.85)} ${R(my + 2)}`, stroke(mix(c, '#ffffff', 0.5), 1.8, 0.7)), // the glint along the lower lip
+    path(`M ${200 + s * 4} ${y0} L ${200 + s * 7} ${y0} L ${200 + s * 13} ${f1(yt - 4)} L ${200 + s * 6} ${f1(yt)} Z`, { fill: c, op: 0.4 }), // the flank of the nose facing this light
+    path(`M ${f1(200 + s * mw * 0.25)} ${f1(my + 4)} Q ${f1(200 + s * mw * 0.6)} ${f1(my + 6)} ${f1(200 + s * mw * 0.85)} ${f1(my + 2)}`, stroke(mix(c, '#ffffff', 0.5), 1.8, 0.7)), // the glint along the lower lip
   ]); },
   over: (p) => { const w = p.face.width / 2, lit = (z) => KEY.flatMap(([s, c]) => [...soft(200 + s * (w + 80), 170, 120, 260, c, 0.75), ...soft(200 + s * (w + 70), 150, 60, 200, mix(c, '#ffffff', 0.5), 0.45)]); // falling off from the outside in: a stroked rim here outlined every curl and the cut round the face, which read as tubes
     return [...hairZones(p), ...beardZones(p)].flatMap((z) => [...z.map((d) => clip(d)), ...lit(z), ...z.map(() => UNCLIP)]); }, // the outside of the hair and the beard along their own edges, the crown left dark
@@ -80,10 +67,10 @@ MAKEUP.neonKey = {
 /** The scene in one lens: sky in bands, a striped sun sitting on the horizon at `hy`, a magenta grid running into it. Thin lines are filled slivers, not strokes, so the frames' shadow on the face (drawn from the strokes) stays the frames'. */
 const scene = (d, x0, x1, hy, y1, sx, sr) => { const w = x1 - x0; return [clip(d),
   rect(x0 - 4, hy - 30, w + 8, 34, { fill: '#2a0f52' }), rect(x0 - 4, hy - 12, w + 8, 12, { fill: '#8a1f8a', op: 0.85 }), rect(x0 - 4, hy - 6, w + 8, 6, { fill: MAGENTA, op: 0.8 }),
-  ellipse(sx, hy, sr, sr, { fill: GOLD }), rect(sx - sr, hy - sr * 0.45, sr * 2, sr * 0.45, { fill: SUN }), ...[0.62, 0.36, 0.14].map((f, i) => rect(sx - sr, R(hy - sr * f), sr * 2, R(0.7 + i * 0.35), { fill: '#8a1f8a' })), // the sun cut by the bands
+  ellipse(sx, hy, sr, sr, { fill: GOLD }), rect(sx - sr, hy - sr * 0.45, sr * 2, sr * 0.45, { fill: SUN }), ...[0.62, 0.36, 0.14].map((f, i) => rect(sx - sr, f1(hy - sr * f), sr * 2, f1(0.7 + i * 0.35), { fill: '#8a1f8a' })), // the sun cut by the bands
   rect(x0 - 4, hy, w + 8, y1 - hy + 4, { fill: '#12061f' }), rect(x0 - 4, hy - 0.5, w + 8, 1.2, { fill: '#ffd6f0' }),
-  ...[2.5, 5.5, 9.5, 15].map((dy) => rect(x0 - 4, R(hy + dy), w + 8, R(0.6 + dy * 0.04), { fill: MAGENTA, op: 0.9 })),
-  ...Array.from({ length: 9 }, (_, i) => { const k = i - 4, xt = sx + k * 1.4, xb = sx + k * w * 0.32; return path(`M ${R(xt - 0.25)} ${hy} L ${R(xt + 0.25)} ${hy} L ${R(xb + 0.7)} ${y1 + 2} L ${R(xb - 0.7)} ${y1 + 2} Z`, { fill: MAGENTA, op: 0.85 }); }),
+  ...[2.5, 5.5, 9.5, 15].map((dy) => rect(x0 - 4, f1(hy + dy), w + 8, f1(0.6 + dy * 0.04), { fill: MAGENTA, op: 0.9 })),
+  ...Array.from({ length: 9 }, (_, i) => { const k = i - 4, xt = sx + k * 1.4, xb = sx + k * w * 0.32; return path(`M ${f1(xt - 0.25)} ${hy} L ${f1(xt + 0.25)} ${hy} L ${f1(xb + 0.7)} ${y1 + 2} L ${f1(xb - 0.7)} ${y1 + 2} Z`, { fill: MAGENTA, op: 0.85 }); }),
   path(`M ${x0 + w * 0.12} ${hy - 30} L ${x0 + w * 0.3} ${hy - 30} L ${x0 + w * 0.08} ${y1 + 4} L ${x0 - w * 0.1} ${y1 + 4} Z`, { fill: '#ffffff', op: 0.16 }), // the glare across the glass
   UNCLIP]; };
 /** Mirrored shades: two lenses, each with the sunset in it, a hard frame, and the frame's outer corner catching its side's light. */
@@ -101,7 +88,6 @@ MAKEUP.neonLiner = { face: (p) => [-1, 1].flatMap((s) => { const E = eyeShape(p,
   ...soft(E.xo + s * 4 * k, E.yo - 5 * k, 14 * k, 6 * k, MAGENTA, 0.4), path(d, stroke(MAGENTA, 2.6, 0.95)), path(d, stroke('#ffd0ee', 0.9, 0.9))]; }) };
 /** A holographic lid: the colour shifting across it, cyan at the inner corner through violet to magenta at the outer,
  *  and glitter over the lid and up onto the cheekbone, placed by the face's own numbers so one face sparkles the same way every time. */
-const keyOf = (p) => Math.round(((p.face?.width ?? 156) * 7 + (p.face?.height ?? 204) * 3) % 97);
 MAKEUP.holoGlitter = { fit: 'eyes',
   skin: () => [-1, 1].flatMap((s) => { const X = (d) => 200 + s * d; return [
     path(`M ${X(19)} 191 C ${X(22)} 178, ${X(42)} 172, ${X(54)} 182 C ${X(44)} 183, ${X(30)} 186, ${X(19)} 191 Z`, { fill: CYAN, op: 0.55 }),
@@ -138,8 +124,4 @@ JACKET_EDGE.vinylJacket = JACKET_EDGE.openJacket;
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const SYNTHWAVE = { glasses: ['mirrorShades', 'wrapVisor'], makeup: ['neonKey', 'neonLiner', 'holoGlitter'], accessories: ['chromeDrops'], tops: ['neonMesh'], jackets: ['neonPaddedJacket', 'vinylJacket'] };
-for (const n of SYNTHWAVE.glasses) tag('glasses', n, 'only:synthwave');
-for (const n of SYNTHWAVE.makeup) tag('makeup', n, 'only:synthwave');
-for (const n of SYNTHWAVE.accessories) tag('accessories', n, 'only:synthwave');
-for (const n of SYNTHWAVE.tops) tag('top', n, 'only:synthwave');
-for (const n of SYNTHWAVE.jackets) tag('jacket', n, 'only:synthwave');
+tagPack(SYNTHWAVE, 'only:synthwave');

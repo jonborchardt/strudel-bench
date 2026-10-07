@@ -1,4 +1,4 @@
-// The scifi cast: a starship's crew, five of them, built as a human is (`scifiHuman` in ANATOMY solves to all 1s).
+// The scifi cast: a starship's crew, five of them, built as a human is (the `human` row of ANATOMY, which solves to all 1s).
 // They wear the sci-fi pack (parts/scifi.mjs) and nothing else, and each reads by silhouette before colour: the
 // captain's long coat closed on the diagonal, the pilot's orange pressure suit with its neck ring and helmet, the
 // science officer's HUD visor, the engineer's padded armour with a lit power cell, the navigator's open shell jacket
@@ -20,7 +20,6 @@ export const SCIFI_COSTUMES = {
   armoured: (v) => ({ top: { style: 'crewSuit', color: '#2b2f36', accent: WHITE }, jacket: { style: 'padArmour', color: v ? '#4a4438' : GUNMETAL, accent: v ? '#7fe3ff' : '#ffc45a' }, pants: { style: 'trousers', color: '#22262e' } }),
 };
 Object.assign(COSTUMES, SCIFI_COSTUMES);
-export const SCIFI_BUILD = buildOf('scifiHuman');
 /** The five, by department and by what each one's silhouette carries. */
 export const SCIFI = {
   captain: { family: 'squareJaw', hair: 'crewCut', hairColors: ['saltPepper', 'gray'], age: 'mid', costume: 'commandCoat', set: { face: { width: 168, height: 206 }, eyes: { style: 'hooded', spacing: 50, depth: 0.8, browLift: -2 }, nose: { style: 'straight', width: 22, length: 40 }, mouth: { width: 50, fullness: 0.35 }, body: { width: 1.1 }, pose: { turn: 0.2, shoulder: 0.3 } } },
@@ -35,6 +34,6 @@ export default {
   skins: [], hairColors: ['jetBlack', 'softBlack', 'darkBrown', 'auburn', 'blond', 'platinum', 'saltPepper'].map((k) => HAIR_COLORS[k]), irises: ['#5a7a8a', '#3a2a22', '#4a6a4a', '#7a8a9a'], clothes: [NAVY, SLATE, COMMAND, SCIENCE, ENGINE, GUNMETAL],
   pools: { tops: own('top'), jackets: own('jacket'), beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: own('glasses'), details: parts('details', { all: ['everyday'] }), graphics: [] },
   wardrobe: { establish: ['none'], develop: ['none'], climax: ['none', 'flightHelmet'], release: ['none'], none: ['none', 'none', 'none', 'flightHelmet'] }, // a helmet on one in four of a crowd, half of them at the climax
-  archetypes: SCIFI, archetypeNames: Object.keys(SCIFI), costumes: Object.keys(SCIFI_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: SCIFI_BUILD, contrast: 1.4, asym: 1,
+  archetypes: SCIFI, archetypeNames: Object.keys(SCIFI), costumes: Object.keys(SCIFI_COSTUMES), build: buildOf('human'), contrast: 1.4, asym: 1,
   base: (s) => (rand(s) < 0.16 ? { makeup: ['templeLight'] } : {}), // the implant on about one in six; an archetype's own makeup is its home styling, so this reaches the crowd alone
 };

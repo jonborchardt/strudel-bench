@@ -3,16 +3,15 @@
 // makeup on the skin and face slots (bruised sockets, gaunt cheeks, grey cracked lips, veins, gashes, the jaw torn
 // open to the teeth, stitches, peeling skin, drool, blood), the grave as marks on the clothes, and the clawed hands
 // on portrait.mjs's `arm`. The undead cast (casts/undead.mjs) wears them; parts.html?pack=undead is the sheet.
-import { MOUTHS, MAKEUP, MARKS, PROPS, TEETH, arm, soft, path, ellipse, rect, line, stroke, tag } from '../portrait.mjs';
+import { MOUTHS, MAKEUP, MARKS, PROPS, TEETH, arm, soft, path, ellipse, rect, line, stroke } from '../portrait.mjs';
+import { tagPack, fp } from './pen.mjs';
 
-const fp = (fill, op = 1) => ({ fill, op });
 
 /** The skins of the dead: ashen, grey-green, a greyed warm, one deep; no live tone among them. */
 export const ZOMBIE_SKINS = ['#8e9a86', '#9aa08f', '#a7a899', '#8b9483', '#b2ac9c', '#9c9d90', '#a39a8e', '#7f8b7a', '#5f6a5e', '#b5b2a6'];
 /** Milky eyes: a pale iris, a grey pupil, the sockets deep and bagged. */
 export const DEAD_EYES = { iris: '#bdb9ab', pupil: '#55524c', sclera: 0.85, bags: 1, depth: 0.95 };
 TEETH.rotten = (d, cx, w, ty, th) => [path(d, { fill: '#c9b27a' }), ...[-0.2, -0.08, 0.05, 0.18].map((f) => line(cx + w * f, ty - th, cx + w * f + 1.5, ty + th, stroke('#3a2a18', 1.8, 0.7))), rect(cx + w * 0.1, ty - th, w * 0.07, th * 2, fp('#2a1a14', 0.9))]; // yellowed, a gap where one is gone
-tag('teeth', 'rotten', 'only:undead');
 
 // --- the rot: makeup on the skin (under the features) and the face (over them), laid out by the eyes or the face ---
 const GASH = (d, rim) => [path(d, stroke('#5a1216', 7, 0.92)), path(d, stroke('#1e0608', 2.6, 0.9)), path(rim, stroke('#b2584f', 1.4, 0.5))]; // a slash: the raw flesh, the dark of it, a lighter edge where the skin has pulled
@@ -69,8 +68,6 @@ export const ZOMBIE_PROPS = {
   veilBack: { back: () => [path('M 150 96 C 118 160, 92 260, 74 430 L 326 430 C 308 260, 282 160, 250 96 Z', fp('#f6f2ea', 0.5)), path('M 150 96 C 118 160, 92 260, 74 430', stroke('#fff', 1.5, 0.5)), path('M 250 96 C 282 160, 308 260, 326 430', stroke('#fff', 1.5, 0.5))] }, // the veil's sheet, behind the figure
 };
 Object.assign(PROPS, ZOMBIE_PROPS);
-for (const n of Object.keys(ZOMBIE_MAKEUP)) tag('makeup', n, 'only:undead');
-for (const n of Object.keys(ZOMBIE_MARKS)) tag('marks', n, 'only:undead');
-for (const n of Object.keys(ZOMBIE_PROPS)) tag('props', n, 'only:undead');
 /** The pack's own names, by kind: what its sheet shows. */
 export const UNDEAD = { makeup: Object.keys(ZOMBIE_MAKEUP), marks: Object.keys(ZOMBIE_MARKS), props: Object.keys(ZOMBIE_PROPS), teeth: ['rotten'] };
+tagPack(UNDEAD, 'only:undead');

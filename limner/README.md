@@ -188,9 +188,8 @@ the slack: `buildOf(race)` walks one parameter across all of them at once (the t
 *smaller* head, together with the short end of every length, or the reverse) and bisects until the figure actually
 stands at the race's own stature. The human row solves to all 1s, which is what ties the table to the drawing.
 
-Twenty-two rows, shortest to tallest: halfling and gnome (0.52), dwarf (0.78), grey alien (0.92), green alien (0.95), human,
-tiefling, sci-fi human, hologram, post-apocalyptic human, steampunk human, and the gothic, noir, synthwave, punk
-and robot rows (1.0), cyborg (1.03), elf (1.04), half-orc
+Fifteen rows, shortest to tallest: halfling and gnome (0.52), dwarf (0.78), grey alien (0.92), green alien (0.95), human,
+tiefling, post-apocalyptic human and steampunk human (1.0), cyborg (1.03), elf (1.04), half-orc
 (1.06), reptilian alien (1.08), orc (1.1), dragonborn (1.13). The alien cast takes a row per kind (the insectoid borrows
 the green alien's, the nordic the elf's): an archetype is one kind, and a random member of a crowd draws its kind and
 that kind's build together.
@@ -300,8 +299,7 @@ node scripts/portrait.mjs <hash> --sweep "facialHair.density=0.2,0.5,0.9"
 A `--sweep` renders a labelled contact sheet of every combination and prints each cell's own hash, so the one that looks
 right is a link straight back into the editor. Nobody reviews a face from a description — render it.
 
-The goldens are the contract. Regenerate them only on purpose (`node scripts/castgolden.mjs`,
-`node scripts/opsgolden.mjs`) and read the diff to confirm only the faces you expected moved.
+The goldens are the contract. Regenerate them only on purpose (`UPDATE_GOLDEN=1 node --test test/`) and read the diff to confirm only the faces you expected moved.
 
 ## Provenance
 

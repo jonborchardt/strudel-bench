@@ -32,6 +32,6 @@ export default {
   skins: [], hairColors: ['jetBlack', 'softBlack', 'darkBrown', 'chestnut', 'platinum', 'gray'].map((k) => HAIR_COLORS[k]), irises: ['#3a2a22', '#4a5a6a'], clothes: [CHARCOAL, CAMEL, NAVY, CREAM, WINE, DOVE],
   pools: { tops: ['noirDoubleBreasted', 'buttonDown', 'turtleneck'], jackets: ['noirTrench', 'blazer'], beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: [], accessories: ['studEarringLeft', 'studEarringRight', 'noirPearls'], details: [], graphics: [] },
   wardrobe: { establish: ['fedora', 'none'], develop: ['none', 'fedora'], climax: ['fedora', 'noirCap'], release: ['none'], none: ['fedora', 'none'] },
-  archetypes: NOIRS, archetypeNames: Object.keys(NOIRS), costumes: Object.keys(NOIR_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: buildOf('noirHuman'), contrast: 2, asym: 1.1,
+  archetypes: NOIRS, archetypeNames: Object.keys(NOIRS), costumes: Object.keys(NOIR_COSTUMES), build: buildOf('human'), contrast: 2, asym: 1.1,
   base: { ...LOOKS.noir, makeup: ['noirKey'] }, // the look and the key, on every one of them (a dressed archetype wears its own makeup list, which carries the key)
 };

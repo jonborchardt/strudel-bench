@@ -6,7 +6,7 @@
 // Each archetype carries one or two things worth remembering, and no more.
 import '../parts/synthwave.mjs'; // the parts this cast is made of register by name
 import '../parts/eighties.mjs';
-import { COSTUMES, FAMILIES, buildOf } from '../people.mjs';
+import { COSTUMES, FAMILIES, buildOf, pickIn } from '../people.mjs';
 import { parts, HAIR_COLORS } from '../portrait.mjs';
 import { rand } from '../rng.mjs';
 
@@ -33,13 +33,13 @@ const pool = (kind) => parts(kind, { any: ['only:synthwave'] });
 const NIGHT_HATS = ['none', 'none', 'none', 'none', 'headband'];
 /** Everyone in the club stands in its light; some have done their eyes for it. One draw. */
 const NATURAL = ['#1c1714', '#2e221a', '#3e2c20', '#5a3e2a']; // the colour hair grows: a dyed head keeps the brows and the beard it grew
-const base = (s) => { const r = rand(s), grown = NATURAL[Math.floor(rand(s) * NATURAL.length)]; return { makeup: r < 0.25 ? [...KEY, 'neonLiner'] : r < 0.4 ? [...KEY, 'holoGlitter'] : KEY, facialHair: { color: grown }, eyes: { browColor: grown } }; };
+const base = (s) => { const r = rand(s), grown = pickIn(s, NATURAL); return { makeup: r < 0.25 ? [...KEY, 'neonLiner'] : r < 0.4 ? [...KEY, 'holoGlitter'] : KEY, facialHair: { color: grown }, eyes: { browColor: grown } }; };
 export default {
   name: 'synthwave', families: FAMILIES,
   skins: [], hairColors: ['jetBlack', 'platinum', 'darkBlond', 'auburn'].map((k) => HAIR_COLORS[k]).concat(['#c0287f', '#2a8ad0']), irises: ['#3a2a22', '#4a6a8a', '#5a4a7a'], clothes: [BLACK, VINYL, VIOLET, BLACK, '#9a1f68', '#1d7f99'],
   // a club, not a costume drawer: the pack's own clothes, the eighties pieces that go out at night, and plain dark tees under them
   pools: { tops: [...pool('top'), 'leotard', 'offShoulderSweat', 'crewTshirt', 'vneckTshirt'], jackets: [...pool('jacket'), 'padShoulderBlazer', 'redLeatherChevron', 'leatherJacket'], beards: parts('facialHair', { all: ['everyday'] }), hair: [...parts('hair', { any: ['era:80s'] }), 'shortMohawk', 'bluntBob', 'pixie', 'sweptBack', 'crewCut'], glasses: parts('glasses', { any: ['only:synthwave'] }), details: parts('details', { all: ['everyday'] }), graphics: [] },
-  wardrobe: { establish: NIGHT_HATS, develop: NIGHT_HATS, climax: NIGHT_HATS, release: NIGHT_HATS, none: NIGHT_HATS },
-  archetypes: SYNTHS, archetypeNames: Object.keys(SYNTHS), costumes: Object.keys(SYNTHWAVE_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: buildOf('synthwaveHuman'), contrast: 1.6, asym: 1,
+  wardrobe: { none: NIGHT_HATS }, // every role
+  archetypes: SYNTHS, archetypeNames: Object.keys(SYNTHS), costumes: Object.keys(SYNTHWAVE_COSTUMES), build: buildOf('human'), contrast: 1.6, asym: 1,
   base, // every one of them under the club's light
 };

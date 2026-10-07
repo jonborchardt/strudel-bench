@@ -46,32 +46,10 @@ import * as noirMod from './casts/noir.mjs';
 import * as synthwaveMod from './casts/synthwave.mjs';
 import * as punksMod from './casts/punks.mjs';
 import * as robotsMod from './casts/robots.mjs';
-import editorial from './casts/editorial.mjs';
-import undead from './casts/undead.mjs';
-import dwarves from './casts/dwarves.mjs';
-import elves from './casts/elves.mjs';
-import humans from './casts/humans.mjs';
-import orcs from './casts/orcs.mjs';
-import halflings from './casts/halflings.mjs';
-import gnomes from './casts/gnomes.mjs';
-import tieflings from './casts/tieflings.mjs';
-import dragonborn from './casts/dragonborn.mjs';
-import scifi from './casts/scifi.mjs';
-import cyborgs from './casts/cyborgs.mjs';
-import aliens from './casts/aliens.mjs';
-import holograms from './casts/holograms.mjs';
-import wastelanders from './casts/wastelanders.mjs';
-import steampunks from './casts/steampunks.mjs';
-import gothic from './casts/gothic.mjs';
-import noir from './casts/noir.mjs';
-import synthwave from './casts/synthwave.mjs';
-import punks from './casts/punks.mjs';
-import robots from './casts/robots.mjs';
-
 export const PACKS = { eighties, undead: undeadPack, dwarf, elf, fantasy, orc: orcPack, halfling: halflingPack, gnome: gnomePack, tiefling: tieflingPack, dragonborn: dragonbornPack, scifi: scifiPack, cyborg: cyborgPack, alien: alienPack, hologram: hologramPack, wasteland: wastelandPack, steampunk: steampunkPack, gothic: gothicPack, noir: noirPack, synthwave: synthwavePack, punk: punkPack, robot: robotPack };
-export const CASTS = { editorial, undead, dwarves, elves, humans, orcs, halflings, gnomes, tieflings, dragonborn, scifi, cyborgs, aliens, holograms, wastelanders, steampunks, gothic, noir, synthwave, punks, robots };
 
 /** The cast modules themselves, so a host can reach one cast's own constants -- the elves' ear range, a build, a costume
  * table -- the way it reaches a pack's through PACKS. CASTS carries the cast objects a theme binds; this carries
  * everything beside them. Both are published, because the sheets (casts.html, parts.html) show exactly this. */
 export const CAST_MODULES = { editorial: editorialMod, undead: undeadMod, dwarves: dwarvesMod, elves: elvesMod, humans: humansMod, orcs: orcsMod, halflings: halflingsMod, gnomes: gnomesMod, tieflings: tieflingsMod, dragonborn: dragonbornMod, scifi: scifiMod, cyborgs: cyborgsMod, aliens: aliensMod, holograms: hologramsMod, wastelanders: wastelandersMod, steampunks: steampunksMod, gothic: gothicMod, noir: noirMod, synthwave: synthwaveMod, punks: punksMod, robots: robotsMod };
+export const CASTS = Object.fromEntries(Object.entries(CAST_MODULES).map(([k, m]) => [k, m.default]));

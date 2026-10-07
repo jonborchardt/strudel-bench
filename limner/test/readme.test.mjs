@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as L from '../index.mjs';
 import * as P from '../primitives.mjs';
+import { ctxStub } from './_stub.mjs';
 
 const {
   person, archetype, characterFrom, dress, renderPortrait, renderFigure, portraitOps, toSvg, drawOn,
@@ -20,6 +21,14 @@ test('the headline example', () => {
   assert.match(renderPortrait(person({ seed: 1 })), /viewBox="0 0 400 480"/, 'the bust viewBox the README quotes');
 });
 
+test('every cast gives a person and a named archetype, and both draw; an unknown cast is the editorial one', () => {
+  for (const name of Object.keys(CASTS)) {
+    svgOf(renderPortrait(person({ cast: name, seed: 3 })));
+    svgOf(renderPortrait(dress(archetype({ cast: name, seed: 3, name: CASTS[name].archetypeNames[0] }), {})));
+  }
+  assert.deepEqual(person({ cast: 'wizards', seed: 1 }), person({ cast: 'editorial', seed: 1 }));
+});
+
 test('a character draws directly; an identity must be dressed, and says so when it is not', () => {
   const who = person({ cast: 'elves', seed: 3 });
   svgOf(renderPortrait(who));
@@ -33,10 +42,9 @@ test('ops are the output type and both renderers read them', () => {
   const ops = portraitOps(person({ seed: 1 }));
   assert.ok(Array.isArray(ops) && ops.length > 300, `the README says ~343 ops, got ${ops.length}`);
   svgOf(toSvg(ops, '#c8102e'));
-  const calls = {};
-  const ctx = new Proxy({}, { get: (o, k) => (...a) => { calls[k] = (calls[k] ?? 0) + 1; return String(k).startsWith('create') ? { addColorStop() {} } : undefined; }, set: () => true });
+  const ctx = ctxStub();
   drawOn(ctx, ops);
-  assert.equal(calls.save, calls.restore, 'balanced');
+  assert.equal(ctx.calls.save, ctx.calls.restore, 'balanced');
   assert.match(renderFigure(person({ seed: 1 })), /viewBox="-30 -200 460 1284"/, 'the figure viewBox the README quotes');
 });
 
@@ -97,11 +105,11 @@ test('the cast table in the README matches the casts that ship', () => {
   assert.match(README, /twenty-one casts share one wardrobe/, 'and the prose says ten');
 });
 
-test('the anatomy claims: twenty-two peoples, shortest to tallest, the human row all 1s', () => {
-  assert.equal(Object.keys(ANATOMY).length, 22);
+test('the anatomy claims: fifteen peoples, shortest to tallest, the human row all 1s', () => {
+  assert.equal(Object.keys(ANATOMY).length, 15);
   const h = buildOf('human');
   for (const [k, v] of Object.entries(h)) assert.ok(Math.abs(v - 1) < 1e-9, `human.${k} should solve to 1, got ${v}`);
-  const order = ['halfling', 'gnome', 'dwarf', 'greyAlien', 'greenAlien', 'human', 'tiefling', 'scifiHuman', 'hologram', 'postApocalypticHuman', 'steampunkHuman', 'gothicHuman', 'noirHuman', 'synthwaveHuman', 'punkHuman', 'robot', 'cyborg', 'elf', 'halfOrc', 'reptilianAlien', 'orc', 'dragonborn'];
+  const order = ['halfling', 'gnome', 'dwarf', 'greyAlien', 'greenAlien', 'human', 'tiefling', 'postApocalypticHuman', 'steampunkHuman', 'cyborg', 'elf', 'halfOrc', 'reptilianAlien', 'orc', 'dragonborn'];
   assert.deepEqual([...order].sort(), Object.keys(ANATOMY).sort(), 'the README names every row');
   const tall = order.map((r) => ANATOMY[r].height);
   for (let i = 1; i < tall.length; i++) assert.ok(tall[i] >= tall[i - 1], `${order[i]} (${tall[i]}) is not at least as tall as ${order[i - 1]} (${tall[i - 1]})`);

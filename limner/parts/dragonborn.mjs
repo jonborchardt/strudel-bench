@@ -5,9 +5,9 @@
 // A pack may only register parts, and a nose is not a part. What is here: the fangs that muzzle shows (a TEETH entry),
 // scale rows over the brow and the cheeks, and two horns swept back off the temples on the `over` slot. A dragonborn
 // has no hair worth drawing, so the cast's hair pool is the shaved styles alone. parts.html?pack=dragonborn is the sheet.
-import { TOPS, JACKETS, MAKEUP, TEETH, NECKLINES, shade, path, ellipse, line, stroke, tag } from '../portrait.mjs';
+import { TOPS, JACKETS, MAKEUP, TEETH, NECKLINES, shade, path, ellipse, line, stroke } from '../portrait.mjs';
+import { tagPack, torso } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const SPIKE = '#4a4038';
 const scale = (x, y, w, h = w * 0.6) => `M ${x} ${y} Q ${x + w / 2} ${y - h} ${x + w} ${y}`; // one scale's arc, written absolute: `fit` and the body's width map a path's numbers as x,y pairs, so a relative q would have its deltas scaled as points and shoot off the head
 
@@ -41,7 +41,4 @@ JACKETS.wingMantle = (p) => { const c = p.jacket.color, dark = shade(c, 0.58); r
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const DRAGONBORN = { makeup: ['scaleHide', 'hornCrest'], tops: ['scaleMailShirt'], jackets: ['wingMantle'], teeth: ['fangs'] };
-for (const n of DRAGONBORN.makeup) tag('makeup', n, 'only:dragonborn');
-for (const n of DRAGONBORN.tops) tag('top', n, 'only:dragonborn');
-for (const n of DRAGONBORN.jackets) tag('jacket', n, 'only:dragonborn');
-for (const n of DRAGONBORN.teeth) tag('teeth', n, 'only:dragonborn');
+tagPack(DRAGONBORN, 'only:dragonborn');

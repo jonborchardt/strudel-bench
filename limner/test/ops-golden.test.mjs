@@ -2,16 +2,17 @@
 // figure that existed before builds did.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { portraitOps, toSvg, drawOn, eyeY, mouthY, feetY } from '../index.mjs';
 import { ctxStub } from './_stub.mjs';
 
-
-// the drawing is pinned: four portraits' ops as they were on 2026-10-05 (scripts/opsgolden.mjs), so a change to the figure is made on purpose or not at all
+// the drawing is pinned: four portraits' ops as they were on 2026-10-05, so a change to the figure is made on purpose or not at all (UPDATE_GOLDEN=1, then read the diff)
 const OPS_CASES = { plain: {}, up: { props: ['handsUp'] }, skirt: { pants: { style: 'skirt' }, top: { style: 'tunic' }, jacket: { style: 'blazer' } }, tall: { face: { height: 230 }, neck: { height: 90 } } };
 test('the portrait draws the ops it drew before build existed (test/fixtures/portrait-ops-golden.json)', () => {
-  const golden = JSON.parse(readFileSync(new URL('./fixtures/portrait-ops-golden.json', import.meta.url), 'utf8'));
-  for (const [k, o] of Object.entries(OPS_CASES)) assert.deepEqual(JSON.parse(JSON.stringify(portraitOps(o))), golden[k], k);
+  const url = new URL('./fixtures/portrait-ops-golden.json', import.meta.url), now = JSON.parse(JSON.stringify(Object.fromEntries(Object.entries(OPS_CASES).map(([k, o]) => [k, portraitOps(o)]))));
+  if (process.env.UPDATE_GOLDEN) writeFileSync(url, JSON.stringify(now));
+  const golden = JSON.parse(readFileSync(url, 'utf8'));
+  for (const k of Object.keys(OPS_CASES)) assert.deepEqual(now[k], golden[k], k);
 });
 
 test('build: the body\'s proportions, all 1 the figure as it was', () => {

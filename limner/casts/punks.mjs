@@ -4,7 +4,7 @@
 // pins, rings and tunnels in the ears, rings through the nose; heavy liner. Each is remembered by the hair and one or
 // two things more, in black, tartan red and bleach. A random one of them is drawn from the same wardrobe.
 import '../parts/punk.mjs'; // the parts this cast is made of register by name
-import { COSTUMES, FAMILIES, buildOf } from '../people.mjs';
+import { COSTUMES, FAMILIES, buildOf, pickIn } from '../people.mjs';
 import { parts, HAIR_COLORS } from '../portrait.mjs';
 import { rand } from '../rng.mjs';
 
@@ -26,19 +26,18 @@ export const PUNKS = {
   drummer: { family: 'roundSoft', hair: 'chelsea', costume: 'teeOnly', makeup: ['punkLiner'], marks: ['studCollar'], set: { hairColor: DYES[5], accessories: ['helixRings'], face: { width: 160, height: 202 }, eyes: { style: 'round', spacing: 58 }, nose: { style: 'upturned', width: 18, length: 36 }, mouth: { width: 44, fullness: 0.55 }, body: { width: 0.98 }, pose: { turn: -0.4, headTilt: -0.06 } } },
   oldGuard: { family: 'heavyBrow', hair: 'libertySpikes', age: 'mid', costume: 'studded', marks: ['studCollar', 'punkSeptum'], set: { hairColor: DYES[3], accessories: ['lobeTunnels'], face: { width: 168, height: 206 }, eyes: { style: 'hooded', spacing: 50, bags: 0.6 }, nose: { style: 'roundedTip', width: 22, length: 42 }, mouth: { style: 'thin', width: 46, fullness: 0.25 }, body: { width: 1.1 }, pose: { turn: 0.3, shoulder: -0.3 } } },
 };
-const one = (s, list) => list[Math.floor(rand(s) * list.length)];
 const OUTFITS = [['studded', 0], ['studded', 1], ['teeOnly', 0], ['teeOnly', 1], ['tartan', 0], ['tartan', 1], ['denimVest', 0]];
 const BODY = [[], [], ['studCollar'], ['padlockChain'], ['bandolier'], ['punkSeptum'], ['punkNostril'], ['studCollar', 'punkNostril']];
 const EARS = [[], ['safetyPinEar'], ['helixRings'], ['lobeTunnels']];
 const NATURAL = ['#1c1714', '#2e221a', '#3e2c20', '#5a3e2a']; // the colour the hair grows: a beard is never dyed with the head
 /** A random one of them: an outfit from the wardrobe, liner on most, and one or two pieces of hardware, drawn from the person's own stream. An archetype's costume, makeup and marks replace these; its `set.accessories` replaces the ears. */
-const signature = (s) => { const [costume, v] = one(s, OUTFITS), liner = rand(s) < 0.7, marks = one(s, BODY), accessories = one(s, EARS), beard = one(s, NATURAL), { top, jacket, pants } = COSTUMES[costume](v);
+const signature = (s) => { const [costume, v] = pickIn(s, OUTFITS), liner = rand(s) < 0.7, marks = pickIn(s, BODY), accessories = pickIn(s, EARS), beard = pickIn(s, NATURAL), { top, jacket, pants } = COSTUMES[costume](v);
   return { top, jacket, pants, makeup: liner ? ['punkLiner'] : [], marks, accessories, facialHair: { color: beard }, eyes: { browColor: beard } }; }; // the brows the hair grew, not the dye
 export default {
   name: 'punks', families: FAMILIES,
   skins: [], hairColors: [...DYES, HAIR_COLORS.jetBlack], irises: ['#3a2a22', '#4a5a6a', '#5a6a4a'], clothes: [BLACK, TARTAN, BLEACH, DENIM, OLIVE],
   pools: { tops: parts('top', { any: ['only:punk'] }), jackets: ['studdedLeather', 'denimJacket', 'leatherJacket'], beards: parts('facialHair', { all: ['everyday'] }), hair: ['libertySpikes', 'mohawkFin', 'chelsea', 'leopardCrop', 'libertySpikes', 'mohawkFin'], glasses: [], details: [], graphics: [] },
-  wardrobe: { establish: ['none'], develop: ['none'], climax: ['none'], release: ['none'], none: ['none'] },
-  archetypes: PUNKS, archetypeNames: Object.keys(PUNKS), costumes: Object.keys(PUNK_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: buildOf('punkHuman'), contrast: 1.7, asym: 1.2,
+  wardrobe: { none: ['none'] }, // every role
+  archetypes: PUNKS, archetypeNames: Object.keys(PUNKS), costumes: Object.keys(PUNK_COSTUMES), build: buildOf('human'), contrast: 1.7, asym: 1.2,
   base: signature,
 };

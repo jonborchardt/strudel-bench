@@ -11,13 +11,12 @@
 // Two tops are worn in shirtsleeves: with `vest` set, `color` is the shirt (or blouse) and so the sleeves, and `vest`
 // the waistcoat or corset; without it `color` is the waistcoat and the sleeves are of a piece with it (the arms are
 // always the top's colour when there is no jacket, so a crowd member reads as dressed in a suit).
-import { TOPS, JACKETS, HATS, HAT_CROWN, GLASSES, ACCESSORIES, PROPS, arm, shade, path, ellipse, rect, stroke, tag } from '../portrait.mjs';
+import { TOPS, JACKETS, HATS, HAT_CROWN, GLASSES, ACCESSORIES, PROPS, arm, shade, path, ellipse, rect, stroke } from '../portrait.mjs';
+import { tagPack, torso, SHOULDERS, f1 } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const BRASS = '#b88a3a', BRASS_LIT = '#f0d590', BRASS_DK = '#6e4d1c', LENS = '#2a2622', SHIRT = '#ece4d6', LEATHER = '#4a3527';
-const r1 = (v) => Math.round(v * 10) / 10;
 /** An arc as a polyline (the path grammar has no A): from angle a0 to a1, radians, y down. */
-const arc = (x, y, rx, ry, a0, a1, n = 10) => 'M ' + Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (a1 - a0) * i / n; return `${r1(x + rx * Math.cos(a))} ${r1(y + ry * Math.sin(a))}`; }).join(' L ');
+const arc = (x, y, rx, ry, a0, a1, n = 10) => 'M ' + Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (a1 - a0) * i / n; return `${f1(x + rx * Math.cos(a))} ${f1(y + ry * Math.sin(a))}`; }).join(' L ');
 const UPPER_LEFT = [Math.PI * 1.05, Math.PI * 1.6], LOWER_RIGHT = [Math.PI * 0.05, Math.PI * 0.6];
 /** A brass ring or disc, modelled: its shadow, the metal, the dark lower edge, the lit upper edge. */
 const brass = (x, y, r, sw = Math.max(1, r * 0.22)) => [ellipse(x + r * 0.08, y + r * 0.14, r, r, { fill: '#000', op: 0.22 }), ellipse(x, y, r, r, { fill: BRASS }),
@@ -25,12 +24,12 @@ const brass = (x, y, r, sw = Math.max(1, r * 0.22)) => [ellipse(x + r * 0.08, y 
 /** A brass button: a modelled disc with a glint. */
 const button = (x, y, r = 3.6) => [...brass(x, y, r, r * 0.5), ellipse(x - r * 0.35, y - r * 0.35, r * 0.3, r * 0.3, { fill: '#fff8e0', op: 0.8 })];
 /** A gear: square teeth round a rim, a hub, a hole, lit and shadowed like the rest of the brass. */
-const gear = (x, y, r, teeth = 8, fill = BRASS) => { const pts = []; for (let i = 0; i < teeth; i++) { const a = (i / teeth) * Math.PI * 2, w = Math.PI / teeth * 0.55; for (const [da, rr] of [[-w * 1.25, r * 0.78], [-w * 0.7, r], [w * 0.7, r], [w * 1.25, r * 0.78]]) pts.push(`${r1(x + rr * Math.cos(a + da))} ${r1(y + rr * Math.sin(a + da))}`); }
+const gear = (x, y, r, teeth = 8, fill = BRASS) => { const pts = []; for (let i = 0; i < teeth; i++) { const a = (i / teeth) * Math.PI * 2, w = Math.PI / teeth * 0.55; for (const [da, rr] of [[-w * 1.25, r * 0.78], [-w * 0.7, r], [w * 0.7, r], [w * 1.25, r * 0.78]]) pts.push(`${f1(x + rr * Math.cos(a + da))} ${f1(y + rr * Math.sin(a + da))}`); }
   const d = `M ${pts.join(' L ')} Z`; return [path(d, { fill: '#000', op: 0.25 }), path(d, { fill }), path(arc(x, y, r * 0.7, r * 0.7, ...LOWER_RIGHT), stroke(BRASS_DK, r * 0.16, 0.7)), path(arc(x, y, r * 0.7, r * 0.7, ...UPPER_LEFT), stroke(BRASS_LIT, r * 0.12, 0.8)),
     ellipse(x, y, r * 0.42, r * 0.42, { fill: shade(fill, 0.8) }), ellipse(x, y, r * 0.18, r * 0.18, { fill: '#1e1a16' })]; };
 /** One goggle eyepiece: a heavy brass rim with a dark lower edge and a lit upper one, a stepped inner rim, smoked glass with a reflection across it, rivets. */
 const eyepiece = (x, y, r, rivets = 6) => [...brass(x, y, r, r * 0.2), ellipse(x, y, r * 0.76, r * 0.76, { fill: BRASS_DK }), ellipse(x, y, r * 0.68, r * 0.68, { fill: LENS }),
-  path(`M ${r1(x - r * 0.5)} ${r1(y - r * 0.05)} Q ${r1(x - r * 0.3)} ${r1(y - r * 0.55)} ${r1(x + r * 0.2)} ${r1(y - r * 0.55)} Q ${r1(x - r * 0.2)} ${r1(y - r * 0.35)} ${r1(x - r * 0.5)} ${r1(y - r * 0.05)} Z`, { fill: '#fff', op: 0.35 }),
+  path(`M ${f1(x - r * 0.5)} ${f1(y - r * 0.05)} Q ${f1(x - r * 0.3)} ${f1(y - r * 0.55)} ${f1(x + r * 0.2)} ${f1(y - r * 0.55)} Q ${f1(x - r * 0.2)} ${f1(y - r * 0.35)} ${f1(x - r * 0.5)} ${f1(y - r * 0.05)} Z`, { fill: '#fff', op: 0.35 }),
   ellipse(x + r * 0.3, y + r * 0.3, r * 0.08, r * 0.08, { fill: '#fff', op: 0.5 }),
   ...Array.from({ length: rivets }, (_, i) => { const a = i * Math.PI * 2 / rivets + 0.4; return ellipse(x + r * 0.88 * Math.cos(a), y + r * 0.88 * Math.sin(a), r * 0.07, r * 0.07, { fill: BRASS_DK }); })];
 /** A pair of goggles where they sit: two eyepieces at (x0, y), (x1, y), a leather bridge, the strap from each outer rim to (sx0, sy) and (sx1, sy). */
@@ -72,7 +71,7 @@ HATS.aviatorCap = (p) => { const c = p.hat.color, dark = shade(c, 0.6), fleece =
   ...goggles(176, 224, 104, 15, 130, 270, 112)]; };
 HAT_CROWN.aviatorCap = 140;
 /** A small lady's top hat, perched and tilted on one side of the head: a crown and brim, a ribbon, a curling feather over the top, a gear pinned to the ribbon. No crown line: it sits on the hair as drawn. */
-HATS.ladyTopHat = (p) => { const c = p.hat.color, dark = shade(c, 0.55), rib = p.hat.accent ?? '#6a2a2a', R = (x, y) => { const a = 0.22, dx = x - 228, dy = y - 86; return `${r1(228 + dx * Math.cos(a) - dy * Math.sin(a))} ${r1(86 + dx * Math.sin(a) + dy * Math.cos(a))}`; };
+HATS.ladyTopHat = (p) => { const c = p.hat.color, dark = shade(c, 0.55), rib = p.hat.accent ?? '#6a2a2a', R = (x, y) => { const a = 0.22, dx = x - 228, dy = y - 86; return `${f1(228 + dx * Math.cos(a) - dy * Math.sin(a))} ${f1(86 + dx * Math.sin(a) + dy * Math.cos(a))}`; };
   const d = (s) => s.replace(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g, (_, x, y) => R(+x, +y));
   return [
     path(d('M 222 64 C 246 30, 296 22, 318 6 C 300 34, 262 52, 236 68 Z'), { fill: '#2a2a28' }), path(d('M 230 62 C 256 36, 290 26, 316 8'), stroke('#fff', 1, 0.3)), // the feather, raked back
@@ -101,7 +100,7 @@ GLASSES.loupeGoggles = () => [...GLASSES.aeroGoggles(),
 const pull = (x, y, s, c) => [path(`M ${x + s * 4} ${y} Q ${x + s * 18} ${y - 4} ${x + s * 32} ${y - 14}`, stroke(shade(c, 0.6), 2, 0.5)), path(`M ${x + s * 5} ${y + 2} Q ${x + s * 18} ${y - 1} ${x + s * 32} ${y - 10}`, stroke('#fff', 1, 0.12))]; // the cloth pulled from a button: a fold and its lit ridge
 /** A waistcoat over a shirt: notched lapels with a lit edge and a shadow under them, the shirt's collar points and a puffed cravat with a stickpin in the V, brass buttons pulling the cloth, a watch chain to a pocket with a gear fob. */
 TOPS.waistcoat = (p) => { const vest = p.top.vest ?? p.top.color, shirt = p.top.vest ? p.top.color : p.top.shirt ?? SHIRT, dark = shade(vest, 0.55), cravat = p.top.cravat ?? p.top.accent ?? '#6a2a2a'; return [
-  torso('M 66 480 C 80 388, 126 358, 162 348 L 238 348 C 274 358, 320 388, 334 480 Z', shirt),
+  torso(SHOULDERS, shirt),
   path('M 180 352 L 200 436 L 220 352 Z', { fill: '#000', op: 0.08 }),
   path('M 168 352 L 186 368 L 200 352 L 214 368 L 232 352 L 214 342 L 186 342 Z', { fill: shirt, collar: true }), path('M 168 352 L 186 368 L 200 352 M 200 352 L 214 368 L 232 352', { ...stroke('#000', 1, 0.2), collar: true }), // the collar's points
   path('M 188 352 Q 200 346 212 352 L 220 384 Q 214 404 200 410 Q 186 404 180 384 Z', { fill: cravat }), path('M 192 360 Q 196 384 200 404', stroke(shade(cravat, 0.6), 1.6, 0.6)), path('M 208 362 Q 206 384 204 402', stroke('#fff', 1.6, 0.15)), // the cravat, puffed
@@ -154,7 +153,7 @@ JACKETS.aviatorCoat = (p) => { const c = p.jacket.color, dark = shade(c, 0.55), 
   path('M 120 400 Q 130 440 126 480', stroke('#fff', 6, 0.08)), path('M 274 400 Q 270 440 276 480', stroke('#fff', 4, 0.06)), path('M 300 420 Q 296 460 300 500', stroke('#000', 14, 0.12)), // the sheen
   path('M 116 384 C 120 352, 160 338, 200 346 C 240 338, 280 352, 284 384 L 264 414 C 250 392, 232 376, 214 378 L 200 392 L 186 378 C 168 376, 150 392, 136 414 Z', { fill: fleece }), // the fleece collar
   path('M 136 414 C 150 392, 168 376, 186 378 L 200 392 L 214 378 C 232 376, 250 392, 264 414', stroke(fd, 3)),
-  ...Array.from({ length: 22 }, (_, i) => { const t = i / 21, x = 124 + t * 152, y = 368 + Math.abs(t - 0.5) * 30 + Math.sin(i * 2.1) * 6; return path(`M ${r1(x)} ${r1(y)} Q ${r1(x + 3)} ${r1(y - 4)} ${r1(x + 6)} ${r1(y)} Q ${r1(x + 9)} ${r1(y + 4)} ${r1(x + 12)} ${r1(y)}`, stroke(fd, 1.6, 0.6)); }), // its curl
+  ...Array.from({ length: 22 }, (_, i) => { const t = i / 21, x = 124 + t * 152, y = 368 + Math.abs(t - 0.5) * 30 + Math.sin(i * 2.1) * 6; return path(`M ${f1(x)} ${f1(y)} Q ${f1(x + 3)} ${f1(y - 4)} ${f1(x + 6)} ${f1(y)} Q ${f1(x + 9)} ${f1(y + 4)} ${f1(x + 12)} ${f1(y)}`, stroke(fd, 1.6, 0.6)); }), // its curl
   path('M 130 380 C 150 360, 176 352, 196 354', stroke('#fff', 3, 0.3))]; };
 /** A duster: a long canvas coat hanging open, a coachman's cape over the shoulders to mid-chest, its collar turned up behind the jaw. */
 JACKETS.duster = (p) => { const c = p.jacket.color, dark = shade(c, 0.6); return [
@@ -177,9 +176,9 @@ ACCESSORIES.brassEar = { at: 'ear', ops: () => [path('M 286 210 C 296 196, 300 1
   ...[0, 1, 2, 3].map((i) => ellipse(282 + 8 * Math.cos(i * 1.57), 220 + 14 * Math.sin(i * 1.57), 1.4, 1.4, { fill: BRASS_DK })), ...gear(282, 220, 5, 7)] };
 /** A brass forearm: the sleeve rolled to the elbow, then a riveted casing with two pistons along it, a brass hand of three jointed fingers raised in front of the chest. */
 PROPS.brassArm = { arms: [1], front: (p) => { const ex = 308, ey = 482, wx = 258, wy = 400, L = Math.hypot(wx - ex, wy - ey), ux = (wx - ex) / L, uy = (wy - ey) / L, nx = -uy, ny = ux;
-  const at = (t, w) => `${r1(ex + (wx - ex) * t + nx * w)} ${r1(ey + (wy - ey) * t + ny * w)}`, W = (t) => 25 - 8 * t; // a point along the forearm, t from the elbow to the wrist, w across it
+  const at = (t, w) => `${f1(ex + (wx - ex) * t + nx * w)} ${f1(ey + (wy - ey) * t + ny * w)}`, W = (t) => 25 - 8 * t; // a point along the forearm, t from the elbow to the wrist, w across it
   const hand = (dx, dy, len, a) => { const x1 = wx + ux * 14 + dx, y1 = wy + uy * 14 + dy, x2 = x1 + Math.cos(a) * len, y2 = y1 + Math.sin(a) * len, x3 = x2 + Math.cos(a - 0.35) * len * 0.7, y3 = y2 + Math.sin(a - 0.35) * len * 0.7;
-    return [path(`M ${r1(x1)} ${r1(y1)} L ${r1(x2)} ${r1(y2)} L ${r1(x3)} ${r1(y3)}`, stroke(BRASS_DK, 9)), path(`M ${r1(x1)} ${r1(y1)} L ${r1(x2)} ${r1(y2)} L ${r1(x3)} ${r1(y3)}`, stroke(BRASS, 6)), ellipse(x2, y2, 3.6, 3.6, { fill: BRASS_DK }), ellipse(x2 - 1, y2 - 1, 1.4, 1.4, { fill: BRASS_LIT })]; }; // a finger: two jointed segments, curling
+    return [path(`M ${f1(x1)} ${f1(y1)} L ${f1(x2)} ${f1(y2)} L ${f1(x3)} ${f1(y3)}`, stroke(BRASS_DK, 9)), path(`M ${f1(x1)} ${f1(y1)} L ${f1(x2)} ${f1(y2)} L ${f1(x3)} ${f1(y3)}`, stroke(BRASS, 6)), ellipse(x2, y2, 3.6, 3.6, { fill: BRASS_DK }), ellipse(x2 - 1, y2 - 1, 1.4, 1.4, { fill: BRASS_LIT })]; }; // a finger: two jointed segments, curling
   return [
   ...arm(p, 1, { lift: 0.35, elbow: [ex, ey], wrist: [ex - 6, ey - 8], hand: false }), // the sleeve to the elbow
   ellipse(ex - 2, ey - 2, 32, 22, { fill: shade(p.top.color, 0.88) }), path(`M ${ex - 30} ${ey - 8} Q ${ex} ${ey - 22} ${ex + 28} ${ey - 12}`, stroke('#000', 2, 0.25)), // its roll
@@ -193,11 +192,5 @@ PROPS.brassArm = { arms: [1], front: (p) => { const ex = 308, ey = 482, wx = 258
   ...brass(wx + ux * 8, wy + uy * 8, 16, 4), ellipse(wx + ux * 8, wy + uy * 8, 6, 6, { fill: BRASS_DK })]; } }; // the wrist's joint, over the knuckles
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
-export const STEAMPUNK = { hats: ['topHatGoggles', 'bowler', 'aviatorCap', 'ladyTopHat'], glasses: ['monocle', 'aeroGoggles', 'loupeGoggles'], tops: ['waistcoat', 'corset', 'militaryJacket'], jackets: ['frockCoat', 'aviatorCoat', 'duster'], props: ['brassArm'] };
-export const STEAMPUNK_ACCESSORIES = ['foreheadGoggles', 'brassEar'];
-for (const n of STEAMPUNK.hats) tag('hat', n, 'only:steampunk');
-for (const n of STEAMPUNK.glasses) tag('glasses', n, 'only:steampunk');
-for (const n of STEAMPUNK.tops) tag('top', n, 'only:steampunk');
-for (const n of STEAMPUNK.jackets) tag('jacket', n, 'only:steampunk');
-for (const n of STEAMPUNK.props) tag('props', n, 'only:steampunk');
-for (const n of STEAMPUNK_ACCESSORIES) tag('accessories', n, 'only:steampunk');
+export const STEAMPUNK = { hats: ['topHatGoggles', 'bowler', 'aviatorCap', 'ladyTopHat'], glasses: ['monocle', 'aeroGoggles', 'loupeGoggles'], tops: ['waistcoat', 'corset', 'militaryJacket'], jackets: ['frockCoat', 'aviatorCoat', 'duster'], props: ['brassArm'], accessories: ['foreheadGoggles', 'brassEar'] };
+tagPack(STEAMPUNK, 'only:steampunk');

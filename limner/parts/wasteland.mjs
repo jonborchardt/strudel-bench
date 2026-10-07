@@ -6,22 +6,14 @@
 // a salvaged helmet; cloth wrapped and strapped for a shirt, a leather vest with a tyre for a pauldron, a road sign
 // strapped on for a breastplate; dirt and patches on whatever survived. parts.html?pack=wasteland is the sheet.
 import { TOPS, JACKETS, HATS, HAT_CROWN, MAKEUP, MARKS, PROPS, GLASSES, NECKLINES, facePath, shade, lcg, path, ellipse, rect, line, clip, UNCLIP, stroke, tag } from '../portrait.mjs';
+import { tagPack, torso, fp, f1, poly, taper, own, SHOULDERS, sideOf } from './pen.mjs';
 
-const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill }); // as portrait.mjs: a top's torso runs past the sheet's bottom
 const DIRT = '#4a3826', DUSTLIGHT = '#cbb58c', LEATHER = '#4a3527', BRASS = '#9a7a3a', RUBBER = '#2a2a2c', STEEL = '#8d8b84', RUSTC = '#8a4a2a', OILC = '#1e1b18';
-const fp = (fill, op = 1) => ({ fill, op });
-const f1 = (v) => Math.round(v * 10) / 10;
-const poly = (pts) => `M ${pts.map(([x, y]) => `${f1(x)} ${f1(y)}`).join(' L ')} Z`;
 /** An irregular closed plane round (cx, cy): n jittered points joined by curves through their midpoints, so it has no corners and no clean edge. */
 const blob = (rnd, cx, cy, rx, ry, n = 8, rot = 0) => {
   const pts = Array.from({ length: n }, (_, i) => { const a = rot + ((i + (rnd() - 0.5) * 0.5) / n) * Math.PI * 2, k = 0.62 + rnd() * 0.5, c = Math.cos(a), s = Math.sin(a); return [cx + (c * Math.cos(rot) - s * Math.sin(rot)) * rx * k, cy + (c * Math.sin(rot) + s * Math.cos(rot)) * ry * k]; });
   const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], m0 = mid(pts[n - 1], pts[0]);
   return `M ${f1(m0[0])} ${f1(m0[1])} ${pts.map((p, i) => { const m = mid(p, pts[(i + 1) % n]); return `Q ${f1(p[0])} ${f1(p[1])} ${f1(m[0])} ${f1(m[1])}`; }).join(' ')} Z`;
-};
-/** A stroke as a shape: a band along the polyline `pts`, `w` wide at its start and narrowing to `w * end` at its end (a drag of paint, a wipe, a drip). */
-const taper = (pts, w, end = 0.1) => {
-  const n = pts.length, side = (sgn) => pts.map(([x, y], i) => { const [ax, ay] = pts[Math.max(0, i - 1)], [bx, by] = pts[Math.min(n - 1, i + 1)], dx = bx - ax, dy = by - ay, l = Math.hypot(dx, dy) || 1, h = (w / 2) * (1 - (1 - end) * (i / (n - 1))); return [x - (dy / l) * h * sgn, y + (dx / l) * h * sgn]; });
-  return poly([...side(1), ...side(-1).reverse()]);
 };
 /** A row of stitches across the line from a to b: short crossing ticks, each with a dark hole at its ends. */
 const stitches = ([ax, ay], [bx, by], n, len, c, sw = 1.4, op = 0.75) => Array.from({ length: n }, (_, i) => {
@@ -30,8 +22,6 @@ const stitches = ([ax, ay], [bx, by], n, len, c, sw = 1.4, op = 0.75) => Array.f
 });
 /** Paint clipped to this face's own outline, exactly, whatever its jaw, chin and lopsidedness. */
 const faceClip = (p) => clip(facePath(p));
-/** One person's own generator for where their dirt goes: from what does not change with a turn of the head, so the smears stay put while the head moves. */
-const own = (p, k = 0) => { let h = 7 + k; for (const ch of `${p.skin}${p.hairColor}${p.face.height}${p.mouth.width}`) h = (h * 31 + ch.charCodeAt(0)) % 1000003; return lcg((p.seed ?? 1) * 17 + h); };
 
 // --- on the skin ------------------------------------------------------------------------------------------------
 /** Grime worked into the skin: a dust wash down one side of the jaw, a darker wipe across a cheekbone, dirt at the hairline and a few flecks; irregular planes, clipped to the face, laid out by the person. */
@@ -77,7 +67,7 @@ MAKEUP.scarStitched = { fit: 'face', skin: (p) => { const c = shade(p.skin, 0.55
 
 // --- over the face -----------------------------------------------------------------------------------------------
 /** A respirator over the nose and the mouth: a moulded rubber cup in the light, a valve at its front, a filter canister on each cheek and the straps back to the ears. */
-MAKEUP.respirator = { fit: 'face', face: (p) => { const sd = p.light?.side || -1, cup = 'M 166 240 C 170 220, 230 220, 234 240 C 240 270, 226 302, 200 306 C 174 302, 160 270, 166 240 Z'; return [
+MAKEUP.respirator = { fit: 'face', face: (p) => { const sd = sideOf(p), cup = 'M 166 240 C 170 220, 230 220, 234 240 C 240 270, 226 302, 200 306 C 174 302, 160 270, 166 240 Z'; return [
   ...[-1, 1].flatMap((s) => [path(`M ${200 + s * 30} 252 Q ${200 + s * 62} 236 ${200 + s * 84} 226`, stroke('#000', 8, 0.18)), path(`M ${200 + s * 30} 250 Q ${200 + s * 62} 234 ${200 + s * 84} 224`, stroke(RUBBER, 5, 0.95))]), // a strap back to each ear, its shadow on the cheek
   path(cup.replace(/(\d+) (\d+)/g, (m, x, y) => `${x} ${+y + 6}`), fp('#000', 0.22)), // its shadow on the chin
   path(cup, { fill: '#3a3c40' }), path(cup, stroke('#1c1d20', 2, 0.8)),
@@ -142,7 +132,6 @@ HATS.scrapHelmet = (p) => { const c = p.hat.color, r = lcg(7); return [path('M 1
 HAT_CROWN.scrapHelmet = 132;
 
 // --- on the body ------------------------------------------------------------------------------------------------
-const SHOULDERS = 'M 66 480 C 80 388, 126 358, 162 348 L 238 348 C 274 358, 320 388, 334 480 Z';
 /** Cloth wrapped and strapped for a shirt: turns of it across the body, each a tone of its own with a torn end, threads hanging from the tears, a patch sewn on, and a leather strap across the chest pressing into the cloth. */
 TOPS.ragWrap = (p) => { const c = p.top.color, dark = shade(c, 0.68), lite = shade(c, 1.16), r = lcg(3); return [
   torso(SHOULDERS, c),
@@ -199,11 +188,5 @@ MARKS.patched = { body: (p) => { const r = own(p, 4), a = [[148, 404], [182, 399
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const WASTELAND = { makeup: ['grime', 'sunweathered', 'goggleTan', 'sootBand', 'fingerStripes', 'scarStitched', 'respirator', 'browGoggles', 'headBandage'], glasses: ['weldingGoggles', 'dustGoggles'], hats: ['shemagh', 'scrapHelmet'], tops: ['ragWrap'], jackets: ['spikedVest', 'scrapArmor'], marks: ['clothGrime', 'patched'], props: ['tyrePauldronLeft', 'tyrePauldronRight'] };
-for (const n of WASTELAND.props) tag('props', n, 'only:wasteland');
-for (const n of WASTELAND.makeup) tag('makeup', n, 'only:wasteland');
-for (const n of WASTELAND.glasses) tag('glasses', n, 'only:wasteland');
+tagPack(WASTELAND, 'only:wasteland');
 tag('glasses', 'weldingGoggles', 'workshop'); // a welder's: an archetype's, not the crowd's
-for (const n of WASTELAND.hats) tag('hat', n, 'only:wasteland');
-for (const n of WASTELAND.tops) tag('top', n, 'only:wasteland');
-for (const n of WASTELAND.jackets) tag('jacket', n, 'only:wasteland');
-for (const n of WASTELAND.marks) tag('marks', n, 'only:wasteland');

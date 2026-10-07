@@ -5,9 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import faces, { characterOf } from '../web/visual/faces.mjs';
-import { readFileSync } from 'node:fs';
-import { portraitOps, renderPortrait, toSvg, tracePath, drawOn, eyeY, mouthY, feetY, mapXY, hatWidth, HAT_TUCK, HAIR_STYLES, HAT_STYLES, TOP_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, HEAD_DY, EAR_POINT, FACE_SHAPES, tag, tagsOf, parts, REGISTRIES } from 'limner';
-import 'limner'; // for its side effect: every cast and pack registers and tags its parts, so the only:* assertions below have something to keep out
+import { portraitOps, HAIR_STYLES, TOP_STYLES, EYE_STYLES } from 'limner';
 import { eventOf, clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
@@ -17,9 +15,6 @@ const song = (g, seed = 3) => g.song({ cps: .5, key: 'C:minor', seed, visual: 'f
   g.section('drop', 2, { role: 'climax', dropout: 1, drums: { density: .9 }, bass: { density: .8 }, melody: { density: .7, notes: '0 2 4 7' }, melody2: { notes: '7 5 4 2' }, pad: { arp: 'up' }, perc: { sound: 'cajon' } }),
 ]).strudel;
 const SNARE = { ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' };
-
-// an eye's lid clip: a Q curve up on the face, not the neckline opening's own Q curve down on the chest
-const isLid = (o) => o.k === 'clip' && /^M [\d.]+ [\d.]+ Q/.test(o.d) && +o.d.split(' ')[2] < 300;
 
 test('faces is importable in Node and draws on a stub context with no randomness or clock of its own', async () => {
   const g = await ready;

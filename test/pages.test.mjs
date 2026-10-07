@@ -40,7 +40,7 @@ test('pages build assembles a static site that works under /<repo>/ and applies 
     // Asserted against the build above rather than a second one: a full build is ~340s, and this needs no new one.
     for (const f of ['limner/index.mjs', 'limner/portrait.mjs', 'limner/people.mjs', 'limner/stances.mjs', 'limner/registry.mjs', 'limner/rng.mjs', 'limner/primitives.mjs', 'limner/package.json', 'limner/casts/undead.mjs', 'limner/parts/undead.mjs'])
       assert.ok(fs.existsSync(path.join(out, f)), `${f} ships`);
-    for (const f of ['limner/test', 'limner/scripts', 'limner/faces.html', 'limner/parts.html', 'limner/casts.html', 'limner/stances.html'])
+    for (const f of ['limner/test', 'limner/scripts', 'limner/faces.html', 'limner/parts.html', 'limner/casts.html'])
       assert.ok(!fs.existsSync(path.join(out, f)), `${f} must not ship`);
     // the pages reach limner by a relative path, not through an import map: relative because a project page lives under
     // /<repo>/, and by path because an import map belongs to a document and cannot be given to a worker

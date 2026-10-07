@@ -4,7 +4,7 @@
 // visor and a jack in the temple; an eye and a jaw; a plated hand raised; a whole arm; half a face. A random one in a
 // crowd draws its own degree of machine from the same stream (`base`), so the street is as mixed as the archetypes.
 import '../parts/cyborg.mjs'; // the parts this cast is made of register by name
-import { COSTUMES, FAMILIES, buildOf } from '../people.mjs';
+import { COSTUMES, FAMILIES, buildOf, pickIn } from '../people.mjs';
 import { parts, HAIR_COLORS } from '../portrait.mjs';
 import { rand } from '../rng.mjs';
 
@@ -35,8 +35,8 @@ export default {
   name: 'cyborgs', families: FAMILIES,
   skins: [], hairColors: ['jetBlack', 'softBlack', 'platinum', 'white', 'gray', 'darkBrown'].map((k) => HAIR_COLORS[k]), irises: ['#3a2a22', '#5a7a8a', '#4a3a2e', '#6a8a7a', '#6fe0ff'], clothes: [GUNMETAL, CHROME, BLACK, RED, TEAL, OLIVE],
   pools: { tops: pool('top'), jackets: parts('jacket', { all: ['everyday'] }), beards: parts('facialHair', { all: ['everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: parts('glasses', { all: ['only:cyborg'] }), details: parts('details', { all: ['everyday'] }), graphics: [] },
-  wardrobe: { establish: ['none'], develop: ['none'], climax: ['none'], release: ['none'], none: ['none'] },
-  archetypes: CYBORGS, archetypeNames: Object.keys(CYBORGS), costumes: Object.keys(CYBORG_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: CYBORG_BUILD, contrast: 1.6, asym: 1.1,
+  wardrobe: { none: ['none'] }, // every role
+  archetypes: CYBORGS, archetypeNames: Object.keys(CYBORGS), costumes: Object.keys(CYBORG_COSTUMES), build: CYBORG_BUILD, contrast: 1.6, asym: 1.1,
   // every random one carries some machine, drawn from the stream (an archetype's own makeup is its home styling, so for them this is only a draw)
-  base: (s) => { const deg = DEGREES[Math.floor(rand(s) * DEGREES.length)], arm = rand(s) < 0.2; return { makeup: deg, props: arm ? ['mechArm'] : [], build: CYBORG_BUILD }; },
+  base: (s) => { const deg = pickIn(s, DEGREES), arm = rand(s) < 0.2; return { makeup: deg, props: arm ? ['mechArm'] : [], build: CYBORG_BUILD }; },
 };

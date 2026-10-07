@@ -35,8 +35,8 @@ export default {
   // the chromatic and metallic hides: bronze, gold, copper, green, red, blue, white, silver and black
   skins: ['#9a7b46', '#c0a95e', '#a8702f', '#5f7a56', '#3f5a4a', '#8d4a3a', '#7a3a3a', '#4a6b82', '#5a7f8d', '#b9b4a8', '#8a8d94', '#4a4a52'], hairColors: ['#2b2824'], irises: ['#d9a22a', '#c98a2a', '#8d1f22'], clothes: [BRONZE, SLATE, OXIDE, MOSS, BONE, NIGHT],
   pools: { tops: pool('top', 'only:dragonborn'), jackets: pool('jacket', 'only:dragonborn'), beards: parts('facialHair', { all: ['only:dragonborn'] }), hair: parts('hair', { all: ['everyday'] }).filter((n) => ['bald', 'shavedHead', 'buzz'].includes(n)), glasses: parts('glasses', { all: ['everyday'] }), details: [], graphics: [] },
-  wardrobe: { establish: ['none'], develop: ['none'], climax: ['none'], release: ['none'], none: ['none'] },
-  archetypes: DRAGONBORN, archetypeNames: Object.keys(DRAGONBORN), costumes: Object.keys(DRAGONBORN_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: DRAGONBORN_BUILD, contrast: 1.6, asym: 1.2,
+  wardrobe: { none: ['none'] }, // every role
+  archetypes: DRAGONBORN, archetypeNames: Object.keys(DRAGONBORN), costumes: Object.keys(DRAGONBORN_COSTUMES), build: DRAGONBORN_BUILD, contrast: 1.6, asym: 1.2,
   base: { makeup: FACE, ears: { size: 0.6 }, nose: { muzzle: 1 }, mouth: { teeth: 'fangs' }, build: DRAGONBORN_BUILD }, // the signature every random one in a crowd carries too, the skeleton with it (an identity takes the build from the cast)
   limits: { 'nose.muzzle': [1, 1], 'ears.pointed': [0, 0.2], 'ears.size': [0.4, 0.9], 'mouth.teeth': ['fangs'], 'build.shoulders': [1.38, 1.7], 'build.trunk': [1.22, 1.5] }, // the build bands are the table's row either side of DRAGONBORN_BUILD: the broadest shoulders and the longest torso of the eight
 };

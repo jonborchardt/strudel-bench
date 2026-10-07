@@ -38,7 +38,7 @@ export default {
   skins: ['porcelain', 'fair', 'lightWarm', 'lightOlive'].map((k) => SKIN_COLORS[k]), hairColors: ['platinum', 'white', 'silver', 'lightBlond', 'jetBlack', 'copper'].map((k) => HAIR_COLORS[k]), irises: ['green', 'grayGreen', 'lightBlue', 'blueGray'].map((k) => EYE_COLORS[k]), clothes: [MOSS, BARK, SILVER, MIST, FERN, NIGHT],
   pools: { tops: parts('top', { any: ['only:elf'] }), jackets: parts('jacket', { any: ['only:elf'] }), beards: parts('facialHair', { all: ['only:elf'] }), hair: parts('hair', { all: ['everyday'], not: ['overEars'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: parts('graphics', { all: ['everyday'] }) },
   wardrobe: { establish: ['none', 'leafCirclet'], develop: ['none', 'leafCirclet', 'none'], climax: ['leafCirclet'], release: ['none'], none: ['none', 'leafCirclet'] },
-  archetypes: ELVES, archetypeNames: Object.keys(ELVES), costumes: Object.keys(ELF_COSTUMES), expressions: null, emotes: null, extraMarks: [], build: ELF_BUILD, contrast: 1.4, asym: 1.2,
+  archetypes: ELVES, archetypeNames: Object.keys(ELVES), costumes: Object.keys(ELF_COSTUMES), build: ELF_BUILD, contrast: 1.4, asym: 1.2,
   base: (s) => ({ ears: { pointed: ELF_EARS[0] + rand(s) * (ELF_EARS[1] - ELF_EARS[0]) } }), // the cast's signature as a rule, on its archetypes and its crowd alike: the ear itself comes to a point (portrait's ears.pointed), by this much on this one, and an archetype may pin its own
   limits: { 'ears.pointed': [0.7, 1], 'nose.muzzle': [0, 0] }, // an elf's ear is the elf: the editor may not round it off (groupsFor)
 };
