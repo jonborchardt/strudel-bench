@@ -32,7 +32,8 @@ export const SYNTHS = {
 const pool = (kind) => parts(kind, { any: ['only:synthwave'] });
 const NIGHT_HATS = ['none', 'none', 'none', 'none', 'headband'];
 /** Everyone in the club stands in its light; some have done their eyes for it. One draw. */
-const base = (s) => { const r = rand(s); return { makeup: r < 0.25 ? [...KEY, 'neonLiner'] : r < 0.4 ? [...KEY, 'holoGlitter'] : KEY }; };
+const NATURAL = ['#1c1714', '#2e221a', '#3e2c20', '#5a3e2a']; // the colour hair grows: a dyed head keeps the brows and the beard it grew
+const base = (s) => { const r = rand(s), grown = NATURAL[Math.floor(rand(s) * NATURAL.length)]; return { makeup: r < 0.25 ? [...KEY, 'neonLiner'] : r < 0.4 ? [...KEY, 'holoGlitter'] : KEY, facialHair: { color: grown }, eyes: { browColor: grown } }; };
 export default {
   name: 'synthwave', families: FAMILIES,
   skins: [], hairColors: ['jetBlack', 'platinum', 'darkBlond', 'auburn'].map((k) => HAIR_COLORS[k]).concat(['#c0287f', '#2a8ad0']), irises: ['#3a2a22', '#4a6a8a', '#5a4a7a'], clothes: [BLACK, VINYL, VIOLET, BLACK, '#9a1f68', '#1d7f99'],

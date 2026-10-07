@@ -5,7 +5,7 @@
 // on a grey's cranium and the wet gloss on its eye, a green's brain lobes and antennae, a reptile's scales (a field of
 // lit and shadowed plates, not arcs) and the bony ridges over its eyes, an insect's chitin plates, compound facets,
 // mandibles and feelers. And five things to wear. parts.html?pack=alien is the sheet.
-import { TOPS, MAKEUP, EYES, NECKLINES, featureScale, shade, mix, soft, path, ellipse, stroke, clip, UNCLIP, tag } from '../portrait.mjs';
+import { TOPS, MAKEUP, EYES, NECKLINES, featureScale, eyeShape, shade, mix, soft, path, ellipse, stroke, clip, UNCLIP, tag } from '../portrait.mjs';
 
 const torso = (d, fill) => path(d.replace(/\s*Z\s*$/, ' L 340 700 L 60 700 Z'), { fill });
 const SHOULDERS = 'M 66 480 C 80 388, 126 358, 162 348 L 238 348 C 274 358, 320 388, 334 480 Z';
@@ -13,14 +13,8 @@ const DARK = '#141418'; // the tone every shadow here is laid in: a neutral dark
 const unit = (v) => Math.max(0, Math.min(1, v ?? 0));
 const r1 = (v) => Math.round(v * 10) / 10;
 
-/** One eye's outline as portrait.mjs's `eye()` draws it (the same style table, scale, openness and squint), so a gloss
- *  or a facet field can be clipped to exactly the eye. Copied geometry, not shared code: keep it in step with `eye()`. */
-function lidOf(p, side) {
-  const e = p.eyes, k = featureScale(p) * (e.size ?? 1), st = EYES[e.style] ?? EYES.almond, sq = unit(e.squint);
-  const cx = 200 + side * e.spacing / 2, o = (e.openness ?? 1) * (side < 0 ? e.asym ?? 1 : 1), y = e.y + (side < 0 ? e.dy ?? 0 : 0);
-  const w = st.w * k, th = st.top * k * o * (1 - 0.25 * sq), bh = st.bot * k * o * (1 - 0.6 * sq), xi = cx - w * side, xo = cx + w * side, yi = y + (st.inn ?? 0) * k, yo = y + (st.out ?? 0) * k, px = cx + 2 * side;
-  return { d: `M ${r1(xi)} ${r1(yi)} Q ${r1(px)} ${r1(y - th)} ${r1(xo)} ${r1(yo)} Q ${r1(cx - side)} ${r1(y + bh)} ${r1(xi)} ${r1(yi)} Z`, cx, y, w, th, bh, xo, yo, k };
-}
+/** One eye's outline: the portrait's own (`eyeShape`), so a gloss or a facet field is clipped to exactly the eye drawn, tilt and all. */
+function lidOf(p, side) { const E = eyeShape(p, side); return { d: E.lid, cx: E.cx, y: E.y, w: E.w, th: E.th, bh: E.bh, xo: E.xo, yo: E.yo, k: E.k }; }
 const lit = (p) => p.light?.side || -1; // the lit side, as the portrait's planes have it (the lit cheekbone is at +side)
 
 /** A grey's head as a volume: the cranium's dome lit on one side, the temples hollowed under it, the cheeks sunk under

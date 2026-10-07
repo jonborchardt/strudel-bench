@@ -10,7 +10,7 @@ import { DEFAULTS, COLORS, EYE_MODES, MOUTH_MODES, EAR_MODES, NOSE_MODES, LEG_ST
 import { STANCES, stanceOf } from './stances.mjs';
 import { FAMILY_NAMES, characterFrom, faceOf, EXPRESSIONS, EDITORIAL_EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from './people.mjs';
 import { CASTS } from './registry.mjs'; // every cast's parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
-import { seed as seedState, rand, prng } from './rng.mjs';
+import { seed as seedState, rand, prng, clamp } from './rng.mjs';
 const EXPRESSION_NAMES = EDITORIAL_EXPRESSIONS; // people.mjs's own snapshot, taken before any cast adds to the registry: a cast that pools an editorial expression beside its own no longer deletes it from this menu
 
 const num = (path, min, max, step = 0.01, o = {}) => ({ kind: 'num', path, min, max, step, ...o });
@@ -165,7 +165,7 @@ export const GROUPS = [
     int('eyes.y', 176, 216), num('eyes.spacing', 36, 76, 0.5), num('eyes.openness', 0, 1.4, 0.02), num('eyes.asym', 0.55, 1.45, 0.02), num('eyes.dy', -6, 6, 0.1),
     num('eyes.depth', 0, 1, 0.02), num('eyes.sclera', 0, 1, 0.02, { nullable: true }), num('eyes.lidWeight', 0, 1, 0.02, { nullable: true }), num('eyes.corner', 0, 1, 0.02, { nullable: true }), num('eyes.bags', 0, 1, 0.02), num('eyes.squint', 0, 1, 0.02),
     col('eyes.iris', 'eyes'), col('eyes.pupil'),
-    num('eyes.browLift', -6, 12, 0.1), num('eyes.browSkew', -0.6, 0.6, 0.02), num('eyes.browInner', -8, 8, 0.1), num('eyes.size', 0.6, 2.6, 0.02), col('eyes.white', null, { nullable: true }), num('eyes.slit', 0, 1, 0.02),
+    num('eyes.browLift', -6, 12, 0.1), num('eyes.browSkew', -0.6, 0.6, 0.02), num('eyes.browInner', -8, 8, 0.1), num('eyes.size', 0.6, 2.6, 0.02), col('eyes.white', null, { nullable: true }), num('eyes.slit', 0, 1, 0.02), num('eyes.tilt', -1, 1, 0.02),
     num('eyes.look.x', -1, 1, 0.02), num('eyes.look.y', -1, 1, 0.02),
     en('nose.style', NOSE_STYLES), en('nose.mode', NOSE_MODES), num('nose.length', 22, 58, 0.5), num('nose.width', 7, 36, 0.5), int('nose.muzzle', 0, 1), // a muzzle is either the face's nose or it is not: `nose` in portrait.mjs swaps the whole drawing at any value over 0, so the in-between was a face with no nose on it. Still a number, so a cast's `limits` narrow it
     en('mouth.style', MOUTH_STYLES), en('mouth.mode', MOUTH_MODES), en('mouth.teeth', TEETH_STYLES), int('mouth.y', 232, 298), num('mouth.width', 26, 70, 0.5), num('mouth.smile', -1, 1, 0.02), num('mouth.fullness', 0, 1, 0.02), num('mouth.open', 0, 1, 0.02), num('mouth.skew', -1, 1, 0.02), num('mouth.press', 0, 1, 0.02), col('mouth.color', null, { nullable: true }),
@@ -194,7 +194,6 @@ export const GROUPS = [
   ] },
 ];
 export const CONTROLS = GROUPS.flatMap((g) => g.items);
-export const PALETTES = COLORS;
 
 // Themes in the editor: a theme is a set of extra options on the menus that already exist (by control path) plus a
 // preset that writes one of its characters over the base. GROUPS and CONTROLS stay the editorial editor, so a test or
@@ -293,7 +292,6 @@ export function report(st, note, url) {
 
 // --- idle animation (the animate toggle): the sitter waiting, on top of whatever the controls say ---
 const wave = (t, period, phase) => Math.sin((t / period + phase) * Math.PI * 2);
-const cl = (v, a, b) => Math.max(a, Math.min(b, v));
 const fract = (n) => { const x = Math.sin(n * 127.1) * 43758.5; return x - Math.floor(x); }; // a deterministic 0..1 per saccade/blink index
 const SACCADE = 2.4, BLINK = 4.3; // seconds between a look somewhere else, and between blinks (both jittered)
 /** The portrait's params with the pose, the gaze, the lids and the expression drifting as if the sitter were bored at
@@ -312,18 +310,18 @@ export function idle(p, t) {
       // the stance drifts, not just the head: on the whole figure a 0.1 shoulder was invisible, so the slow swings are
       // wide enough to read as the sitter shifting their weight and changing pose, over half a minute
       headX: p.pose.headX + 10 * wave(t, 11, 0.1), headY: p.pose.headY + 5 * wave(t, 17, 0.4), headTilt: p.pose.headTilt + 0.09 * wave(t, 13, 0.7),
-      bodyX: p.pose.bodyX + 7 * wave(t, 23, 0.2), bodyTilt: cl(p.pose.bodyTilt + 0.05 * wave(t, 19, 0.9), -0.15, 0.15),
-      turn: cl(p.pose.turn + 0.45 * wave(t, 29, 0.3) + 0.1 * wave(t, 8.5, 0), -1, 1), shoulder: cl(p.pose.shoulder + 0.5 * wave(t, 31, 0.6), -1, 1),
+      bodyX: p.pose.bodyX + 7 * wave(t, 23, 0.2), bodyTilt: clamp(p.pose.bodyTilt + 0.05 * wave(t, 19, 0.9), -0.15, 0.15),
+      turn: clamp(p.pose.turn + 0.45 * wave(t, 29, 0.3) + 0.1 * wave(t, 8.5, 0), -1, 1), shoulder: clamp(p.pose.shoulder + 0.5 * wave(t, 31, 0.6), -1, 1),
     },
     eyes: {
-      openness: cl((p.eyes.openness + 0.1 * Math.max(0, brow)) * lid, 0, 1.6), // interest opens them a little, and the blink still shuts them all the way
-      look: { x: cl(was(0) + (gaze(0) - was(0)) * e, -1, 1), y: cl((was(1) + (gaze(1) - was(1)) * e) * 0.6, -1, 1) },
-      browLift: cl(p.eyes.browLift + 2 * brow, -6, 12), browSkew: cl(p.eyes.browSkew + 0.14 * wave(t, 21, 0.25), -0.6, 0.6), // one brow up: the wry half of the expression
+      openness: clamp((p.eyes.openness + 0.1 * Math.max(0, brow)) * lid, 0, 1.6), // interest opens them a little, and the blink still shuts them all the way
+      look: { x: clamp(was(0) + (gaze(0) - was(0)) * e, -1, 1), y: clamp((was(1) + (gaze(1) - was(1)) * e) * 0.6, -1, 1) },
+      browLift: clamp(p.eyes.browLift + 2 * brow, -6, 12), browSkew: clamp(p.eyes.browSkew + 0.14 * wave(t, 21, 0.25), -0.6, 0.6), // one brow up: the wry half of the expression
     },
     mouth: {
-      smile: cl(p.mouth.smile + 0.22 * mood + 0.06 * wave(t, 7.3, 0.5), -1, 1),
-      open: cl(p.mouth.open + 0.12 * sigh, 0, 1),
-      fullness: cl(p.mouth.fullness + 0.06 * wave(t, 18, 0.35), 0, 1),
+      smile: clamp(p.mouth.smile + 0.22 * mood + 0.06 * wave(t, 7.3, 0.5), -1, 1),
+      open: clamp(p.mouth.open + 0.12 * sigh, 0, 1),
+      fullness: clamp(p.mouth.fullness + 0.06 * wave(t, 18, 0.35), 0, 1),
     },
   });
 }

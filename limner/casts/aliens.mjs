@@ -30,22 +30,22 @@ export const ALIEN_BUILDS = { grey: buildOf('greyAlien'), green: buildOf('greenA
 // Every kind writes every head key any kind changes, so one kind's dial never leaks into another: an archetype's `set`
 // goes over the cast's `base`, which is a random kind, and a grey must not inherit a reptile's muzzle from it.
 const NEUTRAL = { hair: { style: 'bald' }, facialHair: { style: 'none' }, glasses: null, accessories: [], details: [], blush: 0, makeup: [],
-  face: { jaw: 0.75, chin: 0.2, corner: 32, fullness: 0 }, ears: { size: 1, pointed: 0 }, neck: { width: 56, height: 74 },
-  eyes: { style: 'almond', size: 1, spacing: 56, openness: 1, white: null, iris: '#1a1a1a', pupil: '#050506', slit: 0, browStyle: 'none', browLift: 0, sclera: null, lidWeight: null, corner: null, bags: 0, depth: 0.5, squint: 0 },
-  nose: { style: 'short', muzzle: 0, width: 14, length: 30 }, mouth: { style: 'thin', width: 40, fullness: 0.2 } };
+  face: { jaw: 0.75, chin: 0.2, corner: 32, fullness: 0 }, ears: { size: 1, pointed: 0, mode: 'human' }, neck: { width: 56, height: 74 },
+  eyes: { style: 'almond', size: 1, spacing: 56, openness: 1, white: null, iris: '#1a1a1a', pupil: '#050506', slit: 0, browStyle: 'none', browLift: 0, sclera: null, lidWeight: null, corner: null, bags: 0, depth: 0.5, squint: 0, tilt: 0 },
+  nose: { style: 'short', muzzle: 0, width: 14, length: 30, mode: 'human' }, mouth: { style: 'thin', width: 40, fullness: 0.2 } };
 const kind = (k) => merge(NEUTRAL, k);
 /** Each kind's head and body, as portrait keys: what every one of that kind shares. */
 export const KINDS = {
-  grey: kind({ build: ALIEN_BUILDS.grey, face: { width: 190, height: 228, chin: 0.62, jaw: 0.3, corner: 22 }, ears: { size: 0.5 }, neck: { width: 40, height: 84 }, makeup: ['greyCranium', 'eyeGloss'],
-    eyes: { style: 'upturned', size: 2.4, spacing: 90, openness: 1.75, white: '#0a0a0e', iris: '#0a0a0e', pupil: '#050506', sclera: 1, lidWeight: 0, corner: 0, depth: 0.7 },
-    nose: { style: 'short', width: 6, length: 20 }, mouth: { style: 'thin', width: 22, fullness: 0 } }),
+  grey: kind({ build: ALIEN_BUILDS.grey, face: { width: 190, height: 228, chin: 0.62, jaw: 0.3, corner: 22 }, ears: { size: 0.5, mode: 'none' }, neck: { width: 40, height: 84 }, makeup: ['greyCranium', 'eyeGloss'],
+    eyes: { style: 'upturned', size: 2.4, spacing: 90, openness: 1.75, white: '#0a0a0e', iris: '#0a0a0e', pupil: '#050506', sclera: 1, lidWeight: 0, corner: 0, depth: 0.7, tilt: 0.45 },
+    nose: { style: 'short', width: 6, length: 20, mode: 'slits' }, mouth: { style: 'thin', width: 22, fullness: 0 } }),
   green: kind({ build: ALIEN_BUILDS.green, face: { width: 184, height: 214, chin: 0.3, jaw: 0.52, corner: 26 }, ears: { size: 0.6 }, neck: { width: 46, height: 76 }, makeup: ['craniumLobes', 'eyeGloss', 'antennae'],
     eyes: { style: 'round', size: 2, spacing: 70, openness: 1.15, white: '#e8f0c8', iris: '#141414', sclera: 0.25, depth: 0.4 },
     nose: { style: 'short', width: 9, length: 26 }, mouth: { style: 'wide', width: 46, fullness: 0.25 } }),
   reptilian: kind({ build: ALIEN_BUILDS.reptilian, face: { width: 176, height: 210, jaw: 0.86, chin: 0.12, corner: 40 }, ears: { size: 0.5 }, neck: { width: 70, height: 66 }, makeup: ['reptileScales', 'browRidge'],
     eyes: { style: 'narrow', size: 1.1, spacing: 58, openness: 1.25, slit: 0.9, iris: '#d9b02a', white: '#c8b860', sclera: 0.9, depth: 0.9 },
     nose: { style: 'broad', muzzle: 1, width: 22, length: 40 }, mouth: { style: 'wide', width: 52, fullness: 0.12 } }),
-  insectoid: kind({ build: ALIEN_BUILDS.insectoid, face: { width: 168, height: 226, chin: 0.7, jaw: 0.42, corner: 30 }, ears: { size: 0.5 }, neck: { width: 38, height: 86 }, makeup: ['carapace', 'compoundEyes', 'mandibles', 'feelers'],
+  insectoid: kind({ build: ALIEN_BUILDS.insectoid, face: { width: 168, height: 226, chin: 0.7, jaw: 0.42, corner: 30 }, ears: { size: 0.5, mode: 'none' }, neck: { width: 38, height: 86 }, makeup: ['carapace', 'compoundEyes', 'mandibles', 'feelers'],
     eyes: { style: 'round', size: 1.75, spacing: 92, openness: 1.25, white: '#16180f', iris: '#16180f', pupil: '#16180f', sclera: 1, depth: 0.3 },
     nose: { style: 'short', width: 5, length: 22 }, mouth: { style: 'thin', width: 18, fullness: 0 } }),
   nordic: kind({ build: ALIEN_BUILDS.nordic, hair: { style: 'longStraight' }, hairColor: '#ece6d6', face: { width: 150, height: 222, chin: 0.3, jaw: 0.66 }, ears: { size: 0.85 }, neck: { width: 50, height: 88 }, makeup: ['circlet'],

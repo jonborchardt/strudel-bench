@@ -126,6 +126,7 @@ TOPS.corset = (p) => { const body = p.top.vest ?? p.top.color, blouse = p.top.ve
   ...Array.from({ length: 9 }, (_, i) => ellipse(164 + i * 9, 321, 5, 3.4, { fill: shade(blouse, 1.04), collar: true })), // its lace edge
   { ...ellipse(200, 340, 8, 10, { fill: BRASS }), collar: true }, { ...ellipse(200, 340, 6, 8, { fill: '#3a4a5a' }), collar: true }, { ...ellipse(201, 340, 3, 5, { fill: '#ece4d6' }), collar: true }, { ...path('M 194 334 Q 196 330 200 330', stroke(BRASS_LIT, 1.2, 0.8)), collar: true }]; }; // a cameo at the throat
 /** A high-collared military jacket: a standing collar edged in brass, two rows of brass buttons with braided frogging across, a gear medal on a ribbon. */
+TOPS.waistcoat.sleeve = TOPS.corset.sleeve = (p) => (p.top.vest ? p.top.color : p.top.shirt ?? SHIRT); // worn over a shirt: the arms are the shirt's sleeves, for an archetype's `vest` and a crowd member's plain colour alike
 TOPS.militaryJacket = (p) => { const c = p.top.color, dark = shade(c, 0.55), trim = p.top.accent ?? '#c9a03c'; return [
   torso('M 64 480 C 78 390, 124 358, 160 346 L 240 346 C 276 358, 322 390, 336 480 Z', c),
   path('M 198 350 L 194 700', stroke(dark, 2.4, 0.7)), path('M 202 352 L 206 700', stroke('#fff', 1, 0.1)),
