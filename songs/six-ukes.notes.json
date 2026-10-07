@@ -319,6 +319,143 @@
           "why": "closer, outro.raw2 closer why: the bass and the final chord are the foreground of the release"
         }
       ]
+    },
+    {
+      "date": "2026-10-06",
+      "ask": "Thriller's chord chart as a lesson in how a melody moves - not a copy",
+      "changes": [
+        {
+          "section": "chorus",
+          "layer": "raw2/4/5",
+          "why": "the hook plays once and is answered: bars 5-8 are a new busy line falling to the root over iv VII v i, where before the 4-bar hook simply repeated"
+        },
+        {
+          "section": "chorus",
+          "why": "the band holds one chord a bar under the answer (clip 24) so the line stands alone in front of it"
+        },
+        {
+          "section": "chorus",
+          "layer": "raw",
+          "why": "the bass walks the answer's chords (RD RG RE) and lands with it instead of repeating the hook's pedal"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw2/4/5",
+          "why": "the climax answers a third higher and peaks on e5, the song's highest note, which the first two choruses never reach"
+        },
+        {
+          "section": "chorus3",
+          "why": "the last two bars take a chord every half bar (Em F, G Am) so the harmony accelerates into the landing"
+        },
+        {
+          "section": "verse/verse2/verse3",
+          "why": "progression i i i i>i@6 VI v: the last two bars leave the one-chord vamp for VI and the minor v, the band stops, and the baritone sings a four-note tag down to e3 - the verse ends a sentence instead of running out"
+        },
+        {
+          "section": "verse",
+          "layer": "raw4",
+          "why": "the lead voice now enters on that tag, its first appearance in the song"
+        },
+        {
+          "section": "bridge",
+          "why": "progression i VI i VI>i VI i VI i VI V7@2: the seventh bar is the only dominant in the song (E7, the one G#), left ringing into the dropout bar, so the bridge turns instead of fading"
+        },
+        {
+          "section": "pre",
+          "layer": "raw4",
+          "why": "the pre's last three sixteenths walk up into the hook's first note instead of falling away, so the chorus line starts before the bar"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-06",
+      "ask": "the chorus is too flamenco; there is too much pause between bridge and solo",
+      "changes": [
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw2/4/5",
+          "why": "the hook's long notes were an even eight-pick tremolo, which on nylon strings is the one unmistakable classical/flamenco gesture; they are now struck and struck again on the dotted eighth, which is how a funk player holds a note"
+        },
+        {
+          "section": "trans/trans2",
+          "layer": "raw2/4/5",
+          "why": "the same, twenty picks a bar down to four: the transition pulses the chord instead of trembling on it"
+        },
+        {
+          "section": "bridge",
+          "why": "dropout 1>none: the last bar was masked to silence and the solo had to start cold, so the bar now plays - the bass walks the E7 up (e gs b d) into the solo's root, the tenor re-strums the chord on three, the low-G picks it"
+        },
+        {
+          "section": "bridge",
+          "layer": "drums",
+          "why": "fill true: a half-bar palm roll on the cajon over that last bar, so the band leads into the solo instead of the song stopping"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-06",
+      "ask": "the end of chorus 1 2 and 3, raw4 and raw5: the last half sounds too happy and odd - rework those plucks",
+      "changes": [
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw4",
+          "why": "the answer was a scale: stepwise sixteenths walking down to the tonic (c5 b4 a4), which is the most sing-song cadence there is, and the b naturals sat on top of every bar. It is now a riff - one syncopated cell in the minor pentatonic (a c d e g, no major thirds, no b, no f) held against all four chords, entering off the downbeat and falling to the low root"
+        },
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw2",
+          "why": "and raw5 the odd part was three ukes playing that busy line in unison, three humanized nylon attacks smearing every sixteenth; the tenor and concert now chuck the answer's chords on the and of each half instead, so the answer is one voice with the band punctuating"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw4",
+          "why": "the climax riff is the same cell a fourth up and still reaches e5, the song's highest note, but by leap inside the pentatonic rather than by walking the scale"
+        },
+        {
+          "section": "chorus3",
+          "layer": "raw2/raw5",
+          "why": "the chucks follow the half-bar chord changes in the last two bars (Em F, G Am)"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-06",
+      "ask": "do the final mix",
+      "changes": [
+        {
+          "section": "song",
+          "why": "every part now names its seat: position 0 or none writes no pan at all (lib/song.mjs panned), so the bass uke and anything centred was summing at unity in both channels, 3 dB over every part that did name one - the bass measured as the loudest thing in every section for that reason alone"
+        },
+        {
+          "section": "song",
+          "why": "the room is re-seated once for the whole band: baritone .02 (the lead voice in the middle), tenor -.2 and concert -.4 on the left, the soprano .5 and the low-G .2 on the right. The low-G and the soprano are the only right-hand voices in the bridge, the outro and the intro, which is why neither can sit on the left"
+        },
+        {
+          "section": "song",
+          "layer": "chuck",
+          "why": "position .5>.3 level .5>.36: the damped backbeat is this song's snare and it was hard right at .87 and the loudest part of every verse"
+        },
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw3",
+          "why": "level .5>.34 and raw6 .42>.3: the strum bed rang as loud as the hook, so the five ukes sat inside 3 dB of each other"
+        },
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw5",
+          "why": "level .8>.62: the concert doubling was 1 dB off the lead"
+        },
+        {
+          "section": "chorus/chorus2/chorus3",
+          "layer": "raw",
+          "why": "level .65>.85: the bass back level with the kit after it lost its 3 dB of missing pan"
+        },
+        {
+          "section": "verse2",
+          "layer": "raw5",
+          "why": "level .5>.34 and verse3.raw5 .42>.32: the picking is decoration behind the answers, and it measured 1 dB off the lead"
+        }
+      ]
     }
   ],
   "youtube": {

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casts</title>
+<meta name="description" content="One cast on a sheet: its archetypes in their home styling, and a crowd of sixteen the cast's generator draws, as a world would.">
+<meta name="robots" content="noindex">
+<style>
+  html, body { margin: 0; background: #1b1a1c; font-family: system-ui, sans-serif; color: #cfcac1; }
+  main { padding: 16px; }
+  h2 { font-size: 14px; font-weight: 500; margin: 20px 0 8px; }
+  p { font-size: 12px; max-width: 70em; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  figure { margin: 0; width: 150px; text-align: center; font-size: 12px; }
+  svg { width: 150px; height: auto; background: #3a3238; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+  button { font: inherit; padding: 4px 10px; }
+  code { color: #e9e2d0; }
+</style>
+</head>
+<body>
+<main>
+  <h2>cast <span id="name"></span> <small id="casts"></small> <button id="seedup">seed +1</button> <span id="seedlbl"></span></h2>
+  <p>limner/casts/<span id="file"></span>.mjs: who the people are. The archetypes are <code>identityFrom(cast, s, name, i)</code> dressed in their home styling; the crowd is <code>characterFrom(cast, s, role, energy)</code>, a new person per cut from the cast's families, palettes and pools. Parts are on <a href="parts.html">parts.html</a>, poses on <a href="../limner.html#poses">the explorer's poses tab</a>.</p>
+  <h2>archetypes <small>(each in their home costume, makeup and marks)</small></h2><div class="row" id="cast"></div>
+  <h2>costumes <small>(on the first archetype, no paint)</small></h2><div class="row" id="costumes"></div>
+  <h2>crowd <small>(sixteen random people of this cast)</small></h2><div class="row" id="crowd"></div>
+</main>
+<script type="module">
+  import { renderPortrait } from './index.mjs';
+  import { characterFrom, identityFrom, dress } from './people.mjs';
+  import { seed, prng } from './rng.mjs';
+  import { CASTS } from './registry.mjs'; // the casts by name, the editorial one included
+  const name = new URLSearchParams(location.search).get('cast') || 'editorial';
+  document.getElementById('name').textContent = name; document.getElementById('file').textContent = name;
+  document.getElementById('casts').innerHTML = Object.keys(CASTS).map((c) => (c === name ? c : `<a href="?cast=${c}">${c}</a>`)).join(' · ');
+  const cast = CASTS[name] ?? CASTS.editorial;
+  const fig = (svg, label) => `<figure>${svg}<figcaption>${label}</figcaption></figure>`;
+  const bg = { background: '#3a3238' }, ROLES = ['establish', 'develop', 'climax', 'release'];
+  let n = +(location.hash.slice(1) || 1);
+  function sheets() {
+    const s = {}; seed(s, prng(n));
+    document.getElementById('seedlbl').textContent = `seed ${n}`; location.hash = n;
+    const people = cast.archetypeNames.map((a, i) => identityFrom(cast, s, a, i)), lead = people[0];
+    document.getElementById('cast').innerHTML = people.map((c) => fig(renderPortrait({ ...dress(c), ...bg }), `${c.name} · ${c.home.costume}`)).join('');
+    document.getElementById('costumes').innerHTML = cast.costumes.map((c) => fig(renderPortrait({ ...dress(lead, { costume: c, makeup: [], marks: [], props: [] }), ...bg }), c)).join('');
+    const cs = {}; seed(cs, prng(n * 7 + 3));
+    document.getElementById('crowd').innerHTML = Array.from({ length: 16 }, (_, i) => { const role = ROLES[i % 4], c = characterFrom(cast, cs, role, (i % 4) / 3); delete c.cheeks; delete c.frame; return fig(renderPortrait({ ...c, ...bg }), `${role} · ${c.hair.style} · ${c.top.style}${c.jacket.style !== 'none' ? ' · ' + c.jacket.style : ''}`); }).join('');
+  }
+  document.getElementById('seedup').onclick = () => { n++; sheets(); };
+  sheets();
+</script>
+</body>
+</html>

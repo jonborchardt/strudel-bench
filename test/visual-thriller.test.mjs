@@ -1,24 +1,32 @@
-// web/visual/thriller.mjs: the tableau's zombie theme. What it promises: it is off unless a song writes
+// The tableau's zombie theme (THEMES.thriller: limner's undead cast and parts, this repo's thriller dance, bound in
+// web/visual/themes.mjs). What it promises: it is off unless a song writes
 // `visual: { world: 'tableau', theme: 'thriller' }` (the general cast, costumes, poses and part lists are untouched by
 // its being loaded), every zombie part draws, the cast is dead in the ways the file says (ashen skin, milky eyes,
 // rotten teeth, rot as home makeup in every shot), and with it on the tableau plans only its own templates and poses,
 // deterministically, with no clock or randomness of its own. Human eyes judge the look (thriller.html is the sheet).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES as EDITORIAL, layoutOf, FRAMING, previewShot } from '../web/visual/tableau.mjs';
-import thriller, { ZOMBIES, ZOMBIE_NAMES, ZOMBIE_COSTUMES, ZOMBIE_COSTUME_NAMES, ZOMBIE_MAKEUP, ZOMBIE_MARKS, ZOMBIE_PROPS, ZOMBIE_EXPRESSIONS, ZOMBIE_SKINS, POSES, TEMPLATES, PHASES, SPECIAL, claw } from '../web/visual/thriller.mjs';
-import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, EXPRESSIONS } from '../web/visual/cast.mjs';
-import { portraitOps, toSvg, drawOn, TOP_STYLES, JACKET_STYLES, HAT_STYLES, HAIR_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, TEETH_STYLES, TOPS, JACKETS, HATS, HAIR, MAKEUP, MARKS, PROPS, TEETH } from '../web/visual/portrait.mjs';
+// the theme's three halves, each from where it actually lives: the cast and the zombie parts are limner's, the dance
+// is this repo's, and themes.mjs is what ties them together.
+import { POSES, TEMPLATES, PHASES, SPECIAL } from '../web/visual/dances/thriller.mjs';
+import { CAST_MODULES } from 'limner';
+const thriller = THEMES.thriller;
+const { ZOMBIES, ZOMBIE_NAMES, ZOMBIE_COSTUMES, ZOMBIE_COSTUME_NAMES, ZOMBIE_EXPRESSIONS } = CAST_MODULES.undead;
+const { ZOMBIE_MAKEUP, ZOMBIE_MARKS, ZOMBIE_PROPS, ZOMBIE_SKINS, claw } = PACKS.undead;
+import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, EXPRESSIONS } from 'limner';
+import { portraitOps, toSvg, drawOn, TOP_STYLES, JACKET_STYLES, HAT_STYLES, HAIR_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, TEETH_STYLES, TOPS, JACKETS, HATS, HAIR, MAKEUP, MARKS, PROPS, TEETH } from 'limner';
 import { clockOf, createPerformance, fallbackScore, STEP } from '../web/visual/host.mjs';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
 import { seed } from '../web/visual/kit.mjs';
 import { prng } from '../lib/random.mjs';
 import VISUAL from '../lib/visual.json' with { type: 'json' };
-import { THEMES, CASTS, DANCES, PACKS, bindTheme } from '../web/visual/themes.mjs';
-import UNDEAD from '../web/visual/casts/undead.mjs';
+import { THEMES, DANCES, bindTheme } from '../web/visual/themes.mjs';
+import { CASTS, PACKS, STANCES } from 'limner';
+const UNDEAD = CASTS.undead;
 
 const clean = (o) => !/NaN|undefined|Infinity/.test(JSON.stringify(o));
 const draws = (o, what) => { const ops = portraitOps(o); assert.ok(ops.length > 20 && clean(ops), what); const ctx = ctxStub(); drawOn(ctx, ops); assert.equal(ctx.calls.save, ctx.calls.restore, `${what} restores every clip`); assert.ok(toSvg(ops).startsWith('<svg')); return ops; };
@@ -42,7 +50,7 @@ test('the theme is off by default: its parts are registered by name only, and no
   assert.equal(plain.theme, null);
   assert.deepEqual(plain.cast.map((c) => c.name), ARCHETYPE_NAMES, 'a plain tableau casts the archetypes');
   const names = new Set(plain.plan.flat().map((x) => x.tpl)), poses = new Set(plain.plan.flat().map((x) => x.pose));
-  assert.ok([...names].every((t) => EDITORIAL[t]) && [...poses].every((p) => !POSES[p]), 'and plans only editorial shots and poses');
+  assert.ok([...names].every((t) => EDITORIAL[t]) && [...poses].every((p) => !POSES[p] && !STANCES.undead[p]), 'and plans only editorial shots and poses'); // neither the dance's blocking nor the cast's stances
   assert.ok(!JSON.stringify(plain.plan).includes('clawHands') && !JSON.stringify(plain.cast).includes('rotLips'), 'no zombie hand or rot anywhere in it');
   assert.ok(Object.keys(ZOMBIE_EXPRESSIONS).every((e) => EXPRESSIONS[e]) && exprVals('slackJaw').open > 0.3, 'the zombie expressions resolve by name, with the jaw open');
 });
@@ -61,7 +69,7 @@ test('every zombie part draws: garments, hair, hats, teeth, the rot, the grave, 
   const raised = portraitOps({ props: ['clawsUp'] }); assert.equal(raised.filter((o) => o.k === 'line' && o.sw === 52).length, 2, 'arms over the head: two forearms up, none hanging');
   assert.notDeepEqual(claw({ props: [], skin: '#aaa' }, 100, 100, 0), claw({ props: [], skin: '#aaa' }, 100, 100, Math.PI), 'the claw turns');
   const veiled = portraitOps({ hat: { style: 'veil' }, hair: { style: 'longStraight' }, props: ['veilBack'] }); assert.ok(veiled.findIndex((o) => o.fill === '#f6f2ea' && o.op === 0.5) < veiled.findIndex((o) => o.k === 'push'), 'the veil\'s sheet is behind the figure');
-  assert.ok(portraitOps({ top: { style: 'offShoulderSweat' }, skin: '#123456' }).some((o) => o.fill === '#123456' && o.k === 'path' && o.d.startsWith('M 200 388')), 'the sweatshirt bares one shoulder in the skin');
+  assert.ok(portraitOps({ top: { style: 'offShoulderSweat' }, skin: '#123456' }).some((o) => o.fill === '#123456' && o.k === 'path' && o.d.startsWith('M 196 392')), 'the sweatshirt bares one shoulder in the skin');
   assert.ok(portraitOps({ top: { style: 'crewTshirt' }, jacket: { style: 'varsityJacket', color: '#111111', accent: '#eeeeee' } }).some((o) => o.fill === '#eeeeee'), 'a varsity jacket\'s sleeves take the accent');
 });
 
@@ -107,7 +115,7 @@ test('with the theme on, the tableau casts the dead and plans only Thriller shot
     assert.equal(s.theme, 'thriller');
     assert.deepEqual(s.cast.map((c) => c.name), ZOMBIE_NAMES);
     const all = s.plan.flat();
-    assert.ok(all.length >= 2 && all.every((x) => TEMPLATES[x.tpl] && (POSES[x.pose] || x.pose === 'none')), 'every shot is a theme template in a theme pose: ' + all.map((x) => `${x.tpl}/${x.pose}`).join(' '));
+    assert.ok(all.length >= 2 && all.every((x) => TEMPLATES[x.tpl] && (POSES[x.pose] || STANCES.undead[x.pose] || x.pose === 'none')), 'every shot is a theme template in a theme pose: ' + all.map((x) => `${x.tpl}/${x.pose}`).join(' '));
     assert.ok(all[0].tpl === 'riseSolo' && all[0].pose === 'graveReach' && all[0].ids[0] === s.leads[0] && all[0].alts[0][0].expression === 'slackJaw' && all[0].alts[0][0].makeup.length >= 2, 'the song opens on a lead rising, its rot on');
     const last = s.plan.at(-1).at(-1); assert.ok(last.tpl === 'clawDuo' && last.pose === 'clawDuo' && last.ids.length === 2, 'and closes on the leads clawing');
     assert.ok(all.every((x) => x.alts.every((alt) => alt.every((st) => st.makeup.length >= 2 && st.props.length === 0 && ZOMBIE_COSTUMES[st.costume]))), 'in every shot and mutation the rot is on, the hands are the pose\'s, the outfit is the grave\'s');
@@ -123,7 +131,7 @@ test('the binding: lib/visual.json names the theme\'s cast, packs and dance, the
   const g = await ready;
   assert.deepEqual([VISUAL.themes.thriller.cast, VISUAL.themes.thriller.packs, VISUAL.themes.thriller.dance], ['undead', ['eighties', 'undead'], 'thriller']);
   assert.deepEqual(THEMES.thriller.cast, UNDEAD.archetypeNames, 'the bound theme\'s cast is the cast file\'s archetypes');
-  assert.ok(CASTS.undead === UNDEAD && DANCES.thriller.templates === TEMPLATES && THEMES.thriller.templates === TEMPLATES);
+  assert.ok(DANCES.thriller.templates === TEMPLATES && THEMES.thriller.templates === TEMPLATES);
   for (const k of Object.keys(VISUAL.themes)) assert.ok(VISUAL.themes[k].cast && VISUAL.themes[k].packs && VISUAL.themes[k].dance && VISUAL.themes[k].world && VISUAL.themes[k].about, `${k} is a whole row`);
   // the row's packs are read, not decoration: every pack a theme names is a loaded pack module, and a misspelt one is refused where the cast and the dance are
   for (const k of Object.keys(VISUAL.themes)) for (const p of VISUAL.themes[k].packs) assert.ok(PACKS[p], `${k} names the pack ${p}, which is loaded`);
@@ -136,8 +144,9 @@ test('the binding: lib/visual.json names the theme\'s cast, packs and dance, the
 
 test('the themed state is what it was before the theme file was split (test/fixtures/thriller-state.json)', async () => {
   const g = await ready;
-  const pinned = JSON.parse(readFileSync(new URL('./fixtures/thriller-state.json', import.meta.url), 'utf8'));
-  assert.deepEqual(JSON.parse(JSON.stringify(runWorld(tableau, song(g, THEMED), 8).state)), pinned);
+  const url = new URL('./fixtures/thriller-state.json', import.meta.url), state = JSON.parse(JSON.stringify(runWorld(tableau, song(g, THEMED), 8).state));
+  if (process.env.UPDATE_GOLDEN) writeFileSync(url, JSON.stringify(state)); // on purpose only, as golden.test.mjs: read the diff after
+  assert.deepEqual(state, JSON.parse(readFileSync(url, 'utf8')));
 });
 
 test('every theme template draws in every pose it allows, on every set, and the phases, specials and fallbacks are consistent', async () => {
@@ -146,7 +155,7 @@ test('every theme template draws in every pose it allows, on every set, and the 
   for (const ph of Object.values(PHASES)) for (const t of Object.keys(ph.tpls)) assert.ok(TEMPLATES[t], `phase template ${t} exists`);
   for (const t of SPECIAL) assert.ok(TEMPLATES[t]); assert.ok(TEMPLATES[thriller.fallback.red] && TEMPLATES[thriller.fallback.white] && !SPECIAL.has(thriller.fallback.red));
   for (const [name, tpl] of Object.entries(TEMPLATES)) {
-    assert.ok(tpl.n > 0 && tpl.poses.every((p) => POSES[p]) && (!tpl.expression || ZOMBIE_EXPRESSIONS[tpl.expression]), name);
+    assert.ok(tpl.n > 0 && tpl.poses.every((p) => POSES[p] || STANCES.undead[p]) && (!tpl.expression || ZOMBIE_EXPRESSIONS[tpl.expression]), name); // a template's pose is either the dance's blocking or one of the cast's stances
     for (const pose of tpl.poses) for (const set of tpl.set === 'any' ? ['white', 'red'] : [tpl.set]) {
       assert.equal(layoutOf(pose, tpl.n, FRAMING.full, thriller).length, tpl.n, `${pose} places ${tpl.n}`);
       const st = fresh(); st.plan = [[{ ...st.plan[0][0], tpl: name, set, framing: tpl.framing ?? 'close', pose, ids: st.plan[0][0].ids.concat([1, 2]).slice(0, tpl.n), layout: layoutOf(pose, tpl.n, FRAMING[tpl.framing ?? 'close'], thriller), alts: [Array.from({ length: tpl.n }, () => ({ costume: 'thrillerRed', makeup: ['rotLips'], marks: [], props: [], expression: tpl.expression ?? 'slackJaw' }))], fx: tpl.fx ?? null, grid: tpl.grid ?? 0, band: tpl.band ? { color: '#fff', dir: 'v', at: 0.3, size: 0.1 } : null, sculptures: [], gap: false }]];
@@ -161,4 +170,19 @@ test('every theme template draws in every pose it allows, on every set, and the 
   assert.ok(layoutOf('thrillerClaw', 1, FRAMING.full, thriller)[0].props.includes('clawHands') && layoutOf('thrillerClaw', 1, FRAMING.full, thriller)[0].dx === 0 && layoutOf('thrillerClaw', 1, FRAMING.full).length === 1 && !layoutOf('thrillerClaw', 1, FRAMING.full)[0].props.length, 'a theme pose lays out through the theme and is the default stance without it');
   assert.ok(thriller.motion.jaw > 0 && thriller.motion.sway > 1, 'the lurch is bigger than the editorial sway and the kick drops the jaw');
   const plain = createPerformance(tableau, fallbackScore(0.5), { w: 16, h: 9 }).state; assert.equal(plain.theme, null, 'the fallback score has no theme');
+});
+
+// A stance says how one body stands; how many bodies stand that way is the shot's business, and the two paths through
+// layoutOf were never symmetric. A theme's stance spreads across every figure asked for -- splitZombie wants two of
+// deadStill and would otherwise get layout[1] === undefined, a missing half-face -- while five of the editorial stances
+// place exactly one figure however many are asked for. Lifting the stances out of the world nearly flattened that.
+test('a theme stance spreads across the figures a shot asks for; an editorial one does not', async () => {
+  const T = THEMES.thriller;
+  assert.equal(layoutOf('deadStill', 2, FRAMING.close, T).length, 2, 'splitZombie gets both halves');
+  assert.equal(layoutOf('deadStill', 3, FRAMING.close, T).length, 3);
+  assert.equal(layoutOf('thrillerClaw', 1, FRAMING.full, T).length, 1);
+  const two = layoutOf('deadStill', 2, FRAMING.close, T);
+  assert.ok(two[0].dx < 0 && two[1].dx > 0, 'and they stand either side of centre');
+  assert.equal(layoutOf('handsUp', 2, FRAMING.close, null).length, 1, 'an editorial single-figure stance stays one');
+  assert.equal(layoutOf('statueStill', 3, FRAMING.close, null).length, 3, 'the three that were the stance table spread');
 });

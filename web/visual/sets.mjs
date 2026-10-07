@@ -4,7 +4,7 @@
 // winged form, a draped figure, a bust, a vase, a column) as set pieces behind the actors. Every set paints past the
 // frame's edges so a camera punch-in or a tilt never shows the canvas behind it. No randomness: the caller passes the
 // fold positions it drew from its own generator.
-import { tracePath } from './portrait.mjs';
+import { tracePath } from './limner.mjs';
 
 const OVER = 0.3; // how far past the frame a set paints, in frame widths/heights
 

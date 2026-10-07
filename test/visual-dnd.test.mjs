@@ -9,12 +9,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES as EDITORIAL } from '../web/visual/tableau.mjs';
-import { CASTS, THEMES, PACKS } from '../web/visual/themes.mjs';
-import { FANTASY } from '../web/visual/parts/fantasy.mjs';
-import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES, ANATOMY, buildOf, COSTUMES } from '../web/visual/cast.mjs';
-import { portraitOps, toSvg, drawOn, parts, tagsOf, feetY, headBox } from '../web/visual/portrait.mjs';
+import { THEMES } from '../web/visual/themes.mjs';
+import { CASTS, PACKS } from 'limner';
+const { FANTASY } = PACKS.fantasy;
+import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES, ANATOMY, buildOf, COSTUMES } from 'limner';
+import { portraitOps, toSvg, drawOn, parts, tagsOf, feetY, headBox } from 'limner';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
-import { GROUPS, groupsFor, controlsFor } from '../web/visual/editor.mjs';
+import { GROUPS, groupsFor, controlsFor } from '../limner/schema.mjs';
 import { ctxStub, run as runWorld, forbid } from './_visual.mjs';
 import { seed } from '../web/visual/kit.mjs';
 import { prng } from '../lib/random.mjs';
@@ -154,7 +155,7 @@ test('every race is built to the anatomy table: its height against a human\'s, a
   assert.ok(Math.abs(tall('human') - tall('tiefling')) < 8, 'a tiefling stands as a human does');
   assert.ok(tall('elf') > tall('human'), 'an elf is taller than a human, not shorter');
   const order = Object.keys(ANATOMY).sort((a, c) => Math.round(tall(a) / 10) - Math.round(tall(c) / 10) || a.localeCompare(c)); // the two ties are real, so they sort by name rather than by a unit of rounding
-  assert.deepEqual(order, ['gnome', 'halfling', 'dwarf', 'human', 'tiefling', 'elf', 'halfOrc', 'orc', 'dragonborn'], 'and the rest line up shortest to tallest');
+  assert.deepEqual(order, ['gnome', 'halfling', 'dwarf', 'greyAlien', 'greenAlien', 'human', 'postApocalypticHuman', 'steampunkHuman', 'tiefling', 'cyborg', 'elf', 'halfOrc', 'reptilianAlien', 'orc', 'dragonborn'], 'and the rest line up shortest to tallest (the human-statured rows tie, by name)');
 });
 
 test('every cast carries the build the table solves for it, so no cast drifts off ANATOMY by hand', () => {
@@ -164,4 +165,18 @@ test('every cast carries the build the table solves for it, so no cast drifts of
   const slider = Object.fromEntries(GROUPS.flatMap((g) => g.items).filter((c) => c.path.startsWith('build.')).map((c) => [c.path.slice(6), c]));
   for (const cast of Object.values(CASTS)) for (const [k, v] of Object.entries(cast.build === 'default' ? {} : cast.build))
     assert.ok(v >= slider[k].min && v <= slider[k].max, `${cast.name}: build.${k} = ${v} is on the editor's own slider (${slider[k].min}..${slider[k].max}), or the page cannot show the figure it draws`);
+});
+
+// The casts and the part packs are limner's registries now, and a theme row names one of each. The error a misspelt row
+// raises has to keep naming what it got and listing what exists, or a typo in lib/visual.json becomes a blank stage with
+// no clue where to look.
+test('a theme naming a cast limner does not have fails with that cast named and the real ones listed', async () => {
+  const { bindTheme } = await import('../web/visual/themes.mjs');
+  assert.throws(() => bindTheme('bad', { cast: 'wizards', dance: 'editorial', packs: [] }), (e) => {
+    assert.match(e.message, /unknown cast "wizards"/, 'names the cast that was asked for');
+    assert.match(e.message, /editorial/, "and lists one that exists, from limner's registry");
+    return true;
+  });
+  assert.throws(() => bindTheme('bad', { cast: 'editorial', dance: 'editorial', packs: ['sorcery'] }), /unknown pack "sorcery"/);
+  assert.throws(() => bindTheme('bad', { cast: 'editorial', dance: 'moonwalk', packs: [] }), /unknown dance "moonwalk"/);
 });

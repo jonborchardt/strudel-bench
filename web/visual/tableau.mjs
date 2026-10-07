@@ -15,8 +15,7 @@
 // hi-hat blinks one actor every few seconds, an fx impact is a graphic flash frame, a riser is a slow push-in, a
 // dropout holds the shot dark with the eyes shut. Deterministic: randomness only from the state's own generator.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY, feetY } from './portrait.mjs';
-import { identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, METALLIC, wearable, WHITE, RED, GOLD } from './cast.mjs';
+import { portraitOps, drawOn, eyeY, feetY, stanceOf, STANCES, identityOf, dress, exprVals, ARCHETYPE_NAMES, COSTUME_FAMILIES, METALLIC, wearable, WHITE, RED, GOLD } from './limner.mjs';
 import { curtain, cyclorama, voidSet, floorShadow, vignette, sculpture, SCULPTURES } from './sets.mjs';
 import { THEMES } from './themes.mjs';
 
@@ -110,16 +109,24 @@ export function phaseOf(sections, i, climax) {
 }
 
 /** Where each figure stands for a pose: dx (canvas heights from the centre), dy (from the eye line), k (scale), the head's tilt and lean, `turn` (the head off the torso), `shoulder` (one dropped), `headY` (craned forward or tilted back), props the pose adds, a look, `arm` (the index of the figure this one puts an arm on) and `over` (that arm goes over their shoulders, not linked at the hip). Index 0 is nearest the camera. Nothing here is a passport photo: every pose leans, turns or drops a shoulder. */
+/** The stances a shot spreads across every figure rather than placing once: the three that were the `stance` table,
+ * reached through the default case below, which lays n figures out evenly. The other five editorial stances return
+ * exactly one figure however many were asked for, which is what test/fixtures/layout-golden.json pins. This is blocking
+ * -- a fact about how a composition uses a stance, not about the body -- so it is here and not in limner's stances.mjs. */
+const SPREAD_STANCES = ['directFrontal', 'statueStill', 'handsAtSides'];
+
 export function layoutOf(pose, n, fr, theme = null) {
   const sw = 400 / fr.u, F = (o = {}) => ({ dx: 0, dy: 0, k: 1, tilt: 0, bodyTilt: 0, headX: 0, headY: 0, turn: 0, shoulder: 0, props: [], look: null, arm: null, over: false, ...o });
   const tp = theme?.poses?.[pose]; if (tp) { const list = tp(n, sw); return (list.length >= n ? list : Array.from({ length: n }, (_, i) => ({ dx: n === 1 ? 0 : (i - (n - 1) / 2) * sw * 0.7, ...list[0] }))).map((o) => F(o)); } // a theme's own pose: the same fields, written as partials; a single-figure one stands every figure the same way (a split face is two)
-  const stance = { directFrontal: { turn: 0.15, shoulder: 0.3, tilt: 0.02 }, statueStill: { turn: -0.2, shoulder: -0.25, headY: 4 }, handsAtSides: { turn: -0.3, shoulder: 0.4, tilt: -0.04 } }[pose] ?? {}; // the single-figure poses, for any count of figures (a split face is two)
+  // One body's stance is limner's; where the bodies go is this function's. Two kinds spread across every figure asked
+  // for: a theme's own stances (a themed pose always did, through the branch above, so a split shot of two gets two)
+  // and the three editorial ones that were the `stance` table. The other five editorial stances place exactly one
+  // figure however many were asked for, which is what they did before and what the layout golden pins.
+  const stance = stanceOf(pose, theme?.stances);
+  const themed = !!(theme?.stances && STANCES[theme.stances]?.[pose]);
+  if (stance && !themed && !SPREAD_STANCES.includes(pose)) return [F(stance)];
+  if (stance) return Array.from({ length: n }, (_, i) => F({ dx: n === 1 ? 0 : (i - (n - 1) / 2) * sw * 0.7, ...stance }));
   switch (pose) {
-    case 'slightLeanLeft': return [F({ tilt: -0.12, bodyTilt: -0.06, headX: -8, turn: -0.4, shoulder: 0.5 })];
-    case 'slightLeanRight': return [F({ tilt: 0.12, bodyTilt: 0.06, headX: 8, turn: 0.4, shoulder: -0.5 })];
-    case 'swaggerLean': return [F({ tilt: 0.16, bodyTilt: 0.12, headX: 14, dx: -0.06, turn: 0.6, shoulder: 0.7, headY: -6 })];
-    case 'handHeart': return [F({ props: ['handHeartGesture'], headY: 8, tilt: 0.06, turn: 0.2 })];
-    case 'handsUp': return [F({ props: ['handsUp'], headY: -6, tilt: -0.05 })];
     case 'pairFrontal': return [F({ dx: -sw * 0.36, turn: 0.35, tilt: 0.05, shoulder: -0.3 }), F({ dx: sw * 0.36, turn: -0.35, tilt: -0.05, shoulder: 0.3 })];
     case 'linkedArmDuo': return [F({ dx: -sw * 0.3, tilt: 0.06, arm: 1, turn: 0.4, shoulder: 0.4 }), F({ dx: sw * 0.3, tilt: -0.06, turn: -0.3, shoulder: -0.4 })];
     case 'shoulderLeanDuo': return [F({ dx: -sw * 0.34, turn: 0.3, shoulder: -0.4 }), F({ dx: sw * 0.3, tilt: -0.22, headX: -14, dy: 0.02, turn: -0.5, shoulder: 0.6 })];
@@ -129,7 +136,7 @@ export function layoutOf(pose, n, fr, theme = null) {
     case 'dominantForeground': return [F({ dx: -sw * 0.2, dy: 0.08, k: 1.25, turn: 0.6, tilt: 0.08, shoulder: 0.6 }), F({ dx: sw * 0.34, dy: -0.1, k: 0.7, turn: -0.3 })];
     case 'smallGroupCluster': return [F({ dy: 0.02, turn: 0.2, shoulder: 0.3 }), F({ dx: -sw * 0.42, dy: -0.05, k: 0.95, tilt: 0.1, turn: 0.5, bodyTilt: 0.05 }), F({ dx: sw * 0.42, dy: -0.05, k: 0.95, tilt: -0.1, turn: -0.5, bodyTilt: -0.05 })];
     case 'rowFrontal': return [F({ turn: 0.15 }), F({ dx: -sw * 0.75, turn: 0.5, tilt: 0.06, shoulder: 0.4 }), F({ dx: sw * 0.75, turn: -0.5, tilt: -0.06, shoulder: -0.4 })];
-    default: return Array.from({ length: n }, (_, i) => F({ dx: n === 1 ? 0 : (i - (n - 1) / 2) * sw * 0.7, ...stance }));
+    default: return Array.from({ length: n }, (_, i) => F({ dx: n === 1 ? 0 : (i - (n - 1) / 2) * sw * 0.7, ...(stance ?? {}) }));
   }
 }
 
@@ -209,7 +216,7 @@ export function planSection(s, sec, i, n, phase) {
   return shots;
 }
 
-/** A shot built by hand for a sheet (poses.html) or a test: a pose on a set with these people in these costumes and props, still, no effects unless asked. */
+/** A shot built by hand for a sheet (limner.html#poses) or a test: a pose on a set with these people in these costumes and props, still, no effects unless asked. */
 export function previewShot(s, { pose = 'directFrontal', n = 1, framing = 'medium', set = 'white', ids = null, costumes = [], props = [], expressions = [], fx = null, grid = 0, sculptures = [], band = null, gap = false } = {}) {
   const T = themeOf(s), fr = FRAMING[framing] ?? FRAMING.medium, layout = layoutOf(pose, n, fr, T); sameStance(layout, fx);
   const who = ids ?? [...s.leads, ...s.order.filter((i) => !s.leads.includes(i))].slice(0, n);
@@ -289,7 +296,7 @@ export default {
       if (!still) { // the face plays, but barely: the music is in the body, the face only crosses slowly between expressions (the lead fully, the others at a third)
         const a = fi === 0 ? 1 : 0.35, ex = s.expr, b = exprVals(st.expression);
         p.mouth.smile += a * (ex.smile - b.smile + 0.3 * MUSIC_FACE * s.tune); p.mouth.open = M.jaw ? clamp(p.mouth.open + a * (ex.open - b.open) + M.jaw * s.pulse) : 0; // the smile arrives with the expression; a high note lifts it a hair and never opens it (a theme with a jaw dial lets the expression hold the mouth open and the kick drop it further)
-        p.eyes.openness *= 1 + a * (ex.eyes - b.eyes + 0.1 * MUSIC_FACE * s.pulse); p.eyes.browLift += a * BROW_PLAY * (ex.brow - b.brow + (4 * s.tune + 2.5 * s.pulse) * MUSIC_FACE); p.eyes.browSkew += a * BROW_PLAY * (ex.skew - b.skew);
+        p.eyes.openness *= 1 + a * (ex.eyes - b.eyes + 0.1 * MUSIC_FACE * s.pulse); p.eyes.browLift += a * BROW_PLAY * (ex.brow - b.brow + (4 * s.tune + 2.5 * s.pulse) * MUSIC_FACE); p.eyes.browSkew += a * BROW_PLAY * (ex.skew - b.skew); p.eyes.browInner += a * BROW_PLAY * (ex.inner - b.inner); p.eyes.squint = clamp(p.eyes.squint + a * (ex.squint - b.squint)); p.mouth.skew += a * (ex.lip - b.lip); p.mouth.press = clamp(p.mouth.press + a * (ex.press - b.press));
       }
       p.eyes.openness = p.eyes.openness * (1 - (still ? 0 : s.blink[i])) * (1 - 0.9 * s.dark) + 0.02;
       const k = (h / fr.u) * lay.k, stand = floor < 1.05 ? (FEET - feetY(p)) * k : 0; // where the floor is in shot a figure stands on it: a short build's eyes sit lower in the frame, not its feet in the air

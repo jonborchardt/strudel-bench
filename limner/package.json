@@ -1,0 +1,22 @@
+{
+  "name": "limner",
+  "version": "0.1.0",
+  "description": "Draws one person: parameters in, a posed portrait out, as SVG or on a canvas.",
+  "keywords": ["portrait", "avatar", "illustration", "svg", "canvas", "procedural", "generative", "deterministic", "character", "face"],
+  "license": "MIT",
+  "author": "Jonathan Borchardt",
+  "repository": { "type": "git", "url": "git+https://github.com/jonborchardt/strudel-bench.git", "directory": "limner" },
+  "homepage": "https://github.com/jonborchardt/strudel-bench/tree/main/limner#readme",
+  "bugs": { "url": "https://github.com/jonborchardt/strudel-bench/issues" },
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "exports": {
+    ".": "./index.mjs",
+    "./primitives": "./primitives.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": ["index.mjs", "primitives.mjs", "portrait.mjs", "people.mjs", "registry.mjs", "stances.mjs", "rng.mjs", "schema.mjs", "casts", "parts", "README.md", "LICENSE"],
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
+  }
+}

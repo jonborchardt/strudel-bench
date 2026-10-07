@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.mjs",
     "stop": "node scripts/stop.mjs",
-    "test": "node --test --test-concurrency=1",
+    "test": "node --test --test-concurrency=1 \"test/*.test.mjs\" \"limner/test/*.test.mjs\"",
     "check": "node scripts/check.mjs",
     "samples": "node scripts/samples.mjs",
     "pages": "node scripts/pages.mjs",
@@ -20,6 +20,8 @@
     "dump": "node scripts/dump.mjs",
     "note": "node scripts/note.mjs",
     "verify": "node scripts/verify.mjs",
+    "portrait": "node limner/scripts/portrait.mjs",
+    "test:limner": "node --test \"limner/test/*.test.mjs\"",
     "vocab": "node scripts/vocab.mjs > .claude/skills/strudel/reference/vocab.md",
     "lint": "node scripts/lint.mjs",
     "measure": "node scripts/measure.mjs",
@@ -42,6 +44,7 @@
     "@strudel/transpiler": "^1.2.6",
     "@strudel/web": "^1.3.0",
     "acorn": "^8.18.0",
+    "limner": "file:./limner",
     "mp4-muxer": "^5.2.2",
     "webm-muxer": "^5.1.4"
   },

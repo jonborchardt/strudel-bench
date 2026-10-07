@@ -1,4 +1,4 @@
-// web/visual/casts/dwarves.mjs + web/visual/parts/dwarf.mjs: the second theme, and the proof the character system is
+// limner/casts/dwarves.mjs + limner/parts/dwarf.mjs: the second theme, and the proof the character system is
 // general: a kind of person is a part pack, a cast with a build and a row in lib/visual.json, on the tableau's own
 // dance. What it promises: the dwarf parts are quarantined (`only:dwarf`) and every one draws; with the theme on the
 // tableau casts the dwarves, each short and broad by the cast's build, in editorial shots and poses, deterministically.
@@ -6,11 +6,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES as EDITORIAL } from '../web/visual/tableau.mjs';
-import DWARVES from '../web/visual/casts/dwarves.mjs';
-import { DWARF } from '../web/visual/parts/dwarf.mjs';
+import { CASTS, PACKS } from 'limner';
+const DWARVES = CASTS.dwarves, { DWARF } = PACKS.dwarf;
 import { THEMES } from '../web/visual/themes.mjs';
-import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES } from '../web/visual/cast.mjs';
-import { portraitOps, toSvg, drawOn, parts, tagsOf, feetY, HAT_CROWN } from '../web/visual/portrait.mjs';
+import { identityFrom, characterFrom, dress, ARCHETYPE_NAMES } from 'limner';
+import { portraitOps, toSvg, drawOn, parts, tagsOf, feetY, HAT_CROWN } from 'limner';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid } from './_visual.mjs';
 import { seed } from '../web/visual/kit.mjs';

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faces</title>
+<meta name="description" content="The portrait builder behind the faces world: every hairstyle, hat and shirt on one sheet, and a crowd of characters as the world would draw them.">
+<meta name="robots" content="noindex">
+<style>
+  html, body { margin: 0; background: #e7e4df; font-family: system-ui, sans-serif; color: #333; }
+  main { padding: 16px; }
+  h2 { font-size: 14px; font-weight: 500; margin: 20px 0 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  figure { margin: 0; width: 150px; text-align: center; font-size: 12px; }
+  svg { width: 150px; height: auto; background: #d9d4cc; box-shadow: 0 8px 24px rgba(0,0,0,.14); }
+  button { font: inherit; padding: 4px 10px; }
+</style>
+</head>
+<body>
+<main>
+  <h2>crowd <button id="reroll">reroll</button> <button id="seedup">seed +1</button> <span id="seedlbl"></span></h2>
+  <div class="row" id="crowd"></div>
+  <h2>families <small>(the structural families a face is built in, limner/people.mjs, three seeds each)</small></h2><div class="row" id="families"></div>
+  <h2>face shapes</h2><div class="row" id="faces"></div>
+  <h2>eyes</h2><div class="row" id="eyes"></div>
+  <h2>brows</h2><div class="row" id="brows"></div>
+  <h2>noses</h2><div class="row" id="noses"></div>
+  <h2>mouths</h2><div class="row" id="mouths"></div>
+  <h2>hair</h2><div class="row" id="hair"></div>
+  <h2>facial hair</h2><div class="row" id="beards"></div>
+  <h2>glasses</h2><div class="row" id="glasses"></div>
+  <h2>hats</h2><div class="row" id="hats"></div>
+  <h2>hats on hair</h2><div class="row" id="hathair"></div>
+  <h2>tops</h2><div class="row" id="tops"></div>
+  <h2>jackets</h2><div class="row" id="jackets"></div>
+  <h2>accessories</h2><div class="row" id="accessories"></div>
+  <h2>details</h2><div class="row" id="details"></div>
+  <h2>tableau cast <small>(the twenty-four archetypes in their home styling, limner/people.mjs)</small></h2><div class="row" id="cast"></div>
+  <h2>costume families</h2><div class="row" id="costumes"></div>
+  <h2>makeup</h2><div class="row" id="makeup"></div>
+  <h2>marks</h2><div class="row" id="marks"></div>
+  <h2>props</h2><div class="row" id="props"></div>
+  <h2>graphics</h2><div class="row" id="graphics"></div>
+  <h2>expressions and poses</h2><div class="row" id="expressions"></div>
+</main>
+<script type="module">
+  import { renderPortrait, HAIR_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, FACIAL_HAIR_STYLES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, GLASSES_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, FACE_SHAPES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES } from './index.mjs';
+  import { characterOf, identityOf, dress, ARCHETYPE_NAMES, COSTUME_FAMILIES, EXPRESSIONS, FAMILY_NAMES, ARCHETYPES } from './people.mjs';
+  import { seed, prng } from './rng.mjs';
+  const fig = (svg, label) => `<figure>${svg}<figcaption>${label}</figcaption></figure>`;
+  const bald = { hair: { style: 'bald' } };
+  const sheet = (id, styles, make) => { document.getElementById(id).innerHTML = styles.map((s) => fig(renderPortrait(make(s)), s)).join(''); };
+  document.getElementById('families').innerHTML = FAMILY_NAMES.flatMap((f, i) => [1, 2, 3].map((k) => { const s = {}; seed(s, prng(k * 7 + i * 31)); ARCHETYPES._sheet = { family: f, costume: 'plainTee' }; return fig(renderPortrait({ ...dress(identityOf(s, '_sheet', k), { makeup: [], props: [] }), light: { amount: 0.6 }, background: '#d9d4cc' }), `${f} · ${k}`); })).join(''); delete ARCHETYPES._sheet; // one face per family and seed, lit flat, in a plain tee
+  sheet('faces', Object.keys(FACE_SHAPES), (s) => ({ ...bald, face: { ...FACE_SHAPES[s] } }));
+  sheet('eyes', EYE_STYLES, (s) => ({ ...bald, eyes: { style: s } }));
+  sheet('brows', BROW_STYLES, (s) => ({ ...bald, eyes: { browStyle: s } }));
+  sheet('noses', NOSE_STYLES, (s) => ({ ...bald, nose: { style: s } }));
+  sheet('mouths', [...MOUTH_STYLES, 'grin', 'open'], (s) => ({ ...bald, mouth: s === 'grin' ? { smile: 0.9 } : s === 'open' ? { open: 0.7 } : { style: s } }));
+  sheet('hair', HAIR_STYLES, (s) => ({ hair: { style: s } }));
+  sheet('beards', FACIAL_HAIR_STYLES, (s) => ({ ...bald, facialHair: { style: s } }));
+  sheet('glasses', GLASSES_STYLES, (s) => ({ ...bald, glasses: { style: s } }));
+  sheet('hats', HAT_STYLES, (s) => ({ hat: { style: s } }));
+  const onHair = ['afroMedium', 'curlyMedium', 'longStraight', 'bob', 'wavyMedium', 'locsShort', 'boxBraids', 'sideParts'];
+  document.getElementById('hathair').innerHTML = HAT_STYLES.filter((h) => h !== 'none').flatMap((h, i) => [onHair[i % 7], onHair[(i + 3) % 7]].map((hr) => fig(renderPortrait({ hair: { style: hr }, hat: { style: h } }), `${h} · ${hr}`))).join('');
+  sheet('tops', TOP_STYLES, (s) => ({ ...bald, top: { style: s } }));
+  sheet('jackets', JACKET_STYLES, (s) => ({ ...bald, jacket: { style: s, color: '#54595d' } }));
+  sheet('accessories', ACCESSORY_STYLES, (s) => ({ ...bald, accessories: [s] }));
+  sheet('details', DETAIL_STYLES, (s) => ({ ...bald, details: [s] }));
+  // the tableau world's cast and wardrobe: the archetypes as identities (seed 1), each costume on one person, each makeup, mark, prop and print on a plain face
+  const cs = {}; seed(cs, prng(1));
+  const cast = ARCHETYPE_NAMES.map((n, i) => identityOf(cs, n, i)), model = cast[ARCHETYPE_NAMES.indexOf('plainContrast')];
+  const red = { background: '#4a0d16' }, white = { background: '#efede8' };
+  document.getElementById('cast').innerHTML = cast.map((c) => fig(renderPortrait({ ...dress(c), ...(c.home.costume.startsWith('white') || c.home.costume === 'oversizedGraphicHoodie' ? red : white) }), `${c.name} · ${c.home.costume}`)).join('');
+  sheet('costumes', COSTUME_FAMILIES, (s) => ({ ...dress(model, { costume: s, makeup: [], props: [] }), ...(s.startsWith('white') || s === 'oversizedGraphicHoodie' ? red : white) }));
+  sheet('makeup', MAKEUP_STYLES, (s) => ({ ...dress(model, { costume: 'minimalTurtleneck', makeup: [s], props: [] }), ...white }));
+  sheet('marks', MARK_STYLES, (s) => ({ ...dress(model, { costume: 'shirtlessTattooed', makeup: [], marks: [s], props: [] }), ...white }));
+  sheet('props', PROP_STYLES, (s) => ({ ...dress(model, { costume: 'severeBlackSuit', makeup: [], props: [s] }), ...white }));
+  sheet('graphics', GRAPHIC_STYLES, (s) => ({ ...dress(model, { costume: 'whiteMinimalStreetwear', makeup: [], props: [] }), top: { style: 'heavyweightTshirt', color: '#eeeae2', graphic: s }, ...red }));
+  sheet('expressions', Object.keys(EXPRESSIONS), (s) => ({ ...dress(model, { costume: 'plainTee', makeup: [], props: [], expression: s }), ...white }));
+  let n = +(location.hash.slice(1) || 1);
+  const ROLES = ['establish', 'develop', 'climax', 'release'];
+  function crowd() {
+    const s = { pal: { hue: 215, sat: 60, line: 5, field: 177 } }; seed(s, prng(n));
+    document.getElementById('seedlbl').textContent = `seed ${n}`; location.hash = n;
+    document.getElementById('crowd').innerHTML = Array.from({ length: 16 }, (_, i) => { const role = ROLES[i % 4], c = characterOf(s, role, (i % 4) / 3); return fig(renderPortrait({ ...c, background: '#cfd3d0' }), `${role} · ${c.hair.style} · ${c.hat.style} · ${c.top.style}${c.jacket.style !== 'none' ? ' · ' + c.jacket.style : ''}`); }).join('');
+  }
+  document.getElementById('reroll').onclick = () => { n = Math.floor(Math.random() * 1e6); crowd(); };
+  document.getElementById('seedup').onclick = () => { n++; crowd(); };
+  crowd();
+</script>
+</body>
+</html>

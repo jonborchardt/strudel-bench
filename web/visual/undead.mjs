@@ -13,16 +13,17 @@
 // ground fog, clipped at their own floor line), a dropout freezes everyone mid-move and dims the moon.
 // Deterministic: randomness only from the state's own generator.
 //
-// The cast and the choreography are the tableau's `thriller` theme's (web/visual/thriller.mjs): the horde is its
+// The cast and the choreography are the tableau's `thriller` theme's (THEMES.thriller, bound in themes.mjs): the horde is its
 // ZOMBIES in its `styling` (the rot as home makeup, the grave on the clothes), the lead its `thrillerLead` kept
-// alive by `aliveOf` until the release, and every step is one of its POSES (layoutOf partials), so a new pose there
-// is a step here by name. Two places know this and nothing else does: LIVE/aliveOf and STEPS/ROUTINES.
+// alive by `aliveOf` until the release, and every step is one of limner's `STANCES.undead` (one body, no placement),
+// so a new stance in that pack is a step here by name. Two places know this and nothing else does: LIVE/aliveOf and
+// STEPS/ROUTINES.
 import { clamp, lerp, decay, ease, seed, rand, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS } from './portrait.mjs';
-import { identityOf, dress } from './cast.mjs';
+import { portraitOps, drawOn, eyeY, mix, SKIN_COLORS, EYE_COLORS, STANCES, identityOf, dress } from './limner.mjs';
 import { graveyard, floorShadow, vignette } from './sets.mjs';
 import { phaseOf } from './tableau.mjs';
-import thriller, { POSES as ZOMBIE_POSES, ZOMBIE_NAMES } from './thriller.mjs'; // the cast and the choreography: importing registers the zombie parts by name
+import { THEMES } from './themes.mjs'; // the bound theme: limner's undead cast and this repo's thriller dance, already tied together; importing it registers the zombie parts
+const thriller = THEMES.thriller, ZOMBIE_NAMES = thriller.cast;
 
 const FEET = 600; // the sheet's torso runs to here: where the ground meets a standing figure
 const SNAP = 9; // how fast a figure arrives in a step: a dance move lands, then holds
@@ -77,10 +78,10 @@ export function aliveOf(p, decay = 0, idn = null) {
   return p;
 }
 
-// ---- the poses: the theme's POSES (layoutOf partials) are the steps as they stand; a routine is a list of their names,
+// ---- the steps: limner's stances for this cast (STANCES.undead) are the steps as they stand; a routine is a list of their names,
 // one step a beat, repeating. The world eases the numbers toward each step and swaps the arm props (the claws) on the
 // beat; nothing in it knows what a step contains, so new pose tech lands in STEPS and `poseOf` alone.
-const stepOf = (name) => { const { dx, dy, k, arm, over, look, ...st } = (ZOMBIE_POSES[name]?.(1, 400) ?? [{}])[0]; return st; }; // a single-figure pose, the layout's placement dropped
+const stepOf = (name) => STANCES.undead[name] ?? {}; // a step IS a stance: one body, no placement. It used to be a dance pose with its dx/k/arm destructured off, which was this by a longer road
 export const STEPS = Object.fromEntries(['deadStill', 'theLean', 'shoulderShimmy', 'zombieShuffle', 'hunchedLurch', 'headSnapLeft', 'headSnapRight', 'thrillerClaw', 'clawSweep', 'clawsUp', 'armsRight', 'armsLeft'].map((n) => [n, stepOf(n)]));
 STEPS.rest = {};
 export const ROUTINES = {
