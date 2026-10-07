@@ -537,11 +537,15 @@ function paintAnatomy() {
   // builds on (the half-orc, the grey and reptilian kinds, whose cast's own build is the green one's).
   const SITTER = { human: ['humans'], elf: ['elves'], dwarf: ['dwarves'], halfling: ['halflings'], gnome: ['gnomes'], orc: ['orcs'], halfOrc: ['orcs', 'campRunner'], dragonborn: ['dragonborn'], tiefling: ['tieflings'],
     cyborg: ['cyborgs'], greyAlien: ['aliens', 'greyWatcher'], greenAlien: ['aliens', 'greenScout'], reptilianAlien: ['aliens', 'reptilianWarlord'], postApocalypticHuman: ['wastelanders'], steampunkHuman: ['steampunks'] };
+  const ON_HUMAN = [['scifi'], ['holograms'], ['gothic', 'count'], ['noir'], ['synthwave'], ['punks'], ['robots', 'sentinel']].filter(([c]) => CASTS[c]);
   for (const race of order) {
     const b = buildOf(race);
     const [cast, name] = SITTER[race] ?? ['humans'];
     const p = dress(archetype({ cast, seed: 3, ...(name ? { name } : {}) }), {});
     row.insertAdjacentHTML('beforeend', fig(renderFigure({ ...p, build: b }), race, `stature ${ANATOMY[race].height} · ${ANATOMY[race].totalHeight.join('–')} heads`));
+    // the peoples that stand on the human row itself (no row of their own: they are built as a human is) stand beside it,
+    // so every people is in the lineup and not only the ones with a table row
+    if (race === 'human') for (const [c, n] of ON_HUMAN) row.insertAdjacentHTML('beforeend', fig(renderFigure({ ...dress(archetype({ cast: c, seed: 3, ...(n ? { name: n } : {}) }), {}), build: b }), c, 'the human row'));
   }
   s.append(row);
   ex(s, `${imp('ANATOMY, buildOf, person, renderFigure')}
