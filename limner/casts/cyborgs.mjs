@@ -38,5 +38,5 @@ export default {
   wardrobe: { none: ['none'] }, // every role
   archetypes: CYBORGS, archetypeNames: Object.keys(CYBORGS), costumes: Object.keys(CYBORG_COSTUMES), build: CYBORG_BUILD, contrast: 1.6, asym: 1.1,
   // every random one carries some machine, drawn from the stream (an archetype's own makeup is its home styling, so for them this is only a draw)
-  base: (s) => { const deg = pickIn(s, DEGREES), arm = rand(s) < 0.2; return { makeup: deg, props: arm ? ['mechArm'] : [], build: CYBORG_BUILD }; },
+  base: (s) => { const deg = pickIn(s, DEGREES), arm = rand(s) < 0.2; return { makeup: deg, props: arm ? ['mechArm'] : [] }; },
 };

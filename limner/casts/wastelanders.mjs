@@ -34,7 +34,7 @@ const FACE_MARKS = [['sunweathered'], ['sunweathered'], ['sunweathered', 'goggle
 const CLOTH_MARKS = [['clothGrime'], ['patched'], ['clothGrime', 'patched'], []];
 const TROUSERS = [OIL, KHAKI, LEATHER, OLIVE, '#3e3a32'];
 const signature = (s) => { const a = pickIn(s, FACE_MARKS), b = pickIn(s, CLOTH_MARKS), t = pickIn(s, TROUSERS);
-  return { makeup: [...a.filter((n) => n === 'sunweathered' || n === 'goggleTan'), 'grime', ...a.filter((n) => n !== 'sunweathered' && n !== 'goggleTan')], marks: b, pants: { style: 'trousers', color: t }, build: WASTELAND_BUILD }; }; // the sun and the tan under the dirt, paint and soot over it; trousers in the road's colours (a crowd's otherwise follow the hair, and a white-haired one would wear white)
+  return { makeup: [...a.filter((n) => n === 'sunweathered' || n === 'goggleTan'), 'grime', ...a.filter((n) => n !== 'sunweathered' && n !== 'goggleTan')], marks: b, pants: { style: 'trousers', color: t } }; }; // the sun and the tan under the dirt, paint and soot over it; trousers in the road's colours (a crowd's otherwise follow the hair, and a white-haired one would wear white)
 const HEADS = ['none', 'none', 'none', 'shemagh', 'shemagh', 'scrapHelmet']; // a crowd's heads: mostly bare, a wrap, now and then a helmet
 export default {
   name: 'wastelanders', families: FAMILIES,
