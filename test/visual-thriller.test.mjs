@@ -6,7 +6,7 @@
 // deterministically, with no clock or randomness of its own. Human eyes judge the look (thriller.html is the sheet).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { ready } from './_scope.mjs';
 import tableau, { TEMPLATES as EDITORIAL, layoutOf, FRAMING, previewShot } from '../web/visual/tableau.mjs';
 // the theme's three halves, each from where it actually lives: the cast and the zombie parts are limner's, the dance
@@ -69,7 +69,7 @@ test('every zombie part draws: garments, hair, hats, teeth, the rot, the grave, 
   const raised = portraitOps({ props: ['clawsUp'] }); assert.equal(raised.filter((o) => o.k === 'line' && o.sw === 52).length, 2, 'arms over the head: two forearms up, none hanging');
   assert.notDeepEqual(claw({ props: [], skin: '#aaa' }, 100, 100, 0), claw({ props: [], skin: '#aaa' }, 100, 100, Math.PI), 'the claw turns');
   const veiled = portraitOps({ hat: { style: 'veil' }, hair: { style: 'longStraight' }, props: ['veilBack'] }); assert.ok(veiled.findIndex((o) => o.fill === '#f6f2ea' && o.op === 0.5) < veiled.findIndex((o) => o.k === 'push'), 'the veil\'s sheet is behind the figure');
-  assert.ok(portraitOps({ top: { style: 'offShoulderSweat' }, skin: '#123456' }).some((o) => o.fill === '#123456' && o.k === 'path' && o.d.startsWith('M 200 388')), 'the sweatshirt bares one shoulder in the skin');
+  assert.ok(portraitOps({ top: { style: 'offShoulderSweat' }, skin: '#123456' }).some((o) => o.fill === '#123456' && o.k === 'path' && o.d.startsWith('M 196 392')), 'the sweatshirt bares one shoulder in the skin');
   assert.ok(portraitOps({ top: { style: 'crewTshirt' }, jacket: { style: 'varsityJacket', color: '#111111', accent: '#eeeeee' } }).some((o) => o.fill === '#eeeeee'), 'a varsity jacket\'s sleeves take the accent');
 });
 
@@ -144,8 +144,9 @@ test('the binding: lib/visual.json names the theme\'s cast, packs and dance, the
 
 test('the themed state is what it was before the theme file was split (test/fixtures/thriller-state.json)', async () => {
   const g = await ready;
-  const pinned = JSON.parse(readFileSync(new URL('./fixtures/thriller-state.json', import.meta.url), 'utf8'));
-  assert.deepEqual(JSON.parse(JSON.stringify(runWorld(tableau, song(g, THEMED), 8).state)), pinned);
+  const url = new URL('./fixtures/thriller-state.json', import.meta.url), state = JSON.parse(JSON.stringify(runWorld(tableau, song(g, THEMED), 8).state));
+  if (process.env.UPDATE_GOLDEN) writeFileSync(url, JSON.stringify(state)); // on purpose only, as golden.test.mjs: read the diff after
+  assert.deepEqual(state, JSON.parse(readFileSync(url, 'utf8')));
 });
 
 test('every theme template draws in every pose it allows, on every set, and the phases, specials and fallbacks are consistent', async () => {

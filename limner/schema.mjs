@@ -6,7 +6,7 @@
 // generator (constrained to one FAMILIES entry unless family is 'any'), `ov` the edits as flat dotted paths over it,
 // so one edit changes one option and nothing else, and `encode`/`decode` put the whole state in the URL hash: the
 // same hash is the same face every time, and every commit is a history entry, so Back steps through the edits.
-import { DEFAULTS, COLORS, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf, REGISTRIES } from './portrait.mjs';
+import { DEFAULTS, COLORS, EYE_MODES, MOUTH_MODES, EAR_MODES, NOSE_MODES, LEG_STYLES, FACE_SHAPES, NECK_TYPES, EYE_STYLES, BROW_STYLES, NOSE_STYLES, MOUTH_STYLES, TEETH_STYLES, HAIR_STYLES, FACIAL_HAIR_STYLES, MUSTACHE_STYLES, GLASSES_STYLES, HAT_STYLES, TOP_STYLES, JACKET_STYLES, ACCESSORY_STYLES, DETAIL_STYLES, MAKEUP_STYLES, MARK_STYLES, PROP_STYLES, GRAPHIC_STYLES, LONG_HAIR, merge, parts, tagsOf, REGISTRIES } from './portrait.mjs';
 import { STANCES, stanceOf } from './stances.mjs';
 import { FAMILY_NAMES, characterFrom, faceOf, EXPRESSIONS, EDITORIAL_EXPRESSIONS, COSTUMES, COSTUME_FAMILIES, signatureOf } from './people.mjs';
 import { CASTS } from './registry.mjs'; // every cast's parts register by name on import; the editor offers them only when the state's theme is on (groupsFor)
@@ -139,7 +139,7 @@ export const posePreset = (v) => {
   const l = { headX: 0, headY: 0, tilt: 0, bodyTilt: 0, turn: 0, shoulder: 0, props: [], ...(stanceOf(v, STANCE_PACK_OF[v]) ?? {}) };
   return { 'pose.headX': l.headX, 'pose.headY': l.headY, 'pose.headTilt': l.tilt, 'pose.bodyTilt': l.bodyTilt, 'pose.turn': l.turn, 'pose.shoulder': l.shoulder, props: l.props };
 };
-const exprPreset = (v) => { const e = EXPRESSIONS[v]; return { 'mouth.smile': e.mouth.smile, 'mouth.open': e.mouth.open ?? 0, 'mouth.style': e.mouth.style ?? 'plain', 'eyes.openness': e.eyes.openness ?? 1, 'eyes.browLift': e.eyes.browLift ?? 0, 'eyes.browSkew': e.eyes.browSkew ?? 0 }; };
+const exprPreset = (v) => { const e = EXPRESSIONS[v]; return { 'mouth.smile': e.mouth.smile, 'mouth.open': e.mouth.open ?? 0, 'mouth.skew': e.mouth.skew ?? 0, 'mouth.press': e.mouth.press ?? 0, 'eyes.openness': e.eyes.openness ?? 1, 'eyes.browLift': e.eyes.browLift ?? 0, 'eyes.browSkew': e.eyes.browSkew ?? 0, 'eyes.browInner': e.eyes.browInner ?? 0, 'eyes.squint': e.eyes.squint ?? 0 }; }; // an expression is the face's movement, never its mouth style
 
 /** Every parameter, grouped in build order: what the face is, then the head it is on (hair and beard included), its features, what it wears (glasses among the clothes), and how it stands. */
 export const GROUPS = [
@@ -153,7 +153,7 @@ export const GROUPS = [
     int('face.width', 118, 205), int('face.height', 158, 245), num('face.jaw', 0.45, 1.05), num('face.chin', 0, 0.5), int('face.corner', 0, 64),
     num('face.skew', -1, 1, 0.02), num('face.fullness', -1, 1, 0.02),
     num('face.asym.cheek', -2, 2, 0.05), num('face.asym.jaw', -2, 2, 0.05), num('face.asym.temple', -2, 2, 0.05), num('face.asym.chin', -2, 2, 0.05),
-    num('ears.size', 0.5, 1.6, 0.02), num('ears.pointed', 0, 1, 0.02),
+    num('ears.size', 0.5, 1.6, 0.02), num('ears.pointed', 0, 1, 0.02), en('ears.mode', EAR_MODES),
     preset('neck', Object.keys(NECK_TYPES), neckPreset), int('neck.width', 34, 98), int('neck.height', 44, 102),
     num('body.width', 0.7, 1.6), col('skin', 'skin'),
     col('hairColor', 'hair'), en('hair.style', HAIR_STYLES), num('hair.hairline', -1, 1, 0.02), num('hair.recession', 0, 1, 0.02),
@@ -161,14 +161,14 @@ export const GROUPS = [
   ] },
   { name: 'features', items: [
     preset('expression', EXPRESSION_NAMES, exprPreset),
-    en('eyes.style', EYE_STYLES), en('eyes.browStyle', BROW_STYLES),
+    en('eyes.style', EYE_STYLES), en('eyes.mode', EYE_MODES), en('eyes.browStyle', BROW_STYLES), col('eyes.browColor', null, { nullable: true }),
     int('eyes.y', 176, 216), num('eyes.spacing', 36, 76, 0.5), num('eyes.openness', 0, 1.4, 0.02), num('eyes.asym', 0.55, 1.45, 0.02), num('eyes.dy', -6, 6, 0.1),
     num('eyes.depth', 0, 1, 0.02), num('eyes.sclera', 0, 1, 0.02, { nullable: true }), num('eyes.lidWeight', 0, 1, 0.02, { nullable: true }), num('eyes.corner', 0, 1, 0.02, { nullable: true }), num('eyes.bags', 0, 1, 0.02), num('eyes.squint', 0, 1, 0.02),
     col('eyes.iris', 'eyes'), col('eyes.pupil'),
-    num('eyes.browLift', -6, 8, 0.1), num('eyes.browSkew', -0.6, 0.6, 0.02),
+    num('eyes.browLift', -6, 12, 0.1), num('eyes.browSkew', -0.6, 0.6, 0.02), num('eyes.browInner', -8, 8, 0.1), num('eyes.size', 0.6, 2.6, 0.02), col('eyes.white', null, { nullable: true }), num('eyes.slit', 0, 1, 0.02),
     num('eyes.look.x', -1, 1, 0.02), num('eyes.look.y', -1, 1, 0.02),
-    en('nose.style', NOSE_STYLES), num('nose.length', 22, 58, 0.5), num('nose.width', 7, 36, 0.5), int('nose.muzzle', 0, 1), // a muzzle is either the face's nose or it is not: `nose` in portrait.mjs swaps the whole drawing at any value over 0, so the in-between was a face with no nose on it. Still a number, so a cast's `limits` narrow it
-    en('mouth.style', MOUTH_STYLES), en('mouth.teeth', TEETH_STYLES), int('mouth.y', 232, 298), num('mouth.width', 26, 70, 0.5), num('mouth.smile', -1, 1, 0.02), num('mouth.fullness', 0, 1, 0.02), num('mouth.open', 0, 1, 0.02), col('mouth.color', null, { nullable: true }),
+    en('nose.style', NOSE_STYLES), en('nose.mode', NOSE_MODES), num('nose.length', 22, 58, 0.5), num('nose.width', 7, 36, 0.5), int('nose.muzzle', 0, 1), // a muzzle is either the face's nose or it is not: `nose` in portrait.mjs swaps the whole drawing at any value over 0, so the in-between was a face with no nose on it. Still a number, so a cast's `limits` narrow it
+    en('mouth.style', MOUTH_STYLES), en('mouth.mode', MOUTH_MODES), en('mouth.teeth', TEETH_STYLES), int('mouth.y', 232, 298), num('mouth.width', 26, 70, 0.5), num('mouth.smile', -1, 1, 0.02), num('mouth.fullness', 0, 1, 0.02), num('mouth.open', 0, 1, 0.02), num('mouth.skew', -1, 1, 0.02), num('mouth.press', 0, 1, 0.02), col('mouth.color', null, { nullable: true }),
     num('blush', 0, 1, 0.02),
     multi('details', DETAIL_STYLES), multi('makeup', MAKEUP_STYLES), multi('marks', MARK_STYLES),
   ] },
@@ -189,7 +189,7 @@ export const GROUPS = [
     num('pose.headX', -25, 25, 0.5), num('pose.headY', -25, 25, 0.5), num('pose.headTilt', -0.4, 0.4, 0.01),
     num('pose.bodyX', -25, 25, 0.5), num('pose.bodyTilt', -0.15, 0.15, 0.005),
     num('pose.turn', -1, 1, 0.02), num('pose.shoulder', -1, 1, 0.02), en('pose.gaze', ['none', 'camera'], { nullable: true }),
-    en('light.side', [-1, 1], { labels: ['left', 'right'] }), num('light.amount', 0, 1, 0.02), num('light.contrast', 0.4, 2, 0.05),
+    en('light.side', [-1, 1], { labels: ['left', 'right'] }), num('light.amount', 0, 1, 0.02), num('light.contrast', 0.4, 2, 0.05), num('figure.opacity', 0.1, 1, 0.02), num('figure.saturation', 0, 1, 0.02),
     int('seed', 0, 99), col('background'), // the portrait's own seed: where the metallic sheen's folds fall
   ] },
 ];
@@ -316,9 +316,9 @@ export function idle(p, t) {
       turn: cl(p.pose.turn + 0.45 * wave(t, 29, 0.3) + 0.1 * wave(t, 8.5, 0), -1, 1), shoulder: cl(p.pose.shoulder + 0.5 * wave(t, 31, 0.6), -1, 1),
     },
     eyes: {
-      openness: cl((p.eyes.openness + 0.1 * Math.max(0, brow)) * lid, 0, 1.4), // interest opens them a little, and the blink still shuts them all the way
+      openness: cl((p.eyes.openness + 0.1 * Math.max(0, brow)) * lid, 0, 1.6), // interest opens them a little, and the blink still shuts them all the way
       look: { x: cl(was(0) + (gaze(0) - was(0)) * e, -1, 1), y: cl((was(1) + (gaze(1) - was(1)) * e) * 0.6, -1, 1) },
-      browLift: cl(p.eyes.browLift + 2 * brow, -6, 8), browSkew: cl(p.eyes.browSkew + 0.14 * wave(t, 21, 0.25), -0.6, 0.6), // one brow up: the wry half of the expression
+      browLift: cl(p.eyes.browLift + 2 * brow, -6, 12), browSkew: cl(p.eyes.browSkew + 0.14 * wave(t, 21, 0.25), -0.6, 0.6), // one brow up: the wry half of the expression
     },
     mouth: {
       smile: cl(p.mouth.smile + 0.22 * mood + 0.06 * wave(t, 7.3, 0.5), -1, 1),

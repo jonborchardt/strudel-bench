@@ -297,7 +297,7 @@ export default {
       if (!still) { // the face plays, but barely: the music is in the body, the face only crosses slowly between expressions (the lead fully, the others at a third)
         const a = fi === 0 ? 1 : 0.35, ex = s.expr, b = exprVals(st.expression);
         p.mouth.smile += a * (ex.smile - b.smile + 0.3 * MUSIC_FACE * s.tune); p.mouth.open = M.jaw ? clamp(p.mouth.open + a * (ex.open - b.open) + M.jaw * s.pulse) : 0; // the smile arrives with the expression; a high note lifts it a hair and never opens it (a theme with a jaw dial lets the expression hold the mouth open and the kick drop it further)
-        p.eyes.openness *= 1 + a * (ex.eyes - b.eyes + 0.1 * MUSIC_FACE * s.pulse); p.eyes.browLift += a * BROW_PLAY * (ex.brow - b.brow + (4 * s.tune + 2.5 * s.pulse) * MUSIC_FACE); p.eyes.browSkew += a * BROW_PLAY * (ex.skew - b.skew);
+        p.eyes.openness *= 1 + a * (ex.eyes - b.eyes + 0.1 * MUSIC_FACE * s.pulse); p.eyes.browLift += a * BROW_PLAY * (ex.brow - b.brow + (4 * s.tune + 2.5 * s.pulse) * MUSIC_FACE); p.eyes.browSkew += a * BROW_PLAY * (ex.skew - b.skew); p.eyes.browInner += a * BROW_PLAY * (ex.inner - b.inner); p.eyes.squint = clamp(p.eyes.squint + a * (ex.squint - b.squint)); p.mouth.skew += a * (ex.lip - b.lip); p.mouth.press = clamp(p.mouth.press + a * (ex.press - b.press));
       }
       p.eyes.openness = p.eyes.openness * (1 - (still ? 0 : s.blink[i])) * (1 - 0.9 * s.dark) + 0.02;
       const k = (h / fr.u) * lay.k, stand = floor < 1.05 ? (FEET - feetY(p)) * k : 0; // where the floor is in shot a figure stands on it: a short build's eyes sit lower in the frame, not its feet in the air

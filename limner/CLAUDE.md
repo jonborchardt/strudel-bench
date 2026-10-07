@@ -107,7 +107,12 @@ read where a given figure's features actually landed, which is what a host frame
 ## Ops, not SVG
 
 `portraitOps(params)` is the one computation and returns a flat list of `{ k, … }` ops (`path`, `ellipse`, `rect`,
-`line`, `clip`/`unclip`, `push`/`pop`). `toSvg` prints them; `drawOn` paints them. A default figure is ~343 ops. Add a
+`line`, `clip`/`unclip`, `push`/`pop`, and `layer`/`unlayer` when `figure.opacity` is under 1: the figure faded as one
+group, the hologram's). `toSvg` prints them; `drawOn` paints them.
+
+Write a part's paths in absolute `M`/`L`/`C`/`Q`/`Z` only. `fit`, `mapXY` and the body's width read a path's numbers as
+x,y pairs, so an arc (`A rx ry rot flags x y`) or a relative command is mangled under them: an arc became a long stray
+line to the corner of the sheet. `tracePath` (the canvas side) does not draw arcs at all. A default figure is ~343 ops. Add a
 new op kind and both renderers need the case, plus the `--sweep` sheet to look at.
 
 ## Two things that will bite a bundler

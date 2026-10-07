@@ -39,10 +39,10 @@ const SHOULDER_LINE = 356; // the trunk's height is measured from here: the shou
 export const DEFAULTS = {
   background: '#d7d0c5', skin: '#c98e68', hairColor: '#30231e',
   face: { ...FACE_SHAPES.oval, skew: 0, fullness: 0, asym: { cheek: 0, jaw: 0, temple: 0, chin: 0 } }, // skew: one side a little lower, the chin off centre, in -1..1; fullness: soft tissue on the cheeks in -1..1, the weight a face carries independently of the skull its jaw width describes; asym: the face's own irregularities, each signed by side (+x is the character's right): one cheek fuller, one jaw corner sharper, one temple wider, the chin toward one side
-  ears: { size: 1, pointed: 0 }, // pointed: the helix drawn on past the top into a point (0 a round ear, 1 an elf's); a cast's, like build
-  eyes: { y: 196, spacing: 52, openness: 1, asym: 1, dy: 0, depth: 0.5, sclera: null, lidWeight: null, corner: null, bags: 0, squint: 0, style: 'almond', iris: '#604839', pupil: '#171716', browStyle: 'softArch', browLift: 0, browSkew: 0, look: { x: 0, y: 0 } }, // asym: the left eye's openness against the right's; dy: the left eye lower by this much; depth: how far under the brow the eyes sit; sclera: how much white shows (null: the style's); lidWeight: the upper lid's weight (null: the style's); corner: the inner corner drawn out to a point (null: the style's); bags: the lower socket; squint: the lower lid pushed up, what a real smile does to the eye
-  nose: { style: 'straight', length: 38, width: 20, muzzle: 0 }, // muzzle: the nose drawn as one, the bridge carried down into a wide nostril pad instead of a tip with wings (0 a face's nose, 1 a dragonborn's), and the mouth widened and thinned under it; a cast's, like ears.pointed and build
-  mouth: { style: 'plain', y: 260, width: 48, smile: 0.05, fullness: 0.45, color: null, open: 0, teeth: 'even' }, // color: the lips; null is a lip tone under the skin. teeth: what shows between them when the mouth is parted or smiling broadly
+  ears: { size: 1, pointed: 0, mode: 'human' }, // mode: a machine's ear (EAR_MODES, see machineEar);  pointed: the helix drawn on past the top into a point (0 a round ear, 1 an elf's); a cast's, like build
+  eyes: { y: 196, spacing: 52, openness: 1, asym: 1, dy: 0, depth: 0.5, sclera: null, lidWeight: null, corner: null, bags: 0, squint: 0, style: 'almond', iris: '#604839', pupil: '#171716', browStyle: 'softArch', browLift: 0, browSkew: 0, browInner: 0, size: 1, white: null, slit: 0, mode: 'human', browColor: null, look: { x: 0, y: 0 } }, // mode: a machine's eye (EYE_MODES, see machineEye); browColor: the brows' own colour (null: the hair's; a dyed head keeps the brows it grew);  asym: the left eye's openness against the right's; dy: the left eye lower by this much; depth: how far under the brow the eyes sit; sclera: how much white shows (null: the style's); lidWeight: the upper lid's weight (null: the style's); corner: the inner corner drawn out to a point (null: the style's); bags: the lower socket; squint: the lower lid pushed up, what a real smile does to the eye; browInner: the brows' inner ends raised (worry, grief) or, below 0, pulled down and together (anger); size: the whole eye scaled, white: the eye's white as a colour (null: a white that takes the skin; an alien's eye is black from corner to corner), slit: the pupil drawn up into a vertical slit
+  nose: { style: 'straight', length: 38, width: 20, muzzle: 0, mode: 'human' }, // mode: a machine's (NOSE_MODES);  muzzle: the nose drawn as one, the bridge carried down into a wide nostril pad instead of a tip with wings (0 a face's nose, 1 a dragonborn's), and the mouth widened and thinned under it; a cast's, like ears.pointed and build
+  mouth: { style: 'plain', y: 260, width: 48, smile: 0.05, fullness: 0.45, color: null, open: 0, teeth: 'even', skew: 0, press: 0, mode: 'human' }, // mode: a machine's mouth (MOUTH_MODES, see machineMouth);  color: the lips; null is a lip tone under the skin. teeth: what shows between them when the mouth is parted or smiling broadly. skew: the +x corner pulled up (a smirk), the other left; press: the lips pressed thin
   hair: { style: 'sidePart', hairline: 0, recession: 0 }, // hairline: the front hair's edge higher (+1) or lower (-1) on the forehead, the style's own cut at 0; recession: the temples retreating, the centre staying, in 0..1
   facialHair: { style: 'none', color: null, density: null, mustache: null, mustacheStyle: null, cheekLine: null }, // color: null is the hair's; density: how much hair, 0..1, null the style's (the gap between a stubble and a beard is a number, not a style); it is always drawn opaque, a thin beard being the skin showing between the hair rather than a transparent one; mustache: null the style's, true or false to add or drop one; cheekLine: how high up the cheek the beard climbs, 0..1, null the style's
   hat: { style: 'none', color: '#353b43', accent: '#24292f', metal: 0 }, // metal: the garment shaded as metallic cloth (sheen)
@@ -52,6 +52,7 @@ export const DEFAULTS = {
   build: { trunk: 1, legs: 1, shoulders: 1, arms: 1, hands: 1, feet: 1, head: 1 }, // the body's proportions: the trunk's height between the shoulder line and the hem, the legs' length to the floor, the shoulder width (over body.width), the arms' length about the joint, the head's size about the neck base; a cast's build, 1 the figure as drawn
   pants: { style: 'trousers', color: '#2e3136' }, shoes: { color: '#1f1d1b' }, // the legs: LEGS style and its cloth, and the shoes
   glasses: null, // { style, color }
+  figure: { opacity: 1, saturation: 1 }, // the figure as a whole: opacity under 1 fades it as one group (a hologram), saturation under 1 grades every colour toward grey (noir); 1 and 1 draw nothing extra
   accessories: [], details: [], makeup: [], marks: [], props: [], blush: 0, // names in ACCESSORIES, DETAILS, MAKEUP, MARKS, PROPS
   seed: 1, // places the sheen's folds
   light: { side: -1, amount: 0.5, contrast: 1 }, // the light: a soft frontal wash, its strength from none (0) to full (1), the side the planes' shadows fall away from, and contrast: how deep the tonal planes go (the sockets, the cheek, under the chin, the neck, the torso's far side); 1 is the soft default, more is harder (the tableau's dial, never the generic one)
@@ -110,7 +111,7 @@ const solid = (o) => o.fill && o.fill !== 'none' && (o.op ?? 1) >= 0.5, region =
 // and jaw a little and moves the chin off centre, and `asym` gives the face its own irregularities, coherent rather
 // than wobbled: one cheek fuller (its bone out and its jaw curve rounder), one jaw corner sharper, one temple wider,
 // the chin toward one side
-function facePath(p) {
+export function facePath(p) { // exported: a pack that clips to the head (a cyborg's plates, an alien's skull tones) takes the outline itself rather than a copy that drifts
   const cx = 200, top = 112, w = p.face.width, h = p.face.height, hw = w / 2, bottom = top + h, sk = p.face.skew ?? 0, A = p.face.asym ?? {};
   const jawX = hw * p.face.jaw * 0.94, chinDrop = 16 * p.face.chin, chinX = cx + sk * 5 + (A.chin ?? 0) * 6, soft0 = 12 + 26 * p.face.jaw; // how far the jaw corner's handles reach: a round face has no corner
   const fn = p.face.fullness ?? 0, fat = 1 + 0.09 * fn, jfat = 1 + 0.045 * fn; // the weight a face carries sits on the cheek and only half of it reaches the jaw: the temples, which are bone, never move
@@ -167,7 +168,8 @@ function ears(p, turn = 0) {
   const s = stroke(underSkin(p.skin, '#7f5140', 0.5), 2.2, 0.48), k = p.ears.size, t = Math.max(0, Math.min(1, p.ears.pointed ?? 0));
   // the ear is one thing: the shell, its bowl in shadow, the lobe's light and the rim of the helix are drawn at size
   // 1 and scaled about the ear's own centre, so a small ear is a small ear and not a shell with a full-size rim beside it
-  const one = (cx, sd, rim) => mapXY([earShell(cx, sd, t, p.skin), ...soft(cx + 2 * sd, 215, 6, 11, TONE, 0.3), ellipse(cx - 4 * sd, 226, 5, 4, { fill: '#fff', op: 0.08 }),
+  const mode = p.ears.mode ?? 'human'; if (mode === 'none') return [];
+  const one = (cx, sd, rim) => mode !== 'human' ? mapXY(machineEar(cx, sd, mode, p), scaleAbout(cx, k), scaleAbout(212, k)) : mapXY([earShell(cx, sd, t, p.skin), ...soft(cx + 2 * sd, 215, 6, 11, TONE, 0.3), ellipse(cx - 4 * sd, 226, 5, 4, { fill: '#fff', op: 0.08 }),
     ...(t ? [path(`M ${cx - 9 * sd} 207 C ${cx - 12 * sd} ${194 - 10 * t}, ${cx - 12 * sd} ${182 - 14 * t}, ${cx - (9 + t) * sd} ${182 - 20 * t}`, { ...s, sw: 1.7, op: 0.3 })] : []), // the fold carried up into the point, so the blade is a cupped surface and not a flat shard
     path(`M ${cx - (3 + 5 * t) * sd} ${187 - 32 * t} C ${cx - 14 * sd} ${190 - 10 * t}, ${cx - 17 * sd} 206, ${cx - 12 * sd} 222`, stroke('#fff', 2, 0.14)), path(rim, s)], scaleAbout(cx, k), scaleAbout(212, k));
   // The turn, about the ear's own attachment to the head: the ear on the side the nose goes to swings behind the head
@@ -237,20 +239,151 @@ function taper(a, c, b, wf, color, op) {
 // skin's tone, the iris up under the upper lid (which cuts its top and drops its shadow across it), the upper lid a
 // stroke that is thin at the inner end and heavy at the outer third, the lower lid a rim of light with a faint dark
 // at its outer end, a tear duct at the inner corner, a bag under the eye when the character has one.
-const featureScale = (p) => Math.min(1.12, Math.max(0.92, 0.5 + 0.5 * ((p.face?.width ?? 156) / 156))); // the eyes and brows grow a little with the head: one fixed eye on a broad face is a bead, on a narrow one a saucer, and either reads as a part placed on a head
-function eye(cx, p, side) { // side: +1 the right eye, -1 the left (its outer corner at -x)
-  const e = p.eyes, k = featureScale(p), st0 = EYES[e.style] ?? EYES.almond, st = { ...st0, w: st0.w * k, top: st0.top * k, bot: st0.bot * k, iris: st0.iris * k, inn: (st0.inn ?? 0) * k, out: (st0.out ?? 0) * k, crease: st0.crease && { ...st0.crease, dy: st0.crease.dy * k, ctl: st0.crease.ctl * k } }, o = e.openness * (side < 0 ? e.asym : 1), y = e.y + (side < 0 ? e.dy ?? 0 : 0);
-  const depth = e.depth ?? 0.5, scl = e.sclera ?? st.sclera, lw = e.lidWeight ?? st.lid, corner = e.corner ?? st.corner, bags = e.bags ?? 0, dark = '#2b1d19';
+export const featureScale = (p) => Math.min(1.12, Math.max(0.92, 0.5 + 0.5 * ((p.face?.width ?? 156) / 156))); // the eyes and brows grow a little with the head: one fixed eye on a broad face is a bead, on a narrow one a saucer, and either reads as a part placed on a head
+
+// Machine faces. A robot is not a mask over a face: each feature has a `mode`, and a mode other than 'human' draws that
+// feature as a made thing, driven by the same dials a face is, so a robot still opens, squints, frowns and smiles.
+// What carries the feeling is the lids: every machine eye has a shutter above and below its light (mLids), the upper
+// one tilted by the brows (browInner down: the inner end drops, anger; up: the outer end droops, grief), lowered as
+// the eye shuts and lifted clear in surprise, the lower one rising in an arch with a smile's squint, the happy eye.
+//   eyes.mode   'lens' a camera lens in a bezel, its aperture the light, two shutter plates for lids; 'led' a lit
+//               bar sunk in a housing, cut by the lids; 'visor' one band across both, the lids a V or a roof across
+//               it, its two bright spots the look. eyes.iris is the light's colour.
+//   mouth.mode  'grille' slats in a framed housing that opens with the jaw; 'slot' a lit line along the parting;
+//               'speaker' a plate of holes that light up as it talks; 'matrix' a panel of pixels, the lit ones
+//               drawing the lips' line (and the opening's outline when it opens). Each bends with the smile
+//               through lipMove, harder than a lip does, so it reads at a thumbnail. mouth.color is the light.
+//   ears.mode   'none', 'disc' a receiver plate, 'antenna' the plate with a stalk, 'bolt' a hex nut on a boss (a jaw
+//               hinge), 'fin' a stack of cooling fins; they turn with the head as ears do.
+//   nose.mode   'none', 'vent' (slats in a sunk grille where the nostrils would be), 'ridge' a raised nasal plate.
+// The metal is the skin: a robot's skin colour is its plating. Everything made is modelled as a made thing: a plate
+// stands proud (a dropped shadow, a lit top edge, a dark bottom one), a well is sunk (the reverse).
+export const EYE_MODES = ['human', 'lens', 'led', 'visor'], MOUTH_MODES = ['human', 'grille', 'slot', 'speaker', 'matrix'], EAR_MODES = ['human', 'none', 'disc', 'antenna', 'bolt', 'fin'], NOSE_MODES = ['human', 'none', 'vent', 'ridge'];
+const R1 = (v) => Math.round(v * 10) / 10;
+const lightOf = (c) => c ?? '#6fe0ff';
+const mCl = (v, a, b) => Math.max(a, Math.min(b, v));
+/** A lit shape's glow: the light spread soft around it. */
+const halo = (cx, cy, rx, ry, c, op = 0.35) => (op > 0.01 ? soft(cx, cy, rx, ry, c, op) : []);
+/** An ellipse as a path (four cubics), for what has to be clipped to or bevelled. */
+const mOval = (cx, cy, rx, ry) => { const a = 0.5523 * rx, b = 0.5523 * ry, f = R1; return `M ${f(cx - rx)} ${f(cy)} C ${f(cx - rx)} ${f(cy - b)}, ${f(cx - a)} ${f(cy - ry)}, ${f(cx)} ${f(cy - ry)} C ${f(cx + a)} ${f(cy - ry)}, ${f(cx + rx)} ${f(cy - b)}, ${f(cx + rx)} ${f(cy)} C ${f(cx + rx)} ${f(cy + b)}, ${f(cx + a)} ${f(cy + ry)}, ${f(cx)} ${f(cy + ry)} C ${f(cx - a)} ${f(cy + ry)}, ${f(cx - rx)} ${f(cy + b)}, ${f(cx - rx)} ${f(cy)} Z`; };
+/** A rounded box, half sizes w and h, corners of radius r. */
+const mBox = (cx, cy, w, h, r = Math.min(w, h)) => { const f = R1, x1 = cx - w, x2 = cx + w, y1 = cy - h, y2 = cy + h; r = Math.min(r, w, h); return `M ${f(x1 + r)} ${f(y1)} L ${f(x2 - r)} ${f(y1)} Q ${f(x2)} ${f(y1)} ${f(x2)} ${f(y1 + r)} L ${f(x2)} ${f(y2 - r)} Q ${f(x2)} ${f(y2)} ${f(x2 - r)} ${f(y2)} L ${f(x1 + r)} ${f(y2)} Q ${f(x1)} ${f(y2)} ${f(x1)} ${f(y2 - r)} L ${f(x1)} ${f(y1 + r)} Q ${f(x1)} ${f(y1)} ${f(x1 + r)} ${f(y1)} Z`; };
+const mDown = (ops, dy) => mapXY(ops, (x) => x, (y) => y + dy);
+/** A plate standing proud of the plating: the shadow it drops, its fill, a lit top edge and a dark bottom one, its rim. */
+const mPlate = (d, fill, sh = 1) => [...mDown([path(d, { fill: '#000000', op: 0.28 })], 2.2 * sh), path(d, { fill }), clip(d), ...mDown([path(d, stroke(shade(fill, 1.75), 2.2, 0.65))], 1.5 * sh), ...mDown([path(d, stroke(shade(fill, 0.42), 2.2, 0.6))], -1.5 * sh), UNCLIP, path(d, stroke(shade(fill, 0.38), 0.9, 0.8))];
+/** A well sunk into it: the rim's shadow inside its top edge, light caught on its bottom one. */
+const mWell = (d, fill) => [path(d, { fill }), clip(d), ...mDown([path(d, stroke('#000000', 3.4, 0.55))], 1.8), ...mDown([path(d, stroke('#ffffff', 1.4, 0.2))], -1.3), UNCLIP];
+/** Where a machine eye's lids stand, as offsets from its centre for an eye `r` tall each way: the upper lid's inner and
+ *  outer ends, the lower lid's ends and how far it arches up in the middle. The tilt eases off as the eye goes wide,
+ *  so surprise is a round eye and not a worried one; the lids never cross. */
+const mLids = (e, side, r) => {
+  const o = mCl(e.openness * (side < 0 ? e.asym ?? 1 : 1), 0, 1.5), bi = e.browInner ?? 0, sq = unit(e.squint ?? 0), tilt = 1 - mCl((o - 1) * 1.4, 0, 0.6);
+  const top = r * (1 - 1.9 * Math.min(o, 1)) - r * 0.9 * Math.max(0, o - 1) - (e.browLift ?? 0) * 0.12 + (e.browSkew ?? 0) * 4 * side - 0.5 * r * sq; // a smile lifts the upper lid as the lower one rises: the happy eye is an arch of light, not a slit
+  const low = r * (1.05 - 1.0 * sq), yi = Math.min(low, top + tilt * (bi < 0 ? -bi * 0.3 : -bi * 0.14) * r), yo = Math.min(low, top + tilt * (bi > 0 ? bi * 0.2 : bi * 0.08) * r);
+  const arch = Math.min(r * 0.9 * sq, Math.max(0, low - Math.max(yi, yo)) * 0.85);
+  return { yi, yo, low, arch, shown: mCl((low - arch / 2 - (yi + yo) / 2) / (2 * r), 0, 1) };
+};
+/** The lids as two filled shapes about an eye at (cx, y) spanning `half` each way: what covers the light from above and below. */
+const mShutters = (cx, y, half, side, L, reach) => { const xi = R1(cx - half * side), xo = R1(cx + half * side);
+  return { upper: `M ${xi} ${R1(y + L.yi)} Q ${R1(cx)} ${R1(y + (L.yi + L.yo) / 2 + 1.5)} ${xo} ${R1(y + L.yo)} L ${xo} ${R1(y - reach)} L ${xi} ${R1(y - reach)} Z`, lower: `M ${xi} ${R1(y + L.low)} Q ${R1(cx)} ${R1(y + L.low - 2 * L.arch)} ${xo} ${R1(y + L.low)} L ${xo} ${R1(y + reach)} L ${xi} ${R1(y + reach)} Z`,
+    upEdge: `M ${xi} ${R1(y + L.yi)} Q ${R1(cx)} ${R1(y + (L.yi + L.yo) / 2 + 1.5)} ${xo} ${R1(y + L.yo)}`, lowEdge: `M ${xi} ${R1(y + L.low)} Q ${R1(cx)} ${R1(y + L.low - 2 * L.arch)} ${xo} ${R1(y + L.low)}` }; };
+function machineEye(cx, p, side) {
+  const e = p.eyes, k = featureScale(p) * (e.size ?? 1), y = e.y + (side < 0 ? e.dy ?? 0 : 0), c = lightOf(e.iris), metal = p.skin;
+  const lx = cx + e.look.x * 3.5 * k, ly = y + e.look.y * 2.5 * k;
+  if (e.mode === 'lens') { const r = 11.5 * k, R = r + 4.5 * k, L = mLids(e, side, r), ap = r * 0.5 * (0.85 + 0.25 * mCl(e.openness, 0, 1.5)), glass = mOval(cx, y, r, r), S = mShutters(cx, y, r + 1, side, L, r + 2), lid = shade(metal, 0.85);
+    return [
+      ...soft(cx, y - 2, R + 6, R + 3, '#000000', 0.14 * (0.5 + (e.depth ?? 0.5))), // the socket the lens sits in
+      ...mPlate(mOval(cx, y, R, R), shade(metal, 0.7)), ...halo(cx, y, R * 1.5, R * 1.5, c, 0.22 * L.shown), // the bezel, the light spilling onto it
+      ...mWell(glass, '#0b0e12'), clip(glass),
+      ...halo(lx, ly, ap * 2.3, ap * 2.3, c, 0.5), ellipse(lx, ly, ap, ap, { fill: c }), ellipse(lx, ly, ap * 1.35, ap * 1.35, stroke(c, 0.9, 0.55)), ellipse(lx, ly, ap * 0.45, ap * 0.45, { fill: mix(c, '#ffffff', 0.7) }), // the aperture's light, its ring, its hot centre
+      ellipse(cx - r * 0.4, y - r * 0.45, r * 0.24, r * 0.15, { fill: '#ffffff', op: 0.6 }), // the glass's glint
+      ...mDown([path(S.upper, { fill: '#000000', op: 0.45 })], 2.4 * k), path(S.upper, { fill: lid }), path(S.lower, { fill: lid }), // the shutters, the upper dropping its shadow on the light
+      path(S.upEdge, stroke(shade(metal, 0.4), 1.6, 0.9)), ...mDown([path(S.upEdge, stroke(shade(metal, 1.7), 1.1, 0.55))], -1.6), path(S.lowEdge, stroke(shade(metal, 0.45), 1.3, 0.8)), ...mDown([path(S.lowEdge, stroke(shade(metal, 1.7), 1, 0.45))], 1.4),
+      UNCLIP];
+  }
+  // led: a lit bar sunk in a housing, cut by the lids
+  const w = 15 * k, H = 6.5 * k * (1 + 0.35 * Math.max(0, mCl(e.openness, 0, 1.5) - 1)), L = mLids(e, side, H), S = mShutters(cx, y, w + 3, side, L, H + 4);
+  const bar = mBox(cx, y, w, H, H * 0.75);
+  const lit = `M ${R1(cx - (w + 3) * side)} ${R1(y + L.yi)} Q ${R1(cx)} ${R1(y + (L.yi + L.yo) / 2 + 1.5)} ${R1(cx + (w + 3) * side)} ${R1(y + L.yo)} L ${R1(cx + (w + 3) * side)} ${R1(y + L.low)} Q ${R1(cx)} ${R1(y + L.low - 2 * L.arch)} ${R1(cx - (w + 3) * side)} ${R1(y + L.low)} Z`;
+  const core = mCl(lx, cx - w * 0.6, cx + w * 0.6);
+  return [...mPlate(mBox(cx, y, w + 4.5 * k, H + 4.5 * k, H + 2), shade(metal, 0.72), 0.8), ...mWell(mBox(cx, y, w + 2 * k, H + 2 * k, H + 1), '#0b0e12'), ...halo(cx, y, w * 1.35, H + 9, c, 0.38 * L.shown),
+    clip(lit), path(bar, { fill: c }), ellipse(core, y + e.look.y * 2 * k, w * 0.5, H * 0.6, { fill: mix(c, '#ffffff', 0.45), op: 0.85 }), ellipse(core - w * 0.2, y - H * 0.35, w * 0.18, H * 0.2, { fill: '#ffffff', op: 0.7 }), UNCLIP,
+    clip(mBox(cx, y, w + 2 * k, H + 2 * k, H + 1)), path(S.upEdge, stroke(shade(metal, 0.5), 1.4, 0.8)), UNCLIP];
+}
+function machineVisor(p) {
+  const e = p.eyes, k = featureScale(p) * (e.size ?? 1), c = lightOf(e.iris), sp = e.spacing / 2, half = sp + 20 * k, y = e.y, H = 7.5 * k * (1 + 0.3 * Math.max(0, mCl(e.openness, 0, 1.5) - 1));
+  const Ll = mLids(e, -1, H), Lr = mLids(e, 1, H), xl = R1(200 - half - 2), xr = R1(200 + half + 2);
+  const lit = `M ${xl} ${R1(y + Ll.yo)} L 200 ${R1(y + (Ll.yi + Lr.yi) / 2)} L ${xr} ${R1(y + Lr.yo)} L ${xr} ${R1(y + Lr.low)} Q ${R1(200 + sp)} ${R1(y + Lr.low - 2 * Lr.arch)} 200 ${R1(y + (Ll.low + Lr.low) / 2)} Q ${R1(200 - sp)} ${R1(y + Ll.low - 2 * Ll.arch)} ${xl} ${R1(y + Ll.low)} Z`;
+  const band = mBox(200, y, half, H, H * 0.8), shown = (Ll.shown + Lr.shown) / 2;
+  return [...mPlate(mBox(200, y, half + 5 * k, H + 5 * k, H + 4), shade(p.skin, 0.55), 0.8), ...mWell(mBox(200, y, half + 1.5, H + 1.5, H + 1), '#0b0e12'), ...halo(200, y, half * 1.1, H + 10, c, 0.34 * shown),
+    clip(lit), path(band, { fill: c, op: 0.95 }), ...Array.from({ length: Math.ceil((2 * H) / 2.6) }, (_, i) => line(200 - half, R1(y - H + 1.3 + i * 2.6), 200 + half, R1(y - H + 1.3 + i * 2.6), stroke('#000000', 0.8, 0.18))), // scan lines
+    ...[-1, 1].map((sd) => ellipse(R1(200 + sd * sp + e.look.x * 4 * k), R1(y + e.look.y * 2), 8 * k, H * 0.6, { fill: mix(c, '#ffffff', 0.5), op: 0.9 })), ...[-1, 1].map((sd) => ellipse(R1(200 + sd * sp + e.look.x * 4 * k), R1(y + e.look.y * 2), 3 * k, H * 0.3, { fill: '#ffffff', op: 0.9 })), UNCLIP,
+    clip(band), path(`M ${R1(200 - half * 0.7)} ${R1(y + H)} L ${R1(200 - half * 0.45)} ${R1(y - H)} L ${R1(200 - half * 0.32)} ${R1(y - H)} L ${R1(200 - half * 0.57)} ${R1(y + H)} Z`, { fill: '#ffffff', op: 0.12 }), UNCLIP]; // a streak of light across the glass
+}
+function machineMouth(p) {
+  const m = p.mouth, w = m.width * (MOUTHS[m.style]?.wide ?? 1) * 1.3, x1 = 200 - w / 2, x2 = 200 + w / 2, open = m.open ?? 0, kw = m.skew ?? 0, pr = unit(m.press ?? 0), s = m.smile ?? 0;
+  const lift = 15 * s, yl = m.y - lift + 2 * kw, yr = m.y - lift - 9 * kw, mid = m.y + 15 * s - 10 * open, c = lightOf(m.color), metal = p.skin; // a lip's move, pushed: a machine has no lip to read, so the line itself carries the smile
+  const yAt = (t) => (1 - t) ** 2 * yl + 2 * t * (1 - t) * mid + t * t * yr; // the parting
+  const shape = (dw, h) => { const a = x1 - dw, b = x2 + dw; return `M ${R1(a)} ${R1(yl - h / 2)} Q 200 ${R1(mid - h / 2 - 2 * open)} ${R1(b)} ${R1(yr - h / 2)} L ${R1(b)} ${R1(yr + h / 2)} Q 200 ${R1(mid + h / 2)} ${R1(a)} ${R1(yl + h / 2)} Z`; };
+  if (m.mode === 'slot') { const t = (3.4 + 15 * open) * (1 - 0.3 * pr), d = `M ${R1(x1)} ${R1(yl)} Q 200 ${R1(mid)} ${R1(x2)} ${R1(yr)}`;
+    return [...mDown([path(d, stroke(shade(metal, 1.6), t + 8, 0.35))], 1.6), path(d, stroke(shade(metal, 0.4), t + 8, 1)), path(d, stroke('#0b0e12', t + 3, 1)), ...halo(200, yAt(0.5), w * 0.6, t + 8, c, 0.36), path(d, stroke(c, t, 0.95)), path(d, stroke(mix(c, '#ffffff', 0.7), Math.max(0.8, t * 0.3), 0.8))]; }
+  const h = (10 + 30 * open) * (1 - 0.35 * pr), box = shape(0, h), frame = shape(4.5, h + 9);
+  if (m.mode === 'speaker') { const rows = 2 + Math.round(3 * open), cols = Math.max(7, Math.round(w / 6)), hole = mix('#0b0e12', c, 0.25 + 0.75 * Math.min(1, open * 2.5)), out = [...mPlate(frame, shade(metal, 0.72)), ...mWell(box, shade(metal, 0.5)), clip(box)];
+    if (open > 0.05) out.push(...halo(200, yAt(0.5), w * 0.5, h * 0.6, c, 0.45 * Math.min(1, open * 2)));
+    for (let r = 0; r < rows; r++) for (let i = 0; i < cols; i++) { const t = (i + 0.5) / cols, x = x1 + w * t, yy = yAt(t) - h / 2 + (r + 0.5) * (h / rows); out.push(ellipse(R1(x), R1(yy), 2, 2, { fill: hole }), ellipse(R1(x), R1(yy + 1), 1.6, 1, { fill: '#ffffff', op: 0.12 })); }
+    return [...out, UNCLIP]; }
+  if (m.mode === 'matrix') { const cols = 11, pitch = w / cols, rows = 6, top = m.y - (rows / 2) * pitch, half = h / 2 * Math.min(1, open * 3), panel = mBox(200, m.y, w / 2 + 3, (rows / 2) * pitch + 3, 4), out = [...mPlate(mBox(200, m.y, w / 2 + 7, (rows / 2) * pitch + 7, 7), shade(metal, 0.72)), ...mWell(panel, '#0b0e12'), ...halo(200, yAt(0.5), w * 0.55, h * 0.5 + 6, c, 0.3), clip(panel)];
+    for (let i = 0; i < cols; i++) { const t = (i + 0.5) / cols, x = x1 + w * t, yc = yAt(t), up = yc - half - (open > 0.08 ? 2 * open * 4 * t * (1 - t) : 0), dn = yc + half;
+      for (let r = 0; r < rows; r++) { const yy = top + (r + 0.5) * pitch, on = Math.abs(yy - up) < pitch * 0.8 || Math.abs(yy - dn) < pitch * 0.8 || (open > 0.08 && (i === 0 || i === cols - 1) && yy > up && yy < dn);
+        out.push(rect(R1(x - pitch * 0.4), R1(yy - pitch * 0.4), R1(pitch * 0.8), R1(pitch * 0.8), on ? { fill: c, rx: 1.2 } : { fill: mix('#0b0e12', c, 0.14), rx: 1.2 })); if (on) out.push(rect(R1(x - pitch * 0.4), R1(yy - pitch * 0.4), R1(pitch * 0.8), R1(pitch * 0.3), { fill: '#ffffff', op: 0.35, rx: 1 })); } }
+    return [...out, UNCLIP]; }
+  // grille: slats across a sunk housing in a raised frame, light from inside when it opens
+  const n = Math.max(7, Math.round(w / 7)), slat = shade(metal, 0.62);
+  return [...mPlate(frame, shade(metal, 0.72)), ...mWell(box, '#0e1115'), clip(box), ...halo(200, yAt(0.5), w * 0.45, h * 0.5, c, 0.5 * Math.min(1, open * 2)),
+    ...Array.from({ length: n }, (_, i) => { const x = R1(x1 + (i + 0.5) * (w / n)); return [line(x, m.y - 60, x, m.y + 60, stroke(slat, 3, 1)), line(x - 1, m.y - 60, x - 1, m.y + 60, stroke(shade(slat, 1.6), 0.8, 0.6))]; }).flat(), UNCLIP];
+}
+function machineEar(cx, sd, mode, p) {
+  const metal = p.skin, X = (d) => cx - d * sd; // d away from the face
+  const disc = [...mPlate(mOval(X(2), 212, 13, 15), shade(metal, 0.8)), ...mWell(mOval(X(2), 212, 8, 9.5), shade(metal, 0.45)), ellipse(X(2), 212, 3, 3, { fill: shade(metal, 0.3) })];
+  if (mode === 'disc') return disc;
+  if (mode === 'bolt') { const hex = Array.from({ length: 6 }, (_, i) => { const a = (i / 6) * Math.PI * 2 + Math.PI / 6; return [X(2) + 9 * Math.cos(a), 212 + 9 * Math.sin(a)]; }), d = `M ${hex.map(([x, y]) => `${R1(x)} ${R1(y)}`).join(' L ')} Z`;
+    return [...mPlate(mOval(X(1), 212, 14, 17), shade(metal, 0.75)), ...mPlate(d, shade(metal, 1.05), 1.2), ...hex.map(([x, y]) => line(R1(X(2) + (x - X(2)) * 0.45), R1(212 + (y - 212) * 0.45), R1(x), R1(y), stroke(shade(metal, 0.6), 0.8, 0.5))), ...mWell(mOval(X(2), 212, 3.6, 3.6), shade(metal, 0.3))]; }
+  if (mode === 'fin') { const fins = [-2, -1, 0, 1, 2].flatMap((i) => mPlate(mBox(X(5), 212 + i * 7, 9, 2.2, 1.5), shade(metal, 0.95 - 0.04 * Math.abs(i)), 0.6));
+    return [...mPlate(mBox(X(-1), 212, 9, 22, 7), shade(metal, 0.7)), ...fins]; }
+  const c = lightOf(p.eyes.iris);
+  return [path(`M ${X(-4)} 198 L ${X(-10)} 152`, stroke(shade(metal, 0.4), 3)), path(`M ${X(-4.8)} 198 L ${X(-10.8)} 152`, stroke(shade(metal, 1.6), 1, 0.5)), ...disc, ...halo(X(-10), 150, 8, 8, c, 0.45), ellipse(X(-10), 150, 3.6, 3.6, { fill: c }), ellipse(X(-9), 149, 1.2, 1.2, { fill: '#ffffff', op: 0.8 })];
+}
+const machineNose = (p) => { if (p.nose.mode === 'none') return []; const y = p.eyes.y + 10 + (p.nose.length ?? 38) * 0.85, w = (p.nose.width ?? 20) * 0.5, metal = p.skin;
+  if (p.nose.mode === 'ridge') { const y0 = p.eyes.y + 4, d = `M ${R1(200 - 4)} ${R1(y0)} L ${R1(200 + 4)} ${R1(y0)} L ${R1(200 + w * 0.8)} ${R1(y)} Q 200 ${R1(y + 5)} ${R1(200 - w * 0.8)} ${R1(y)} Z`;
+    return [...mPlate(d, shade(metal, 1.08), 1.3), path(`M ${R1(200 + 1.5)} ${R1(y0 + 2)} L ${R1(200 + w * 0.45)} ${R1(y - 2)}`, stroke(shade(metal, 1.8), 1.2, 0.5))]; }
+  const box = mBox(200, y + 3, w, 6, 3);
+  return [...mWell(box, shade(metal, 0.32)), clip(box), ...[0, 1, 2].map((i) => line(R1(200 - w), R1(y - 1 + i * 4), R1(200 + w), R1(y - 1 + i * 4), stroke(shade(metal, 0.7), 1.6, 0.9))), UNCLIP, path(box, stroke(shade(metal, 0.4), 0.9, 0.7))]; };
+/** The whole drawing graded toward grey: every fill and stroke mixed toward its own luminance by 1 - saturation, so a
+ *  noir figure keeps its values (what reads) and loses its colour. */
+const greyed = (hex, s) => { if (typeof hex !== 'string' || !/^#[0-9a-f]{6}$/i.test(hex)) return hex; const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)), l = 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2];
+  return '#' + c.map((v) => Math.round(l + (v - l) * s).toString(16).padStart(2, '0')).join(''); };
+const grade = (ops, s) => (s >= 1 ? ops : ops.map((o) => (o.fill || o.stroke ? { ...o, ...(o.fill ? { fill: greyed(o.fill, s) } : {}), ...(o.stroke ? { stroke: greyed(o.stroke, s) } : {}) } : o)));
+/** One eye's outline as this face draws it (side +1 the right eye, -1 the left): its centre and line, the inner and
+ *  outer corners (xi,yi / xo,yo), the upper lid's peak (px, y - th) and the lower lid's depth (y + bh), and the lid
+ *  path itself. Exported so makeup on the eye (a liner, a lid colour, a gloss) is built on the eye that is drawn and
+ *  never on a default eye slid into place, which misses the corners on any other face. */
+export function eyeShape(p, side, cx = 200 + side * p.eyes.spacing / 2) {
+  const e = p.eyes, k = featureScale(p) * (e.size ?? 1), st0 = EYES[e.style] ?? EYES.almond, st = { ...st0, w: st0.w * k, top: st0.top * k, bot: st0.bot * k, iris: st0.iris * k, inn: (st0.inn ?? 0) * k, out: (st0.out ?? 0) * k, crease: st0.crease && { ...st0.crease, dy: st0.crease.dy * k, ctl: st0.crease.ctl * k } }, o = e.openness * (side < 0 ? e.asym : 1), y = e.y + (side < 0 ? e.dy ?? 0 : 0);
   const sq = unit(e.squint ?? 0); // a smile does not shut the eye from above: the cheek pushes the lower lid up and the upper lid comes down a little after it
   const xi = cx - st.w * side, xo = cx + st.w * side, yi = y + (st.inn ?? 0), yo = y + (st.out ?? 0), th = st.top * o * (1 - 0.25 * sq), bh = st.bot * o * (1 - 0.6 * sq), px = cx + 2 * side; // the upper lid peaks past the centre toward the outer corner
-  const lid = `M ${xi} ${yi} Q ${px} ${y - th} ${xo} ${yo} Q ${cx - side} ${y + bh} ${xi} ${yi} Z`;
-  const ir = st.iris * (1.5 - 0.55 * scl), lx = cx + e.look.x * 3, ly = y - th * 0.22 + e.look.y * 2; // the iris sits up under the upper lid; the more sclera, the smaller it is against the aperture
-  const white = mix('#ece0d3', p.skin, 0.18); // the white is never white: it takes a little of the skin
+  return { cx, y, k, st, o, sq, xi, xo, yi, yo, th, bh, px, w: st.w, lid: `M ${xi} ${yi} Q ${px} ${y - th} ${xo} ${yo} Q ${cx - side} ${y + bh} ${xi} ${yi} Z` };
+}
+function eye(cx, p, side) { // side: +1 the right eye, -1 the left (its outer corner at -x)
+  if (p.eyes.mode === 'lens' || p.eyes.mode === 'led') return machineEye(cx, p, side);
+  const e = p.eyes, { k, st, o, y, sq, xi, xo, yi, yo, th, bh, px, lid } = eyeShape(p, side, cx);
+  const depth = e.depth ?? 0.5, scl = e.sclera ?? st.sclera, lw = e.lidWeight ?? st.lid, corner = e.corner ?? st.corner, bags = e.bags ?? 0, dark = '#2b1d19';
+  const ir = st.iris * (1.5 - 0.55 * scl), lx = cx + e.look.x * 3, ly = y - st.top * 0.22 + e.look.y * 2; // the iris sits up under the upper lid; the more sclera, the smaller it is against the aperture. Placed from the resting lid, not this one, so a lid raised in surprise shows white over the iris and a lowered one cuts across it
+  const white = e.white ?? mix('#ece0d3', p.skin, 0.18), sl = unit(e.slit ?? 0); // the white is never white: it takes a little of the skin, unless the eye is not a human one
   return [
     ...(depth > 0.02 ? soft(cx, y - 9, st.w + 4, 8, '#1d0f0c', 0.2 * depth) : []),
     ...(bags > 0.02 ? [path(`M ${xi} ${yi + 3} Q ${cx} ${y + bh + 9} ${xo} ${yo + 3} Q ${cx} ${y + bh + 16 + 4 * bags} ${xi} ${yi + 5} Z`, { fill: TONE, op: 0.18 * bags }), path(`M ${xi + 3 * side} ${y + bh + 5} Q ${cx} ${y + bh + 11 + 3 * bags} ${xo - 2 * side} ${y + bh + 4}`, stroke('#6b473b', 1.1, 0.3 * bags))] : []),
     path(lid, { fill: white }),
-    clip(lid), ellipse(lx, ly, ir, ir, { fill: e.iris }), ellipse(lx, ly, ir, ir, stroke(shade(e.iris, 0.55), 1, 0.45)), ellipse(lx, ly, ir * 0.42, ir * 0.42, { fill: e.pupil }), ellipse(lx - 1.6 * side, ly - 1.8, 1.2, 1.2, { fill: '#fff', op: 0.75 }),
+    clip(lid), ellipse(lx, ly, ir, ir, { fill: e.iris }), ellipse(lx, ly, ir, ir, stroke(shade(e.iris, 0.55), 1, 0.45)), ellipse(lx, ly, ir * 0.42 * (1 - 0.78 * sl), ir * 0.42 * (1 + 1.1 * sl), { fill: e.pupil }), ellipse(lx - 1.6 * side, ly - 1.8, 1.2, 1.2, { fill: '#fff', op: 0.75 }),
     ellipse(lx + 0.5, ly + ir * 0.35, ir * 0.7, ir * 0.35, { fill: '#fff', op: 0.08 }), // the iris lit from below, where the light gets under the lid
     path(`M ${xi - 2 * side} ${yi - 2} Q ${px} ${y - th + 3.5} ${xo + 2 * side} ${yo - 2} L ${xo + 2 * side} ${yo - 12} L ${xi - 2 * side} ${yi - 12} Z`, { fill: TONE, op: 0.24 + 0.1 * depth }), UNCLIP, // the upper lid's shadow across the white and the iris
     taper([xi, yi], [px, y - th - 0.4], [xo + 2 * side, yo - 1.5], (t) => (0.7 + 1.1 * lw) + (0.7 + 0.9 * lw) * Math.sin(Math.PI * t ** 2.4), dark, 0.85), // the upper lid: one line, thin at the inner end, heaviest at the outer third where the lashes gather, to a point at the corner (t ** 2.4 puts the hump at three quarters)
@@ -263,17 +396,27 @@ function eye(cx, p, side) { // side: +1 the right eye, -1 the left (its outer co
 // brows: the right brow as [x0, y0, cx, cy, x1, y1, width] relative to the eye's centre and line, inner end first; mirrored for the left
 export const BROWS = {
   straight: [-16, -27, 0, -30, 16, -27, 4.6], softArch: [-16, -25, 0, -35, 17, -27, 4.5], highArch: [-16, -24, 0, -39, 16, -28, 4], thickStraight: [-17, -27, 0, -30, 17, -27, 6.8],
-  angled: [-17, -25, -2, -33, 17, -30, 4.7], thin: [-16, -26, 0, -32, 16, -27, 2.5], tapered: [-18, -26, -4, -34, 18, -28, 5.4],
+  angled: [-17, -25, -2, -33, 17, -30, 4.7], thin: [-16, -26, 0, -32, 16, -27, 2.5], tapered: [-18, -26, -4, -34, 18, -28, 5.4], none: null, // none: brow() draws nothing
 };
 export const BROW_STYLES = Object.keys(BROWS);
 function brow(cx, p, side) {
+  if (p.eyes.browStyle === 'none') return []; // a face with no brow ridge hair at all: the greys, a hologram's smooth mask
   const e = p.eyes, k = featureScale(p), [x0, y0, mx, my, x1, y1, sw] = (BROWS[e.browStyle] ?? BROWS.softArch).map((v, i) => (i < 6 ? v * k : v)), y = e.y - e.browLift + side * e.browSkew * 5; // skew: one brow up, the other down; the brow grows with the eye
-  const a = [cx + x0 * side, y + y0], c = [cx + mx * side, y + my], b = [cx + x1 * side, y + y1]; // a drawn brow is heavy at the inner end and tapers to a tail: one stroke whose weight falls along it, not a fat one with a thin one sticking out past its end
-  const out = [{ ...taper(a, c, b, (t) => sw * (0.98 - 0.76 * t ** 1.25), p.hairColor, 0.88), brow: true }]; // marked, since a brow is now a hair-coloured fill like the beard and the hair
+  const bi = 1.4 * (e.browInner ?? 0), knit = Math.max(0, -bi); // the inner end carries the feeling: up and the brow slopes like a roof (grief, worry), down and in it slopes like a scowl
+  const a = [cx + (x0 + 0.5 * knit) * side, y + y0 - bi], c = [cx + mx * side, y + my - 0.2 * bi], b = [cx + x1 * side, y + y1 + 0.35 * bi]; // a drawn brow is heavy at the inner end and tapers to a tail: one stroke whose weight falls along it, not a fat one with a thin one sticking out past its end
+  const out = [{ ...taper(a, c, b, (t) => sw * (0.98 - 0.76 * t ** 1.25), e.browColor ?? p.hairColor, 0.88), brow: true }]; // marked, since a brow is now a hair-coloured fill like the beard and the hair
   if (e.browStyle === 'tapered') out.push(path(`M ${cx + 7 * side} ${y - 29} Q ${cx + 14 * side} ${y - 28} ${cx + 19 * side} ${y - 27}`, stroke(p.skin, 2.4)));
   return out;
 }
-const eyes = (p, brows = true) => [...eye(200 - p.eyes.spacing / 2, p, -1), ...eye(200 + p.eyes.spacing / 2, p, 1), ...(brows ? [...brow(200 - p.eyes.spacing / 2, p, -1), ...brow(200 + p.eyes.spacing / 2, p, 1)] : [])]; // brows false: a masked face, whose brows are behind the shell
+// what the brows do to the skin around them: two short furrows between them when they knit, and lines across the
+// forehead when they go up (the whole brow, or the inner ends in grief). Nothing at rest.
+function browCreases(p) {
+  const e = p.eyes, bi = e.browInner ?? 0, by = e.y - e.browLift - 27 * featureScale(p), ink = underSkin(p.skin, '#7a4f42', 0.6), out = [];
+  const knit = unit((-bi - 1.5) / 5); if (knit > 0) out.push(...[-1, 1].map((s) => path(`M ${200 + s * 5} ${by - 6} Q ${200 + s * 3} ${by + 2} ${200 + s * 4.5} ${by + 10}`, stroke(ink, 1.4, 0.5 * knit))));
+  const up = unit((e.browLift + 1.5 * Math.max(0, bi) - 4) / 8); if (up > 0) out.push(...[0, 1].map((i) => path(`M ${200 - 26 + i * 4} ${by - 13 - i * 8} Q 200 ${by - 18 - i * 8 - 1.5 * Math.max(0, bi)} ${200 + 26 - i * 4} ${by - 13 - i * 8}`, stroke(ink, 1.2, (0.34 - 0.1 * i) * up))));
+  return out;
+}
+const eyes = (p, brows = true) => p.eyes.mode === 'visor' ? [...machineVisor(p), ...(brows ? [...brow(200 - p.eyes.spacing / 2, p, -1), ...brow(200 + p.eyes.spacing / 2, p, 1)] : [])] : [...eye(200 - p.eyes.spacing / 2, p, -1), ...eye(200 + p.eyes.spacing / 2, p, 1), ...(brows ? [...browCreases(p), ...brow(200 - p.eyes.spacing / 2, p, -1), ...brow(200 + p.eyes.spacing / 2, p, 1)] : [])]; // brows false: a masked face, whose brows are behind the shell
 
 // a feature line under this skin: the reference colour (drawn for the default skin), or the skin darkened by `k` where that is darker, channel by channel, so a line never comes out lighter than the face it sits on
 const luma = (hex) => [0.299, 0.587, 0.114].reduce((a, w, i) => a + (w * parseInt(hex.slice(1 + 2 * i, 3 + 2 * i), 16)) / 255, 0);
@@ -294,7 +437,7 @@ export const NOSE_STYLES = Object.keys(NOSES);
 // Most of a nose is shadow: the far side of the bridge, the wings, the underside of the tip on the lip, the nostrils;
 // then a highlight down the ridge and a spot on the tip. The only lines are the crease at the far wing and a hint of
 // the tip's underside, both short. A hook catches light on its bump, a dip holds shadow.
-const nose = (p) => { const st = NOSES[p.nose.style] ?? NOSES.straight, sd = p.light.side || -1, dk = underSkin(p.skin, '#6e4236', 0.42), lift = 1 + Math.max(0, 0.5 - luma(p.skin)) * 1.4, y0 = p.eyes.y + 10, yt = y0 + st.len, w = st.w, t = st.tip, up = st.up, hook = st.bridge; // the bridge starts just under the eye line, wherever this face has it
+const nose = (p) => { if (p.nose.mode && p.nose.mode !== 'human') return machineNose(p); const st = NOSES[p.nose.style] ?? NOSES.straight, sd = p.light.side || -1, dk = underSkin(p.skin, '#6e4236', 0.42), lift = 1 + Math.max(0, 0.5 - luma(p.skin)) * 1.4, y0 = p.eyes.y + 10, yt = y0 + st.len, w = st.w, t = st.tip, up = st.up, hook = st.bridge; // the bridge starts just under the eye line, wherever this face has it
   const nostril = (s) => path(`M ${200 + s * w * 0.55} ${yt + t * 0.65} Q ${200 + s * w * 0.3} ${yt + t * 0.4 + 4 * up} ${200 + s * w * 0.1} ${yt + t * 0.75} Q ${200 + s * w * 0.35} ${yt + t * 1.05} ${200 + s * w * 0.55} ${yt + t * 0.65} Z`, { fill: dk, op: Math.min(1, (0.3 + 0.35 * up) * lift) });
   // a muzzle is the same nose at the same place, built the other way: no tip with wings but a bridge running down into
   // a broad pad, modelled in light and shadow with the two nostrils cut into it as the only marks, so it reads as the
@@ -339,24 +482,33 @@ export const TEETH = {
   none: () => [],
 };
 export const TEETH_STYLES = Object.keys(TEETH);
+/** How the lips move: a smile lifts the corners (a frown drops them) by `lift` and the parting bows by the rest, so a grin is corners pulled up and out, not a lip bent down at the middle; `ctl` is where the parting's control point sits under the resting line. Exported because the moustache rides the same lip. */
+export const lipMove = (m) => { const s = m.smile ?? 0, o = m.open ?? 0; return { lift: 9 * s, ctl: 9 * s - 14 * o }; }; // an open jaw lifts the upper lip's middle as it drops the lower, so the opening is an oval and not a crescent hung off the parting
 function mouth(p) {
+  if (p.mouth.mode && p.mouth.mode !== 'human') return machineMouth(p);
   const mz = Math.max(0, Math.min(1, p.nose?.muzzle ?? 0)); // a muzzle's mouth is the same mouth, wider and with less lip: it still smiles, opens and shows its teeth, because it is this code and not a line drawn over it
-  const m = { ...p.mouth, y: p.mouth.y - 3 * mz, color: p.mouth.color ?? underSkin(p.skin, '#8b5149', 0.72) }, st = MOUTHS[m.style] ?? MOUTHS.plain, w = m.width * (st.wide ?? 1) * (1 + 0.7 * mz), x1 = 200 - w / 2, x2 = 200 + w / 2, open = m.open ?? 0, a = st.asym ?? 0; // a muzzle's mouth is up at the end of it, not a lip gap below: there is no lip to leave room for
-  const yl = m.y + a * 2, yr = m.y - a * 4, qx = 200 - a * 7, mid = m.y + m.smile * 18 - 2 * open, dark = shade(m.color, 0.45);
-  const upper = `M ${x1} ${yl} Q ${qx} ${mid} ${x2} ${yr}`, out = [ellipse(200, m.y + 11 + 6 * m.fullness, w * 0.36, 4.5, { fill: TONE, op: 0.12 }), ellipse(200, m.y + 5 + 5 * m.fullness, w * 0.28, 3, { fill: '#fff', op: 0.1 }), ellipse(200, m.y - 9, w * 0.2, 4, { fill: TONE, op: 0.05 })]; // the shadow under the lower lip and the light on it, and the philtrum's shade above, so the mouth sits in a face rather than on it
-  // every mouth is two lips, not a line: the upper a bowed lens in shadow, the lower a fuller lens in the light, the parting drawn between them; the style sets how much lip there is
-  const k = (st.thin ? 0.45 : st.full ? 1.5 : 1) * (1 - 0.55 * mz), top = (4 + 4 * m.fullness) * k, bot = (6 + 8 * m.fullness) * k;
-  out.push(path(`${upper} Q ${qx + w * 0.26} ${mid - top * 1.15} ${qx} ${mid - (top * 0.55) / (st.bow ?? 1)} Q ${qx - w * 0.26} ${mid - top * 1.15} ${x1} ${yl} Z`, { fill: shade(m.color, 0.82), op: 0.88 }), path(`${upper} Q ${qx} ${mid + bot + (st.pout ?? 0)} ${x1} ${yl} Z`, { fill: shade(m.color, 1.08), op: 0.82 }));
-  // the teeth: the band between the two lips, from the parting down (a parted mouth) or the sliver a broad smile shows
+  const m = { ...p.mouth, y: p.mouth.y - 3 * mz, color: p.mouth.color ?? underSkin(p.skin, '#8b5149', 0.72) }, st = MOUTHS[m.style] ?? MOUTHS.plain, open = m.open ?? 0, sm = m.smile, kw = m.skew ?? 0, pr = unit(m.press ?? 0), a = st.asym ?? 0; // a muzzle's mouth is up at the end of it, not a lip gap below: there is no lip to leave room for
+  const w = m.width * (st.wide ?? 1) * (1 + 0.7 * mz) * (1 + 0.14 * Math.max(0, sm) - 0.16 * open - 0.08 * pr), x1 = 200 - w / 2, x2 = 200 + w / 2; // a smile pulls the corners out, a dropped jaw draws them in, pressed lips go a little narrower
+  const { lift, ctl } = lipMove(m), yl = m.y + a * 2 - lift + 1.5 * kw, yr = m.y - a * 4 - lift - 7 * kw, qx = 200 - a * 7 + 3 * kw, mid = m.y + ctl, dark = shade(m.color, 0.45); // skew: the +x corner hitched up, the other barely moving
+  const yAt = (t) => (1 - t) ** 2 * yl + 2 * t * (1 - t) * mid + t * t * yr; // the parting itself, so the upper lip is built on it however far the corners have gone
+  const parted = open > 0.08 || sm > 0.6, inside = open > 0.08 ? mid + 6 + 50 * open : mid + 16 * unit((sm - 0.6) / 0.4), drop = parted ? inside - mid : 0; // a broad smile parts the lips over the teeth; the lower lip's top edge is `inside`
+  const upper = `M ${x1} ${yl} Q ${qx} ${mid} ${x2} ${yr}`, out = [ellipse(200, m.y + 11 + 6 * m.fullness + drop * 0.5, w * 0.36, 4.5, { fill: TONE, op: 0.12 }), ellipse(200, m.y + 5 + 5 * m.fullness + drop * 0.5, w * 0.28, 3, { fill: '#fff', op: 0.1 }), ellipse(200, m.y - 9 - lift * 0.5, w * 0.2, 4, { fill: TONE, op: 0.05 })]; // the shadow under the lower lip and the light on it, and the philtrum's shade above, so the mouth sits in a face rather than on it
+  // the cheeks a smile pushes up: the apple lit, and the fold from the nose's wing down past the corner; a hitched corner (skew) folds its own side
+  const ink = underSkin(p.skin, '#6e4236', 0.55);
+  for (const s of [-1, 1]) { const f = (1 - mz) * Math.min(1, unit((sm - 0.15) / 0.6) + 0.8 * unit((s * kw) / 0.7)), cxr = s > 0 ? x2 : x1, cyr = s > 0 ? yr : yl; if (f < 0.03) continue;
+    out.push(...soft(200 + s * (w * 0.62 + 10), m.y - 30 - 0.4 * lift, 15, 10, '#fff', 0.05 * f), path(`M ${200 + s * (w * 0.36 + 6)} ${m.y - 32} Q ${200 + s * (w * 0.5 + 14)} ${m.y - 14 - lift * 0.4} ${cxr + s * 7} ${cyr + 9}`, stroke(ink, 1.6, 0.5 * f))); }
+  // every mouth is two lips, not a line: the upper a bowed lens in shadow, the lower a fuller lens in the light, the parting drawn between them; the style sets how much lip there is, pressed lips have less of it
+  const k = (st.thin ? 0.45 : st.full ? 1.5 : 1) * (1 - 0.55 * mz) * (1 - 0.65 * pr), top = (4 + 4 * m.fullness) * k, bot = (6 + 8 * m.fullness) * k, low = parted ? inside : mid;
+  out.push(path(`${upper} Q ${qx + w * 0.26} ${yAt(0.75) - top * 1.15} ${qx} ${yAt(0.5) - (top * 0.55) / (st.bow ?? 1)} Q ${qx - w * 0.26} ${yAt(0.25) - top * 1.15} ${x1} ${yl} Z`, { fill: shade(m.color, 0.82), op: 0.88 }), path(`M ${x1} ${yl} Q ${qx} ${low} ${x2} ${yr} Q ${qx} ${low + bot + (st.pout ?? 0)} ${x1} ${yl} Z`, { fill: shade(m.color, 1.08), op: 0.82 }));
+  // the teeth: the band between the two lips, from the parting down (a parted mouth) or the row a broad smile shows
   const rows = TEETH[m.teeth ?? 'even'] ?? TEETH.even, bx1 = x1 + 5, bx2 = x2 - 5, bl = yl + (mid - yl) * 0.15, br = yr + (mid - yr) * 0.15;
   // the band is also the clip: a gap, a crooked edge or a grill's dividers are straight marks across a lens that is
   // thinner at its ends than at its middle, so left loose they are drawn over the lower lip. They run past it instead and are cut to it.
   const band = (bot2) => `M ${bx1} ${bl} Q ${qx} ${mid} ${bx2} ${br} Q ${qx} ${bot2} ${bx1} ${bl} Z`;
   const teeth = (bot2) => { const d = band(bot2); return [clip(d), ...rows(d, qx, w, (mid + bot2) / 2, Math.abs(bot2 - mid)), UNCLIP]; };
-  if (open > 0.08) { const inside = m.y + 8 + 26 * open; out.push(path(`${upper} Q ${qx} ${inside} ${x1} ${yl} Z`, { fill: '#3a1f1c' }), ...teeth(mid + Math.min(11, (inside - mid) * 0.6))); } // the inside is the region between the two lips, so it never shows past them
-  else if (m.smile > 0.75) out.push(path(`${upper} Q ${qx} ${m.y + m.smile * 6} ${x1} ${yl} Z`, { fill: dark }), ...teeth(m.y + m.smile * 6)); // a broad smile shows teeth
+  if (parted) out.push(path(`${upper} Q ${qx} ${inside} ${x1} ${yl} Z`, { fill: open > 0.08 ? '#3a1f1c' : dark }), ...teeth(open > 0.08 ? mid + Math.min(8, (inside - mid) * 0.3) : inside - 1)); // the inside is the region between the two lips, so it never shows past them
   out.push(path(upper, stroke(shade(m.color, 0.55), st.thin ? 1.4 : 2, 0.9)), ellipse(x1, yl, 2.2, 1.6, { fill: dark, op: 0.45 }), ellipse(x2, yr, 2.2, 1.6, { fill: dark, op: 0.45 })); // the parting, and the corners tucked into the cheeks
-  if (open > 0.08) out.push(path(`M ${x1} ${yl} Q ${qx} ${m.y + 8 + 26 * open} ${x2} ${yr}`, stroke(shade(m.color, 0.7), 2)));
+  if (parted) out.push(path(`M ${x1} ${yl} Q ${qx} ${inside} ${x2} ${yr}`, stroke(shade(m.color, 0.7), 2)));
   return out;
 }
 
@@ -476,9 +628,9 @@ const mustache = (p, pull = LIP_PULL, op = 1, style = 'chevron') => {
   const { top, bot } = stacheBox(p, style);
   const sh = MUSTACHES[style] ?? MUSTACHES.chevron; // the gap under the nose is only ever a few units tall, so what tells one moustache from another is mostly its width: each shape carries its own
   const ops = mapXY([path(sh.d, { fill: p.hairColor, op })], scaleAbout(200, ((m.width * (st.wide ?? 1)) / 48) * (sh.w ?? 1)), (y) => top + ((y - 243) * (bot - top)) / 17).map((o) => ({ ...o, stache: true })); // marked: on a turned head the moustache rides with the features, not with the jaw the beard sits on
-  const drop = (m.smile * 18 - 2 * (m.open ?? 0)) * pull;
-  if (Math.abs(drop) < 0.2) return ops; // a resting mouth moves nothing
-  return mapPts(ops, (x, y) => { const t = unit((x - 200 + hw) / (2 * hw)), d = unit((y - top) / (bot - top)); return [x, y + d * 2 * t * (1 - t) * drop]; });
+  const { lift, ctl } = lipMove(m), drop = (ctl + lift) * pull, rise = lift * pull; // the parting: its ends up by the corners' lift, its middle bowed by the rest
+  if (Math.abs(drop) < 0.2 && Math.abs(rise) < 0.2) return ops; // a resting mouth moves nothing
+  return mapPts(ops, (x, y) => { const t = unit((x - 200 + hw) / (2 * hw)), d = unit((y - top) / (bot - top)); return [x, y + d * (2 * t * (1 - t) * drop - rise)]; });
 };
 // Each style is the band's shape and whether it carries a moustache; `facialHair`'s own dials (color, density,
 // mustache, cheekLine) go over it, so the gap between a stubble and a beard is a number and not a missing style.
@@ -965,10 +1117,11 @@ export function portraitOps(options = {}) {
   // a hood or a bare chest has no entry and needs none.
   const outer = p.jacket.style !== 'none' && NECKLINES[p.jacket.style] ? p.jacket.style : p.top.style;
   const openingOf = (d) => { const t = d.match(/-?[\d.]+/g); return `${d} L ${t[t.length - 2]} ${NECK_TOP} L ${t[0]} ${NECK_TOP} Z`; }; // the curve closed upward, not on its own chord: a garment's top edge sits a little above the neckline, and closing on the chord leaves a band of cloth lying across the throat
-  const through = NECKLINES[outer] ? [...wide(shear([clip(openingOf(NECKLINES[outer]))])), neckG, ...neck(p), ...onNeck, POP, UNCLIP] : [];
-  const model = modelling(p);
-  return rough([
-    ...overlays(p, 'back', fits), // the ground behind the figure, outside its sway
+  const through = NECKLINES[outer] ? [...wide(shear([clip(openingOf(NECKLINES[outer]))])), neckG, ...neck(p), ...overlays(p, 'neck', fits), ...onNeck, POP, UNCLIP] : [];
+  const model = modelling(p), see = (p.figure?.opacity ?? 1) < 1; // `figure.opacity`: the whole figure faded as one thing (a hologram), never shape by shape, so nothing inside it shows through anything else inside it
+  return grade(rough([
+    ...overlays(p, 'back', fits), // the ground behind the figure, outside its sway: a hologram's beam stays at full strength
+    ...(see ? [{ k: 'layer', op: Math.max(0, p.figure.opacity) }] : []),
     push(q.bodyX, 0, q.bodyTilt, HIPS),
     headG, ...tf(under(backHair), 4), POP, // the back hair hangs behind the shoulders, so it goes down before the top
     ...wide(shear(hoodBack)), // a hood hangs behind the neck
@@ -984,14 +1137,15 @@ export function portraitOps(options = {}) {
     ...tf(faceLight(p, facePath(p)), 4), ...tf(hairShadow, 4), ...tf(under(frontHair), 4), ...tf(specShadow, 12), ...tf(specs, 12), ...tf(brim, HAT_TURN), ...tf(skirt, HAT_TURN), ...tf(hat, HAT_TURN), ...tf(fit(accessories(p, 'over')), 4), ...tf(overlays(p, 'over', fits), 4), POP,
     ...wide([...hangs, ...overlays(p, 'front', fits)]), // the arms: hanging, then what a prop does with them
     POP,
-  ], p.seed);
+    ...(see ? [{ k: 'unlayer' }] : []),
+  ], p.seed), p.figure?.saturation ?? 1);
 }
 
 const attrs = (o) => [o.fill !== undefined ? `fill="${o.fill}"` : '', o.stroke ? `stroke="${o.stroke}" stroke-width="${o.sw ?? 1}" stroke-linecap="${o.cap ?? 'round'}"` : '', o.op !== undefined ? `opacity="${o.op}"` : '', o.rx ? `rx="${o.rx}"` : '', o.rule ? `fill-rule="${o.rule}"` : ''].filter(Boolean).join(' ');
 let clipN = 0; // clip ids are unique across every svg printed, since a page shows many portraits and ids are document-wide
 export function toSvg(ops, background = null, view = '0 0 400 480', dy = 0) {
   let n = 0;
-  const body = ops.map((o) => o.k === 'push' ? `<g transform="translate(${o.tx} ${o.ty}) rotate(${(o.rot * 180) / Math.PI} ${o.cx} ${o.cy})${o.sc && o.sc !== 1 ? ` translate(${o.cx} ${o.cy}) scale(${o.sc}) translate(${-o.cx} ${-o.cy})` : ''}">` : o.k === 'pop' ? '</g>' : o.k === 'clip' ? `<clipPath id="c${(n = ++clipN)}"><path d="${o.d}"${o.rule ? ` clip-rule="${o.rule}"` : ''}/></clipPath><g clip-path="url(#c${n})">` : o.k === 'unclip' ? '</g>' : o.k === 'path' ? `<path d="${o.d}" ${attrs(o)}/>` : o.k === 'ellipse' ? `<ellipse cx="${o.cx}" cy="${o.cy}" rx="${o.rx}" ry="${o.ry}" ${attrs({ ...o, rx: 0 })}/>` : o.k === 'rect' ? `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" ${attrs(o)}/>` : `<line x1="${o.x1}" y1="${o.y1}" x2="${o.x2}" y2="${o.y2}" ${attrs(o)}/>`).join('\n');
+  const body = ops.map((o) => o.k === 'layer' ? `<g opacity="${o.op}">` : o.k === 'unlayer' ? '</g>' : o.k === 'push' ? `<g transform="translate(${o.tx} ${o.ty}) rotate(${(o.rot * 180) / Math.PI} ${o.cx} ${o.cy})${o.sc && o.sc !== 1 ? ` translate(${o.cx} ${o.cy}) scale(${o.sc}) translate(${-o.cx} ${-o.cy})` : ''}">` : o.k === 'pop' ? '</g>' : o.k === 'clip' ? `<clipPath id="c${(n = ++clipN)}"><path d="${o.d}"${o.rule ? ` clip-rule="${o.rule}"` : ''}/></clipPath><g clip-path="url(#c${n})">` : o.k === 'unclip' ? '</g>' : o.k === 'path' ? `<path d="${o.d}" ${attrs(o)}/>` : o.k === 'ellipse' ? `<ellipse cx="${o.cx}" cy="${o.cy}" rx="${o.rx}" ry="${o.ry}" ${attrs({ ...o, rx: 0 })}/>` : o.k === 'rect' ? `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" ${attrs(o)}/>` : `<line x1="${o.x1}" y1="${o.y1}" x2="${o.x2}" y2="${o.y2}" ${attrs(o)}/>`).join('\n');
   const [vx, vy, vw, vh] = view.split(' ');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${view}" role="img">\n${background ? `<rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="${background}"/>` : ''}\n${dy ? `<g transform="translate(0 ${dy})">` : ''}${body}${dy ? '</g>' : ''}\n</svg>`;
 }
@@ -1015,7 +1169,10 @@ export function tracePath(ctx, d) {
 }
 /** Paint the ops on a canvas in sheet units (400 x 480); `alpha` scales every opacity. */
 export function drawOn(ctx, ops, alpha = 1) {
+  const under = []; // the contexts a `layer` drew over: its ops go to an offscreen canvas, composited at `unlayer` at the layer's opacity, so the figure fades as one thing
   for (const o of ops) {
+    if (o.k === 'layer') { const can = typeof OffscreenCanvas !== 'undefined' && ctx.canvas ? new OffscreenCanvas(ctx.canvas.width, ctx.canvas.height) : null; const off = can?.getContext('2d'); under.push({ ctx, op: o.op, off: !!off, alpha }); if (off) { off.setTransform(ctx.getTransform()); ctx = off; } else alpha *= o.op; continue; } // no offscreen canvas: each shape at the layer's opacity, close and still deterministic
+    if (o.k === 'unlayer') { const u = under.pop(); if (!u) continue; if (u.off) { const off = ctx; ctx = u.ctx; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = u.op * u.alpha; ctx.drawImage(off.canvas, 0, 0); ctx.restore(); } alpha = u.alpha; continue; }
     if (o.k === 'clip') { ctx.save(); ctx.beginPath(); tracePath(ctx, o.d); ctx.clip(o.rule ?? 'nonzero'); continue; }
     if (o.k === 'unclip' || o.k === 'pop') { ctx.restore(); continue; }
     if (o.k === 'push') { ctx.save(); ctx.translate(o.cx + o.tx, o.cy + o.ty); ctx.rotate(o.rot); if (o.sc && o.sc !== 1) ctx.scale(o.sc, o.sc); ctx.translate(-o.cx, -o.cy); continue; }

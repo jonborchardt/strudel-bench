@@ -72,7 +72,8 @@ export function characterFrom(cast, s, role = 'none', energy = 0.5) {
     pants: { style: 'trousers', color: shade(hair, 1.6) }, // dark trousers off the hair's tone: no draw from the generator, so every seeded face stays the face it was
     ...(cast.build && cast.build !== 'default' ? { build: { ...cast.build } } : {}), // a random one of a cast is built like the cast, as its archetypes are (no draw: the editorial crowd is the figure as drawn)
     glasses: sig === 'glasses' ? { style: pick(P.glasses, 'rectangularThin'), color: pick(['#2b2927', '#211f1e', '#5c5a57', '#6b4a3a']) } : null,
-    accessories: sig === 'accessory' ? [pick([...ONE_SIDED, ...EXTRAS])] : [], details: sig === 'detail' ? [pick(P.details, null)].filter(Boolean) : [],
+    // accessories: a cast's own pool when it has one (no earbuds in 1940); one draw either way, so a pool changes no other face
+    accessories: sig === 'accessory' ? [pick(P.accessories ?? [...ONE_SIDED, ...EXTRAS])].filter(Boolean) : [], details: sig === 'detail' ? [pick(P.details, null)].filter(Boolean) : [],
     cheeks: r() < 0.35 ? 0 : 0.3 + r() * 0.7, // how much this face colours *when something drives it*: a third not at all. limner never draws this; it is a staging key a host may read to modulate `blush` live, and it draws from the stream here so a seeded person carries it
     blush: r() < 0.45 ? 0 : 0.2 + r() * 0.7, // and the portrait's own: colour in the cheeks on rather more than half of them
     light: lightOf(s, 0.55 + r() * 0.3), // one lighting language across a crowd: every face modelled, none flat, none harsh
@@ -201,24 +202,27 @@ export const identityOf = (s, name, id = 0) => identityFrom(EDITORIAL, s, name, 
 
 // expressions: what the face does, over the identity's own features; deadpan is the default
 export const EXPRESSIONS = {
+  // Written as the face's muscles, not as moods: browLift the whole brow, browInner its inner ends (up: grief and
+  // worry; down and in: anger), openness the upper lid (past 1 white shows over the iris), squint the cheek pushing
+  // the lower lid up (every real smile has it), smile the corners, skew one corner, press the lips, open the jaw.
   deadpan: { eyes: { openness: 1, browLift: 0 }, mouth: { smile: -0.05, open: 0 } },
-  stare: { eyes: { openness: 1.18, browLift: -2 }, mouth: { smile: -0.1, open: 0 } },
-  slightSmile: { eyes: { openness: 0.95 }, mouth: { smile: 0.28, open: 0 } },
-  openMouth: { eyes: { openness: 1.05, browLift: 3 }, mouth: { smile: 0, open: 0.45 } },
-  sneer: { eyes: { openness: 0.85, browSkew: 0.45 }, mouth: { style: 'asym', smile: -0.15, open: 0 } },
-  shut: { eyes: { openness: 0.04 }, mouth: { smile: -0.05, open: 0 } },
-  grin: { eyes: { openness: 0.9, browLift: 2 }, mouth: { smile: 0.82, open: 0 } },
-  smirk: { eyes: { openness: 0.92, browSkew: 0.3 }, mouth: { style: 'asym', smile: 0.3, open: 0 } },
-  halfSmile: { eyes: { openness: 1 }, mouth: { smile: 0.16, open: 0 } },
-  pout: { eyes: { openness: 0.95, browLift: -1 }, mouth: { style: 'full', smile: -0.32, open: 0 } },
-  wideEyed: { eyes: { openness: 1.28, browLift: 6 }, mouth: { smile: 0.05, open: 0 } },
-  squint: { eyes: { openness: 0.6, browLift: -3 }, mouth: { smile: 0.1, open: 0 } },
+  stare: { eyes: { openness: 1.14, browLift: -3, browInner: -4 }, mouth: { smile: -0.1, open: 0, press: 0.45 } },
+  slightSmile: { eyes: { openness: 0.95, squint: 0.3, browInner: 0.5 }, mouth: { smile: 0.38, open: 0 } },
+  openMouth: { eyes: { openness: 1.35, browLift: 9, browInner: 3 }, mouth: { smile: 0, open: 0.55 } },
+  sneer: { eyes: { openness: 0.8, squint: 0.4, browLift: -3, browInner: -3 }, mouth: { smile: -0.3, open: 0, skew: 0.5, press: 0.3 } },
+  shut: { eyes: { openness: 0.04, browInner: 1 }, mouth: { smile: 0.06, open: 0 } },
+  grin: { eyes: { openness: 0.85, squint: 0.75, browLift: 1 }, mouth: { smile: 0.92, open: 0 } },
+  smirk: { eyes: { openness: 0.9, squint: 0.25, browSkew: 0.35 }, mouth: { smile: 0.12, open: 0, skew: 0.8 } },
+  halfSmile: { eyes: { openness: 1, squint: 0.15 }, mouth: { smile: 0.24, open: 0 } },
+  pout: { eyes: { openness: 0.9, browLift: -1, browInner: 5 }, mouth: { smile: -0.5, open: 0 } },
+  wideEyed: { eyes: { openness: 1.45, browLift: 10, browInner: 4 }, mouth: { smile: -0.1, open: 0 } },
+  squint: { eyes: { openness: 0.6, squint: 0.5, browLift: -4, browInner: -2 }, mouth: { smile: 0.05, open: 0, skew: 0.2, press: 0.3 } },
 };
 /** The editorial expressions: a snapshot taken here, before any cast assigns its own into EXPRESSIONS (a cast imports this module, so this line runs first), the way HAIR_STYLES snapshots the hair. The editor's own menu, so a cast is free to pool an editorial expression beside its own without deleting it from the editor. */
 export const EDITORIAL_EXPRESSIONS = Object.keys(EXPRESSIONS);
-/** An expression as the five numbers a world animates between: smile, open, eyes (an openness factor), brow (a lift), skew. */
-export const exprVals = (name) => { const e = EXPRESSIONS[name] ?? EXPRESSIONS.deadpan; return { smile: e.mouth.smile, open: e.mouth.open ?? 0, eyes: e.eyes.openness ?? 1, brow: e.eyes.browLift ?? 0, skew: e.eyes.browSkew ?? 0 }; };
-/** The identity dressed for a shot: `styling` = { costume, variant, makeup: [names], marks: [names], props: [names], hat: { style, color, accent } | name, expression, pose, look, stance }; unset keys fall back to the identity's home styling. Returns portraitOps' options. */
+/** An expression as the numbers a world animates between: smile, open, eyes (an openness factor), brow (a lift), skew (the brows'), inner (the brows' inner ends), squint, lip (the mouth's skew), press. */
+export const exprVals = (name) => { const e = EXPRESSIONS[name] ?? EXPRESSIONS.deadpan; return { smile: e.mouth.smile, open: e.mouth.open ?? 0, eyes: e.eyes.openness ?? 1, brow: e.eyes.browLift ?? 0, skew: e.eyes.browSkew ?? 0, inner: e.eyes.browInner ?? 0, squint: e.eyes.squint ?? 0, lip: e.mouth.skew ?? 0, press: e.mouth.press ?? 0 }; };
+/** The identity dressed for a shot: `styling` = { costume, variant, makeup: [names], marks: [names], props: [names], hat: { style, color, accent } | name, expression, pose, look, stance, lighting (a LOOKS name) }; unset keys fall back to the identity's home styling. Returns portraitOps' options. */
 export function dress(idn, styling = {}) {
   const st = styling, family = st.costume ?? idn.home.costume, cos = (COSTUMES[family] ?? COSTUMES.plainTee)(st.variant ?? 0);
   const { props: cprops = [], accessories: cacc = [], ...garments } = cos;
@@ -230,14 +234,22 @@ export function dress(idn, styling = {}) {
   p.makeup = mk.filter((x) => x && x !== 'none'); p.marks = marks.filter((x) => x && x !== 'none'); p.props = props.filter((x) => x && x !== 'none');
   p.accessories = [...new Set([...(idn.base.accessories ?? []), ...cacc])];
   const ex = EXPRESSIONS[st.expression] ?? EXPRESSIONS.deadpan;
-  p.eyes = { ...p.eyes, openness: idn.base.eyes.openness * ex.eyes.openness, browLift: idn.base.eyes.browLift + (ex.eyes.browLift ?? 0), browSkew: idn.base.eyes.browSkew + (ex.eyes.browSkew ?? 0), look: st.look ?? { x: 0, y: 0 } };
+  p.eyes = { ...p.eyes, openness: idn.base.eyes.openness * ex.eyes.openness, browLift: idn.base.eyes.browLift + (ex.eyes.browLift ?? 0), browSkew: idn.base.eyes.browSkew + (ex.eyes.browSkew ?? 0), browInner: (idn.base.eyes.browInner ?? 0) + (ex.eyes.browInner ?? 0), squint: Math.min(1, (idn.base.eyes.squint ?? 0) + (ex.eyes.squint ?? 0)), look: st.look ?? { x: 0, y: 0 } };
   p.mouth = { ...p.mouth, ...ex.mouth, smile: ex.mouth.smile + (st.smile ?? 0) }; // smile: a per-shot offset, so two deadpans differ
   const own = st.stance === false ? {} : idn.base.pose ?? {}; // stance false: the shot's pose alone, none of the person's own, so two people can hold exactly the same one (the two halves of a split face)
   p.pose = { headX: 0, headY: 0, headTilt: 0, bodyX: 0, bodyTilt: 0, turn: 0, shoulder: 0, ...own }; for (const [k, v] of Object.entries(st.pose ?? {})) p.pose[k] = (own[k] ?? 0) + v; // the shot's pose over the person's own stance
   p.seed = idn.id * 13 + (st.variant ?? 0) * 3 + 1;
   p.blush = 0;
+  const look = LOOKS[st.lighting]; if (look) { p.light = { ...p.light, ...look.light }; p.figure = { ...p.figure, ...look.figure }; if (look.makeup) p.makeup = [...new Set([...p.makeup, ...look.makeup])]; } // a lighting look over whoever this is: the person stays, the light, the colour and the shadow shapes change
   return p;
 }
+/** Lighting looks any person can be dressed in (`dress(idn, { lighting: 'noir' })`), so a song's cast can go noir for
+ *  a section without a cast of its own: the light and the colour grade, never the people. `light` goes over the
+ *  person's own, `figure` over theirs (saturation grades every colour toward grey, keeping its value). */
+export const LOOKS = {
+  noir: { light: { amount: 1, contrast: 2 }, figure: { saturation: 0.08 }, makeup: ['noirKey'] }, // hard light, nearly black and white; the dials alone only grey a face, so the look brings the noir pack's key (half the face in hard shadow, a brim's shadow over the eyes, a rim on the dark jaw), which draws nothing if that pack is not loaded
+  noirRed: { light: { amount: 1, contrast: 2 }, figure: { saturation: 0.3 }, makeup: ['noirKey'] }, // the same, with a little blood left in the colour
+};
 
 /** The anatomy every fantasy cast is built from, exactly as published: every figure in **head heights** (the head
  *  itself is 1), and every one of them a *range* rather than a value. `height` is the one column that is not in the
@@ -262,6 +274,20 @@ export const ANATOMY = {
   halfOrc: { height: 1.06, totalHeight: [6.8, 7.6], shoulderWidth: [2.3, 2.8], torsoLength: [2.3, 2.7], armLength: [3, 3.3], legLength: [3.3, 3.9], handSize: [0.78, 0.92], footLength: [1, 1.12] },
   dragonborn: { height: 1.13, totalHeight: [6.5, 7.5], shoulderWidth: [2.5, 3.1], torsoLength: [2.5, 2.9], armLength: [2.8, 3.3], legLength: [3.1, 3.7], handSize: [0.82, 1], footLength: [1, 1.2] },
   tiefling: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.82], footLength: [0.95, 1.08] },
+  scifiHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
+  cyborg: { height: 1.03, totalHeight: [7, 8], shoulderWidth: [2.1, 2.6], torsoLength: [2.2, 2.7], armLength: [2.8, 3.3], legLength: [3.5, 4.2], handSize: [0.72, 0.9], footLength: [0.95, 1.15] },
+  greyAlien: { height: 0.92, totalHeight: [7.5, 9], shoulderWidth: [1.4, 1.8], torsoLength: [1.8, 2.2], armLength: [3.3, 4], legLength: [3.4, 4.2], handSize: [0.65, 0.8], footLength: [0.8, 0.95] },
+  greenAlien: { height: 0.95, totalHeight: [6.8, 8], shoulderWidth: [1.8, 2.3], torsoLength: [2.1, 2.5], armLength: [2.9, 3.5], legLength: [3.3, 4], handSize: [0.7, 0.85], footLength: [0.9, 1.05] },
+  reptilianAlien: { height: 1.08, totalHeight: [6.5, 7.5], shoulderWidth: [2.3, 2.9], torsoLength: [2.4, 2.9], armLength: [2.9, 3.4], legLength: [3.1, 3.8], handSize: [0.8, 1], footLength: [1, 1.2] },
+  hologram: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
+  postApocalypticHuman: { height: 1, totalHeight: [6.8, 7.8], shoulderWidth: [1.9, 2.4], torsoLength: [2.2, 2.6], armLength: [2.7, 3.2], legLength: [3.4, 4], handSize: [0.68, 0.8], footLength: [0.95, 1.08] },
+  steampunkHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.5], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.82], footLength: [0.95, 1.08] },
+  // the genre casts, every one sized against the human: a row of their own so each stands in the lineup as itself
+  gothicHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
+  noirHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
+  synthwaveHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
+  punkHuman: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
+  robot: { height: 1, totalHeight: [7, 8], shoulderWidth: [2, 2.4], torsoLength: [2.2, 2.6], armLength: [2.8, 3.2], legLength: [3.5, 4.1], handSize: [0.7, 0.8], footLength: [0.95, 1.05] },
 };
 /** `build` keys by their column, in the order the portrait lists them. */
 const COLUMN = { trunk: 'torsoLength', legs: 'legLength', shoulders: 'shoulderWidth', arms: 'armLength', hands: 'handSize', feet: 'footLength' };

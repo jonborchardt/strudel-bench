@@ -120,7 +120,7 @@ can hold exactly the same one.
 
 ## Peoples, casts and parts
 
-Ten casts ship. Each is a *people*: a signature merged over every member (an elf's ears, a dragonborn's muzzle, the
+Twenty-one casts ship: the fantasy peoples, the future ones, and the genres and eras. Each is a *people*: a signature merged over every member (an elf's ears, a dragonborn's muzzle, the
 build itself), pools of parts it may wear, archetypes with pinned faces, and its own palettes.
 
 | cast | archetypes | | cast | archetypes |
@@ -130,6 +130,18 @@ build itself), pools of parts it may wear, archetypes with pinned faces, and its
 | `dwarves` | 8 | | `tieflings` | 6 |
 | `elves` | 6 | | `gnomes` | 5 |
 | `humans` | 6 | | `dragonborn` | 5 |
+| `scifi` | 5 | | `cyborgs` | 6 |
+| `aliens` | 7 | | `holograms` | 5 |
+| `wastelanders` | 5 | | `steampunks` | 7 |
+| `gothic` | 5 | | `noir` | 5 |
+| `synthwave` | 5 | | `punks` | 5 |
+| `robots` | 7 | | | |
+
+A robot is not a mask over a face: its eyes, mouth, ears and nose are **machine modes** of the features themselves
+(`eyes.mode` lens/led/visor, `mouth.mode` grille/slot/speaker, `ears.mode` disc/antenna/none, `nose.mode` vent/none),
+driven by the same expression dials, so a robot still squints and smiles. And a **lighting look** is not a people:
+`dress(identity, { lighting: 'noir' })` puts anybody in `LOOKS.noir` (hard light, the colour graded toward grey through
+`figure.saturation`), which the noir cast wears as its signature.
 
 ```js
 import { CASTS, characterFrom, seed, prng } from 'limner';
@@ -155,7 +167,7 @@ parts('makeup', { any: ['only:undead'] });        // the rot: reached only by as
 `tagsOf(kind, name)` to see what any part carries.
 
 **Sharing is a tag; quarantine is a pool.** A part tagged `only:<x>` comes back only when a query names
-`only:<x>`, which is how ten casts share one wardrobe without a zombie's rot reaching an ordinary face. Register your
+`only:<x>`, which is how twenty-one casts share one wardrobe without a zombie's rot reaching an ordinary face. Register your
 own with `tag(kind, name, ...tags)` after adding it to the matching registry.
 
 ### Anatomy is solved, not stated
@@ -176,8 +188,12 @@ the slack: `buildOf(race)` walks one parameter across all of them at once (the t
 *smaller* head, together with the short end of every length, or the reverse) and bisects until the figure actually
 stands at the race's own stature. The human row solves to all 1s, which is what ties the table to the drawing.
 
-Nine rows, shortest to tallest: halfling and gnome (0.52), dwarf (0.78), human and tiefling (1.0), elf (1.04), half-orc
-(1.06), orc (1.1), dragonborn (1.13).
+Twenty-two rows, shortest to tallest: halfling and gnome (0.52), dwarf (0.78), grey alien (0.92), green alien (0.95), human,
+tiefling, sci-fi human, hologram, post-apocalyptic human, steampunk human, and the gothic, noir, synthwave, punk
+and robot rows (1.0), cyborg (1.03), elf (1.04), half-orc
+(1.06), reptilian alien (1.08), orc (1.1), dragonborn (1.13). The alien cast takes a row per kind (the insectoid borrows
+the green alien's, the nordic the elf's): an archetype is one kind, and a random member of a crowd draws its kind and
+that kind's build together.
 
 ## Stances
 

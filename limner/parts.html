@@ -37,9 +37,9 @@
   const WEAR = {
     tops: (n) => ({ top: { style: n, color: '#c23d8e', accent: '#2fb5b0' } }), jackets: (n) => ({ jacket: { style: n, color: '#2a4f8f', accent: '#e9e2d0' }, top: { style: 'crewTshirt', color: '#eeeae2' } }),
     hats: (n) => ({ hat: { style: n, color: '#d9c64a', accent: '#2a5fb8' } }), hair: (n) => ({ hair: { style: n } }), beards: (n) => ({ facialHair: { style: n } }),
-    teeth: (n) => ({ mouth: { teeth: n, open: 0.5 } }), makeup: (n) => ({ makeup: [n] }), marks: (n) => ({ marks: [n] }), props: (n) => ({ props: [n] }), glasses: (n) => ({ glasses: { style: n, color: '#2b2927' } }),
+    teeth: (n) => ({ mouth: { teeth: n, open: 0.5 } }), makeup: (n) => ({ makeup: [n] }), marks: (n) => ({ marks: [n] }), props: (n) => ({ props: [n] }), glasses: (n) => ({ glasses: { style: n, color: '#2b2927' } }), accessories: (n) => ({ accessories: [n] }),
   };
-  const KIND = { tops: 'top', jackets: 'jacket', hats: 'hat', hair: 'hair', beards: 'facialHair', teeth: 'teeth', makeup: 'makeup', marks: 'marks', props: 'props', glasses: 'glasses' };
+  const KIND = { tops: 'top', jackets: 'jacket', hats: 'hat', hair: 'hair', beards: 'facialHair', teeth: 'teeth', makeup: 'makeup', marks: 'marks', props: 'props', glasses: 'glasses', accessories: 'accessories' };
   const fig = (svg, label, tags) => `<figure>${svg}<figcaption>${label}<br><small>${tags || 'untagged'}</small></figcaption></figure>`;
   document.getElementById('sheet').innerHTML = Object.entries(names ?? {}).map(([kind, list]) => {
     const all = parts(KIND[kind], { any: [...new Set(list.flatMap((n) => [...tagsOf(KIND[kind], n)]))] }).filter((n) => list.includes(n)); // through the query, so a part the query would refuse is missing from its own sheet and says so

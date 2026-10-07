@@ -62,12 +62,12 @@ export const ZOMBIE_NAMES = Object.keys(ZOMBIES);
 
 // --- the faces they hold: no smile among them; `open` is the jaw, which the kick drops further (tableau's `motion.jaw`) ---
 export const ZOMBIE_EXPRESSIONS = {
-  slackJaw: { eyes: { openness: 0.9, browLift: 1 }, mouth: { smile: -0.25, open: 0.35 } },
-  deadStare: { eyes: { openness: 1.2, browLift: -1 }, mouth: { smile: -0.15, open: 0.08 } },
-  hunger: { eyes: { openness: 1.1, browLift: 3 }, mouth: { smile: 0.1, open: 0.5 } },
-  snarl: { eyes: { openness: 0.75, browLift: -4, browSkew: 0.3 }, mouth: { style: 'asym', smile: -0.3, open: 0.25 } },
-  moan: { eyes: { openness: 0.55, browLift: 4 }, mouth: { smile: -0.1, open: 0.6 } },
-  lidsHalf: { eyes: { openness: 0.45 }, mouth: { smile: -0.2, open: 0.15 } },
+  slackJaw: { eyes: { openness: 0.8, browLift: -1, browInner: 1 }, mouth: { smile: -0.3, open: 0.45 } },
+  deadStare: { eyes: { openness: 1.32, browLift: 2 }, mouth: { smile: -0.2, open: 0.08 } }, // white all round the iris: nobody home
+  hunger: { eyes: { openness: 1.15, squint: 0.2, browLift: -2, browInner: -4 }, mouth: { smile: 0.1, open: 0.55 } },
+  snarl: { eyes: { openness: 0.7, squint: 0.5, browLift: -5, browInner: -6 }, mouth: { smile: -0.35, open: 0.3, skew: 0.6 } },
+  moan: { eyes: { openness: 0.5, browLift: 3, browInner: 6 }, mouth: { smile: -0.3, open: 0.6 } },
+  lidsHalf: { eyes: { openness: 0.42, browInner: 1 }, mouth: { smile: -0.25, open: 0.15 } },
 };
 Object.assign(EXPRESSIONS, ZOMBIE_EXPRESSIONS);
 const EXPR_POOL = ['slackJaw', 'slackJaw', 'deadStare', 'hunger', 'snarl', 'moan', 'lidsHalf'], EMOTES = ['slackJaw', 'deadStare', 'hunger', 'moan', 'lidsHalf'];

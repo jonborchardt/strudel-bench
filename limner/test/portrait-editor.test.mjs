@@ -178,7 +178,7 @@ test('the moustache belongs to the features: under the nose, above the lip, and 
     assert.ok(Math.max(...ys) < mouth.y, `and stops above the lip (${what})`);
   }
   const squeezed = yOf(stache({ nose: { style: 'long', length: 52 }, mouth: { y: 250 } })); // a nose that runs down to the lip leaves no gap: the hair is squeezed, never drawn over the mouth
-  assert.ok(Math.max(...squeezed) < 250 && Math.max(...squeezed) - Math.min(...squeezed) >= 8);
+  assert.ok(Math.max(...squeezed) < 250 && Math.max(...squeezed) - Math.min(...squeezed) >= 7.5); // 8 at the squeeze, less the hair a resting smile lifts the lip's corners (lipMove)
 });
 
 test('the beard takes a colour, a density, a cheek line and a moustache of its own', () => {

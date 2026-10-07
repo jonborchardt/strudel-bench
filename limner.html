@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>limner explorer</title>
-<meta name="description" content="What limner draws: the full parameter editor with the face in the URL, every pose, the ten peoples, a seeded crowd, the anatomy table, expressions, costumes, the part quarantine, and the ops both renderers read.">
+<meta name="description" content="What limner draws: the full parameter editor with the face in the URL, every pose, the twenty-one peoples, a seeded crowd, the anatomy table, expressions, costumes, the part quarantine, and the ops both renderers read.">
 <meta name="robots" content="noindex">
 <style>
   :root { --paper: #e7e4df; --card: #f3f1ec; --line: #cfcac1; --ink: #2e2c29; --dim: #7d7871; --mark: #b3202a; }
@@ -456,14 +456,14 @@ renderFigure(dress(sitter, { props: ['${PROP_STYLES.find((p) => p !== 'none' && 
   go();
 }
 
-// ---- ten peoples ----
+// ---- the peoples ----
 function paintPeoples() {
   const s = $('t-peoples');
   head(s, `Peoples (${castNames.length} casts, ${castNames.reduce((n, c) => n + CASTS[c].archetypeNames.length, 0)} archetypes)`,
     'One archetype from each cast, in its home styling. A cast is a signature merged over every member — the ears, the muzzle, the build itself — plus the pools of parts it may wear and its own palettes. None of them is a filter over a human: they are built differently. Step the archetype to see that a cast is a people and not one face.');
   const row = el('div', { className: 'row w160' });
   const picks = el('div', { className: 'picks' });
-  let i = 0, code; // the same index into every cast's archetype list, wrapped: one row is one cross-section of the ten
+  let i = 0, code; // the same index into every cast's archetype list, wrapped: one row is one cross-section of every people
   const go = () => {
     row.innerHTML = castNames.map((name) => {
       const cast = CASTS[name], who = cast.archetypeNames[i % cast.archetypeNames.length];
@@ -532,10 +532,16 @@ function paintAnatomy() {
     'ANATOMY gives each people a stature relative to a human and then the figure in head heights, every measure a range. buildOf() walks one parameter across all of those ranges at once and bisects until the figure actually stands at the right stature — so the human row solves to all 1s, which is what ties the published table to this drawing. Drawn to one scale, feet on one floor.');
   const order = Object.keys(ANATOMY).sort((a, b) => ANATOMY[a].height - ANATOMY[b].height);
   const row = el('div', { className: 'row ground' });
+  // Who stands in for each row, named: finding the cast whose build equals the row's put a sci-fi crewman on the human
+  // and hologram rows (every all-1s build is equal, and the humans' build is 'default') and a human on any row no cast
+  // builds on (the half-orc, the grey and reptilian kinds, whose cast's own build is the green one's).
+  const SITTER = { human: ['humans'], elf: ['elves'], dwarf: ['dwarves'], halfling: ['halflings'], gnome: ['gnomes'], orc: ['orcs'], halfOrc: ['orcs', 'campRunner'], dragonborn: ['dragonborn'], tiefling: ['tieflings'],
+    scifiHuman: ['scifi'], cyborg: ['cyborgs'], greyAlien: ['aliens', 'greyWatcher'], greenAlien: ['aliens', 'greenScout'], reptilianAlien: ['aliens', 'reptilianWarlord'], hologram: ['holograms'], postApocalypticHuman: ['wastelanders'], steampunkHuman: ['steampunks'],
+    gothicHuman: ['gothic', 'count'], noirHuman: ['noir'], synthwaveHuman: ['synthwave'], punkHuman: ['punks'], robot: ['robots', 'sentinel'] };
   for (const race of order) {
     const b = buildOf(race);
-    const cast = castNames.find((c) => JSON.stringify(CASTS[c].build) === JSON.stringify(b)) ?? 'humans';
-    const p = dress(archetype({ cast, seed: 3 }), {});
+    const [cast, name] = SITTER[race] ?? ['humans'];
+    const p = dress(archetype({ cast, seed: 3, ...(name ? { name } : {}) }), {});
     row.insertAdjacentHTML('beforeend', fig(renderFigure({ ...p, build: b }), race, `stature ${ANATOMY[race].height} · ${ANATOMY[race].totalHeight.join('–')} heads`));
   }
   s.append(row);

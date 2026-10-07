@@ -91,17 +91,17 @@ test('the tag queries in the README return parts, and the quarantine holds', () 
 });
 
 test('the cast table in the README matches the casts that ship', () => {
-  const counts = { editorial: 24, undead: 19, dwarves: 8, elves: 6, humans: 6, orcs: 6, halflings: 6, tieflings: 6, gnomes: 5, dragonborn: 5 };
-  assert.deepEqual(Object.keys(CASTS).sort(), Object.keys(counts).sort(), 'ten casts, the ones the table lists');
+  const counts = { editorial: 24, undead: 19, dwarves: 8, elves: 6, humans: 6, orcs: 6, halflings: 6, tieflings: 6, gnomes: 5, dragonborn: 5, scifi: 5, cyborgs: 6, aliens: 7, holograms: 5, wastelanders: 5, steampunks: 7, gothic: 5, noir: 5, synthwave: 5, punks: 5, robots: 7 };
+  assert.deepEqual(Object.keys(CASTS).sort(), Object.keys(counts).sort(), 'twenty-one casts, the ones the table lists');
   for (const [name, n] of Object.entries(counts)) assert.equal(CASTS[name].archetypeNames.length, n, `${name} has ${n} archetypes`);
-  assert.match(README, /ten casts share one wardrobe/, 'and the prose says ten');
+  assert.match(README, /twenty-one casts share one wardrobe/, 'and the prose says ten');
 });
 
-test('the anatomy claims: nine peoples, shortest to tallest, the human row all 1s', () => {
-  assert.equal(Object.keys(ANATOMY).length, 9);
+test('the anatomy claims: twenty-two peoples, shortest to tallest, the human row all 1s', () => {
+  assert.equal(Object.keys(ANATOMY).length, 22);
   const h = buildOf('human');
   for (const [k, v] of Object.entries(h)) assert.ok(Math.abs(v - 1) < 1e-9, `human.${k} should solve to 1, got ${v}`);
-  const order = ['halfling', 'gnome', 'dwarf', 'human', 'tiefling', 'elf', 'halfOrc', 'orc', 'dragonborn'];
+  const order = ['halfling', 'gnome', 'dwarf', 'greyAlien', 'greenAlien', 'human', 'tiefling', 'scifiHuman', 'hologram', 'postApocalypticHuman', 'steampunkHuman', 'gothicHuman', 'noirHuman', 'synthwaveHuman', 'punkHuman', 'robot', 'cyborg', 'elf', 'halfOrc', 'reptilianAlien', 'orc', 'dragonborn'];
   assert.deepEqual([...order].sort(), Object.keys(ANATOMY).sort(), 'the README names every row');
   const tall = order.map((r) => ANATOMY[r].height);
   for (let i = 1; i < tall.length; i++) assert.ok(tall[i] >= tall[i - 1], `${order[i]} (${tall[i]}) is not at least as tall as ${order[i - 1]} (${tall[i - 1]})`);
