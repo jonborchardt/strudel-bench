@@ -900,6 +900,13 @@ export function arm(p, side, { lift = 0, elbow, wrist, hand = true }) {
     ...(hand ? mitten(p, hx + (dx / L) * 4, hy + (dy / L) * 4, a, 1.25) : []),
   ];
 }
+/** A raised arm's x (arm space, as `arm` takes it) that lands at least `gap` outside the face edge on the sheet. `arm` scales the point about the shoulder by the build's arms and the body maps it about 200 by the shoulders' width, while the head scales by its own: a short-armed people with a big head (a halfling) would otherwise put its hands on its cheeks. A human's point is already clear and comes back unchanged. */
+const handsOut = (p, side, x, gap) => {
+  const b = bld(p), bw = p.body.width * b.shoulders, sx = 200 + 94 * side; // the lifted shoulder joint (SHOULDER less the lift's inset)
+  const sheet = 200 + (sx + (x - sx) * b.arms - 200) * bw, clear = (p.face.width / 2) * b.head + gap;
+  if (Math.abs(sheet - 200) >= clear) return x;
+  return sx + (200 + (side * clear) / bw - sx) / b.arms;
+};
 const sleeve = (p, x0, y0, x1, y1, sw = 34) => line(x0, y0, x1, y1, stroke(sleeveColor(p), sw));
 const hand = (p, x, y, a = 0, k = 1) => mitten(p, x, y, a - Math.PI / 2, k);
 const GOLD_OBJ = (cx, cy, r) => [ellipse(cx, cy, r, r, { fill: '#b8892b' }), ellipse(cx - r * 0.3, cy - r * 0.35, r * 0.35, r * 0.25, { fill: '#fff3c8', op: 0.7 }), ellipse(cx + r * 0.25, cy + r * 0.3, r * 0.5, r * 0.4, { fill: '#6e4d12', op: 0.35 })];
@@ -917,7 +924,7 @@ export const PROPS = {
   abstractGoldObject: { arms: [1], front: (p) => [...arm(p, 1, { lift: 0.35, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), ...GOLD_OBJ(250, 432, 24)] },
   abstractToyLikeProp: { arms: [1], front: (p) => [...arm(p, 1, { lift: 0.35, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), rect(240, 420, 28, 32, { rx: 5, fill: '#b3202a' }), ellipse(248, 432, 3.5, 3.5, { fill: '#fff' }), ellipse(260, 432, 3.5, 3.5, { fill: '#fff' }), rect(246, 442, 16, 4, { fill: '#fff' })] },
   handHeartGesture: { arms: [-1, 1], front: (p) => [...arm(p, -1, { lift: 0.35, elbow: [96, 490], wrist: [176, 476], hand: false }), ...arm(p, 1, { lift: 0.35, elbow: [304, 490], wrist: [224, 476], hand: false }), path('M 200 498 C 172 480, 160 452, 178 442 C 188 437, 197 443, 200 452 C 203 443, 212 437, 222 442 C 240 452, 228 480, 200 498 Z', stroke(handColor(p), 19)), path('M 200 494 C 176 478, 166 456, 180 448 C 190 444, 198 449, 200 458 C 202 449, 210 444, 220 448 C 234 456, 224 478, 200 494 Z', { fill: '#000', op: 0.16 })] },
-  handsUp: { lift: [-1, 1], front: (p) => [...arm(p, -1, { lift: 1, elbow: [70, 300], wrist: [92, 190] }), ...arm(p, 1, { lift: 1, elbow: [330, 300], wrist: [308, 190] })] }, // both shoulders lifted, elbows out past the ears, hands above the head
+  handsUp: { lift: [-1, 1], front: (p) => [...arm(p, -1, { lift: 1, elbow: [handsOut(p, -1, 34, 32), 326], wrist: [handsOut(p, -1, 42, 24), 196] }), ...arm(p, 1, { lift: 1, elbow: [handsOut(p, 1, 366, 32), 326], wrist: [handsOut(p, 1, 358, 24), 196] })] }, // both shoulders lifted, elbows wide and forearms upright, palms beside the head clear of the face and the hat: this figure's arms (about 4.6 heads tall) cannot reach over the crown, so up is beside it, not on it
   armRaised: { lift: [1], front: (p) => [...arm(p, 1, { lift: 1, elbow: [332, 296], wrist: [312, 184] })] },
 };
 export const PROP_STYLES = Object.keys(PROPS);

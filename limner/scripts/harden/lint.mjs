@@ -2,7 +2,7 @@
 // verdict. Each closed todo whose fault is geometric adds one here and a test in ../../test/harden.test.mjs over a state
 // that used to show it, so the reader's job shrinks as the list grows.
 // ponytail: bounding points, not path intersection; good enough to rank a cell, not to judge it.
-import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES, HAIR, eyeShape } from '../../index.mjs';
+import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES, HAIR, eyeShape, PROPS, headBox } from '../../index.mjs';
 import { params } from '../../schema.mjs';
 import { VIEWBOX } from './sheet.mjs';
 
@@ -108,6 +108,16 @@ export function shadowHairOut(p, ops) {
 
 export const HAIR_EYE_CLEAR = 10; // how far outside an eye's outer corner a panel's edge must hang
 
+/** A raised hand (a prop that lifts an arm) whose centre lands on the face: inside the face's half width, between the top of the head and the chin. The handsUp hands sat on the temples, and a short-armed people's on the cheeks (T043). The hand ellipses are the skin- or glove-coloured ellipses the prop adds over the same figure with no prop. The offending hand's centre, or null. */
+export function handOnFace(p, ops = portraitOps(p)) {
+  if (!(p.props ?? []).some((n) => PROPS[n]?.lift)) return null;
+  const without = new Set(portraitOps({ ...p, props: [] }).map((o) => JSON.stringify(o)));
+  const hb = headBox(p), k = (hb.chin - hb.top) / (p.face.height + 16 * p.face.chin), half = (p.face.width / 2) * k, cx = 200 + (p.pose?.headX ?? 0);
+  const hands = ops.filter((o) => o.k === 'ellipse' && (o.fill === p.skin || o.fill === '#161517') && !without.has(JSON.stringify(o)));
+  const on = hands.find((o) => Math.abs(o.cx - cx) < half && o.cy > hb.top && o.cy < hb.chin);
+  return on ? [on.cx, on.cy] : null;
+}
+
 const POSE_KEYS =['pose.headX', 'pose.headY', 'pose.headTilt', 'pose.bodyTilt', 'pose.turn', 'pose.shoulder', 'props'];
 /** The lints over a sheet cell: the ops lints, plus the ones that need the state (a stance compared against no stance). */
 export function lintState(st, tuple) {
@@ -118,6 +128,7 @@ export function lintState(st, tuple) {
   if (shadowHairOut(p, ops)) out.push({ name: 'stack:shaved-halo', parts: ['hair:shavedHead'], detail: 'the shaved head\'s shadow is drawn outside the head\'s clip' });
   if ((p.eyes.mode ?? 'human') === 'human' && p.eyes.openness > WIDE_OPEN) { const w = whiteOverIris(p); if (w < WIDE_WHITE) out.push({ name: 'expression:wide-no-white', parts: [`eyes:${p.eyes.style}`], detail: `opened to ${p.eyes.openness}, the lid clears the iris by ${w.toFixed(1)} (under ${WIDE_WHITE})` }); }
   const hair = hairOverEye(p); if (hair > -HAIR_EYE_CLEAR) out.push({ name: 'stack:hair-over-eye', parts: [`hair:${p.hair.style}`], detail: `a front hair panel hangs ${(-hair).toFixed(1)} outside an eye's outer corner (under ${HAIR_EYE_CLEAR})` });
+  const onFace = handOnFace(p, ops); if (onFace) out.push({ name: 'pose:hand-on-face', parts: tuple.stance && tuple.stance !== 'none' ? [`stance:${tuple.stance}`] : p.props.filter((n) => PROPS[n]?.lift).map((n) => `props:${n}`), detail: `a raised hand lands at ${onFace.map((v) => v.toFixed(1))}, on the face` });
   if (tuple.stance && tuple.stance !== 'none') {
     const ov = { ...st.ov }; for (const k of POSE_KEYS) delete ov[k];
     if (JSON.stringify(ops) === JSON.stringify(portraitOps(params({ ...st, ov })))) out.push({ name: 'pose:stance-noop', parts: [`stance:${tuple.stance}`], detail: 'the stance draws the same figure as no stance' });

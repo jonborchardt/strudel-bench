@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -139,6 +139,20 @@ test('the vanDyke moustache sits over the mouth, not cheek to cheek (T001)', () 
   const st = decode('eyJzZWVkIjo4MTAzODQsImZhbWlseSI6ImFueSIsInRoZW1lIjoic2NpZmkiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6LTEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo1LCJleWVzLnNxdWludCI6MH19');
   const span = (style) => { const xs = portraitOps(params({ ...st, ov: { ...st.ov, 'facialHair.style': style } })).filter((o) => o.stache).flatMap((o) => pointsOf(o).map(([x]) => x)); return Math.max(...xs) - Math.min(...xs); };
   assert.ok(span('vanDyke') <= span('goatee') * 1.3, `vanDyke (control points included) ${span('vanDyke').toFixed(1)} against the goatee's chevron ${span('goatee').toFixed(1)}: a moustache is as wide as the mouth it sits on, its turned ends a little past`);
+});
+
+test('lint: handsUp raises the hands beside the head, not onto the face, on a halfling and a human (T043)', async () => {
+  const { PROPS, arm } = await import('../index.mjs');
+  const halfling = params(decode('eyJzZWVkIjoxNzUzNzgsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaGFsZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAsIm1vdXRoLm9wZW4iOjAuNTUsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjM1LCJleWVzLmJyb3dMaWZ0Ijo5LCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MywiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOi02LCJwb3NlLmhlYWRUaWx0IjotMC4wNSwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6WyJoYW5kc1VwIl19fQ'));
+  const human = params({ ...blank(), ov: { props: ['handsUp'] } });
+  assert.equal(handOnFace(halfling), null);
+  assert.equal(handOnFace(human), null);
+  assert.equal(handOnFace(params(blank())), null, 'no raised arm, nothing to check');
+  const front = PROPS.handsUp.front;
+  try { // the hands as they were placed before the fix: wrists at x 92 and 308, scaled toward the shoulder by a short people's arms
+    PROPS.handsUp.front = (p) => [...arm(p, -1, { lift: 1, elbow: [70, 300], wrist: [92, 190] }), ...arm(p, 1, { lift: 1, elbow: [330, 300], wrist: [308, 190] })];
+    assert.ok(handOnFace(halfling), 'the halfling\'s hands landed on its cheeks');
+  } finally { PROPS.handsUp.front = front; }
 });
 
 test('lint: a stance that moves nothing is pose:stance-noop, a real one is not', () => {
