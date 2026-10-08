@@ -493,7 +493,7 @@ const mouthLine = (p) => { const mz = Math.max(0, Math.min(1, p.nose?.muzzle ?? 
 /** How the lips move: a smile lifts the corners (a frown drops them) by `lift` and the parting bows by the rest, so a grin is corners pulled up and out, not a lip bent down at the middle; `ctl` is where the parting's control point sits under the resting line. Exported because the moustache rides the same lip. */
 export const lipMove = (m) => { const s = m.smile ?? 0, o = m.open ?? 0; return { lift: 9 * s, ctl: 9 * s - 14 * o }; }; // an open jaw lifts the upper lip's middle as it drops the lower, so the opening is an oval and not a crescent hung off the parting
 /** How far past a muzzle's nostril pad, each side, its mouth may run (T066: the pad is the nose's own width, a straight nose's half as broad as a broad one's, while the mouth was sized from the face, so a straight-nosed dragonborn's mouth ran 30 past the pad at every style and expression, a slash cheek to cheek). The mouth follows the snout it ends. */
-export const MOUTH_PAD_MARGIN = 12;
+const MOUTH_PAD_MARGIN = 12;
 function mouth(p) {
   if (p.mouth.mode && p.mouth.mode !== 'human') return machineMouth(p);
   const mz = Math.max(0, Math.min(1, p.nose?.muzzle ?? 0)); // a muzzle's mouth is the same mouth, wider and with less lip: it still smiles, opens and shows its teeth, because it is this code and not a line drawn over it
