@@ -3181,11 +3181,11 @@
    "0109",
    "0114"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
-  "lint": null,
+  "closed": "2026-10-08",
+  "commit": "53070c3",
+  "lint": "anatomy:mouth-past-muzzle",
   "wontfix": null,
   "attempts": 0,
   "tried": []
