@@ -582,3 +582,8 @@ test('lint: stack:beard-box, a beard tapers under the chin instead of hanging as
  const b = beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': style } })); assert.ok(b <= BEARD_BOX, style + ' ' + b); }
   assert.equal(beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': 'none' } })), null);
 });
+test('lint: stack:beard-box leaves a stubble alone, its foot being the face\'s own jaw (T117)', () => {
+  const st = decode('eyJzZWVkIjoyNzgwNzMsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOjAuMTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuOCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MC4zNSwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjI1LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjo4LCJwb3NlLmhlYWRUaWx0IjowLjA2LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMiwicG9zZS5zaG91bGRlciI6MCwicHJvcHMiOlsiaGFuZEhlYXJ0R2VzdHVyZSJdfX0');
+  for (const style of ['lightStubble', 'heavyStubble', 'stubbleStache']) assert.equal(beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': style } })), null, style);
+  assert.ok(beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': 'shortBeard' } })) > 0, 'a beard that hangs past the chin is still measured');
+});

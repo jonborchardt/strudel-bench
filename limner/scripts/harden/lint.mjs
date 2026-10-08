@@ -122,6 +122,7 @@ export function beardBox(p) {
     else pts.push([a[n - 2], a[n - 1]]);
     cur = [a[n - 2], a[n - 1]]; }
   const foot = Math.max(...pts.map(([, y]) => y)), low = 216 + 0.8 * (foot - 216);
+  if (foot - (112 + p.face.height + 16 * p.face.chin) < 2) return null; // a stubble (chin 0) hangs nothing past the chin: its foot is the face's own jaw, as wide as that jaw is, and no box (T117)
   return Math.max(...pts.filter(([, y]) => y >= low).map(([x]) => Math.abs(x - 200))) / (p.face.width / 2);
 }
 export const BEARD_BOX = 0.58; // the 21 evidence beards measured 0.45..0.80 as boxes and 0.41..0.56 tapered; a beard's mass in its lowest fifth no wider than this much of the face's half width
