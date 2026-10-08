@@ -15,6 +15,7 @@ samples/user/voice/
 /docs
 dist/
 renders/
+limner/scripts/harden/sheets/
 *.bak
 
 # test fixtures: the suite writes _t_-prefixed files into test/, songs/ and samples/user/ and deletes them after; an interrupted run leaves them, and they are never to be committed

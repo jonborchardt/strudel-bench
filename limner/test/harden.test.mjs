@@ -10,7 +10,9 @@ import { EXPRESSIONS } from '../people.mjs';
 import { params, decode } from '../schema.mjs';
 import { CALIBRATION, gridOf, keyOf, stateFor, pickCells, bump } from '../scripts/harden/sampler.mjs';
 import { CROPS, LAYOUT, svgOf, sheetHtml, pairsHtml } from '../scripts/harden/sheet.mjs';
-import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CATEGORIES, fingerprint, nextId, record, rank, close, load, save } from '../scripts/harden/ledger.mjs';
@@ -148,6 +150,39 @@ test('ledger: load of a missing file is empty, save round trips', () => {
     assert.deepEqual(load(file), []);
     const todos = []; record(todos, [finding()], { sheet: '0001', today: '2026-10-07' });
     save(file, todos); assert.ok(existsSync(file)); assert.deepEqual(load(file), todos);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+const HARDEN = fileURLToPath(new URL('../scripts/harden.mjs', import.meta.url));
+const cli = (dir, ...args) => execFileSync(process.execPath, [HARDEN, ...args, '--dir', dir], { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+const cliIn = (dir, input, ...args) => execFileSync(process.execPath, [HARDEN, ...args, '--dir', dir], { encoding: 'utf8', input });
+
+test('cli: a first run starts empty, next --html writes sheet 0001 without a browser, record fills the hash from the cell, todos ranks it', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'harden-cli-'));
+  try {
+    const out = cli(dir, 'next', '--html', '--cells', '3', '--pool', '0');
+    assert.match(out, /sheet 0001/); assert.match(out, /1\s+calibration/); assert.match(out, /limner\.html#editor\//);
+    assert.ok(existsSync(join(dir, 'sheets', '0001.html')) && existsSync(join(dir, 'sheets', '0001.json')) && !existsSync(join(dir, 'sheets', '0001.png')));
+    const sheet = JSON.parse(readFileSync(join(dir, 'sheets', '0001.json'), 'utf8'));
+    assert.equal(sheet.view, 'bust'); assert.equal(sheet.cells.length, 3); assert.ok(sheet.cells[1].hash && sheet.cells[1].key);
+    const cov = JSON.parse(readFileSync(join(dir, 'coverage.json'), 'utf8')); assert.equal(Object.values(cov).reduce((a, b) => a + b, 0), 2, 'two cells covered, calibration not');
+    const r = cliIn(dir, JSON.stringify([{ cell: 2, category: 'style', parts: ['eyes:almond'], severity: 1, note: 'flat iris' }, { cell: 9, category: 'style', parts: ['x'], severity: 1, note: 'not on the sheet' }]), 'record', '0001');
+    assert.match(r, /opened T001/); assert.match(r, /refused cell 9/);
+    const todos = JSON.parse(readFileSync(join(dir, 'todos.json'), 'utf8'));
+    assert.equal(todos[0].evidence[0], sheet.cells[1].hash); assert.deepEqual(todos[0].tuples, [sheet.cells[1].key]);
+    assert.match(cli(dir, 'todos'), /T001\s+1x1\s+style\s+eyes:almond\s+flat iris/);
+    assert.match(cli(dir, 'next', '--html', '--cells', '2', '--pool', '0'), /sheet 0002/); assert.equal(JSON.parse(readFileSync(join(dir, 'sheets', '0002.json'), 'utf8')).view, 'figure', 'even sheets are figures');
+    assert.match(cli(dir, 'close', 'T001', '--wontfix', 'in character'), /T001 wontfix/);
+    assert.equal(cli(dir, 'todos').trim(), 'no open todos');
+    assert.match(cli(dir, 'todos', '--all'), /T001.*wontfix/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('cli: lint prints the flags of one state', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'harden-cli-'));
+  try {
+    assert.match(cli(dir, 'lint', JSON.stringify({ seed: 3, ov: {} })), /clean/);
+    assert.match(cli(dir, 'lint', JSON.stringify({ seed: 3, ov: {} }), '--stance', 'deadStill'), /pose:stance-noop/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
