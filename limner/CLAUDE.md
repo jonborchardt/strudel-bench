@@ -148,7 +148,7 @@ dependencies**, and that is worth keeping.
 finds faults nobody rendered: a sheet of cast × stance × expression cells (cell 1 always the same calibration face),
 geometric lints in `scripts/harden/lint.mjs` ranking cells for eyes, a ledger `scripts/harden/todos.json` that merges
 findings by category plus parts and ranks by severity × seen, `coverage.json` counting what has been rendered, and
-`verify <id>` re-rendering an entry's evidence then-and-now. The rubric is `scripts/harden/rubric.md`; the procedure is
+`verify <id>` re-rendering an entry's evidence then-and-now, `related <id>` rendering other combinations that draw the same parts (the regression check), `attempt` counting repair tries (three parks an entry), `stats` the defects per sheet by severity with fresh cells told apart. The rubric is `scripts/harden/rubric.md`; the procedure is
 the parent's `.claude/skills/limner-harden/SKILL.md`. A closed geometric fault leaves a lint and a test behind. Nothing
 under `scripts/` ships.
 
