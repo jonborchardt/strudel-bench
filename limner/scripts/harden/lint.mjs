@@ -30,7 +30,7 @@ export function lintOps(ops, { dy = 0 } = {}) {
   let depth = 0; // a stroke under a clip shows only inside it (hair strands run long under the hair's clip), so only depth 0 can stray
   for (const op of ops) {
     if (op.k === 'clip') { depth++; continue; } // a clip is never drawn, and the pose clips run to x -97.6..502.4 by design (a hidden control region)
-    if (op.k === 'unclip') { depth--; continue; }
+    if (op.k === 'unclip') { depth = Math.max(0, depth - 1); continue; }
     if (depth > 0) continue;
     const far = pointsOf(op).find(([x, y]) => x < SHEET.x0 || x > SHEET.x1 || y + dy < SHEET.y0 || y + dy > SHEET.y1);
     if (far) { out.push({ name: 'render:offsheet', parts: partsOf(op), detail: `${op.k} reaches ${far[0]},${far[1]}` }); break; }

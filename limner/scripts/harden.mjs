@@ -7,7 +7,7 @@
 //   node limner/scripts/harden.mjs lint "<hash|{json}>" [--stance <name>]
 //   node limner/scripts/harden.mjs record <sheet> [findings.json]        findings on stdin when no file
 //   node limner/scripts/harden.mjs todos [--all]
-//   node limner/scripts/harden.mjs verify <id> [--html]
+//   node limner/scripts/harden.mjs verify <id> [--crop head|eyes|"x y w h"] [--html]   a crop enlarges that region of the then cell and draws the now side as the cropped bust
 //   node limner/scripts/harden.mjs close <id> --commit <sha> [--lint <name>] | --wontfix "why"
 //   node limner/scripts/harden.mjs attempt <id> "<what was tried>"      three park the entry
 //   node limner/scripts/harden.mjs related <id> [--cells 8] [--html]    other combinations drawing its parts: the regression check
@@ -17,16 +17,17 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { encode, decode } from '../schema.mjs';
+import { encode, decode, params } from '../schema.mjs';
+import { feetY, FEET_Y } from '../index.mjs';
 import { lintState } from './harden/lint.mjs';
 import { pickCells, bump, keyOf, relatedCells } from './harden/sampler.mjs';
-import { sheetHtml, pairsHtml, screenshot, svgOf, LAYOUT } from './harden/sheet.mjs';
+import { sheetHtml, pairsHtml, screenshot, svgOf, LAYOUT, CROPS } from './harden/sheet.mjs';
 import { record, rank, close, load, save, attempt, isParked, statsOf, MAX_ATTEMPTS } from './harden/ledger.mjs';
 
 const argv = process.argv.slice(2);
 const flag = (name, dflt) => { const i = argv.indexOf('--' + name); return i < 0 ? dflt : argv[i + 1]; };
 const has = (name) => argv.includes('--' + name);
-const VALUED = new Set(['dir', 'view', 'cells', 'pool', 'stance', 'commit', 'lint', 'wontfix']); // html and all are booleans
+const VALUED = new Set(['dir', 'view', 'cells', 'pool', 'stance', 'commit', 'lint', 'wontfix', 'crop']); // html and all are booleans
 const positional = argv.filter((a, i) => !a.startsWith('--') && !(argv[i - 1]?.startsWith('--') && VALUED.has(argv[i - 1].slice(2))));
 const [cmd, ...args] = positional;
 const dir = flag('dir', join(dirname(fileURLToPath(import.meta.url)), 'harden'));
@@ -109,13 +110,13 @@ const commands = {
   },
   async verify([id]) {
     const todos = load(TODOS), t = todos.find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
-    const pairs = [];
+    const pairs = [], crop = flag('crop', null), box = crop && (([x, y, w, h]) => ({ x, y, w, h }))((CROPS[crop] ?? crop).split(/\s+/).map(Number));
     for (const num of t.sheets) {
       const s = sheetJson(num);
-      for (const c of s.cells) if (t.evidence.includes(c.hash) && c.rect && s.png.endsWith('.png')) pairs.push({ label: `${id} sheet ${num} cell ${c.n}`, before: { png: readFileSync(s.png).toString('base64'), rect: c.rect }, after: svgOf(decode(c.hash), s.view) });
+      for (const c of s.cells) if (t.evidence.includes(c.hash) && c.rect && s.png.endsWith('.png')) pairs.push({ label: `${id} sheet ${num} cell ${c.n}`, before: { png: readFileSync(s.png).toString('base64'), rect: c.rect, ...(crop ? { crop: box, frame: s.view === 'figure' ? { x: -30, y: -200 - (FEET_Y - feetY(params(decode(c.hash)))), w: 460 } : undefined } : {}) }, after: svgOf(decode(c.hash), s.view, crop) });
     }
     if (!pairs.length) throw new Error(`${id}: no evidence cell with a png; re-render with next, or open the hashes in the editor`);
-    const width = pairs[0].before.rect.w, html = pairsHtml(pairs, width), base = join(sheets, `${id}-verify`);
+    const width = Math.max(...pairs.map((q) => q.before.rect.w)), html = pairsHtml(pairs, width), base = join(sheets, `${id}-verify`);
     let file;
     if (has('html')) { file = base + '.html'; writeFileSync(file, html); } else { file = base + '.png'; await screenshot(html, file, width * 2 + 24); }
     console.log(`${file}\n${t.evidence.map((h) => link(decode(h))).join('\n')}`);

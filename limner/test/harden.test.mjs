@@ -128,6 +128,15 @@ test('sheet: verify pairs put the old cell crop beside the new drawing at one wi
   assert.match(html, /margin:-20px 0 0 -10px/); assert.match(html, /data:image\/png;base64,AAAA/); assert.match(html, /T001 cell 4/); assert.match(html, /<svg viewBox/);
 });
 
+test('sheet: verify --crop enlarges the region of the then cell to the pair width', () => {
+  const html = pairsHtml([{ label: 'T007 cell 7', before: { png: 'AAAA', rect: { x: 0, y: 0, w: 400, h: 480 }, crop: { x: 50, y: 40, w: 320, h: 330 } }, after: '<svg viewBox="50 40 320 330"></svg>' }], 320);
+  assert.match(html, /transform:scale\(1\)/); assert.match(html, /margin:-40px 0 0 -50px/); assert.match(html, /width:320px;height:330px/); assert.match(html, /then \(enlarged\), now/);
+  const half = pairsHtml([{ label: 'x', before: { png: 'AAAA', rect: { x: 10, y: 20, w: 200, h: 300 }, crop: { x: 50, y: 40, w: 320, h: 330 } }, after: '' }], 320);
+  assert.match(half, /transform:scale\(2\)/); assert.match(half, /margin:-80px 0 0 -70px/, 'sx 10+25, sy 20+20, both doubled');
+  const fig = pairsHtml([{ label: 'x', before: { png: 'AAAA', rect: { x: 0, y: 0, w: 230, h: 700 }, crop: { x: 50, y: 40, w: 320, h: 330 }, frame: { x: -30, y: -260, w: 460 } }, after: '' }], 320);
+  assert.match(fig, /transform:scale\(2\)/); assert.match(fig, /margin:-300px 0 0 -80px/, 'a figure cell: (50+30)/2 and (40+260)/2 at half scale, doubled');
+});
+
 const finding = (o = {}) => ({ cell: 2, category: 'stack', parts: ['hat:leafCirclet', 'hair:highBun'], severity: 2, note: 'circlet floats clear of the bun', hash: 'H1', tuple: 'elves/none/grin/bust', ...o });
 
 test('ledger: a finding opens a todo, the same fingerprint seen again counts, a refused one writes nothing', () => {
