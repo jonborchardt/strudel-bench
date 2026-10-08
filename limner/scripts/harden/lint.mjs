@@ -2,7 +2,7 @@
 // verdict. Each closed todo whose fault is geometric adds one here and a test in ../../test/harden.test.mjs over a state
 // that used to show it, so the reader's job shrinks as the list grows.
 // ponytail: bounding points, not path intersection; good enough to rank a cell, not to judge it.
-import { portraitOps, feetY, FEET_Y } from '../../index.mjs';
+import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES } from '../../index.mjs';
 import { params } from '../../schema.mjs';
 
 /** The figure sheet (renderFigure's viewBox -30 -200 460 1284) plus 40 units of slack on every side. */
@@ -38,10 +38,18 @@ export function lintOps(ops, { dy = 0 } = {}) {
   return out;
 }
 
+/** Where a muzzle's nostrils end below the eye line, on the sheet: the pad's nostril slits run to the tip plus its radius, in the nose's own scaling (T007). */
+export function muzzleGap(p) {
+  const fh = (p.face?.height ?? 204) / 204, st = NOSES[p.nose.style] ?? NOSES.straight, ey = eyeY(p);
+  const k = (mouthY({ ...p, nose: { ...p.nose, muzzle: 0 } }) - ey) / ((p.mouth.y - p.eyes.y) * fh); // the head's scale on the sheet, read off the plain mouth
+  return mouthY(p) - (ey + k * (10 + (st.len + st.tip) * (p.nose.length * fh) / 38)); // the parting below the nostrils' bottom: under 0 runs through them
+}
+
 const POSE_KEYS = ['pose.headX', 'pose.headY', 'pose.headTilt', 'pose.bodyTilt', 'pose.turn', 'pose.shoulder', 'props'];
 /** The lints over a sheet cell: the ops lints, plus the ones that need the state (a stance compared against no stance). */
 export function lintState(st, tuple) {
   const p = params(st), ops = portraitOps(p), out = lintOps(ops, { dy: FEET_Y - feetY(p) });
+  if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human' && muzzleGap(p) < 2) out.push({ name: 'anatomy:muzzle-mouth', parts: ['unknown:muzzle'], detail: `the mouth line is ${muzzleGap(p).toFixed(1)} under the nostrils` });
   if (tuple.stance && tuple.stance !== 'none') {
     const ov = { ...st.ov }; for (const k of POSE_KEYS) delete ov[k];
     if (JSON.stringify(ops) === JSON.stringify(portraitOps(params({ ...st, ov })))) out.push({ name: 'pose:stance-noop', parts: [`stance:${tuple.stance}`], detail: 'the stance draws the same figure as no stance' });

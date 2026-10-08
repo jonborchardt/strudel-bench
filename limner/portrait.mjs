@@ -485,12 +485,15 @@ export const TEETH = {
   none: () => [],
 };
 export const TEETH_STYLES = Object.keys(TEETH);
+// where the mouth's parting sits on a laid-out face: its own line, or with a muzzle the end of the pad (the nose's own
+// scaling, so the parting runs under the nostrils and never through them: a mouth line across the nostrils reads as a ring)
+const mouthLine = (p) => { const mz = Math.max(0, Math.min(1, p.nose?.muzzle ?? 0)); if (!mz) return p.mouth.y; const st = NOSES[p.nose.style] ?? NOSES.straight; return p.mouth.y + mz * (p.eyes.y + 10 + (st.len + st.tip * 1.625) * (p.nose.length / 38) + 6 - p.mouth.y); };
 /** How the lips move: a smile lifts the corners (a frown drops them) by `lift` and the parting bows by the rest, so a grin is corners pulled up and out, not a lip bent down at the middle; `ctl` is where the parting's control point sits under the resting line. Exported because the moustache rides the same lip. */
 export const lipMove = (m) => { const s = m.smile ?? 0, o = m.open ?? 0; return { lift: 9 * s, ctl: 9 * s - 14 * o }; }; // an open jaw lifts the upper lip's middle as it drops the lower, so the opening is an oval and not a crescent hung off the parting
 function mouth(p) {
   if (p.mouth.mode && p.mouth.mode !== 'human') return machineMouth(p);
   const mz = Math.max(0, Math.min(1, p.nose?.muzzle ?? 0)); // a muzzle's mouth is the same mouth, wider and with less lip: it still smiles, opens and shows its teeth, because it is this code and not a line drawn over it
-  const m = { ...p.mouth, y: p.mouth.y - 3 * mz, color: p.mouth.color ?? underSkin(p.skin, '#8b5149', 0.72) }, st = MOUTHS[m.style] ?? MOUTHS.plain, open = m.open ?? 0, sm = m.smile, kw = m.skew ?? 0, pr = unit(m.press ?? 0), a = st.asym ?? 0; // a muzzle's mouth is up at the end of it, not a lip gap below: there is no lip to leave room for
+  const m = { ...p.mouth, y: mouthLine(p), color: p.mouth.color ?? underSkin(p.skin, '#8b5149', 0.72) }, st = MOUTHS[m.style] ?? MOUTHS.plain, open = m.open ?? 0, sm = m.smile, kw = m.skew ?? 0, pr = unit(m.press ?? 0), a = st.asym ?? 0; // a muzzle's mouth is up at the end of it, not a lip gap below: there is no lip to leave room for
   const w = m.width * (st.wide ?? 1) * (1 + 0.7 * mz) * (1 + 0.14 * Math.max(0, sm) - 0.16 * open - 0.08 * pr), x1 = 200 - w / 2, x2 = 200 + w / 2; // a smile pulls the corners out, a dropped jaw draws them in, pressed lips go a little narrower
   const { lift, ctl } = lipMove(m), yl = m.y + a * 2 - lift + 1.5 * kw, yr = m.y - a * 4 - lift - 7 * kw, qx = 200 - a * 7 + 3 * kw, mid = m.y + ctl, dark = shade(m.color, 0.45); // skew: the +x corner hitched up, the other barely moving
   const yAt = (t) => (1 - t) ** 2 * yl + 2 * t * (1 - t) * mid + t * t * yr; // the parting itself, so the upper lip is built on it however far the corners have gone
@@ -1056,7 +1059,7 @@ const rough = (ops, seed) => { const rnd = lcg(seed + 29); return ops.map((o) =>
 const onHead = (p, y) => { const k = bld(p).head; return (k === 1 ? y : NECK_BASE[1] + (y - NECK_BASE[1]) * k) + headDrop(p); }; // a head-local y as the sheet reads it (less HEAD_DY and the pose, the convention every framing shares): the head group scales about the neck base, so a bigger head lifts its features
 export const eyeY = (p) => onHead(p, faceY(p)(p.eyes?.y ?? DEFAULTS.eyes.y)); // on the sheet: the face's layout, the head's scale, plus how far the head moved on the neck to seat its chin
 /** Where the mouth sits on the sheet, laid out the same way: the other line a likeness is judged on (the third, the chin, is `CHIN_Y` on every face). */
-export const mouthY = (p) => onHead(p, faceY(p)(p.mouth?.y ?? DEFAULTS.mouth.y));
+export const mouthY = (p) => { const q = merge(DEFAULTS, p), fy = faceY(q); return onHead(p, mouthLine({ ...q, eyes: { ...q.eyes, y: fy(q.eyes.y) }, mouth: { ...q.mouth, y: fy(q.mouth.y) }, nose: { ...q.nose, length: q.nose.length * q.face.height / 204 } })); }; // laid out as portraitOps lays it out, so a muzzle's mouth is where it is drawn
 /** The drawing, back to front, without the background: a plain list of primitives for `toSvg` or `drawOn`. */
 export function portraitOps(options = {}) {
   const p = merge(DEFAULTS, options), hair = hairOf(p), q = p.pose, turn = q.turn ?? 0, sd = p.light.side || -1, fy = faceY(p);

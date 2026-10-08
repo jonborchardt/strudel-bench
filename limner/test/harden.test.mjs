@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -43,6 +43,14 @@ test('lint: offsheet ignores strokes under a clip (T004) and stands the figure o
   assert.deepEqual(lintOps(clipped), [], 'a stroke under a clip cannot stray');
   assert.deepEqual(lintOps([...clipped, { k: 'path', d: 'M 200 300 L 9000 9000' }]).map((f) => f.name), ['render:offsheet'], 'after the unclip it can');
   assert.deepEqual(lintOps([{ k: 'ellipse', cx: 200, cy: 1140, rx: 5, ry: 5 }], { dy: -91 }), [], 'a tall figure\'s shoe lands on the floor');
+});
+
+test('lint: anatomy:muzzle-mouth, the mouth line runs under a muzzle\'s nostrils and not through them (T007)', () => {
+  const st = decode('eyJzZWVkIjoxODUxOTcsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjA2LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC4wNCwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjEsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjo4LCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjEyLCJwb3NlLmJvZHlUaWx0IjowLjA2LCJwb3NlLnR1cm4iOjAuNCwicG9zZS5zaG91bGRlciI6LTAuNSwicHJvcHMiOltdfX0');
+  const p = params(st);
+  assert.ok(muzzleGap(p) >= 2, `the evidence face's mouth sits under the nostrils (${muzzleGap(p)})`);
+  assert.ok(!lintState(st, { cast: 'dragonborn', stance: 'none', expression: 'none', view: 'bust' }).some((f) => f.name === 'anatomy:muzzle-mouth'));
+  for (const style of ['straight', 'short', 'long', 'broad', 'aquiline']) for (const length of [22, 40, 58]) assert.ok(muzzleGap({ ...p, nose: { ...p.nose, style, length } }) >= 2, `${style} ${length}`);
 });
 
 test('lint: a stance that moves nothing is pose:stance-noop, a real one is not', () => {
