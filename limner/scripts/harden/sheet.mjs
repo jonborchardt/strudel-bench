@@ -21,7 +21,7 @@ const page = (body, width) => `<!doctype html><meta charset=utf-8><style>body{ma
 /** The sheet: every cell as a figure numbered from 1, in the view's layout. A crop draws every cell as a cropped bust. */
 export function sheetHtml(cells, { view = 'bust', crop = null } = {}) {
   const { cols, cell } = LAYOUT[crop ? 'bust' : view];
-  const body = cells.map((c, i) => `<figure id="c${i + 1}" style="--w:${cell}px;width:${cell}px">${svgOf(c.state, view, crop)}<figcaption>${i + 1} ${label(c.tuple)}</figcaption></figure>`).join('');
+  const body = cells.map((c, i) => `<figure id="c${i + 1}" style="--w:${cell}px;width:${cell}px">${svgOf(c.state, view, crop)}<figcaption>${c.label ?? `${i + 1} ${label(c.tuple)}`}</figcaption></figure>`).join('');
   return page(body, cols * (cell + 8) + 8);
 }
 

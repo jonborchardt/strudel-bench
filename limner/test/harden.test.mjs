@@ -241,6 +241,23 @@ test('cli: a first run starts empty, next --html writes sheet 0001 without a bro
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('cli: snap takes the before once, the after freely, and verify names the then source', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'harden-cli-'));
+  try {
+    const hs = [3, 4].map((seed) => encode(stateFor({ cast: 'elves', stance: 'none', expression: 'grin', view: 'bust' }, seed)));
+    writeFileSync(join(dir, 'todos.json'), JSON.stringify([{ id: 'T001', status: 'open', category: 'style', severity: 1, seen: 1, parts: ['eyes:almond'], title: 't', sheets: ['0001'], evidence: hs, tuples: ['elves/none/grin/bust'], attempts: 0, tried: [] }]));
+    assert.match(cli(dir, 'verify', 'T001', '--html'), /then: sheets/);
+    assert.match(cli(dir, 'snap', 'T001', 'before', '--html'), /T001-before\.html/);
+    const f = join(dir, 'sheets', 'fixes'), snap = JSON.parse(readFileSync(join(f, 'T001-before.json'), 'utf8')), html = readFileSync(join(f, 'T001-before.html'), 'utf8');
+    assert.equal(snap.cells.length, 2); assert.equal(snap.sheet, 'T001-before'); assert.match(html, /T001 1 /);
+    assert.throws(() => cli(dir, 'snap', 'T001', 'before', '--html'), (e) => e.status === 1 && /before is taken once, before any edit/.test(e.stderr));
+    assert.equal(readFileSync(join(f, 'T001-before.html'), 'utf8'), html, 'the first before is untouched');
+    assert.match(cli(dir, 'snap', 'T001', 'before', '--html', '--crop', 'head'), /T001-before-head\.html/, 'a crop is its own before');
+    cli(dir, 'snap', 'T001', 'after', '--html'); cli(dir, 'snap', 'T001', 'after', '--html'); assert.ok(existsSync(join(f, 'T001-after.json')));
+    assert.match(cli(dir, 'verify', 'T001', '--html'), /then: fixes\/T001-before\.json \(png needed to show it\)/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('cli: sheet numbers pass every sheet the committed ledger names', () => {
   const dir = mkdtempSync(join(tmpdir(), 'harden-cli-'));
   try {

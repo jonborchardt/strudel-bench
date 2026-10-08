@@ -8,6 +8,7 @@
 //   node limner/scripts/harden.mjs record <sheet> [findings.json]        findings on stdin when no file
 //   node limner/scripts/harden.mjs todos [--all]
 //   node limner/scripts/harden.mjs verify <id> [--crop head|eyes|"x y w h"] [--html]   a crop enlarges that region of the then cell and draws the now side as the cropped bust
+//   node limner/scripts/harden.mjs snap <id> before|after [--crop head|eyes|"x y w h"] [--html]   the evidence from the current code into sheets/fixes/; the before is taken once, before any edit, and verify then uses it as the then side
 //   node limner/scripts/harden.mjs close <id> --commit <sha> [--lint <name>] | --wontfix "why"
 //   node limner/scripts/harden.mjs attempt <id> "<what was tried>"      three park the entry
 //   node limner/scripts/harden.mjs related <id> [--cells 8] [--html]    other combinations drawing its parts: the regression check
@@ -31,7 +32,7 @@ const VALUED = new Set(['dir', 'view', 'cells', 'pool', 'stance', 'commit', 'lin
 const positional = argv.filter((a, i) => !a.startsWith('--') && !(argv[i - 1]?.startsWith('--') && VALUED.has(argv[i - 1].slice(2))));
 const [cmd, ...args] = positional;
 const dir = flag('dir', join(dirname(fileURLToPath(import.meta.url)), 'harden'));
-const sheets = join(dir, 'sheets');
+const sheets = join(dir, 'sheets'), fixes = join(sheets, 'fixes'); // fixes/ is made by snap
 mkdirSync(sheets, { recursive: true });
 const TODOS = join(dir, 'todos.json'), COVERAGE = join(dir, 'coverage.json');
 const d = new Date(), today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; // local, not UTC
@@ -107,6 +108,19 @@ const commands = {
     writeFileSync(join(sheets, `${num}.json`), JSON.stringify({ sheet: num, view, viewBox: VIEWBOX[view], crop: null, png: file, cells: rows }, null, 1));
     console.log(`sheet ${num}   ${file}\n${table(rows)}`);
   },
+  async snap([id, when]) {
+    const t = load(TODOS).find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
+    if (when !== 'before' && when !== 'after') throw new Error('usage: snap <id> before|after [--crop head|eyes|"x y w h"] [--html]');
+    const crop = flag('crop', null), view = viewOf(t), name = `${id}-${when}${crop ? '-' + (CROPS[crop] ? crop : crop.replace(/\s+/g, '_')) : ''}`, base = join(fixes, name);
+    if (when === 'before' && existsSync(base + '.json')) throw new Error(`fixes/${name}.png exists; the before is taken once, before any edit`);
+    mkdirSync(fixes, { recursive: true });
+    const known = t.sheets.filter((n) => existsSync(join(sheets, `${n}.json`))).flatMap((n) => sheetJson(n).cells); // the tuple a hash was judged under
+    const rows = t.evidence.map((hash, i) => ({ n: i + 1, key: known.find((c) => c.hash === hash)?.key ?? hash.slice(0, 8), hash }));
+    const cells = rows.map((r) => ({ state: decode(r.hash), label: `${id} ${r.n} ${r.key}` }));
+    const { file, rects } = await emit(sheetHtml(cells, { view, crop }), base, crop ? 'bust' : view);
+    writeFileSync(base + '.json', JSON.stringify({ sheet: name, view, crop, png: file, cells: rows.map((r, i) => ({ ...r, rect: rects?.[i] ?? null })) }, null, 1));
+    console.log(file);
+  },
   stats() {
     const recorded = readdirSync(sheets).filter((f) => /^\d{4}\.json$/.test(f)).sort().map((f) => JSON.parse(readFileSync(join(sheets, f), 'utf8'))).filter((s) => Array.isArray(s.findings));
     if (!recorded.length) return console.log('no recorded sheets');
@@ -117,7 +131,13 @@ const commands = {
   async verify([id]) {
     const todos = load(TODOS), t = todos.find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
     const pairs = [], crop = flag('crop', null), box = crop && (([x, y, w, h]) => ({ x, y, w, h }))((CROPS[crop] ?? crop).split(/\s+/).map(Number));
-    for (const num of t.sheets) {
+    const snapName = `${id}-before${crop ? '-' + (CROPS[crop] ? crop : crop.replace(/\s+/g, '_')) : ''}`, snapFile = join(fixes, snapName + '.json'), snap = existsSync(snapFile) ? JSON.parse(readFileSync(snapFile, 'utf8')) : null;
+    if (snap && snap.cells.every((c) => c.rect)) { // the before snapshot is the then side, whole: its cells are already in the view and crop
+      console.log(`then: fixes/${snapName}.png`);
+      for (const c of snap.cells) pairs.push({ label: `${id} ${c.key}`, before: { png: readFileSync(join(fixes, basename(snap.png))).toString('base64'), rect: c.rect }, after: svgOf(decode(c.hash), snap.view, crop) });
+    } else if (snap) console.log(`then: fixes/${snapName}.json (png needed to show it)`);
+    else console.log('then: sheets');
+    for (const num of pairs.length ? [] : t.sheets) {
       if (!existsSync(join(sheets, `${num}.json`))) continue; // sheets/ is gitignored: a fresh checkout has none
       const s = sheetJson(num);
       for (const c of s.cells) if (t.evidence.includes(c.hash) && c.rect && s.png.endsWith('.png')) pairs.push({ label: `${id} sheet ${num} cell ${c.n}`, before: { png: readFileSync(join(sheets, basename(s.png))).toString('base64') /* by name in this checkout's sheets: a sheet copied from another checkout carries that checkout's absolute path */, rect: c.rect, ...(crop ? { crop: box, frame: s.view === 'figure' ? (([x, y, w]) => ({ x, y: y - (FEET_Y - feetY(params(decode(c.hash)))), w }))((s.viewBox ?? '-30 -200 460 1284' /* a sheet drawn before T006 widened the frame records none */).split(' ').map(Number)) : undefined } : {}) }, after: svgOf(decode(c.hash), s.view, crop) });
@@ -139,5 +159,5 @@ const commands = {
   },
 };
 
-if (!commands[cmd]) { console.error(`usage: harden next|crop|lint|record|todos|verify|close|attempt|related|stats (see the header of ${fileURLToPath(import.meta.url)})`); process.exit(2); }
+if (!commands[cmd]) { console.error(`usage: harden next|crop|lint|record|todos|verify|close|attempt|related|snap|stats (see the header of ${fileURLToPath(import.meta.url)})`); process.exit(2); }
 try { await commands[cmd](args); } catch (e) { console.error(e.message); process.exit(1); }
