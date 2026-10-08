@@ -23,9 +23,9 @@ The sheet pngs are the loop's *then* side and live only where they were rendered
 3. Write the findings as JSON to the scratchpad: `[{ "cell": 4, "category": "stack", "parts": ["hat:leafCirclet", "hair:highBun"], "severity": 2, "note": "circlet floats clear of the bun" }]`. Categories and severity are the rubric's; `parts` may be `["unknown"]` when nothing specific can be named. A clean sheet is `[]`, and it is still recorded: the stats need it.
 4. `npm run harden -- record <sheet> <file>`. A refusal is a malformed finding; fix the JSON and record again (a refused batch writes nothing, so the sheet is not yet recorded; a sheet already recorded is refused, never recorded twice).
 
-**Fix: one entry.**
+**Fix: every severity-3 entry, then the top one left.** Severity 3 is wrong at thumbnail size, so none of those waits a cycle; after they are all closed or parked, one more entry, whatever ranks first. Steps 6 to 10 run once per entry.
 
-5. `npm run harden -- todos`. Take the top entry. No open entries: skip to 11. Parked entries (three attempts) are not listed; take the top one shown.
+5. `npm run harden -- todos`. Take the open severity-3 entries in the order listed, then the top entry of the rest. No open entries: skip to 11. Parked entries (three attempts) are not listed; they are not taken.
 6. Read `limner/CLAUDE.md`'s rules (parts by tag, one body per stance, paths absolute, never regenerate a golden to make a test pass). Edit limner. Fix the generator's rule, not the one picture: the smallest change to the part or the stack order that the parts name. Do not widen the fix into a refactor of neighbouring code; if the fault needs one, record that with `attempt` and move on.
 7. `npm run harden -- verify <id>` and read the png: then on the left, now on the right. For a face fault, `verify <id> --crop head` (or `eyes`, or `"x y w h"` in bust units): the then cell enlarged, the now bust cropped the same. The fault is gone, or go to 9.
 8. `npm run harden -- related <id>` and read the png: other combinations drawing the same parts. A fault there is a regression: record it with `npm run harden -- record <id>-related <file>` and go to 9. Clean: go to 10. No related cells means the check was not done, not that it passed: judge a fresh `next` sheet before closing.
