@@ -9,6 +9,7 @@ import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode } from '../schema.mjs';
 import { CALIBRATION, gridOf, keyOf, stateFor, pickCells, bump } from '../scripts/harden/sampler.mjs';
+import { CROPS, LAYOUT, svgOf, sheetHtml, pairsHtml } from '../scripts/harden/sheet.mjs';
 
 test('lint: pointsOf reads every op kind as x,y pairs', () => {
   assert.deepEqual(pointsOf({ k: 'path', d: 'M 10 20 L 30 40 C 1 2 3 4 5 6 Z' }), [[10, 20], [30, 40], [1, 2], [3, 4], [5, 6]]);
@@ -77,5 +78,29 @@ test('sampler: cell 1 is calibration, flagged cells come first, the rest are the
   const cov = bump({}, a);
   assert.equal(Object.keys(cov).length, 4, 'calibration is not coverage'); assert.ok(Object.values(cov).every((v) => v === 1));
   assert.notDeepEqual(pickCells({ coverage: {}, n: 3, view: 'figure', sheet: 4, lint: () => [], pool: 0 }), pickCells({ coverage: {}, n: 3, view: 'figure', sheet: 5, lint: () => [], pool: 0 }), 'another sheet, other seeds');
+});
+
+test('sheet: a cell draws as a bust or a figure, cropped when asked', () => {
+  const st = stateFor({ cast: 'dwarves', stance: 'none', expression: 'grin', view: 'bust' }, 3);
+  assert.match(svgOf(st, 'bust'), /viewBox="0 0 400 480"/);
+  assert.match(svgOf(st, 'figure'), /viewBox="-30 -200 460 1284"/);
+  assert.match(svgOf(st, 'bust', 'head'), new RegExp(`viewBox="${CROPS.head}"`));
+  assert.match(svgOf(st, 'bust', '10 20 30 40'), /viewBox="10 20 30 40"/, 'a crop may be a viewBox of its own');
+});
+
+test('sheet: the html numbers and labels every cell and lays the view out', () => {
+  const cells = pickCells({ coverage: {}, n: 3, view: 'figure', sheet: 9, lint: () => [], pool: 0 });
+  const html = sheetHtml(cells, { view: 'figure' });
+  assert.equal((html.match(/<figure id="c\d+"/g) ?? []).length, 3);
+  assert.match(html, /<figcaption>1 calibration<\/figcaption>/);
+  assert.match(html, new RegExp(`<figcaption>2 ${cells[1].tuple.cast}/${cells[1].tuple.stance}/${cells[1].tuple.expression}`));
+  assert.match(html, new RegExp(`width:${LAYOUT.figure.cell}px`));
+  assert.equal((html.match(/<svg/g) ?? []).length, 3);
+  assert.match(sheetHtml(cells, { view: 'figure', crop: 'eyes' }), new RegExp(`viewBox="${CROPS.eyes}"`), 'a cropped sheet draws busts cropped');
+});
+
+test('sheet: verify pairs put the old cell crop beside the new drawing at one width', () => {
+  const html = pairsHtml([{ label: 'T001 cell 4', before: { png: 'AAAA', rect: { x: 10, y: 20, w: 220, h: 600 } }, after: '<svg viewBox="0 0 1 1"></svg>' }], 220);
+  assert.match(html, /margin:-20px 0 0 -10px/); assert.match(html, /data:image\/png;base64,AAAA/); assert.match(html, /T001 cell 4/); assert.match(html, /<svg viewBox/);
 });
 
