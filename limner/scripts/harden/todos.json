@@ -4441,11 +4441,11 @@
    "0173",
    "0175"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
-  "lint": null,
+  "closed": "2026-10-08",
+  "commit": "5436e49",
+  "lint": "stack:circlet-past-head",
   "wontfix": null,
   "attempts": 0,
   "tried": []
