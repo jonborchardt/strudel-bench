@@ -549,7 +549,7 @@ const K = 0.5523, ellipsePath = (o) => `M ${o.cx + o.rx} ${o.cy} C ${o.cx + o.rx
 // the wreath a head that has lost the top is left with: WREATH is the mass behind the skull, a shade darker as
 // `longBack` is, showing past its sides as the volume hair has; WINGS is the same band's near side, on the head.
 const WREATH = (p) => [path('M 114 174 C 109 204, 117 232, 136 254 L 164 244 C 143 220, 134 196, 135 170 Z', { fill: shade(p.hairColor, 0.88) }), path('M 286 174 C 291 204, 283 232, 264 254 L 236 244 C 257 220, 266 196, 265 170 Z', { fill: shade(p.hairColor, 0.88) })];
-const WINGS = (p) => [path('M 126 154 C 121 172, 122 187, 127 197 C 137 195, 146 187, 150 177 C 153 168, 152 159, 149 152 C 140 148, 131 149, 126 154 Z', { fill: p.hairColor }), path('M 274 154 C 279 172, 278 187, 273 197 C 263 195, 254 187, 250 177 C 247 168, 248 159, 251 152 C 260 148, 269 149, 274 154 Z', { fill: p.hairColor })];
+const WINGS = (p) => [path('M 121 146 C 114 160, 112 180, 115 206 L 127 204 C 126 186, 127 166, 133 150 C 129 146, 125 145, 121 146 Z', { fill: p.hairColor }), path('M 279 146 C 286 160, 288 180, 285 206 L 273 204 C 274 186, 273 166, 267 150 C 271 146, 275 145, 279 146 Z', { fill: p.hairColor })]; // a narrow band on the skull's own edge, let out past the outline so it runs on into the wreath behind: drawn inside the outline as a rounded block, with skin showing beside it, it read as an ear muff (T084)
 // A panel that hangs beside the face is drawn for the default head and follows this one. Below HANG_TOP each point
 // keeps the distance from the face's outline it was drawn at: it moves by how much wider this face's own outline is
 // where the point lands than the default's where it was drawn (fullness, a fuller cheek, the jaw, the skew), and
