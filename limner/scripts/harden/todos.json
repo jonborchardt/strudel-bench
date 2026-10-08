@@ -830,10 +830,10 @@
    "0011",
    "0013"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
+  "closed": "2026-10-08",
+  "commit": "e1460a2",
   "lint": null,
   "wontfix": null,
   "attempts": 0,
