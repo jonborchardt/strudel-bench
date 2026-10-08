@@ -37,7 +37,7 @@ export function sheetHtml(cells, { view = 'bust', crop = null } = {}) {
 
 /** The old cell, or with `before.crop` ({ x, y, w, h } in ops units, the bust's 400x480) that region of it enlarged to `width`. `frame` is where the cell's svg starts in ops units and how wide it is: the bust's { x: 0, y: 0, w: 400 }, a figure's { x, y: y - dy, w } from the viewBox the sheet was drawn in (its json's `viewBox`) with dy renderFigure's floor shift; the svg is rect.w wide from the cell's top. */
 function thenOf({ png, rect, crop, frame = { x: 0, y: 0, w: 400 } }, width) {
-  const src = `src="data:image/png;base64,${png}"`;
+  const src = typeof png === 'number' ? `data-png="${png}"` : `src="data:image/png;base64,${png}"`; // a number: one of the page's shared pngs (pairsHtml)
   if (!crop) return `<div style="width:${rect.w}px;height:${rect.h}px"><img style="width:auto;margin:-${rect.y}px 0 0 -${rect.x}px" ${src}></div>`;
   const u = rect.w / frame.w, sx = rect.x + (crop.x - frame.x) * u, sy = rect.y + (crop.y - frame.y) * u, sw = crop.w * u, sh = crop.h * u, k = width / sw;
   return `<div style="width:${width}px;height:${width * sh / sw}px"><img style="width:auto;transform:scale(${k});transform-origin:0 0;margin:-${sy * k}px 0 0 -${sx * k}px" ${src}></div>`;
@@ -45,8 +45,9 @@ function thenOf({ png, rect, crop, frame = { x: 0, y: 0, w: 400 } }, width) {
 
 /** Verify's page: per pair, the old cell cut out of its sheet png on the left (enlarged when cropped) and the new drawing on the right. */
 export function pairsHtml(pairs, width) {
-  const body = pairs.map(({ label: l, before, after }) => `<figure style="--w:${width}px;width:${width * 2 + 4}px"><div class="pair">${before ? thenOf(before, width) : `<div style="width:${width}px">then: not on disk</div>`}<div style="width:${width}px">${after}</div></div><figcaption>${l}: ${!before ? 'now only' : before.crop ? 'then (enlarged), now' : 'then, now'}</figcaption></figure>`).join('');
-  return page(body, width * 2 + 24);
+  const pngs = [], shared = (png) => (pngs.includes(png) ? pngs.indexOf(png) : pngs.push(png) - 1); // every pair cut from one snapshot carries the same png: written once, not once per pair (sixty-seven copies of a tall snapshot closed the browser, T022)
+  const body = pairs.map(({ label: l, before, after }) => `<figure style="--w:${width}px;width:${width * 2 + 4}px"><div class="pair">${before ? thenOf({ ...before, png: shared(before.png) }, width) : `<div style="width:${width}px">then: not on disk</div>`}<div style="width:${width}px">${after}</div></div><figcaption>${l}: ${!before ? 'now only' : before.crop ? 'then (enlarged), now' : 'then, now'}</figcaption></figure>`).join('');
+  return page(body + (pngs.length ? `<script>const P = ${JSON.stringify(pngs.map((b) => `data:image/png;base64,${b}`))}; for (const i of document.querySelectorAll('img[data-png]')) i.src = P[i.dataset.png];</script>` : ''), width * 2 + 24);
 }
 
 /** The page as a png, full height. Returns each figure's box in page pixels, in order. */

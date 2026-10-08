@@ -80,6 +80,24 @@ test('lint: stack:hair-over-eye, a bluntBob\'s panels hang beside the eyes, not 
   assert.ok(hairOverEye({ ...p, hair: { ...p.hair, style: 'combOver' } }) === -Infinity, 'temple wings are not panels');
 });
 
+test('lint: stack:hair-over-eye, the bob and long hair hang their panels beside the face, not across it (T022)', () => {
+  const cases = [
+    ['bob', { cast: 'halflings', stance: 'none', expression: 'halfSmile', view: 'bust' }, 'eyJzZWVkIjo5ODM3MzEsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaGFsZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMjQsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAuMTV9fQ'],
+    ['longStraight', { cast: 'gnomes', stance: 'none', expression: 'wideEyed', view: 'bust' }, 'eyJzZWVkIjo2MjkwMjYsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZ25vbWVzIiwib3YiOnsibW91dGguc21pbGUiOi0wLjEsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjQ1LCJleWVzLmJyb3dMaWZ0IjoxMCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjQsImV5ZXMuc3F1aW50IjowfX0'],
+  ];
+  for (const [style, tuple, hash] of cases) {
+    const st = decode(hash), p = params(st);
+    assert.equal(p.hair.style, style);
+    assert.ok(!lintState(st, tuple).some((f) => f.name === 'stack:hair-over-eye'), `${style}: the evidence face's panels clear the eyes (${hairOverEye(p)})`);
+    for (const width of [140, 156, 175]) assert.ok(hairOverEye({ ...p, face: { ...p.face, width, height: 204 }, eyes: { ...p.eyes, spacing: 68, y: 196 } }) < -HAIR_EYE_CLEAR, `${style} width ${width} at the widest eye spacing`);
+  }
+  const front = HAIR.bob.front;
+  try { // the bob's panels as they were cut before the fix: the inner edge at x 152 on the eye line, narrowing to a point at the jaw
+    HAIR.bob.front = (q) => [{ k: 'path', d: 'M 118 171 C 108 126, 121 90, 151 76 C 177 64, 223 64, 249 76 C 279 90, 292 126, 282 171 L 272 246 C 256 236, 250 211, 248 183 C 245 145, 228 117, 200 112 C 172 117, 155 145, 152 183 C 150 211, 144 236, 128 246 Z', fill: q.hairColor }];
+    assert.ok(lintState(decode(cases[0][2]), cases[0][1]).some((f) => f.name === 'stack:hair-over-eye' && f.parts[0] === 'hair:bob'));
+  } finally { HAIR.bob.front = front; }
+});
+
 test('the vanDyke moustache sits over the mouth, not cheek to cheek (T001)', () => {
   const st = decode('eyJzZWVkIjo4MTAzODQsImZhbWlseSI6ImFueSIsInRoZW1lIjoic2NpZmkiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6LTEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo1LCJleWVzLnNxdWludCI6MH19');
   const span = (style) => { const xs = portraitOps(params({ ...st, ov: { ...st.ov, 'facialHair.style': style } })).filter((o) => o.stache).flatMap((o) => pointsOf(o).map(([x]) => x)); return Math.max(...xs) - Math.min(...xs); };
