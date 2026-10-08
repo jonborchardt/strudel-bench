@@ -728,9 +728,11 @@ export function beardOps(p, spec) { // exported for a pack that registers a bear
   // shows the mouth and the cheek's planes through itself, which reads as a stain and not as a thin beard, and on a
   // pale-haired face it is a dark smudge whichever way the hair goes. The two stubble styles keep their wash when no
   // density is asked for, since a stubble with no dial on it is a shadow of hair and drawn as one.
-  const fill = d == null ? (spec.stubble ? mix(color, '#3a2a24', 0.45) : color) : mix(p.skin, color, 0.35 + 0.65 * d);
+  // A stubble stays a wash at every density: the dial weighs the shadow (0.5 the style's own), it never turns it into an
+  // opaque band of skin-tinted hair, which read as a full beard mask with the jaw under it (T132).
+  const fill = spec.stubble ? mix(color, '#3a2a24', 0.45) : d == null ? color : mix(p.skin, color, 0.35 + 0.65 * d);
   const q = { ...p, hairColor: fill };
-  const op = d == null ? spec.op ?? 1 : 1;
+  const op = spec.stubble ? spec.op * (d == null ? 1 : 0.6 + 0.8 * d) : d == null ? spec.op ?? 1 : 1;
   const top = f.cheekLine == null ? spec.top : 46 - 32 * unit(f.cheekLine); // 0: a beard line low on the jaw; 1: up to the cheekbone
   const stache = f.mustache == null ? !!spec.stache : !!f.mustache, stacheStyle = f.mustacheStyle ?? spec.stacheStyle ?? 'chevron'; // the style's own moustache, or the one this face asks for over it
   return [
