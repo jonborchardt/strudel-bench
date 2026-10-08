@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -71,6 +71,16 @@ test('lint: anatomy:muzzle-mouth, the mouth line runs under a muzzle\'s nostrils
   assert.ok(muzzleGap(p) >= 2, `the evidence face's mouth sits under the nostrils (${muzzleGap(p)})`);
   assert.ok(!lintState(st, { cast: 'dragonborn', stance: 'none', expression: 'none', view: 'bust' }).some((f) => f.name === 'anatomy:muzzle-mouth'));
   for (const style of ['straight', 'short', 'long', 'broad', 'aquiline']) for (const length of [22, 40, 58]) assert.ok(muzzleGap({ ...p, nose: { ...p.nose, style, length } }) >= 2, `${style} ${length}`);
+});
+
+test('lint: stack:shaved-halo, a shaved head\'s shadow is drawn inside the head\'s clip (T008)', () => {
+  const st = decode('eyJzZWVkIjo1MjcxNTcsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4wNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjEsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MH19');
+  const p = params(st), ops = portraitOps(p), i = ops.findIndex((o) => o.fill === p.hairColor && (o.op ?? 1) < 0.5);
+  assert.ok(p.hair.style === 'shavedHead' && i >= 0, 'the evidence face is shaved');
+  assert.equal(shadowHairOut(p, ops), null);
+  assert.ok(!lintState(st, { cast: 'dragonborn', stance: 'none', expression: 'none', view: 'bust' }).some((f) => f.name === 'stack:shaved-halo'));
+  let c = i; while (ops[c].k !== 'clip') c--;
+  assert.ok(shadowHairOut(p, ops.filter((_, j) => j !== c)), 'the shadow drawn with no clip is named');
 });
 
 test('lint: render:horn-stroke-out, a horn\'s ridges and highlight end inside the horn (T010)', () => {

@@ -93,6 +93,14 @@ export function hairOverEye(p) {
 /** The horn this face wears, as a part: the makeup whose name says horn (T061: the lint named curvedHorns on every dragonborn, whose horns are the hornCrest). */
 export const hornParts = (p) => { const h = (p.makeup ?? []).filter((n) => /horn/i.test(n)).map((n) => `makeup:${n}`); return h.length ? h : ['unknown:horn']; };
 
+/** A shaved head's hair is only a shadow on the scalp (the hair colour, faint): drawn outside any clip it is the default cap fitted to a head whose skull may be lower or flatter, and stands clear above the crown as a halo (T008). The first such op drawn at clip depth 0, or null. */
+export function shadowHairOut(p, ops) {
+  if (p.hair?.style !== 'shavedHead') return null;
+  let depth = 0;
+  for (const op of ops) { if (op.k === 'clip') depth++; else if (op.k === 'unclip') depth = Math.max(0, depth - 1); else if (!depth && op.fill === p.hairColor && (op.op ?? 1) < 0.5) return op; }
+  return null;
+}
+
 export const HAIR_EYE_CLEAR = 10; // how far outside an eye's outer corner a panel's edge must hang
 
 const POSE_KEYS =['pose.headX', 'pose.headY', 'pose.headTilt', 'pose.bodyTilt', 'pose.turn', 'pose.shoulder', 'props'];
@@ -102,6 +110,7 @@ export function lintState(st, tuple) {
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human' && muzzleGap(p) < 2) out.push({ name: 'anatomy:muzzle-mouth', parts: ['unknown:muzzle'], detail: `the mouth line is ${muzzleGap(p).toFixed(1)} under the nostrils` });
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human') { const past = mouthPastMuzzle(p, ops); if (past > MOUTH_PAST_MUZZLE) out.push({ name: 'anatomy:mouth-past-muzzle', parts: [`mouth:${p.mouth.style}`], detail: `the mouth runs ${past.toFixed(1)} past the muzzle pad (over ${MOUTH_PAST_MUZZLE})` }); }
   const hornOut = hornStrokesOut(ops); if (hornOut) out.push({ name: 'render:horn-stroke-out', parts: hornParts(p), detail: `a horn's stroke ends at ${hornOut.map((v) => v.toFixed(1))}, outside the horn` });
+  if (shadowHairOut(p, ops)) out.push({ name: 'stack:shaved-halo', parts: ['hair:shavedHead'], detail: 'the shaved head\'s shadow is drawn outside the head\'s clip' });
   const hair = hairOverEye(p); if (hair > -HAIR_EYE_CLEAR) out.push({ name: 'stack:hair-over-eye', parts: [`hair:${p.hair.style}`], detail: `a front hair panel hangs ${(-hair).toFixed(1)} outside an eye's outer corner (under ${HAIR_EYE_CLEAR})` });
   if (tuple.stance && tuple.stance !== 'none') {
     const ov = { ...st.ov }; for (const k of POSE_KEYS) delete ov[k];
