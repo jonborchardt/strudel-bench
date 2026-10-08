@@ -9,8 +9,8 @@ The hands are `npm run harden -- <cmd>` (`limner/scripts/harden.mjs`). The eyes 
 tool. The rubric is `limner/scripts/harden/rubric.md`; read it before the first sheet of a session. The ledger is
 `limner/scripts/harden/todos.json`; read `npm run harden -- todos` before judging, so a known fault is a count.
 
-Set the browser once per session (PowerShell):
-`$env:CHROME = "C:/Users/Jon/AppData/Local/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-win64/chrome-headless-shell.exe"`
+The browser is found by itself: the newest playwright headless shell under `%LOCALAPPDATA%\ms-playwright` (`chromePath` in
+`limner/scripts/harden/sheet.mjs`). Set `CHROME` to a Chromium binary only when a render fails with `no browser`.
 
 The sheet pngs are the loop's *then* side and live only where they were rendered (`limner/scripts/harden/sheets/`, gitignored). Keep that folder with the checkout that runs the loop; moving the loop to another checkout means copying it over, or `verify` shows only the now side.
 

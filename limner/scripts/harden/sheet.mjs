@@ -1,8 +1,18 @@
 // Cells to a labelled html page, and that page to a png through a headless Chromium, the way scripts/portrait.mjs
 // does it. The html is the testable half; the screenshot needs a browser and returns where each figure landed, so a
 // cell can be cut back out of the png later (verify's "then" side).
+import { readdirSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { renderPortrait, renderFigure } from '../../index.mjs';
 import { params } from '../../schema.mjs';
+
+/** The Chromium every render here launches: `CHROME` when set, else the newest playwright headless shell installed on this machine (`ms-playwright/chromium_headless_shell-<build>`), else undefined so playwright picks its own. Nobody sets an env var to render a sheet. */
+export function chromePath(home = process.env.PLAYWRIGHT_BROWSERS_PATH ?? join(process.env.LOCALAPPDATA ?? join(process.env.HOME ?? '.', '.cache'), 'ms-playwright')) {
+  if (process.env.CHROME) return process.env.CHROME;
+  const builds = existsSync(home) ? readdirSync(home).filter((d) => /^chromium_headless_shell-\d+$/.test(d)).sort((a, b) => +b.split('-')[1] - +a.split('-')[1]) : [];
+  for (const b of builds) for (const exe of ['chrome-headless-shell-win64/chrome-headless-shell.exe', 'chrome-headless-shell-linux64/chrome-headless-shell']) if (existsSync(join(home, b, exe))) return join(home, b, exe);
+  return undefined;
+}
 
 /** Named crops of the bust sheet: the head, and the eyes (tuned by looking: the head crop holds a dragonborn's horns and a leaned head, sheets 0001-0002). */
 export const CROPS = { head: '50 40 320 330', eyes: '95 160 210 90' };
@@ -44,7 +54,7 @@ export async function screenshot(html, out, width) {
   let chromium;
   try { ({ chromium } = await import('playwright-core')); } catch { throw new Error('playwright-core is not installed (npm install)'); }
   let b;
-  try { b = await chromium.launch({ executablePath: process.env.CHROME }); } catch (e) { throw new Error(`no browser: set CHROME to a Chromium binary (${e.message.split('\n')[0]})`); }
+  try { b = await chromium.launch({ executablePath: chromePath() }); } catch (e) { throw new Error(`no browser: none under ms-playwright, set CHROME to a Chromium binary (${e.message.split('\n')[0]})`); }
   try {
     const p = await b.newPage({ viewport: { width, height: 900 } });
     await p.setContent(html);

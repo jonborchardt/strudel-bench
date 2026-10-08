@@ -130,7 +130,7 @@ Nobody can review a face from a description. Render it.
 
     npm test                                     # from here: the whole suite, both goldens
     node scripts/portrait.mjs "<hash|url|{json}>" # one face -> renders/portrait.svg
-    node scripts/portrait.mjs <hash> --out x.png  # a png, through playwright-core's chromium
+    node scripts/portrait.mjs <hash> --out x.png  # a png, through playwright-core's chromium (the newest headless shell under ms-playwright, found by `chromePath` in scripts/harden/sheet.mjs; CHROME overrides)
     node scripts/portrait.mjs <hash> --photo p.png --crop "95 105 210 220"
     node scripts/portrait.mjs <hash> --sweep "facialHair.density=0.2,0.6" --sweep "eyes.squint=0,.5"
 

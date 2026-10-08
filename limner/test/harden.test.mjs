@@ -9,8 +9,8 @@ import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
 import { CALIBRATION, gridOf, keyOf, stateFor, pickCells, bump, relatedCells, drawsPart } from '../scripts/harden/sampler.mjs';
-import { CROPS, LAYOUT, svgOf, sheetHtml, pairsHtml } from '../scripts/harden/sheet.mjs';
-import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { CROPS, LAYOUT, svgOf, sheetHtml, pairsHtml, chromePath } from '../scripts/harden/sheet.mjs';
+import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -341,5 +341,16 @@ test('cli: next marks fresh cells, record writes findings into the sheet, attemp
     const rel = cli(dir, 'related', 'T001', '--html', '--cells', '2');
     assert.ok(/no other combination/.test(rel) || existsSync(join(dir, 'sheets', 'T001-related.json')), rel);
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('sheet: the browser is the newest headless shell installed, CHROME overriding, nothing when none is there', () => {
+  const home = mkdtempSync(join(tmpdir(), 'ms-playwright-')), had = process.env.CHROME; delete process.env.CHROME;
+  try {
+    assert.equal(chromePath(home), undefined, 'an empty install dir: playwright picks its own');
+    for (const b of ['chromium_headless_shell-1208', 'chromium_headless_shell-1234', 'chromium-1243', 'chromium_headless_shell-1243']) mkdirSync(join(home, b, 'chrome-headless-shell-win64'), { recursive: true });
+    for (const b of ['chromium_headless_shell-1208', 'chromium_headless_shell-1234']) writeFileSync(join(home, b, 'chrome-headless-shell-win64', 'chrome-headless-shell.exe'), '');
+    assert.equal(chromePath(home), join(home, 'chromium_headless_shell-1234', 'chrome-headless-shell-win64', 'chrome-headless-shell.exe'), 'the newest build that has the binary (1243 has the folder and no exe)');
+    process.env.CHROME = 'x/chrome.exe'; assert.equal(chromePath(home), 'x/chrome.exe', 'CHROME wins');
+  } finally { if (had === undefined) delete process.env.CHROME; else process.env.CHROME = had; rmSync(home, { recursive: true, force: true }); }
 });
 
