@@ -2,7 +2,7 @@
 // verdict. Each closed todo whose fault is geometric adds one here and a test in ../../test/harden.test.mjs over a state
 // that used to show it, so the reader's job shrinks as the list grows.
 // ponytail: bounding points, not path intersection; good enough to rank a cell, not to judge it.
-import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES, HAIR, eyeShape, PROPS, headBox, FACIAL_HAIR, HATS } from '../../index.mjs';
+import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES, HAIR, LONG_HAIR, facePath, eyeShape, PROPS, headBox, FACIAL_HAIR, HATS } from '../../index.mjs';
 import { params } from '../../schema.mjs';
 import { VIEWBOX } from './sheet.mjs';
 
@@ -88,13 +88,46 @@ export function mouthPastMuzzle(p, ops = portraitOps(p)) { // the mouth is the o
   return Math.max(n[0] - m[0], m[1] - n[1]);
 }
 
-/** How far a hanging front panel of hair reaches in past an eye's outer corner near the eye line, in sheet units (negative: how far it stays outside). A panel is a front hair path that hangs past the eye line; a temple wing or a fringe is not one. T012: a bluntBob's panels at -5..-8 laid a slab of hair across the eye corners and cheeks, since the lashes and the eye's shadow run past the white's corner. The hair follows the face's width only; the eyes sit at their spacing on the laid-out eye line. */
+/** A path's outline as points, its curves flattened (absolute M/L/C/Q/Z only), so an edge is measured between its vertices too. */
+export function outlinePts(d, steps = 12) {
+  const t = d.match(/[MLCQZ]|-?\d*\.?\d+(?:e-?\d+)?/gi) ?? [], out = [], N = { M: 2, L: 2, C: 6, Q: 4 };
+  let c = [0, 0], cmd = 'M', start = c;
+  for (let i = 0; i < t.length;) {
+    if (/[MLCQZ]/i.test(t[i])) { cmd = t[i++].toUpperCase(); if (cmd === 'Z') { for (let k = 1; k <= steps; k++) out.push([0, 1].map((j) => c[j] + (k / steps) * (start[j] - c[j]))); c = start; } continue; } // Z closes with a line back to the start
+    const n = N[cmd], v = t.slice(i, i + n).map(Number); i += n;
+    for (let k = 1; k <= (cmd === 'M' ? 1 : steps); k++) { const u = cmd === 'M' ? 1 : k / steps, w = 1 - u;
+      out.push(cmd === 'C' ? [0, 1].map((j) => w * w * w * c[j] + 3 * w * w * u * v[j] + 3 * w * u * u * v[2 + j] + u * u * u * v[4 + j]) : cmd === 'Q' ? [0, 1].map((j) => w * w * c[j] + 2 * w * u * v[j] + u * u * v[2 + j]) : cmd === 'L' ? [0, 1].map((j) => w * c[j] + u * v[j]) : [v[0], v[1]]); }
+    c = [v[n - 2], v[n - 1]]; if (cmd === 'M') start = c;
+  }
+  return out;
+}
+export const HAIR_TURN = 8; // how far the features slide past the hair per unit of turn (12 against 4)
+
+/** Where a face-framing panel (LONG_HAIR) leaves the face showing beside or under it: the most the face's own outline runs past the panel's outer edge between the cheekbone and the jaw corner, and how far the panel's cut stops short of the jaw corner, in sheet units, the worse of the two (positive: the face shows). T113: the panels were the default head's, scaled by width alone, so a full cheek or a broad jaw stood out past them and the jaw came out under a flat cut at the mouth, and the hair read as a see-through sheet on the face. */
+export const PANEL_OFF_FACE = 2; // how much face may show past a panel's outer edge or under its cut before it reads as a sheet on the face
+export function panelOffFace(p) {
+  if (!LONG_HAIR.includes(p.hair?.style)) return -Infinity;
+  const k = p.face.width / 156, face = outlinePts(facePath(p), 32), jawY = 112 + p.face.height - (p.face.corner ?? 32);
+  const hair = (HAIR[p.hair.style].front(p)).filter((o) => o.k === 'path').flatMap((o) => outlinePts(o.d, 32)).map(([x, y]) => [200 + (x - 200) * k, y]);
+  let worst = -Infinity;
+  for (const s of [-1, 1]) {
+    const side = hair.filter(([x]) => s * (x - 200) > 0), bottom = Math.max(...side.map(([, y]) => y));
+    worst = Math.max(worst, jawY - bottom);
+    for (let y = 216; y <= Math.min(bottom, jawY); y += 4) {
+      const reach = (pts) => Math.max(0, ...pts.filter(([x, py]) => s * (x - 200) > 0 && Math.abs(py - y) <= 3).map(([x]) => s * (x - 200)));
+      worst = Math.max(worst, reach(face) - reach(side));
+    }
+  }
+  return worst;
+}
+
+/** How far a hanging front panel of hair reaches in past an eye's outer corner near the eye line, in sheet units (negative: how far it stays outside). A panel is a front hair path that hangs past the eye line; a temple wing or a fringe is not one. T012: a bluntBob's panels at -5..-8 laid a slab of hair across the eye corners and cheeks, since the lashes and the eye's shadow run past the white's corner. The hair follows the face's width; the eyes sit at their spacing on the laid-out eye line, and on a turn slide HAIR_TURN past the hair (12 x turn against its 4). The edge is read along its curves, not at its vertices: the stretched panels of T113 have no vertex at the eye line. */
 export function hairOverEye(p) {
   const r = HAIR[p.hair?.style]; if (!r) return -Infinity;
-  const k = (p.face?.width ?? 156) / 156, ey = 112 + (p.eyes.y - 112) * (p.face?.height ?? 204) / 204, [l, rt] = [-1, 1].map((s) => eyeShape(p, s).xo);
+  const k = (p.face?.width ?? 156) / 156, ey = 112 + (p.eyes.y - 112) * (p.face?.height ?? 204) / 204, [l, rt] = [-1, 1].map((s) => eyeShape(p, s).xo + HAIR_TURN * (p.pose?.turn ?? 0));
   const panels = (typeof r === 'function' ? r(p) : r.front(p)).filter((o) => o.k === 'path' && o.fill && o.fill !== 'none' && (o.op ?? 1) > 0.5 && pointsOf(o).some(([, y]) => y > ey + 30)); // a shaved head's shadow is not hair over anything
   let over = -Infinity;
-  for (const op of panels) for (const [x0, y] of pointsOf(op)) if (Math.abs(y - ey) <= 25) { const x = 200 + (x0 - 200) * k; over = Math.max(over, Math.min(x - l, rt - x)); }
+  for (const op of panels) for (const [x0, y] of outlinePts(op.d)) if (Math.abs(y - ey) <= 25) { const x = 200 + (x0 - 200) * k; over = Math.max(over, Math.min(x - l, rt - x)); }
   return over;
 }
 /** The horn this face wears, as a part: the makeup whose name says horn (T061: the lint named curvedHorns on every dragonborn, whose horns are the hornCrest). */
@@ -159,6 +192,7 @@ export function lintState(st, tuple) {
   if (shadowHairOut(p, ops)) out.push({ name: 'stack:shaved-halo', parts: ['hair:shavedHead'], detail: 'the shaved head\'s shadow is drawn outside the head\'s clip' });
   if ((p.eyes.mode ?? 'human') === 'human' && p.eyes.openness >= WIDE_OPEN) { const w = whiteOverIris(p); if (w < WIDE_WHITE) out.push({ name: 'expression:wide-no-white', parts: [`eyes:${p.eyes.style}`], detail: `opened to ${p.eyes.openness}, the lid clears the iris by ${w.toFixed(1)} (under ${WIDE_WHITE})` }); }
   const circ = circletPastHead(p); if (circ > 0) out.push({ name: 'stack:circlet-past-head', parts: ['hat:leafCirclet'], detail: 'the circlet runs ' + circ.toFixed(1) + ' past the skull at the temples' });
+  const off = panelOffFace(p); if (off > PANEL_OFF_FACE) out.push({ name: 'stack:panel-off-face', parts: [`hair:${p.hair.style}`], detail: `the face shows ${off.toFixed(1)} past or under a hanging panel (over ${PANEL_OFF_FACE})` });
   const hair = hairOverEye(p); if (hair > -HAIR_EYE_CLEAR) out.push({ name: 'stack:hair-over-eye', parts: [`hair:${p.hair.style}`], detail: `a front hair panel hangs ${(-hair).toFixed(1)} outside an eye's outer corner (under ${HAIR_EYE_CLEAR})` });
   const onFace = handOnFace(p, ops); if (onFace) out.push({ name: 'pose:hand-on-face', parts: tuple.stance && tuple.stance !== 'none' ? [`stance:${tuple.stance}`] : p.props.filter((n) => PROPS[n]?.lift).map((n) => `props:${n}`), detail: `a raised hand lands at ${onFace.map((v) => v.toFixed(1))}, on the face` });
   if (tuple.stance && tuple.stance !== 'none') {

@@ -550,6 +550,49 @@ const K = 0.5523, ellipsePath = (o) => `M ${o.cx + o.rx} ${o.cy} C ${o.cx + o.rx
 // `longBack` is, showing past its sides as the volume hair has; WINGS is the same band's near side, on the head.
 const WREATH = (p) => [path('M 114 174 C 109 204, 117 232, 136 254 L 164 244 C 143 220, 134 196, 135 170 Z', { fill: shade(p.hairColor, 0.88) }), path('M 286 174 C 291 204, 283 232, 264 254 L 236 244 C 257 220, 266 196, 265 170 Z', { fill: shade(p.hairColor, 0.88) })];
 const WINGS = (p) => [path('M 126 154 C 121 172, 122 187, 127 197 C 137 195, 146 187, 150 177 C 153 168, 152 159, 149 152 C 140 148, 131 149, 126 154 Z', { fill: p.hairColor }), path('M 274 154 C 279 172, 278 187, 273 197 C 263 195, 254 187, 250 177 C 247 168, 248 159, 251 152 C 260 148, 269 149, 274 154 Z', { fill: p.hairColor })];
+// A panel that hangs beside the face is drawn for the default head and follows this one. Below HANG_TOP each point
+// keeps the distance from the face's outline it was drawn at: it moves by how much wider this face's own outline is
+// where the point lands than the default's where it was drawn (fullness, a fuller cheek, the jaw, the skew), and
+// `cut`, the default cut's bottom, is carried down to this face's jaw corner, so the jaw does not come out under a
+// flat cut at the mouth. Then the inner edge, read along its curve, keeps HANG_EYE clear of each eye's outer corner
+// near the eye line (T012), the eyes sitting at their own spacing (not the face's width) and sliding HANG_TURN past
+// the hair per unit of turn (the features 12 x turn, the head and hair 4). In the default frame: `fit` scales it after.
+// Width alone moved the panels, so a full cheek or a broad jaw stood out past and under them, and the hair read as a
+// see-through sheet laid on the face (T113).
+const HANG_TOP = 170, HANG_BLEND = 30, HANG_TURN = 8, HANG_EYE = 12, HANG_OUT = 2;
+const flatten = (d, n = 24) => { const t = tokens(d), out = []; let c = [0, 0], start = c, cmd = 'M';
+  for (let i = 0; i < t.length;) {
+    if (/[MLCQZ]/i.test(t[i])) { cmd = t[i++].toUpperCase(); if (cmd === 'Z') { for (let k = 1; k <= n; k++) out.push([0, 1].map((j) => c[j] + (k / n) * (start[j] - c[j]))); c = start; } continue; }
+    const m = ARGS[cmd], v = t.slice(i, i + m).map(Number); i += m;
+    if (cmd === 'C') for (let k = 1; k <= n; k++) { const u = k / n, w = 1 - u; out.push([0, 1].map((j) => w * w * w * c[j] + 3 * w * w * u * v[j] + 3 * w * u * u * v[2 + j] + u * u * u * v[4 + j])); }
+    else if (cmd === 'Q') for (let k = 1; k <= n; k++) { const u = k / n, w = 1 - u; out.push([0, 1].map((j) => w * w * c[j] + 2 * w * u * v[j] + u * u * v[2 + j])); }
+    else if (cmd === 'L') for (let k = 1; k <= n; k++) out.push([0, 1].map((j) => c[j] + (k / n) * (v[j] - c[j])));
+    else out.push([v[0], v[1]]);
+    c = [v[m - 2], v[m - 1]]; if (cmd === 'M') start = c;
+  }
+  return out; };
+const halfAt = (pts, s, y) => { let w = 0; for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; if (y0 !== y1 && (y0 - y) * (y1 - y) <= 0 && Math.sign(x0 + x1 - 400) === s) w = Math.max(w, Math.abs(x0 + ((x1 - x0) * (y - y0)) / (y1 - y0) - 200)); } return w; };
+const jawYOf = (face) => 112 + face.height - (face.corner ?? 32);
+const hang = (p, ops, cut, edges = true) => { // edges: a front panel, whose edges are measured against the face; a back sheet only follows the outline
+  const ref = DEFAULTS.face, k = p.face.width / 156, turn = p.pose?.turn ?? 0, ey = 112 + ((p.eyes.y - 112) * p.face.height) / 204;
+  const me = flatten(facePath(p)), base = flatten(facePath({ face: ref })), jy = jawYOf(p.face), jr = jawYOf(ref), stretch = cut ? (jy - HANG_TOP) / (cut - HANG_TOP) : 1;
+  const ramp = (y) => unit((y - HANG_TOP + HANG_BLEND) / HANG_BLEND), inside = (x, y, s, need = 0) => y > HANG_TOP - HANG_BLEND && s * (x - 200) > 0 && Math.abs(x - 200) < Math.max(halfAt(me, s, Math.min(y, jy)) / k, need + 1); // the inner edge: inside the face, or short of where it has to be
+  let out = mapPts(ops, (x, y) => { if (y <= HANG_TOP - HANG_BLEND) return [x, y];
+    const y1 = y > HANG_TOP ? HANG_TOP + (y - HANG_TOP) * stretch : y, s = x < 200 ? -1 : 1;
+    return [x + s * ramp(y) * (halfAt(me, s, Math.min(y1, jy)) / k - halfAt(base, s, Math.min(y, jr))), y1]; });
+  if (edges) for (const s of [-1, 1]) {
+    // the outer edge is straight between its points while the cheek bulges between them, and a fuller cheek or one lowered by the skew bulges where no point is: it moves out by what still shows
+    const from = out, lines = from.filter((o) => o.k === 'path').map((o) => flatten(o.d)), bottom = Math.max(...lines.flat().filter(([x]) => s * (x - 200) > 0).map(([, y]) => y)), reach = (y) => Math.max(0, ...lines.map((l) => halfAt(l, s, y)));
+    let show = 0; for (let y = HANG_TOP + 40; y <= Math.min(bottom, jy); y += 4) show = Math.max(show, halfAt(me, s, y) / k + HANG_OUT - reach(y));
+    if (show > 0) out = mapPts(from, (x, y) => (y > HANG_TOP - HANG_BLEND && s * (x - 200) > halfAt(me, s, Math.min(y, jy)) / k ? [x + s * show * ramp(y), y] : [x, y]));
+  }
+  if (edges) for (const s of [-1, 1]) {
+    const need = (Math.abs(eyeShape(p, s).xo - 200) + HANG_EYE + HANG_TURN * Math.max(0, s * turn)) / k, from = out, push = (g) => mapPts(from, (x, y) => (inside(x, y, s, need) ? [x + s * g * ramp(y), y] : [x, y]));
+    let g = 0; for (let pass = 0; pass < 4; pass++) { // the edge's curve follows its moved points only part of the way, so the shift is found in a few passes, always from the same points
+      const near = out.filter((o) => o.k === 'path').flatMap((o) => flatten(o.d)).filter(([x, y]) => Math.abs(y - ey) <= 25 && s * (x - 200) > 0 && s * (x - 200) < need + 1 + g), gap = near.length ? need - Math.min(...near.map(([x]) => s * (x - 200))) : 0;
+      if (gap <= 0.05) break; g += gap; out = push(g); }
+  }
+  return out; };
 const HAIR_TEXTURE = { curlyMedium: 'curls', afroShort: 'curls', afroMedium: 'curls', locsShort: 'none', boxBraids: 'none', cornrows: 'none', shortMohawk: 'none' }; // the grain each style takes; unlisted styles are combed strands
 export const HAIR = {
   bald: () => [],
@@ -566,9 +609,9 @@ export const HAIR = {
   afroShort: { back: (p) => [ellipse(200, 110, 84, 63, { fill: p.hairColor }), ellipse(135, 125, 28, 39, { fill: p.hairColor }), ellipse(265, 125, 28, 39, { fill: p.hairColor })], front: CAP },
   afroMedium: { back: (p) => [ellipse(200, 103, 96, 72, { fill: p.hairColor }), ellipse(120, 134, 33, 45, { fill: p.hairColor }), ellipse(280, 134, 33, 45, { fill: p.hairColor })], front: CAP },
   pixie: (p) => [path('M 129 165 C 118 125, 131 96, 154 82 C 172 71, 198 71, 216 75 C 246 81, 270 104, 271 158 C 257 147, 249 134, 240 126 C 220 117, 198 115, 180 120 C 160 124, 144 136, 129 165 Z', { fill: p.hairColor }), gloss('M 172 83 Q 187 70 198 86', 2), gloss('M 199 79 Q 215 69 226 87', 2)],
-  bob: { back: (p) => longBack(240, p), front: (p) => [path('M 118 171 C 108 126, 121 90, 151 76 C 177 64, 223 64, 249 76 C 279 90, 292 126, 282 171 L 288 248 C 281 252, 274 251, 267 246 C 268 222, 268 204, 268 183 C 266 148, 236 117, 200 112 C 164 117, 134 148, 132 183 C 132 204, 132 222, 133 246 C 126 251, 119 252, 112 248 Z', { fill: p.hairColor })] }, // a hanging panel's inner edge stays outside the eyes' outer corners (x 132 at the eye line) and its outer edge outside the face's widest (x 112 at the jaw): cut nearer the middle and narrowing to a point it lay across the cheek with the face's edge showing past it, which read as a see-through sheet over the face (T022)
-  bluntBob: { back: (p) => [path('M 118 160 C 114 100, 152 66, 200 66 C 248 66, 286 100, 282 160 L 281 244 L 119 244 Z', { fill: shade(p.hairColor, 0.8) })], front: (p) => [path('M 112 170 C 104 121, 122 84, 154 72 C 178 62, 222 62, 246 72 C 278 84, 296 121, 288 170 L 284 248 L 254 248 C 262 214, 262 172, 250 144 C 234 114, 166 114, 150 144 C 138 172, 138 214, 146 248 L 116 248 Z', { fill: p.hairColor })] }, // the panels hang beside the face, their inner edge outside the eyes' outer corners: cut nearer the middle they laid a slab of hair across the cheeks and eyes (T012). The back is the blunt cut's own, inside the front's outline: the shared longBack is wider and longer than these panels, so it stood out round every edge as a darker rim and the panels read as see-through sheets laid on the face (T068)
-  longStraight: { back: (p) => longBack(350, p), front: (p) => [path('M 114 178 C 103 125, 120 84, 151 70 C 177 58, 223 58, 249 70 C 280 84, 297 125, 286 178 L 299 355 L 259 355 C 266 285, 268 222, 268 183 C 266 146, 234 120, 200 118 C 166 120, 134 146, 132 183 C 132 222, 134 285, 141 355 L 101 355 Z', { fill: p.hairColor })] }, // the same panel rule as bob's (T022)
+  bob: { back: (p) => hang(p, [path('M 118 160 C 114 100, 152 66, 200 66 C 248 66, 286 100, 282 160 L 285 244 L 115 244 Z', { fill: shade(p.hairColor, 0.8) })], 248, false), front: (p) => hang(p, [path('M 118 171 C 108 126, 121 90, 151 76 C 177 64, 223 64, 249 76 C 279 90, 292 126, 282 171 L 288 248 C 281 252, 274 251, 267 246 C 268 222, 268 204, 268 183 C 266 148, 236 117, 200 112 C 164 117, 134 148, 132 183 C 132 204, 132 222, 133 246 C 126 251, 119 252, 112 248 Z', { fill: p.hairColor })], 248) }, // a hanging panel's inner edge stays outside the eyes' outer corners (x 132 at the eye line) and its outer edge outside the face's widest (x 112 at the jaw): cut nearer the middle and narrowing to a point it lay across the cheek with the face's edge showing past it, which read as a see-through sheet over the face (T022). The back is its own, inside the front's outline, as bluntBob's is (T068): the shared longBack stood out round a pale bob as a grey rim, blinkers off the head (T120)
+  bluntBob: { back: (p) => hang(p, [path('M 118 160 C 114 100, 152 66, 200 66 C 248 66, 286 100, 282 160 L 281 244 L 119 244 Z', { fill: shade(p.hairColor, 0.8) })], 248, false), front: (p) => hang(p, [path('M 112 170 C 104 121, 122 84, 154 72 C 178 62, 222 62, 246 72 C 278 84, 296 121, 288 170 L 284 248 L 254 248 C 262 214, 262 172, 250 144 C 234 114, 166 114, 150 144 C 138 172, 138 214, 146 248 L 116 248 Z', { fill: p.hairColor })], 248) }, // the panels hang beside the face, their inner edge outside the eyes' outer corners: cut nearer the middle they laid a slab of hair across the cheeks and eyes (T012). The back is the blunt cut's own, inside the front's outline: the shared longBack is wider and longer than these panels, so it stood out round every edge as a darker rim and the panels read as see-through sheets laid on the face (T068)
+  longStraight: { back: (p) => hang(p, longBack(350, p), null, false), front: (p) => hang(p, [path('M 114 178 C 103 125, 120 84, 151 70 C 177 58, 223 58, 249 70 C 280 84, 297 125, 286 178 L 299 355 L 259 355 C 266 285, 268 222, 268 183 C 266 146, 234 120, 200 118 C 166 120, 134 146, 132 183 C 132 222, 134 285, 141 355 L 101 355 Z', { fill: p.hairColor })]) }, // the same panel rule as bob's (T022)
   ponytailLow: { back: (p) => [path('M 254 139 C 292 150, 303 195, 284 229 C 273 248, 260 257, 249 264 C 263 221, 261 176, 254 139 Z', { fill: p.hairColor })], front: (p) => [path('M 122 168 C 116 124, 128 93, 154 78 C 179 64, 221 64, 246 78 C 272 93, 284 124, 278 168 C 258 140, 234 122, 200 120 C 166 122, 142 140, 122 168 Z', { fill: p.hairColor })] },
   highBun: { back: (p) => [ellipse(200, 54, 36, 31, { fill: p.hairColor })], front: (p) => [path('M 121 168 C 117 124, 129 92, 155 78 C 179 66, 221 66, 245 78 C 271 92, 283 124, 279 168 C 259 139, 235 122, 200 120 C 165 122, 141 139, 121 168 Z', { fill: p.hairColor })] },
   lowBun: { back: (p) => [ellipse(268, 171, 29, 31, { fill: p.hairColor })], front: (p) => [path('M 122 169 C 118 125, 130 93, 155 78 C 179 64, 221 64, 245 78 C 270 93, 282 125, 278 169 C 258 140, 234 122, 200 120 C 166 122, 142 140, 122 169 Z', { fill: p.hairColor })] },

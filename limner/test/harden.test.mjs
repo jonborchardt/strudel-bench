@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR, FACIAL_HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, crownStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace, beardBox, BEARD_BOX, circletPastHead } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, panelOffFace, PANEL_OFF_FACE, hornStrokesOut, crownStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace, beardBox, BEARD_BOX, circletPastHead } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -592,4 +592,24 @@ test('lint: stack:beard-box leaves a stubble alone, its foot being the face\'s o
   const st = decode('eyJzZWVkIjoyNzgwNzMsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOjAuMTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuOCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MC4zNSwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjI1LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjo4LCJwb3NlLmhlYWRUaWx0IjowLjA2LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMiwicG9zZS5zaG91bGRlciI6MCwicHJvcHMiOlsiaGFuZEhlYXJ0R2VzdHVyZSJdfX0');
   for (const style of ['lightStubble', 'heavyStubble', 'stubbleStache']) assert.equal(beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': style } })), null, style);
   assert.ok(beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': 'shortBeard' } })) > 0, 'a beard that hangs past the chin is still measured');
+});
+
+test('lint: stack:panel-off-face, a bob\'s panels follow the face they hang beside, to the jaw (T113)', () => {
+  // the orc in a black bluntBob: a broad full cheek stood out past the panel's outer edge and the jaw came out under its flat cut at the mouth
+  const st = decode('eyJzZWVkIjo3ODA2NzcsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MS40NSwiZXllcy5icm93TGlmdCI6MTAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo0LCJleWVzLnNxdWludCI6MH19');
+  const p = params(st), tuple = { cast: 'orcs', stance: 'none', expression: 'wideEyed', view: 'bust' };
+  assert.equal(p.hair.style, 'bluntBob');
+  assert.ok(panelOffFace(p) <= PANEL_OFF_FACE, `the face stays behind the panels (${panelOffFace(p)})`);
+  assert.ok(!lintState(st, tuple).some((f) => f.name === 'stack:panel-off-face' || f.name === 'stack:hair-over-eye'));
+  const front = HAIR.bluntBob.front;
+  try { // the panels as they were before the fix: the default head's, scaled by width alone
+    HAIR.bluntBob.front = (q) => [{ k: 'path', d: 'M 112 170 C 104 121, 122 84, 154 72 C 178 62, 222 62, 246 72 C 278 84, 296 121, 288 170 L 284 248 L 254 248 C 262 214, 262 172, 250 144 C 234 114, 166 114, 150 144 C 138 172, 138 214, 146 248 L 116 248 Z', fill: q.hairColor }];
+    assert.ok(lintState(st, tuple).some((f) => f.name === 'stack:panel-off-face' && f.parts[0] === 'hair:bluntBob'));
+  } finally { HAIR.bluntBob.front = front; }
+  // across widths and turns the three styles keep the face behind them and the eyes clear
+  for (const style of ['bob', 'bluntBob', 'longStraight']) for (const width of [130, 160, 190]) for (const turn of [-1, 0, 1]) {
+    const q = params({ ...st, ov: { ...st.ov, 'hair.style': style, 'face.width': width, 'pose.turn': turn } });
+    assert.ok(panelOffFace(q) <= PANEL_OFF_FACE, `${style} ${width} ${turn}: ${panelOffFace(q)}`);
+    assert.ok(hairOverEye(q) < -HAIR_EYE_CLEAR, `${style} ${width} ${turn}: eye ${hairOverEye(q)}`);
+  }
 });
