@@ -596,7 +596,11 @@ const hairOf = (p) => { const r = HAIR[p.hair.style] ?? HAIR.sidePart; return ty
 // ear, down the cheek, under the mouth's corners and the lower lip) cut to this face's own outline let out a little
 // (`hull`: wider at the jaw, longer under the chin), so a beard on a square jaw is square and one on a narrow chin is
 // narrow. Drawn in the face's real coordinates (the eye line, the mouth), not fitted from a default beard.
-const hull = (p, chin) => { const ey = p.eyes.y, bot = 112 + p.face.height + 16 * p.face.chin; return mapXY([path(facePath(p))], scaleAbout(200, 1.03), (y) => ey + (y - ey) * (1 + chin / (bot - ey)))[0].d; }; // the outline let out: the chin pushed down by `chin`, the jaw with it
+// The beard's own silhouette, not the face's: the head's sides down to the cheekbone, then one curve each side out
+// over the jaw's corner and round under the chin, `chin` below it. A copy of the face outline let out kept the face's
+// straight cheek-to-jaw side, its corner and its flat chin, so every beard was a straight-sided box (T062).
+const hull = (p, chin) => { const hw = (p.face.width / 2) * 1.03, ey = p.eyes.y, jawY = 112 + p.face.height - (p.face.corner ?? 32), jx = (p.face.width / 2) * p.face.jaw * 0.94 * 1.1, B = 112 + p.face.height + 16 * p.face.chin + chin;
+  return `M ${200 - hw} ${ey - 20} L ${200 + hw} ${ey - 20} L ${200 + hw} 216 C ${200 + jx} ${jawY + 20}, ${200 + hw * 0.35} ${B}, 200 ${B} C ${200 - hw * 0.35} ${B}, ${200 - jx} ${jawY + 20}, ${200 - hw} 216 Z`; };
 // top: the sideburn's y under the eye line; cheek: how far in from the outline the beard line runs (0..1 of the half width); lip: how far under the lower lip the beard starts; chin: how far the mass hangs past the chin; sharp: a straight, barbered line; width: how far out the band reaches (1 past the face, less for a beard that leaves the jaw's sides bare and sits round the mouth)
 function beardBand(p, { top = 26, cheek = 0.1, lip = 9, chin = 6, sharp = false, op = 1, width = 1 } = {}) {
   const w = p.face.width / 2, ey = p.eyes.y, my = p.mouth.y, mw = p.mouth.width / 2, x0 = 200 - (w + 30) * width, x1 = 200 + (w + 30) * width, ya = ey + top, cx = Math.min(w * (1 - cheek), (w + 30) * width), c2 = w * 0.44; // c2: how tightly the beard line closes on the mouth. Swung wide it leaves the mouth sitting on a bare island in the middle of the beard, which is what a beard never looks like

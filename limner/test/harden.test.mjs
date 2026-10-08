@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR, FACIAL_HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, crownStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, crownStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace, beardBox, BEARD_BOX } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -573,4 +573,12 @@ test('sampler: partsOf names the parts a cell draws, in the spelling a finding u
   assert.ok(parts.includes('hair:' + p.hair.style) && parts.includes('eyes:' + p.eyes.style), parts.join(' '));
   assert.ok(parts.every((x) => /^\w+:\w+$/.test(x) && !x.endsWith(':none')), 'kind:name, never none');
   assert.ok(parts.every((x) => drawsPart(st, { stance: 'swaggerLean', expression: 'grin' }, x)), 'every named part is one related() would find');
+});
+
+test('lint: stack:beard-box, a beard tapers under the chin instead of hanging as a box the jaw\'s full width (T062)', () => {
+  const st = decode('eyJzZWVkIjo4MTM2NjQsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOi0wLjEsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjQ1LCJleWVzLmJyb3dMaWZ0IjoxMCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjQsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjo4LCJwb3NlLmhlYWRUaWx0IjowLjA2LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMiwicG9zZS5zaG91bGRlciI6MCwicHJvcHMiOlsiaGFuZEhlYXJ0R2VzdHVyZSJdfX0');
+  assert.ok(beardBox(params(st)) <= BEARD_BOX, String(beardBox(params(st))));
+  for (const style of ['shortBeard', 'fullBeard', 'boxedBeard', 'circleBeard', 'ducktail', 'garibaldi']) { // not the stubbles: a wash on the face's own jaw (chin 0), so on a broad jaw it keeps the jaw's width
+ const b = beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': style } })); assert.ok(b <= BEARD_BOX, style + ' ' + b); }
+  assert.equal(beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': 'none' } })), null);
 });

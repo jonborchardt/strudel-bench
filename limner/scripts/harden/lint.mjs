@@ -2,7 +2,7 @@
 // verdict. Each closed todo whose fault is geometric adds one here and a test in ../../test/harden.test.mjs over a state
 // that used to show it, so the reader's job shrinks as the list grows.
 // ponytail: bounding points, not path intersection; good enough to rank a cell, not to judge it.
-import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES, HAIR, eyeShape, PROPS, headBox } from '../../index.mjs';
+import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES, HAIR, eyeShape, PROPS, headBox, FACIAL_HAIR } from '../../index.mjs';
 import { params } from '../../schema.mjs';
 import { VIEWBOX } from './sheet.mjs';
 
@@ -113,6 +113,19 @@ export function shadowHairOut(p, ops) {
   return null;
 }
 
+/** How wide a beard's mass still is near its bottom, against the face's half width: the hull (the clip every banded beard opens with) traced as curves, the widest point in its lowest fifth between the cheekbone and the beard's foot. A box keeps the jaw's full width down there (T062: the hull was the face outline stretched down, ~0.8); a beard tapers under the chin. null with no hull. */
+export function beardBox(p) {
+  const [hull] = (FACIAL_HAIR[p.facialHair?.style] ?? (() => []))(p); if (hull?.k !== 'clip') return null;
+  const tok = hull.d.match(/[MLCQZ]|-?\d*\.?\d+(?:e-?\d+)?/g) ?? [], pts = []; let cur = [0, 0], cmd = '';
+  for (let i = 0; i < tok.length;) { if (/[MLCQZ]/.test(tok[i])) { cmd = tok[i++]; if (cmd === 'Z') continue; } const n = { M: 2, L: 2, Q: 4, C: 6 }[cmd], a = tok.slice(i, i + n).map(Number); i += n;
+    if (cmd === 'C') for (let t = 0.05; t <= 1; t += 0.05) { const u = 1 - t; pts.push([u ** 3 * cur[0] + 3 * u * u * t * a[0] + 3 * u * t * t * a[2] + t ** 3 * a[4], u ** 3 * cur[1] + 3 * u * u * t * a[1] + 3 * u * t * t * a[3] + t ** 3 * a[5]]); }
+    else pts.push([a[n - 2], a[n - 1]]);
+    cur = [a[n - 2], a[n - 1]]; }
+  const foot = Math.max(...pts.map(([, y]) => y)), low = 216 + 0.8 * (foot - 216);
+  return Math.max(...pts.filter(([, y]) => y >= low).map(([x]) => Math.abs(x - 200))) / (p.face.width / 2);
+}
+export const BEARD_BOX = 0.58; // the 21 evidence beards measured 0.45..0.80 as boxes and 0.41..0.56 tapered; a beard's mass in its lowest fifth no wider than this much of the face's half width
+
 export const HAIR_EYE_CLEAR = 10; // how far outside an eye's outer corner a panel's edge must hang
 
 /** A raised hand (a prop that lifts an arm) whose centre lands on the face: inside the face's half width, between the top of the head and the chin. The handsUp hands sat on the temples, and a short-armed people's on the cheeks (T043). The hand ellipses are the skin- or glove-coloured ellipses the prop adds over the same figure with no prop. The offending hand's centre, or null. */
@@ -133,6 +146,7 @@ export function lintState(st, tuple) {
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human') { const past = mouthPastMuzzle(p, ops); if (past > MOUTH_PAST_MUZZLE) out.push({ name: 'anatomy:mouth-past-muzzle', parts: [`mouth:${p.mouth.style}`], detail: `the mouth runs ${past.toFixed(1)} past the muzzle pad (over ${MOUTH_PAST_MUZZLE})` }); }
   const crownOut = crownStrokesOut(ops); if (crownOut) out.push({ name: 'render:crown-stroke-out', parts: [`hat:${p.hat.style}`], detail: `a crown's stroke ends at ${crownOut.map((v) => v.toFixed(1))}, outside the crown` });
   const hornOut = hornStrokesOut(ops); if (hornOut) out.push({ name: 'render:horn-stroke-out', parts: hornParts(p), detail: `a horn's stroke ends at ${hornOut.map((v) => v.toFixed(1))}, outside the horn` });
+  const box = beardBox(p); if (box > BEARD_BOX) out.push({ name: 'stack:beard-box', parts: [`facialHair:${p.facialHair.style}`], detail: `the beard's foot is ${box.toFixed(2)} of the face's half width (over ${BEARD_BOX})` });
   if (shadowHairOut(p, ops)) out.push({ name: 'stack:shaved-halo', parts: ['hair:shavedHead'], detail: 'the shaved head\'s shadow is drawn outside the head\'s clip' });
   if ((p.eyes.mode ?? 'human') === 'human' && p.eyes.openness >= WIDE_OPEN) { const w = whiteOverIris(p); if (w < WIDE_WHITE) out.push({ name: 'expression:wide-no-white', parts: [`eyes:${p.eyes.style}`], detail: `opened to ${p.eyes.openness}, the lid clears the iris by ${w.toFixed(1)} (under ${WIDE_WHITE})` }); }
   const hair = hairOverEye(p); if (hair > -HAIR_EYE_CLEAR) out.push({ name: 'stack:hair-over-eye', parts: [`hair:${p.hair.style}`], detail: `a front hair panel hangs ${(-hair).toFixed(1)} outside an eye's outer corner (under ${HAIR_EYE_CLEAR})` });
