@@ -10,7 +10,7 @@ import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
 import { CALIBRATION, gridOf, keyOf, stateFor, pickCells, bump, relatedCells, drawsPart } from '../scripts/harden/sampler.mjs';
 import { CROPS, LAYOUT, svgOf, sheetHtml, pairsHtml } from '../scripts/harden/sheet.mjs';
-import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -166,8 +166,12 @@ test('cli: a first run starts empty, next --html writes sheet 0001 without a bro
     const sheet = JSON.parse(readFileSync(join(dir, 'sheets', '0001.json'), 'utf8'));
     assert.equal(sheet.view, 'bust'); assert.equal(sheet.cells.length, 3); assert.ok(sheet.cells[1].hash && sheet.cells[1].key);
     const cov = JSON.parse(readFileSync(join(dir, 'coverage.json'), 'utf8')); assert.equal(Object.values(cov).reduce((a, b) => a + b, 0), 2, 'two cells covered, calibration not');
-    const r = cliIn(dir, JSON.stringify([{ cell: 2, category: 'style', parts: ['eyes:almond'], severity: 1, note: 'flat iris' }, { cell: 9, category: 'style', parts: ['x'], severity: 1, note: 'not on the sheet' }]), 'record', '0001');
-    assert.match(r, /opened T001/); assert.match(r, /refused cell 9/);
+    const good = { cell: 2, category: 'style', parts: ['eyes:almond'], severity: 1, note: 'flat iris' };
+    const bad = cliIn(dir, JSON.stringify([good, { cell: 9, category: 'style', parts: ['x'], severity: 1, note: 'not on the sheet' }]), 'record', '0001');
+    assert.match(bad, /refused cell 9/); assert.match(bad, /nothing recorded/); assert.ok(!/opened/.test(bad)); assert.ok(!existsSync(join(dir, 'todos.json')), 'a refusal writes no ledger');
+    assert.equal(JSON.parse(readFileSync(join(dir, 'sheets', '0001.json'), 'utf8')).findings, undefined, 'nor the sheet');
+    const r = cliIn(dir, JSON.stringify([good]), 'record', '0001');
+    assert.match(r, /opened T001/);
     const todos = JSON.parse(readFileSync(join(dir, 'todos.json'), 'utf8'));
     assert.equal(todos[0].evidence[0], sheet.cells[1].hash); assert.deepEqual(todos[0].tuples, [sheet.cells[1].key]);
     assert.match(cli(dir, 'todos'), /T001\s+1x1\s+style\s+eyes:almond\s+flat iris/);
@@ -190,7 +194,11 @@ test('cli: lint prints the flags of one state', () => {
 test('ledger: three attempts park an entry out of the ranking, record names the entry each finding landed in', () => {
   const todos = [];
   const r = record(todos, [finding({ note: 'a', parts: ['a'] }), finding({ note: 'b', parts: ['b'] })], { sheet: '0001', today: '2026-10-07' });
-  assert.deepEqual(r.accepted, [{ cell: 2, id: 'T001' }, { cell: 2, id: 'T002' }]);
+  assert.deepEqual(r.accepted, [{ cell: 2, category: 'stack', severity: 2, id: 'T001' }, { cell: 2, category: 'stack', severity: 2, id: 'T002' }]);
+  const two = record([], [finding({ note: 'a', parts: ['a'], severity: 3 }), finding({ note: 'b', category: 'style', parts: ['b'], severity: 1 })], { sheet: '0001', today: '2026-10-07' });
+  assert.deepEqual(two.accepted.map((a) => [a.category, a.severity]), [['stack', 3], ['style', 1]], 'two findings on one cell keep their own severity');
+  const mixed = [], m = record(mixed, [finding({ parts: ['a'] }), finding({ parts: [] })], { sheet: '0001', today: '2026-10-07' });
+  assert.equal(m.refused.length, 1); assert.deepEqual(m.accepted, []); assert.equal(mixed.length, 0, 'one refusal records nothing');
   assert.equal(todos[0].attempts, 0); assert.deepEqual(todos[0].tried, []);
   for (let i = 1; i <= MAX_ATTEMPTS; i++) { const t = attempt(todos, 'T001', 'try ' + i, { today: '2026-10-08' }); assert.equal(t.attempts, i); }
   assert.ok(isParked(todos[0])); assert.deepEqual(todos[0].tried, ['2026-10-08: try 1', '2026-10-08: try 2', '2026-10-08: try 3']);
@@ -238,7 +246,8 @@ test('cli: next marks fresh cells, record writes findings into the sheet, attemp
     assert.match(cliIn(dir, JSON.stringify([{ cell: 2, category: 'stack', parts: ['hat:beanie'], severity: 2, note: 'x' }]), 'record', '0001'), /recorded 1 findings on sheet 0001/);
     assert.deepEqual(JSON.parse(readFileSync(join(dir, 'sheets', '0001.json'), 'utf8')).findings, [{ cell: 2, category: 'stack', severity: 2, id: 'T001' }]);
     assert.match(cliIn(dir, '[]', 'record', '0001'), /recorded 0 findings/); assert.deepEqual(JSON.parse(readFileSync(join(dir, 'sheets', '0001.json'), 'utf8')).findings, [], 'a re-record replaces');
-    assert.match(cli(dir, 'stats'), /0001\s+cells 2\s+fresh 2\s+defects 3:0 2:0 1:0/);
+    writeFileSync(join(dir, 'sheets', 'T001-related.json'), JSON.stringify({ sheet: 'T001-related', cells: [], findings: [{ cell: 1, category: 'stack', severity: 3, id: 'T001' }] }));
+    const stats = cli(dir, 'stats'); assert.match(stats, /0001\s+cells 2\s+fresh 2\s+defects 3:0 2:0 1:0/); assert.ok(!/related/.test(stats), 'a related sheet is not a survey sheet');
     for (let i = 1; i <= 3; i++) assert.match(cli(dir, 'attempt', 'T001', 'try ' + i), new RegExp(`T001 attempt ${i}/3`));
     assert.match(cli(dir, 'todos'), /no open todos\s*\n?parked: T001/); assert.match(cli(dir, 'todos', '--all'), /parked 3\/3/);
     const rel = cli(dir, 'related', 'T001', '--html', '--cells', '2');

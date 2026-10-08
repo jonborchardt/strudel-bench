@@ -18,19 +18,21 @@ const problem = (f) => {
 /** Merge findings into todos (mutating). Returns which ids were opened, which seen again, which findings were refused and why, and which wontfix entries were seen. */
 export function record(todos, findings, { sheet, today }) {
   const out = { opened: [], seen: [], refused: [], wontfix: [], accepted: [] };
+  // all or nothing: one malformed finding and the file is recorded again whole, so nothing is counted twice
+  for (const f of findings) { const why = problem(f); if (why) out.refused.push({ cell: f.cell, why }); }
+  if (out.refused.length) return out;
   for (const f of findings) {
-    const why = problem(f); if (why) { out.refused.push({ cell: f.cell, why }); continue; }
     const key = fingerprint(f), same = todos.filter((t) => fingerprint(t) === key);
     const open = same.find((t) => t.status === 'open');
     if (open) {
       open.seen++; open.evidence.push(f.hash); if (!open.sheets.includes(sheet)) open.sheets.push(sheet);
       if (f.tuple && !open.tuples.includes(f.tuple)) open.tuples.push(f.tuple); if (f.note && !open.notes.includes(f.note)) open.notes.push(f.note);
-      open.severity = Math.max(open.severity, f.severity); out.seen.push(open.id); out.accepted.push({ cell: f.cell, id: open.id }); continue;
+      open.severity = Math.max(open.severity, f.severity); out.seen.push(open.id); out.accepted.push({ cell: f.cell, category: f.category, severity: f.severity, id: open.id }); continue;
     }
     const wf = same.find((t) => t.status === 'wontfix'); if (wf) { out.wontfix.push(wf.id); continue; }
     const id = nextId(todos);
     todos.push({ id, title: f.note ?? key, notes: f.note ? [f.note] : [], category: f.category, parts: [...f.parts].sort(), severity: f.severity, seen: 1, evidence: [f.hash], tuples: f.tuple ? [f.tuple] : [], sheets: [sheet], status: 'open', opened: today, closed: null, commit: null, lint: null, wontfix: null, attempts: 0, tried: [] });
-    out.opened.push(id); out.accepted.push({ cell: f.cell, id });
+    out.opened.push(id); out.accepted.push({ cell: f.cell, category: f.category, severity: f.severity, id });
   }
   return out;
 }

@@ -69,13 +69,14 @@ const commands = {
   record([num, file]) {
     const s = sheetJson(num), todos = load(TODOS);
     const findings = JSON.parse(file ? readFileSync(file, 'utf8') : readFileSync(0, 'utf8')).map((f) => { const c = s.cells.find((x) => x.n === f.cell); return { ...f, hash: c?.hash, tuple: c?.key }; });
-    const r = record(todos, findings, { sheet: num, today }); save(TODOS, todos);
+    const r = record(todos, findings, { sheet: num, today });
+    if (r.refused.length) { for (const x of r.refused) console.log(`refused cell ${x.cell}: ${x.why}`); return console.log('nothing recorded: fix the findings and record again'); }
+    save(TODOS, todos);
     for (const id of r.opened) console.log(`opened ${id}  ${todos.find((t) => t.id === id).title}`);
     for (const id of r.seen) console.log(`seen ${id}  now ${todos.find((t) => t.id === id).seen}x`);
     for (const id of r.wontfix) console.log(`wontfix ${id} seen again (not reopened)`);
-    for (const x of r.refused) console.log(`refused cell ${x.cell}: ${x.why}`);
     // the sheet remembers what was found on it: a clean sheet is findings: [], which is what makes it count in stats
-    s.findings = r.accepted.map(({ cell, id }) => { const f = findings.find((x) => x.cell === cell); return { cell, category: f.category, severity: f.severity, id }; });
+    s.findings = r.accepted;
     writeFileSync(join(sheets, `${num}.json`), JSON.stringify(s, null, 1));
     console.log(`recorded ${s.findings.length} findings on sheet ${num}`);
   },
@@ -100,7 +101,7 @@ const commands = {
     console.log(`sheet ${num}   ${file}\n${table(rows)}`);
   },
   stats() {
-    const recorded = readdirSync(sheets).filter((f) => f.endsWith('.json')).sort().map((f) => JSON.parse(readFileSync(join(sheets, f), 'utf8'))).filter((s) => Array.isArray(s.findings));
+    const recorded = readdirSync(sheets).filter((f) => /^\d{4}\.json$/.test(f)).sort().map((f) => JSON.parse(readFileSync(join(sheets, f), 'utf8'))).filter((s) => Array.isArray(s.findings));
     if (!recorded.length) return console.log('no recorded sheets');
     const { rows, fresh } = statsOf(recorded), rate = (x) => `${x.rate ?? 'n/a'} (${x.defects}/${x.cells})`;
     for (const r of rows) console.log(`${r.sheet}  cells ${r.cells}  fresh ${r.freshCells}  defects 3:${r.s3} 2:${r.s2} 1:${r.s1}  on fresh ${r.freshDefects}`);
