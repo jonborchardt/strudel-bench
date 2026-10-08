@@ -73,11 +73,13 @@ export function muzzleGap(p) {
   return mouthY(p) - (ey + k * (10 + (st.len + st.tip) * (p.nose.length * fh) / 38)); // the parting below the nostrils' bottom: under 0 runs through them
 }
 
-/** How far a muzzle's mouth runs past the muzzle's pad on its wider side, in head units: the ops a nudge of the mouth's width moves against the ops a nudge of the nose's width moves. T058: a wide style on top of the muzzle's own widening ran the line 30 and more past the pad, cheek to cheek and off a turned jaw; a plain mouth there sits up to ~25 past it. */
-export const MOUTH_PAST_MUZZLE = 28;
-const moved = (a, q) => { const b = new Set(portraitOps(q).map((o) => JSON.stringify(o))); const xs = a.filter((o) => !b.has(JSON.stringify(o))).flatMap(pointsOf).map(([x]) => x); return [Math.min(...xs), Math.max(...xs)]; };
-export function mouthPastMuzzle(p, ops = portraitOps(p)) {
-  const m = moved(ops, { ...p, mouth: { ...p.mouth, width: p.mouth.width + 0.5 } }), n = moved(ops, { ...p, nose: { ...p.nose, width: p.nose.width + 0.5 } });
+/** How far a muzzle's mouth runs past the muzzle's pad on its wider side, in head units: the mouth's ops against the ops a nudge of the nose's width moves. T058: a wide style on top of the muzzle's own widening ran the line 30 and more past the pad, cheek to cheek and off a turned jaw; a plain mouth there sat up to ~25 past it, and on a straight nose's narrow pad that was still a slash cheek to cheek (T066, 28..37). With the mouth capped at the pad plus MOUTH_PAD_MARGIN it sits at most ~11 past. */
+export const MOUTH_PAST_MUZZLE = 16;
+const moved = (a, q) => { const b = new Set(portraitOps(q).map((o) => JSON.stringify(o))); return a.filter((o) => !b.has(JSON.stringify(o))); };
+const span = (os) => { const xs = os.flatMap(pointsOf).map(([x]) => x); return [Math.min(...xs), Math.max(...xs)]; };
+export function mouthPastMuzzle(p, ops = portraitOps(p)) { // the mouth is the ops a change of its colour repaints (T066: its width alone no longer moves a mouth capped by the pad); the pad, the ops a nudge of the nose's width moves that are not the mouth, which follows it
+  const mouth = moved(ops, { ...p, mouth: { ...p.mouth, color: p.mouth.color === '#010203' ? '#030201' : '#010203' } }), mine = new Set(mouth);
+  const m = span(mouth), n = span(moved(ops, { ...p, nose: { ...p.nose, width: p.nose.width + 0.5 } }).filter((o) => !mine.has(o)));
   return Math.max(n[0] - m[0], m[1] - n[1]);
 }
 

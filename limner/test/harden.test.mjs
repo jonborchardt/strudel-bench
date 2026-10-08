@@ -63,7 +63,17 @@ test('lint: anatomy:mouth-past-muzzle, a wide mouth under a muzzle is no wider t
   assert.equal(p.mouth.style, 'wide');
   assert.ok(mouthPastMuzzle(p) <= MOUTH_PAST_MUZZLE, `the evidence face's mouth stays near the pad (${mouthPastMuzzle(p)})`);
   assert.ok(!lintState(st, { cast: 'dragonborn', stance: 'none', expression: 'none', view: 'bust' }).some((f) => f.name === 'anatomy:mouth-past-muzzle'));
-  assert.ok(mouthPastMuzzle({ ...p, mouth: { ...p.mouth, width: p.mouth.width * 1.3 } }) > MOUTH_PAST_MUZZLE, 'the old width, wide times the muzzle widening, is flagged');
+  assert.ok(mouthPastMuzzle({ ...p, mouth: { ...p.mouth, width: p.mouth.width * 1.3 } }) <= MOUTH_PAST_MUZZLE, 'the old width, wide times the muzzle widening, is held at the pad (T066 capped it there)');
+});
+
+test('lint: anatomy:mouth-past-muzzle, a muzzle\'s mouth follows its pad on a straight nose too, at every expression and turn (T066)', () => {
+  const hashes = ['eyJzZWVkIjo2NDU4NCwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJkcmFnb25ib3JuIiwib3YiOnsibW91dGguc21pbGUiOjAuOTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjg1LCJleWVzLmJyb3dMaWZ0IjoxLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAuNzUsInBvc2UuaGVhZFgiOjgsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOjAuMTIsInBvc2UuYm9keVRpbHQiOjAuMDYsInBvc2UudHVybiI6MC40LCJwb3NlLnNob3VsZGVyIjotMC41LCJwcm9wcyI6W119fQ','eyJzZWVkIjozMjE2NDksImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjM4LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC45NSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAuNSwiZXllcy5zcXVpbnQiOjAuMywicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6LTAuMDQsInBvc2UuYm9keVRpbHQiOjAsInBvc2UudHVybiI6LTAuMywicG9zZS5zaG91bGRlciI6MC40LCJwcm9wcyI6W119fQ','eyJzZWVkIjo4MTQ4MTksImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjkyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC44NSwiZXllcy5icm93TGlmdCI6MSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjc1LCJwb3NlLmhlYWRYIjotOCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6LTAuMTIsInBvc2UuYm9keVRpbHQiOi0wLjA2LCJwb3NlLnR1cm4iOi0wLjQsInBvc2Uuc2hvdWxkZXIiOjAuNSwicHJvcHMiOltdfX0']; // a grin turned 0.4, a plain slightSmile turned -0.3, a wide grin turned -0.4: 33..37 past the pad before the cap
+  for (const h of hashes) {
+    const st = decode(h), p = params(st);
+    assert.equal(p.nose.style, 'straight');
+    assert.ok(mouthPastMuzzle(p) <= MOUTH_PAST_MUZZLE, String(mouthPastMuzzle(p)));
+    assert.ok(!lintState(st, { cast: 'dragonborn', stance: 'none', expression: 'none', view: 'bust' }).some((f) => f.name === 'anatomy:mouth-past-muzzle'));
+  }
 });
 test('lint: anatomy:muzzle-mouth, the mouth line runs under a muzzle\'s nostrils and not through them (T007)', () => {
   const st = decode('eyJzZWVkIjoxODUxOTcsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjA2LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC4wNCwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjEsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjo4LCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjEyLCJwb3NlLmJvZHlUaWx0IjowLjA2LCJwb3NlLnR1cm4iOjAuNCwicG9zZS5zaG91bGRlciI6LTAuNSwicHJvcHMiOltdfX0');
