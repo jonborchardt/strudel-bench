@@ -73,6 +73,14 @@ export function muzzleGap(p) {
   return mouthY(p) - (ey + k * (10 + (st.len + st.tip) * (p.nose.length * fh) / 38)); // the parting below the nostrils' bottom: under 0 runs through them
 }
 
+/** How far a muzzle's mouth runs past the muzzle's pad on its wider side, in head units: the ops a nudge of the mouth's width moves against the ops a nudge of the nose's width moves. T058: a wide style on top of the muzzle's own widening ran the line 30 and more past the pad, cheek to cheek and off a turned jaw; a plain mouth there sits up to ~25 past it. */
+export const MOUTH_PAST_MUZZLE = 28;
+const moved = (a, q) => { const b = new Set(portraitOps(q).map((o) => JSON.stringify(o))); const xs = a.filter((o) => !b.has(JSON.stringify(o))).flatMap(pointsOf).map(([x]) => x); return [Math.min(...xs), Math.max(...xs)]; };
+export function mouthPastMuzzle(p, ops = portraitOps(p)) {
+  const m = moved(ops, { ...p, mouth: { ...p.mouth, width: p.mouth.width + 0.5 } }), n = moved(ops, { ...p, nose: { ...p.nose, width: p.nose.width + 0.5 } });
+  return Math.max(n[0] - m[0], m[1] - n[1]);
+}
+
 /** How far a hanging front panel of hair reaches in past an eye's outer corner near the eye line, in sheet units (negative: how far it stays outside). A panel is a front hair path that hangs past the eye line; a temple wing or a fringe is not one. T012: a bluntBob's panels at -5..-8 laid a slab of hair across the eye corners and cheeks, since the lashes and the eye's shadow run past the white's corner. The hair follows the face's width only; the eyes sit at their spacing on the laid-out eye line. */
 export function hairOverEye(p) {
   const r = HAIR[p.hair?.style]; if (!r) return -Infinity;
@@ -89,6 +97,7 @@ const POSE_KEYS =['pose.headX', 'pose.headY', 'pose.headTilt', 'pose.bodyTilt', 
 export function lintState(st, tuple) {
   const p = params(st), ops = portraitOps(p), out = lintOps(ops, { dy: FEET_Y - feetY(p) });
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human' && muzzleGap(p) < 2) out.push({ name: 'anatomy:muzzle-mouth', parts: ['unknown:muzzle'], detail: `the mouth line is ${muzzleGap(p).toFixed(1)} under the nostrils` });
+  if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human') { const past = mouthPastMuzzle(p, ops); if (past > MOUTH_PAST_MUZZLE) out.push({ name: 'anatomy:mouth-past-muzzle', parts: [`mouth:${p.mouth.style}`], detail: `the mouth runs ${past.toFixed(1)} past the muzzle pad (over ${MOUTH_PAST_MUZZLE})` }); }
   const hornOut = hornStrokesOut(ops); if (hornOut) out.push({ name: 'render:horn-stroke-out', parts: ['makeup:curvedHorns'], detail: `a horn's stroke ends at ${hornOut.map((v) => v.toFixed(1))}, outside the horn` });
   const hair = hairOverEye(p); if (hair > -HAIR_EYE_CLEAR) out.push({ name: 'stack:hair-over-eye', parts: [`hair:${p.hair.style}`], detail: `a front hair panel hangs ${(-hair).toFixed(1)} outside an eye's outer corner (under ${HAIR_EYE_CLEAR})` });
   if (tuple.stance && tuple.stance !== 'none') {

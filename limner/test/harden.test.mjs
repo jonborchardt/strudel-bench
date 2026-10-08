@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, mouthPastMuzzle, MOUTH_PAST_MUZZLE } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -58,6 +58,13 @@ test('lint: offsheet ignores strokes under a clip (T004) and stands the figure o
   assert.deepEqual(lintOps([{ k: 'ellipse', cx: 200, cy: 1140, rx: 5, ry: 5 }], { dy: -91 }), [], 'a tall figure\'s shoe lands on the floor');
 });
 
+test('lint: anatomy:mouth-past-muzzle, a wide mouth under a muzzle is no wider than a plain one there (T058)', () => {
+  const st = decode('eyJzZWVkIjo1NDg1ODMsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MS40NSwiZXllcy5icm93TGlmdCI6MTAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo0LCJleWVzLnNxdWludCI6MH19'), p = params(st);
+  assert.equal(p.mouth.style, 'wide');
+  assert.ok(mouthPastMuzzle(p) <= MOUTH_PAST_MUZZLE, `the evidence face's mouth stays near the pad (${mouthPastMuzzle(p)})`);
+  assert.ok(!lintState(st, { cast: 'dragonborn', stance: 'none', expression: 'none', view: 'bust' }).some((f) => f.name === 'anatomy:mouth-past-muzzle'));
+  assert.ok(mouthPastMuzzle({ ...p, mouth: { ...p.mouth, width: p.mouth.width * 1.3 } }) > MOUTH_PAST_MUZZLE, 'the old width, wide times the muzzle widening, is flagged');
+});
 test('lint: anatomy:muzzle-mouth, the mouth line runs under a muzzle\'s nostrils and not through them (T007)', () => {
   const st = decode('eyJzZWVkIjoxODUxOTcsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjA2LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC4wNCwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjEsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjo4LCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjEyLCJwb3NlLmJvZHlUaWx0IjowLjA2LCJwb3NlLnR1cm4iOjAuNCwicG9zZS5zaG91bGRlciI6LTAuNSwicHJvcHMiOltdfX0');
   const p = params(st);
