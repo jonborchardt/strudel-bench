@@ -15,7 +15,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CATEGORIES, fingerprint, nextId, record, rank, close, load, save, MAX_ATTEMPTS, attempt, isParked, statsOf } from '../scripts/harden/ledger.mjs';
+import { CATEGORIES, fingerprint, nextId, record, merge, rank, close, load, save, MAX_ATTEMPTS, attempt, isParked, statsOf } from '../scripts/harden/ledger.mjs';
 
 test('lint: pointsOf reads every op kind as x,y pairs', () => {
   assert.deepEqual(pointsOf({ k: 'path', d: 'M 10 20 L 30 40 C 1 2 3 4 5 6 Z' }), [[10, 20], [30, 40], [1, 2], [3, 4], [5, 6]]);
@@ -305,6 +305,42 @@ test('ledger: three attempts park an entry out of the ranking, record names the 
   const again = record(todos, [finding({ note: 'a', parts: ['x:a'], hash: 'H9' })], { sheet: '0002', today: '2026-10-09' });
   assert.deepEqual(again.seen, ['T001'], 'a parked entry still counts when seen');
   assert.throws(() => attempt(todos, 'T099', 'x', { today: '2026-10-09' }), /T099/);
+});
+
+test('ledger: merge folds open entries into one, the merged fingerprint counts on the target, bad ids change nothing; the CLI prints it', () => {
+  const rec = (todos, parts, o) => record(todos, [finding({ parts, ...o })], { sheet: o.sheet, today: o.today });
+  const todos = [];
+  rec(todos, ['hair:a'], { hash: 'Ha', tuple: 'c1', note: 'na', severity: 1, sheet: '0001', today: '2026-10-05' });
+  rec(todos, ['hair:b'], { hash: 'Hb', tuple: 'c2', note: 'nb', severity: 3, sheet: '0002', today: '2026-10-03' });
+  rec(todos, ['hair:b'], { hash: 'Hb2', tuple: 'c2', note: 'nb', severity: 3, sheet: '0002', today: '2026-10-03' });
+  rec(todos, ['hair:c'], { hash: 'Ha', tuple: 'c1', note: 'nc', severity: 2, sheet: '0003', today: '2026-10-06' });
+  close(todos, 'T003', { wontfix: 'x', today: '2026-10-07' }).status; // closed one is not mergeable
+  const before = JSON.stringify(todos);
+  assert.throws(() => merge(todos, 'T001', ['T002', 'T003'], { today: 'D' }), /T003 is wontfix/);
+  assert.throws(() => merge(todos, 'T001', ['T002', 'T099'], { today: 'D' }), /T099/);
+  assert.throws(() => merge(todos, 'T001', ['T001'], { today: 'D' }), /T001/);
+  assert.equal(JSON.stringify(todos), before, 'a refusal changes nothing');
+  const fresh = [];
+  rec(fresh, ['hair:a'], { hash: 'Ha', tuple: 'c1', note: 'na', severity: 1, sheet: '0001', today: '2026-10-05' });
+  rec(fresh, ['hair:b'], { hash: 'Hb', tuple: 'c2', note: 'nb', severity: 3, sheet: '0002', today: '2026-10-03' });
+  rec(fresh, ['hair:b'], { hash: 'Hb2', tuple: 'c2', note: 'nb', severity: 3, sheet: '0002', today: '2026-10-03' });
+  rec(fresh, ['hair:c'], { hash: 'Ha', tuple: 'c1', note: 'nc', severity: 2, sheet: '0003', today: '2026-10-06' });
+  const k = merge(fresh, 'T001', ['T002', 'T003'], { parts: ['unknown:hairPanel'], today: '2026-10-08' });
+  assert.equal(k.seen, 4); assert.deepEqual(k.evidence, ['Ha', 'Hb', 'Hb2']); assert.deepEqual(k.sheets, ['0001', '0002', '0003']);
+  assert.deepEqual(k.tuples, ['c1', 'c2']); assert.deepEqual(k.notes, ['na', 'nb', 'nc']);
+  assert.equal(k.severity, 3); assert.equal(k.opened, '2026-10-03'); assert.deepEqual(k.parts, ['unknown:hairPanel']);
+  assert.deepEqual(fresh.slice(1).map((t) => [t.status, t.mergedInto, t.closed]), [['merged', 'T001', '2026-10-08'], ['merged', 'T001', '2026-10-08']]);
+  assert.deepEqual(rank(fresh).map((t) => t.id), ['T001']);
+  const r = rec(fresh, ['hair:b'], { hash: 'Hz', tuple: 'c9', note: 'again', severity: 1, sheet: '0004', today: '2026-10-09' }).seen;
+  assert.deepEqual(r, ['T001']); assert.equal(fresh.length, 3, 'opens nothing'); assert.equal(fresh[0].seen, 5);
+
+  const dir = mkdtempSync(join(tmpdir(), 'harden-merge-'));
+  try {
+    const t2 = []; for (const p of ['x:a', 'x:b']) rec(t2, [p], { hash: 'H' + p, tuple: 't', note: p, severity: 2, sheet: '0001', today: '2026-10-05' });
+    save(join(dir, 'todos.json'), t2);
+    assert.match(cli(dir, 'merge', 'T001', 'T002', '--parts', 'unknown:w'), /^T001 now 2x, merged T002/);
+    assert.match(cli(dir, 'todos', '--all'), /T002 .*\(merged into T001\)/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 test('ledger: statsOf counts defects per sheet by severity and fresh defects early against late', () => {

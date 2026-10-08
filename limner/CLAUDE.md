@@ -144,7 +144,7 @@ dependencies**, and that is worth keeping.
 
 ## The hardening loop
 
-`scripts/harden.mjs` (`npm run harden -- next|crop|lint|record|todos|verify|close|attempt|related|snap|stats` from the parent) is the loop that
+`scripts/harden.mjs` (`npm run harden -- next|crop|lint|record|todos|verify|close|merge|attempt|related|snap|stats` from the parent) is the loop that
 finds faults nobody rendered: a sheet of cast × stance × expression cells (cell 1 always the same calibration face),
 geometric lints in `scripts/harden/lint.mjs` ranking cells for eyes, a ledger `scripts/harden/todos.json` that merges
 findings by category plus parts and ranks by severity × seen, `coverage.json` counting what has been rendered, and

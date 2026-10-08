@@ -10,6 +10,7 @@
 //   node limner/scripts/harden.mjs verify <id> [--crop head|eyes|"x y w h"] [--html]   a crop enlarges that region of the then cell and draws the now side as the cropped bust
 //   node limner/scripts/harden.mjs snap <id> before|after [--crop head|eyes|"x y w h"] [--html]   the evidence from the current code into sheets/fixes/; the before is taken once, before any edit, and verify then uses it as the then side
 //   node limner/scripts/harden.mjs close <id> --commit <sha> [--lint <name>] | --wontfix "why"
+//   node limner/scripts/harden.mjs merge <keep> <id> [<id> ...] [--parts "kind:a,kind:b"]   fold open entries that are one fault under different parts into <keep>; later findings of their fingerprints count on it
 //   node limner/scripts/harden.mjs attempt <id> "<what was tried>"      three park the entry
 //   node limner/scripts/harden.mjs related <id> [--cells 8] [--html]    other combinations drawing its parts: the regression check
 //   node limner/scripts/harden.mjs stats                                defects per sheet, fresh cells told apart
@@ -23,12 +24,12 @@ import { feetY, FEET_Y } from '../index.mjs';
 import { lintState } from './harden/lint.mjs';
 import { pickCells, bump, keyOf, relatedCells } from './harden/sampler.mjs';
 import { sheetHtml, pairsHtml, screenshot, svgOf, LAYOUT, CROPS, VIEWBOX } from './harden/sheet.mjs';
-import { record, rank, close, load, save, attempt, isParked, statsOf, MAX_ATTEMPTS } from './harden/ledger.mjs';
+import { record, merge, rank, close, load, save, attempt, isParked, statsOf, MAX_ATTEMPTS } from './harden/ledger.mjs';
 
 const argv = process.argv.slice(2);
 const flag = (name, dflt) => { const i = argv.indexOf('--' + name); return i < 0 ? dflt : argv[i + 1]; };
 const has = (name) => argv.includes('--' + name);
-const VALUED = new Set(['dir', 'view', 'cells', 'pool', 'stance', 'commit', 'lint', 'wontfix', 'crop']); // html and all are booleans
+const VALUED = new Set(['dir', 'view', 'cells', 'pool', 'stance', 'commit', 'lint', 'wontfix', 'crop', 'parts']); // html and all are booleans
 const positional = argv.filter((a, i) => !a.startsWith('--') && !(argv[i - 1]?.startsWith('--') && VALUED.has(argv[i - 1].slice(2))));
 const [cmd, ...args] = positional;
 const dir = flag('dir', join(dirname(fileURLToPath(import.meta.url)), 'harden'));
@@ -91,8 +92,12 @@ const commands = {
   todos() {
     const todos = load(TODOS), list = has('all') ? todos : rank(todos), parked = todos.filter(isParked);
     if (!list.length) console.log(has('all') ? 'no todos' : 'no open todos');
-    else console.log(list.map((t) => `${t.id}  ${t.severity}x${t.seen}  ${t.category.padEnd(10)} ${t.parts.join(',').padEnd(36)} ${t.title}${t.status === 'open' && !isParked(t) ? '' : '  (' + (isParked(t) ? `parked ${t.attempts}/${MAX_ATTEMPTS}` : t.status + (t.commit ? ' ' + t.commit : '')) + ')'}`).join('\n'));
+    else console.log(list.map((t) => `${t.id}  ${t.severity}x${t.seen}  ${t.category.padEnd(10)} ${t.parts.join(',').padEnd(36)} ${t.title}${t.status === 'open' && !isParked(t) ? '' : '  (' + (isParked(t) ? `parked ${t.attempts}/${MAX_ATTEMPTS}` : t.status === 'merged' ? 'merged into ' + t.mergedInto : t.status + (t.commit ? ' ' + t.commit : '')) + ')'}`).join('\n'));
     if (parked.length) console.log(`parked: ${parked.map((t) => t.id).join(', ')} (${MAX_ATTEMPTS} attempts; see --all)`);
+  },
+  merge([keep, ...ids]) {
+    const todos = load(TODOS), parts = flag('parts', null), k = merge(todos, keep, ids, { parts: parts && parts.split(',').map((p) => p.trim()).filter(Boolean), today }); save(TODOS, todos);
+    console.log(`${k.id} now ${k.seen}x, merged ${ids.join(', ')}`);
   },
   attempt([id, note]) {
     const todos = load(TODOS), t = attempt(todos, id, note ?? '', { today }); save(TODOS, todos);
@@ -159,5 +164,5 @@ const commands = {
   },
 };
 
-if (!commands[cmd]) { console.error(`usage: harden next|crop|lint|record|todos|verify|close|attempt|related|snap|stats (see the header of ${fileURLToPath(import.meta.url)})`); process.exit(2); }
+if (!commands[cmd]) { console.error(`usage: harden next|crop|lint|record|todos|verify|close|merge|attempt|related|snap|stats (see the header of ${fileURLToPath(import.meta.url)})`); process.exit(2); }
 try { await commands[cmd](args); } catch (e) { console.error(e.message); process.exit(1); }
