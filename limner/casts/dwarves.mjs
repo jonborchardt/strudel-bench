@@ -36,7 +36,7 @@ const pickKeys = (o, ks) => Object.fromEntries(ks.map((k) => [k, o[k]]));
 export default {
   name: 'dwarves', families: pickKeys(FAMILIES, ['heavyBrow', 'squareJaw', 'roundSoft']),
   skins: Object.values(SKIN_COLORS), hairColors: ['auburn', 'copper', 'chestnut', 'saltPepper', 'white'].map((k) => HAIR_COLORS[k]), clothes: [STEEL, IRON, LEATHER, FUR, WOOL, MOSS, OAK, '#3a2f26'],
-  pools: { tops: parts('top', { any: ['only:dwarf'] }), jackets: parts('jacket', { any: ['only:dwarf', 'everyday'] }), beards: parts('facialHair', { any: ['only:dwarf', 'everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: parts('graphics', { all: ['everyday'] }) },
+  pools: { tops: parts('top', { any: ['only:dwarf'] }), jackets: parts('jacket', { any: ['only:dwarf', 'everyday'] }), beards: parts('facialHair', { any: ['only:dwarf', 'everyday'] }), hair: parts('hair', { all: ['everyday'] }), glasses: parts('glasses', { all: ['everyday'] }), details: parts('details', { all: ['everyday'] }), graphics: [] /* no streetwear print on a fantasy garment (T027), as the other fantasy casts */ },
   wardrobe: { establish: ['none', 'leatherCap', 'none'], develop: ['leatherCap', 'hornlessHelm', 'none'], climax: ['hornlessHelm', 'hornlessHelm', 'leatherCap'], release: ['none', 'leatherCap'], none: ['none', 'leatherCap', 'hornlessHelm'] },
   archetypes: DWARVES, archetypeNames: Object.keys(DWARVES), costumes: Object.keys(DWARF_COSTUMES), build: DWARF_BUILD, contrast: 1.6, asym: 1.4,
   base: (s) => ({ ears: { pointed: DWARF_EARS[0] + rand(s) * (DWARF_EARS[1] - DWARF_EARS[0]) } }), // the cast's signature as a rule: mostly round, now and then a little drawn out
