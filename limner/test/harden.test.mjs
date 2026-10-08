@@ -10,6 +10,10 @@ import { EXPRESSIONS } from '../people.mjs';
 import { params, decode } from '../schema.mjs';
 import { CALIBRATION, gridOf, keyOf, stateFor, pickCells, bump } from '../scripts/harden/sampler.mjs';
 import { CROPS, LAYOUT, svgOf, sheetHtml, pairsHtml } from '../scripts/harden/sheet.mjs';
+import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { CATEGORIES, fingerprint, nextId, record, rank, close, load, save } from '../scripts/harden/ledger.mjs';
 
 test('lint: pointsOf reads every op kind as x,y pairs', () => {
   assert.deepEqual(pointsOf({ k: 'path', d: 'M 10 20 L 30 40 C 1 2 3 4 5 6 Z' }), [[10, 20], [30, 40], [1, 2], [3, 4], [5, 6]]);
@@ -102,5 +106,48 @@ test('sheet: the html numbers and labels every cell and lays the view out', () =
 test('sheet: verify pairs put the old cell crop beside the new drawing at one width', () => {
   const html = pairsHtml([{ label: 'T001 cell 4', before: { png: 'AAAA', rect: { x: 10, y: 20, w: 220, h: 600 } }, after: '<svg viewBox="0 0 1 1"></svg>' }], 220);
   assert.match(html, /margin:-20px 0 0 -10px/); assert.match(html, /data:image\/png;base64,AAAA/); assert.match(html, /T001 cell 4/); assert.match(html, /<svg viewBox/);
+});
+
+const finding = (o = {}) => ({ cell: 2, category: 'stack', parts: ['hat:leafCirclet', 'hair:highBun'], severity: 2, note: 'circlet floats clear of the bun', hash: 'H1', tuple: 'elves/none/grin/bust', ...o });
+
+test('ledger: a finding opens a todo, the same fingerprint seen again counts, a refused one writes nothing', () => {
+  const todos = [];
+  const r1 = record(todos, [finding()], { sheet: '0001', today: '2026-10-07' });
+  assert.deepEqual(r1.opened, ['T001']); assert.equal(todos.length, 1);
+  assert.equal(todos[0].title, 'circlet floats clear of the bun'); assert.deepEqual(todos[0].parts, ['hair:highBun', 'hat:leafCirclet'], 'parts are sorted');
+  assert.equal(fingerprint(todos[0]), 'stack:hair:highBun+hat:leafCirclet');
+  const r2 = record(todos, [finding({ hash: 'H2', note: 'again, on a bob', parts: ['hair:highBun', 'hat:leafCirclet'] })], { sheet: '0002', today: '2026-10-08' });
+  assert.deepEqual(r2.seen, ['T001']); assert.equal(todos.length, 1); assert.equal(todos[0].seen, 2);
+  assert.deepEqual(todos[0].evidence, ['H1', 'H2']); assert.deepEqual(todos[0].sheets, ['0001', '0002']); assert.deepEqual(todos[0].notes, ['circlet floats clear of the bun', 'again, on a bob']);
+  const r3 = record(todos, [finding({ parts: [] }), finding({ category: 'ugly' }), finding({ severity: 7 }), finding({ hash: undefined })], { sheet: '0003', today: '2026-10-08' });
+  assert.equal(r3.refused.length, 4); assert.equal(todos.length, 1); assert.equal(todos[0].seen, 2);
+  assert.match(r3.refused[0].why, /parts/); assert.match(r3.refused[1].why, new RegExp(CATEGORIES.join('|')));
+  assert.equal(nextId(todos), 'T002');
+});
+
+test('ledger: rank is severity x seen then older first; close records the commit; wontfix is reported, never reopened', () => {
+  const todos = [];
+  record(todos, [finding({ note: 'a', parts: ['a'], severity: 1 }), finding({ note: 'b', parts: ['b'], severity: 3 })], { sheet: '0001', today: '2026-10-01' });
+  for (let i = 0; i < 4; i++) record(todos, [finding({ note: 'a', parts: ['a'], severity: 1, hash: 'H' + i })], { sheet: '000' + (2 + i), today: '2026-10-02' });
+  assert.deepEqual(rank(todos).map((t) => t.id), ['T001', 'T002'], 'severity 1 seen five times outranks severity 3 seen once');
+  record(todos, [finding({ note: 'c', parts: ['c'], severity: 3 })], { sheet: '0009', today: '2026-10-03' });
+  assert.deepEqual(rank(todos).map((t) => t.id), ['T001', 'T002', 'T003'], 'ties go to the older');
+  const done = close(todos, 'T002', { commit: 'abc1234', lint: 'stack:hat-below-eyes', today: '2026-10-04' });
+  assert.equal(done.status, 'fixed'); assert.equal(done.commit, 'abc1234'); assert.equal(done.lint, 'stack:hat-below-eyes'); assert.equal(done.closed, '2026-10-04');
+  assert.deepEqual(rank(todos).map((t) => t.id), ['T001', 'T003']);
+  close(todos, 'T003', { wontfix: 'in character', today: '2026-10-04' });
+  assert.equal(todos[2].status, 'wontfix');
+  const r = record(todos, [finding({ note: 'c again', parts: ['c'], severity: 3 })], { sheet: '0010', today: '2026-10-05' });
+  assert.deepEqual(r.wontfix, ['T003']); assert.deepEqual(r.opened, []); assert.equal(todos.length, 3); assert.equal(todos[2].seen, 1, 'untouched');
+  assert.throws(() => close(todos, 'T099', { commit: 'x' }), /T099/);
+});
+
+test('ledger: load of a missing file is empty, save round trips', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'harden-')), file = join(dir, 'todos.json');
+  try {
+    assert.deepEqual(load(file), []);
+    const todos = []; record(todos, [finding()], { sheet: '0001', today: '2026-10-07' });
+    save(file, todos); assert.ok(existsSync(file)); assert.deepEqual(load(file), todos);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
