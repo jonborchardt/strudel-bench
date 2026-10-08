@@ -2,7 +2,7 @@
 // verdict. Each closed todo whose fault is geometric adds one here and a test in ../../test/harden.test.mjs over a state
 // that used to show it, so the reader's job shrinks as the list grows.
 // ponytail: bounding points, not path intersection; good enough to rank a cell, not to judge it.
-import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES, HAIR, eyeShape, PROPS, headBox, FACIAL_HAIR } from '../../index.mjs';
+import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES, HAIR, eyeShape, PROPS, headBox, FACIAL_HAIR, HATS } from '../../index.mjs';
 import { params } from '../../schema.mjs';
 import { VIEWBOX } from './sheet.mjs';
 
@@ -127,6 +127,14 @@ export function beardBox(p) {
 }
 export const BEARD_BOX = 0.58; // the 21 evidence beards measured 0.45..0.80 as boxes and 0.41..0.56 tapered; a beard's mass in its lowest fifth no wider than this much of the face's half width
 
+/** How far a leafCirclet's band reaches past the skull at the temples, where it should turn behind the head: its widest point (fitted to this face as the hat is) less the face's half width less CIRCLET_IN. Over 0 the band runs out past the head (T088). null with no circlet. */
+export function circletPastHead(p) {
+  if (p.hat?.style !== 'leafCirclet') return null;
+  const [band] = HATS.leafCirclet(p), xs = pointsOf(band).map(([x]) => Math.abs(x - 200) * (p.face.width / 156));
+  return Math.max(...xs) - (p.face.width / 2 - CIRCLET_IN);
+}
+export const CIRCLET_IN = 6; // the skull at the band's height is about this much inside the face's half width
+
 export const HAIR_EYE_CLEAR = 10; // how far outside an eye's outer corner a panel's edge must hang
 
 /** A raised hand (a prop that lifts an arm) whose centre lands on the face: inside the face's half width, between the top of the head and the chin. The handsUp hands sat on the temples, and a short-armed people's on the cheeks (T043). The hand ellipses are the skin- or glove-coloured ellipses the prop adds over the same figure with no prop. The offending hand's centre, or null. */
@@ -150,6 +158,7 @@ export function lintState(st, tuple) {
   const box = beardBox(p); if (box > BEARD_BOX) out.push({ name: 'stack:beard-box', parts: [`facialHair:${p.facialHair.style}`], detail: `the beard's foot is ${box.toFixed(2)} of the face's half width (over ${BEARD_BOX})` });
   if (shadowHairOut(p, ops)) out.push({ name: 'stack:shaved-halo', parts: ['hair:shavedHead'], detail: 'the shaved head\'s shadow is drawn outside the head\'s clip' });
   if ((p.eyes.mode ?? 'human') === 'human' && p.eyes.openness >= WIDE_OPEN) { const w = whiteOverIris(p); if (w < WIDE_WHITE) out.push({ name: 'expression:wide-no-white', parts: [`eyes:${p.eyes.style}`], detail: `opened to ${p.eyes.openness}, the lid clears the iris by ${w.toFixed(1)} (under ${WIDE_WHITE})` }); }
+  const circ = circletPastHead(p); if (circ > 0) out.push({ name: 'stack:circlet-past-head', parts: ['hat:leafCirclet'], detail: 'the circlet runs ' + circ.toFixed(1) + ' past the skull at the temples' });
   const hair = hairOverEye(p); if (hair > -HAIR_EYE_CLEAR) out.push({ name: 'stack:hair-over-eye', parts: [`hair:${p.hair.style}`], detail: `a front hair panel hangs ${(-hair).toFixed(1)} outside an eye's outer corner (under ${HAIR_EYE_CLEAR})` });
   const onFace = handOnFace(p, ops); if (onFace) out.push({ name: 'pose:hand-on-face', parts: tuple.stance && tuple.stance !== 'none' ? [`stance:${tuple.stance}`] : p.props.filter((n) => PROPS[n]?.lift).map((n) => `props:${n}`), detail: `a raised hand lands at ${onFace.map((v) => v.toFixed(1))}, on the face` });
   if (tuple.stance && tuple.stance !== 'none') {

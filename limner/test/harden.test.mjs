@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR, FACIAL_HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, crownStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace, beardBox, BEARD_BOX } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, crownStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace, beardBox, BEARD_BOX, circletPastHead } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -581,6 +581,12 @@ test('lint: stack:beard-box, a beard tapers under the chin instead of hanging as
   for (const style of ['shortBeard', 'fullBeard', 'boxedBeard', 'circleBeard', 'ducktail', 'garibaldi']) { // not the stubbles: a wash on the face's own jaw (chin 0), so on a broad jaw it keeps the jaw's width
  const b = beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': style } })); assert.ok(b <= BEARD_BOX, style + ' ' + b); }
   assert.equal(beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': 'none' } })), null);
+});
+test('lint: stack:circlet-past-head, the leafCirclet turns behind the head inside the skull (T088)', () => {
+  const st = decode('eyJzZWVkIjo4Nzc3ODYsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZWx2ZXMiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4yNCwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjEsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC4xNX19');
+  assert.equal(params(st).hat.style, 'leafCirclet');
+  assert.ok(circletPastHead(params(st)) <= 0, String(circletPastHead(params(st))));
+  assert.equal(circletPastHead(params({ ...st, ov: { ...st.ov, 'hat.style': 'none' } })), null);
 });
 test('lint: stack:beard-box leaves a stubble alone, its foot being the face\'s own jaw (T117)', () => {
   const st = decode('eyJzZWVkIjoyNzgwNzMsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOjAuMTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuOCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MC4zNSwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjI1LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjo4LCJwb3NlLmhlYWRUaWx0IjowLjA2LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMiwicG9zZS5zaG91bGRlciI6MCwicHJvcHMiOlsiaGFuZEhlYXJ0R2VzdHVyZSJdfX0');
