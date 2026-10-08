@@ -39,6 +39,33 @@ export function lintOps(ops, { dy = 0 } = {}) {
   return out;
 }
 
+/** A path's outline as points along it (absolute M/L/C/Q/Z, each curve flattened in 12 steps), for an inside test. */
+export function outline(d) {
+  const tok = d.match(/[MLCQZ]|-?\d*\.?\d+(?:e-?\d+)?/g) ?? [], out = []; let i = 0, cmd = 'M', cur = [0, 0];
+  while (i < tok.length) {
+    if (/[MLCQZ]/.test(tok[i])) cmd = tok[i++];
+    if (cmd === 'Z') { if (i < tok.length && !/[MLCQZ]/.test(tok[i])) break; continue; }
+    const c = Array.from({ length: { M: 1, L: 1, Q: 2, C: 3 }[cmd] }, () => [+tok[i++], +tok[i++]]);
+    if (c.length === 1) { out.push(cur = c[0]); continue; }
+    for (let s = 1; s <= 12; s++) { let q = [cur, ...c]; while (q.length > 1) q = q.slice(1).map((b, j) => [q[j][0] + (b[0] - q[j][0]) * s / 12, q[j][1] + (b[1] - q[j][1]) * s / 12]); out.push(q[0]); }
+    cur = c[c.length - 1];
+  }
+  return out;
+}
+export const inside = ([x, y], poly) => poly.reduce((on, [x0, y0], j) => { const [x1, y1] = poly[(j + 1) % poly.length]; return (y0 > y) !== (y1 > y) && x < x0 + (x1 - x0) * (y - y0) / (y1 - y0) ? !on : on; }, false);
+
+/** A horn's own strokes (the ridges and the highlight drawn right after its fill) end inside its outline (T010: the growth ridges ran past both edges into the background as whiskers). */
+export function hornStrokesOut(ops) {
+  let horn = null;
+  for (const op of ops) {
+    if (op.horn) { horn = outline(op.d); continue; }
+    if (!horn || op.k !== 'path' || op.fill !== 'none') { horn = null; continue; }
+    const pts = pointsOf(op), out = [pts[0], pts[pts.length - 1]].find((pt) => !inside(pt, horn));
+    if (out) return out;
+  }
+  return null;
+}
+
 /** Where a muzzle's nostrils end below the eye line, on the sheet: the pad's nostril slits run to the tip plus its radius, in the nose's own scaling (T007). */
 export function muzzleGap(p) {
   const fh = (p.face?.height ?? 204) / 204, st = NOSES[p.nose.style] ?? NOSES.straight, ey = eyeY(p);
@@ -62,6 +89,7 @@ const POSE_KEYS =['pose.headX', 'pose.headY', 'pose.headTilt', 'pose.bodyTilt', 
 export function lintState(st, tuple) {
   const p = params(st), ops = portraitOps(p), out = lintOps(ops, { dy: FEET_Y - feetY(p) });
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human' && muzzleGap(p) < 2) out.push({ name: 'anatomy:muzzle-mouth', parts: ['unknown:muzzle'], detail: `the mouth line is ${muzzleGap(p).toFixed(1)} under the nostrils` });
+  const hornOut = hornStrokesOut(ops); if (hornOut) out.push({ name: 'render:horn-stroke-out', parts: ['makeup:curvedHorns'], detail: `a horn's stroke ends at ${hornOut.map((v) => v.toFixed(1))}, outside the horn` });
   const hair = hairOverEye(p); if (hair > -HAIR_EYE_CLEAR) out.push({ name: 'stack:hair-over-eye', parts: [`hair:${p.hair.style}`], detail: `a front hair panel hangs ${(-hair).toFixed(1)} outside an eye's outer corner (under ${HAIR_EYE_CLEAR})` });
   if (tuple.stance && tuple.stance !== 'none') {
     const ov = { ...st.ov }; for (const k of POSE_KEYS) delete ov[k];

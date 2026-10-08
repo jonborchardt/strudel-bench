@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -64,6 +64,16 @@ test('lint: anatomy:muzzle-mouth, the mouth line runs under a muzzle\'s nostrils
   assert.ok(muzzleGap(p) >= 2, `the evidence face's mouth sits under the nostrils (${muzzleGap(p)})`);
   assert.ok(!lintState(st, { cast: 'dragonborn', stance: 'none', expression: 'none', view: 'bust' }).some((f) => f.name === 'anatomy:muzzle-mouth'));
   for (const style of ['straight', 'short', 'long', 'broad', 'aquiline']) for (const length of [22, 40, 58]) assert.ok(muzzleGap({ ...p, nose: { ...p.nose, style, length } }) >= 2, `${style} ${length}`);
+});
+
+test('lint: render:horn-stroke-out, a horn\'s ridges and highlight end inside the horn (T010)', () => {
+  const st = decode('eyJzZWVkIjo2NDA0NzUsImZhbWlseSI6ImFueSIsInRoZW1lIjoidGllZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMDUsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuMiwibW91dGgucHJlc3MiOjAuMywiZXllcy5vcGVubmVzcyI6MC42LCJleWVzLmJyb3dMaWZ0IjotNCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi0yLCJleWVzLnNxdWludCI6MC41fX0');
+  const ops = portraitOps(params(st)), h = ops.findIndex((o) => o.horn);
+  assert.ok(h >= 0, 'the evidence face wears horns');
+  assert.equal(hornStrokesOut(ops), null);
+  assert.ok(!lintState(st, { cast: 'tieflings', stance: 'none', expression: 'squint', view: 'bust' }).some((f) => f.name === 'render:horn-stroke-out'));
+  const [x, y] = pointsOf(ops[h])[0], whisker = [...ops.slice(0, h + 1), { k: 'path', d: `M ${x} ${y - 10} Q ${x + 20} ${y - 18} ${x + 40} ${y - 14}`, fill: 'none' }, ...ops.slice(h + 1)];
+  assert.ok(hornStrokesOut(whisker), 'a ridge run out past the horn is named');
 });
 
 test('lint: stack:hair-over-eye, a bluntBob\'s panels hang beside the eyes, not over them (T012)', () => {
