@@ -3607,12 +3607,12 @@
    "0092",
    "0096"
   ],
-  "status": "open",
+  "status": "wontfix",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
-  "wontfix": null,
+  "wontfix": "a lint artefact: the eyes read fine at cell size; the lint was tightened in c9b34a6",
   "attempts": 0,
   "tried": []
  },
