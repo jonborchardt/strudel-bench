@@ -186,6 +186,8 @@ test('sampler: cell 1 is calibration, flagged cells come first, the rest are the
   assert.ok(flagged.length >= 1 && flagged.every((c) => c.tuple.cast === 'orcs' && c.flags.length === 1));
   const flood = pickCells({ coverage: {}, n: 10, view: 'bust', sheet: 3, lint: () => [{ name: 'x', parts: [], detail: '' }], pool: 120 });
   assert.equal(flood.filter((c) => c.source === 'flagged').length, 3, 'a lint that flags everything takes a third of the sheet, not all of it');
+  const casts = new Set(pickCells({ coverage: {}, n: 10, view: 'figure', sheet: 7, lint: () => [], pool: 0 }).slice(1).map((c) => c.tuple.cast));
+  assert.ok(casts.size >= 4, `an uncovered figure sheet mixes casts, not the grid's first one: ${[...casts]}`);
   assert.ok(a.filter((c) => c.source === 'coverage').every((c) => c.tuple.cast === 'editorial'), 'the uncovered cast fills the rest');
   assert.ok(a.every((c) => c.flags.length === 0 || c.source === 'flagged'));
   const keys = a.slice(1).map((c) => keyOf(c.tuple)); assert.equal(new Set(keys).size, keys.length, 'no tuple twice on one sheet');
