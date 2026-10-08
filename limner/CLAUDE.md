@@ -142,6 +142,16 @@ sheets, served by the parent repo's dev server, are the other half: `parts.html?
 `scripts/portrait.mjs` reaches for `playwright-core` for the png path. The published library itself has **no
 dependencies**, and that is worth keeping.
 
+## The hardening loop
+
+`scripts/harden.mjs` (`npm run harden -- next|crop|lint|record|todos|verify|close` from the parent) is the loop that
+finds faults nobody rendered: a sheet of cast × stance × expression cells (cell 1 always the same calibration face),
+geometric lints in `scripts/harden/lint.mjs` ranking cells for eyes, a ledger `scripts/harden/todos.json` that merges
+findings by category plus parts and ranks by severity × seen, `coverage.json` counting what has been rendered, and
+`verify <id>` re-rendering an entry's evidence then-and-now. The rubric is `scripts/harden/rubric.md`; the procedure is
+the parent's `.claude/skills/limner-harden/SKILL.md`. A closed geometric fault leaves a lint and a test behind. Nothing
+under `scripts/` ships.
+
 ## When the host's expectations matter
 
 limner is consumed by a Strudel live-coding harness in the parent repo, which uses it from Node, from a browser page and

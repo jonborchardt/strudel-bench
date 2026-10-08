@@ -12,6 +12,7 @@ samples/user/voice/
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/strudel/
+!.claude/skills/limner-harden/
 /docs
 dist/
 renders/
