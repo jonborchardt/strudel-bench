@@ -3649,12 +3649,12 @@
    "0204",
    "0205"
   ],
-  "status": "open",
+  "status": "wontfix",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
-  "wontfix": null,
+  "wontfix": "the lint was wrong for the chelsea's narrow locks: fixed in 9cafbfa (stack:hair-over-eye reads a lock beside the eye against the lid line, not the slab clearance)",
   "attempts": 0,
   "tried": []
  },
