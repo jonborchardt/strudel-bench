@@ -35,6 +35,16 @@ test('lint: the default figure is clean, a stray point is offsheet, a NaN is nan
   assert.ok(SHEET.x0 < -30 && SHEET.x1 > 430 && SHEET.y0 < -200 && SHEET.y1 > 1084, 'the bounds are the figure sheet plus a margin');
 });
 
+test('lint: offsheet ignores strokes under a clip (T004) and stands the figure on its floor (T005)', () => {
+  const hair = decode('eyJzZWVkIjo5NDgxMzUsImZhbWlseSI6ImFueSIsInRoZW1lIjoic3ludGh3YXZlIiwib3YiOnsibW91dGguc21pbGUiOjAuOTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjg1LCJleWVzLmJyb3dMaWZ0IjoxLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAuNzV9fQ');
+  const tall = decode('eyJzZWVkIjozNzM2NTksImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4wNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjEsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MH19');
+  for (const st of [hair, tall]) assert.ok(!lintState(st, { cast: st.theme, stance: 'none', expression: 'none', view: 'figure' }).some((f) => f.name === 'render:offsheet'), st.theme);
+  const clipped = [{ k: 'clip', d: 'M 0 0 L 100 0 L 100 100 Z' }, { k: 'path', d: 'M 200 300 L 9000 9000' }, { k: 'unclip' }];
+  assert.deepEqual(lintOps(clipped), [], 'a stroke under a clip cannot stray');
+  assert.deepEqual(lintOps([...clipped, { k: 'path', d: 'M 200 300 L 9000 9000' }]).map((f) => f.name), ['render:offsheet'], 'after the unclip it can');
+  assert.deepEqual(lintOps([{ k: 'ellipse', cx: 200, cy: 1140, rx: 5, ry: 5 }], { dy: -91 }), [], 'a tall figure\'s shoe lands on the floor');
+});
+
 test('lint: a stance that moves nothing is pose:stance-noop, a real one is not', () => {
   const st = { ...blank(), ov: { 'pose.turn': 0.6, 'pose.shoulder': 0.7, props: ['handsUp'] } };
   assert.deepEqual(lintState(st, { cast: 'editorial', stance: 'handsUp', expression: 'deadpan', view: 'figure' }), []);
