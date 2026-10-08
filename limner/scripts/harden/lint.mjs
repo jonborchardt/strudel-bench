@@ -121,6 +121,19 @@ export function panelOffFace(p) {
   return worst;
 }
 
+/** How far an ear's shell stands out past a hanging panel's outer edge, in sheet units (positive: the ear shows beside the hair). The shell is the default ear (78 off the middle, 15 x 27 at ears.size about y 212) at the face's width, read straight on: a turn's swing is left out. T138: the panels covered the face's own outline to the jaw but not the ear, which stood out past them, so the hair lay on the cheek in front of it and read as a sheet on the face. */
+export const EAR_PAST_PANEL = 2;
+export function earPastPanel(p) {
+  if (!LONG_HAIR.includes(p.hair?.style) || p.ears?.mode === 'none') return -Infinity;
+  const k = p.face.width / 156, ek = p.ears?.size ?? 1, hair = (HAIR[p.hair.style].front(p)).filter((o) => o.k === 'path').flatMap((o) => outlinePts(o.d, 32));
+  let worst = -Infinity;
+  for (const s of [-1, 1]) for (let y = 216; y <= 212 + 20 * ek; y += 4) {
+    const v = (y - 212) / (27 * ek), ear = 78 + 15 * ek * Math.sqrt(1 - v * v), side = hair.filter(([x, py]) => s * (x - 200) > 0 && Math.abs(py - y) <= 3);
+    if (side.length) worst = Math.max(worst, (ear - Math.max(...side.map(([x]) => s * (x - 200)))) * k);
+  }
+  return worst;
+}
+
 /** How far a hanging front panel of hair reaches in past an eye's outer corner near the eye line, in sheet units (negative: how far it stays outside). A panel is a front hair path that hangs past the eye line; a temple wing or a fringe is not one. T012: a bluntBob's panels at -5..-8 laid a slab of hair across the eye corners and cheeks, since the lashes and the eye's shadow run past the white's corner. The hair follows the face's width; the eyes sit at their spacing on the laid-out eye line, and on a turn slide HAIR_TURN past the hair (12 x turn against its 4). The edge is read along its curves, not at its vertices: the stretched panels of T113 have no vertex at the eye line. */
 export function hairOverEye(p) {
   const r = HAIR[p.hair?.style]; if (!r) return -Infinity;
@@ -198,6 +211,7 @@ export function lintState(st, tuple) {
   if ((p.eyes.mode ?? 'human') === 'human' && p.eyes.openness >= WIDE_OPEN) { const w = whiteOverIris(p); if (w < WIDE_WHITE) out.push({ name: 'expression:wide-no-white', parts: [`eyes:${p.eyes.style}`], detail: `opened to ${p.eyes.openness}, the lid clears the iris by ${w.toFixed(1)} (under ${WIDE_WHITE})` }); }
   const circ = circletPastHead(p); if (circ > 0) out.push({ name: 'stack:circlet-past-head', parts: ['hat:leafCirclet'], detail: 'the circlet runs ' + circ.toFixed(1) + ' past the skull at the temples' });
   const off = panelOffFace(p); if (off > PANEL_OFF_FACE) out.push({ name: 'stack:panel-off-face', parts: [`hair:${p.hair.style}`], detail: `the face shows ${off.toFixed(1)} past or under a hanging panel (over ${PANEL_OFF_FACE})` });
+  const ear = earPastPanel(p); if (ear > EAR_PAST_PANEL) out.push({ name: 'stack:ear-past-panel', parts: [`hair:${p.hair.style}`], detail: `an ear stands ${ear.toFixed(1)} past a hanging panel (over ${EAR_PAST_PANEL})` });
   const hair = hairOverEye(p); if (hair > -HAIR_EYE_CLEAR) out.push({ name: 'stack:hair-over-eye', parts: [`hair:${p.hair.style}`], detail: `a front hair panel hangs ${(-hair).toFixed(1)} outside an eye's outer corner (under ${HAIR_EYE_CLEAR})` });
   const onFace = handOnFace(p, ops); if (onFace) out.push({ name: 'pose:hand-on-face', parts: tuple.stance && tuple.stance !== 'none' ? [`stance:${tuple.stance}`] : p.props.filter((n) => PROPS[n]?.lift).map((n) => `props:${n}`), detail: `a raised hand lands at ${onFace.map((v) => v.toFixed(1))}, on the face` });
   if (tuple.stance && tuple.stance !== 'none') {

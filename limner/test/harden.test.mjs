@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR, FACIAL_HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, panelOffFace, PANEL_OFF_FACE, hornStrokesOut, crownStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace, beardBox, BEARD_BOX, circletPastHead } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, panelOffFace, PANEL_OFF_FACE, earPastPanel, EAR_PAST_PANEL, hornStrokesOut, crownStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace, beardBox, BEARD_BOX, circletPastHead } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -634,6 +634,24 @@ test('lint: stack:panel-off-face, a bob\'s panels follow the face they hang besi
     const q = params({ ...st, ov: { ...st.ov, 'hair.style': style, 'face.width': width, 'pose.turn': turn } });
     assert.ok(panelOffFace(q) <= PANEL_OFF_FACE, `${style} ${width} ${turn}: ${panelOffFace(q)}`);
     assert.ok(hairOverEye(q) < -HAIR_EYE_CLEAR, `${style} ${width} ${turn}: eye ${hairOverEye(q)}`);
+  }
+});
+
+test('lint: stack:ear-past-panel, a bob\'s panels hang over the ears, not on the cheek in front of them (T138)', () => {
+  // the human in a white bluntBob: the panels covered the face's outline but each ear stood 17 past them
+  const st = decode('eyJzZWVkIjo2MTE4MzUsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOjAuMjQsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAuMTUsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOi02LCJwb3NlLmhlYWRUaWx0IjotMC4wNSwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6WyJoYW5kc1VwIl19fQ');
+  const p = params(st), tuple = { cast: 'humans', stance: 'handsUp', expression: 'halfSmile', view: 'figure' };
+  assert.equal(p.hair.style, 'bluntBob');
+  assert.ok(earPastPanel(p) <= EAR_PAST_PANEL, `the ears stay behind the panels (${earPastPanel(p)})`);
+  assert.ok(!lintState(st, tuple).some((f) => f.name === 'stack:ear-past-panel'));
+  const front = HAIR.bluntBob.front;
+  try { // the panel's outer edge at the face's own edge, as T113 left it: the ear stands out past it
+    HAIR.bluntBob.front = (q) => [{ k: 'path', d: 'M 120 170 C 104 121, 122 84, 154 72 C 178 62, 222 62, 246 72 C 278 84, 296 121, 280 170 L 280 248 L 254 248 C 262 214, 262 172, 250 144 C 234 114, 166 114, 150 144 C 138 172, 138 214, 146 248 L 120 248 Z', fill: q.hairColor }];
+    assert.ok(lintState(st, tuple).some((f) => f.name === 'stack:ear-past-panel' && f.parts[0] === 'hair:bluntBob'));
+  } finally { HAIR.bluntBob.front = front; }
+  for (const style of ['bob', 'bluntBob', 'longStraight']) for (const width of [130, 160, 190]) for (const turn of [-1, 0, 1]) for (const size of [0.8, 1.3]) {
+    const q = params({ ...st, ov: { ...st.ov, 'hair.style': style, 'face.width': width, 'pose.turn': turn, 'ears.size': size } });
+    assert.ok(earPastPanel(q) <= EAR_PAST_PANEL, `${style} ${width} ${turn} ${size}: ${earPastPanel(q)}`);
   }
 });
 

@@ -583,7 +583,12 @@ const hang = (p, ops, cut, edges = true) => { // edges: a front panel, whose edg
   if (edges) for (const s of [-1, 1]) {
     // the outer edge is straight between its points while the cheek bulges between them, and a fuller cheek or one lowered by the skew bulges where no point is: it moves out by what still shows
     const from = out, lines = from.filter((o) => o.k === 'path').map((o) => flatten(o.d)), bottom = Math.max(...lines.flat().filter(([x]) => s * (x - 200) > 0).map(([, y]) => y)), reach = (y) => Math.max(0, ...lines.map((l) => halfAt(l, s, y)));
-    let show = 0; for (let y = HANG_TOP + 40; y <= Math.min(bottom, jy); y += 4) show = Math.max(show, halfAt(me, s, y) / k + HANG_OUT - reach(y));
+    // and the ear behind it: hair that falls over an ear covers it, so the shell (cx 78 off the middle, 15 x 27 at
+    // ears.size, the near one standing out on a turn) is under the panel too; an ear standing out past the panel's
+    // edge put the hair on the cheek in front of it, a sheet laid on the face (T138)
+    const ek = p.ears?.mode === 'none' ? 0 : p.ears?.size ?? 1, eo = 78 + (s === Math.sign(turn) ? 0 : EAR_TURN_OUT * turn * turn);
+    const ear = (y) => { const v = (y - 212) / (27 * ek); return ek && Math.abs(v) < 1 ? eo + 15 * ek * Math.sqrt(1 - v * v) : 0; };
+    let show = 0; for (let y = HANG_TOP + 40; y <= Math.min(bottom, jy); y += 4) show = Math.max(show, Math.max(halfAt(me, s, y) / k, ear(y)) + HANG_OUT - reach(y));
     if (show > 0) out = mapPts(from, (x, y) => (y > HANG_TOP - HANG_BLEND && s * (x - 200) > halfAt(me, s, Math.min(y, jy)) / k ? [x + s * show * ramp(y), y] : [x, y]));
   }
   if (edges) for (const s of [-1, 1]) {
