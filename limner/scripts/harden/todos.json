@@ -145,11 +145,11 @@
    "0002",
    "0003"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
-  "lint": null,
+  "closed": "2026-10-08",
+  "commit": "7d11848",
+  "lint": "render:offsheet",
   "wontfix": null,
   "attempts": 0,
   "tried": []
@@ -192,11 +192,11 @@
    "0002",
    "0003"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
-  "lint": null,
+  "closed": "2026-10-08",
+  "commit": "7d11848",
+  "lint": "render:offsheet",
   "wontfix": null,
   "attempts": 0,
   "tried": []
@@ -266,11 +266,11 @@
    "0002",
    "0003"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
-  "lint": null,
+  "closed": "2026-10-08",
+  "commit": "bbea804",
+  "lint": "anatomy:muzzle-mouth",
   "wontfix": null,
   "attempts": 0,
   "tried": []
