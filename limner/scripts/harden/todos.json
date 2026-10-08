@@ -441,23 +441,41 @@
   "id": "T013",
   "title": "the ceremonialSymbols body marks (circle, two triangles, dots) are painted over the bomber jacket and shirt on the chest instead of being hidden under the clothes",
   "notes": [
-   "the ceremonialSymbols body marks (circle, two triangles, dots) are painted over the bomber jacket and shirt on the chest instead of being hidden under the clothes"
+   "the ceremonialSymbols body marks (circle, two triangles, dots) are painted over the bomber jacket and shirt on the chest instead of being hidden under the clothes",
+   "the ceremonialSymbols body marks (circle, two triangles) are painted on the buttonDown shirt's chest instead of being hidden under it",
+   "the scriptLikeMarks body marks (wavy script lines) are painted across the puffer jacket's chest instead of being hidden under the clothes",
+   "the scriptLikeMarks wavy lines are painted across the buttonDown shirt's chest instead of being hidden under it",
+   "the abstractLineWork body marks (dark wavy lines) are painted across the waistcoat and shirt on the chest instead of being hidden under the clothes",
+   "the redGraphicLines body marks (red ladder lines) are painted on the fieldJacket and shirt on the chest instead of being hidden under the clothes"
   ],
   "category": "stack",
   "parts": [
-   "jacket:bomber",
-   "marks:ceremonialSymbols"
+   "unknown:bodyMarks"
   ],
   "severity": 2,
-  "seen": 1,
+  "seen": 6,
   "evidence": [
-   "eyJzZWVkIjozMzM3NSwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJub25lIiwib3YiOnsibW91dGguc21pbGUiOi0wLjA1LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowfX0"
+   "eyJzZWVkIjozMzM3NSwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJub25lIiwib3YiOnsibW91dGguc21pbGUiOi0wLjA1LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowfX0",
+   "eyJzZWVkIjo5Mzc2NTQsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjA2LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC4wNCwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjEsImV5ZXMuc3F1aW50IjowfX0",
+   "eyJzZWVkIjo0MDE5NzUsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjI0LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjE1fX0",
+   "eyJzZWVkIjo1NTc4OTcsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLCJtb3V0aC5vcGVuIjowLjU1LCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MS4zNSwiZXllcy5icm93TGlmdCI6OSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjMsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjotOCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6LTAuMTIsInBvc2UuYm9keVRpbHQiOi0wLjA2LCJwb3NlLnR1cm4iOi0wLjQsInBvc2Uuc2hvdWxkZXIiOjAuNSwicHJvcHMiOltdfX0",
+   "eyJzZWVkIjozNDY2NjcsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjI0LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjE1fX0",
+   "eyJzZWVkIjo0OTA3MTMsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MC40NSwiZXllcy5vcGVubmVzcyI6MS4xNCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjE0LCJwb3NlLmhlYWRZIjotNiwicG9zZS5oZWFkVGlsdCI6MC4xNiwicG9zZS5ib2R5VGlsdCI6MC4xMiwicG9zZS50dXJuIjowLjYsInBvc2Uuc2hvdWxkZXIiOjAuNywicHJvcHMiOltdfX0"
   ],
   "tuples": [
-   "editorial/none/deadpan/figure"
+   "editorial/none/deadpan/figure",
+   "editorial/none/shut/bust",
+   "editorial/none/halfSmile/bust",
+   "editorial/slightLeanLeft/openMouth/figure",
+   "editorial/swaggerLean/stare/figure"
   ],
   "sheets": [
-   "0004"
+   "0004",
+   "0005",
+   "0007",
+   "0010",
+   "0019",
+   "0024"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -490,14 +508,15 @@
   "sheets": [
    "0005"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T013"
  },
  {
   "id": "T015",
@@ -624,14 +643,15 @@
   "sheets": [
    "0007"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T013"
  },
  {
   "id": "T019",
@@ -702,23 +722,30 @@
   "id": "T021",
   "title": "under the dadCap no boxBraids hair is drawn at the head, but the braids still hang as pale sticks from mid-cheek on both sides, attached to nothing",
   "notes": [
-   "under the dadCap no boxBraids hair is drawn at the head, but the braids still hang as pale sticks from mid-cheek on both sides, attached to nothing"
+   "under the dadCap no boxBraids hair is drawn at the head, but the braids still hang as pale sticks from mid-cheek on both sides, attached to nothing",
+   "under the baseballCap no boxBraids hair is drawn at the head, but the braids still hang as pale sticks below the beard, attached to nothing",
+   "under the bucketHat no boxBraids hair is drawn at the head, but the braids still hang as thin sticks from the cheeks down past the jaw, attached to nothing"
   ],
   "category": "stack",
   "parts": [
-   "hair:boxBraids",
-   "hat:dadCap"
+   "hair:boxBraids"
   ],
   "severity": 2,
-  "seen": 1,
+  "seen": 3,
   "evidence": [
-   "eyJzZWVkIjoxNzcxMzYsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MC40NSwiZXllcy5vcGVubmVzcyI6MS4xNCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOi04LCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjotMC4xMiwicG9zZS5ib2R5VGlsdCI6LTAuMDYsInBvc2UudHVybiI6LTAuNCwicG9zZS5zaG91bGRlciI6MC41LCJwcm9wcyI6W119fQ"
+   "eyJzZWVkIjoxNzcxMzYsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MC40NSwiZXllcy5vcGVubmVzcyI6MS4xNCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOi04LCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjotMC4xMiwicG9zZS5ib2R5VGlsdCI6LTAuMDYsInBvc2UudHVybiI6LTAuNCwicG9zZS5zaG91bGRlciI6MC41LCJwcm9wcyI6W119fQ",
+   "eyJzZWVkIjo4MDEzNjgsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MS40NSwiZXllcy5icm93TGlmdCI6MTAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo0LCJleWVzLnNxdWludCI6MCwicG9zZS5oZWFkWCI6OCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6MC4xMiwicG9zZS5ib2R5VGlsdCI6MC4wNiwicG9zZS50dXJuIjowLjQsInBvc2Uuc2hvdWxkZXIiOi0wLjUsInByb3BzIjpbXX19",
+   "eyJzZWVkIjo0OTA3MTMsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MC40NSwiZXllcy5vcGVubmVzcyI6MS4xNCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjE0LCJwb3NlLmhlYWRZIjotNiwicG9zZS5oZWFkVGlsdCI6MC4xNiwicG9zZS5ib2R5VGlsdCI6MC4xMiwicG9zZS50dXJuIjowLjYsInBvc2Uuc2hvdWxkZXIiOjAuNywicHJvcHMiOltdfX0"
   ],
   "tuples": [
-   "editorial/slightLeanLeft/stare/figure"
+   "editorial/slightLeanLeft/stare/figure",
+   "editorial/slightLeanRight/wideEyed/figure",
+   "editorial/swaggerLean/stare/figure"
   ],
   "sheets": [
-   "0010"
+   "0010",
+   "0014",
+   "0024"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -733,23 +760,69 @@
   "id": "T022",
   "title": "under the baseballCap the wavyMedium side panel lies over the left temple and cheek as a translucent tan sheet, the face edge showing through it",
   "notes": [
-   "under the baseballCap the wavyMedium side panel lies over the left temple and cheek as a translucent tan sheet, the face edge showing through it"
+   "under the baseballCap the wavyMedium side panel lies over the left temple and cheek as a translucent tan sheet, the face edge showing through it",
+   "under the bucketHat the bob's side panels lie over both cheeks and the temple as translucent sheets, the face's edge showing through the hair",
+   "under the bucketHat the bob's left panel lies over the temple and cheek, the face edge showing through",
+   "under the flatCap the bob's side panels lie over the cheeks as translucent sheets, the face's edge and cheek lines showing through",
+   "under the fedora the bob's side panels hang over both cheeks as translucent grey sheets, the face edge showing through them",
+   "with no hat the bob's side panels lie over both cheeks as translucent sheets, the face edge showing through the hair",
+   "under the bucketHat the longStraight hair lies across the whole face as a translucent brown sheet from the brim down, the eyes, glasses and face edge showing through it",
+   "under the leatherCap the longStraight hair lies across the whole face as a translucent sheet from the brim down, the cheeks and face edge showing through it",
+   "under the pointedFeltHat the pale longStraight hair lies over both cheeks as translucent sheets, the face edge showing through it",
+   "under the leatherCap the bob's side panels lie over both cheeks as translucent sheets, the face edge showing through the hair",
+   "under the feltTravelHat the longStraight hair lies over both cheeks as translucent sheets, the face edge showing through it"
   ],
   "category": "stack",
   "parts": [
-   "hair:wavyMedium",
-   "hat:baseballCap"
+   "unknown:hairPanel"
   ],
   "severity": 2,
-  "seen": 1,
+  "seen": 15,
   "evidence": [
-   "eyJzZWVkIjo1NTc4OTcsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLCJtb3V0aC5vcGVuIjowLjU1LCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MS4zNSwiZXllcy5icm93TGlmdCI6OSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjMsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjotOCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6LTAuMTIsInBvc2UuYm9keVRpbHQiOi0wLjA2LCJwb3NlLnR1cm4iOi0wLjQsInBvc2Uuc2hvdWxkZXIiOjAuNSwicHJvcHMiOltdfX0"
+   "eyJzZWVkIjo1NTc4OTcsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLCJtb3V0aC5vcGVuIjowLjU1LCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MS4zNSwiZXllcy5icm93TGlmdCI6OSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjMsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjotOCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6LTAuMTIsInBvc2UuYm9keVRpbHQiOi0wLjA2LCJwb3NlLnR1cm4iOi0wLjQsInBvc2Uuc2hvdWxkZXIiOjAuNSwicHJvcHMiOltdfX0",
+   "eyJzZWVkIjoxNzczNTksImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MC40NSwiZXllcy5vcGVubmVzcyI6MS4xNCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjgsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOjAuMTIsInBvc2UuYm9keVRpbHQiOjAuMDYsInBvc2UudHVybiI6MC40LCJwb3NlLnNob3VsZGVyIjotMC41LCJwcm9wcyI6W119fQ",
+   "eyJzZWVkIjo1Njg4NjAsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjA2LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC4wNCwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjEsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjo4LCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjEyLCJwb3NlLmJvZHlUaWx0IjowLjA2LCJwb3NlLnR1cm4iOjAuNCwicG9zZS5zaG91bGRlciI6LTAuNSwicHJvcHMiOltdfX0",
+   "eyJzZWVkIjoyNjIwNDQsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4zLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjUsIm1vdXRoLnByZXNzIjowLjMsImV5ZXMub3Blbm5lc3MiOjAuOCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotMywiZXllcy5zcXVpbnQiOjAuNCwicG9zZS5oZWFkWCI6OCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6MC4xMiwicG9zZS5ib2R5VGlsdCI6MC4wNiwicG9zZS50dXJuIjowLjQsInBvc2Uuc2hvdWxkZXIiOi0wLjUsInByb3BzIjpbXX19",
+   "eyJzZWVkIjozMTk0MjAsImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjIsIm1vdXRoLm9wZW4iOjAuMDgsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjMyLCJleWVzLmJyb3dMaWZ0IjoyLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOi0wLjAyLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuOTUsInBvc2Uuc2hvdWxkZXIiOjAsInByb3BzIjpbXX19",
+   "eyJzZWVkIjoxOTAzNDgsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9pciIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC41LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC45LCJleWVzLmJyb3dMaWZ0IjotMSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjUsImV5ZXMuc3F1aW50IjowfX0",
+   "eyJzZWVkIjoyNzg3MDIsImZhbWlseSI6ImFueSIsInRoZW1lIjoidGllZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMzgsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjk1LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MC41LCJleWVzLnNxdWludCI6MC4zLCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjotMC4wNCwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjotMC4zLCJwb3NlLnNob3VsZGVyIjowLjQsInByb3BzIjpbXX19",
+   "eyJzZWVkIjo3ODYxODYsImZhbWlseSI6ImFueSIsInRoZW1lIjoid2FzdGVsYW5kZXJzIiwib3YiOnsibW91dGguc21pbGUiOjAuMTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuOCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MC4zNSwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjI1fX0",
+   "eyJzZWVkIjo5NzY3NDIsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9pciIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4wNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjEsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MCwicG9zZS5oZWFkWCI6LTgsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOi0wLjEyLCJwb3NlLmJvZHlUaWx0IjotMC4wNiwicG9zZS50dXJuIjotMC40LCJwb3NlLnNob3VsZGVyIjowLjUsInByb3BzIjpbXX19",
+   "eyJzZWVkIjoyMDI0MjAsImZhbWlseSI6ImFueSIsInRoZW1lIjoiY3lib3JncyIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4wNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjEsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MCwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6OCwicG9zZS5oZWFkVGlsdCI6MC4wNiwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLjIsInBvc2Uuc2hvdWxkZXIiOjAsInByb3BzIjpbImhhbmRIZWFydEdlc3R1cmUiXX19",
+   "eyJzZWVkIjozNDY2NjcsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjI0LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjE1fX0",
+   "eyJzZWVkIjo5OTY0ODQsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHdhcnZlcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjI0LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjE1fX0",
+   "eyJzZWVkIjo5NTkzMjgsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZ25vbWVzIiwib3YiOnsibW91dGguc21pbGUiOi0wLjEsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjQ1LCJleWVzLmJyb3dMaWZ0IjoxMCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjQsImV5ZXMuc3F1aW50IjowfX0",
+   "eyJzZWVkIjoyMzA5NiwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJkd2FydmVzIiwib3YiOnsibW91dGguc21pbGUiOi0wLjEsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjQ1LCJleWVzLmJyb3dMaWZ0IjoxMCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjQsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjo4LCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjEyLCJwb3NlLmJvZHlUaWx0IjowLjA2LCJwb3NlLnR1cm4iOjAuNCwicG9zZS5zaG91bGRlciI6LTAuNSwicHJvcHMiOltdfX0",
+   "eyJzZWVkIjozMTkwMTAsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOi0wLjA1LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowfX0"
   ],
   "tuples": [
-   "editorial/slightLeanLeft/openMouth/figure"
+   "editorial/slightLeanLeft/openMouth/figure",
+   "editorial/slightLeanRight/stare/figure",
+   "editorial/slightLeanRight/shut/figure",
+   "editorial/slightLeanRight/sneer/figure",
+   "undead/headSnapRight/deadStare/figure",
+   "noir/none/pout/bust",
+   "tieflings/handsAtSides/slightSmile/figure",
+   "wastelanders/none/smirk/bust",
+   "noir/slightLeanLeft/deadpan/figure",
+   "cyborgs/handHeart/deadpan/figure",
+   "editorial/none/halfSmile/bust",
+   "dwarves/none/halfSmile/bust",
+   "gnomes/none/wideEyed/bust",
+   "dwarves/slightLeanRight/wideEyed/figure",
+   "humans/none/deadpan/figure"
   ],
   "sheets": [
-   "0010"
+   "0010",
+   "0012",
+   "0014",
+   "0024",
+   "0017",
+   "0018",
+   "0021",
+   "0022",
+   "0019",
+   "0023"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -782,14 +855,15 @@
   "sheets": [
    "0010"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T013"
  },
  {
   "id": "T024",
@@ -900,14 +974,15 @@
    "0012",
    "0014"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T022"
  },
  {
   "id": "T027",
@@ -1088,14 +1163,15 @@
    "0014",
    "0024"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T022"
  },
  {
   "id": "T033",
@@ -1119,14 +1195,15 @@
   "sheets": [
    "0014"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T021"
  },
  {
   "id": "T034",
@@ -1260,14 +1337,15 @@
   "sheets": [
    "0017"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T022"
  },
  {
   "id": "T037",
@@ -1299,14 +1377,15 @@
    "0022",
    "0024"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T022"
  },
  {
   "id": "T038",
@@ -1393,14 +1472,15 @@
   "sheets": [
    "0019"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T022"
  },
  {
   "id": "T041",
@@ -1424,14 +1504,15 @@
   "sheets": [
    "0019"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T013"
  },
  {
   "id": "T042",
@@ -1519,14 +1600,15 @@
   "sheets": [
    "0023"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T022"
  },
  {
   "id": "T045",
@@ -1550,14 +1632,15 @@
   "sheets": [
    "0023"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T022"
  },
  {
   "id": "T046",
@@ -1581,14 +1664,15 @@
   "sheets": [
    "0024"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T022"
  },
  {
   "id": "T047",
@@ -1612,14 +1696,15 @@
   "sheets": [
    "0024"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T022"
  },
  {
   "id": "T048",
@@ -1643,14 +1728,15 @@
   "sheets": [
    "0024"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T021"
  },
  {
   "id": "T049",
@@ -1674,13 +1760,14 @@
   "sheets": [
    "0024"
   ],
-  "status": "open",
+  "status": "merged",
   "opened": "2026-10-08",
-  "closed": null,
+  "closed": "2026-10-08",
   "commit": null,
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "mergedInto": "T013"
  }
 ]
