@@ -373,7 +373,9 @@ export function eyeShape(p, side, cx = 200 + side * p.eyes.spacing / 2) {
   const e = p.eyes, k = featureScale(p) * (e.size ?? 1), st0 = EYES[e.style] ?? EYES.almond, st = { ...st0, w: st0.w * k, top: st0.top * k, bot: st0.bot * k, iris: st0.iris * k, inn: (st0.inn ?? 0) * k, out: (st0.out ?? 0) * k, crease: st0.crease && { ...st0.crease, dy: st0.crease.dy * k, ctl: st0.crease.ctl * k } }, o = e.openness * (side < 0 ? e.asym : 1), y = e.y + (side < 0 ? e.dy ?? 0 : 0);
   const sq = unit(e.squint ?? 0); // a smile does not shut the eye from above: the cheek pushes the lower lid up and the upper lid comes down a little after it
   const tl = (e.tilt ?? 0) * st.w * 0.6; // the slant: the outer corner up by most of it, the inner down by the rest
-  const xi = cx - st.w * side, xo = cx + st.w * side, yi = y + (st.inn ?? 0) + 0.3 * tl, yo = y + (st.out ?? 0) - tl, th = st.top * o * (1 - 0.25 * sq), bh = st.bot * o * (1 - 0.6 * sq), px = cx + 2 * side; // the upper lid peaks past the centre toward the outer corner
+  const irTop = st.top * 0.22 + st.iris * (1.5 - 0.55 * (e.sclera ?? st.sclera)); // the iris's top at rest, as eye() places it
+  const wide = o > 1 ? Math.max(st.top * o, irTop + 14 * k * (o - 1)) : st.top * o; // eyes opened past rest show white over the iris: a narrow or lidded eye's small top scaled by openness never clears its own iris (T015)
+  const xi = cx - st.w * side, xo = cx + st.w * side, yi = y + (st.inn ?? 0) + 0.3 * tl, yo = y + (st.out ?? 0) - tl, th = wide * (1 - 0.25 * sq), bh = st.bot * o * (1 - 0.6 * sq), px = cx + 2 * side; // the upper lid peaks past the centre toward the outer corner
   return { cx, y, k, st, o, sq, xi, xo, yi, yo, th, bh, px, w: st.w, lid: `M ${xi} ${yi} Q ${px} ${y - th} ${xo} ${yo} Q ${cx - side} ${y + bh} ${xi} ${yi} Z` };
 }
 function eye(cx, p, side) { // side: +1 the right eye, -1 the left (its outer corner at -x)

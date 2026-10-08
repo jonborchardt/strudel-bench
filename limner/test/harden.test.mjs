@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -487,4 +487,13 @@ test('cli: snap draws the re-derived state, not the frozen hash', () => {
     assert.ok(flat(html).includes(flat(svgOf(decode(encode(st)), 'bust'))), 'the preset-derived state is drawn');
     assert.ok(!flat(html).includes(flat(svgOf(decode(hash), 'bust'))), 'not the frozen one');
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('T015: wideEyed on hooded eyes shows white over the iris, and the lint says when it does not', () => {
+  const st = decode('eyJzZWVkIjozMTM4NzYsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9pciIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MS40NSwiZXllcy5icm93TGlmdCI6MTAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo0LCJleWVzLnNxdWludCI6MCwicG9zZS5oZWFkWCI6OCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6MC4xMiwicG9zZS5ib2R5VGlsdCI6MC4wNiwicG9zZS50dXJuIjowLjQsInBvc2Uuc2hvdWxkZXIiOi0wLjUsInByb3BzIjpbXX19'); // sheet 0086 cell 3, noir hooded at 1.45
+  const p = params(st);
+  for (const style of ['narrow', 'hooded', 'monolid']) assert.ok(whiteOverIris({ ...p, eyes: { ...p.eyes, style } }) >= WIDE_WHITE, style);
+  assert.ok(!lintState(st, { stance: 'none' }).some((f) => f.name === 'expression:wide-no-white'));
+  const low = { ...st, ov: { ...st.ov, 'eyes.openness': 1.3, 'eyes.squint': 0.9 } }; // a squint pulls the lid back over the iris: the lint fires
+  assert.ok(lintState(low, { stance: 'none' }).some((f) => f.name === 'expression:wide-no-white'));
 });
