@@ -525,10 +525,11 @@ const longBack = (bottom, p) => [path(`M 110 150 C 110 78, 150 60, 200 60 C 250 
 const gloss = (d, sw = 2.1) => path(d, stroke('#fff', sw, 0.09));
 // strands: a fan of fine lines combed from the crown, darker and lighter than the hair by turns, jittered by the seed; clipped to the hair's mass by the caller, so they read as its grain on any style
 // `from` is the crown they fan from, `a0..a1` the fan in radians, `len` how far; a beard combs down from the chin with the same
-const strands =(p, { from = [200, 64], a0 = -0.15, a1 = Math.PI + 0.15, len = 150, n = 22 } = {}) => { const rnd = lcg(p.seed), out = [];
+const strands =(p, { from = [200, 64], a0 = -0.15, a1 = Math.PI + 0.15, len = 150, n = 22, fall = false } = {}) => { const rnd = lcg(p.seed), out = [];
   const dark = 0.16 * (1 - 0.7 * luma(p.hairColor)); // a dark strand on white hair is a crack, so it fades with the hair's lightness
   for (let i = 0; i < n; i++) { const a = a0 + (i / (n - 1)) * (a1 - a0) + (rnd() - 0.5) * 0.12, l = len + rnd() * len * 0.6, x0 = from[0] + (rnd() - 0.5) * 30, y0 = from[1] + (rnd() - 0.5) * 16, x1 = x0 + Math.cos(a) * l, y1 = y0 + Math.sin(a) * l; // out from the crown, then it falls
-    out.push(path(`M ${x0} ${y0} Q ${x1} ${y1} ${x1 + Math.cos(a) * l * 0.15 + (rnd() - 0.5) * 12} ${y1 + l * 0.8}`, stroke(i % 2 ? '#fff' : '#000', 1 + rnd() * 1.2, i % 2 ? 0.08 : dark))); }
+    const j = (rnd() - 0.5) * 12, r = l * 0.4, sx = x0 + Math.cos(a) * r, sy = y0 + Math.max(Math.sin(a), 0.2) * r, hang = `M ${x0} ${y0} Q ${sx} ${sy - r * 0.35} ${sx + Math.cos(a) * r * 0.2} ${sy + r * 0.3} L ${sx + Math.cos(a) * r * 0.2 + j} ${sy + l * 1.2}`; // head hair: over the skull from the crown, then down under its own weight, not a straight spoke
+    out.push(path(fall ? hang : `M ${x0} ${y0} Q ${x1} ${y1} ${x1 + Math.cos(a) * l * 0.15 + j} ${y1 + l * 0.8}`, stroke(i % 2 ? '#fff' : '#000', 1 + rnd() * 1.2, i % 2 ? 0.08 : dark))); }
   return out; };
 // curls: small arcs scattered over the mass, for hair that has no comb direction
 const curls = (p) => { const rnd = lcg(p.seed + 7), out = [];
@@ -1078,7 +1079,7 @@ export function portraitOps(options = {}) {
   const crown0 = HAT_CROWN[p.hat.style], back = fit(hair.back), front = hairline(fit(hair.front));
   const grain = HAIR_TEXTURE[p.hair.style] ?? 'strands', mass = region(grain === 'curls' ? [...back, ...front] : front); // the hair's mass: the front, or with the back for curls (an afro's mass is behind the head)
   const textured = (ops, mass, grainOps) => (grain !== 'none' && mass ? [...ops, clip(mass), ...grainOps, ...soft(200, 96, 46, 22, '#fff', 0.14), UNCLIP] : ops); // the hair with its grain (strands combed from the crown, or curls) and a light on it inside its mass, so it is hair and not a cap
-  const backHair = grain === 'curls' ? textured(back, region(back), curls(p)) : back, frontHair = textured(front, region(front), grain === 'curls' ? curls(p) : strands(p)); // the back's texture goes on behind the head, since the face sits inside an afro's footprint
+  const backHair = grain === 'curls' ? textured(back, region(back), curls(p)) : back, frontHair = textured(front, region(front), grain === 'curls' ? curls(p) : strands(p, { fall: true })); // the back's texture goes on behind the head, since the face sits inside an afro's footprint
   const hairShadow = front.length ? [clip(facePath(p)), ...mapXY(front.filter(solid), (x) => x, (y) => y + 6).map((o) => ({ ...o, fill: '#000', op: 0.14 })), UNCLIP] : []; // the hair's cast shadow on the forehead: the front hair a little lower, dark, inside the face
   const facial = (FACIAL_HAIR[p.facialHair.style] ?? FACIAL_HAIR.none)(p), masked = p.makeup.some((n) => MAKEUP[n]?.mask); // the beard is built on this face's own outline and mouth (beardBand); a mask goes on over the beard, so the beard goes under the skin overlays
   const beard = facial.filter((o) => !o.stache), stache = facial.filter((o) => o.stache); // the mass belongs to the jaw and the moustache to the features, and on a turned head they travel at different rates; a moustache is never inside a clip group, so the two split cleanly
