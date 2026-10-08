@@ -903,12 +903,13 @@ export function arm(p, side, { lift = 0, elbow, wrist, hand = true }) {
     ...(hand ? mitten(p, hx + (dx / L) * 4, hy + (dy / L) * 4, a, 1.25) : []),
   ];
 }
-/** A raised arm's x (arm space, as `arm` takes it) that lands at least `gap` outside the face edge on the sheet. `arm` scales the point about the shoulder by the build's arms and the body maps it about 200 by the shoulders' width, while the head scales by its own: a short-armed people with a big head (a halfling) would otherwise put its hands on its cheeks. A human's point is already clear and comes back unchanged. */
+/** A raised arm's x (arm space, as `arm` takes it) that lands at least `gap` outside the face edge on the sheet. `arm` scales the point about the shoulder by the build's arms and the body maps it about 200 by the shoulders' width, while the head scales by its own: a short-armed people with a big head (a halfling) would otherwise put its hands on its cheeks. A broad, long-armed people (a dragonborn, an orc: shoulders 1.44 times a body up to 1.28) would carry the point as far out again as its shoulders, past the figure's frame, so the reach is capped at a human's of the same body width: up is beside the head, not a span. A human's point is already clear and inside its own reach and comes back unchanged. */
 const handsOut = (p, side, x, gap) => {
   const b = bld(p), bw = p.body.width * b.shoulders, sx = 200 + 94 * side; // the lifted shoulder joint (SHOULDER less the lift's inset)
   const sheet = 200 + (sx + (x - sx) * b.arms - 200) * bw, clear = (p.face.width / 2) * b.head + gap;
-  if (Math.abs(sheet - 200) >= clear) return x;
-  return sx + (200 + (side * clear) / bw - sx) / b.arms;
+  const off = Math.max(clear, Math.min(Math.abs(sheet - 200), Math.abs(x - 200) * p.body.width)); // clear of the face, within a human's reach
+  if (off === Math.abs(sheet - 200)) return x;
+  return sx + (200 + (side * off) / bw - sx) / b.arms;
 };
 const sleeve = (p, x0, y0, x1, y1, sw = 34) => line(x0, y0, x1, y1, stroke(sleeveColor(p), sw));
 const hand = (p, x, y, a = 0, k = 1) => mitten(p, x, y, a - Math.PI / 2, k);

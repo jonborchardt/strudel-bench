@@ -155,6 +155,15 @@ test('lint: handsUp raises the hands beside the head, not onto the face, on a ha
   } finally { PROPS.handsUp.front = front; }
 });
 
+test('lint: handsUp on the broadest builds keeps the hands beside the head, inside the frame (T089)', () => {
+  const hashes = ['eyJzZWVkIjo1ODgzMCwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJkcmFnb25ib3JuIiwib3YiOnsibW91dGguc21pbGUiOjAuMDYsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjA0LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MSwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOi02LCJwb3NlLmhlYWRUaWx0IjotMC4wNSwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6WyJoYW5kc1VwIl19fQ', 'eyJzZWVkIjo4ODk4OTUsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MC40NSwiZXllcy5vcGVubmVzcyI6MS4xNCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOi02LCJwb3NlLmhlYWRUaWx0IjotMC4wNSwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6WyJoYW5kc1VwIl19fQ'];
+  for (const h of hashes) { // a dragonborn and an orc: their shoulders carried the raised hands past -90, the frame's edge
+    const st = decode(h);
+    assert.ok(!lintState(st, { cast: st.theme, stance: 'handsUp', expression: 'none', view: 'figure' }).some((f) => f.name === 'render:offsheet'), st.theme);
+    assert.equal(handOnFace(params(st)), null, st.theme + ': pulled in, still clear of the face');
+  }
+});
+
 test('lint: a stance that moves nothing is pose:stance-noop, a real one is not', () => {
   const st = { ...blank(), ov: { 'pose.turn': 0.6, 'pose.shoulder': 0.7, props: ['handsUp'] } };
   assert.deepEqual(lintState(st, { cast: 'editorial', stance: 'handsUp', expression: 'deadpan', view: 'figure' }), []);
