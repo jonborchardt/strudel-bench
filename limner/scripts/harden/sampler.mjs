@@ -80,8 +80,10 @@ export function drawsPart(state, tuple, part) {
   return JSON.stringify(params(state)).includes(`"${name}"`); // ponytail: a value match, not a path match; a colour named like a part would false-positive, and none is
 }
 
-/** Other combinations that carry a todo's parts, for the regression check after a fix: a seeded pool of random cells, keeping those that draw one of the parts and are not the todo's own evidence, no tuple twice. The seed is the todo's number, so the same todo always gets the same neighbours. */
-export function relatedCells(todo, { n = 8, pool = 2000, casts = CASTS } = {}) {
+const CAST_TRIES = 40;
+
+/** Other combinations that carry a todo's parts, for the regression check after a fix: one cell per cast that can wear a part (the horseshoe, boxBraids and face-panel fixes each reopened under a cast's own light, hat or makeup that a random pool never drew), then random cells of the whole grid up to n; none is the todo's own evidence, no tuple twice. The seed is the todo's number, so the same todo always gets the same neighbours. */
+export function relatedCells(todo, { n = 24, pool = 2000, casts = CASTS } = {}) {
   const rng = prng(1000 + +todo.id.slice(1)), draw = () => 1 + Math.floor(rng() * 999998);
   const stancePart = todo.parts.some((p) => p.startsWith('stance:'));
   // no part can be drawn (unknown only): the casts the todo was seen on stand in, any cell of them
@@ -90,11 +92,20 @@ export function relatedCells(todo, { n = 8, pool = 2000, casts = CASTS } = {}) {
   if (!attributed && !seenOn.size) return [];
   const grid = gridOf(casts).filter((t) => (stancePart ? t.view === 'figure' : true) && (attributed || seenOn.has(t.cast)));
   const cells = [], taken = new Set(todo.evidence);
-  for (let i = 0; i < pool && cells.length < n && grid.length; i++) {
-    const tuple = pick(rng, grid), state = stateFor(tuple, draw()), hash = encode(state);
-    if (taken.has(hash) || taken.has(keyOf(tuple))) continue;
-    if (!attributed || todo.parts.some((p) => drawsPart(state, tuple, p))) { taken.add(hash); taken.add(keyOf(tuple)); cells.push({ tuple, state, flags: [], source: 'related' }); }
+  const tryCell = (tuple) => {
+    const state = stateFor(tuple, draw()), hash = encode(state);
+    if (taken.has(hash) || taken.has(keyOf(tuple))) return false;
+    if (attributed && !todo.parts.some((p) => drawsPart(state, tuple, p))) return false;
+    taken.add(hash); taken.add(keyOf(tuple)); cells.push({ tuple, state, flags: [], source: 'related' });
+    return true;
+  };
+  // one cell per cast first (a cast that never draws the part in its tries cannot wear it), then random cells of the whole grid
+  if (attributed) for (const cast of Object.keys(casts).sort()) {
+    if (cells.length >= n) break;
+    const own = grid.filter((t) => t.cast === cast);
+    for (let i = 0; i < CAST_TRIES && own.length; i++) if (tryCell(pick(rng, own))) break;
   }
+  for (let i = 0; i < pool && cells.length < n && grid.length; i++) tryCell(pick(rng, grid));
   return cells;
 }
 

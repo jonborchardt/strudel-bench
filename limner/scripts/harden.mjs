@@ -105,7 +105,7 @@ const commands = {
   },
   async related([id]) {
     const t = load(TODOS).find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
-    const cells = relatedCells(t, { n: +flag('cells', 8) });
+    const cells = relatedCells(t, { n: +flag('cells', 24) });
     if (!cells.length) return console.log(`${id}: no other combination draws ${t.parts.join(', ')}`);
     const view = viewOf(t), num = `${id}-related`;
     const { file, rects } = await emit(sheetHtml(cells, { view }), join(sheets, num), view);

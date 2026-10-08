@@ -509,6 +509,17 @@ test('sampler: related cells draw one of the todo\'s parts and never its own evi
   assert.equal(drawsPart(stateFor({ cast: 'elves', stance: 'none', expression: 'grin', view: 'bust' }, 3), { stance: 'none', expression: 'grin' }, 'expression:grin'), true);
 });
 
+test('sampler: related cells reach one per cast that can wear a common part', () => {
+  const part = partsOf(stateFor({ cast: 'elves', stance: 'none', expression: 'grin', view: 'bust' }, 1)).find((p) => p.startsWith('eyes:'));
+  const todo = { id: 'T010', parts: [part], evidence: [] };
+  const cells = relatedCells(todo, { n: 24 });
+  const casts = new Set(cells.map((c) => c.tuple.cast));
+  assert.ok(casts.size >= 10, `${part}: ${casts.size} casts`);
+  assert.ok(cells.every((c) => drawsPart(c.state, c.tuple, part)), 'every cell draws the part');
+  assert.equal(new Set(cells.map((c) => keyOf(c.tuple))).size, cells.length, 'no tuple twice');
+  assert.deepEqual(relatedCells(todo, { n: 24 }), cells, 'deterministic');
+});
+
 test('cli: next marks fresh cells, record writes findings into the sheet, attempt parks, related and stats run', () => {
   const dir = mkdtempSync(join(tmpdir(), 'harden-cli-'));
   try {
