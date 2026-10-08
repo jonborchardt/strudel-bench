@@ -156,6 +156,18 @@ test('lint: stack:hair-over-eye, the bob and long hair hang their panels beside 
   } finally { HAIR.bob.front = front; }
 });
 
+test('lint: stack:hair-over-eye is quiet on a chelsea\'s locks beside the eyes, and a lock over the eye still fires (T069)', () => {
+  const st = decode('eyJzZWVkIjo3NTczNzAsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuMywibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MC41LCJtb3V0aC5wcmVzcyI6MC4zLCJleWVzLm9wZW5uZXNzIjowLjgsImV5ZXMuYnJvd0xpZnQiOi0zLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6LTMsImV5ZXMuc3F1aW50IjowLjQsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjQsInBvc2UuaGVhZFRpbHQiOjAsInBvc2UuYm9keVRpbHQiOjAsInBvc2UudHVybiI6LTAuMiwicG9zZS5zaG91bGRlciI6LTAuMjUsInByb3BzIjpbXX19');
+  const p = params(st), tuple = { cast: 'punks', stance: 'statueStill', expression: 'sneer', view: 'figure' };
+  assert.equal(p.hair.style, 'chelsea');
+  assert.ok(!lintState(st, tuple).some((f) => f.name === 'stack:hair-over-eye'), `the locks hang beside the eyes (${hairOverEye(p)})`);
+  const chelsea = HAIR.chelsea;
+  try { // the same lock moved in over the left eye's outer corner
+    HAIR.chelsea = (q) => [{ k: 'path', d: 'M 150 150 C 148 180, 150 210, 152 240 L 164 240 C 162 210, 160 180, 162 152 Z', fill: q.hairColor }];
+    assert.ok(lintState(st, tuple).some((f) => f.name === 'stack:hair-over-eye' && f.parts[0] === 'hair:chelsea'), `a lock over the eye (${hairOverEye(params(st))})`);
+  } finally { HAIR.chelsea = chelsea; }
+});
+
 test('the vanDyke moustache sits over the mouth, not cheek to cheek (T001)', () => {
   const st = decode('eyJzZWVkIjo4MTAzODQsImZhbWlseSI6ImFueSIsInRoZW1lIjoic2NpZmkiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6LTEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo1LCJleWVzLnNxdWludCI6MH19');
   const span = (style) => { const xs = portraitOps(params({ ...st, ov: { ...st.ov, 'facialHair.style': style } })).filter((o) => o.stache).flatMap((o) => pointsOf(o).map(([x]) => x)); return Math.max(...xs) - Math.min(...xs); };

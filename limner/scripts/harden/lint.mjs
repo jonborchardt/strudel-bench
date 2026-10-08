@@ -127,9 +127,14 @@ export function hairOverEye(p) {
   const k = (p.face?.width ?? 156) / 156, ey = 112 + (p.eyes.y - 112) * (p.face?.height ?? 204) / 204, [l, rt] = [-1, 1].map((s) => eyeShape(p, s).xo + HAIR_TURN * (p.pose?.turn ?? 0));
   const panels = (typeof r === 'function' ? r(p) : r.front(p)).filter((o) => o.k === 'path' && o.fill && o.fill !== 'none' && (o.op ?? 1) > 0.5 && pointsOf(o).some(([, y]) => y > ey + 30)); // a shaved head's shadow is not hair over anything
   let over = -Infinity;
-  for (const op of panels) for (const [x0, y] of outlinePts(op.d)) if (Math.abs(y - ey) <= 25) { const x = 200 + (x0 - 200) * k; over = Math.max(over, Math.min(x - l, rt - x)); }
+  for (const op of panels) for (const s of [-1, 1]) {
+    const xs = outlinePts(op.d).filter(([x0, y]) => Math.abs(y - ey) <= 25 && s * (x0 - 200) > 0).map(([x0]) => 200 + (x0 - 200) * k); if (!xs.length) continue;
+    const lock = Math.max(...xs) - Math.min(...xs) < LOCK_W; // a lock beside the eye lays no mass over its corner: it covers the eye only by reaching the lid line (T069: the chelsea's locks at 5..9 outside the corner, the eyes clear)
+    for (const x of xs) over = Math.max(over, Math.min(x - l, rt - x) - (lock ? HAIR_EYE_CLEAR - LOCK_EYE_CLEAR : 0));
+  }
   return over;
 }
+export const LOCK_W = 20, LOCK_EYE_CLEAR = 2; // a panel narrower than LOCK_W at the eye line is a lock, read as if it hung HAIR_EYE_CLEAR - LOCK_EYE_CLEAR further out: the lid line runs 2 past the white's corner
 /** The horn this face wears, as a part: the makeup whose name says horn (T061: the lint named curvedHorns on every dragonborn, whose horns are the hornCrest). */
 /** How much of the white shows over the iris at the lid's peak, the smaller side (T015: a narrow or hooded eye opened to 1.45 kept its iris against the lid). */
 export function whiteOverIris(p) {
