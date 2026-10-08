@@ -2,7 +2,7 @@
 // the ledger that remembers. No browser here: the screenshot is the script's business.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { portraitOps, renderFigure, HAIR } from '../index.mjs';
+import { portraitOps, renderFigure, HAIR, FACIAL_HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
 import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
@@ -517,4 +517,15 @@ test('T079: the wide-eye lint is quiet on openMouth and deadStare, which read op
   const openMouth = decode('eyJzZWVkIjo4NDAyNzMsImZhbWlseSI6ImFueSIsInRoZW1lIjoid2FzdGVsYW5kZXJzIiwib3YiOnsibW91dGguc21pbGUiOjAsIm1vdXRoLm9wZW4iOjAuNTUsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjM1LCJleWVzLmJyb3dMaWZ0Ijo5LCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MywiZXllcy5zcXVpbnQiOjB9fQ'); // T079 evidence 1
   const deadStare = decode('eyJzZWVkIjo5MzYzMDcsImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjIsIm1vdXRoLm9wZW4iOjAuMDgsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjMyLCJleWVzLmJyb3dMaWZ0IjoyLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjEwLCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjotMC4xOCwicG9zZS5ib2R5VGlsdCI6MC4xMywicG9zZS50dXJuIjowLjM1LCJwb3NlLnNob3VsZGVyIjotMC44LCJwcm9wcyI6WyJjbGF3SGFuZHMiXX19'); // T079 evidence 14
   for (const st of [openMouth, deadStare]) assert.ok(!lintState(st, { stance: 'none' }).some((f) => f.name === 'expression:wide-no-white'));
+});
+
+test('T052: the goatee is a tuft with curved sides and grain, not a straight-sided box', () => {
+  const p = params(decode('eyJzZWVkIjo3MzI3ODEsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjM4LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC45NSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAuNSwiZXllcy5zcXVpbnQiOjAuM319')); // T052 evidence 1
+  for (const style of ['goatee', 'vanDyke']) {
+    const ops = FACIAL_HAIR[style](p), patch = ops[1];
+    let last = null, longest = 0; // the longest straight edge: the old patch's sides were 42 long
+    for (const [, c, nums] of patch.d.matchAll(/([MLQCZ])([^MLQCZ]*)/g)) { const v = nums.trim().split(/[ ,]+/).filter(Boolean).map(Number), end = v.length >= 2 ? v.slice(-2) : last; if (c === 'L' && last) longest = Math.max(longest, Math.hypot(end[0] - last[0], end[1] - last[1])); if (end) last = end; }
+    assert.ok(longest < 12, `${style}: a straight edge ${longest.toFixed(1)} long`);
+    assert.ok(ops.filter((o) => o.k === 'clip').length >= 2, `${style}: the grain is drawn inside the patch`);
+  }
 });

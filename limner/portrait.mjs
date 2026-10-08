@@ -648,6 +648,9 @@ const mustache = (p, pull = LIP_PULL, op = 1, style = 'chevron') => {
 };
 // Each style is the band's shape and whether it carries a moustache; `facialHair`'s own dials (color, density,
 // mustache, cheekLine) go over it, so the gap between a stubble and a beard is a number and not a missing style.
+// The chin patch (goatee, vanDyke), drawn for the default mouth (48 wide on the line 260) and clipped to the chin: a tuft under the lip that fills out over the chin and tapers to it, curved sides, not a straight-sided box (T052)
+const CHIN_PATCH = 'M 194 272 Q 200 276 206 272 Q 213 284 216 300 Q 219 314 213 324 L 208 327 L 205 333 L 200 330 L 195 335 L 192 327 L 187 324 Q 181 314 184 300 Q 187 284 194 272 Z';
+const chinPatch = (q) => { const [patch] = onMouth(q, [path(CHIN_PATCH, { fill: q.hairColor })]); return [clip(hull(q, 8)), patch, clip(patch.d), ...strands(q, { from: [200, q.mouth.y + 8], a0: 1.25, a1: Math.PI - 1.25, len: 34, n: 7 }), UNCLIP, UNCLIP]; }; // the grain the full beard has, so the patch reads as hair
 const BEARDS = {
   none: null,
   lightStubble: { op: 0.09, chin: 0, stubble: true, stache: true, stacheStyle: 'walrus' }, // a shadow of hair grows on the upper lip as well: a stubble with a shaved moustache is a choice, not the default (facialHair.mustache 0 makes it one) // a stubble is a shadow of hair, so it is never lighter than the skin: pale hair is pulled toward dark for it
@@ -681,7 +684,7 @@ export function beardOps(p, spec) { // exported for a pack that registers a bear
   const stache = f.mustache == null ? !!spec.stache : !!f.mustache, stacheStyle = f.mustacheStyle ?? spec.stacheStyle ?? 'chevron'; // the style's own moustache, or the one this face asks for over it
   return [
     ...(spec.band === false ? [] : beardBand(q, { top, cheek: spec.cheek, lip: spec.lip, chin: spec.chin, sharp: spec.sharp, width: spec.width, op })),
-    ...(spec.chinPatch ? [clip(hull(q, 8)), ...onMouth(q, [path('M 184 271 Q 200 282 216 271 L 211 313 Q 200 321 189 313 Z', { fill: q.hairColor })]), UNCLIP] : []),
+    ...(spec.chinPatch ? chinPatch(q) : []),
     ...(stache && spec.band !== false ? stacheJoin(q, stacheStyle, spec.lip ?? 14, op) : []), // the corners of the mouth, so the moustache and the mass under it are one beard
     ...(stache ? mustache(q, spec.pull ?? (spec.band === false ? LIP_PULL : BEARD_PULL), spec.stacheOp ?? op, stacheStyle) : []), // the moustache is the same hair: the beard's colour and the beard's weight
   ];
