@@ -532,10 +532,11 @@ const CAP = (p) => [path('M 126 163 C 124 121, 150 91, 199 90 C 247 91, 275 121,
 const longBack = (bottom, p) => [path(`M 110 150 C 110 78, 150 60, 200 60 C 250 60, 290 78, 290 150 L 294 ${bottom} Q 294 ${bottom + 20} 274 ${bottom + 20} L 126 ${bottom + 20} Q 106 ${bottom + 20} 106 ${bottom} Z`, { fill: shade(p.hairColor, 0.8) })]; // the sheet of long hair behind the neck and shoulders
 const gloss = (d, sw = 2.1) => path(d, stroke('#fff', sw, 0.09));
 // strands: a fan of fine lines combed from the crown, darker and lighter than the hair by turns, jittered by the seed; clipped to the hair's mass by the caller, so they read as its grain on any style
-// `from` is the crown they fan from, `a0..a1` the fan in radians, `len` how far; a beard combs down from the chin with the same
+// `from` is the crown they fan from, `a0..a1` the fan in radians, `len` how far; a beard combs down from the chin with the same.
+// Head hair (`fall`) starts each strand on a ring 40..68 out from the crown in its own direction: started at the one point, the fan met there and read as wireframe spokes on pale hair (T011)
 const strands =(p, { from = [200, 64], a0 = -0.15, a1 = Math.PI + 0.15, len = 150, n = 22, fall = false } = {}) => { const rnd = lcg(p.seed), out = [];
   const dark = 0.16 * (1 - 0.7 * luma(p.hairColor)); // a dark strand on white hair is a crack, so it fades with the hair's lightness
-  for (let i = 0; i < n; i++) { const a = a0 + (i / (n - 1)) * (a1 - a0) + (rnd() - 0.5) * 0.12, l = len + rnd() * len * 0.6, x0 = from[0] + (rnd() - 0.5) * 30, y0 = from[1] + (rnd() - 0.5) * 16, x1 = x0 + Math.cos(a) * l, y1 = y0 + Math.sin(a) * l; // out from the crown, then it falls
+  for (let i = 0; i < n; i++) { const a = a0 + (i / (n - 1)) * (a1 - a0) + (rnd() - 0.5) * 0.12, l = len + rnd() * len * 0.6, rs = fall ? 40 + (i % 3) * 14 : 0, x0 = from[0] + (rnd() - 0.5) * 30 + Math.cos(a) * rs, y0 = from[1] + (rnd() - 0.5) * 16 + Math.max(Math.sin(a), 0) * rs * 0.6, x1 = x0 + Math.cos(a) * l, y1 = y0 + Math.sin(a) * l; // out from the crown, then it falls
     const j = (rnd() - 0.5) * 12, r = l * 0.4, sx = x0 + Math.cos(a) * r, sy = y0 + Math.max(Math.sin(a), 0.2) * r, hang = `M ${x0} ${y0} Q ${sx} ${sy - r * 0.35} ${sx + Math.cos(a) * r * 0.2} ${sy + r * 0.3} L ${sx + Math.cos(a) * r * 0.2 + j} ${sy + l * 1.2}`; // head hair: over the skull from the crown, then down under its own weight, not a straight spoke
     out.push(path(fall ? hang : `M ${x0} ${y0} Q ${x1} ${y1} ${x1 + Math.cos(a) * l * 0.15 + j} ${y1 + l * 0.8}`, stroke(i % 2 ? '#fff' : '#000', 1 + rnd() * 1.2, i % 2 ? 0.08 : dark))); }
   return out; };
