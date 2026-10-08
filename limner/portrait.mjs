@@ -728,18 +728,23 @@ export function beardOps(p, spec) { // exported for a pack that registers a bear
   // shows the mouth and the cheek's planes through itself, which reads as a stain and not as a thin beard, and on a
   // pale-haired face it is a dark smudge whichever way the hair goes. The two stubble styles keep their wash when no
   // density is asked for, since a stubble with no dial on it is a shadow of hair and drawn as one.
-  // A stubble stays a wash at every density: the dial weighs the shadow (0.5 the style's own), it never turns it into an
-  // opaque band of skin-tinted hair, which read as a full beard mask with the jaw under it (T132).
-  const fill = spec.stubble ? mix(color, '#3a2a24', 0.45) : d == null ? color : mix(p.skin, color, 0.35 + 0.65 * d);
+  // A stubble with a density builds up toward a short beard: the hair's own colour, its weight growing with the dial
+  // and its grain coming in once it is past a wash. It is never tinted toward the skin and never opaque, the skin and
+  // the jaw always showing through: an opaque skin-tinted band read as a tan sheet on pale hair and a solid mask on
+  // black (T132). The calibration face (heavyStubble at 0.42, the user's own likeness) is this short beard.
+  const fill = spec.stubble ? (d == null ? mix(color, '#3a2a24', 0.45) : color) : d == null ? color : mix(p.skin, color, 0.35 + 0.65 * d);
   const q = { ...p, hairColor: fill };
-  const op = spec.stubble ? spec.op * (d == null ? 1 : 0.6 + 0.8 * d) : d == null ? spec.op ?? 1 : 1;
+  const op = spec.stubble ? (d == null ? spec.op : Math.min(0.72, spec.op + d)) : d == null ? spec.op ?? 1 : 1;
+  // A built-up stubble's moustache and mouth corners overlap the band: drawn at its weight they doubled it into dark
+  // patches, so they are drawn solid in the colour the band shows over the skin, and meet it without a seam.
+  const builtUp = spec.stubble && d != null, built = builtUp ? { ...p, hairColor: mix(p.skin, color, op) } : q, builtOp = builtUp ? 1 : op;
   const top = f.cheekLine == null ? spec.top : 46 - 32 * unit(f.cheekLine); // 0: a beard line low on the jaw; 1: up to the cheekbone
   const stache = f.mustache == null ? !!spec.stache : !!f.mustache, stacheStyle = f.mustacheStyle ?? spec.stacheStyle ?? 'chevron'; // the style's own moustache, or the one this face asks for over it
   return [
     ...(spec.band === false ? [] : beardBand(q, { top, cheek: spec.cheek, lip: spec.lip, chin: spec.chin, sharp: spec.sharp, width: spec.width, op })),
     ...(spec.chinPatch ? chinPatch(q) : []),
-    ...(stache && spec.band !== false ? stacheJoin(q, stacheStyle, spec.lip ?? 14, op) : []), // the corners of the mouth, so the moustache and the mass under it are one beard
-    ...(stache ? mustache(q, spec.pull ?? (spec.band === false ? LIP_PULL : BEARD_PULL), spec.stacheOp ?? op, stacheStyle) : []), // the moustache is the same hair: the beard's colour and the beard's weight
+    ...(stache && spec.band !== false ? stacheJoin(built, stacheStyle, spec.lip ?? 14, builtOp) : []), // the corners of the mouth, so the moustache and the mass under it are one beard
+    ...(stache ? mustache(spec.stacheOp == null ? built : q, spec.pull ?? (spec.band === false ? LIP_PULL : BEARD_PULL), spec.stacheOp ?? builtOp, stacheStyle) : []), // the moustache is the same hair: the beard's colour and the beard's weight
   ];
 }
 export const FACIAL_HAIR = Object.fromEntries(Object.entries(BEARDS).map(([name, spec]) => [name, (p) => beardOps(p, spec)]));

@@ -70,3 +70,5 @@ part removed from a pool, a range pinned) must say so in its commit; variety is 
 ## Corrections
 
 When the user corrects a judgment, the correction goes here, dated, as a rule the next reader follows.
+
+2026-10-08: Cell 1 is the user's own likeness. A fix that changes it is a regression unless the user asked for the change; the calibration golden test says so.

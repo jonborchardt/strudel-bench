@@ -636,3 +636,11 @@ test('lint: stack:panel-off-face, a bob\'s panels follow the face they hang besi
     assert.ok(hairOverEye(q) < -HAIR_EYE_CLEAR, `${style} ${width} ${turn}: eye ${hairOverEye(q)}`);
   }
 });
+
+// This is the user's own likeness (cell 1 of every sheet, built by hand in the editor: a short brown beard and a
+// moustache, heavyStubble at density 0.42). A change here is made on purpose, with the user's say, or not at all.
+test('the calibration face draws the ops it drew (test/fixtures/calibration-golden.json)', () => {
+  const url = new URL('./fixtures/calibration-golden.json', import.meta.url), now = JSON.parse(JSON.stringify(portraitOps(params(decode(CALIBRATION)))));
+  if (process.env.UPDATE_GOLDEN) writeFileSync(url, JSON.stringify(now));
+  assert.deepEqual(now, JSON.parse(readFileSync(url, 'utf8')), 'the calibration face moved: a regression unless the user asked for it');
+});
