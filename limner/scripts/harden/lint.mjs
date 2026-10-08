@@ -90,6 +90,9 @@ export function hairOverEye(p) {
   for (const op of panels) for (const [x0, y] of pointsOf(op)) if (Math.abs(y - ey) <= 25) { const x = 200 + (x0 - 200) * k; over = Math.max(over, Math.min(x - l, rt - x)); }
   return over;
 }
+/** The horn this face wears, as a part: the makeup whose name says horn (T061: the lint named curvedHorns on every dragonborn, whose horns are the hornCrest). */
+export const hornParts = (p) => { const h = (p.makeup ?? []).filter((n) => /horn/i.test(n)).map((n) => `makeup:${n}`); return h.length ? h : ['unknown:horn']; };
+
 export const HAIR_EYE_CLEAR = 10; // how far outside an eye's outer corner a panel's edge must hang
 
 const POSE_KEYS =['pose.headX', 'pose.headY', 'pose.headTilt', 'pose.bodyTilt', 'pose.turn', 'pose.shoulder', 'props'];
@@ -98,7 +101,7 @@ export function lintState(st, tuple) {
   const p = params(st), ops = portraitOps(p), out = lintOps(ops, { dy: FEET_Y - feetY(p) });
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human' && muzzleGap(p) < 2) out.push({ name: 'anatomy:muzzle-mouth', parts: ['unknown:muzzle'], detail: `the mouth line is ${muzzleGap(p).toFixed(1)} under the nostrils` });
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human') { const past = mouthPastMuzzle(p, ops); if (past > MOUTH_PAST_MUZZLE) out.push({ name: 'anatomy:mouth-past-muzzle', parts: [`mouth:${p.mouth.style}`], detail: `the mouth runs ${past.toFixed(1)} past the muzzle pad (over ${MOUTH_PAST_MUZZLE})` }); }
-  const hornOut = hornStrokesOut(ops); if (hornOut) out.push({ name: 'render:horn-stroke-out', parts: ['makeup:curvedHorns'], detail: `a horn's stroke ends at ${hornOut.map((v) => v.toFixed(1))}, outside the horn` });
+  const hornOut = hornStrokesOut(ops); if (hornOut) out.push({ name: 'render:horn-stroke-out', parts: hornParts(p), detail: `a horn's stroke ends at ${hornOut.map((v) => v.toFixed(1))}, outside the horn` });
   const hair = hairOverEye(p); if (hair > -HAIR_EYE_CLEAR) out.push({ name: 'stack:hair-over-eye', parts: [`hair:${p.hair.style}`], detail: `a front hair panel hangs ${(-hair).toFixed(1)} outside an eye's outer corner (under ${HAIR_EYE_CLEAR})` });
   if (tuple.stance && tuple.stance !== 'none') {
     const ov = { ...st.ov }; for (const k of POSE_KEYS) delete ov[k];

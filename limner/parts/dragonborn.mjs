@@ -25,7 +25,7 @@ MAKEUP.hornCrest = { fit: 'face', over: () => [-1, 1].flatMap((sd) => [
   path(`M ${200 + sd * 46} 162 C ${200 + sd * 64} 138, ${200 + sd * 80} 110, ${200 + sd * 92} 74` // the upper edge, back and up to the tip
     + ` C ${200 + sd * 76} 106, ${200 + sd * 58} 132, ${200 + sd * 36} 150 Z`, { fill: SPIKE, horn: true }), // and the lower edge home, so it tapers to a point
   path(`M ${200 + sd * 50} 156 C ${200 + sd * 66} 134, ${200 + sd * 80} 108, ${200 + sd * 90} 78`, stroke('#9a8b7e', 2, 0.35)), // the light along its back
-  ...[0, 1, 2].map((i) => path(`M ${200 + sd * (44 + i * 14)} ${154 - i * 24} L ${200 + sd * (56 + i * 13)} ${146 - i * 22}`, stroke('#2b2220', 1.8, 0.45))), // growth ridges across it
+  ...[0, 1, 2].map((i) => path(`M ${200 + sd * (44 + i * 15.5)} ${154 - i * 24} L ${200 + sd * (56 + i * 12)} ${146 - i * 22}`, stroke('#2b2220', 1.8, 0.45))), // growth ridges across it, each end inside the horn: it narrows toward the tip, and the third ridge at 14 and 13 a step ran out of both edges (T061)
   ...(sd > 0 ? [-1, 0, 1].map((k) => path(`M ${200 + k * 17 - 7} 120 L ${200 + k * 17} ${104 - (k ? 4 : 0)} L ${200 + k * 17 + 7} 120 Z`, { fill: SPIKE, op: 0.9, spike: true })) : [])]) }; // three low spines on the crown between them
 
 TOPS.scaleMailShirt = (p) => { const c = p.top.color, dark = shade(c, 0.6); return [

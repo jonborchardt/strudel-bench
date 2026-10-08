@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, mouthPastMuzzle, MOUTH_PAST_MUZZLE } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -81,6 +81,16 @@ test('lint: render:horn-stroke-out, a horn\'s ridges and highlight end inside th
   assert.ok(!lintState(st, { cast: 'tieflings', stance: 'none', expression: 'squint', view: 'bust' }).some((f) => f.name === 'render:horn-stroke-out'));
   const [x, y] = pointsOf(ops[h])[0], whisker = [...ops.slice(0, h + 1), { k: 'path', d: `M ${x} ${y - 10} Q ${x + 20} ${y - 18} ${x + 40} ${y - 14}`, fill: 'none' }, ...ops.slice(h + 1)];
   assert.ok(hornStrokesOut(whisker), 'a ridge run out past the horn is named');
+});
+
+test('lint: render:horn-stroke-out, a dragonborn hornCrest\'s ridges end inside the horn, and the lint names that horn (T061)', () => {
+  const st = decode('eyJzZWVkIjo4MzE4MTEsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLCJtb3V0aC5vcGVuIjowLjU1LCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MS4zNSwiZXllcy5icm93TGlmdCI6OSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjMsImV5ZXMuc3F1aW50IjowfX0');
+  const p = params(st), ops = portraitOps(p), h = ops.findIndex((o) => o.horn);
+  assert.ok(p.makeup.includes('hornCrest') && h >= 0, 'the evidence face wears the crest');
+  assert.equal(hornStrokesOut(ops), null);
+  const [x, y] = pointsOf(ops[h])[0], whisker = [...ops.slice(0, h + 1), { k: 'path', d: `M ${x} ${y - 10} L ${x + 40} ${y - 14}`, fill: 'none' }, ...ops.slice(h + 1)];
+  assert.ok(hornStrokesOut(whisker), 'a ridge run out past the crest is named');
+  assert.deepEqual(hornParts(p), ['makeup:hornCrest']);
 });
 
 test('lint: stack:hair-over-eye, a bluntBob\'s panels hang beside the eyes, not over them (T012)', () => {
