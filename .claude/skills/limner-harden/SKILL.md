@@ -16,7 +16,7 @@ The sheet pngs are the loop's *then* side and live only where they were rendered
 
 ## One cycle
 
-**Survey: three sheets.** For each of the three:
+**Survey: ten sheets.** More sheets before a fix means truer `seen` counts, and the stats need the volume. For each of the ten:
 
 1. `npm run harden -- next`. Read the table it prints and the png.
 2. Judge every cell but cell 1 against the rubric, cell 1 being the scale. For a face fault on a figure sheet, `npm run harden -- crop <sheet> head` first.
