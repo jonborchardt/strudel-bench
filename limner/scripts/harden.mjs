@@ -9,6 +9,9 @@
 //   node limner/scripts/harden.mjs todos [--all]
 //   node limner/scripts/harden.mjs verify <id> [--html]
 //   node limner/scripts/harden.mjs close <id> --commit <sha> [--lint <name>] | --wontfix "why"
+//   node limner/scripts/harden.mjs attempt <id> "<what was tried>"      three park the entry
+//   node limner/scripts/harden.mjs related <id> [--cells 8] [--html]    other combinations drawing its parts: the regression check
+//   node limner/scripts/harden.mjs stats                                defects per sheet, fresh cells told apart
 //
 // --dir names the folder holding todos.json, coverage.json and sheets/ (default: limner/scripts/harden).
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
@@ -16,9 +19,9 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { encode, decode } from '../schema.mjs';
 import { lintState } from './harden/lint.mjs';
-import { pickCells, bump, keyOf } from './harden/sampler.mjs';
+import { pickCells, bump, keyOf, relatedCells } from './harden/sampler.mjs';
 import { sheetHtml, pairsHtml, screenshot, svgOf, LAYOUT } from './harden/sheet.mjs';
-import { record, rank, close, load, save } from './harden/ledger.mjs';
+import { record, rank, close, load, save, attempt, isParked, statsOf, MAX_ATTEMPTS } from './harden/ledger.mjs';
 
 const argv = process.argv.slice(2);
 const flag = (name, dflt) => { const i = argv.indexOf('--' + name); return i < 0 ? dflt : argv[i + 1]; };
@@ -49,7 +52,7 @@ const commands = {
     const view = flag('view', n % 2 ? 'bust' : 'figure'), coverage = readJson(COVERAGE, {});
     const cells = pickCells({ coverage, n: +flag('cells', 9), view, sheet: n, pool: +flag('pool', 200) });
     const { file, rects } = await emit(sheetHtml(cells, { view }), join(sheets, num), view);
-    const rows = cells.map((c, i) => ({ n: i + 1, tuple: c.tuple, key: c.tuple.cast === 'calibration' ? 'calibration' : keyOf(c.tuple), hash: encode(c.state), flags: c.flags, source: c.source, rect: rects?.[i] ?? null }));
+    const rows = cells.map((c, i) => ({ n: i + 1, tuple: c.tuple, key: c.tuple.cast === 'calibration' ? 'calibration' : keyOf(c.tuple), hash: encode(c.state), flags: c.flags, source: c.source, rect: rects?.[i] ?? null, fresh: c.tuple.cast !== 'calibration' && !(coverage[keyOf(c.tuple)] > 0) })); // before bump
     writeFileSync(join(sheets, `${num}.json`), JSON.stringify({ sheet: num, view, crop: null, png: file, cells: rows }, null, 1));
     writeFileSync(COVERAGE, JSON.stringify(bump(coverage, cells), null, 1) + '\n');
     console.log(`sheet ${num}   ${file}\n${table(rows)}`);
@@ -71,11 +74,37 @@ const commands = {
     for (const id of r.seen) console.log(`seen ${id}  now ${todos.find((t) => t.id === id).seen}x`);
     for (const id of r.wontfix) console.log(`wontfix ${id} seen again (not reopened)`);
     for (const x of r.refused) console.log(`refused cell ${x.cell}: ${x.why}`);
+    // the sheet remembers what was found on it: a clean sheet is findings: [], which is what makes it count in stats
+    s.findings = r.accepted.map(({ cell, id }) => { const f = findings.find((x) => x.cell === cell); return { cell, category: f.category, severity: f.severity, id }; });
+    writeFileSync(join(sheets, `${num}.json`), JSON.stringify(s, null, 1));
+    console.log(`recorded ${s.findings.length} findings on sheet ${num}`);
   },
   todos() {
-    const todos = load(TODOS), list = has('all') ? todos : rank(todos);
-    if (!list.length) return console.log(has('all') ? 'no todos' : 'no open todos');
-    console.log(list.map((t) => `${t.id}  ${t.severity}x${t.seen}  ${t.category.padEnd(10)} ${t.parts.join(',').padEnd(36)} ${t.title}${t.status === 'open' ? '' : '  (' + t.status + (t.commit ? ' ' + t.commit : '') + ')'}`).join('\n'));
+    const todos = load(TODOS), list = has('all') ? todos : rank(todos), parked = todos.filter(isParked);
+    if (!list.length) console.log(has('all') ? 'no todos' : 'no open todos');
+    else console.log(list.map((t) => `${t.id}  ${t.severity}x${t.seen}  ${t.category.padEnd(10)} ${t.parts.join(',').padEnd(36)} ${t.title}${t.status === 'open' && !isParked(t) ? '' : '  (' + (isParked(t) ? `parked ${t.attempts}/${MAX_ATTEMPTS}` : t.status + (t.commit ? ' ' + t.commit : '')) + ')'}`).join('\n'));
+    if (parked.length) console.log(`parked: ${parked.map((t) => t.id).join(', ')} (${MAX_ATTEMPTS} attempts; see --all)`);
+  },
+  attempt([id, note]) {
+    const todos = load(TODOS), t = attempt(todos, id, note ?? '', { today }); save(TODOS, todos);
+    console.log(`${id} attempt ${t.attempts}/${MAX_ATTEMPTS}${isParked(t) ? '  parked: record what was tried in the ledger, move on' : ''}`);
+  },
+  async related([id]) {
+    const t = load(TODOS).find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
+    const cells = relatedCells(t, { n: +flag('cells', 8) });
+    if (!cells.length) return console.log(`${id}: no other combination draws ${t.parts.join(', ')}`);
+    const view = t.parts.some((p) => p.startsWith('stance:')) ? 'figure' : 'bust', num = `${id}-related`;
+    const { file, rects } = await emit(sheetHtml(cells, { view }), join(sheets, num), view);
+    const rows = cells.map((c, i) => ({ n: i + 1, tuple: c.tuple, key: keyOf(c.tuple), hash: encode(c.state), flags: c.flags, source: c.source, rect: rects?.[i] ?? null, fresh: false }));
+    writeFileSync(join(sheets, `${num}.json`), JSON.stringify({ sheet: num, view, crop: null, png: file, cells: rows }, null, 1));
+    console.log(`sheet ${num}   ${file}\n${table(rows)}`);
+  },
+  stats() {
+    const recorded = readdirSync(sheets).filter((f) => f.endsWith('.json')).sort().map((f) => JSON.parse(readFileSync(join(sheets, f), 'utf8'))).filter((s) => Array.isArray(s.findings));
+    if (!recorded.length) return console.log('no recorded sheets');
+    const { rows, fresh } = statsOf(recorded), rate = (x) => `${x.rate ?? 'n/a'} (${x.defects}/${x.cells})`;
+    for (const r of rows) console.log(`${r.sheet}  cells ${r.cells}  fresh ${r.freshCells}  defects 3:${r.s3} 2:${r.s2} 1:${r.s1}  on fresh ${r.freshDefects}`);
+    console.log(`fresh defects per fresh cell: early ${rate(fresh.early)}  late ${rate(fresh.late)}`);
   },
   async verify([id]) {
     const todos = load(TODOS), t = todos.find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
@@ -97,5 +126,5 @@ const commands = {
   },
 };
 
-if (!commands[cmd]) { console.error(`usage: harden next|crop|lint|record|todos|verify|close (see the header of ${fileURLToPath(import.meta.url)})`); process.exit(2); }
+if (!commands[cmd]) { console.error(`usage: harden next|crop|lint|record|todos|verify|close|attempt|related|stats (see the header of ${fileURLToPath(import.meta.url)})`); process.exit(2); }
 try { await commands[cmd](args); } catch (e) { console.error(e.message); process.exit(1); }

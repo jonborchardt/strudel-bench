@@ -7,15 +7,15 @@ import { blank } from '../schema.mjs';
 import { SHEET, pointsOf, lintOps, lintState } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
-import { params, decode } from '../schema.mjs';
-import { CALIBRATION, gridOf, keyOf, stateFor, pickCells, bump } from '../scripts/harden/sampler.mjs';
+import { params, decode, encode } from '../schema.mjs';
+import { CALIBRATION, gridOf, keyOf, stateFor, pickCells, bump, relatedCells, drawsPart } from '../scripts/harden/sampler.mjs';
 import { CROPS, LAYOUT, svgOf, sheetHtml, pairsHtml } from '../scripts/harden/sheet.mjs';
 import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CATEGORIES, fingerprint, nextId, record, rank, close, load, save } from '../scripts/harden/ledger.mjs';
+import { CATEGORIES, fingerprint, nextId, record, rank, close, load, save, MAX_ATTEMPTS, attempt, isParked, statsOf } from '../scripts/harden/ledger.mjs';
 
 test('lint: pointsOf reads every op kind as x,y pairs', () => {
   assert.deepEqual(pointsOf({ k: 'path', d: 'M 10 20 L 30 40 C 1 2 3 4 5 6 Z' }), [[10, 20], [30, 40], [1, 2], [3, 4], [5, 6]]);
@@ -184,6 +184,65 @@ test('cli: lint prints the flags of one state', () => {
   try {
     assert.match(cli(dir, 'lint', JSON.stringify({ seed: 3, ov: {} })), /clean/);
     assert.match(cli(dir, 'lint', JSON.stringify({ seed: 3, ov: {} }), '--stance', 'deadStill'), /pose:stance-noop/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('ledger: three attempts park an entry out of the ranking, record names the entry each finding landed in', () => {
+  const todos = [];
+  const r = record(todos, [finding({ note: 'a', parts: ['a'] }), finding({ note: 'b', parts: ['b'] })], { sheet: '0001', today: '2026-10-07' });
+  assert.deepEqual(r.accepted, [{ cell: 2, id: 'T001' }, { cell: 2, id: 'T002' }]);
+  assert.equal(todos[0].attempts, 0); assert.deepEqual(todos[0].tried, []);
+  for (let i = 1; i <= MAX_ATTEMPTS; i++) { const t = attempt(todos, 'T001', 'try ' + i, { today: '2026-10-08' }); assert.equal(t.attempts, i); }
+  assert.ok(isParked(todos[0])); assert.deepEqual(todos[0].tried, ['2026-10-08: try 1', '2026-10-08: try 2', '2026-10-08: try 3']);
+  assert.deepEqual(rank(todos).map((t) => t.id), ['T002'], 'a parked entry is not ranked');
+  assert.ok(!isParked({ status: 'open' }), 'an entry from before attempts existed is not parked');
+  const again = record(todos, [finding({ note: 'a', parts: ['a'], hash: 'H9' })], { sheet: '0002', today: '2026-10-09' });
+  assert.deepEqual(again.seen, ['T001'], 'a parked entry still counts when seen');
+  assert.throws(() => attempt(todos, 'T099', 'x', { today: '2026-10-09' }), /T099/);
+});
+
+test('ledger: statsOf counts defects per sheet by severity and fresh defects early against late', () => {
+  const sheet = (n, fresh, findings) => ({ sheet: n, cells: [{ n: 1, tuple: { cast: 'calibration' }, fresh: false }, { n: 2, tuple: { cast: 'elves' }, fresh: fresh[0] }, { n: 3, tuple: { cast: 'orcs' }, fresh: fresh[1] }], findings });
+  const { rows, fresh } = statsOf([
+    sheet('0001', [true, true], [{ cell: 2, category: 'stack', severity: 3, id: 'T001' }, { cell: 3, category: 'style', severity: 1, id: 'T002' }]),
+    sheet('0002', [true, false], []),
+    sheet('0003', [false, true], [{ cell: 2, category: 'pose', severity: 2, id: 'T003' }]),
+    sheet('0004', [true, true], [{ cell: 3, category: 'stack', severity: 3, id: 'T001' }]),
+  ]);
+  assert.deepEqual(rows[0], { sheet: '0001', cells: 2, freshCells: 2, s3: 1, s2: 0, s1: 1, freshDefects: 2 });
+  assert.deepEqual(rows[1], { sheet: '0002', cells: 2, freshCells: 1, s3: 0, s2: 0, s1: 0, freshDefects: 0 });
+  assert.deepEqual(rows[2], { sheet: '0003', cells: 2, freshCells: 1, s3: 0, s2: 1, s1: 0, freshDefects: 0 }, 'a defect on a seen cell is not a fresh defect');
+  assert.deepEqual(fresh.early, { cells: 3, defects: 2, rate: 0.67 }); assert.deepEqual(fresh.late, { cells: 3, defects: 1, rate: 0.33 });
+  assert.deepEqual(statsOf([sheet('0001', [false, false], [])]).fresh, { early: { cells: 0, defects: 0, rate: null }, late: { cells: 0, defects: 0, rate: null } });
+});
+
+test('sampler: related cells draw one of the todo\'s parts and never its own evidence', () => {
+  const todo = { id: 'T005', parts: ['hat:leafCirclet', 'stance:swaggerLean'], evidence: [] };
+  const cells = relatedCells(todo, { n: 4, pool: 600 });
+  assert.ok(cells.length >= 1 && cells.length <= 4, `${cells.length} related cells`);
+  assert.ok(cells.every((c) => c.tuple.view === 'figure'), 'a stance part means figures');
+  assert.ok(cells.every((c) => c.tuple.stance === 'swaggerLean' || JSON.stringify(params(c.state)).includes('"leafCirclet"')));
+  assert.deepEqual(relatedCells(todo, { n: 4, pool: 600 }), cells, 'deterministic per todo');
+  const seen = relatedCells({ ...todo, evidence: cells.map((c) => encode(c.state)) }, { n: 4, pool: 600 });
+  assert.ok(!seen.some((c) => cells.some((d) => encode(d.state) === encode(c.state))), 'the evidence itself is never a neighbour');
+  assert.deepEqual(relatedCells({ id: 'T006', parts: ['unknown'], evidence: [] }, { n: 4, pool: 100 }), [], 'unknown has no neighbours');
+  assert.equal(drawsPart(stateFor({ cast: 'elves', stance: 'none', expression: 'grin', view: 'bust' }, 3), { stance: 'none', expression: 'grin' }, 'expression:grin'), true);
+});
+
+test('cli: next marks fresh cells, record writes findings into the sheet, attempt parks, related and stats run', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'harden-cli-'));
+  try {
+    cli(dir, 'next', '--html', '--cells', '3', '--pool', '0');
+    const s1 = JSON.parse(readFileSync(join(dir, 'sheets', '0001.json'), 'utf8'));
+    assert.deepEqual(s1.cells.map((c) => c.fresh), [false, true, true], 'calibration is never fresh, the first sight of a tuple is');
+    assert.match(cliIn(dir, JSON.stringify([{ cell: 2, category: 'stack', parts: ['hat:beanie'], severity: 2, note: 'x' }]), 'record', '0001'), /recorded 1 findings on sheet 0001/);
+    assert.deepEqual(JSON.parse(readFileSync(join(dir, 'sheets', '0001.json'), 'utf8')).findings, [{ cell: 2, category: 'stack', severity: 2, id: 'T001' }]);
+    assert.match(cliIn(dir, '[]', 'record', '0001'), /recorded 0 findings/); assert.deepEqual(JSON.parse(readFileSync(join(dir, 'sheets', '0001.json'), 'utf8')).findings, [], 'a re-record replaces');
+    assert.match(cli(dir, 'stats'), /0001\s+cells 2\s+fresh 2\s+defects 3:0 2:0 1:0/);
+    for (let i = 1; i <= 3; i++) assert.match(cli(dir, 'attempt', 'T001', 'try ' + i), new RegExp(`T001 attempt ${i}/3`));
+    assert.match(cli(dir, 'todos'), /no open todos\s*\n?parked: T001/); assert.match(cli(dir, 'todos', '--all'), /parked 3\/3/);
+    const rel = cli(dir, 'related', 'T001', '--html', '--cells', '2');
+    assert.ok(/no other combination/.test(rel) || existsSync(join(dir, 'sheets', 'T001-related.json')), rel);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

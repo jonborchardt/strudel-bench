@@ -4,7 +4,7 @@
 import { CASTS } from '../../registry.mjs';
 import { stanceNames } from '../../stances.mjs';
 import { EXPRESSIONS, EDITORIAL_EXPRESSIONS } from '../../people.mjs';
-import { controlsFor, posePreset, decode } from '../../schema.mjs';
+import { controlsFor, posePreset, decode, encode, params } from '../../schema.mjs';
 import { prng, pick } from '../../rng.mjs';
 import { lintState } from './lint.mjs';
 
@@ -48,6 +48,29 @@ export function pickCells({ coverage = {}, n = 9, view = 'bust', sheet = 1, lint
   for (const c of flagged) { const k = keyOf(c.tuple); if (cells.length < n && !taken.has(k)) { taken.add(k); cells.push(c); } }
   const rest = grid.map((t, i) => ({ t, i, c: coverage[keyOf(t)] ?? 0 })).sort((a, b) => a.c - b.c || a.i - b.i);
   for (const { t } of rest) { const k = keyOf(t); if (cells.length >= n) break; if (taken.has(k)) continue; taken.add(k); cells.push({ tuple: t, state: stateFor(t, draw()), flags: [], source: 'coverage' }); }
+  return cells;
+}
+
+/** Whether a cell draws one of the parts a todo names: a stance or expression by its tuple, any other `kind:name` by the name appearing as a value in the drawn params, `unknown` never. */
+export function drawsPart(state, tuple, part) {
+  const [kind, name] = part.split(':');
+  if (kind === 'unknown' || !name) return false;
+  if (kind === 'stance') return tuple.stance === name;
+  if (kind === 'expression') return tuple.expression === name;
+  return JSON.stringify(params(state)).includes(`"${name}"`); // ponytail: a value match, not a path match; a colour named like a part would false-positive, and none is
+}
+
+/** Other combinations that carry a todo's parts, for the regression check after a fix: a seeded pool of random cells, keeping those that draw one of the parts and are not the todo's own evidence, no tuple twice. The seed is the todo's number, so the same todo always gets the same neighbours. */
+export function relatedCells(todo, { n = 8, pool = 2000, casts = CASTS } = {}) {
+  const rng = prng(1000 + +todo.id.slice(1)), draw = () => 1 + Math.floor(rng() * 999998);
+  const stancePart = todo.parts.some((p) => p.startsWith('stance:'));
+  const grid = gridOf(casts).filter((t) => (stancePart ? t.view === 'figure' : true));
+  const cells = [], taken = new Set(todo.evidence);
+  for (let i = 0; i < pool && cells.length < n; i++) {
+    const tuple = pick(rng, grid), state = stateFor(tuple, draw()), hash = encode(state);
+    if (taken.has(hash) || taken.has(keyOf(tuple))) continue;
+    if (todo.parts.some((p) => drawsPart(state, tuple, p))) { taken.add(hash); taken.add(keyOf(tuple)); cells.push({ tuple, state, flags: [], source: 'related' }); }
+  }
   return cells;
 }
 

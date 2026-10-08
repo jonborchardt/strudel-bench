@@ -17,7 +17,7 @@ const problem = (f) => {
 
 /** Merge findings into todos (mutating). Returns which ids were opened, which seen again, which findings were refused and why, and which wontfix entries were seen. */
 export function record(todos, findings, { sheet, today }) {
-  const out = { opened: [], seen: [], refused: [], wontfix: [] };
+  const out = { opened: [], seen: [], refused: [], wontfix: [], accepted: [] };
   for (const f of findings) {
     const why = problem(f); if (why) { out.refused.push({ cell: f.cell, why }); continue; }
     const key = fingerprint(f), same = todos.filter((t) => fingerprint(t) === key);
@@ -25,18 +25,38 @@ export function record(todos, findings, { sheet, today }) {
     if (open) {
       open.seen++; open.evidence.push(f.hash); if (!open.sheets.includes(sheet)) open.sheets.push(sheet);
       if (f.tuple && !open.tuples.includes(f.tuple)) open.tuples.push(f.tuple); if (f.note && !open.notes.includes(f.note)) open.notes.push(f.note);
-      open.severity = Math.max(open.severity, f.severity); out.seen.push(open.id); continue;
+      open.severity = Math.max(open.severity, f.severity); out.seen.push(open.id); out.accepted.push({ cell: f.cell, id: open.id }); continue;
     }
     const wf = same.find((t) => t.status === 'wontfix'); if (wf) { out.wontfix.push(wf.id); continue; }
     const id = nextId(todos);
-    todos.push({ id, title: f.note ?? key, notes: f.note ? [f.note] : [], category: f.category, parts: [...f.parts].sort(), severity: f.severity, seen: 1, evidence: [f.hash], tuples: f.tuple ? [f.tuple] : [], sheets: [sheet], status: 'open', opened: today, closed: null, commit: null, lint: null, wontfix: null });
-    out.opened.push(id);
+    todos.push({ id, title: f.note ?? key, notes: f.note ? [f.note] : [], category: f.category, parts: [...f.parts].sort(), severity: f.severity, seen: 1, evidence: [f.hash], tuples: f.tuple ? [f.tuple] : [], sheets: [sheet], status: 'open', opened: today, closed: null, commit: null, lint: null, wontfix: null, attempts: 0, tried: [] });
+    out.opened.push(id); out.accepted.push({ cell: f.cell, id });
   }
   return out;
 }
 
-/** The open entries, the one to fix first at the top: severity x seen, then the older. */
-export const rank = (todos) => todos.filter((t) => t.status === 'open').sort((a, b) => b.severity * b.seen - a.severity * a.seen || a.opened.localeCompare(b.opened) || a.id.localeCompare(b.id));
+export const MAX_ATTEMPTS = 3;
+export const isParked = (t) => t.status === 'open' && (t.attempts ?? 0) >= MAX_ATTEMPTS;
+
+/** Count one repair try on an entry; at MAX_ATTEMPTS it parks and leaves the ranking. */
+export function attempt(todos, id, note, { today }) {
+  const t = todos.find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
+  t.attempts = (t.attempts ?? 0) + 1; (t.tried ??= []).push(`${today}: ${note}`);
+  return t;
+}
+
+/** Defects per sheet by severity, and fresh defects per fresh cell over the first half of the sheets against the second: do unseen combinations produce fewer faults over time, or is the ledger only shrinking. */
+export function statsOf(sheets) {
+  const rows = sheets.map((s) => {
+    const freshOf = new Map(s.cells.map((c) => [c.n, c.fresh === true])), by = (v) => s.findings.filter((f) => f.severity === v).length;
+    return { sheet: s.sheet, cells: s.cells.filter((c) => c.tuple.cast !== 'calibration').length, freshCells: s.cells.filter((c) => c.fresh === true).length, s3: by(3), s2: by(2), s1: by(1), freshDefects: s.findings.filter((f) => freshOf.get(f.cell)).length };
+  });
+  const half = Math.floor(rows.length / 2), sum = (rs) => { const cells = rs.reduce((a, r) => a + r.freshCells, 0), defects = rs.reduce((a, r) => a + r.freshDefects, 0); return { cells, defects, rate: cells ? Math.round((defects / cells) * 100) / 100 : null }; };
+  return { rows, fresh: { early: sum(rows.slice(0, half)), late: sum(rows.slice(half)) } };
+}
+
+/** The open entries that are not parked, the one to fix first at the top: severity x seen, then the older. */
+export const rank = (todos) => todos.filter((t) => t.status === 'open' && !isParked(t)).sort((a, b) => b.severity * b.seen - a.severity * a.seen || a.opened.localeCompare(b.opened) || a.id.localeCompare(b.id));
 
 /** Close one entry: fixed by a commit (and a lint that now catches it), or wontfix with the reason. */
 export function close(todos, id, { commit = null, lint = null, wontfix = null, today }) {
