@@ -8,7 +8,7 @@ import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_C
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
-import { CALIBRATION, gridOf, keyOf, stateFor, pickCells, bump, relatedCells, drawsPart } from '../scripts/harden/sampler.mjs';
+import { CALIBRATION, gridOf, keyOf, stateFor, nowState, pickCells, bump, relatedCells, drawsPart } from '../scripts/harden/sampler.mjs';
 import { CROPS, LAYOUT, svgOf, sheetHtml, pairsHtml, chromePath } from '../scripts/harden/sheet.mjs';
 import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -240,6 +240,17 @@ test('ledger: load of a missing file is empty, save round trips', () => {
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('nowState re-runs the tuple through the current presets; an unknown key falls back to the hash', () => {
+  const t = { cast: 'editorial', stance: 'none', expression: 'grin', view: 'bust' }, hash = encode(stateFor(t, 7)), old = decode(hash).ov['mouth.smile'], g = EXPRESSIONS.grin.mouth;
+  const was = g.smile; g.smile = old + 0.123;
+  try {
+    assert.equal(nowState(hash, 'editorial/none/grin/bust').ov['mouth.smile'], old + 0.123);
+    assert.equal(decode(hash).ov['mouth.smile'], old);
+  } finally { g.smile = was; }
+  assert.deepEqual(nowState(hash, null), decode(hash));
+  assert.deepEqual(nowState(hash, 'nobody/none/grin/bust'), decode(hash));
+});
+
 const HARDEN = fileURLToPath(new URL('../scripts/harden.mjs', import.meta.url));
 const cli = (dir, ...args) => execFileSync(process.execPath, [HARDEN, ...args, '--dir', dir], { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
 const cliIn = (dir, input, ...args) => execFileSync(process.execPath, [HARDEN, ...args, '--dir', dir], { encoding: 'utf8', input });
@@ -422,3 +433,17 @@ test('sheet: the browser is the newest headless shell installed, CHROME overridi
   } finally { if (had === undefined) delete process.env.CHROME; else process.env.CHROME = had; rmSync(home, { recursive: true, force: true }); }
 });
 
+test('cli: snap draws the re-derived state, not the frozen hash', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'harden-cli-'));
+  try {
+    const t = { cast: 'elves', stance: 'none', expression: 'grin', view: 'bust' }, st = stateFor(t, 5), stale = { ...st, ov: { ...st.ov, 'mouth.smile': 0.01 } }, hash = encode(stale);
+    mkdirSync(join(dir, 'sheets'), { recursive: true });
+    writeFileSync(join(dir, 'sheets', '0001.json'), JSON.stringify({ sheet: '0001', view: 'bust', cells: [{ n: 1, key: 'elves/none/grin/bust', hash }] }));
+    writeFileSync(join(dir, 'todos.json'), JSON.stringify([{ id: 'T001', status: 'open', category: 'style', severity: 1, seen: 1, parts: ['x'], title: 't', sheets: ['0001'], evidence: [hash], tuples: [], attempts: 0, tried: [] }]));
+    cli(dir, 'snap', 'T001', 'before', '--html');
+    const html = readFileSync(join(dir, 'sheets', 'fixes', 'T001-before.html'), 'utf8');
+    const flat = (x) => x.replace(/c\d+/g, 'c'); // clip ids count up across draws
+    assert.ok(flat(html).includes(flat(svgOf(decode(encode(st)), 'bust'))), 'the preset-derived state is drawn');
+    assert.ok(!flat(html).includes(flat(svgOf(decode(hash), 'bust'))), 'not the frozen one');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

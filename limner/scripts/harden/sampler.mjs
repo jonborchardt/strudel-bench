@@ -33,6 +33,13 @@ export function stateFor(t, seed) {
   return st;
 }
 
+/** A cell's state as the current code would build it: its tuple re-run through today's presets on the hash's own seed. An evidence hash freezes the expression and stance as numbers, so without this a fix to EXPRESSIONS or STANCES is invisible to verify. Falls back to the decoded hash when the tuple is unknown (calibration, or a key that no longer parses). stateFor builds `ov` from the presets alone, so any other `ov` keys the hash carries (none today, from `next`) are dropped. */
+export function nowState(hash, key) {
+  const st = decode(hash), [cast, stance, expression, view] = (key ?? '').split('/');
+  if (!view || !CASTS[cast] || !(expression === 'none' || EXPRESSIONS[expression])) return st;
+  return stateFor({ cast, stance, expression, view }, st.seed);
+}
+
 /** One sheet's cells. `lint(state, tuple)` ranks a pool of random cells; coverage counts fill the rest, least seen first, grid order breaking ties; `sheet` seeds everything, so the same inputs give the same sheet. */
 export function pickCells({ coverage = {}, n = 9, view = 'bust', sheet = 1, lint = lintState, pool = 200, casts = CASTS } = {}) {
   const rng = prng(sheet), draw = () => 1 + Math.floor(rng() * 999998);

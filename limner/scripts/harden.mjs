@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { encode, decode, params } from '../schema.mjs';
 import { feetY, FEET_Y } from '../index.mjs';
 import { lintState } from './harden/lint.mjs';
-import { pickCells, bump, keyOf, relatedCells } from './harden/sampler.mjs';
+import { pickCells, bump, keyOf, relatedCells, nowState } from './harden/sampler.mjs';
 import { sheetHtml, pairsHtml, screenshot, svgOf, LAYOUT, CROPS, VIEWBOX } from './harden/sheet.mjs';
 import { record, merge, rank, close, load, save, attempt, isParked, statsOf, MAX_ATTEMPTS } from './harden/ledger.mjs';
 
@@ -121,7 +121,7 @@ const commands = {
     mkdirSync(fixes, { recursive: true });
     const known = t.sheets.filter((n) => existsSync(join(sheets, `${n}.json`))).flatMap((n) => sheetJson(n).cells); // the tuple a hash was judged under
     const rows = t.evidence.map((hash, i) => ({ n: i + 1, key: known.find((c) => c.hash === hash)?.key ?? hash.slice(0, 8), hash }));
-    const cells = rows.map((r) => ({ state: decode(r.hash), label: `${id} ${r.n} ${r.key}` }));
+    const cells = rows.map((r) => ({ state: nowState(r.hash, known.find((c) => c.hash === r.hash)?.key), label: `${id} ${r.n} ${r.key}` }));
     const { file, rects } = await emit(sheetHtml(cells, { view, crop }), base, crop ? 'bust' : view);
     writeFileSync(base + '.json', JSON.stringify({ sheet: name, view, crop, png: file, cells: rows.map((r, i) => ({ ...r, rect: rects?.[i] ?? null })) }, null, 1));
     console.log(file);
@@ -135,22 +135,23 @@ const commands = {
   },
   async verify([id]) {
     const todos = load(TODOS), t = todos.find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
+    const keyFor = (h) => t.sheets.filter((n) => existsSync(join(sheets, `${n}.json`))).flatMap((n) => sheetJson(n).cells).find((c) => c.hash === h)?.key ?? null;
     const pairs = [], crop = flag('crop', null), box = crop && (([x, y, w, h]) => ({ x, y, w, h }))((CROPS[crop] ?? crop).split(/\s+/).map(Number));
     const snapName = `${id}-before${crop ? '-' + (CROPS[crop] ? crop : crop.replace(/\s+/g, '_')) : ''}`, snapFile = join(fixes, snapName + '.json'), snap = existsSync(snapFile) ? JSON.parse(readFileSync(snapFile, 'utf8')) : null;
     if (snap && snap.cells.every((c) => c.rect)) { // the before snapshot is the then side, whole: its cells are already in the view and crop
       console.log(`then: fixes/${snapName}.png`);
-      for (const c of snap.cells) pairs.push({ label: `${id} ${c.key}`, before: { png: readFileSync(join(fixes, basename(snap.png))).toString('base64'), rect: c.rect }, after: svgOf(decode(c.hash), snap.view, crop) });
+      for (const c of snap.cells) pairs.push({ label: `${id} ${c.key}`, before: { png: readFileSync(join(fixes, basename(snap.png))).toString('base64'), rect: c.rect }, after: svgOf(nowState(c.hash, c.key), snap.view, crop) });
     } else if (snap) console.log(`then: fixes/${snapName}.json (png needed to show it)`);
     else console.log('then: sheets');
     for (const num of pairs.length ? [] : t.sheets) {
       if (!existsSync(join(sheets, `${num}.json`))) continue; // sheets/ is gitignored: a fresh checkout has none
       const s = sheetJson(num);
-      for (const c of s.cells) if (t.evidence.includes(c.hash) && c.rect && s.png.endsWith('.png')) pairs.push({ label: `${id} sheet ${num} cell ${c.n}`, before: { png: readFileSync(join(sheets, basename(s.png))).toString('base64') /* by name in this checkout's sheets: a sheet copied from another checkout carries that checkout's absolute path */, rect: c.rect, ...(crop ? { crop: box, frame: s.view === 'figure' ? (([x, y, w]) => ({ x, y: y - (FEET_Y - feetY(params(decode(c.hash)))), w }))((s.viewBox ?? '-30 -200 460 1284' /* a sheet drawn before T006 widened the frame records none */).split(' ').map(Number)) : undefined } : {}) }, after: svgOf(decode(c.hash), s.view, crop) });
+      for (const c of s.cells) if (t.evidence.includes(c.hash) && c.rect && s.png.endsWith('.png')) pairs.push({ label: `${id} sheet ${num} cell ${c.n}`, before: { png: readFileSync(join(sheets, basename(s.png))).toString('base64') /* by name in this checkout's sheets: a sheet copied from another checkout carries that checkout's absolute path */, rect: c.rect, ...(crop ? { crop: box, frame: s.view === 'figure' ? (([x, y, w]) => ({ x, y: y - (FEET_Y - feetY(params(decode(c.hash)))), w }))((s.viewBox ?? '-30 -200 460 1284' /* a sheet drawn before T006 widened the frame records none */).split(' ').map(Number)) : undefined } : {}) }, after: svgOf(nowState(c.hash, c.key), s.view, crop) });
     }
     if (!pairs.length) {
       if (!t.evidence.length) throw new Error(`${id}: no evidence cell with a png; re-render with next, or open the hashes in the editor`);
       const view = viewOf(t); // the then side is gone: the now side alone
-      t.evidence.forEach((h, i) => pairs.push({ label: `${id} evidence ${i + 1}`, before: null, after: svgOf(decode(h), view, crop) }));
+      t.evidence.forEach((h, i) => pairs.push({ label: `${id} evidence ${i + 1}`, before: null, after: svgOf(nowState(h, keyFor(h)), view, crop) }));
     }
     const width = Math.max(...pairs.map((q) => q.before?.rect.w ?? LAYOUT.bust.cell)), html = pairsHtml(pairs, width), base = join(sheets, `${id}-verify`);
     let file;
