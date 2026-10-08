@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR, FACIAL_HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, panelOffFace, PANEL_OFF_FACE, earPastPanel, EAR_PAST_PANEL, hornStrokesOut, crownStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace, beardBox, BEARD_BOX, circletPastHead } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, panelOffFace, PANEL_OFF_FACE, earPastPanel, EAR_PAST_PANEL, hornStrokesOut, crownStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace, beardBox, BEARD_BOX, beardLevel, BEARD_LEVEL, circletPastHead } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -615,6 +615,12 @@ test('lint: stack:beard-box leaves a stubble alone, its foot being the face\'s o
   const st = decode('eyJzZWVkIjoyNzgwNzMsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOjAuMTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuOCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MC4zNSwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjI1LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjo4LCJwb3NlLmhlYWRUaWx0IjowLjA2LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMiwicG9zZS5zaG91bGRlciI6MCwicHJvcHMiOlsiaGFuZEhlYXJ0R2VzdHVyZSJdfX0');
   for (const style of ['lightStubble', 'heavyStubble', 'stubbleStache']) assert.equal(beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': style } })), null, style);
   assert.ok(beardBox(params({ ...st, ov: { ...st.ov, 'facialHair.style': 'shortBeard' } })) > 0, 'a beard that hangs past the chin is still measured');
+});
+test('lint: stack:beard-level, a beard\'s top falls from the sideburn toward the mouth instead of running level across the cheek (T136)', () => {
+  const st = decode('eyJzZWVkIjo3NjQ2NywiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJvcmNzIiwib3YiOnsibW91dGguc21pbGUiOi0wLjEsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLjQ1LCJleWVzLm9wZW5uZXNzIjoxLjE0LCJleWVzLmJyb3dMaWZ0IjotMywiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi00LCJleWVzLnNxdWludCI6MH19');
+  assert.equal(params(st).facialHair.style, 'boxedBeard');
+  for (const style of ['boxedBeard', 'circleBeard', 'ducktail', 'shortBeard', 'fullBeard', 'garibaldi']) { const l = beardLevel(params({ ...st, ov: { ...st.ov, 'facialHair.style': style } })); assert.ok(l >= BEARD_LEVEL, style + ' ' + l); }
+  assert.equal(beardLevel(params({ ...st, ov: { ...st.ov, 'facialHair.style': 'mustache' } })), null, 'no band, nothing measured');
 });
 
 test('lint: stack:panel-off-face, a bob\'s panels follow the face they hang beside, to the jaw (T113)', () => {

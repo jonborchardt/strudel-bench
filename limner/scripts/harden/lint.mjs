@@ -176,6 +176,19 @@ export function beardBox(p) {
   if (foot - (112 + p.face.height + 16 * p.face.chin) < 2) return null; // a stubble (chin 0) hangs nothing past the chin: its foot is the face's own jaw, as wide as that jaw is, and no box (T117)
   return Math.max(...pts.filter(([, y]) => y >= low).map(([x]) => Math.abs(x - 200))) / (p.face.width / 2);
 }
+/** How far a banded beard's top edge has fallen toward the mouth by the time it is a fifth of the way in from the face's side, as a share of the drop from the side to the mouth line: a level run across the cheek is 0, the box top T136 found on boxedBeard, circleBeard and ducktail. null with no band. */
+export function beardLevel(p) {
+  const ops = (FACIAL_HAIR[p.facialHair?.style] ?? (() => []))(p); if (ops[0]?.k !== 'clip' || ops[1]?.k !== 'path') return null;
+  const tok = ops[1].d.match(/[MLCQZ]|-?\d*\.?\d+(?:e-?\d+)?/g) ?? [], pts = []; let cur = [0, 0], cmd = '';
+  for (let i = 0; i < tok.length;) { if (/[MLCQZ]/.test(tok[i])) { cmd = tok[i++]; if (cmd === 'Z') continue; } const n = { M: 2, L: 2, Q: 4, C: 6 }[cmd], a = tok.slice(i, i + n).map(Number); i += n;
+    for (let t = 0.05; t <= 1.001; t += 0.05) { const u = 1 - t; pts.push(cmd === 'C' ? [u ** 3 * cur[0] + 3 * u * u * t * a[0] + 3 * u * t * t * a[2] + t ** 3 * a[4], u ** 3 * cur[1] + 3 * u * u * t * a[1] + 3 * u * t * t * a[3] + t ** 3 * a[5]] : cmd === 'Q' ? [u * u * cur[0] + 2 * u * t * a[0] + t * t * a[2], u * u * cur[1] + 2 * u * t * a[1] + t * t * a[3]] : cmd === 'M' ? a : [cur[0] + t * (a[0] - cur[0]), cur[1] + t * (a[1] - cur[1])]); if (cmd === 'M') break; }
+    cur = [a[n - 2], a[n - 1]]; }
+  const topAt = (x) => Math.min(...pts.slice(1).flatMap(([x1, y1], i) => { const [x0, y0] = pts[i]; return (x0 - x) * (x1 - x) <= 0 && x0 !== x1 ? [y0 + ((x - x0) * (y1 - y0)) / (x1 - x0)] : []; }));
+  const ex = Math.max(200 - p.face.width / 2, Math.min(...pts.map(([x]) => x)) + 0.5), edge = topAt(ex), cheek = topAt(ex + 0.2 * (200 - ex)); // a narrow beard (circleBeard) measured from its own outer side
+  return (cheek - edge) / (p.mouth.y - edge);
+}
+export const BEARD_LEVEL = 0.1; // the boxedBeard evidence measured 0 (a level run to a quarter of the way in), every beard after the fix 0.26..0.33 and the full beards 0.22..0.24; the narrow ones measured 0.15..0.22 before it, too close to a full beard to tell apart here
+
 export const BEARD_BOX = 0.58; // the 21 evidence beards measured 0.45..0.80 as boxes and 0.41..0.56 tapered; a beard's mass in its lowest fifth no wider than this much of the face's half width
 
 /** How far a leafCirclet's band reaches past the skull at the temples, where it should turn behind the head: its widest point (fitted to this face as the hat is) less the face's half width less CIRCLET_IN. Over 0 the band runs out past the head (T088). null with no circlet. */
@@ -206,6 +219,7 @@ export function lintState(st, tuple) {
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human') { const past = mouthPastMuzzle(p, ops); if (past > MOUTH_PAST_MUZZLE) out.push({ name: 'anatomy:mouth-past-muzzle', parts: [`mouth:${p.mouth.style}`], detail: `the mouth runs ${past.toFixed(1)} past the muzzle pad (over ${MOUTH_PAST_MUZZLE})` }); }
   const crownOut = crownStrokesOut(ops); if (crownOut) out.push({ name: 'render:crown-stroke-out', parts: [`hat:${p.hat.style}`], detail: `a crown's stroke ends at ${crownOut.map((v) => v.toFixed(1))}, outside the crown` });
   const hornOut = hornStrokesOut(ops); if (hornOut) out.push({ name: 'render:horn-stroke-out', parts: hornParts(p), detail: `a horn's stroke ends at ${hornOut.map((v) => v.toFixed(1))}, outside the horn` });
+  const lvl = beardLevel(p); if (lvl != null && lvl < BEARD_LEVEL) out.push({ name: 'stack:beard-level', parts: [`facialHair:${p.facialHair.style}`], detail: `the beard's top has fallen ${lvl.toFixed(2)} of the way to the mouth a fifth of the way in from the side (under ${BEARD_LEVEL})` });
   const box = beardBox(p); if (box > BEARD_BOX) out.push({ name: 'stack:beard-box', parts: [`facialHair:${p.facialHair.style}`], detail: `the beard's foot is ${box.toFixed(2)} of the face's half width (over ${BEARD_BOX})` });
   if (shadowHairOut(p, ops)) out.push({ name: 'stack:shaved-halo', parts: ['hair:shavedHead'], detail: 'the shaved head\'s shadow is drawn outside the head\'s clip' });
   if ((p.eyes.mode ?? 'human') === 'human' && p.eyes.openness >= WIDE_OPEN) { const w = whiteOverIris(p); if (w < WIDE_WHITE) out.push({ name: 'expression:wide-no-white', parts: [`eyes:${p.eyes.style}`], detail: `opened to ${p.eyes.openness}, the lid clears the iris by ${w.toFixed(1)} (under ${WIDE_WHITE})` }); }

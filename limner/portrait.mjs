@@ -653,9 +653,14 @@ const hull = (p, chin) => { const hw = (p.face.width / 2) * 1.03, ey = p.eyes.y,
 // top: the sideburn's y under the eye line; cheek: how far in from the outline the beard line runs (0..1 of the half width); lip: how far under the lower lip the beard starts; chin: how far the mass hangs past the chin; sharp: a straight, barbered line; width: how far out the band reaches (1 past the face, less for a beard that leaves the jaw's sides bare and sits round the mouth)
 function beardBand(p, { top = 26, cheek = 0.1, lip = 9, chin = 6, sharp = false, op = 1, width = 1 } = {}) {
   const w = p.face.width / 2, ey = p.eyes.y, my = p.mouth.y, mw = p.mouth.width / 2, x0 = 200 - (w + 30) * width, x1 = 200 + (w + 30) * width, ya = ey + top, cx = Math.min(w * (1 - cheek), (w + 30) * width), c2 = w * 0.44; // c2: how tightly the beard line closes on the mouth. Swung wide it leaves the mouth sitting on a bare island in the middle of the beard, which is what a beard never looks like
+  // A barbered line (sharp) runs straight from the sideburn to the mouth's corner, and a narrow beard (width under 1)
+  // leaves the cheek sloping from its outer edge and rounds its sides in under the chin: a level run across the cheek
+  // and straight sides down to the bottom of the sheet were a box over the lower face (T136). A full beard keeps its line.
+  const narrow = width < 1, ys = narrow ? ya + (my - ya) * 0.5 : ya, yb = narrow ? ys + (my - ys) * 0.5 : ya, cb = 112 + p.face.height + 16 * p.face.chin + chin;
+  const sides = narrow ? `C ${x1} ${ys + (cb - ys) * 0.7}, ${200 + (x1 - 200) * 0.55} ${cb}, 200 ${cb} C ${200 - (200 - x0) * 0.55} ${cb}, ${x0} ${ys + (cb - ys) * 0.7}, ${x0} ${ys} Z` : `L ${x1} 700 L ${x0} 700 Z`;
   const band = sharp
-    ? `M ${x0} ${ya} L ${200 - cx} ${ya} L ${200 - mw} ${my + lip * 0.25} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.25} L ${200 + cx} ${ya} L ${x1} ${ya} L ${x1} 700 L ${x0} 700 Z`
-    : `M ${x0} ${ya} C ${200 - cx} ${ya}, ${200 - c2} ${my - 6}, ${200 - mw} ${my + lip * 0.25} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.25} C ${200 + c2} ${my - 6}, ${200 + cx} ${ya}, ${x1} ${ya} L ${x1} 700 L ${x0} 700 Z`;
+    ? `M ${x0} ${ys} L ${Math.max(x0, 200 - w)} ${ys} L ${200 - mw} ${my + lip * 0.25} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.25} L ${Math.min(x1, 200 + w)} ${ys} L ${x1} ${ys} ${sides}`
+    : `M ${x0} ${ys} C ${200 - cx} ${yb}, ${200 - c2} ${my - 6}, ${200 - mw} ${my + lip * 0.25} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.25} C ${200 + c2} ${my - 6}, ${200 + cx} ${yb}, ${x1} ${ys} ${sides}`;
   return [clip(hull(p, chin)), path(band, { fill: p.hairColor, op }), ...(op >= 0.5 ? [clip(band), ...strands(p, { from: [200, my + 10], a0: 0.4, a1: Math.PI - 0.4, len: 55, n: 16 }), UNCLIP] : []), UNCLIP]; // a stubble is a wash with no grain
 }
 const onMouth = (p, ops) => mapXY(ops, scaleAbout(200, p.mouth.width / 48), (y) => y + p.mouth.y - 260); // ops drawn for the default mouth (48 wide on the line 260) follow this one
