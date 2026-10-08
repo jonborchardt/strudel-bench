@@ -272,3 +272,9 @@ test('the theme menu offers the casts that change something, and not the default
     assert.equal(new Set(poses).size, poses.length, `${t}: the pose menu lists nothing twice`);
   }
 });
+
+test('a chest mark is on the skin: it shows on a bare chest and never on cloth', () => {
+  const ring = (top, jacket = 'none') => portraitOps({ top: { style: top, graphic: 'none' }, jacket: { style: jacket }, marks: ['ceremonialSymbols'] }).filter((o) => o.k === 'ellipse' && o.cx === 200 && o.cy === 420 && o.rx === 16).length;
+  assert.equal(ring('bare'), 1); assert.equal(ring('bare', 'openJacket'), 1, 'under an open jacket too');
+  assert.equal(ring('crewTshirt'), 0, 'not painted over a shirt');
+});

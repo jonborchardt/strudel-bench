@@ -39,7 +39,7 @@ JACKETS.wolfPelt = (p) => { const c = p.jacket.color, dark = shade(c, 0.6), ligh
   path('M 52 700 L 48 436 C 54 382, 112 352, 170 348 L 158 700 Z', { fill: c }), path('M 348 700 L 352 436 C 346 382, 288 352, 230 348 L 242 700 Z', { fill: c }),
   ...Array.from({ length: 30 }, (_, i) => { const x = 56 + i * 10.4, y = 372 + Math.sin(i * 1.4) * 10; return path(`M ${x} ${y - 18} Q ${x + 4} ${y + 2} ${x - 3} ${y + 20}`, stroke(i % 2 ? dark : light, 3.2, 0.6)); }),
   path('M 170 350 Q 200 374 230 350', stroke(dark, 4, 0.5)), ellipse(200, 358, 6, 6, { fill: '#8d7f60' })]; }; // a pelt over both shoulders, the fur drawn in tufts, pinned at the throat
-MARKS.clanTattoo = { body: () => [path('M 150 400 L 200 388 L 250 400', stroke(INK, 4, 0.75)), path('M 160 424 L 200 412 L 240 424', stroke(INK, 3.4, 0.7)), path('M 176 452 L 200 440 L 224 452', stroke(INK, 3, 0.65)), ellipse(200, 486, 10, 10, { fill: 'none', stroke: INK, sw: 3, op: 0.7 }), ellipse(200, 486, 3, 3, { fill: INK, op: 0.7 })] };
+MARKS.clanTattoo = { chest: () => [path('M 150 400 L 200 388 L 250 400', stroke(INK, 4, 0.75)), path('M 160 424 L 200 412 L 240 424', stroke(INK, 3.4, 0.7)), path('M 176 452 L 200 440 L 224 452', stroke(INK, 3, 0.65)), ellipse(200, 486, 10, 10, { fill: 'none', stroke: INK, sw: 3, op: 0.7 }), ellipse(200, 486, 3, 3, { fill: INK, op: 0.7 })] };
 
 /** The pack's own names, by kind: what its sheet shows and what is tagged. */
 export const ORC = { makeup: ['tusks'], hats: ['boneHelm'], tops: ['hideArmor'], jackets: ['wolfPelt'], marks: ['clanTattoo'] };

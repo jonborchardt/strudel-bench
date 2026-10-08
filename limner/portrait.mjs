@@ -915,15 +915,15 @@ export const MAKEUP = {
 export const MAKEUP_STYLES = Object.keys(MAKEUP);
 export const MARKS = {
   none: {},
-  chestSparse: { body: () => [ellipse(166, 412, 7, 7, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.65 }), path('M 236 396 L 248 420 L 224 420 Z', INKL(2)), line(200, 444, 200, 476, INKL(2))] },
-  chestDense: { body: () => [ellipse(166, 412, 7, 7, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.65 }), path('M 236 396 L 248 420 L 224 420 Z', INKL(2)), line(200, 440, 200, 476, INKL(2)), path('M 140 440 Q 160 430 176 446', INKL(1.8)), path('M 260 440 Q 240 430 224 446', INKL(1.8)), path('M 150 470 L 166 462 L 158 484 Z', INKL(1.6)), path('M 250 470 L 234 462 L 242 484 Z', INKL(1.6)), ellipse(200, 500, 12, 12, { fill: 'none', stroke: '#1c1a1e', sw: 1.8, op: 0.6 }), line(186, 500, 214, 500, INKL(1.6)), path('M 176 396 Q 200 388 224 396', INKL(1.6))] },
+  chestSparse: { chest: () => [ellipse(166, 412, 7, 7, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.65 }), path('M 236 396 L 248 420 L 224 420 Z', INKL(2)), line(200, 444, 200, 476, INKL(2))] },
+  chestDense: { chest: () => [ellipse(166, 412, 7, 7, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.65 }), path('M 236 396 L 248 420 L 224 420 Z', INKL(2)), line(200, 440, 200, 476, INKL(2)), path('M 140 440 Q 160 430 176 446', INKL(1.8)), path('M 260 440 Q 240 430 224 446', INKL(1.8)), path('M 150 470 L 166 462 L 158 484 Z', INKL(1.6)), path('M 250 470 L 234 462 L 242 484 Z', INKL(1.6)), ellipse(200, 500, 12, 12, { fill: 'none', stroke: '#1c1a1e', sw: 1.8, op: 0.6 }), line(186, 500, 214, 500, INKL(1.6)), path('M 176 396 Q 200 388 224 396', INKL(1.6))] },
   neckMarks: { neck: () => [line(186, 322, 214, 322, INKL(2)), path('M 190 340 Q 200 348 210 340', INKL(2)), ellipse(200, 358, 3, 3, facePaint('#1c1a1e', 0.7))] },
   faceMarkSmall: { fit: 'eyes', face: () => [line(150, 214, 156, 220, INKL(1.6)), line(156, 214, 150, 220, INKL(1.6))] },
-  abstractLineWork: { body: () => [path('M 130 400 C 170 440, 230 380, 270 430', INKL(2)), path('M 140 460 C 180 420, 220 500, 262 458', INKL(1.8)), path('M 160 500 Q 200 470 240 500', INKL(1.6))] },
-  redGraphicLines: { body: () => [line(150, 400, 250, 400, INKL(3, 0.8, REDP)), line(200, 408, 200, 480, INKL(3, 0.8, REDP)), path('M 160 470 L 240 470', INKL(2.4, 0.8, REDP)), path('M 168 430 L 232 430', INKL(2.4, 0.8, REDP))] },
-  scriptLikeMarks: { body: () => [path('M 140 420 C 150 406, 156 434, 166 418 C 176 402, 182 436, 192 420 C 202 404, 208 434, 218 418 C 228 402, 236 436, 246 420 C 252 410, 258 428, 264 418', INKL(1.6)), path('M 150 456 C 160 442, 166 470, 176 454 C 186 438, 192 472, 202 456 C 212 440, 218 470, 228 454 C 238 438, 244 466, 252 456', INKL(1.6))] },
-  ceremonialSymbols: { body: () => [ellipse(200, 420, 16, 16, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.7 }), ellipse(200, 420, 4, 4, facePaint('#1c1a1e', 0.7)), path('M 152 470 L 170 440 L 188 470 Z', INKL(2)), path('M 212 470 L 230 440 L 248 470 Z', INKL(2)), ...[150, 200, 250].map((x) => ellipse(x, 496, 2.5, 2.5, facePaint('#1c1a1e', 0.7)))] },
-  geometricBodyMarks: { body: () => [rect(150, 396, 34, 34, facePaint('#1c1a1e', 0.8)), path('M 216 396 L 250 396 L 233 430 Z', facePaint('#1c1a1e', 0.8)), rect(176, 452, 48, 10, facePaint('#1c1a1e', 0.8)), ellipse(200, 494, 14, 14, { fill: 'none', stroke: '#1c1a1e', sw: 3, op: 0.8 })] },
+  abstractLineWork: { chest: () => [path('M 130 400 C 170 440, 230 380, 270 430', INKL(2)), path('M 140 460 C 180 420, 220 500, 262 458', INKL(1.8)), path('M 160 500 Q 200 470 240 500', INKL(1.6))] },
+  redGraphicLines: { chest: () => [line(150, 400, 250, 400, INKL(3, 0.8, REDP)), line(200, 408, 200, 480, INKL(3, 0.8, REDP)), path('M 160 470 L 240 470', INKL(2.4, 0.8, REDP)), path('M 168 430 L 232 430', INKL(2.4, 0.8, REDP))] },
+  scriptLikeMarks: { chest: () => [path('M 140 420 C 150 406, 156 434, 166 418 C 176 402, 182 436, 192 420 C 202 404, 208 434, 218 418 C 228 402, 236 436, 246 420 C 252 410, 258 428, 264 418', INKL(1.6)), path('M 150 456 C 160 442, 166 470, 176 454 C 186 438, 192 472, 202 456 C 212 440, 218 470, 228 454 C 238 438, 244 466, 252 456', INKL(1.6))] },
+  ceremonialSymbols: { chest: () => [ellipse(200, 420, 16, 16, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.7 }), ellipse(200, 420, 4, 4, facePaint('#1c1a1e', 0.7)), path('M 152 470 L 170 440 L 188 470 Z', INKL(2)), path('M 212 470 L 230 440 L 248 470 Z', INKL(2)), ...[150, 200, 250].map((x) => ellipse(x, 496, 2.5, 2.5, facePaint('#1c1a1e', 0.7)))] },
+  geometricBodyMarks: { chest: () => [rect(150, 396, 34, 34, facePaint('#1c1a1e', 0.8)), path('M 216 396 L 250 396 L 233 430 Z', facePaint('#1c1a1e', 0.8)), rect(176, 452, 48, 10, facePaint('#1c1a1e', 0.8)), ellipse(200, 494, 14, 14, { fill: 'none', stroke: '#1c1a1e', sw: 3, op: 0.8 })] },
 };
 export const MARK_STYLES = Object.keys(MARKS);
 // hands and sleeves: a hand is the skin (a glove when the character wears them), a sleeve the outer garment's colour
@@ -1204,7 +1204,7 @@ export function portraitOps(options = {}) {
     ...wide(shear(hoodBack)), // a hood hangs behind the neck
     neckG, ...neck(p), ...overlays(p, 'neck', fits), POP, // the neck goes behind every garment, so a collar, a lapel or a neckline covers its base: a collar, a lapel or a neckline covers its base, or the skin reads as a column standing on the shirt
     ...wide(shear(legs)), // the legs under the hem
-    ...wide(shear([clip(TRUNK(640, b.trunk)), ...top, ...edge, UNCLIP])), // a top is the trunk's shape to its hem
+    ...wide(shear([clip(TRUNK(640, b.trunk)), ...top, ...(p.top.style === 'bare' ? overlays(p, 'chest', fits) : []), ...edge, UNCLIP])), // a top is the trunk's shape to its hem; a mark in the `chest` slot is on the skin (a tattoo, body paint), so it shows on a bare chest, under any jacket, and never on cloth
     ...(onNeck.length ? [neckG, ...onNeck, POP] : []), // a turtleneck's collar wraps the neck, so it rides in the neck's group and leans with it, over the shirt it belongs to and under any jacket (which shows it again through its own neckline)
     ...wide(shear([clip(TRUNK(690, b.trunk)), ...jacket, UNCLIP, ...overlays(p, 'body', fits)])), // a jacket, longer
     ...through, // and shows again through the outermost neckline, because a neckline is a hole, not a curve painted on the cloth
