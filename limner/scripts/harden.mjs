@@ -34,7 +34,7 @@ const dir = flag('dir', join(dirname(fileURLToPath(import.meta.url)), 'harden'))
 const sheets = join(dir, 'sheets');
 mkdirSync(sheets, { recursive: true });
 const TODOS = join(dir, 'todos.json'), COVERAGE = join(dir, 'coverage.json');
-const today = new Date().toISOString().slice(0, 10);
+const d = new Date(), today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; // local, not UTC
 const readJson = (f, dflt) => (existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : dflt);
 const link = (st) => `limner.html#editor/${encode(st)}`;
 const stateOf = (s) => (s.trim().startsWith('{') ? { seed: 1, family: 'any', theme: 'none', ...JSON.parse(s), ov: { ...(JSON.parse(s).ov ?? {}) } } : decode(s.includes('#') ? s.slice(s.indexOf('#') + 1) : s));
@@ -49,7 +49,10 @@ const table = (cells) => cells.map((c) => `${String(c.n).padStart(2)}  ${c.key.p
 
 const commands = {
   async next() {
-    const n = readdirSync(sheets).filter((f) => /^\d{4}\.json$/.test(f)).length + 1, num = String(n).padStart(4, '0');
+    // past the sheets on disk and past every sheet the committed ledger names: sheets/ is gitignored, a fresh checkout has none
+    const onDisk = readdirSync(sheets).filter((f) => /^\d{4}\.json$/.test(f)).map((f) => +f.slice(0, 4));
+    const named = load(TODOS).flatMap((t) => t.sheets ?? []).filter((s) => /^\d+$/.test(s)).map(Number);
+    const n = Math.max(0, ...onDisk, ...named) + 1, num = String(n).padStart(4, '0');
     const view = flag('view', n % 2 ? 'bust' : 'figure'), coverage = readJson(COVERAGE, {});
     const cells = pickCells({ coverage, n: +flag('cells', 9), view, sheet: n, pool: +flag('pool', 200) });
     const { file, rects } = await emit(sheetHtml(cells, { view }), join(sheets, num), view);
@@ -69,6 +72,7 @@ const commands = {
   },
   record([num, file]) {
     const s = sheetJson(num), todos = load(TODOS);
+    if (Array.isArray(s.findings)) { console.log(`sheet ${num} is already recorded; nothing changed`); process.exit(1); } // a second record would count its findings twice
     const findings = JSON.parse(file ? readFileSync(file, 'utf8') : readFileSync(0, 'utf8')).map((f) => { const c = s.cells.find((x) => x.n === f.cell); return { ...f, hash: c?.hash, tuple: c?.key }; });
     const r = record(todos, findings, { sheet: num, today });
     if (r.refused.length) { for (const x of r.refused) console.log(`refused cell ${x.cell}: ${x.why}`); return console.log('nothing recorded: fix the findings and record again'); }
@@ -112,11 +116,16 @@ const commands = {
     const todos = load(TODOS), t = todos.find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
     const pairs = [], crop = flag('crop', null), box = crop && (([x, y, w, h]) => ({ x, y, w, h }))((CROPS[crop] ?? crop).split(/\s+/).map(Number));
     for (const num of t.sheets) {
+      if (!existsSync(join(sheets, `${num}.json`))) continue; // sheets/ is gitignored: a fresh checkout has none
       const s = sheetJson(num);
       for (const c of s.cells) if (t.evidence.includes(c.hash) && c.rect && s.png.endsWith('.png')) pairs.push({ label: `${id} sheet ${num} cell ${c.n}`, before: { png: readFileSync(s.png).toString('base64'), rect: c.rect, ...(crop ? { crop: box, frame: s.view === 'figure' ? { x: -30, y: -200 - (FEET_Y - feetY(params(decode(c.hash)))), w: 460 } : undefined } : {}) }, after: svgOf(decode(c.hash), s.view, crop) });
     }
-    if (!pairs.length) throw new Error(`${id}: no evidence cell with a png; re-render with next, or open the hashes in the editor`);
-    const width = Math.max(...pairs.map((q) => q.before.rect.w)), html = pairsHtml(pairs, width), base = join(sheets, `${id}-verify`);
+    if (!pairs.length) {
+      if (!t.evidence.length) throw new Error(`${id}: no evidence cell with a png; re-render with next, or open the hashes in the editor`);
+      const view = t.parts.some((p) => p.startsWith('stance:')) ? 'figure' : 'bust'; // the then side is gone: the now side alone
+      t.evidence.forEach((h, i) => pairs.push({ label: `${id} evidence ${i + 1}`, before: null, after: svgOf(decode(h), view, crop) }));
+    }
+    const width = Math.max(...pairs.map((q) => q.before?.rect.w ?? LAYOUT.bust.cell)), html = pairsHtml(pairs, width), base = join(sheets, `${id}-verify`);
     let file;
     if (has('html')) { file = base + '.html'; writeFileSync(file, html); } else { file = base + '.png'; await screenshot(html, file, width * 2 + 24); }
     console.log(`${file}\n${t.evidence.map((h) => link(decode(h))).join('\n')}`);

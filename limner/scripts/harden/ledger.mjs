@@ -11,6 +11,7 @@ const problem = (f) => {
   if (!CATEGORIES.includes(f.category)) return `category must be one of ${CATEGORIES.join(', ')}`;
   if (!Array.isArray(f.parts) || !f.parts.length) return 'a finding names the parts (kind:name) or it is not a finding';
   if (!Number.isInteger(f.severity) || f.severity < 1 || f.severity > 3) return 'severity is 1, 2 or 3';
+  const bad = f.parts.find((p) => !/^(unknown(:\w+)?|\w+:\w+)$/.test(p)); if (bad !== undefined) return `parts are kind:name, or unknown[:word]: got "${bad}"`;
   if (!f.hash) return 'no hash: the cell is not on this sheet';
   return null;
 };
@@ -63,6 +64,8 @@ export const rank = (todos) => todos.filter((t) => t.status === 'open' && !isPar
 /** Close one entry: fixed by a commit (and a lint that now catches it), or wontfix with the reason. */
 export function close(todos, id, { commit = null, lint = null, wontfix = null, today }) {
   const t = todos.find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
+  if (t.status !== 'open') throw new Error(`${id} is already ${t.status}`);
+  if (!(typeof commit === 'string' && commit) && !(typeof wontfix === 'string' && wontfix)) throw new Error('close needs --commit <sha> or --wontfix "<why>"');
   Object.assign(t, { status: wontfix ? 'wontfix' : 'fixed', closed: today, commit, lint, wontfix });
   return t;
 }

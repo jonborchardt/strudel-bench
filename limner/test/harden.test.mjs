@@ -137,6 +137,11 @@ test('sheet: verify --crop enlarges the region of the then cell to the pair widt
   assert.match(fig, /transform:scale\(2\)/); assert.match(fig, /margin:-300px 0 0 -80px/, 'a figure cell: (50+30)/2 and (40+260)/2 at half scale, doubled');
 });
 
+test('sheet: a pair with no then side labels the empty pane', () => {
+  const html = pairsHtml([{ label: 'T001 evidence 1', before: null, after: '<svg viewBox="0 0 1 1"></svg>' }], 220);
+  assert.match(html, /then: not on disk/); assert.match(html, /<svg viewBox/); assert.ok(!/data:image/.test(html));
+});
+
 const finding = (o = {}) => ({ cell: 2, category: 'stack', parts: ['hat:leafCirclet', 'hair:highBun'], severity: 2, note: 'circlet floats clear of the bun', hash: 'H1', tuple: 'elves/none/grin/bust', ...o });
 
 test('ledger: a finding opens a todo, the same fingerprint seen again counts, a refused one writes nothing', () => {
@@ -148,25 +153,29 @@ test('ledger: a finding opens a todo, the same fingerprint seen again counts, a 
   const r2 = record(todos, [finding({ hash: 'H2', note: 'again, on a bob', parts: ['hair:highBun', 'hat:leafCirclet'] })], { sheet: '0002', today: '2026-10-08' });
   assert.deepEqual(r2.seen, ['T001']); assert.equal(todos.length, 1); assert.equal(todos[0].seen, 2);
   assert.deepEqual(todos[0].evidence, ['H1', 'H2']); assert.deepEqual(todos[0].sheets, ['0001', '0002']); assert.deepEqual(todos[0].notes, ['circlet floats clear of the bun', 'again, on a bob']);
-  const r3 = record(todos, [finding({ parts: [] }), finding({ category: 'ugly' }), finding({ severity: 7 }), finding({ hash: undefined })], { sheet: '0003', today: '2026-10-08' });
-  assert.equal(r3.refused.length, 4); assert.equal(todos.length, 1); assert.equal(todos[0].seen, 2);
+  const r3 = record(todos, [finding({ parts: [] }), finding({ category: 'ugly' }), finding({ severity: 7 }), finding({ hash: undefined }), finding({ parts: ['circlet'] })], { sheet: '0003', today: '2026-10-08' });
+  assert.equal(r3.refused.length, 5); assert.match(r3.refused[4].why, /kind:name.*"circlet"/);
+  assert.equal(record([], [finding({ parts: ['unknown', 'unknown:muzzle'] })], { sheet: '0003', today: '2026-10-08' }).refused.length, 0, 'unknown and unknown:word are shapes'); assert.equal(todos.length, 1); assert.equal(todos[0].seen, 2);
   assert.match(r3.refused[0].why, /parts/); assert.match(r3.refused[1].why, new RegExp(CATEGORIES.join('|')));
   assert.equal(nextId(todos), 'T002');
 });
 
 test('ledger: rank is severity x seen then older first; close records the commit; wontfix is reported, never reopened', () => {
   const todos = [];
-  record(todos, [finding({ note: 'a', parts: ['a'], severity: 1 }), finding({ note: 'b', parts: ['b'], severity: 3 })], { sheet: '0001', today: '2026-10-01' });
-  for (let i = 0; i < 4; i++) record(todos, [finding({ note: 'a', parts: ['a'], severity: 1, hash: 'H' + i })], { sheet: '000' + (2 + i), today: '2026-10-02' });
+  record(todos, [finding({ note: 'a', parts: ['x:a'], severity: 1 }), finding({ note: 'b', parts: ['x:b'], severity: 3 })], { sheet: '0001', today: '2026-10-01' });
+  for (let i = 0; i < 4; i++) record(todos, [finding({ note: 'a', parts: ['x:a'], severity: 1, hash: 'H' + i })], { sheet: '000' + (2 + i), today: '2026-10-02' });
   assert.deepEqual(rank(todos).map((t) => t.id), ['T001', 'T002'], 'severity 1 seen five times outranks severity 3 seen once');
-  record(todos, [finding({ note: 'c', parts: ['c'], severity: 3 })], { sheet: '0009', today: '2026-10-03' });
+  record(todos, [finding({ note: 'c', parts: ['x:c'], severity: 3 })], { sheet: '0009', today: '2026-10-03' });
   assert.deepEqual(rank(todos).map((t) => t.id), ['T001', 'T002', 'T003'], 'ties go to the older');
   const done = close(todos, 'T002', { commit: 'abc1234', lint: 'stack:hat-below-eyes', today: '2026-10-04' });
   assert.equal(done.status, 'fixed'); assert.equal(done.commit, 'abc1234'); assert.equal(done.lint, 'stack:hat-below-eyes'); assert.equal(done.closed, '2026-10-04');
   assert.deepEqual(rank(todos).map((t) => t.id), ['T001', 'T003']);
+  assert.throws(() => close(todos, 'T002', { commit: 'def', today: '2026-10-04' }), /T002 is already fixed/);
+  assert.throws(() => close(todos, 'T003', { commit: undefined, wontfix: '', today: '2026-10-04' }), /close needs --commit/);
+  assert.equal(todos[2].status, 'open', 'a refused close changes nothing');
   close(todos, 'T003', { wontfix: 'in character', today: '2026-10-04' });
   assert.equal(todos[2].status, 'wontfix');
-  const r = record(todos, [finding({ note: 'c again', parts: ['c'], severity: 3 })], { sheet: '0010', today: '2026-10-05' });
+  const r = record(todos, [finding({ note: 'c again', parts: ['x:c'], severity: 3 })], { sheet: '0010', today: '2026-10-05' });
   assert.deepEqual(r.wontfix, ['T003']); assert.deepEqual(r.opened, []); assert.equal(todos.length, 3); assert.equal(todos[2].seen, 1, 'untouched');
   assert.throws(() => close(todos, 'T099', { commit: 'x' }), /T099/);
 });
@@ -203,10 +212,22 @@ test('cli: a first run starts empty, next --html writes sheet 0001 without a bro
     assert.equal(todos[0].evidence[0], sheet.cells[1].hash); assert.deepEqual(todos[0].tuples, [sheet.cells[1].key]);
     assert.match(cli(dir, 'todos'), /T001\s+1x1\s+style\s+eyes:almond\s+flat iris/);
     assert.match(cli(dir, 'next', '--html', '--cells', '2', '--pool', '0'), /sheet 0002/); assert.equal(JSON.parse(readFileSync(join(dir, 'sheets', '0002.json'), 'utf8')).view, 'figure', 'even sheets are figures');
+    assert.throws(() => cli(dir, 'close', 'T001'), (e) => e.status === 1 && /close needs --commit/.test(e.stderr), 'a bare close is refused');
+    assert.throws(() => execFileSync(process.execPath, [HARDEN, '--dir', dir, 'close', 'T001', '--commit'], { encoding: 'utf8', stdio: 'pipe' }), (e) => e.status === 1 && /close needs --commit/.test(e.stderr), 'a --commit with no value is refused');
     assert.match(cli(dir, 'close', '--wontfix', 'in character', 'T001'), /T001 wontfix/);
-    assert.throws(() => cli(dir, 'verify', '--html', 'T001'), /no evidence cell with a png/, 'a boolean flag before the id keeps the id');
+    assert.match(cli(dir, 'verify', '--html', 'T001'), /T001-verify\.html/, 'a boolean flag before the id keeps the id; no png on disk, the now side alone');
+    assert.match(readFileSync(join(dir, 'sheets', 'T001-verify.html'), 'utf8'), /then: not on disk/);
     assert.equal(cli(dir, 'todos').trim(), 'no open todos');
     assert.match(cli(dir, 'todos', '--all'), /T001.*wontfix/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('cli: sheet numbers pass every sheet the committed ledger names', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'harden-cli-'));
+  try {
+    const todos = []; record(todos, [finding()], { sheet: '0007', today: '2026-10-07' }); save(join(dir, 'todos.json'), todos);
+    assert.match(cli(dir, 'next', '--html', '--cells', '2', '--pool', '0'), /sheet 0008/);
+    assert.ok(existsSync(join(dir, 'sheets', '0008.json')) && !existsSync(join(dir, 'sheets', '0001.json')));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -220,18 +241,18 @@ test('cli: lint prints the flags of one state', () => {
 
 test('ledger: three attempts park an entry out of the ranking, record names the entry each finding landed in', () => {
   const todos = [];
-  const r = record(todos, [finding({ note: 'a', parts: ['a'] }), finding({ note: 'b', parts: ['b'] })], { sheet: '0001', today: '2026-10-07' });
+  const r = record(todos, [finding({ note: 'a', parts: ['x:a'] }), finding({ note: 'b', parts: ['x:b'] })], { sheet: '0001', today: '2026-10-07' });
   assert.deepEqual(r.accepted, [{ cell: 2, category: 'stack', severity: 2, id: 'T001' }, { cell: 2, category: 'stack', severity: 2, id: 'T002' }]);
-  const two = record([], [finding({ note: 'a', parts: ['a'], severity: 3 }), finding({ note: 'b', category: 'style', parts: ['b'], severity: 1 })], { sheet: '0001', today: '2026-10-07' });
+  const two = record([], [finding({ note: 'a', parts: ['x:a'], severity: 3 }), finding({ note: 'b', category: 'style', parts: ['x:b'], severity: 1 })], { sheet: '0001', today: '2026-10-07' });
   assert.deepEqual(two.accepted.map((a) => [a.category, a.severity]), [['stack', 3], ['style', 1]], 'two findings on one cell keep their own severity');
-  const mixed = [], m = record(mixed, [finding({ parts: ['a'] }), finding({ parts: [] })], { sheet: '0001', today: '2026-10-07' });
+  const mixed = [], m = record(mixed, [finding({ parts: ['x:a'] }), finding({ parts: [] })], { sheet: '0001', today: '2026-10-07' });
   assert.equal(m.refused.length, 1); assert.deepEqual(m.accepted, []); assert.equal(mixed.length, 0, 'one refusal records nothing');
   assert.equal(todos[0].attempts, 0); assert.deepEqual(todos[0].tried, []);
   for (let i = 1; i <= MAX_ATTEMPTS; i++) { const t = attempt(todos, 'T001', 'try ' + i, { today: '2026-10-08' }); assert.equal(t.attempts, i); }
   assert.ok(isParked(todos[0])); assert.deepEqual(todos[0].tried, ['2026-10-08: try 1', '2026-10-08: try 2', '2026-10-08: try 3']);
   assert.deepEqual(rank(todos).map((t) => t.id), ['T002'], 'a parked entry is not ranked');
   assert.ok(!isParked({ status: 'open' }), 'an entry from before attempts existed is not parked');
-  const again = record(todos, [finding({ note: 'a', parts: ['a'], hash: 'H9' })], { sheet: '0002', today: '2026-10-09' });
+  const again = record(todos, [finding({ note: 'a', parts: ['x:a'], hash: 'H9' })], { sheet: '0002', today: '2026-10-09' });
   assert.deepEqual(again.seen, ['T001'], 'a parked entry still counts when seen');
   assert.throws(() => attempt(todos, 'T099', 'x', { today: '2026-10-09' }), /T099/);
 });
@@ -260,7 +281,9 @@ test('sampler: related cells draw one of the todo\'s parts and never its own evi
   assert.deepEqual(relatedCells(todo, { n: 4, pool: 600 }), cells, 'deterministic per todo');
   const seen = relatedCells({ ...todo, evidence: cells.map((c) => encode(c.state)) }, { n: 4, pool: 600 });
   assert.ok(!seen.some((c) => cells.some((d) => encode(d.state) === encode(c.state))), 'the evidence itself is never a neighbour');
-  assert.deepEqual(relatedCells({ id: 'T006', parts: ['unknown'], evidence: [] }, { n: 4, pool: 100 }), [], 'unknown has no neighbours');
+  assert.deepEqual(relatedCells({ id: 'T006', parts: ['unknown'], evidence: [] }, { n: 4, pool: 100 }), [], 'unknown with no tuples has no neighbours');
+  const lost = relatedCells({ id: 'T007', parts: ['unknown:muzzle'], tuples: ['dragonborn/none/grin/bust'], evidence: [] }, { n: 4, pool: 100 });
+  assert.ok(lost.length >= 1 && lost.every((c) => c.tuple.cast === 'dragonborn'), 'an unattributed entry gets its cast\'s neighbours');
   assert.equal(drawsPart(stateFor({ cast: 'elves', stance: 'none', expression: 'grin', view: 'bust' }, 3), { stance: 'none', expression: 'grin' }, 'expression:grin'), true);
 });
 
@@ -272,9 +295,11 @@ test('cli: next marks fresh cells, record writes findings into the sheet, attemp
     assert.deepEqual(s1.cells.map((c) => c.fresh), [false, true, true], 'calibration is never fresh, the first sight of a tuple is');
     assert.match(cliIn(dir, JSON.stringify([{ cell: 2, category: 'stack', parts: ['hat:beanie'], severity: 2, note: 'x' }]), 'record', '0001'), /recorded 1 findings on sheet 0001/);
     assert.deepEqual(JSON.parse(readFileSync(join(dir, 'sheets', '0001.json'), 'utf8')).findings, [{ cell: 2, category: 'stack', severity: 2, id: 'T001' }]);
-    assert.match(cliIn(dir, '[]', 'record', '0001'), /recorded 0 findings/); assert.deepEqual(JSON.parse(readFileSync(join(dir, 'sheets', '0001.json'), 'utf8')).findings, [], 'a re-record replaces');
+    const before = readFileSync(join(dir, 'sheets', '0001.json'), 'utf8'), ledger = readFileSync(join(dir, 'todos.json'), 'utf8');
+    assert.throws(() => cliIn(dir, '[]', 'record', '0001'), (e) => e.status === 1 && /already recorded; nothing changed/.test(e.stdout));
+    assert.equal(readFileSync(join(dir, 'sheets', '0001.json'), 'utf8'), before, 'the sheet is unchanged'); assert.equal(readFileSync(join(dir, 'todos.json'), 'utf8'), ledger, 'so is the ledger');
     writeFileSync(join(dir, 'sheets', 'T001-related.json'), JSON.stringify({ sheet: 'T001-related', cells: [], findings: [{ cell: 1, category: 'stack', severity: 3, id: 'T001' }] }));
-    const stats = cli(dir, 'stats'); assert.match(stats, /0001\s+cells 2\s+fresh 2\s+defects 3:0 2:0 1:0/); assert.ok(!/related/.test(stats), 'a related sheet is not a survey sheet');
+    const stats = cli(dir, 'stats'); assert.match(stats, /0001\s+cells 2\s+fresh 2\s+defects 3:0 2:1 1:0/); assert.ok(!/related/.test(stats), 'a related sheet is not a survey sheet');
     for (let i = 1; i <= 3; i++) assert.match(cli(dir, 'attempt', 'T001', 'try ' + i), new RegExp(`T001 attempt ${i}/3`));
     assert.match(cli(dir, 'todos'), /no open todos\s*\n?parked: T001/); assert.match(cli(dir, 'todos', '--all'), /parked 3\/3/);
     const rel = cli(dir, 'related', 'T001', '--html', '--cells', '2');

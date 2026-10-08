@@ -64,12 +64,16 @@ export function drawsPart(state, tuple, part) {
 export function relatedCells(todo, { n = 8, pool = 2000, casts = CASTS } = {}) {
   const rng = prng(1000 + +todo.id.slice(1)), draw = () => 1 + Math.floor(rng() * 999998);
   const stancePart = todo.parts.some((p) => p.startsWith('stance:'));
-  const grid = gridOf(casts).filter((t) => (stancePart ? t.view === 'figure' : true));
+  // no part can be drawn (unknown only): the casts the todo was seen on stand in, any cell of them
+  const attributed = todo.parts.some((p) => !p.startsWith('unknown') && p.includes(':'));
+  const seenOn = new Set((todo.tuples ?? []).map((k) => k.split('/')[0]).filter((c) => c !== 'calibration'));
+  if (!attributed && !seenOn.size) return [];
+  const grid = gridOf(casts).filter((t) => (stancePart ? t.view === 'figure' : true) && (attributed || seenOn.has(t.cast)));
   const cells = [], taken = new Set(todo.evidence);
-  for (let i = 0; i < pool && cells.length < n; i++) {
+  for (let i = 0; i < pool && cells.length < n && grid.length; i++) {
     const tuple = pick(rng, grid), state = stateFor(tuple, draw()), hash = encode(state);
     if (taken.has(hash) || taken.has(keyOf(tuple))) continue;
-    if (todo.parts.some((p) => drawsPart(state, tuple, p))) { taken.add(hash); taken.add(keyOf(tuple)); cells.push({ tuple, state, flags: [], source: 'related' }); }
+    if (!attributed || todo.parts.some((p) => drawsPart(state, tuple, p))) { taken.add(hash); taken.add(keyOf(tuple)); cells.push({ tuple, state, flags: [], source: 'related' }); }
   }
   return cells;
 }

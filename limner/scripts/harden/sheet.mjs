@@ -35,7 +35,7 @@ function thenOf({ png, rect, crop, frame = { x: 0, y: 0, w: 400 } }, width) {
 
 /** Verify's page: per pair, the old cell cut out of its sheet png on the left (enlarged when cropped) and the new drawing on the right. */
 export function pairsHtml(pairs, width) {
-  const body = pairs.map(({ label: l, before, after }) => `<figure style="--w:${width}px;width:${width * 2 + 4}px"><div class="pair">${thenOf(before, width)}<div style="width:${width}px">${after}</div></div><figcaption>${l}: ${before.crop ? 'then (enlarged), now' : 'then, now'}</figcaption></figure>`).join('');
+  const body = pairs.map(({ label: l, before, after }) => `<figure style="--w:${width}px;width:${width * 2 + 4}px"><div class="pair">${before ? thenOf(before, width) : `<div style="width:${width}px">then: not on disk</div>`}<div style="width:${width}px">${after}</div></div><figcaption>${l}: ${!before ? 'now only' : before.crop ? 'then (enlarged), now' : 'then, now'}</figcaption></figure>`).join('');
   return page(body, width * 2 + 24);
 }
 
