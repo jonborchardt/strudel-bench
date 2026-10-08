@@ -509,6 +509,12 @@ test('T015: wideEyed on hooded eyes shows white over the iris, and the lint says
   const p = params(st);
   for (const style of ['narrow', 'hooded', 'monolid']) assert.ok(whiteOverIris({ ...p, eyes: { ...p.eyes, style } }) >= WIDE_WHITE, style);
   assert.ok(!lintState(st, { stance: 'none' }).some((f) => f.name === 'expression:wide-no-white'));
-  const low = { ...st, ov: { ...st.ov, 'eyes.openness': 1.3, 'eyes.squint': 0.9 } }; // a squint pulls the lid back over the iris: the lint fires
+  const low = { ...st, ov: { ...st.ov, 'eyes.squint': 0.9 } }; // a squint pulls the lid back over the iris: the lint fires
   assert.ok(lintState(low, { stance: 'none' }).some((f) => f.name === 'expression:wide-no-white'));
+});
+
+test('T079: the wide-eye lint is quiet on openMouth and deadStare, which read open at cell size', () => {
+  const openMouth = decode('eyJzZWVkIjo4NDAyNzMsImZhbWlseSI6ImFueSIsInRoZW1lIjoid2FzdGVsYW5kZXJzIiwib3YiOnsibW91dGguc21pbGUiOjAsIm1vdXRoLm9wZW4iOjAuNTUsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjM1LCJleWVzLmJyb3dMaWZ0Ijo5LCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MywiZXllcy5zcXVpbnQiOjB9fQ'); // T079 evidence 1
+  const deadStare = decode('eyJzZWVkIjo5MzYzMDcsImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjIsIm1vdXRoLm9wZW4iOjAuMDgsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjMyLCJleWVzLmJyb3dMaWZ0IjoyLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjEwLCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjotMC4xOCwicG9zZS5ib2R5VGlsdCI6MC4xMywicG9zZS50dXJuIjowLjM1LCJwb3NlLnNob3VsZGVyIjotMC44LCJwcm9wcyI6WyJjbGF3SGFuZHMiXX19'); // T079 evidence 14
+  for (const st of [openMouth, deadStare]) assert.ok(!lintState(st, { stance: 'none' }).some((f) => f.name === 'expression:wide-no-white'));
 });

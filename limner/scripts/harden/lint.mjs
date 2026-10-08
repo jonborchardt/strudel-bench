@@ -95,7 +95,7 @@ export function hairOverEye(p) {
 export function whiteOverIris(p) {
   return Math.min(...[-1, 1].map((s) => { const E = eyeShape(p, s); return E.th - (E.st.top * 0.22 + E.st.iris * (1.5 - 0.55 * (p.eyes.sclera ?? E.st.sclera))); }));
 }
-export const WIDE_OPEN = 1.25, WIDE_WHITE = 4; // an eye opened past WIDE_OPEN shows at least WIDE_WHITE of white over the iris, past the lid's shadow
+export const WIDE_OPEN = 1.4, WIDE_WHITE = 4; // an eye opened to WIDE_OPEN shows at least WIDE_WHITE of white over the iris, past the lid's shadow. Only wideEyed (1.45) and the like ask for white above the iris: openMouth (1.35) and deadStare (1.32) read open at cell size with white beside it (T079)
 export const hornParts =(p) => { const h = (p.makeup ?? []).filter((n) => /horn/i.test(n)).map((n) => `makeup:${n}`); return h.length ? h : ['unknown:horn']; };
 
 /** A shaved head's hair is only a shadow on the scalp (the hair colour, faint): drawn outside any clip it is the default cap fitted to a head whose skull may be lower or flatter, and stands clear above the crown as a halo (T008). The first such op drawn at clip depth 0, or null. */
@@ -126,7 +126,7 @@ export function lintState(st, tuple) {
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human') { const past = mouthPastMuzzle(p, ops); if (past > MOUTH_PAST_MUZZLE) out.push({ name: 'anatomy:mouth-past-muzzle', parts: [`mouth:${p.mouth.style}`], detail: `the mouth runs ${past.toFixed(1)} past the muzzle pad (over ${MOUTH_PAST_MUZZLE})` }); }
   const hornOut = hornStrokesOut(ops); if (hornOut) out.push({ name: 'render:horn-stroke-out', parts: hornParts(p), detail: `a horn's stroke ends at ${hornOut.map((v) => v.toFixed(1))}, outside the horn` });
   if (shadowHairOut(p, ops)) out.push({ name: 'stack:shaved-halo', parts: ['hair:shavedHead'], detail: 'the shaved head\'s shadow is drawn outside the head\'s clip' });
-  if ((p.eyes.mode ?? 'human') === 'human' && p.eyes.openness > WIDE_OPEN) { const w = whiteOverIris(p); if (w < WIDE_WHITE) out.push({ name: 'expression:wide-no-white', parts: [`eyes:${p.eyes.style}`], detail: `opened to ${p.eyes.openness}, the lid clears the iris by ${w.toFixed(1)} (under ${WIDE_WHITE})` }); }
+  if ((p.eyes.mode ?? 'human') === 'human' && p.eyes.openness >= WIDE_OPEN) { const w = whiteOverIris(p); if (w < WIDE_WHITE) out.push({ name: 'expression:wide-no-white', parts: [`eyes:${p.eyes.style}`], detail: `opened to ${p.eyes.openness}, the lid clears the iris by ${w.toFixed(1)} (under ${WIDE_WHITE})` }); }
   const hair = hairOverEye(p); if (hair > -HAIR_EYE_CLEAR) out.push({ name: 'stack:hair-over-eye', parts: [`hair:${p.hair.style}`], detail: `a front hair panel hangs ${(-hair).toFixed(1)} outside an eye's outer corner (under ${HAIR_EYE_CLEAR})` });
   const onFace = handOnFace(p, ops); if (onFace) out.push({ name: 'pose:hand-on-face', parts: tuple.stance && tuple.stance !== 'none' ? [`stance:${tuple.stance}`] : p.props.filter((n) => PROPS[n]?.lift).map((n) => `props:${n}`), detail: `a raised hand lands at ${onFace.map((v) => v.toFixed(1))}, on the face` });
   if (tuple.stance && tuple.stance !== 'none') {
