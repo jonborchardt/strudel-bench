@@ -52,7 +52,9 @@ export function pickCells({ coverage = {}, n = 9, view = 'bust', sheet = 1, lint
     if (flags.length) flagged.push({ tuple, state, flags, source: 'flagged' });
   }
   flagged.sort((a, b) => b.flags.length - a.flags.length);
-  for (const c of flagged) { const k = keyOf(c.tuple); if (cells.length < n && !taken.has(k)) { taken.add(k); cells.push(c); } }
+  // flagged cells take at most a third of a sheet (at least one): a lint that fires on a whole cast once filled ten sheets with that cast, and the survey stopped seeing the rest
+  const cap = 1 + Math.max(1, Math.floor((n - 1) / 3));
+  for (const c of flagged) { const k = keyOf(c.tuple); if (cells.length < cap && !taken.has(k)) { taken.add(k); cells.push(c); } }
   const rest = grid.map((t, i) => ({ t, i, c: coverage[keyOf(t)] ?? 0 })).sort((a, b) => a.c - b.c || a.i - b.i);
   for (const { t } of rest) { const k = keyOf(t); if (cells.length >= n) break; if (taken.has(k)) continue; taken.add(k); cells.push({ tuple: t, state: stateFor(t, draw()), flags: [], source: 'coverage' }); }
   return cells;
