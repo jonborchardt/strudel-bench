@@ -2793,11 +2793,11 @@
    "0063",
    "0064"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
-  "lint": null,
+  "closed": "2026-10-08",
+  "commit": "2a8ac66",
+  "lint": "render:horn-stroke-out",
   "wontfix": null,
   "attempts": 0,
   "tried": []
@@ -2823,6 +2823,37 @@
   ],
   "sheets": [
    "0061"
+  ],
+  "status": "open",
+  "opened": "2026-10-08",
+  "closed": null,
+  "commit": null,
+  "lint": null,
+  "wontfix": null,
+  "attempts": 0,
+  "tried": []
+ },
+ {
+  "id": "T063",
+  "title": "a translucent tan square box sits round the base of the neck above the roughTunic's collar, wider than the neck, its straight edges standing out on the background",
+  "notes": [
+   "a translucent tan square box sits round the base of the neck above the roughTunic's collar, wider than the neck, its straight edges standing out on the background"
+  ],
+  "category": "stack",
+  "parts": [
+   "top:roughTunic",
+   "unknown:neck"
+  ],
+  "severity": 2,
+  "seen": 1,
+  "evidence": [
+   "eyJzZWVkIjo4Nzc2OTAsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MC40NSwiZXllcy5vcGVubmVzcyI6MS4xNCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOjAuMDIsInBvc2UuYm9keVRpbHQiOjAsInBvc2UudHVybiI6MC4xNSwicG9zZS5zaG91bGRlciI6MC4zLCJwcm9wcyI6W119fQ"
+  ],
+  "tuples": [
+   "dragonborn/directFrontal/stare/figure"
+  ],
+  "sheets": [
+   "T061-related"
   ],
   "status": "open",
   "opened": "2026-10-08",
