@@ -60,7 +60,9 @@ export function statsOf(sheets) {
     return { sheet: s.sheet, cells: s.cells.filter((c) => c.tuple.cast !== 'calibration').length, freshCells: s.cells.filter((c) => c.fresh === true).length, s3: by(3), s2: by(2), s1: by(1), freshDefects: s.findings.filter((f) => freshOf.get(f.cell)).length };
   });
   const half = Math.floor(rows.length / 2), sum = (rs) => { const cells = rs.reduce((a, r) => a + r.freshCells, 0), defects = rs.reduce((a, r) => a + r.freshDefects, 0); return { cells, defects, rate: cells ? Math.round((defects / cells) * 100) / 100 : null }; };
-  return { rows, fresh: { early: sum(rows.slice(0, half)), late: sum(rows.slice(half)) } };
+  // every cell is a new seed, a face never drawn before, so defects per cell measures unseen faces too, and it does not run dry when every tuple has been covered
+  const all = (rs) => { const cells = rs.reduce((a, r) => a + r.cells, 0), defects = rs.reduce((a, r) => a + r.s3 + r.s2 + r.s1, 0); return { cells, defects, rate: cells ? Math.round((defects / cells) * 100) / 100 : null }; };
+  return { rows, fresh: { early: sum(rows.slice(0, half)), late: sum(rows.slice(half)) }, perCell: { early: all(rows.slice(0, half)), late: all(rows.slice(half)) } };
 }
 
 /** The open entries that are not parked, the one to fix first at the top: severity x seen, then the older. */

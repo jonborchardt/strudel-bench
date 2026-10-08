@@ -129,9 +129,10 @@ const commands = {
   stats() {
     const recorded = readdirSync(sheets).filter((f) => /^\d{4}\.json$/.test(f)).sort().map((f) => JSON.parse(readFileSync(join(sheets, f), 'utf8'))).filter((s) => Array.isArray(s.findings));
     if (!recorded.length) return console.log('no recorded sheets');
-    const { rows, fresh } = statsOf(recorded), rate = (x) => `${x.rate ?? 'n/a'} (${x.defects}/${x.cells})`;
+    const { rows, fresh, perCell } = statsOf(recorded), rate = (x) => `${x.rate ?? 'n/a'} (${x.defects}/${x.cells})`;
     for (const r of rows) console.log(`${r.sheet}  cells ${r.cells}  fresh ${r.freshCells}  defects 3:${r.s3} 2:${r.s2} 1:${r.s1}  on fresh ${r.freshDefects}`);
     console.log(`fresh defects per fresh cell: early ${rate(fresh.early)}  late ${rate(fresh.late)}`);
+    console.log(`defects per cell (every cell a new face): early ${rate(perCell.early)}  late ${rate(perCell.late)}`);
   },
   async verify([id]) {
     const todos = load(TODOS), t = todos.find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);

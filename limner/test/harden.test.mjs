@@ -429,7 +429,7 @@ test('ledger: merge folds open entries into one, the merged fingerprint counts o
 
 test('ledger: statsOf counts defects per sheet by severity and fresh defects early against late', () => {
   const sheet = (n, fresh, findings) => ({ sheet: n, cells: [{ n: 1, tuple: { cast: 'calibration' }, fresh: false }, { n: 2, tuple: { cast: 'elves' }, fresh: fresh[0] }, { n: 3, tuple: { cast: 'orcs' }, fresh: fresh[1] }], findings });
-  const { rows, fresh } = statsOf([
+  const { rows, fresh, perCell } = statsOf([
     sheet('0001', [true, true], [{ cell: 2, category: 'stack', severity: 3, id: 'T001' }, { cell: 3, category: 'style', severity: 1, id: 'T002' }]),
     sheet('0002', [true, false], []),
     sheet('0003', [false, true], [{ cell: 2, category: 'pose', severity: 2, id: 'T003' }]),
@@ -439,6 +439,7 @@ test('ledger: statsOf counts defects per sheet by severity and fresh defects ear
   assert.deepEqual(rows[1], { sheet: '0002', cells: 2, freshCells: 1, s3: 0, s2: 0, s1: 0, freshDefects: 0 });
   assert.deepEqual(rows[2], { sheet: '0003', cells: 2, freshCells: 1, s3: 0, s2: 1, s1: 0, freshDefects: 0 }, 'a defect on a seen cell is not a fresh defect');
   assert.deepEqual(fresh.early, { cells: 3, defects: 2, rate: 0.67 }); assert.deepEqual(fresh.late, { cells: 3, defects: 1, rate: 0.33 });
+  assert.deepEqual(perCell.early, { cells: 4, defects: 2, rate: 0.5 }); assert.deepEqual(perCell.late, { cells: 4, defects: 2, rate: 0.5 }, 'per cell counts every defect, fresh or not, over every non-calibration cell');
   assert.deepEqual(statsOf([sheet('0001', [false, false], [])]).fresh, { early: { cells: 0, defects: 0, rate: null }, late: { cells: 0, defects: 0, rate: null } });
 });
 
