@@ -699,8 +699,9 @@ const mustache = (p, pull = LIP_PULL, op = 1, style = 'chevron') => {
 // Each style is the band's shape and whether it carries a moustache; `facialHair`'s own dials (color, density,
 // mustache, cheekLine) go over it, so the gap between a stubble and a beard is a number and not a missing style.
 // The chin patch (goatee, vanDyke), drawn for the default mouth (48 wide on the line 260) and clipped to the chin: a tuft under the lip that fills out over the chin and tapers to it, curved sides, not a straight-sided box (T052)
-const CHIN_PATCH = 'M 194 272 Q 200 276 206 272 Q 213 284 216 300 Q 219 314 213 324 L 208 327 L 205 333 L 200 330 L 195 335 L 192 327 L 187 324 Q 181 314 184 300 Q 187 284 194 272 Z';
-const chinPatch = (q) => { const [patch] = onMouth(q, [path(CHIN_PATCH, { fill: q.hairColor })]); return [clip(hull(q, 8)), patch, clip(patch.d), ...strands(q, { from: [200, q.mouth.y + 8], a0: 1.25, a1: Math.PI - 1.25, len: 34, n: 7 }), UNCLIP, UNCLIP]; }; // the grain the full beard has, so the patch reads as hair
+// It is sized by the chin it covers, the face's width, not by the mouth: a patch as narrow as a small mouth hung from the lip as a tongue (T123)
+const CHIN_PATCH = 'M 188 271 Q 200 275 212 271 Q 222 280 224 296 Q 225 312 217 322 L 211 325 L 207 330 L 203 326 L 199 331 L 195 326 L 191 330 L 187 325 Q 177 316 176 304 Q 175 286 188 271 Z';
+const chinPatch = (q) => { const [patch] = mapXY([path(CHIN_PATCH, { fill: q.hairColor })], scaleAbout(200, q.face.width / 156), (y) => y + q.mouth.y - 260); return [clip(hull(q, 8)), patch, clip(patch.d), ...strands(q, { from: [200, q.mouth.y + 8], a0: 1.25, a1: Math.PI - 1.25, len: 34, n: 7 }), UNCLIP, UNCLIP]; }; // the grain the full beard has, so the patch reads as hair
 const BEARDS = {
   none: null,
   lightStubble: { op: 0.09, chin: 0, stubble: true, stache: true, stacheStyle: 'walrus' }, // a shadow of hair grows on the upper lip as well: a stubble with a shaved moustache is a choice, not the default (facialHair.mustache 0 makes it one) // a stubble is a shadow of hair, so it is never lighter than the skin: pale hair is pulled toward dark for it
