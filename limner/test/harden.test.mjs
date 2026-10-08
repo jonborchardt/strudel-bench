@@ -174,6 +174,15 @@ test('lint: handsUp on the broadest builds keeps the hands beside the head, insi
   }
 });
 
+test('lint: every raised-arm prop keeps its hand off the face, not only handsUp (T073)', () => {
+  const hashes = ['eyJzZWVkIjo2NTQ2NTAsImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjIsIm1vdXRoLm9wZW4iOjAuMDgsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjMyLCJleWVzLmJyb3dMaWZ0IjoyLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjYsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOjAuMTIsInBvc2UuYm9keVRpbHQiOjAuMDMsInBvc2UudHVybiI6MC41LCJwb3NlLnNob3VsZGVyIjotMC40LCJwcm9wcyI6WyJjbGF3c1JpZ2h0Il19fQ', 'eyJzZWVkIjoyMzcxNzcsImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjI1LCJtb3V0aC5vcGVuIjowLjE1LCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC40MiwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjEsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjotNiwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6LTAuMTIsInBvc2UuYm9keVRpbHQiOi0wLjAzLCJwb3NlLnR1cm4iOi0wLjUsInBvc2Uuc2hvdWxkZXIiOjAuNCwicHJvcHMiOlsiY2xhd3NMZWZ0Il19fQ', 'eyJzZWVkIjo1MTQ5MTYsImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOjAuMSwibW91dGgub3BlbiI6MC41NSwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjEuMTUsImV5ZXMuYnJvd0xpZnQiOi0yLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6LTQsImV5ZXMuc3F1aW50IjowLjIsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjQsInBvc2UuaGVhZFRpbHQiOi0wLjE0LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOi0wLjUsInBvc2Uuc2hvdWxkZXIiOi0wLjYsInByb3BzIjpbImNsYXdSYWlzZWRSaWdodCJdfX0', 'eyJzZWVkIjo1NTAxMzQsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4zLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjUsIm1vdXRoLnByZXNzIjowLjMsImV5ZXMub3Blbm5lc3MiOjAuOCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotMywiZXllcy5zcXVpbnQiOjAuNH19'];
+  for (const h of hashes) { // clawsRight's far claw over the eye, clawsLeft's on the temple, clawRaisedRight's and an editorial armRaised's on the brim
+    const p = params(decode(h));
+    assert.ok(p.props.some((n) => ['clawsRight', 'clawsLeft', 'clawRaisedRight', 'armRaised'].includes(n)), 'the evidence still raises the arm');
+    assert.equal(handOnFace(p), null, p.props.join(','));
+  }
+});
+
 test('lint: a stance that moves nothing is pose:stance-noop, a real one is not', () => {
   const st = { ...blank(), ov: { 'pose.turn': 0.6, 'pose.shoulder': 0.7, props: ['handsUp'] } };
   assert.deepEqual(lintState(st, { cast: 'editorial', stance: 'handsUp', expression: 'deadpan', view: 'figure' }), []);

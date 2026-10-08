@@ -886,7 +886,8 @@ const sleeveColor = (p) => { if (p.jacket.style !== 'none') return p.jacket.colo
 const ARM_W = 58, FORE_W = 52, SHOULDER = (side) => [200 + 86 * side, 398];
 const mitten = (p, x, y, a, k0 = 1) => { const k = k0 * bld(p).hands; const c = Math.cos(a), sn = Math.sin(a), at = (dx, dy) => [x + (dx * c - dy * sn) * k, y + (dx * sn + dy * c) * k], col = handColor(p), f = at(11, 0), t = at(2, -14); return [ellipse(x, y, 15 * k, 17 * k, { fill: col }), ellipse(f[0], f[1], 12 * k, 12 * k, { fill: col }), ellipse(t[0], t[1], 6.5 * k, 8 * k, { fill: col })]; };
 /** An arm from the shoulder on `side` through `elbow` to `wrist` (sheet points), with a hand unless `hand` is false. The upper arm and the forearm are round tubes from the joint; over the joint sits the deltoid, a soft bulge that continues the trunk's own shoulder curve out over the top of the arm and fades into it, so the arm grows out of a shoulder rather than hanging off a corner. No outline: a highlight along the top of the shoulder, a soft shadow where the upper arm meets the chest, and a soft edge under the forearm so a sleeve the colour of the shirt still reads against the body. `lift` moves the joint up and out as the arm rises. */
-export function arm(p, side, { lift = 0, elbow, wrist, hand = true }) {
+export function arm(p, side, { lift = 0, elbow, wrist, hand = true, clear }) {
+  if (clear != null) { elbow = [handsOut(p, side, elbow[0], clear + 4), elbow[1]]; wrist = [handsOut(p, side, wrist[0], clear), wrist[1]]; } // a raised hand kept `clear` outside the face edge, as handsUp's are (T073: a claw on the eye, a hand on the brim)
   const [sx0, sy0] = SHOULDER(side), sx = sx0 - (16 - 24 * lift) * side, sy = sy0 - 8 * lift, col = sleeveColor(p), ak = bld(p).arms, dark = shade(col, 0.5);
   const [ex, ey] = ak === 1 ? elbow : [sx + (elbow[0] - sx) * ak, sy + (elbow[1] - sy) * ak], [wx, wy] = ak === 1 ? wrist : [sx + (wrist[0] - sx) * ak, sy + (wrist[1] - sy) * ak]; // the arm's length is the build's, about the joint
   const dx = wx - ex, dy = wy - ey, L = Math.hypot(dx, dy) || 1, a = Math.atan2(dy, dx), hx = wx + (dx / L) * 16, hy = wy + (dy / L) * 16;
@@ -902,7 +903,7 @@ export function arm(p, side, { lift = 0, elbow, wrist, hand = true }) {
     ...(lift > 0.5 ? [path(`M ${P(sx - 18 * side, sy + 18)} Q ${P(sx, sy + 30)} ${P(sx + 14 * side, sy + 20)}`, stroke('#000', 2.5, 0.09))] : []), // the crease under a lifted arm
     line(ex, ey, wx, wy, stroke(col, FORE_W)),
     ellipse(ex, ey, 9, 7, { fill: '#000', op: 0.07 }), // the elbow
-    ...(hand ? mitten(p, hx + (dx / L) * 4, hy + (dy / L) * 4, a, 1.25) : []),
+    ...(typeof hand === 'function' ? hand(wx, wy) : hand ? mitten(p, hx + (dx / L) * 4, hy + (dy / L) * 4, a, 1.25) : []), // a function draws its own hand at the wrist as drawn (a claw)
   ];
 }
 /** A raised arm's x (arm space, as `arm` takes it) that lands at least `gap` outside the face edge on the sheet. `arm` scales the point about the shoulder by the build's arms and the body maps it about 200 by the shoulders' width, while the head scales by its own: a short-armed people with a big head (a halfling) would otherwise put its hands on its cheeks. A broad, long-armed people (a dragonborn, an orc: shoulders 1.44 times a body up to 1.28) would carry the point as far out again as its shoulders, past the figure's frame, so the reach is capped at a human's of the same body width: up is beside the head, not a span. A human's point is already clear and inside its own reach and comes back unchanged. */
@@ -911,7 +912,7 @@ const handsOut = (p, side, x, gap) => {
   const sheet = 200 + (sx + (x - sx) * b.arms - 200) * bw, clear = (p.face.width / 2) * b.head + gap;
   const off = Math.max(clear, Math.min(Math.abs(sheet - 200), Math.abs(x - 200) * p.body.width)); // clear of the face, within a human's reach
   if (off === Math.abs(sheet - 200)) return x;
-  return sx + (200 + (side * off) / bw - sx) / b.arms;
+  return sx + (200 + (Math.sign(x - 200) * off) / bw - sx) / b.arms; // the point's own side: a far arm reaching across keeps to the side it reached
 };
 const sleeve = (p, x0, y0, x1, y1, sw = 34) => line(x0, y0, x1, y1, stroke(sleeveColor(p), sw));
 const hand = (p, x, y, a = 0, k = 1) => mitten(p, x, y, a - Math.PI / 2, k);
@@ -931,7 +932,7 @@ export const PROPS = {
   abstractToyLikeProp: { arms: [1], front: (p) => [...arm(p, 1, { lift: 0.35, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), rect(240, 420, 28, 32, { rx: 5, fill: '#b3202a' }), ellipse(248, 432, 3.5, 3.5, { fill: '#fff' }), ellipse(260, 432, 3.5, 3.5, { fill: '#fff' }), rect(246, 442, 16, 4, { fill: '#fff' })] },
   handHeartGesture: { arms: [-1, 1], front: (p) => [...arm(p, -1, { lift: 0.35, elbow: [96, 490], wrist: [176, 476], hand: false }), ...arm(p, 1, { lift: 0.35, elbow: [304, 490], wrist: [224, 476], hand: false }), path('M 200 498 C 172 480, 160 452, 178 442 C 188 437, 197 443, 200 452 C 203 443, 212 437, 222 442 C 240 452, 228 480, 200 498 Z', stroke(handColor(p), 19)), path('M 200 494 C 176 478, 166 456, 180 448 C 190 444, 198 449, 200 458 C 202 449, 210 444, 220 448 C 234 456, 224 478, 200 494 Z', { fill: '#000', op: 0.16 })] },
   handsUp: { lift: [-1, 1], front: (p) => [...arm(p, -1, { lift: 1, elbow: [handsOut(p, -1, 34, 32), 326], wrist: [handsOut(p, -1, 42, 24), 196] }), ...arm(p, 1, { lift: 1, elbow: [handsOut(p, 1, 366, 32), 326], wrist: [handsOut(p, 1, 358, 24), 196] })] }, // both shoulders lifted, elbows wide and forearms upright, palms beside the head clear of the face and the hat: this figure's arms (about 4.6 heads tall) cannot reach over the crown, so up is beside it, not on it
-  armRaised: { lift: [1], front: (p) => [...arm(p, 1, { lift: 1, elbow: [332, 296], wrist: [312, 184] })] },
+  armRaised: { lift: [1], front: (p) => [...arm(p, 1, { lift: 1, elbow: [332, 296], wrist: [312, 184], clear: 40 })] },
 };
 export const PROP_STYLES = Object.keys(PROPS);
 // The body is a figure: a trunk the body's own width (shoulders rounded at the joint, the sides straight to the hip),
