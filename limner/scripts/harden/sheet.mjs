@@ -4,8 +4,8 @@
 import { renderPortrait, renderFigure } from '../../index.mjs';
 import { params } from '../../schema.mjs';
 
-/** Named crops of the bust sheet: the head, and the eyes (tuned by looking, Task 8 may move them). */
-export const CROPS = { head: '80 90 240 260', eyes: '95 160 210 90' };
+/** Named crops of the bust sheet: the head, and the eyes (tuned by looking: the head crop holds a dragonborn's horns and a leaned head, sheets 0001-0002). */
+export const CROPS = { head: '50 40 320 330', eyes: '95 160 210 90' };
 export const LAYOUT = { bust: { cols: 3, cell: 360 }, figure: { cols: 5, cell: 220 } };
 const VIEWBOX = { bust: '0 0 400 480', figure: '-30 -200 460 1284' };
 
