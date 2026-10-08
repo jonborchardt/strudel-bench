@@ -225,11 +225,11 @@
   "sheets": [
    "0002"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
-  "lint": null,
+  "closed": "2026-10-07",
+  "commit": "7a8a3b1",
+  "lint": "render:offsheet",
   "wontfix": null,
   "attempts": 0,
   "tried": []
