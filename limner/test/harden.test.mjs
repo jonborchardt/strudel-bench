@@ -5,6 +5,10 @@ import assert from 'node:assert/strict';
 import { portraitOps } from '../index.mjs';
 import { blank } from '../schema.mjs';
 import { SHEET, pointsOf, lintOps, lintState } from '../scripts/harden/lint.mjs';
+import { CASTS } from '../registry.mjs';
+import { EXPRESSIONS } from '../people.mjs';
+import { params, decode } from '../schema.mjs';
+import { CALIBRATION, gridOf, keyOf, stateFor, pickCells, bump } from '../scripts/harden/sampler.mjs';
 
 test('lint: pointsOf reads every op kind as x,y pairs', () => {
   assert.deepEqual(pointsOf({ k: 'path', d: 'M 10 20 L 30 40 C 1 2 3 4 5 6 Z' }), [[10, 20], [30, 40], [1, 2], [3, 4], [5, 6]]);
@@ -33,3 +37,45 @@ test('lint: a stance that moves nothing is pose:stance-noop, a real one is not',
   assert.deepEqual(flags[0].parts, ['stance:deadStill']);
   assert.deepEqual(lintState(still, { cast: 'editorial', stance: 'none', expression: 'deadpan', view: 'bust' }), [], 'no stance, no noop check');
 });
+
+test('sampler: the grid is every cast x its stances x its expressions x view, stances only as figures', () => {
+  const grid = gridOf();
+  assert.ok(grid.length > 500, `${grid.length} cells`);
+  assert.ok(grid.every((t) => CASTS[t.cast] && EXPRESSIONS[t.expression] && ['bust', 'figure'].includes(t.view)));
+  assert.ok(grid.every((t) => t.stance === 'none' || t.view === 'figure'), 'a stance is a body');
+  assert.ok(grid.some((t) => t.cast === 'undead' && t.stance === 'thrillerClaw'), 'a cast reaches its own stance pack');
+  assert.ok(grid.some((t) => t.cast === 'undead' && t.expression === 'hunger'), 'and its own expressions');
+  assert.ok(!grid.some((t) => t.cast === 'elves' && t.expression === 'hunger'), 'but not another cast\'s');
+  assert.equal(new Set(grid.map(keyOf)).size, grid.length, 'every key is unique');
+  const fake = { ghosts: { ...CASTS.editorial, name: 'ghosts', expressions: ['deadpan', 'notAnExpression'] } };
+  assert.ok(!gridOf(fake).some((t) => t.expression === 'notAnExpression'), 'an expression EXPRESSIONS lacks is skipped, not thrown');
+});
+
+test('sampler: a tuple and a seed are a state the editor opens, drawn in that stance and expression', () => {
+  const st = stateFor({ cast: 'elves', stance: 'swaggerLean', expression: 'grin', view: 'figure' }, 42);
+  assert.equal(st.theme, 'elves'); assert.equal(st.seed, 42);
+  assert.equal(st.ov['pose.turn'], 0.6); assert.equal(st.ov['mouth.smile'], 0.92);
+  assert.equal(params(st).pose.turn, 0.6, 'the ov lands on the drawn params');
+  assert.equal(stateFor({ cast: 'editorial', stance: 'none', expression: 'deadpan', view: 'bust' }, 1).theme, 'none');
+  assert.ok(decode(CALIBRATION).seed, 'the calibration hash decodes');
+});
+
+test('sampler: cell 1 is calibration, flagged cells come first, the rest are the least covered, and it is deterministic', () => {
+  const flagOn = (st, t) => (t.cast === 'orcs' ? [{ name: 'render:offsheet', parts: [], detail: '' }] : []);
+  const covered = Object.fromEntries(gridOf().filter((t) => t.view === 'bust' && t.cast !== 'editorial').map((t) => [keyOf(t), 5]));
+  const a = pickCells({ coverage: covered, n: 5, view: 'bust', sheet: 3, lint: flagOn, pool: 120 });
+  const b = pickCells({ coverage: covered, n: 5, view: 'bust', sheet: 3, lint: flagOn, pool: 120 });
+  assert.deepEqual(a, b, 'same inputs, same sheet');
+  assert.equal(a.length, 5);
+  assert.equal(a[0].source, 'calibration'); assert.equal(a[0].tuple.cast, 'calibration'); assert.equal(a[0].tuple.view, 'bust');
+  assert.ok(a.slice(1).every((c) => c.tuple.view === 'bust'));
+  const flagged = a.filter((c) => c.source === 'flagged');
+  assert.ok(flagged.length >= 1 && flagged.every((c) => c.tuple.cast === 'orcs' && c.flags.length === 1));
+  assert.ok(a.filter((c) => c.source === 'coverage').every((c) => c.tuple.cast === 'editorial'), 'the uncovered cast fills the rest');
+  assert.ok(a.every((c) => c.flags.length === 0 || c.source === 'flagged'));
+  const keys = a.slice(1).map((c) => keyOf(c.tuple)); assert.equal(new Set(keys).size, keys.length, 'no tuple twice on one sheet');
+  const cov = bump({}, a);
+  assert.equal(Object.keys(cov).length, 4, 'calibration is not coverage'); assert.ok(Object.values(cov).every((v) => v === 1));
+  assert.notDeepEqual(pickCells({ coverage: {}, n: 3, view: 'figure', sheet: 4, lint: () => [], pool: 0 }), pickCells({ coverage: {}, n: 3, view: 'figure', sheet: 5, lint: () => [], pool: 0 }), 'another sheet, other seeds');
+});
+
