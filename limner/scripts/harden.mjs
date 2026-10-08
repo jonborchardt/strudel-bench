@@ -23,7 +23,8 @@ import { record, rank, close, load, save } from './harden/ledger.mjs';
 const argv = process.argv.slice(2);
 const flag = (name, dflt) => { const i = argv.indexOf('--' + name); return i < 0 ? dflt : argv[i + 1]; };
 const has = (name) => argv.includes('--' + name);
-const positional = argv.filter((a, i) => !a.startsWith('--') && !argv[i - 1]?.startsWith('--'));
+const VALUED = new Set(['dir', 'view', 'cells', 'pool', 'stance', 'commit', 'lint', 'wontfix']); // html and all are booleans
+const positional = argv.filter((a, i) => !a.startsWith('--') && !(argv[i - 1]?.startsWith('--') && VALUED.has(argv[i - 1].slice(2))));
 const [cmd, ...args] = positional;
 const dir = flag('dir', join(dirname(fileURLToPath(import.meta.url)), 'harden'));
 const sheets = join(dir, 'sheets');

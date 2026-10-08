@@ -172,7 +172,8 @@ test('cli: a first run starts empty, next --html writes sheet 0001 without a bro
     assert.equal(todos[0].evidence[0], sheet.cells[1].hash); assert.deepEqual(todos[0].tuples, [sheet.cells[1].key]);
     assert.match(cli(dir, 'todos'), /T001\s+1x1\s+style\s+eyes:almond\s+flat iris/);
     assert.match(cli(dir, 'next', '--html', '--cells', '2', '--pool', '0'), /sheet 0002/); assert.equal(JSON.parse(readFileSync(join(dir, 'sheets', '0002.json'), 'utf8')).view, 'figure', 'even sheets are figures');
-    assert.match(cli(dir, 'close', 'T001', '--wontfix', 'in character'), /T001 wontfix/);
+    assert.match(cli(dir, 'close', '--wontfix', 'in character', 'T001'), /T001 wontfix/);
+    assert.throws(() => cli(dir, 'verify', '--html', 'T001'), /no evidence cell with a png/, 'a boolean flag before the id keeps the id');
     assert.equal(cli(dir, 'todos').trim(), 'no open todos');
     assert.match(cli(dir, 'todos', '--all'), /T001.*wontfix/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
