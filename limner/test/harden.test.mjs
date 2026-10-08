@@ -66,6 +66,12 @@ test('lint: anatomy:muzzle-mouth, the mouth line runs under a muzzle\'s nostrils
   for (const style of ['straight', 'short', 'long', 'broad', 'aquiline']) for (const length of [22, 40, 58]) assert.ok(muzzleGap({ ...p, nose: { ...p.nose, style, length } }) >= 2, `${style} ${length}`);
 });
 
+test('the vanDyke moustache sits over the mouth, not cheek to cheek (T001)', () => {
+  const st = decode('eyJzZWVkIjo4MTAzODQsImZhbWlseSI6ImFueSIsInRoZW1lIjoic2NpZmkiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6LTEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo1LCJleWVzLnNxdWludCI6MH19');
+  const span = (style) => { const xs = portraitOps(params({ ...st, ov: { ...st.ov, 'facialHair.style': style } })).filter((o) => o.stache).flatMap((o) => pointsOf(o).map(([x]) => x)); return Math.max(...xs) - Math.min(...xs); };
+  assert.ok(span('vanDyke') <= span('goatee') * 1.3, `vanDyke (control points included) ${span('vanDyke').toFixed(1)} against the goatee's chevron ${span('goatee').toFixed(1)}: a moustache is as wide as the mouth it sits on, its turned ends a little past`);
+});
+
 test('lint: a stance that moves nothing is pose:stance-noop, a real one is not', () => {
   const st = { ...blank(), ov: { 'pose.turn': 0.6, 'pose.shoulder': 0.7, props: ['handsUp'] } };
   assert.deepEqual(lintState(st, { cast: 'editorial', stance: 'handsUp', expression: 'deadpan', view: 'figure' }), []);
