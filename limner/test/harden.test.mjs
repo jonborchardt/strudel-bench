@@ -8,7 +8,7 @@ import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_C
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
-import { CALIBRATION, gridOf, keyOf, stateFor, nowState, pickCells, bump, relatedCells, drawsPart } from '../scripts/harden/sampler.mjs';
+import { CALIBRATION, gridOf, keyOf, stateFor, nowState, pickCells, bump, relatedCells, drawsPart, partsOf } from '../scripts/harden/sampler.mjs';
 import { CROPS, LAYOUT, svgOf, sheetHtml, pairsHtml, chromePath } from '../scripts/harden/sheet.mjs';
 import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -556,4 +556,10 @@ test('T052: the goatee is a tuft with curved sides and grain, not a straight-sid
     assert.ok(longest < 12, `${style}: a straight edge ${longest.toFixed(1)} long`);
     assert.ok(ops.filter((o) => o.k === 'clip').length >= 2, `${style}: the grain is drawn inside the patch`);
   }
+});
+test('sampler: partsOf names the parts a cell draws, in the spelling a finding uses', () => {
+  const st = stateFor({ cast: 'elves', stance: 'swaggerLean', expression: 'grin', view: 'figure' }, 42), parts = partsOf(st), p = params(st);
+  assert.ok(parts.includes('hair:' + p.hair.style) && parts.includes('eyes:' + p.eyes.style), parts.join(' '));
+  assert.ok(parts.every((x) => /^\w+:\w+$/.test(x) && !x.endsWith(':none')), 'kind:name, never none');
+  assert.ok(parts.every((x) => drawsPart(st, { stance: 'swaggerLean', expression: 'grin' }, x)), 'every named part is one related() would find');
 });

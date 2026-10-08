@@ -20,7 +20,7 @@ The sheet pngs are the loop's *then* side and live only where they were rendered
 
 1. `npm run harden -- next`. Read the table it prints and the png.
 2. Judge every cell but cell 1 against the rubric, cell 1 being the scale. For a face fault on a figure sheet, `npm run harden -- crop <sheet> head` first.
-3. Write the findings as JSON to the scratchpad: `[{ "cell": 4, "category": "stack", "parts": ["hat:leafCirclet", "hair:highBun"], "severity": 2, "note": "circlet floats clear of the bun" }]`. Categories and severity are the rubric's; `parts` may be `["unknown"]` when nothing specific can be named. A clean sheet is `[]`, and it is still recorded: the stats need it.
+3. Write the findings as JSON to the scratchpad: `[{ "cell": 4, "category": "stack", "parts": ["hat:leafCirclet", "hair:highBun"], "severity": 2, "note": "circlet floats clear of the bun" }]`. Categories and severity are the rubric's. Name parts from the cell's own `parts` list in the sheet json (`sheets/<sheet>.json`: every hair, hat, garment, mark and feature style the cell draws, spelled as a finding takes them), never from the picture alone; `parts` may be `["unknown"]` when the fault belongs to none of them. A clean sheet is `[]`, and it is still recorded: the stats need it.
 4. `npm run harden -- record <sheet> <file>`. A refusal is a malformed finding; fix the JSON and record again (a refused batch writes nothing, so the sheet is not yet recorded; a sheet already recorded is refused, never recorded twice).
 
 **Fix: every severity-3 entry, then the top one left.** Severity 3 is wrong at thumbnail size, so none of those waits a cycle; after they are all closed or parked, one more entry, whatever ranks first. Steps 6 to 10 run once per entry.

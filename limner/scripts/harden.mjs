@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { encode, decode, params } from '../schema.mjs';
 import { feetY, FEET_Y } from '../index.mjs';
 import { lintState } from './harden/lint.mjs';
-import { pickCells, bump, keyOf, relatedCells, nowState } from './harden/sampler.mjs';
+import { pickCells, bump, keyOf, relatedCells, nowState, partsOf } from './harden/sampler.mjs';
 import { sheetHtml, pairsHtml, screenshot, svgOf, LAYOUT, CROPS, VIEWBOX } from './harden/sheet.mjs';
 import { record, merge, rank, close, load, save, attempt, isParked, statsOf, MAX_ATTEMPTS } from './harden/ledger.mjs';
 
@@ -60,7 +60,7 @@ const commands = {
     const view = flag('view', n % 2 ? 'bust' : 'figure'), coverage = readJson(COVERAGE, {});
     const cells = pickCells({ coverage, n: +flag('cells', 9), view, sheet: n, pool: +flag('pool', 200) });
     const { file, rects } = await emit(sheetHtml(cells, { view }), join(sheets, num), view);
-    const rows = cells.map((c, i) => ({ n: i + 1, tuple: c.tuple, key: c.tuple.cast === 'calibration' ? 'calibration' : keyOf(c.tuple), hash: encode(c.state), flags: c.flags, source: c.source, rect: rects?.[i] ?? null, fresh: c.tuple.cast !== 'calibration' && !(coverage[keyOf(c.tuple)] > 0) })); // before bump
+    const rows = cells.map((c, i) => ({ n: i + 1, tuple: c.tuple, key: c.tuple.cast === 'calibration' ? 'calibration' : keyOf(c.tuple), hash: encode(c.state), parts: partsOf(c.state), flags: c.flags, source: c.source, rect: rects?.[i] ?? null, fresh: c.tuple.cast !== 'calibration' && !(coverage[keyOf(c.tuple)] > 0) })); // before bump
     writeFileSync(join(sheets, `${num}.json`), JSON.stringify({ sheet: num, view, viewBox: VIEWBOX[view], crop: null, png: file, cells: rows }, null, 1));
     writeFileSync(COVERAGE, JSON.stringify(bump(coverage, cells), null, 1) + '\n');
     console.log(`sheet ${num}   ${file}\n${table(rows)}`);

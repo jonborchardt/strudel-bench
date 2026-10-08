@@ -62,6 +62,16 @@ export function pickCells({ coverage = {}, n = 9, view = 'bust', sheet = 1, lint
 }
 
 /** Whether a cell draws one of the parts a todo names: a stance or expression by its tuple, any other `kind:name` by the name appearing as a value in the drawn params, `unknown` never. */
+/** The parts a cell actually draws, as `kind:name` in the editor's spelling, so a reader names a finding's parts from the sheet json instead of guessing from the picture. Styled parts by `style`, list parts by each name, the feature styles last; `none` and empty are left out. */
+export function partsOf(state) {
+  const p = params(state), out = [];
+  for (const k of ['hair', 'hat', 'facialHair', 'glasses', 'top', 'jacket', 'pants']) { const s = p[k]?.style; if (s && s !== 'none') out.push(`${k}:${s}`); }
+  for (const k of ['makeup', 'marks', 'props', 'accessories', 'details']) for (const n of [p[k] ?? []].flat()) if (n && n !== 'none') out.push(`${k}:${n}`);
+  if (p.top?.graphic && p.top.graphic !== 'none') out.push(`graphics:${p.top.graphic}`);
+  for (const k of ['eyes', 'nose', 'mouth']) { const s = p[k]?.style; if (s) out.push(`${k}:${s}`); }
+  return out;
+}
+
 export function drawsPart(state, tuple, part) {
   const [kind, name] = part.split(':');
   if (kind === 'unknown' || !name) return false;
