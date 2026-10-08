@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { portraitOps, renderFigure, HAIR, FACIAL_HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR, hornStrokesOut, crownStrokesOut, hornParts, mouthPastMuzzle, MOUTH_PAST_MUZZLE, shadowHairOut, whiteOverIris, WIDE_WHITE, handOnFace } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -111,6 +111,17 @@ test('lint: render:horn-stroke-out, a dragonborn hornCrest\'s ridges end inside 
   const [x, y] = pointsOf(ops[h])[0], whisker = [...ops.slice(0, h + 1), { k: 'path', d: `M ${x} ${y - 10} L ${x + 40} ${y - 14}`, fill: 'none' }, ...ops.slice(h + 1)];
   assert.ok(hornStrokesOut(whisker), 'a ridge run out past the crest is named');
   assert.deepEqual(hornParts(p), ['makeup:hornCrest']);
+});
+
+test('lint: render:crown-stroke-out, a strawCap\'s coiled rows end inside its crown (T053)', () => {
+  const st = decode('eyJzZWVkIjo2OTEzOTgsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaGFsZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMDYsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjA0LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MSwiZXllcy5zcXVpbnQiOjB9fQ');
+  const p = params(st), ops = portraitOps(p), c = ops.findIndex((o) => o.crown);
+  assert.ok(p.hat.style === 'strawCap' && c >= 0, 'the evidence face wears the strawCap');
+  assert.equal(crownStrokesOut(ops), null);
+  assert.ok(!lintState(st, { cast: 'halflings', stance: 'none', expression: 'shut', view: 'bust' }).some((f) => f.name === 'render:crown-stroke-out'));
+  const [x0, y0] = pointsOf(ops[c])[0], top = Math.min(...pointsOf(ops[c]).map(([, y]) => y));
+  const whisker = [...ops.slice(0, c + 1), { k: 'path', d: `M ${x0 + 12} ${top + 4} Q 200 ${top - 10} ${400 - x0 - 12} ${top + 4}`, fill: 'none', sw: 1.4 }, ...ops.slice(c + 1)];
+  assert.ok(crownStrokesOut(whisker), 'a row run out past the crown is named');
 });
 
 test('lint: stack:hair-over-eye, a bluntBob\'s panels hang beside the eyes, not over them (T012)', () => {

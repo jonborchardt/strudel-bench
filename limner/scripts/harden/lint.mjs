@@ -55,11 +55,16 @@ export function outline(d) {
 export const inside = ([x, y], poly) => poly.reduce((on, [x0, y0], j) => { const [x1, y1] = poly[(j + 1) % poly.length]; return (y0 > y) !== (y1 > y) && x < x0 + (x1 - x0) * (y - y0) / (y1 - y0) ? !on : on; }, false);
 
 /** A horn's own strokes (the ridges and the highlight drawn right after its fill) end inside its outline (T010: the growth ridges ran past both edges into the background as whiskers). */
-export function hornStrokesOut(ops) {
+export const hornStrokesOut = (ops) => strokesOut(ops, 'horn');
+/** A hat crown's fine strokes (the strawCap's coiled rows, drawn right after its crown) end inside the crown; a band (FINE_SW and wider) is laid on the brim and not checked (T053: the top rows ran past the crown into the background as whiskers). */
+export const FINE_SW = 3;
+export const crownStrokesOut = (ops) => strokesOut(ops, 'crown', FINE_SW);
+/** The strokes drawn right after a shape flagged by key (narrower than maxSw) end inside its outline. */
+function strokesOut(ops, key, maxSw = Infinity) {
   let horn = null;
   for (const op of ops) {
-    if (op.horn) { horn = outline(op.d); continue; }
-    if (!horn || op.k !== 'path' || op.fill !== 'none') { horn = null; continue; }
+    if (op[key]) { horn = outline(op.d); continue; }
+    if (!horn || op.k !== 'path' || op.fill !== 'none' || op.sw >= maxSw) { horn = null; continue; }
     const pts = pointsOf(op), out = [pts[0], pts[pts.length - 1]].find((pt) => !inside(pt, horn));
     if (out) return out;
   }
@@ -126,6 +131,7 @@ export function lintState(st, tuple) {
   const p = params(st), ops = portraitOps(p), out = lintOps(ops, { dy: FEET_Y - feetY(p) });
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human' && muzzleGap(p) < 2) out.push({ name: 'anatomy:muzzle-mouth', parts: ['unknown:muzzle'], detail: `the mouth line is ${muzzleGap(p).toFixed(1)} under the nostrils` });
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human') { const past = mouthPastMuzzle(p, ops); if (past > MOUTH_PAST_MUZZLE) out.push({ name: 'anatomy:mouth-past-muzzle', parts: [`mouth:${p.mouth.style}`], detail: `the mouth runs ${past.toFixed(1)} past the muzzle pad (over ${MOUTH_PAST_MUZZLE})` }); }
+  const crownOut = crownStrokesOut(ops); if (crownOut) out.push({ name: 'render:crown-stroke-out', parts: [`hat:${p.hat.style}`], detail: `a crown's stroke ends at ${crownOut.map((v) => v.toFixed(1))}, outside the crown` });
   const hornOut = hornStrokesOut(ops); if (hornOut) out.push({ name: 'render:horn-stroke-out', parts: hornParts(p), detail: `a horn's stroke ends at ${hornOut.map((v) => v.toFixed(1))}, outside the horn` });
   if (shadowHairOut(p, ops)) out.push({ name: 'stack:shaved-halo', parts: ['hair:shavedHead'], detail: 'the shaved head\'s shadow is drawn outside the head\'s clip' });
   if ((p.eyes.mode ?? 'human') === 'human' && p.eyes.openness >= WIDE_OPEN) { const w = whiteOverIris(p); if (w < WIDE_WHITE) out.push({ name: 'expression:wide-no-white', parts: [`eyes:${p.eyes.style}`], detail: `opened to ${p.eyes.openness}, the lid clears the iris by ${w.toFixed(1)} (under ${WIDE_WHITE})` }); }
