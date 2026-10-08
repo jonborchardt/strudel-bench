@@ -4,9 +4,10 @@
 // ponytail: bounding points, not path intersection; good enough to rank a cell, not to judge it.
 import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES } from '../../index.mjs';
 import { params } from '../../schema.mjs';
+import { VIEWBOX } from './sheet.mjs';
 
-/** The figure sheet (renderFigure's viewBox -30 -200 460 1284) plus 40 units of slack on every side. */
-export const SHEET = { x0: -70, x1: 470, y0: -240, y1: 1124 };
+/** The figure sheet, renderFigure's own viewBox with no slack: a drawn point past it is cut off at the frame (T006: a 40-unit margin let a dragonborn's hands and hem leave the frame unflagged). */
+export const SHEET = (([x, y, w, h]) => ({ x0: x, x1: x + w, y0: y, y1: y + h }))(VIEWBOX.figure.split(' ').map(Number));
 
 const nums = (d) => (d.match(/-?\d*\.?\d+(?:e-?\d+)?/g) ?? []).map(Number);
 /** Every op's coordinates as x,y pairs: a path's numbers in order (absolute M/L/C/Q/Z only, the rule in CLAUDE.md), an ellipse's centre, a rect's corners, a line's ends. Transforms carry none. */

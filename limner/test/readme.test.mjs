@@ -45,7 +45,7 @@ test('ops are the output type and both renderers read them', () => {
   const ctx = ctxStub();
   drawOn(ctx, ops);
   assert.equal(ctx.calls.save, ctx.calls.restore, 'balanced');
-  assert.match(renderFigure(person({ seed: 1 })), /viewBox="-30 -200 460 1284"/, 'the figure viewBox the README quotes');
+  assert.match(renderFigure(person({ seed: 1 })), /viewBox="-90 -200 580 1284"/, 'the figure viewBox the README quotes');
 });
 
 test('the parameters example, every style name in it', () => {

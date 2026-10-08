@@ -15,13 +15,13 @@
 //
 // --dir names the folder holding todos.json, coverage.json and sheets/ (default: limner/scripts/harden).
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { encode, decode, params } from '../schema.mjs';
 import { feetY, FEET_Y } from '../index.mjs';
 import { lintState } from './harden/lint.mjs';
 import { pickCells, bump, keyOf, relatedCells } from './harden/sampler.mjs';
-import { sheetHtml, pairsHtml, screenshot, svgOf, LAYOUT, CROPS } from './harden/sheet.mjs';
+import { sheetHtml, pairsHtml, screenshot, svgOf, LAYOUT, CROPS, VIEWBOX } from './harden/sheet.mjs';
 import { record, rank, close, load, save, attempt, isParked, statsOf, MAX_ATTEMPTS } from './harden/ledger.mjs';
 
 const argv = process.argv.slice(2);
@@ -39,6 +39,8 @@ const readJson = (f, dflt) => (existsSync(f) ? JSON.parse(readFileSync(f, 'utf8'
 const link = (st) => `limner.html#editor/${encode(st)}`;
 const stateOf = (s) => (s.trim().startsWith('{') ? { seed: 1, family: 'any', theme: 'none', ...JSON.parse(s), ov: { ...(JSON.parse(s).ov ?? {}) } } : decode(s.includes('#') ? s.slice(s.indexOf('#') + 1) : s));
 const sheetJson = (n) => { const f = join(sheets, `${n}.json`); if (!existsSync(f)) throw new Error(`no sheet ${n} in ${sheets}`); return JSON.parse(readFileSync(f, 'utf8')); };
+/** The view a todo's own cells were judged in: a stance is only seen standing, and so is a fault every tuple saw on the figure (T006: a frame fault does not show on a bust). */
+const viewOf = (t) => (t.parts.some((p) => p.startsWith('stance:')) || (t.tuples?.length && t.tuples.every((u) => u.endsWith('/figure'))) ? 'figure' : 'bust');
 const widthOf = (view) => LAYOUT[view].cols * (LAYOUT[view].cell + 8) + 8;
 /** Write the page: a png with the figures' boxes through the browser, or the html alone with --html. */
 async function emit(html, base, view) {
@@ -57,7 +59,7 @@ const commands = {
     const cells = pickCells({ coverage, n: +flag('cells', 9), view, sheet: n, pool: +flag('pool', 200) });
     const { file, rects } = await emit(sheetHtml(cells, { view }), join(sheets, num), view);
     const rows = cells.map((c, i) => ({ n: i + 1, tuple: c.tuple, key: c.tuple.cast === 'calibration' ? 'calibration' : keyOf(c.tuple), hash: encode(c.state), flags: c.flags, source: c.source, rect: rects?.[i] ?? null, fresh: c.tuple.cast !== 'calibration' && !(coverage[keyOf(c.tuple)] > 0) })); // before bump
-    writeFileSync(join(sheets, `${num}.json`), JSON.stringify({ sheet: num, view, crop: null, png: file, cells: rows }, null, 1));
+    writeFileSync(join(sheets, `${num}.json`), JSON.stringify({ sheet: num, view, viewBox: VIEWBOX[view], crop: null, png: file, cells: rows }, null, 1));
     writeFileSync(COVERAGE, JSON.stringify(bump(coverage, cells), null, 1) + '\n');
     console.log(`sheet ${num}   ${file}\n${table(rows)}`);
   },
@@ -99,10 +101,10 @@ const commands = {
     const t = load(TODOS).find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
     const cells = relatedCells(t, { n: +flag('cells', 8) });
     if (!cells.length) return console.log(`${id}: no other combination draws ${t.parts.join(', ')}`);
-    const view = t.parts.some((p) => p.startsWith('stance:')) ? 'figure' : 'bust', num = `${id}-related`;
+    const view = viewOf(t), num = `${id}-related`;
     const { file, rects } = await emit(sheetHtml(cells, { view }), join(sheets, num), view);
     const rows = cells.map((c, i) => ({ n: i + 1, tuple: c.tuple, key: keyOf(c.tuple), hash: encode(c.state), flags: c.flags, source: c.source, rect: rects?.[i] ?? null, fresh: false }));
-    writeFileSync(join(sheets, `${num}.json`), JSON.stringify({ sheet: num, view, crop: null, png: file, cells: rows }, null, 1));
+    writeFileSync(join(sheets, `${num}.json`), JSON.stringify({ sheet: num, view, viewBox: VIEWBOX[view], crop: null, png: file, cells: rows }, null, 1));
     console.log(`sheet ${num}   ${file}\n${table(rows)}`);
   },
   stats() {
@@ -118,11 +120,11 @@ const commands = {
     for (const num of t.sheets) {
       if (!existsSync(join(sheets, `${num}.json`))) continue; // sheets/ is gitignored: a fresh checkout has none
       const s = sheetJson(num);
-      for (const c of s.cells) if (t.evidence.includes(c.hash) && c.rect && s.png.endsWith('.png')) pairs.push({ label: `${id} sheet ${num} cell ${c.n}`, before: { png: readFileSync(s.png).toString('base64'), rect: c.rect, ...(crop ? { crop: box, frame: s.view === 'figure' ? { x: -30, y: -200 - (FEET_Y - feetY(params(decode(c.hash)))), w: 460 } : undefined } : {}) }, after: svgOf(decode(c.hash), s.view, crop) });
+      for (const c of s.cells) if (t.evidence.includes(c.hash) && c.rect && s.png.endsWith('.png')) pairs.push({ label: `${id} sheet ${num} cell ${c.n}`, before: { png: readFileSync(join(sheets, basename(s.png))).toString('base64') /* by name in this checkout's sheets: a sheet copied from another checkout carries that checkout's absolute path */, rect: c.rect, ...(crop ? { crop: box, frame: s.view === 'figure' ? (([x, y, w]) => ({ x, y: y - (FEET_Y - feetY(params(decode(c.hash)))), w }))((s.viewBox ?? '-30 -200 460 1284' /* a sheet drawn before T006 widened the frame records none */).split(' ').map(Number)) : undefined } : {}) }, after: svgOf(decode(c.hash), s.view, crop) });
     }
     if (!pairs.length) {
       if (!t.evidence.length) throw new Error(`${id}: no evidence cell with a png; re-render with next, or open the hashes in the editor`);
-      const view = t.parts.some((p) => p.startsWith('stance:')) ? 'figure' : 'bust'; // the then side is gone: the now side alone
+      const view = viewOf(t); // the then side is gone: the now side alone
       t.evidence.forEach((h, i) => pairs.push({ label: `${id} evidence ${i + 1}`, before: null, after: svgOf(decode(h), view, crop) }));
     }
     const width = Math.max(...pairs.map((q) => q.before?.rect.w ?? LAYOUT.bust.cell)), html = pairsHtml(pairs, width), base = join(sheets, `${id}-verify`);

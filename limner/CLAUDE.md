@@ -100,7 +100,7 @@ its own build.
 
 One sheet, in its own units; the host scales. The head is 204 tall, every chin lands on `CHIN_Y` (327.2) and every pair
 of feet on `FEET_Y` (1078). `renderPortrait` is the bust (`viewBox="0 0 400 480"`), `renderFigure` the whole standing
-body (`-30 -200 460 1284`, shifted so the feet land on the floor). `eyeY(p)`, `mouthY(p)`, `feetY(p)` and `headBox(p)`
+body (`-90 -200 580 1284`, shifted so the feet land on the floor, wide enough for the broadest build). `eyeY(p)`, `mouthY(p)`, `feetY(p)` and `headBox(p)`
 read where a given figure's features actually landed, which is what a host frames on — never assume the defaults.
 
 ## Ops, not SVG

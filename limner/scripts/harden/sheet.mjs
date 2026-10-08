@@ -6,8 +6,8 @@ import { params } from '../../schema.mjs';
 
 /** Named crops of the bust sheet: the head, and the eyes (tuned by looking: the head crop holds a dragonborn's horns and a leaned head, sheets 0001-0002). */
 export const CROPS = { head: '50 40 320 330', eyes: '95 160 210 90' };
-export const LAYOUT = { bust: { cols: 3, cell: 360 }, figure: { cols: 5, cell: 220 } };
-const VIEWBOX = { bust: '0 0 400 480', figure: '-30 -200 460 1284' };
+export const LAYOUT = { bust: { cols: 3, cell: 360 }, figure: { cols: 5, cell: 280 } }; // a figure cell 280 wide draws the 580-wide frame at the scale 220 drew the old 460
+export const VIEWBOX = { bust: '0 0 400 480', figure: '-90 -200 580 1284' }; // renderPortrait's and renderFigure's own
 
 /** One cell's svg: the bust or the standing figure; with a crop (a CROPS name or a viewBox) the bust cut to it. */
 export function svgOf(st, view = 'bust', crop = null) {
@@ -25,7 +25,7 @@ export function sheetHtml(cells, { view = 'bust', crop = null } = {}) {
   return page(body, cols * (cell + 8) + 8);
 }
 
-/** The old cell, or with `before.crop` ({ x, y, w, h } in ops units, the bust's 400x480) that region of it enlarged to `width`. `frame` is where the cell's svg starts in ops units and how wide it is: the bust's { x: 0, y: 0, w: 400 }, a figure's { x: -30, y: -200 - dy, w: 460 } with dy renderFigure's floor shift; the svg is rect.w wide from the cell's top. */
+/** The old cell, or with `before.crop` ({ x, y, w, h } in ops units, the bust's 400x480) that region of it enlarged to `width`. `frame` is where the cell's svg starts in ops units and how wide it is: the bust's { x: 0, y: 0, w: 400 }, a figure's { x, y: y - dy, w } from the viewBox the sheet was drawn in (its json's `viewBox`) with dy renderFigure's floor shift; the svg is rect.w wide from the cell's top. */
 function thenOf({ png, rect, crop, frame = { x: 0, y: 0, w: 400 } }, width) {
   const src = `src="data:image/png;base64,${png}"`;
   if (!crop) return `<div style="width:${rect.w}px;height:${rect.h}px"><img style="width:auto;margin:-${rect.y}px 0 0 -${rect.x}px" ${src}></div>`;

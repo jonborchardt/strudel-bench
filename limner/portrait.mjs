@@ -1160,7 +1160,7 @@ export const renderPortrait = (options = {}) => toSvg(portraitOps(options), merg
 /** The standing figure: the same drawing down to the floor, dropped so the shoes land on the view's bottom edge
  *  whatever the build, so a short people (a halfling, a gnome) draws as a short figure beside a tall one rather than
  *  the same figure scaled. */
-export const renderFigure = (options = {}) => { const p = merge(DEFAULTS, options); return toSvg(portraitOps(p), p.background, '-30 -200 460 1284', FEET_Y - feetY(p)); }; // the shoes on the bottom edge, 200 units of headroom above the sheet: a dragonborn's build stands its crown 91 above a human's and it wears a horn crest on top of that
+export const renderFigure = (options = {}) => { const p = merge(DEFAULTS, options); return toSvg(portraitOps(p), p.background, '-90 -200 580 1284', FEET_Y - feetY(p)); }; // the shoes on the bottom edge, 200 units of headroom above the sheet: a dragonborn's build stands its crown 91 above a human's and it wears a horn crest on top of that; and 90 either side of the bust's 0..400, because the broadest builds (a dragonborn's shoulders 1.44, an orc's 1.37) times the widest body.width a person is given draw hands and a skirt's hem out to about -67..478
 
 /** Walk an absolute M/L/C/Q/Z path onto a canvas context. */
 export function tracePath(ctx, d) {

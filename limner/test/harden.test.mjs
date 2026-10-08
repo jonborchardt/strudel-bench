@@ -2,7 +2,7 @@
 // the ledger that remembers. No browser here: the screenshot is the script's business.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { portraitOps } from '../index.mjs';
+import { portraitOps, renderFigure } from '../index.mjs';
 import { blank } from '../schema.mjs';
 import { SHEET, pointsOf, lintOps, lintState, muzzleGap } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
@@ -32,7 +32,20 @@ test('lint: the default figure is clean, a stray point is offsheet, a NaN is nan
   assert.match(lintOps(stray)[0].detail, /9000/);
   const nan = [{ k: 'ellipse', cx: NaN, cy: 100, rx: 1, ry: 1 }];
   assert.ok(lintOps(nan).some((f) => f.name === 'render:nan'));
-  assert.ok(SHEET.x0 < -30 && SHEET.x1 > 430 && SHEET.y0 < -200 && SHEET.y1 > 1084, 'the bounds are the figure sheet plus a margin');
+  const [vx, vy, vw, vh] = renderFigure({}).match(/viewBox="([^"]+)"/)[1].split(' ').map(Number);
+  assert.deepEqual(SHEET, { x0: vx, x1: vx + vw, y0: vy, y1: vy + vh }, 'the bounds are renderFigure\'s own frame, no margin');
+});
+
+test('lint: the broadest build stands inside renderFigure\'s frame, hands and hem included (T006)', () => {
+  const hashes = ['eyJzZWVkIjo4MzYyMDQsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjA1LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjIsIm1vdXRoLnByZXNzIjowLjMsImV5ZXMub3Blbm5lc3MiOjAuNiwiZXllcy5icm93TGlmdCI6LTQsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotMiwiZXllcy5zcXVpbnQiOjAuNSwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6MC4wMiwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLjE1LCJwb3NlLnNob3VsZGVyIjowLjMsInByb3BzIjpbXX19', 'eyJzZWVkIjoxODUxOTcsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHJhZ29uYm9ybiIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjA2LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC4wNCwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjEsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjo4LCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjEyLCJwb3NlLmJvZHlUaWx0IjowLjA2LCJwb3NlLnR1cm4iOjAuNCwicG9zZS5zaG91bGRlciI6LTAuNSwicHJvcHMiOltdfX0'];
+  for (const h of hashes) {
+    const st = decode(h), p = params(st), ops = portraitOps(p);
+    assert.ok(!lintState(st, { cast: 'dragonborn', stance: 'none', expression: 'none', view: 'figure' }).some((f) => f.name === 'render:offsheet'));
+    let d = 0, x0 = Infinity, x1 = -Infinity; // the drawn extent with an ellipse's radius, which the lint's centre point leaves out: a hand is an ellipse
+    for (const op of ops) { if (op.k === 'clip') d++; else if (op.k === 'unclip') d--; else if (!d) for (const [x] of op.k === 'ellipse' ? [[op.cx - op.rx], [op.cx + op.rx]] : pointsOf(op)) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); } }
+    assert.ok(x0 < -30 && x1 > 430, `the evidence is wider than the old frame (${x0}..${x1}), so the lint at no margin would have named it`);
+    assert.ok(x0 >= SHEET.x0 && x1 <= SHEET.x1, `${x0}..${x1} inside ${SHEET.x0}..${SHEET.x1}`);
+  }
 });
 
 test('lint: offsheet ignores strokes under a clip (T004) and stands the figure on its floor (T005)', () => {
@@ -107,7 +120,7 @@ test('sampler: cell 1 is calibration, flagged cells come first, the rest are the
 test('sheet: a cell draws as a bust or a figure, cropped when asked', () => {
   const st = stateFor({ cast: 'dwarves', stance: 'none', expression: 'grin', view: 'bust' }, 3);
   assert.match(svgOf(st, 'bust'), /viewBox="0 0 400 480"/);
-  assert.match(svgOf(st, 'figure'), /viewBox="-30 -200 460 1284"/);
+  assert.match(svgOf(st, 'figure'), /viewBox="-90 -200 580 1284"/);
   assert.match(svgOf(st, 'bust', 'head'), new RegExp(`viewBox="${CROPS.head}"`));
   assert.match(svgOf(st, 'bust', '10 20 30 40'), /viewBox="10 20 30 40"/, 'a crop may be a viewBox of its own');
 });
