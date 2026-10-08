@@ -2,7 +2,7 @@
 // verdict. Each closed todo whose fault is geometric adds one here and a test in ../../test/harden.test.mjs over a state
 // that used to show it, so the reader's job shrinks as the list grows.
 // ponytail: bounding points, not path intersection; good enough to rank a cell, not to judge it.
-import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES } from '../../index.mjs';
+import { portraitOps, feetY, FEET_Y, eyeY, mouthY, NOSES, HAIR, eyeShape } from '../../index.mjs';
 import { params } from '../../schema.mjs';
 import { VIEWBOX } from './sheet.mjs';
 
@@ -46,11 +46,23 @@ export function muzzleGap(p) {
   return mouthY(p) - (ey + k * (10 + (st.len + st.tip) * (p.nose.length * fh) / 38)); // the parting below the nostrils' bottom: under 0 runs through them
 }
 
-const POSE_KEYS = ['pose.headX', 'pose.headY', 'pose.headTilt', 'pose.bodyTilt', 'pose.turn', 'pose.shoulder', 'props'];
+/** How far a hanging front panel of hair reaches in past an eye's outer corner near the eye line, in sheet units (negative: how far it stays outside). A panel is a front hair path that hangs past the eye line; a temple wing or a fringe is not one. T012: a bluntBob's panels at -5..-8 laid a slab of hair across the eye corners and cheeks, since the lashes and the eye's shadow run past the white's corner. The hair follows the face's width only; the eyes sit at their spacing on the laid-out eye line. */
+export function hairOverEye(p) {
+  const r = HAIR[p.hair?.style]; if (!r) return -Infinity;
+  const k = (p.face?.width ?? 156) / 156, ey = 112 + (p.eyes.y - 112) * (p.face?.height ?? 204) / 204, [l, rt] = [-1, 1].map((s) => eyeShape(p, s).xo);
+  const panels = (typeof r === 'function' ? r(p) : r.front(p)).filter((o) => o.k === 'path' && o.fill && o.fill !== 'none' && (o.op ?? 1) > 0.5 && pointsOf(o).some(([, y]) => y > ey + 30)); // a shaved head's shadow is not hair over anything
+  let over = -Infinity;
+  for (const op of panels) for (const [x0, y] of pointsOf(op)) if (Math.abs(y - ey) <= 25) { const x = 200 + (x0 - 200) * k; over = Math.max(over, Math.min(x - l, rt - x)); }
+  return over;
+}
+export const HAIR_EYE_CLEAR = 10; // how far outside an eye's outer corner a panel's edge must hang
+
+const POSE_KEYS =['pose.headX', 'pose.headY', 'pose.headTilt', 'pose.bodyTilt', 'pose.turn', 'pose.shoulder', 'props'];
 /** The lints over a sheet cell: the ops lints, plus the ones that need the state (a stance compared against no stance). */
 export function lintState(st, tuple) {
   const p = params(st), ops = portraitOps(p), out = lintOps(ops, { dy: FEET_Y - feetY(p) });
   if ((p.nose?.muzzle ?? 0) > 0 && (p.nose.mode ?? 'human') === 'human' && (p.mouth.mode ?? 'human') === 'human' && muzzleGap(p) < 2) out.push({ name: 'anatomy:muzzle-mouth', parts: ['unknown:muzzle'], detail: `the mouth line is ${muzzleGap(p).toFixed(1)} under the nostrils` });
+  const hair = hairOverEye(p); if (hair > -HAIR_EYE_CLEAR) out.push({ name: 'stack:hair-over-eye', parts: [`hair:${p.hair.style}`], detail: `a front hair panel hangs ${(-hair).toFixed(1)} outside an eye's outer corner (under ${HAIR_EYE_CLEAR})` });
   if (tuple.stance && tuple.stance !== 'none') {
     const ov = { ...st.ov }; for (const k of POSE_KEYS) delete ov[k];
     if (JSON.stringify(ops) === JSON.stringify(portraitOps(params({ ...st, ov })))) out.push({ name: 'pose:stance-noop', parts: [`stance:${tuple.stance}`], detail: 'the stance draws the same figure as no stance' });

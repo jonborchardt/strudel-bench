@@ -2,9 +2,9 @@
 // the ledger that remembers. No browser here: the screenshot is the script's business.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { portraitOps, renderFigure } from '../index.mjs';
+import { portraitOps, renderFigure, HAIR } from '../index.mjs';
 import { blank } from '../schema.mjs';
-import { SHEET, pointsOf, lintOps, lintState, muzzleGap } from '../scripts/harden/lint.mjs';
+import { SHEET, pointsOf, lintOps, lintState, muzzleGap, hairOverEye, HAIR_EYE_CLEAR } from '../scripts/harden/lint.mjs';
 import { CASTS } from '../registry.mjs';
 import { EXPRESSIONS } from '../people.mjs';
 import { params, decode, encode } from '../schema.mjs';
@@ -64,6 +64,20 @@ test('lint: anatomy:muzzle-mouth, the mouth line runs under a muzzle\'s nostrils
   assert.ok(muzzleGap(p) >= 2, `the evidence face's mouth sits under the nostrils (${muzzleGap(p)})`);
   assert.ok(!lintState(st, { cast: 'dragonborn', stance: 'none', expression: 'none', view: 'bust' }).some((f) => f.name === 'anatomy:muzzle-mouth'));
   for (const style of ['straight', 'short', 'long', 'broad', 'aquiline']) for (const length of [22, 40, 58]) assert.ok(muzzleGap({ ...p, nose: { ...p.nose, style, length } }) >= 2, `${style} ${length}`);
+});
+
+test('lint: stack:hair-over-eye, a bluntBob\'s panels hang beside the eyes, not over them (T012)', () => {
+  const st = decode('eyJzZWVkIjoxMDM5MDcsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjEyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjgsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjksImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAuMzUsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC4yNSwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6MC4wMiwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLjE1LCJwb3NlLnNob3VsZGVyIjowLjMsInByb3BzIjpbXX19');
+  const p = params(st), tuple = { cast: 'editorial', stance: 'directFrontal', expression: 'smirk', view: 'figure' };
+  assert.equal(p.hair.style, 'bluntBob');
+  assert.ok(!lintState(st, tuple).some((f) => f.name === 'stack:hair-over-eye'), `the evidence face's panels clear the eyes (${hairOverEye(p)})`);
+  const front = HAIR.bluntBob.front;
+  try { // the panels as they were cut before the fix: an inner edge ~6 outside the eye's corner
+    HAIR.bluntBob.front = (q) => [{ k: 'path', d: 'M 116 170 C 108 121, 124 86, 154 73 C 178 62, 222 62, 246 73 C 276 86, 292 121, 284 170 L 272 245 L 243 245 C 248 210, 247 166, 236 140 C 221 112, 179 112, 164 140 C 153 166, 152 210, 157 245 L 128 245 Z', fill: q.hairColor }];
+    assert.ok(lintState(st, tuple).some((f) => f.name === 'stack:hair-over-eye' && f.parts[0] === 'hair:bluntBob'));
+  } finally { HAIR.bluntBob.front = front; }
+  for (const width of [140, 156, 175]) assert.ok(hairOverEye({ ...p, face: { ...p.face, width, height: 204 }, eyes: { ...p.eyes, spacing: 56, y: 196 } }) < -HAIR_EYE_CLEAR, `width ${width}`);
+  assert.ok(hairOverEye({ ...p, hair: { ...p.hair, style: 'combOver' } }) === -Infinity, 'temple wings are not panels');
 });
 
 test('the vanDyke moustache sits over the mouth, not cheek to cheek (T001)', () => {
