@@ -1,4 +1,16 @@
 {
   "made": "2026-09-19",
-  "prompt": "Pairs of sections for the blog post \"mixing as a scene\": the same material with one mix key changed (duck on and off, organicness against humanize, separate reverbs against one hall)."
+  "prompt": "Pairs of sections for the blog post \"mixing as a scene\": the same material with one mix key changed (duck on and off, organicness against humanize, separate reverbs against one hall).",
+  "requests": [
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "saturate .6 on the bus; kit and sub level .8 to 1.1 to hold loudness. room, ducks and no-duck pairs left as the demo's content; no new sub (it already uses the sub patch, bass midi 14)"
+        }
+      ]
+    }
+  ]
 }

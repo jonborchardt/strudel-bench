@@ -2,12 +2,12 @@
 // @blog
 // mix-demo: pairs of sections for the blog post "mixing as a scene": the same material with one mix key changed.
 // duck on/off, organicness (dice per hit) against humanize (a played feel), separate reverbs against one hall.
-const kit  = { template: 'house', density: .6, drive: .7, articulation: .6, space: .3, level: .8 };
+const kit  = { template: 'house', density: .6, drive: .7, articulation: .6, space: .3, level: 1.1 };
 const bed  = { sound: 'sawtooth', patch: 'wide', density: .8, register: .4, brightness: .45, width: .6, space: .6, level: .9, articulation: 0 };
-const sub  = { sound: 'square', patch: 'sub', notes: '0 ~ 0 5', density: .75, weight: .8, register: .3, space: .3, level: .8 };
+const sub  = { sound: 'square', patch: 'sub', notes: '0 ~ 0 5', density: .75, weight: .8, register: .3, space: .3, level: 1.1 };
 const line = { sound: 'marimba', notes: '0 ~ 2 ~ 4 ~ 7@2 ~ 5 ~ 4 ~ 2 0 ~', follow: true, phrase: 2, register: .6, articulation: .7, space: .5, level: 1.1 };
 const rim  = { sound: 'rim', rhythm: '..x.....x...x.x.', space: .6, level: .7, position: .3 };
-song({ cps: .5, key: 'D:minor', seed: 7, kit: 'RolandTR909', packs: ['rooms'] }, [
+song({ cps: .5, key: 'D:minor', seed: 7, kit: 'RolandTR909', packs: ['rooms'], saturate: .6 }, [
   // duck: the same kit, sub and pad; the second section sidechains the pad and the sub under the kick
   section('noduck', 4, { role: 'establish', progression: 'i VI',
     drums: kit, bass: sub, pad: bed,
