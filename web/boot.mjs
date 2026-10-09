@@ -61,6 +61,23 @@ export function softClipCurve(n = 8193, knee = 0.8) {
   return c;
 }
 
+/** The bus saturator's transfer: tanh(k·x)/tanh(k), k = 4·amount, so 0 is a line and 1 is a hard bend. Odd, monotonic, ±1 at the ends. */
+export function satCurve(amount, n = 8193) {
+  const k = 4 * amount, c = new Float32Array(n), t = k ? Math.tanh(k) : 1;
+  for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = k ? Math.tanh(k * x) / t : x; }
+  return c;
+}
+
+/** Drive before the curve and the makeup after it that keeps a -12 dBFS sine's rms, so turning the amount up adds harmonics, not level. */
+export function satGains(amount) {
+  if (!amount) return { pre: 1, post: 1 };
+  const pre = 1 + 3 * amount, c = satCurve(amount), N = 1024, a = .25;
+  const at = (x) => c[Math.round(((Math.max(-1, Math.min(1, x)) + 1) / 2) * (c.length - 1))];
+  let i2 = 0, o2 = 0;
+  for (let i = 0; i < N; i++) { const x = a * Math.sin(2 * Math.PI * i / N); i2 += x * x; o2 += at(x * pre) ** 2; }
+  return { pre, post: Math.sqrt(i2 / o2) };
+}
+
 /** Re-route a SuperdoughOutput's last gain through a soft clip on its context. */
 function limit(output) {
   const ac = output.audioContext, wall = new WaveShaperNode(ac, { curve: softClipCurve(), oversample: '4x' });
