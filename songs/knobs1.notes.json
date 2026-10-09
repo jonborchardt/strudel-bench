@@ -11,6 +11,16 @@
           "why": "saturate .6 on the bus; drums and bass level 1.25 in verse and drop to hold loudness. no sub (bass under midi 40), no sidechain, kit kept"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10), level lifts reverted",
+      "changes": [
+        {
+          "section": "drums/bass",
+          "why": "level 1.25: the spec asks for harmonics, not level; peaks fell, rms sits 2-3 dB under the baseline by design"
+        }
+      ]
     }
   ]
 }
