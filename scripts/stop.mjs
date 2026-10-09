@@ -30,5 +30,5 @@ for (const pid of pids) {
 if (win) {
   const n = ['chrome-headless-shell.exe', 'headless_shell.exe']
     .reduce((t, im) => t + run('tasklist', ['/FI', `IMAGENAME eq ${im}`, '/FO', 'CSV', '/NH']).split('\n').filter((l) => l.trim().startsWith('"' + im)).length, 0);
-  if (n) console.log(`warning: ${n} stale headless browsers still alive (started by another run): taskkill /IM chrome-headless-shell.exe /F to clear them`);
+  if (n) console.log(`warning: ${n} orphaned headless browsers still alive (from an earlier npm run headless that found a server already up, so /T could not reach them): taskkill /IM chrome-headless-shell.exe /F to clear them`);
 }

@@ -63,20 +63,23 @@ export function softClipCurve(n = 8193, knee = 0.8) {
   return c;
 }
 
-/** The bus saturator's transfer: tanh(k·x)/k, k = 4·amount. A static curve's gain depends on level, so any makeup tuned at one level boosts everything quieter (a whole mix sits near -25 dBFS); normalising the slope at zero to exactly 1 leaves quiet material alone, and the ceiling 1/k only softens peaks. More amount is more harmonics, never more level. Odd, monotonic; 0 is a line. */
-export function satCurve(amount, n = 8193) {
-  const k = 4 * amount, c = new Float32Array(n);
-  for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = k > 1e-9 ? Math.tanh(k * x) / k : x; }
+/** The bus saturator's transfer: tanh(k·x)/k, k = 4·amount. A static curve's gain depends on level, so any makeup tuned at one level boosts everything quieter (a whole mix sits near -25 dBFS); normalising the slope at zero to exactly 1 leaves quiet material alone, and the ceiling 1/k only softens peaks. More amount is more harmonics, never more level. Odd, monotonic; 0 is a line.
+ *  A WaveShaper clamps its input to ±1, and an orbit's sum goes past that (hence the master wall), which at low amounts would hard-clip a hot bus. So the curve is laid over u = x/R in −1..1 (tanh(k·R·u)/(k·R)) and `saturate` scales by 1/R before the shaper and R after: the end-to-end transfer is tanh(k·x)/k out to ±R. */
+export function satCurve(amount, n = 8193, R = 4) {
+  const k = 4 * amount * R, c = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const u = (i / (n - 1)) * 2 - 1; c[i] = k > 1e-9 ? Math.tanh(k * u) / k : u; }
   return c;
 }
+const SAT_RANGE = 4;
 
 let satAmount = 0; // the song's `saturate`, read when an orbit is built (live or in an offline render context) and pushed to live orbits on change
 /** The bus saturator between an orbit's sum and its output: a unity-slope tanh curve (2x oversampled). Native nodes, one set per orbit, nothing per hit. */
 function saturate(orbit) {
   const ac = orbit.audioContext, shaper = new WaveShaperNode(ac, { oversample: '2x' });
+  const pre = new GainNode(ac), post = new GainNode(ac); // 1/R and R around the shaper: it clamps at ±1, a hot bus does not
   orbit.summingNode.disconnect(); // was -> output; delay and reverb feed summingNode so they pass through too. setDjf would re-route around this (unused here)
-  orbit.summingNode.connect(shaper); shaper.connect(orbit.output);
-  const set = (amount) => { shaper.curve = amount ? satCurve(amount) : null; };
+  orbit.summingNode.connect(pre); pre.connect(shaper); shaper.connect(post); post.connect(orbit.output);
+  const set = (amount) => { const g = amount ? SAT_RANGE : 1; pre.gain.value = 1 / g; post.gain.value = g; shaper.curve = amount ? satCurve(amount) : null; };
   set(satAmount);
   orbit.saturator = { set };
 }

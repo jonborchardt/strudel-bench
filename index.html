@@ -569,7 +569,7 @@
     if (!wasPlaying && paused == null) stage.reset();
     stage.start();
     if (!wasPlaying && paused == null && loop) paused = loop.offset; // Play from stopped starts at the pin
-    if (loop) { setcps(loop.cps); setSaturation(songPat.strudel?.meta.saturate ?? 0); } // the pinned section loops on its own, at its own tempo
+    if (loop) { setcps(loop.cps); } // the pinned section loops on its own, at its own tempo
     await setLive(); // the pinned section, solo/mute, A/B
     if (paused != null) { (await ready).scheduler.setCycle(loop ? toLocal(paused) : paused); paused = null; }
     console.log('[strudel] evaluated', $('song').value);
@@ -1069,7 +1069,8 @@
   // a material: this section's `layer` with `key` set to `text` (a drum voice alone on its template grid: the whole part would drown it, or not even include it, since voices join as density rises)
   const audition = (btn, layer, key, text, voice, section = mixSection, src = code.text) => pv.preview(btn, async () => { // no key: the part as it is written
     const pat = await evalCode(ready, key ? setMaterial(src, section, layer, key, text) : src);
-    const s = pat.strudel.sections.find((x) => x.name === section);
+    setSaturation(pat.strudel?.meta.saturate ?? 0);
+    const s =pat.strudel.sections.find((x) => x.name === section);
     let pattern = s.layers[layer].pattern, what = key ? `${key} ${text ?? 'removed'}` : 'as written';
     if (voice) {
       const name = s.layers[layer].attrs.sounds?.[voice];
@@ -1483,8 +1484,8 @@
       if (playing) await stop(); // the render replaces the audio context
       await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
       const song = await strudel.evaluate(code.text, false); // once, not once per render
-      setSaturation(song?.strudel?.meta.saturate ?? 0);
-      const stats = async (layer) => metricsOf(await renderSong({ song, section: mixSection, layer, cycles: Math.min(ev.cycles, 4), progress: (i, n) => mstate('busy', `measuring ${layer ?? mixSection} ${Math.round((i / n) * 100)}%`) }), { cps: ev.cps }); // levelRows reads rms and peak
+      // with saturate above 0 a part alone passes its own orbit's shaper; in the mix a shared bus is driven harder, so per-part dB lean a little optimistic
+      const stats =async (layer) => metricsOf(await renderSong({ song, section: mixSection, layer, cycles: Math.min(ev.cycles, 4), progress: (i, n) => mstate('busy', `measuring ${layer ?? mixSection} ${Math.round((i / n) * 100)}%`) }), { cps: ev.cps }); // levelRows reads rms and peak
       const parts = [{ name: 'mix', ...(await stats()) }];
       for (const l of Object.keys(ev.layers)) parts.push({ name: l, ...(await stats(l)) }); // one render at a time: renderSong shares the offline context
       const rows = levelRows(parts);
