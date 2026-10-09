@@ -81,8 +81,9 @@ test('every rooms impulse is stereo, and no song asks a room.size longer than it
   const meta = JSON.parse(fs.readFileSync(path.join(ROOMS, 'meta.json'), 'utf8'));
   for (const key of Object.keys(meta)) assert.equal(readWav(fs.readFileSync(path.join(ROOT, 'samples/user', key))).channels, 2, `${key} is not stereo`);
   for (const f of fs.readdirSync(path.join(ROOT, 'songs')).filter((f) => f.endsWith('.strudel'))) {
-    for (const [, body] of fs.readFileSync(path.join(ROOT, 'songs', f), 'utf8').matchAll(/{([^{}]*)}/g)) {
-      const ir = body.match(/ir:s*'([^']+)'/)?.[1], size = Number(body.match(/size:s*([d.]+)/)?.[1]), m = meta[`rooms/${ir}.wav`];
+    const src = fs.readFileSync(path.join(ROOT, 'songs', f), 'utf8'), header = src.match(/\bir:\s*'([^']+)'/)?.[1]; // a section's size without an ir reads the song header's
+    for (const [, body] of src.matchAll(/\{([^{}]*)\}/g)) {
+      const ir = body.match(/\bir:\s*'([^']+)'/)?.[1] ?? (/\broom:/.test(body) ? undefined : header), size = Number(body.match(/\bsize:\s*([\d.]+)/)?.[1]), m = meta[`rooms/${ir}.wav`];
       if (ir && size && m) assert.ok(size <= m.seconds, `${f}: room.size ${size} outlasts ${ir}.wav (${m.seconds} s)`);
     }
   }

@@ -26,9 +26,10 @@ export function toStereo(frames) {
 export function importIr(buf, { seconds = 4, predelayMs = 10, keepDirect = false } = {}) {
   const { rate, frames } = readWav(buf);
   let [l, r] = toStereo(frames);
-  const scan = (from) => { let peak = 0, at = from; for (let i = from; i < l.length; i++) { const v = Math.max(Math.abs(l[i]), Math.abs(r[i])); if (v > peak) { peak = v; at = i; } } return { peak, at }; };
+  const scan = (from, to = l.length) => { let peak = 0, at = from; for (let i = from; i < Math.min(to, l.length); i++) { const v = Math.max(Math.abs(l[i]), Math.abs(r[i])); if (v > peak) { peak = v; at = i; } } return { peak, at }; };
   // the floor is 40 dB under the peak, not absolute: a quiet noise floor before the arrival (room.wav had 5 ms of -55 dB) is not the start
   const firstAbove = (from, peak) => { const floor = peak * 10 ** (-40 / 20); let i = from; while (i < l.length && Math.abs(l[i]) < floor && Math.abs(r[i]) < floor) i++; return i; };
+  const pre = Math.round(rate * predelayMs / 1000), n = Math.round(rate * seconds), fade = Math.round(rate * .05), kept = n - pre;
   let { peak, at } = scan(0);
   if (peak === 0) throw new Error('silent file');
   let start = firstAbove(0, peak);
@@ -39,11 +40,12 @@ export function importIr(buf, { seconds = 4, predelayMs = 10, keepDirect = false
     l = Float32Array.from(l); r = Float32Array.from(r);
     const end = Math.min(l.length, at + Math.round(rate * .0025) + 1);
     l.fill(0, start, end); r.fill(0, start, end);
-    ({ peak } = scan(end));
+    ({ peak } = scan(end, end + kept));
     if (peak === 0) throw new Error('nothing after the direct sound');
     start = firstAbove(end, peak);
+    peak = scan(start, start + kept).peak; // normalise against what the file keeps, not a louder sample past `seconds`
   }
-  const pre = Math.round(rate * predelayMs / 1000), n = Math.round(rate * seconds), fade = Math.round(rate * .05), g = .5 / peak;
+  const g = .5 / peak;
   const cut = (ch) => { const out = new Float32Array(n); for (let i = pre; i < n; i++) { const s = ch[start + i - pre]; if (s === undefined) break; const k = n - i; out[i] = s * g * (k < fade ? k / fade : 1); } return out; };
   return { rate, channels: [cut(l), cut(r)] };
 }
