@@ -729,6 +729,10 @@ const BEARDS = {
   stubbleStache: { op: 0.22, chin: 0, stubble: true, stache: true, pull: LIP_PULL, stacheStyle: 'horseshoe', stacheOp: 1 }, // the one the other way round: the beard is a shadow and the moustache is grown out, at its own full weight // a shadow of a beard with a real moustache standing in it
   pencilStache: { band: false, stache: true, pull: LIP_PULL, stacheStyle: 'pencil' },
 };
+/** A beard with a density: sparse on the cheeks and full from the mouth down, so the band is laid in four steps from
+ *  its cheek line to the mouth, the first at the dial's weight and the last solid, and its top edge fades in rather
+ *  than standing as one hard line across the face. */
+const thinBeard = (q, band, top, mouth, cheek) => { const m = Math.max(top, mouth); return [[top, cheek], [top + (m - top) / 3, 0.4], [top + (2 * (m - top)) / 3, 0.4], [m, 1]].flatMap(([t, op]) => beardBand(q, { ...band, top: t, op })); };
 /** One style's ops with the character's own dials applied: a density anywhere between a wash and a mass, a beard colour of its own, a moustache added or dropped, and how high the mass climbs the cheek. */
 export function beardOps(p, spec) { // exported for a pack that registers a beard of its own (parts/dwarf.mjs): a spec shaped like a BEARDS entry
   if (!spec) return [];
@@ -742,7 +746,11 @@ export function beardOps(p, spec) { // exported for a pack that registers a bear
   // and its grain coming in once it is past a wash. It is never tinted toward the skin and never opaque, the skin and
   // the jaw always showing through: an opaque skin-tinted band read as a tan sheet on pale hair and a solid mask on
   // black (T132). The calibration face (heavyStubble at 0.42, the user's own likeness) is this short beard.
-  const fill = spec.stubble ? (d == null ? mix(color, '#3a2a24', 0.45) : color) : d == null ? color : mix(p.skin, color, 0.35 + 0.65 * d);
+  // A beard with a density is the hair's own colour, never tinted toward the skin: an opaque skin-tinted band was a
+  // pale sheet with a hard top edge across the cheeks (T192). Thin hair is sparse on the cheeks and full on the jaw and
+  // chin, so the band over the cheeks takes the dial's weight and the mass from the mouth down is solid.
+  const thin = !spec.stubble && d != null, band = { cheek: spec.cheek, lip: spec.lip, chin: spec.chin, sharp: spec.sharp, width: spec.width };
+  const fill = spec.stubble ? (d == null ? mix(color, '#3a2a24', 0.45) : color) : color;
   const q = { ...p, hairColor: fill };
   const op = spec.stubble ? (d == null ? spec.op : Math.min(0.72, spec.op + d)) : d == null ? spec.op ?? 1 : 1;
   // A built-up stubble's moustache and mouth corners overlap the band: drawn at its weight they doubled it into dark
@@ -751,7 +759,7 @@ export function beardOps(p, spec) { // exported for a pack that registers a bear
   const top = f.cheekLine == null ? spec.top : 46 - 32 * unit(f.cheekLine); // 0: a beard line low on the jaw; 1: up to the cheekbone
   const stache = f.mustache == null ? !!spec.stache : !!f.mustache, stacheStyle = f.mustacheStyle ?? spec.stacheStyle ?? 'chevron'; // the style's own moustache, or the one this face asks for over it
   return [
-    ...(spec.band === false ? [] : beardBand(q, { top, cheek: spec.cheek, lip: spec.lip, chin: spec.chin, sharp: spec.sharp, width: spec.width, op })),
+    ...(spec.band === false ? [] : thin ? thinBeard(q, band, top, p.mouth.y - p.eyes.y + 22, 0.3 + 0.7 * d) : beardBand(q, { ...band, top, op })),
     ...(spec.chinPatch ? chinPatch(q) : []),
     ...(stache && spec.band !== false ? stacheJoin(built, stacheStyle, spec.lip ?? 14, builtOp) : []), // the corners of the mouth, so the moustache and the mass under it are one beard
     ...(stache ? mustache(spec.stacheOp == null ? built : q, spec.pull ?? (spec.band === false ? LIP_PULL : BEARD_PULL), spec.stacheOp ?? builtOp, stacheStyle) : []), // the moustache is the same hair: the beard's colour and the beard's weight

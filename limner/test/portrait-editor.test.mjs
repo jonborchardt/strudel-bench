@@ -186,11 +186,13 @@ test('the beard takes a colour, a density, a cheek line and a moustache of its o
   const band = (f) => ops(f).filter((o) => o.k === 'path' && / 700/.test(o.d)).at(-1); // the mass is the band that runs off the bottom of the sheet, drawn after the shirt that does the same
   assert.equal(band({}).fill, '#123123', 'the beard is the hair colour by default');
   assert.equal(band({ color: '#a05020' }).fill, '#a05020', 'a beard colour of its own, apart from the hair');
-  // density is how much hair, drawn as the skin showing between it, never as a transparent beard (which shows the mouth through itself)
-  const near = (a, b) => [1, 3, 5].reduce((s, i) => s + Math.abs(parseInt(a.slice(i, i + 2), 16) - parseInt(b.slice(i, i + 2), 16)), 0);
+  // density is how much hair: always the hair's colour (a skin-tinted band read as a pale sheet, T192), sparse on the
+  // cheeks and solid from the mouth down, so the mass under the mouth is opaque at every density
+  const bands = (f) => ops(f).filter((o) => o.k === 'path' && / 700/.test(o.d) && o.fill === '#123123');
   const thin = band({ density: 0.15 }), thick = band({ density: 1 });
-  assert.ok((thin.op ?? 1) === 1 && (thick.op ?? 1) === 1, 'every density is opaque');
-  assert.ok(near(thin.fill, DEFAULTS.skin) < near(thick.fill, DEFAULTS.skin), 'a thin beard is nearer the skin, a full one is the hair');
+  assert.ok((thin.op ?? 1) === 1 && (thick.op ?? 1) === 1, 'the mass is opaque at every density');
+  assert.equal(thin.fill, '#123123', 'a thin beard is the hair, not the skin');
+  assert.ok(bands({ density: 0.15 })[0].op < bands({ density: 1 })[0].op, 'a thin beard is sparse on the cheeks');
   assert.equal(thick.fill, '#123123');
   assert.equal(ops({ mustache: false }).filter((o) => o.stache).length, 0);
   assert.equal(portraitOps({ facialHair: { style: 'heavyStubble', mustache: true } }).filter((o) => o.stache).length, 3, 'and a stubble carries one: the moustache itself plus the strip down each corner of the mouth that joins it to the mass'); // stubble grows on the upper lip too, so it is the default for every stubble now
