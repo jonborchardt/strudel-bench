@@ -1,4 +1,16 @@
 {
   "made": "2026-09-10",
-  "prompt": "machine as first committed (90 BPM, one chord), kept so the blog can play the first version against the finished one; hidden."
+  "prompt": "machine as first committed (90 BPM, one chord), kept so the blog can play the first version against the finished one; hidden.",
+  "requests": [
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "saturate .6 on the bus; level 1.8 on drums and bass, 1.4 on melody and pad in every section to hold loudness (the distorted parts answer little to level). no sub (bass midi 16), no sidechain (measure showed no drums/bass low pair), kit kept"
+        }
+      ]
+    }
+  ]
 }
