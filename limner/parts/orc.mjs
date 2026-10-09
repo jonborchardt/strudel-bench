@@ -22,7 +22,7 @@ MAKEUP.tusks = { mouth: (p) => { const m = p.mouth, w = Math.max(m.width, 40), h
     path(`M ${x - bw + 1.6} ${y - 2} C ${x - bw + 2 + sd * 0.6} ${y - h * 0.5}, ${x - sd * 0.6} ${y - h * 0.8}, ${x + sd * 2.6} ${y - h * 0.92}`, stroke('#fff', 1.8, 0.45)), // the light down its front
     path(`M ${x + bw - 1.2} ${y - 2} C ${x + bw + sd * 0.4} ${y - h * 0.32}, ${x + sd * 4.4} ${y - h * 0.68}, ${x + sd * 2.9} ${y - h * 0.9}`, stroke('#8d7f60', 1.4, 0.55))]; }); } }; // and the shaded edge behind it
 
-HATS.boneHelm = (p) => [...[-1, 1].map((sd) => path(`M ${200 + sd * 58} 124 Q ${200 + sd * 78} 150 ${200 + sd * 68} 198 Q ${200 + sd * 54} 186 ${200 + sd * 48} 138 Z`, { fill: shade(p.hat.color, 0.8) })), // cheek plates
+HATS.boneHelm = (p) => [...[-1, 1].map((sd) => path(`M ${200 + sd * 60} 128 Q ${200 + sd * 90} 130 ${200 + sd * 88} 176 Q ${200 + sd * 86} 206 ${200 + sd * 72} 208 Q ${200 + sd * 60} 206 ${200 + sd * 60} 180 Z`, { fill: shade(p.hat.color, 0.8) })), // cheek plates over the ears, out past the face's edge with a rounded foot: drawn inside the face from the rim to a point on the cheek they were two daggers on the temples, blinkers rather than armour (T182)
   path('M 128 134 C 130 84, 162 62, 200 62 C 238 62, 270 84, 272 134 Z', { fill: p.hat.color }),
   path('M 128 134 Q 200 122 272 134', stroke(shade(p.hat.color, 0.62), 5, 0.9, 'butt')),
   path('M 200 60 L 200 132', stroke(BONE, 7, 0.9)), ...[0, 1, 2].map((i) => path(`M 188 ${80 + i * 20} L 212 ${80 + i * 20}`, stroke(BONE, 3, 0.8))), // a bone ridge, lashed down
