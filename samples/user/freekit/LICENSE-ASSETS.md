@@ -1,6 +1,7 @@
 # Asset license
 
 Every file here is CC0 1.0 (public domain dedication) on Freesound, checked through the API by id when imported.
+Modified: peak-normalised to -3 dBFS at import (16-bit wav); otherwise the originals.
 No attribution is required; the provenance is kept so the check can be repeated.
 
 | file | title | uploader | source | licence |
@@ -29,7 +30,6 @@ No attribution is required; the provenance is kept so the check can be repeated.
 | freekit_ht/508939.wav | Rock Snare Tom Hi | tripjazz | https://freesound.org/people/tripjazz/sounds/508939/ | CC0 |
 | freekit_ht/510279.wav | Sonny Tom Hi | tripjazz | https://freesound.org/people/tripjazz/sounds/510279/ | CC0 |
 | freekit_ht/511147.wav | GB’s Jazz Tom Hi | tripjazz | https://freesound.org/people/tripjazz/sounds/511147/ | CC0 |
-| freekit_lt/508938.wav | Rock Snare Tom Lo | tripjazz | https://freesound.org/people/tripjazz/sounds/508938/ | CC0 |
 | freekit_lt/510284.wav | Sonny Tom Lo | tripjazz | https://freesound.org/people/tripjazz/sounds/510284/ | CC0 |
 | freekit_lt/511150.wav | GB’s Jazz Tom Lo | tripjazz | https://freesound.org/people/tripjazz/sounds/511150/ | CC0 |
 | freekit_mt/508937.wav | Rock Snare Tom Mid | tripjazz | https://freesound.org/people/tripjazz/sounds/508937/ | CC0 |
@@ -41,7 +41,6 @@ No attribution is required; the provenance is kept so the check can be repeated.
 | freekit_oh/509338.wav | Hornstull OH | tripjazz | https://freesound.org/people/tripjazz/sounds/509338/ | CC0 |
 | freekit_oh/510276.wav | Sonny HH Open | tripjazz | https://freesound.org/people/tripjazz/sounds/510276/ | CC0 |
 | freekit_oh/511141.wav | GB’s Jazz HH Open | tripjazz | https://freesound.org/people/tripjazz/sounds/511141/ | CC0 |
-| freekit_rd/508943.wav | Studio Cymbal 2 | tripjazz | https://freesound.org/people/tripjazz/sounds/508943/ | CC0 |
 | freekit_rd/509593.wav | Boom Bap Cymbal | tripjazz | https://freesound.org/people/tripjazz/sounds/509593/ | CC0 |
 | freekit_rd/518818.wav | Leeloo Cymbal | tripjazz | https://freesound.org/people/tripjazz/sounds/518818/ | CC0 |
 | freekit_rim/508039.wav | Weekend Sidestick | tripjazz | https://freesound.org/people/tripjazz/sounds/508039/ | CC0 |
