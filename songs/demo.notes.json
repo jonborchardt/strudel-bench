@@ -53,6 +53,16 @@
           "why": "notes 0 7 0 4: octave pop under the hook"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate .6; drums and bass level 1.25 in verse and drop to hold rms after saturation; drop.melody2 glockenspiel>handchimes (was 49 dB under the mix); dry room kept on purpose, no sub (bass at midi 24), no sidechain (no low pair named)"
+        }
+      ]
     }
   ]
 }
