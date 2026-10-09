@@ -18,9 +18,9 @@ const safeDecode = (s) => { try { return decodeURIComponent(s); } catch { return
 /** { seconds, rms, peak } of one wav file (rms over its loudest half second, so a long tail does not hide a loud hit). */
 export function measureWav(buf) {
   const { rate, frames, bits, float } = readWav(buf);
-  const x = frames[0];
   let peak = 0;
-  for (let i = 0; i < x.length; i++) peak = Math.max(peak, Math.abs(x[i]));
+  for (const c of frames) for (let i = 0; i < c.length; i++) peak = Math.max(peak, Math.abs(c[i]));
+  const x = frames.length === 1 ? frames[0] : Float32Array.from(frames[0], (_, i) => frames.reduce((s, c) => s + c[i], 0) / frames.length); // rms over the mono mix
   const win = Math.min(x.length, Math.floor(rate / 2)), step = Math.max(1, Math.floor(win / 4));
   let e = 0;
   for (let i = 0; i < win; i++) e += x[i] * x[i];

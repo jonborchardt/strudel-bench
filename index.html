@@ -347,7 +347,7 @@
     $('strip').innerHTML = sections.map((s, i) => `<div class="blk${s.name === pinned ? ' pin' : ''}${s === at ? ' on' : ''}" data-i="${i}" style="flex-grow:${s.span}" title="${esc(s.name)}: ${s.cycles} bars${s.role ? ', ' + s.role : ''}. Click to scrub here."><span class="nm">${esc(s.name)}</span><span class="ops"><button data-op="pin" title="${s.name === pinned ? 'unpin: follow the playhead again' : 'pin: loop this section, start Play here, keep the mix on it'}">&#128204;</button><button data-op="left" title="move earlier"${i ? '' : ' disabled'}>&#9664;</button><button data-op="right" title="move later"${i < sections.length - 1 ? '' : ' disabled'}>&#9654;</button><button data-op="dup" title="duplicate it after this one">&#10697;</button><button data-op="ren" title="rename (or double-click the name)">&#9998;</button><button data-op="verb" title="a transform: breakdown, lift, strip, halftime">&#9889;</button><button data-op="del" title="remove this section (undo brings it back)">&times;</button></span>${layerNames().map((l) => {
       const a = s.layers[l]?.attrs, d = typeof a?.density === 'number' ? a.density : .5;
       const ml = a?.enter ? (100 * a.enter / s.cycles).toFixed(1) : 0, mr = a?.exit ? (100 * a.exit / s.cycles).toFixed(1) : 0;
-      return `<i style="opacity:${a ? ((.3 + .7 * d) * Math.min(1, a.level ?? 1)).toFixed(2) : 0};margin-left:${ml}%;margin-right:${mr}%" title="${l}${a ? `: density ${d}${a.enter ? `, in at bar ${a.enter}` : ''}${a.exit ? `, out ${a.exit} bars early` : ''}` : ' (silent)'}"></i>`;
+      return `<i style="opacity:${a ? ((.3 + .7 * d) * Math.min(1, a.level ?? 1)).toFixed(2) : 0};margin-left:${ml}%;margin-right:${mr}%" title="${l}${a ? `: density ${d}${a.enter ? `, after ${a.enter} bars` : ''}${a.exit ? `, out ${a.exit} bars early` : ''}` : ' (silent)'}"></i>`;
     }).join('')}${transition(s, sections[i + 1])}${fade(s)}</div>`).join('');
     stripFollow($('strip').querySelector('.blk.on'));
   }
@@ -1073,7 +1073,7 @@
   const audition = (btn, layer, key, text, voice, section = mixSection, src = code.text) => pv.preview(btn, async () => { // no key: the part as it is written
     const pat = await evalCode(ready, key ? setMaterial(src, section, layer, key, text) : src);
     setSaturation(pat.strudel?.meta.saturate ?? 0);
-    const s =pat.strudel.sections.find((x) => x.name === section);
+    const s = pat.strudel.sections.find((x) => x.name === section);
     let pattern = s.layers[layer].pattern, what = key ? `${key} ${text ?? 'removed'}` : 'as written';
     if (voice) {
       const name = s.layers[layer].attrs.sounds?.[voice];
@@ -1488,7 +1488,7 @@
       await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
       const song = await strudel.evaluate(code.text, false); // once, not once per render
       // with saturate above 0 a part alone passes its own orbit's shaper; in the mix a shared bus is driven harder, so per-part dB lean a little optimistic
-      const stats =async (layer) => metricsOf(await renderSong({ song, section: mixSection, layer, cycles: Math.min(ev.cycles, 4), progress: (i, n) => mstate('busy', `measuring ${layer ?? mixSection} ${Math.round((i / n) * 100)}%`) }), { cps: ev.cps }); // levelRows reads rms and peak
+      const stats = async (layer) => metricsOf(await renderSong({ song, section: mixSection, layer, cycles: Math.min(ev.cycles, 4), progress: (i, n) => mstate('busy', `measuring ${layer ?? mixSection} ${Math.round((i / n) * 100)}%`) }), { cps: ev.cps }); // levelRows reads rms and peak
       const parts = [{ name: 'mix', ...(await stats()) }];
       for (const l of Object.keys(ev.layers)) parts.push({ name: l, ...(await stats(l)) }); // one render at a time: renderSong shares the offline context
       const rows = levelRows(parts);

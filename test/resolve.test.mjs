@@ -379,4 +379,7 @@ test('verb sidechain skips a section with no drums and notes an overwritten duck
   assert.match(r.skipped.join(), /bass/); assert.match(r.skipped.join(), /pad/);
   const src2 = "song({ cps: .5 }, [section('a', 8, { drums: {}, bass: { duck: 'kick' } })])\n";
   assert.match(applyVerb(src2, 'a', 'sidechain').report.join(), /bass: duck was/);
+  const { VERBS } = await import('../lib/resolve.mjs'), was = VERBS.sidechain.material.bass.duck;
+  VERBS.sidechain.material.bass.duck = '"drums"'; // a double-quoted target is read too
+  try { assert.match(applyVerb(src, 'a', 'sidechain').skipped.join(), /bass: no part "drums"/); } finally { VERBS.sidechain.material.bass.duck = was; }
 });

@@ -31,6 +31,14 @@ test('with keepDirect: importIr trims the leading silence, keeps the rate, adds 
   } finally { fs.rmSync(tmp, { force: true }); }
 });
 
+test('keepDirect normalises the kept window to .5 even when the window is short', () => {
+  writeWav(tmp, 48000, impulse(48000, 10, 2));
+  try {
+    const { channels } = importIr(fs.readFileSync(tmp), { seconds: .1, predelayMs: 5, keepDirect: true });
+    assert.ok(Math.abs(Math.max(...channels.map((c) => c.reduce((a, x) => Math.max(a, Math.abs(x)), 0))) - .5) < 1e-3);
+  } finally { fs.rmSync(tmp, { force: true }); }
+});
+
 test('toStereo: mono duplicates, 4-channel B-format decodes W±Y (silent Y gives identical channels)', () => {
   const [l, r] = toStereo([Float32Array.of(.2, .4)]);
   assert.deepEqual([...l], [...r]);

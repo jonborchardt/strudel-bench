@@ -44,7 +44,7 @@ export function importIr(buf, { seconds = 4, predelayMs = 10, keepDirect = false
     if (peak === 0) throw new Error('nothing after the direct sound');
     start = firstAbove(end, peak);
     peak = scan(start, start + kept).peak; // normalise against what the file keeps, not a louder sample past `seconds`
-  }
+  } else peak = scan(start, start + kept).peak; // the kept window, not a louder sample past `seconds`
   const g = .5 / peak;
   const cut = (ch) => { const out = new Float32Array(n); for (let i = pre; i < n; i++) { const s = ch[start + i - pre]; if (s === undefined) break; const k = n - i; out[i] = s * g * (k < fade ? k / fade : 1); } return out; };
   return { rate, channels: [cut(l), cut(r)] };

@@ -22,6 +22,7 @@ export async function importKit(dir, kit, { fetchJson, root = ROOT, peakDb = -3 
   const out = path.join(root, 'samples', 'user', kit), imported = [], rejected = [];
   const keep = [];
   for (const file of fs.readdirSync(dir).filter((f) => /\.(wav|flac|aif|aiff)$/i.test(f)).sort()) { // look every id up first: an API failure writes nothing
+    if (peakDb != null && !/\.wav$/i.test(file)) throw new Error(`${file}: only wav can be peak-normalised (convert it, or pass --peak none)`);
     const p = parseName(file);
     if (!p) { rejected.push({ file, why: 'name must be <voice>_<id>__...' }); continue; }
     const m = await fetchJson(p.id);
@@ -48,7 +49,7 @@ export async function importKit(dir, kit, { fetchJson, root = ROOT, peakDb = -3 
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const pi = process.argv.indexOf('--peak'), peakDb = pi > 0 ? Number(process.argv[pi + 1]) : -3;
+  const pi = process.argv.indexOf('--peak'), peakDb = pi > 0 ? (/^(null|none)$/i.test(process.argv[pi + 1]) ? null : Number(process.argv[pi + 1])) : -3;
   const [dir, kit] = process.argv.slice(2).filter((a, i, v) => a !== '--peak' && v[i - 1] !== '--peak'), token = process.env.FREESOUND_TOKEN;
   if (!dir || !kit) { console.error('usage: FREESOUND_TOKEN=... node scripts/freesound.mjs <dir> <kit>'); process.exit(2); }
   if (!token) { console.error('set FREESOUND_TOKEN (https://freesound.org/apiv2/apply/)'); process.exit(2); }

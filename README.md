@@ -230,11 +230,11 @@ Rhythm has one written grammar everywhere it appears: `x` hit, `X` accent, `o` g
 | song, section | `meter` | `'4/4'`, `'3/4'`, `'6/8'`, `'7/8'`, `'5/4'` | one bar is still one cycle; 16th grid |
 | song | `bpm` | number | instead of `cps`: beats per minute on the meter's denominator |
 | section | `bpm` or `cps` | number | that section plays at its own tempo |
-| section | `dropout` | bars `n` | silences every part but fx for the last `n` bars |
+| section | `dropout` | bars `n` | silences every part but fx for the last `n` bars (a note already sounding at the boundary rings out: the mask drops new onsets, not held notes) |
 | section | `sweep` | bars `n` | over every part but fx during the last `n` bars, opens the filter to 8 kHz at the start of the tail and closes it to 150 Hz by the end, overriding that part's own brightness for those bars |
 | any part | `enter` | bars `n` | the part is silent for the section's first `n` bars (a late hat, a pad that joins) |
 | bass | `sub` | 0..1 | a sine an octave under every note at that gain, stripped of the voice's filter and drive: the fundamental a driven bass loses (not the `sub` patch, a plain vibrato-free voice: a different thing) |
-| any part | `exit` | bars `n` | the part is silent for the section's last `n` bars, counted from the end like dropout |
+| any part | `exit` | bars `n` | the part is silent for the section's last `n` bars, counted from the end like dropout (a note already sounding at the boundary rings out: the mask drops new onsets, not held notes) |
 
 A key that is neither an axis nor that layer's material throws, naming both lists: a typo (`arpp: 'up'`) is a build error, not a silent no-op. The same goes for song metadata (`bmp: 120` throws).
 

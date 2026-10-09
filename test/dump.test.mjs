@@ -144,6 +144,7 @@ test('enter/exit print as masks and the expansion plays the same gap', async () 
     assert.match(out, /\.mask\(/);
     const built = (await evaluate(fs.readFileSync(file, 'utf8'), transpiler)).pattern, dumped = (await evaluate(out, transpiler)).pattern;
     const bassOnsets = (p, a, b) => p.queryArc(a, b).filter((h) => h.hasOnset() && h.value.note !== undefined).length; // the bass is the only pitched part
+    assert.ok(bassOnsets(built, 2, 6) > 0, 'the bass sounds in the open bars');
     assert.equal(bassOnsets(dumped, 0, 2), 0, 'silent head in the expansion');
     assert.equal(bassOnsets(dumped, 6, 8), 0, 'silent tail in the expansion');
     assert.equal(bassOnsets(dumped, 2, 6), bassOnsets(built, 2, 6));

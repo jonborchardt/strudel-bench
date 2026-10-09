@@ -22,6 +22,14 @@ test('measureWav: seconds, peak and rms of the loudest half second, in dBFS', ()
   } finally { fs.unlinkSync(f); }
 });
 
+test('measureWav: peak is the max over all channels (a right channel alone at .5 reads -6 dB)', () => {
+  const tmp = path.resolve(import.meta.dirname, '_t_meta3.wav');
+  try {
+    writeWav(tmp, 44100, [new Float32Array(4410), sine(0.1, 0.5)]);
+    assert.ok(Math.abs(measureWav(fs.readFileSync(tmp)).peak - -6) < 0.1);
+  } finally { fs.rmSync(tmp, { force: true }); }
+});
+
 test('measureWav reports rate and bits', () => {
   const tmp = path.resolve(import.meta.dirname, '_t_meta2.wav');
   try {

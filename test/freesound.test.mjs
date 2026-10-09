@@ -49,6 +49,14 @@ test('importKit peak-normalises a wav to peakDb and says so in the licence heade
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+test('importKit refuses a non-wav input while normalising', async () => {
+  const root = path.resolve(import.meta.dirname, '_t_fs4'), src = path.join(root, 'in');
+  fs.mkdirSync(src, { recursive: true });
+  fs.writeFileSync(path.join(src, 'bd_1__a__k.flac'), 'x');
+  try { await assert.rejects(importKit(src, 'tkit', { fetchJson: async () => ({}), root, peakDb: -3 }), /only wav/); }
+  finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test('importKit: a failing lookup writes nothing, and a re-run drops stale takes', async () => {
   const root = path.resolve(import.meta.dirname, '_t_fs3'), src = path.join(root, 'in'), bd = path.join(root, 'samples', 'user', 'tkit', 'tkit_bd');
   fs.mkdirSync(src, { recursive: true }); fs.mkdirSync(bd, { recursive: true });
