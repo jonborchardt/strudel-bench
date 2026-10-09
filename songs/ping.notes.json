@@ -14,6 +14,16 @@
           "why": "on a dry-on-purpose demo (no room, TR909 kept: it is the demo); drums, bass, melody level 1.4 to bring rms back inside 2 dB; no sub, no sidechain, no entries"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10), level lifts reverted",
+      "changes": [
+        {
+          "section": "drums/bass/melody",
+          "why": "level 1.4: the spec asks for harmonics, not level; peaks fell, rms sits 2-3 dB under the baseline by design"
+        }
+      ]
     }
   ]
 }
