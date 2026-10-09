@@ -189,3 +189,16 @@ test('song() files carry a visual score the check describes; a plain file has no
   const f = tmp('_t_plainvisual.strudel', 's("bd sd")');
   try { assert.equal((await checkFile(f)).visual, undefined); } finally { fs.rmSync(f); }
 });
+
+test('a user-pack kit resolves to its own files and needs its pack declared', async () => {
+  const song = (head) => `song({ ${head}kit: 'freekit', seed: 1 }, [ section('a', 2, { drums: { density: .6 } }) ])`;
+  const f = tmp('_t_freekit.strudel', song(''));
+  const g = tmp('_t_freekit2.strudel', song("packs: ['freekit'], "));
+  try {
+    assert.ok((await checkFile(f)).problems.some((p) => p.includes("packs: ['freekit']")));
+    const r = await checkFile(g);
+    assert.deepEqual(r.problems, []);
+    assert.ok(r.sounds.some((u) => u.file && u.name === 'freekit_bd'), 'reads freekit_bd, not uzu bd');
+    assert.ok(r.sounds.some((u) => u.seconds !== undefined && u.name.startsWith('freekit_')), 'meta comes from the pack');
+  } finally { fs.rmSync(f, { force: true }); fs.rmSync(g, { force: true }); }
+});

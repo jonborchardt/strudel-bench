@@ -92,3 +92,11 @@ test('a banned kit or sound is an error naming it and the reason', () => {
   assert.ok(out.some((f) => f.level === 'error' && /kit AkaiLinn.*12-bit crunch/.test(f.text)));
   assert.ok(out.some((f) => f.level === 'error' && /sound "bd".*8-bit/.test(f.text)));
 });
+
+test('banReason: case-blind, strips a prefix only when it is a kit', async () => {
+  const { banReason } = await import('../lib/packs.mjs');
+  const kits = ['RolandTR909'];
+  assert.ok(banReason('rolandtr909_cb', { sounds: { RolandTR909_cb: 'x' } }, kits), 'CamelCase entry, lowercase name');
+  assert.equal(banReason('snare_modern', { sounds: { modern: 'x' } }, kits), undefined);
+  assert.ok(banReason('rolandtr909_cb', { sounds: { cb: 'x' } }, kits), 'bare ban hides the kit voice');
+});

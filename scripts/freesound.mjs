@@ -20,12 +20,17 @@ export const isCc0 = (license) => /creativecommons\.org\/publicdomain\/zero|^Cre
 export async function importKit(dir, kit, { fetchJson, root = ROOT, peakDb = -3 } = {}) {
   if (!/^[a-z][a-z0-9]*$/.test(kit)) throw new Error('kit: lowercase letters and digits (it becomes the bank prefix)');
   const out = path.join(root, 'samples', 'user', kit), imported = [], rejected = [];
-  for (const file of fs.readdirSync(dir).filter((f) => /\.(wav|flac|aif|aiff)$/i.test(f)).sort()) {
+  const keep = [];
+  for (const file of fs.readdirSync(dir).filter((f) => /\.(wav|flac|aif|aiff)$/i.test(f)).sort()) { // look every id up first: an API failure writes nothing
     const p = parseName(file);
     if (!p) { rejected.push({ file, why: 'name must be <voice>_<id>__...' }); continue; }
     const m = await fetchJson(p.id);
     if (!m) { rejected.push({ file, why: 'not found on Freesound' }); continue; }
     if (!isCc0(m.license)) { rejected.push({ file, why: `licence ${m.license}` }); continue; }
+    keep.push({ file, p, m });
+  }
+  for (const v of new Set(keep.map((k) => k.p.voice))) fs.rmSync(path.join(out, `${kit}_${v}`), { recursive: true, force: true }); // a re-run keeps no stale takes
+  for (const { file, p, m } of keep) {
     fs.mkdirSync(path.join(out, `${kit}_${p.voice}`), { recursive: true });
     fs.copyFileSync(path.join(dir, file), path.join(out, `${kit}_${p.voice}`, `${p.id}${path.extname(file).toLowerCase()}`));
     if (peakDb != null && /\.wav$/i.test(file)) { // takes of one voice differ by up to 24 dB; a per-hit take pick would jump in level
@@ -47,7 +52,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const [dir, kit] = process.argv.slice(2).filter((a, i, v) => a !== '--peak' && v[i - 1] !== '--peak'), token = process.env.FREESOUND_TOKEN;
   if (!dir || !kit) { console.error('usage: FREESOUND_TOKEN=... node scripts/freesound.mjs <dir> <kit>'); process.exit(2); }
   if (!token) { console.error('set FREESOUND_TOKEN (https://freesound.org/apiv2/apply/)'); process.exit(2); }
-  const fetchJson = async (id) => { const r = await fetch(`https://freesound.org/apiv2/sounds/${id}/?token=${token}&fields=${FIELDS}`); return r.ok ? r.json() : null; };
+  const fetchJson = async (id) => { const r = await fetch(`https://freesound.org/apiv2/sounds/${id}/?token=${token}&fields=${FIELDS}`); if (r.status === 404) return null; if (!r.ok) throw new Error(`Freesound API ${r.status} for sound ${id} (Retry-After: ${r.headers.get('retry-after') ?? 'none'})`); return r.json(); };
   const { imported, rejected } = await importKit(dir, kit, { fetchJson, peakDb });
   for (const x of imported) console.log(`+ ${kit}_${x.voice}/${x.id}  ${x.name} (${x.username})`);
   for (const x of rejected) console.log(`- ${x.file}: ${x.why}`);

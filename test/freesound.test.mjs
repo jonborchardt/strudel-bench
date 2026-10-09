@@ -48,3 +48,16 @@ test('importKit peak-normalises a wav to peakDb and says so in the licence heade
     assert.match(fs.readFileSync(path.join(root, 'samples', 'user', 'tkit', 'LICENSE-ASSETS.md'), 'utf8'), /peak-normalised to -3 dBFS at import/);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
+
+test('importKit: a failing lookup writes nothing, and a re-run drops stale takes', async () => {
+  const root = path.resolve(import.meta.dirname, '_t_fs3'), src = path.join(root, 'in'), bd = path.join(root, 'samples', 'user', 'tkit', 'tkit_bd');
+  fs.mkdirSync(src, { recursive: true }); fs.mkdirSync(bd, { recursive: true });
+  fs.writeFileSync(path.join(src, 'bd_1__a__k.wav'), 'x'); fs.writeFileSync(path.join(src, 'bd_2__a__k.wav'), 'x'); fs.writeFileSync(path.join(bd, '99.wav'), 'old');
+  const ok = { license: 'Creative Commons 0', name: 'k', username: 'a', url: 'u' };
+  try {
+    await assert.rejects(importKit(src, 'tkit', { fetchJson: async (id) => { if (id === '2') throw new Error('429'); return ok; }, root, peakDb: null }), /429/);
+    assert.ok(fs.existsSync(path.join(bd, '99.wav')) && !fs.existsSync(path.join(bd, '1.wav')), 'nothing touched');
+    await importKit(src, 'tkit', { fetchJson: async () => ok, root, peakDb: null });
+    assert.ok(!fs.existsSync(path.join(bd, '99.wav')) && fs.existsSync(path.join(bd, '1.wav')));
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});

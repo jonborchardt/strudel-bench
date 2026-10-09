@@ -1,4 +1,5 @@
 // The kit audit: every drum kit on the same two bars in one render, plus a table of what each kit's files are.
+// Covers the machine kits (samples/packs) and user-pack kits (samples/user/<pack>/<kit>_<voice> folders with a meta.json).
 // usage: node scripts/kitsheet.mjs [--render]   (PORT env; --render needs an open page: PORT=3001 npm run headless)
 // Writes renders/kitsheet.md (the table, with a verdict from the objective columns, and the index: which second each
 // kit starts at) and, with --render, songs/_t_kitsheet.strudel (removed after) rendered to renders/kitsheet.mp3.
@@ -30,13 +31,19 @@ export function kitTable(kits, map, meta, usage) {
   });
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) try {
   const packsDir = path.join(ROOT, 'samples', 'packs');
   const map = {}, meta = {};
   for (const f of fs.readdirSync(packsDir)) { // every pack map and its meta, keyed by the map's file strings
     if (!f.endsWith('.json') || f === 'packs.json' || f.includes('alias')) continue;
     const j = JSON.parse(fs.readFileSync(path.join(packsDir, f), 'utf8'));
     if (f.endsWith('.meta.json')) Object.assign(meta, j); else for (const [k, v] of Object.entries(j)) if (k !== '_base') map[k] = [v].flat();
+  }
+  const userDir = path.join(ROOT, 'samples', 'user'); // user packs: a folder <kit>_<voice> is a kit voice; meta keyed pack/folder/file
+  for (const p of fs.existsSync(userDir) ? fs.readdirSync(userDir) : []) {
+    const mf = path.join(userDir, p, 'meta.json');
+    if (fs.existsSync(mf)) Object.assign(meta, JSON.parse(fs.readFileSync(mf, 'utf8')));
+    for (const d of fs.existsSync(mf) ? fs.readdirSync(path.join(userDir, p), { withFileTypes: true }).filter((e) => e.isDirectory() && e.name.includes('_')) : []) map[d.name] = fs.readdirSync(path.join(userDir, p, d.name)).map((x) => `${p}/${d.name}/${x}`);
   }
   const kits = Object.keys(KITS).filter((k) => kitVoices(map, k).length);
   const usage = {};
@@ -53,4 +60,4 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     try { console.log(await renderVia({ song: '_t_kitsheet.strudel', name: 'kitsheet', mp3: true })); }
     finally { fs.rmSync(song, { force: true }); }
   }
-}
+} catch (e) { console.error(e.message); process.exit(1); }

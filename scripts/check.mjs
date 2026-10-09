@@ -128,11 +128,12 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   const known = builtinSounds();
   const local = localSounds(packs);
   loadMeta(packs);
+  const fullName = (v, bare) => { const k = `${v.bank}_${bare}`; return v.bank && (known.has(k) || local.has(k)) ? k : bare; };
   // the sound a hap plays as superdough resolves it (the bank-prefixed name when the kit has it, else the bare name) and its take
   const soundOf = (v) => {
     if (typeof v !== 'object' || v === null || v.s === undefined) return null;
     const bare = String(v.s).split(':')[0].split(',')[0].trim();
-    return { name: v.bank && known.has(`${v.bank}_${bare}`) ? `${v.bank}_${bare}` : bare, n: v.n ?? +(String(v.s).split(':')[1] ?? 0) };
+    return { name: fullName(v, bare), n: v.n ?? +(String(v.s).split(':')[1] ?? 0) };
   };
   const metaOf = (h) => { const u = soundOf(h.value); return u && soundMeta(u.name, u.n, packs); };
   // a bad sample definition in a pack the song declares, and a definition of that pack another pack's name took
@@ -150,13 +151,13 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
     const names = typeof v === 'object' && v !== null ? [...(v.s === undefined ? [] : String(v.s).split(':')[0].split(',')), ...(typeof v.ir === 'string' ? [v.ir] : [])] : [];
     for (const name of names) {
       const bare = name.trim();
-      const full = v.bank && known.has(`${v.bank}_${bare}`) ? `${v.bank}_${bare}` : bare;
+      const full = fullName(v, bare);
       const idx = bare === v.ir ? 0 : v.n ?? +(String(v.s).split(':')[1] ?? 0);
       used.set(`${full}:${idx}`, { name: full, n: idx });
       if (known.has(full)) continue;
-      const pack = local.get(bare);
-      if (!pack) unknown.add(bare);
-      else if (!declared.includes(pack)) undeclared.set(bare, pack);
+      const pack = local.get(full);
+      if (!pack) unknown.add(full);
+      else if (!declared.includes(pack)) undeclared.set(full, pack);
     }
   }
   const sounds = [...used.values()].map((u) => ({ ...u, file: soundFile(u.name, u.n, packs), ...soundMeta(u.name, u.n, packs) })).filter((u) => u.file);

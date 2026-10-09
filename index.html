@@ -143,7 +143,7 @@
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks, setSaturation } from './web/boot.mjs';
   import { kitsIn, buildRequest, notesView, notesFile, youtubeView, verifyRows, shareEncode, shareDecode, levelRows } from './web/compose.mjs';
-  import { packsOf, packKind, registerSamples, resolveSample, sampleDef, SAMPLES, SYNTHS, PATCHES } from './lib/packs.mjs';
+  import { banReason, packsOf, packKind, registerSamples, resolveSample, sampleDef, SAMPLES, SYNTHS, PATCHES } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
   import { SCHEMA, host, CHORDS } from './web/hll-schema.mjs';
@@ -201,7 +201,7 @@
   const ready = boot({ onError: (m) => ($('err').textContent = m), onStatus: status });
   // the synths and every loaded sample: what any layer can name
   let quality = { kits: {}, sounds: {} }; // lib/quality.json: banned kits and sounds, hidden from the picks
-  const soundNames = () => [...new Set([...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()])].filter((n) => !quality.sounds[n] && !quality.sounds[n.replace(/^[^_]+_/, '')]);
+  const soundNames = () => [...new Set([...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()])].filter((n) => !banReason(n, quality, Object.keys(kitInfo)));
   // plus the packs' named sample definitions (a part naming one inherits its region, bars and slices). Only a sample
   // part resolves them (resolveSample), so they are offered there and nowhere else: s("loop-kick") on a melody is
   // silence in the page and an unknown sound at check time.
