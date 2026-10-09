@@ -76,6 +76,16 @@
           "why": "impact none>bd the breakdown lands on a low hit instead of the drop just stopping"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate .6 (bus saturator, peak down, rms within 2 dB); no kit swap, room kept, no sub (bass reaches midi <=40), no sidechain pair named by measure, no entries merged"
+        }
+      ]
     }
   ]
 }
