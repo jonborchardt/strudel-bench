@@ -403,7 +403,7 @@ test('patch: a named bundle of voice controls, or an object of them, applied und
   const g = await ready;
   const { resolvePatch, PATCHES } = await import('../lib/packs.mjs');
   assert.deepEqual(resolvePatch('pluck'), PATCHES.pluck); assert.deepEqual(resolvePatch({ unison: 3 }), { unison: 3 }); assert.equal(resolvePatch(undefined), null);
-  assert.throws(() => resolvePatch('nope'), /unknown patch "nope"/); assert.throws(() => resolvePatch({ lpf: 300 }), /patch: unknown key "lpf"/);
+  assert.throws(() => resolvePatch('nope'), /unknown patch "nope"/); assert.throws(() => resolvePatch({ hpf: 300 }), /patch: unknown key "hpf"/);
   const v = (L, attrs) => onsets(g[L](attrs, ctx))[0].value;
   assert.equal(v('pad', { patch: 'wide' }).unison, 5); assert.equal(v('pad', { patch: 'wide' }).detune, .18);
   assert.equal(onsets(g.pad({ patch: 'wide' }, ctx)).length, onsets(g.pad({}, ctx)).length, 'unison adds voices inside a hap, not onsets');
@@ -436,4 +436,17 @@ test('bass rhythm: a written grid replaces the density grid, keeps drive and acc
   assert.equal(at({ rhythm: 'x.....x.....x...', drive: .9 }).length, 6, 'drive keeps the count');
   const gains = onsets(g.bass({ rhythm: 'X.....o.....x...' }, { ...ctx, cycles: 1 }), 1).map((h) => h.value.gain);
   assert.ok(gains[0] > gains[2] && gains[1] < gains[2], 'accent and ghost');
+});
+
+test('patch: ftype/drive/lpf are patch keys; driven and warm exist; ftype is validated', async () => {
+  await ready;
+  const hap = (layer, attrs) => song({ cps: .5 }, [section('a', 4, { [layer]: attrs })]).strudel.sections[0].layers[layer].pattern.queryArc(0, 1).find((h) => h.hasOnset()).value;
+  const b = hap('bass', { patch: 'driven', notes: '0 0 0 0' });
+  assert.equal(b.ftype, 'ladder'); assert.ok(b.drive > 0); assert.ok(b.cutoff > 0, 'the bass always carries a cutoff');
+  const m = hap('melody', { patch: 'warm', notes: '0 2 4 5' });
+  assert.equal(m.ftype, 'ladder'); assert.equal(m.cutoff, 6000, "warm's own lpf, since brightness is unwritten");
+  const bright = hap('melody', { patch: 'warm', notes: '0 2 4 5', brightness: .9 });
+  assert.ok(bright.cutoff > 6000, 'a written brightness overrides the patch lpf');
+  assert.throws(() => hap('bass', { patch: { ftype: 'moog' } }), /ftype must be one of 12db, 24db, ladder/);
+  assert.throws(() => hap('bass', { patch: { drive: 9 } }), /drive must be a number in 0\.\.3/);
 });

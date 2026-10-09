@@ -25,9 +25,9 @@ const WORKLETS = ['coarse', 'crush', 'shape', 'distort']; // superdough builds a
 const load = (h, cycles, cps, meta) => {
   const v = h.value, s = String(v.s ?? '').split(':')[0];
   // the synth worklets too: a supersaw is one processor running `unison` (5) detuned voices, a wavetable (wt_*) one processor
-  // per note, and a `compressor` is a DynamicsCompressorNode per hit; neon's drop2 read 15 with these uncounted and traced
+  // per note, and a `compressor` is a DynamicsCompressorNode per hit, the ladder filter a processor per hit too; neon's drop2 read 15 with these uncounted and traced
   // 65% busy with dropouts, machine's chorus3 read 33 by the same model and traced 43%
-  const worklets = WORKLETS.filter((k) => v[k] !== undefined).length + (s === 'supersaw' ? Math.max(1, v.unison ?? 5) - 1 : 0) + (s.startsWith('wt_') ? 1 : 0) + (v.compressor !== undefined ? 1 : 0);
+  const worklets = WORKLETS.filter((k) => v[k] !== undefined).length + (s === 'supersaw' ? Math.max(1, v.unison ?? 5) - 1 : 0) + (s.startsWith('wt_') ? 1 : 0) + (v.compressor !== undefined ? 1 : 0) + (v.ftype === 'ladder' ? 1 : 0);
   const file = v.clip === undefined && meta?.seconds ? meta.seconds * (typeof v.end === 'number' ? v.end - (v.begin ?? 0) : 1) / Math.max(Math.abs(v.speed ?? 1), 1e-3) : 0;
   return (1 + worklets) * (Math.max(cycles, file * cps) + (v.release ?? 0) * cps);
 };
