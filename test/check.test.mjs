@@ -5,6 +5,7 @@ import path from 'node:path';
 import { checkFile, checkCode, missingPackOnly, formLetters } from '../scripts/check.mjs';
 import { describeVisual } from '../lib/visual.mjs';
 import { isUnlisted } from '../server.mjs';
+import QUALITY from '../lib/quality.json' with { type: 'json' };
 
 const tmp = (name, code) => {
   const f = path.join(import.meta.dirname, name);
@@ -201,4 +202,13 @@ test('a user-pack kit resolves to its own files and needs its pack declared', as
     assert.ok(r.sounds.some((u) => u.file && u.name === 'freekit_bd'), 'reads freekit_bd, not uzu bd');
     assert.ok(r.sounds.some((u) => u.seconds !== undefined && u.name.startsWith('freekit_')), 'meta comes from the pack');
   } finally { fs.rmSync(f, { force: true }); fs.rmSync(g, { force: true }); }
+});
+
+test('a banned kit or sound is a check problem', async () => {
+  const [kit, why] = Object.entries(QUALITY.kits)[0] ?? [];
+  if (!kit) return; // nothing banned yet
+  const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_banned.strudel');
+  fs.writeFileSync(file, `song({ cps: .5, kit: '${kit}' }, [section('a', 4, { drums: {} })])\n`);
+  try { const r = await checkFile(file); assert.ok(r.problems.some((p) => p.includes(`kit ${kit} is banned`) && p.includes(why))); }
+  finally { fs.rmSync(file, { force: true }); }
 });

@@ -5,9 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AXIS_NAMES } from '../lib/axes.mjs';
 import { layerBase } from '../lib/song.mjs';
-import { banReason, soundNames } from '../lib/packs.mjs';
-import KITS from '../lib/kits.json' with { type: 'json' };
-import QUALITY from '../lib/quality.json' with { type: 'json' };
+import { soundNames } from '../lib/packs.mjs';
 import { checkFile, missingPackOnly } from './check.mjs';
 
 // the check table prints a list or weights sound as its JSON; a plain name is itself; a pattern is the word "signal"
@@ -36,11 +34,9 @@ const loudness = (x) => { // a part's static loudness in dB: its loudest measure
 };
 
 /** Findings for one checkFile result: [{ level: 'error' | 'warn', section?, text }]. A plain-Strudel file has no sections and no findings. */
-export function lint({ sections, problems = [], sounds = [] }, quality = QUALITY) {
+export function lint({ sections, problems = [] }) {
   const out = [];
   for (const p of problems) out.push({ level: 'error', text: p });
-  for (const u of sounds) { const why = banReason(u.name, quality, Object.keys(KITS)); if (why) out.push({ level: 'error', text: `sound "${u.name}" is banned (lib/quality.json: ${why}): pick another` }); }
-  for (const s of sections ?? []) if (s.kit && quality.kits[s.kit]) out.push({ level: 'error', section: s.name, text: `kit ${s.kit} is banned (lib/quality.json: ${quality.kits[s.kit]}): pick another kit` });
   if (!sections?.length) return out;
   const warn = (section, text) => out.push({ level: 'warn', section, text });
   const climax = sections.filter((s) => s.role === 'climax');

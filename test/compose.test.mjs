@@ -20,7 +20,7 @@ test('buildRequest places each note at its cycle and quotes the sections around 
   assert.match(req, /^Song: songs\/demo\.strudel\n/);
   assert.match(req, /1\. cycle 15\.0 \(drop, bar 4 of 8\): less hats\n2\. cycle 6\.2 \(verse, bar 3 of 8\): darker pad/);
   assert.match(req, /that exact\nspot, the section it is in, or what led into it just before/);
-  assert.ok(req.includes("song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909' }"), 'song header for key/kit/tempo');
+  assert.ok(req.includes("song({ cps: .5, key: 'C:minor', seed: 3, saturate: .6, kit: 'RolandTR909' }"), 'song header for key/kit/tempo');
   assert.ok(req.includes(sectionSource(demo, 'verse')) && req.includes(sectionSource(demo, 'drop')));
   assert.ok(!req.includes("section('intro'"), 'section nobody pinned is left out');
   assert.equal(sectionSource(demo, 'nope'), '');

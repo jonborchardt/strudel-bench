@@ -7,7 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { userPacks } from '../server.mjs';
 import './esm-fix.mjs'; // must run before the strudel imports below are resolved, hence dynamic imports
 import { parseProgression, chordNames } from '../lib/harmony.mjs';
-import { GM_SOUNDS, packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS } from '../lib/packs.mjs';
+import KITS from '../lib/kits.json' with { type: 'json' };
+import QUALITY from '../lib/quality.json' with { type: 'json' };
+import { banReason, GM_SOUNDS, packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS } from '../lib/packs.mjs';
 import { describeAxes } from '../lib/vocab.mjs';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
@@ -163,6 +165,8 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   const sounds = [...used.values()].map((u) => ({ ...u, file: soundFile(u.name, u.n, packs), ...soundMeta(u.name, u.n, packs) })).filter((u) => u.file);
   for (const u of unknown) problems.push(`${path.basename(file)}: unknown sound "${u}"`);
   for (const [s, p] of undeclared) problems.push(`${path.basename(file)}: sound "${s}" is in local pack "${p}" which the song does not declare: add packs: ['${p}']`);
+  for (const u of used.values()) { const why = banReason(u.name, QUALITY, Object.keys(KITS)); if (why) problems.push(`${path.basename(file)}: sound "${u.name}" is banned (lib/quality.json: ${why})`); }
+  for (const s of pattern.strudel?.sections ?? []) if (s.kit && QUALITY.kits[s.kit]) problems.push(`${path.basename(file)}: section "${s.name}": kit ${s.kit} is banned (lib/quality.json: ${QUALITY.kits[s.kit]})`);
   let sections, visual;
   if (pattern.strudel) {
     sections = pattern.strudel.sections.map((s) => {
