@@ -15,7 +15,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { cycleCommit, sheetsOf, testSummary } from '../scripts/harden/cycle.mjs';
+import { cycleCommit, sheetsOf, testSummary, pad, SHEETS_PER_CYCLE as N } from '../scripts/harden/cycle.mjs';
 import { prng, pick } from '../rng.mjs';
 import { CATEGORIES, fingerprint, nextId, record, merge, rank, close, load, save, MAX_ATTEMPTS, attempt, isParked, statsOf } from '../scripts/harden/ledger.mjs';
 
@@ -719,24 +719,24 @@ test('cycle: the commit is written from the sheets and the ledger against the cy
   const sheets = sheetsOf(start).map((n, i) => cycleSheet(n, i ? [] : [{ cell: 2, severity: 3 }, { cell: 3, severity: 1 }]));
   const c = cycleCommit(start, sheets, cycleTodos());
   assert.equal(c.subject, 'limner: harden, cycle 4');
-  assert.match(c.body, /^Sheets 0011-0020: 20 cells judged, 2 findings \(1 at severity 3, 0 at 2, 1 at 1\)\./);
+  assert.ok(c.body.startsWith(`Sheets 0011-${pad(10 + N)}: ${2 * N} cells judged, 2 findings (1 at severity 3, 0 at 2, 1 at 1).`), c.body);
   assert.match(c.body, /New: T004 \(merged into T003\), T005\. Fixed: T001 \(abc\)\. Wontfix: none\. Merged: none\. Parked: T002\. 3 open\./);
   assert.deepEqual(c.review, []); assert.deepEqual(c.next.unreviewed, ['T000', 'T001']);
-  assert.deepEqual({ cycle: c.next.cycle, from: c.next.from, last: c.next.last, open: c.next.open }, { cycle: 5, from: 21, last: 5, open: ['T003', 'T005'] });
+  assert.deepEqual({ cycle: c.next.cycle, from: c.next.from, last: c.next.last, open: c.next.open }, { cycle: 5, from: 11 + N, last: 5, open: ['T003', 'T005'] });
   const r = cycleCommit({ ...start, cycle: 6 }, sheets, cycleTodos());
   assert.deepEqual(r.review, ['T000', 'T001']); assert.deepEqual(r.next.unreviewed, [], 'a review clears the list');
 });
 
-test('cli: with cycle.json, next refuses an eleventh sheet, cycle refuses an unrecorded one and --dry prints the commit', () => {
+test('cli: with cycle.json, next refuses a sheet past the cycle\'s count, cycle refuses an unrecorded one and --dry prints the commit', () => {
   const dir = mkdtempSync(join(tmpdir(), 'harden-cli-'));
   try {
     writeFileSync(join(dir, 'cycle.json'), JSON.stringify({ cycle: 1, from: 1, last: 0, open: [], unreviewed: [] }));
-    for (let i = 1; i <= 10; i++) cli(dir, 'next', '--html', '--cells', '2', '--pool', '0');
-    assert.throws(() => cli(dir, 'next', '--html', '--cells', '2', '--pool', '0'), (e) => e.status === 1 && /cycle 1 has its 10 sheets \(0001-0010\)/.test(e.stdout));
-    assert.throws(() => cli(dir, 'cycle', '--dry'), (e) => e.status === 1 && /sheets 0001, .*0010 not rendered or not recorded/.test(e.stderr));
-    for (let i = 1; i <= 10; i++) cliIn(dir, '[]', 'record', String(i).padStart(4, '0'));
+    for (let i = 1; i <= N; i++) cli(dir, 'next', '--html', '--cells', '2', '--pool', '0');
+    assert.throws(() => cli(dir, 'next', '--html', '--cells', '2', '--pool', '0'), (e) => e.status === 1 && e.stdout.includes(`cycle 1 has its ${N} sheets (0001-${pad(N)})`));
+    assert.throws(() => cli(dir, 'cycle', '--dry'), (e) => e.status === 1 && e.stderr.includes(`${pad(N)} not rendered or not recorded`));
+    for (let i = 1; i <= N; i++) cliIn(dir, '[]', 'record', pad(i));
     const out = cli(dir, 'cycle', '--dry', '--note', 'Quiet.', '--trailer', 'Co-Authored-By: x');
-    assert.match(out, /^limner: harden, cycle 1\n\nSheets 0001-0010: 10 cells judged, 0 findings .* Quiet\.\n\nCo-Authored-By: x\n/);
+    assert.ok(out.startsWith(`limner: harden, cycle 1\n\nSheets 0001-${pad(N)}: ${N} cells judged, 0 findings `) && /Quiet\.\n\nCo-Authored-By: x\n/.test(out), out);
     assert.equal(JSON.parse(readFileSync(join(dir, 'cycle.json'), 'utf8')).cycle, 1, '--dry writes nothing');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

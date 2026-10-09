@@ -3,14 +3,14 @@
 // the highest todo id and the unparked open ids at that moment, and the fixes no review has looked at yet.
 import { isParked, statsOf } from './ledger.mjs';
 
-export const SHEETS_PER_CYCLE = 10, REVIEW_EVERY = 3;
+export const SHEETS_PER_CYCLE = 20, REVIEW_EVERY = 3;
 export const pad = (n) => String(n).padStart(4, '0');
 export const sheetsOf = (cyc) => Array.from({ length: SHEETS_PER_CYCLE }, (_, i) => pad(cyc.from + i));
 
 /** The state a cycle starts from, taken from the ledger as it stands. */
 export const startOf = (cycle, from, todos, unreviewed = []) => ({ cycle, from, last: todos.reduce((m, t) => Math.max(m, +t.id.slice(1)), 0), open: todos.filter((t) => t.status === 'open' && !isParked(t)).map((t) => t.id), unreviewed });
 
-/** The cycle's commit message from its ten recorded sheets and the ledger now against the ledger at its start; `next` the cycle.json that follows. */
+/** The cycle's commit message from its recorded sheets and the ledger now against the ledger at its start; `next` the cycle.json that follows. */
 export function cycleCommit(cyc, sheets, todos, { recorded = sheets, note = null } = {}) {
   const ids = (ts) => ts.map((t) => t.id), list = (xs) => (xs.length ? xs.join(', ') : 'none');
   const ours = (t) => cyc.open.includes(t.id) || +t.id.slice(1) > cyc.last; // open at the start or opened since

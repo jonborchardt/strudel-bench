@@ -15,11 +15,11 @@
 //   node limner/scripts/harden.mjs related <id> [--cells 8] [--html]    other combinations drawing its parts: the regression check
 //   node limner/scripts/harden.mjs stats                                defects per sheet, fresh cells told apart
 //   node limner/scripts/harden.mjs test [files...]                      the suite, judged by its fail line: PASS or FAIL with the failing tests
-//   node limner/scripts/harden.mjs cycle [--note "..."] [--trailer "..."] [--dry]   the cycle's commit, written from its ten sheets and the ledger
+//   node limner/scripts/harden.mjs cycle [--note "..."] [--trailer "..."] [--dry]   the cycle's commit, written from its sheets and the ledger
 //   node limner/scripts/harden.mjs reopen <id> "<why>"                  a fixed entry the review found does not hold
 //
 // verify writes eight pairs per png (--per n): <id>-verify.png, then <id>-verify-2.png, ...
-// With cycle.json present, next refuses an eleventh sheet in a cycle.
+// With cycle.json present, next refuses a sheet past SHEETS_PER_CYCLE (cycle.mjs) in a cycle.
 // --dir names the folder holding todos.json, coverage.json and sheets/ (default: limner/scripts/harden).
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
