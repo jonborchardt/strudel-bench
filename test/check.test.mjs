@@ -212,3 +212,15 @@ test('a banned kit or sound is a check problem', async () => {
   try { const r = await checkFile(file); assert.ok(r.problems.some((p) => p.includes(`kit ${kit} is banned`) && p.includes(why))); }
   finally { fs.rmSync(file, { force: true }); }
 });
+
+test('a banned kit\'s sample named directly is a check problem', async () => {
+  const kit = Object.keys(QUALITY.kits)[0];
+  if (!kit) return;
+  const plain = path.resolve(import.meta.dirname, '..', 'songs', '_t_banned_plain.strudel');
+  const sg = path.resolve(import.meta.dirname, '..', 'songs', '_t_banned_song.strudel');
+  fs.writeFileSync(plain, `s("${kit}_bd")\n`);
+  fs.writeFileSync(sg, `song({ cps: .5, kit: 'RolandTR909' }, [section('a', 4, { drums: { sounds: { bd: '${kit}_bd' } } })])\n`);
+  try {
+    for (const f of [plain, sg]) assert.ok((await checkFile(f)).problems.some((p) => p.includes(kit) && p.includes('banned')), f);
+  } finally { fs.rmSync(plain, { force: true }); fs.rmSync(sg, { force: true }); }
+});

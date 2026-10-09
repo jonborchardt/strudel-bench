@@ -8,7 +8,7 @@
       "changes": [
         {
           "section": "song",
-          "why": "saturate 0>.6 bus saturation; kit, room, bass sub, sidechain and entries unchanged: kit kept, room already set, bass below midi 40, no bass/pad-drums low-band pair in the measure, no single-part section pairs"
+          "why": "saturate 0>.6 bus saturation; kit, room, bass sub, sidechain and entries unchanged: kit kept, dry on purpose (no room), bass below midi 40, no bass/pad-drums low-band pair in the measure; the loop>chop pair also changes the sample part, so no merge"
         }
       ]
     }

@@ -60,7 +60,7 @@
       "changes": [
         {
           "section": "song",
-          "why": "saturate .6; drums and bass level 1.25 in verse and drop to hold rms after saturation; drop.melody2 glockenspiel>handchimes (was 49 dB under the mix); dry room kept on purpose, no sub (bass at midi 24), no sidechain (no low pair named)"
+          "why": "saturate .6; drums and bass level 1.25 in verse and drop to hold rms after saturation; drop.melody2 glockenspiel>handchimes (the swap was made because the glockenspiel measured 49 dB under the mix); dry room kept on purpose, no sub (bass at midi 24), no sidechain (no low pair named)"
         }
       ]
     }
