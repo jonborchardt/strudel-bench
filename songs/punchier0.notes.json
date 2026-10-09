@@ -1,4 +1,16 @@
 {
   "made": "2026-09-10",
-  "prompt": "A verbatim copy of demo.strudel, the \"before\" for the blog's punchier example; hidden."
+  "prompt": "A verbatim copy of demo.strudel, the \"before\" for the blog's punchier example; hidden.",
+  "requests": [
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "saturate .6; drums and bass level 1.4 to hold loudness (rms -1.25 dB); no sub (bass low), no sidechain pair named, no entries"
+        }
+      ]
+    }
+  ]
 }
