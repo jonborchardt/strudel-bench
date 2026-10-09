@@ -2,6 +2,7 @@
 // usage: node scripts/headless.mjs [songs/x.strudel]   (PORT env, default 3000; starts the server when none answers)
 // Needs playwright-core (npm i -D playwright-core, then npx playwright-core install chromium) or CHROME=<path to a chrome
 // binary> for a browser you already have. Web Audio, the clock worker and the offline renderer all run headless.
+// Stop it with npm run stop -- <port> (kills the browser too); a browser left behind by a killed server keeps rendering jobs with stale code.
 import path from 'node:path';
 import { createServer } from '../server.mjs';
 
