@@ -1,15 +1,15 @@
 // @hidden
-// rooms: the same phrase carried through four reverbs, so the generated impulses of samples/user/rooms can be heard
+// rooms: the same phrase carried through four reverbs, so the recorded impulses of samples/user/rooms (OpenAIR) can be heard
 // against each other and against no impulse at all. Sections differ by their `room` first and by one step of density
 // second; the material is deliberately sparse and transient-heavy (marimba plucks, rim, a dry kick) because that is
 // what a pre-delay and a set of early reflections are audible in — a dense pad hides both.
 //
 //   dry    no room key at all: superdough synthesizes its own decaying-noise tail. No early reflections, no gap.
 //   small  rooms/room.wav, 8 ms pre-delay, 0.9 s: the attack stays in front of the reverb, the box is close.
-//   plate  rooms/plate.wav, 15 ms, 1.8 s: no geometry, dense taps, bright — a plate has no walls to speak of.
+//   plate  rooms/plate.wav, 15 ms, 1.8 s: Terry's Typing Room, a small hard room recorded in stereo, standing in for a plate.
 //   hall   rooms/hall.wav, 30 ms, 3.2 s: the gap is obvious on the rim, the tail outlasts the bar. The climax.
-//   tight  the same hall read from 1.5% in (irbegin), which skips the silent head: the same room with the
-//          pre-delay removed. A/B this against `hall` to hear what the pre-delay alone was doing.
+//   tight  the same hall read from 1.5% in (irbegin), which skips into the file past the silent head: the same room with the
+//          pre-delay shortened. A/B this against `hall` to hear what the pre-delay alone was doing.
 //
 // room.size truncates an impulse and never stretches it, so each section's size is set at or under its file's length.
 song({ cps: .52, key: 'D:minor', seed: 7, kit: 'RolandTR909', packs: ['rooms'] }, [
