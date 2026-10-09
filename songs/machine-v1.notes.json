@@ -11,6 +11,16 @@
           "why": "saturate .6 on the bus; level 1.8 on drums and bass, 1.4 on melody and pad in every section to hold loudness (the distorted parts answer little to level). no sub (bass midi 16), no sidechain (measure showed no drums/bass low pair), kit kept"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10), level lifts reverted",
+      "changes": [
+        {
+          "section": "drums/bass",
+          "why": "level 1.8, melody/pad level 1.4: the spec asks for harmonics, not level; peaks fell, rms sits 2-3 dB under the baseline by design"
+        }
+      ]
     }
   ]
 }
