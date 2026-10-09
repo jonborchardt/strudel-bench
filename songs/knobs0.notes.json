@@ -1,4 +1,16 @@
 {
   "made": "2026-09-10",
-  "prompt": "A verbatim copy of demo.strudel, the \"before\" for the blog's knobs example; hidden."
+  "prompt": "A verbatim copy of demo.strudel, the \"before\" for the blog's knobs example; hidden.",
+  "requests": [
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "saturate .6 on the bus; drums and bass level 1.25 in verse and drop to hold loudness (saturate alone -2.7 dB). no sub (bass under midi 40), no sidechain, rooms and kit kept"
+        }
+      ]
+    }
+  ]
 }
