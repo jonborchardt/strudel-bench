@@ -3423,6 +3423,7 @@
   ],
   "category": "stack",
   "parts": [
+   "hair:longStraight",
    "hat:scrapHelmet"
   ],
   "severity": 2,
@@ -3452,7 +3453,10 @@
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "aliases": [
+   "stack:hat:scrapHelmet"
+  ]
  },
  {
   "id": "T065",
@@ -3969,6 +3973,7 @@
   ],
   "category": "expression",
   "parts": [
+   "eyes:monolid",
    "makeup:punkLiner"
   ],
   "severity": 2,
@@ -4003,7 +4008,10 @@
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "aliases": [
+   "expression:makeup:punkLiner"
+  ]
  },
  {
   "id": "T076",
@@ -6947,7 +6955,9 @@
   ],
   "category": "stack",
   "parts": [
-   "hair:boxBraids"
+   "hair:boxBraids",
+   "hat:pointedFeltHat",
+   "hat:strawCap"
   ],
   "severity": 2,
   "seen": 10,
@@ -6994,7 +7004,10 @@
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "aliases": [
+   "stack:hair:boxBraids"
+  ]
  },
  {
   "id": "T144",
@@ -8344,6 +8357,8 @@
   ],
   "category": "stack",
   "parts": [
+   "hair:locsShort",
+   "hair:sweptBack",
    "hat:boneHelm"
   ],
   "severity": 2,
@@ -8376,7 +8391,10 @@
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "aliases": [
+   "stack:hat:boneHelm"
+  ]
  },
  {
   "id": "T183",
@@ -8701,6 +8719,11 @@
   ],
   "category": "stack",
   "parts": [
+   "facialHair:boxedBeard",
+   "facialHair:circleBeard",
+   "facialHair:ducktail",
+   "facialHair:fullBeard",
+   "facialHair:garibaldi",
    "facialHair:shortBeard"
   ],
   "severity": 2,
@@ -8744,7 +8767,10 @@
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "aliases": [
+   "stack:facialHair:shortBeard"
+  ]
  },
  {
   "id": "T193",
@@ -8878,6 +8904,7 @@
   ],
   "category": "stack",
   "parts": [
+   "facialHair:heavyStubble",
    "facialHair:lightStubble"
   ],
   "severity": 2,
@@ -8901,7 +8928,10 @@
   "lint": null,
   "wontfix": null,
   "attempts": 0,
-  "tried": []
+  "tried": [],
+  "aliases": [
+   "stack:facialHair:lightStubble"
+  ]
  },
  {
   "id": "T198",

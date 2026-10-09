@@ -23,7 +23,7 @@ export function record(todos, findings, { sheet, today }) {
   for (const f of findings) { const why = problem(f); if (why) out.refused.push({ cell: f.cell, why }); }
   if (out.refused.length) return out;
   for (const f of findings) {
-    const key = fingerprint(f), same = todos.filter((t) => fingerprint(t) === key);
+    const key = fingerprint(f), same = todos.filter((t) => fingerprint(t) === key || t.aliases?.includes(key));
     let open = same.find((t) => t.status === 'open');
     if (!open) { // a merged entry counts on its target, down the chain
       let m = same.find((t) => t.status === 'merged'); const seenIds = new Set();
@@ -92,13 +92,15 @@ export function merge(todos, keep, ids, { parts, today }) {
     const bad = parts.find((p) => !/^(unknown(:\w+)?|\w+:\w+)$/.test(p)); if (bad !== undefined || !parts.length) throw new Error(`parts are kind:name, or unknown[:word]: got "${bad ?? ''}"`);
   }
   const union = (a, b) => [...new Set([...(a ?? []), ...(b ?? [])])];
+  // the kept entry carries every member's parts plus any named here: replacing them with one name left `related` checking that part alone (T192 kept shortBeard out of four beard styles)
+  const before = fingerprint(k), merged = [...from.reduce((acc, t) => union(acc, t.parts), union(k.parts, parts))].sort();
+  if (merged.join() !== [...k.parts].sort().join()) { k.aliases = union(k.aliases, [before]); k.parts = merged; } // the old fingerprint still finds it
   for (const t of from) {
     k.seen += t.seen; k.evidence = union(k.evidence, t.evidence); k.tuples = union(k.tuples, t.tuples); k.sheets = union(k.sheets, t.sheets); k.notes = union(k.notes, t.notes);
     k.severity = Math.max(k.severity, t.severity); if (t.opened < k.opened) k.opened = t.opened;
     k.attempts = Math.max(k.attempts ?? 0, t.attempts ?? 0); k.tried = [...(k.tried ?? []), ...(t.tried ?? [])];
     Object.assign(t, { status: 'merged', mergedInto: keep, closed: today });
   }
-  if (parts) k.parts = [...parts].sort();
   return k;
 }
 

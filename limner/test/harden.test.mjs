@@ -463,11 +463,13 @@ test('ledger: merge folds open entries into one, the merged fingerprint counts o
   const k = merge(fresh, 'T001', ['T002', 'T003'], { parts: ['unknown:hairPanel'], today: '2026-10-08' });
   assert.equal(k.seen, 4); assert.deepEqual(k.evidence, ['Ha', 'Hb', 'Hb2']); assert.deepEqual(k.sheets, ['0001', '0002', '0003']);
   assert.deepEqual(k.tuples, ['c1', 'c2']); assert.deepEqual(k.notes, ['na', 'nb', 'nc']);
-  assert.equal(k.severity, 3); assert.equal(k.opened, '2026-10-03'); assert.deepEqual(k.parts, ['unknown:hairPanel']);
+  assert.equal(k.severity, 3); assert.equal(k.opened, '2026-10-03'); assert.deepEqual(k.parts, ['hair:a', 'hair:b', 'hair:c', 'unknown:hairPanel'], 'every member\'s parts kept, plus the shared name, so related still checks each style');
   assert.deepEqual(fresh.slice(1).map((t) => [t.status, t.mergedInto, t.closed]), [['merged', 'T001', '2026-10-08'], ['merged', 'T001', '2026-10-08']]);
   assert.deepEqual(rank(fresh).map((t) => t.id), ['T001']);
   const r = rec(fresh, ['hair:b'], { hash: 'Hz', tuple: 'c9', note: 'again', severity: 1, sheet: '0004', today: '2026-10-09' }).seen;
   assert.deepEqual(r, ['T001']); assert.equal(fresh.length, 3, 'opens nothing'); assert.equal(fresh[0].seen, 5);
+  assert.deepEqual(rec(fresh, ['hair:a'], { hash: 'Hy', tuple: 'c8', note: 'a again', severity: 1, sheet: '0005', today: '2026-10-09' }).seen, ['T001'], 'the kept entry\'s own old fingerprint still finds it after its parts grew');
+  assert.equal(fresh.length, 3);
 
   const dir = mkdtempSync(join(tmpdir(), 'harden-merge-'));
   try {
