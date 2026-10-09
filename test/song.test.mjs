@@ -216,3 +216,25 @@ test('mix material: position shifts every hap\'s pan together; velocity, humaniz
   assert.equal(at(pg, 'drums').postgain, .4, 'postgain is the gain after the distortion, the one a saturated part answers to');
   assert.throws(() => song({ cps: .5 }, [section('a', 1, { drums: { postgain: 3 } })]), /postgain must be a number in 0..2/);
 });
+
+test('enter/exit: the part is silent for the first enter bars and the last exit bars', async () => {
+  await ready;
+  const build = (bass) => song({ cps: .5 }, [section('v', 16, { drums: {}, bass })]).strudel.sections[0].layers.bass.pattern;
+  const onsets = (p, a, b) => p.queryArc(a, b).filter((h) => h.hasOnset()).length;
+  const plain = build({}), late = build({ enter: 4 }), early = build({ exit: 2 }), both = build({ enter: 8, exit: 2 });
+  assert.equal(onsets(late, 0, 4), 0, 'silent before bar 4');
+  assert.equal(onsets(late, 4, 16), onsets(plain, 4, 16), 'the same notes from bar 4 on');
+  assert.equal(onsets(early, 14, 16), 0, 'silent for the last 2 bars');
+  assert.equal(onsets(early, 0, 14), onsets(plain, 0, 14));
+  assert.equal(onsets(both, 0, 8) + onsets(both, 14, 16), 0);
+  assert.equal(onsets(both, 8, 14), onsets(plain, 8, 14));
+});
+
+test('enter/exit: whole bars, and together under the section length, naming section and part', async () => {
+  await ready;
+  const bad = (bass) => assert.throws(() => song({ cps: .5 }, [section('v', 16, { bass })]), /section "v": bass.*enter|section "v": bass.*exit/);
+  bad({ enter: 1.5 });
+  bad({ exit: -1 });
+  bad({ enter: 4, exit: 12 });
+  bad({ enter: 16 });
+});
