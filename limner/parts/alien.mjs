@@ -5,8 +5,9 @@
 // on a grey's cranium and the wet gloss on its eye, a green's brain lobes and antennae, a reptile's scales (a field of
 // lit and shadowed plates, not arcs) and the bony ridges over its eyes, an insect's chitin plates, compound facets,
 // mandibles and feelers. And five things to wear. parts.html?pack=alien is the sheet.
-import { TOPS, MAKEUP, EYES, NECKLINES, featureScale, eyeShape, shade, mix, soft, path, ellipse, stroke, clip, UNCLIP } from '../portrait.mjs';
+import { TOPS, MAKEUP, EYES, NECKLINES, featureScale, eyeShape, shade, mix, soft, path, ellipse, stroke, clip, UNCLIP, facePath } from '../portrait.mjs';
 import { tagPack, torso, SHOULDERS, f1, sideOf } from './pen.mjs';
+const onHead = (p, ops) => [clip(facePath(p)), ...ops, UNCLIP]; // skull tones stay inside the outline: a soft shadow laid out on the face's width spills past a head that narrows to the jaw, a grey smudge beside it
 
 const DARK = '#141418'; // the tone every shadow here is laid in: a neutral dark, so it deepens a skin without tinting it (a violet one bruised the greys)
 const unit = (v) => Math.max(0, Math.min(1, v ?? 0));
@@ -16,12 +17,12 @@ function lidOf(p, side) { const E = eyeShape(p, side); return { d: E.lid, cx: E.
 
 /** A grey's head as a volume: the cranium's dome lit on one side, the temples hollowed under it, the cheeks sunk under
  *  the eyes and a long soft shadow down the far side to the narrow chin. Laid out on this face, under the modelling. */
-MAKEUP.greyCranium = { skin: (p) => { const w = p.face.width / 2, h = p.face.height, t = 112, sd = sideOf(p), ey = p.eyes.y; return [
+MAKEUP.greyCranium = { skin: (p) => { const w = p.face.width / 2, h = p.face.height, t = 112, sd = sideOf(p), ey = p.eyes.y; return onHead(p, [
   ...soft(200 + sd * w * 0.22, t + h * 0.2, w * 0.62, h * 0.17, '#ffffff', 0.34), // the dome catching the light
   ...soft(200 + sd * w * 0.34, t + h * 0.16, w * 0.22, h * 0.07, '#ffffff', 0.3), // and its hottest point
   ...[-1, 1].flatMap((s) => soft(200 + s * w * 0.86, t + h * 0.46, w * 0.2, h * 0.16, DARK, s === sd ? 0.12 : 0.22)), // the temples, where the skull narrows into the face
   ...[-1, 1].flatMap((s) => soft(200 + s * w * 0.4, ey + 34, w * 0.18, 12, DARK, s === sd ? 0.05 : 0.1)), // the hollow cheeks under the eyes
-  ...soft(200, t + h * 0.05, w * 0.5, h * 0.06, DARK, 0.06)]; } };
+  ...soft(200, t + h * 0.05, w * 0.5, h * 0.06, DARK, 0.06)]); } };
 /** The black eye's wet gloss: a cool reflected light along the lower lid, a sky window on the upper curve and one hard
  *  glint, all on the lit side and clipped to the eye, so the black reads as a convex lens and not a hole. */
 MAKEUP.eyeGloss = { face: (p) => { const sd = sideOf(p); return [-1, 1].flatMap((side) => { const L = lidOf(p, side); if (L.th + L.bh < 2) return []; return [
@@ -41,11 +42,11 @@ MAKEUP.antennae = { fit: 'face', over: (p) => { const dark = shade(p.skin, 0.6),
   path(`M ${200 + s * 19} 100 C ${200 + s * 23} 70, ${200 + s * 42} 48, ${200 + s * 57} 33`, stroke(light, 1.6, 0.5)),
   ellipse(200 + s * 62, 27, 9, 9, { fill: p.skin }), ellipse(200 + s * 63, 29, 9, 9, { fill: dark, op: 0.35 }), ellipse(200 + s * 59, 24, 3, 3, { fill: '#ffffff', op: 0.75 })]); } };
 /** A green's swollen cranium: two lobes either side of a groove down the middle of the forehead, each lit on its crown. */
-MAKEUP.craniumLobes = { skin: (p) => { const w = p.face.width / 2, h = p.face.height, t = 112, sd = sideOf(p); return [
+MAKEUP.craniumLobes = { skin: (p) => { const w = p.face.width / 2, h = p.face.height, t = 112, sd = sideOf(p); return onHead(p, [
   path(`M 200 ${t + 4} C 197 ${t + h * 0.12}, 203 ${t + h * 0.22}, 200 ${t + h * 0.32}`, stroke(DARK, 6, 0.1)), path(`M 200 ${t + 6} C 197 ${t + h * 0.12}, 203 ${t + h * 0.2}, 200 ${t + h * 0.28}`, stroke(DARK, 1.2, 0.16)), // the groove
   ...[-1, 1].flatMap((s) => soft(200 + s * w * 0.42, t + h * 0.16, w * 0.36, h * 0.14, '#ffffff', s === sd ? 0.5 : 0.26)), // a lobe each side, the lit one brighter
   ...[-1, 1].flatMap((s) => [0, 1].map((i) => path(`M ${f1(200 + s * w * (0.2 + i * 0.3))} ${f1(t + h * (0.1 + i * 0.05))} q ${f1(s * w * 0.12)} ${f1(h * 0.06)} ${f1(s * w * 0.06)} ${f1(h * 0.14)}`, stroke(DARK, 1.4, 0.12)))), // the folds of the lobes, faint
-  ...soft(200 - sd * w * 0.6, t + h * 0.6, w * 0.32, h * 0.28, DARK, 0.1)]; } };
+  ...soft(200 - sd * w * 0.6, t + h * 0.6, w * 0.32, h * 0.28, DARK, 0.1)]); } };
 
 /** A reptile's hide as tone: a field of overlapping scales over the crown, the temples and the cheeks, each lit along its
  *  top and shadowed under its lip, thinning out toward the centre of the face where the skin is smoother, and a pale
@@ -72,14 +73,14 @@ MAKEUP.browRidge = { face: (p) => { const w = p.face.width / 2, h = p.face.heigh
   ...[0, 1, 2, 3, 4].filter((i) => ey - 40 - i * h * 0.075 > t + 12).flatMap((i) => { const y = ey - 40 - i * h * 0.075, r = 5 - i * 0.6; return [ellipse(200, f1(y), f1(r * 1.1), f1(r), { fill: shade(sk, 0.82) }), ellipse(200 + sd * 1.2, f1(y - 1), f1(r * 0.64), f1(r * 0.45), { fill: lt, op: 0.55 })]; })]; } }; // the studs stop short of the crown: one standing on the skyline reads as a bead on a wire
 /** An insect's head as plates of chitin: a seam down the middle of the brow, a plate over each eye and one down each
  *  cheek, every plate lit on its upper edge and darkened along the lower, so the head reads as a shell. */
-MAKEUP.carapace = { skin: (p) => { const w = p.face.width / 2, h = p.face.height, t = 112, ey = p.eyes.y, dk = shade(p.skin, 0.5), lt = mix(p.skin, '#ffffff', 0.35), sd = sideOf(p); return [
+MAKEUP.carapace = { skin: (p) => { const w = p.face.width / 2, h = p.face.height, t = 112, ey = p.eyes.y, dk = shade(p.skin, 0.5), lt = mix(p.skin, '#ffffff', 0.35), sd = sideOf(p); return onHead(p, [
   path(`M 200 ${t + 2} L 200 ${ey - 14}`, stroke(dk, 2.4, 0.5)), path(`M ${200 + sd * 2} ${t + 4} L ${200 + sd * 2} ${ey - 16}`, stroke(lt, 1.2, 0.4)), // the seam
   ...[-1, 1].flatMap((s) => [
     path(`M ${200 + s * 6} ${ey - 26} Q ${200 + s * w * 0.55} ${ey - 52} ${200 + s * w * 0.92} ${ey - 20}`, stroke(dk, 2, 0.45)), // the brow plate's edge
     path(`M ${200 + s * 6} ${ey - 28} Q ${200 + s * w * 0.55} ${ey - 54} ${200 + s * w * 0.9} ${ey - 23}`, stroke(lt, 1.2, s === sd ? 0.5 : 0.25)),
     path(`M ${200 + s * w * 0.34} ${ey + 26} Q ${200 + s * w * 0.62} ${ey + 30} ${200 + s * w * 0.46} ${t + h * 0.74}`, stroke(dk, 2, 0.4)), // the cheek plate's seam
     ...soft(200 + s * w * 0.55, t + h * 0.22, w * 0.3, h * 0.1, '#ffffff', s === sd ? 0.26 : 0.1)]), // each brow plate lit on its dome
-  ...soft(200 - sd * w * 0.58, t + h * 0.66, w * 0.3, h * 0.25, DARK, 0.14)]; } };
+  ...soft(200 - sd * w * 0.58, t + h * 0.66, w * 0.3, h * 0.25, DARK, 0.14)]); } };
 /** An insect's mouthparts: a hooked mandible either side of the mouth, closing toward the chin, lit on its outer curve. */
 MAKEUP.mandibles = { mouth: (p) => { const my = p.mouth.y, hw = Math.max(p.mouth.width, 24) / 2, c = shade(p.skin, 0.42), lt = mix(p.skin, '#ffffff', 0.55); return [-1, 1].flatMap((s) => { const x0 = 200 + s * (hw + 18), x1 = 200 + s * 7, y1 = my + 50; return [ // the tips hang past the chin: inside the face they read as a mouth
   path(`M ${x0 + s * 7} ${my - 10} C ${x0 + s * 12} ${my + 14}, ${x1 + s * 14} ${y1 - 4}, ${x1} ${y1} C ${x1 + s * 6} ${y1 - 14}, ${x0 - s * 2} ${my + 12}, ${x0 - s * 6} ${my - 6} Z`, { fill: c }), // the mandible: a blade from the cheek curving down and in to a point under the chin, dark and glossy
