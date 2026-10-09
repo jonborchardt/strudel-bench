@@ -25,11 +25,12 @@ export function record(todos, findings, { sheet, today }) {
   for (const f of findings) {
     const key = fingerprint(f), same = todos.filter((t) => fingerprint(t) === key || t.aliases?.includes(key));
     let open = same.find((t) => t.status === 'open');
-    if (!open) { // a merged entry counts on its target, down the chain
-      let m = same.find((t) => t.status === 'merged'); const seenIds = new Set();
-      while (m?.status === 'merged' && !seenIds.has(m.id)) { seenIds.add(m.id); m = todos.find((t) => t.id === m.mergedInto); }
-      if (m?.status === 'open') open = m;
+    if (!open) { // a merged entry counts on its target, down the chain; several merged entries can share a fingerprint, so take the one whose chain ends open
+      const end = (m) => { const seenIds = new Set(); while (m?.status === 'merged' && !seenIds.has(m.id)) { seenIds.add(m.id); m = todos.find((t) => t.id === m.mergedInto); } return m; };
+      open = same.filter((t) => t.status === 'merged').map(end).find((m) => m?.status === 'open');
     }
+    // an open entry of the same category that already names every part of this finding is this fault (T192 names six beards; a finding on one of them counts there)
+    if (!open && !f.parts.some((p) => p.startsWith('unknown'))) open = todos.find((t) => t.status === 'open' && t.category === f.category && f.parts.every((p) => t.parts.includes(p)));
     if (open) {
       open.seen++; open.evidence.push(f.hash); if (!open.sheets.includes(sheet)) open.sheets.push(sheet);
       if (f.tuple && !open.tuples.includes(f.tuple)) open.tuples.push(f.tuple); if (f.note && !open.notes.includes(f.note)) open.notes.push(f.note);

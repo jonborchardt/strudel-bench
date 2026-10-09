@@ -470,6 +470,20 @@ test('ledger: merge folds open entries into one, the merged fingerprint counts o
   assert.deepEqual(r, ['T001']); assert.equal(fresh.length, 3, 'opens nothing'); assert.equal(fresh[0].seen, 5);
   assert.deepEqual(rec(fresh, ['hair:a'], { hash: 'Hy', tuple: 'c8', note: 'a again', severity: 1, sheet: '0005', today: '2026-10-09' }).seen, ['T001'], 'the kept entry\'s own old fingerprint still finds it after its parts grew');
   assert.equal(fresh.length, 3);
+  // a finding on one part of a merged entry counts there even when an older merge of that fingerprint ends at a closed entry
+  const chain = [];
+  rec(chain, ['hair:x'], { hash: 'X1', tuple: 'c1', note: 'x', severity: 2, sheet: '0001', today: '2026-10-01' }); // T001
+  rec(chain, ['hair:y'], { hash: 'Y1', tuple: 'c2', note: 'y', severity: 2, sheet: '0001', today: '2026-10-01' }); // T002
+  merge(chain, 'T001', ['T002'], { today: '2026-10-02' }); close(chain, 'T001', { commit: 'abc', today: '2026-10-03' });
+  rec(chain, ['hair:z'], { hash: 'Z1', tuple: 'c3', note: 'z', severity: 2, sheet: '0002', today: '2026-10-04' }); // T003
+  rec(chain, ['hair:w'], { hash: 'W1', tuple: 'c4', note: 'w', severity: 2, sheet: '0002', today: '2026-10-04' }); // T004
+  rec(chain, ['hair:y'], { hash: 'Y2', tuple: 'c5', note: 'y again', severity: 2, sheet: '0003', today: '2026-10-05' }); // T005: a regression of closed T001
+  merge(chain, 'T003', ['T004', 'T005'], { today: '2026-10-06' });
+  assert.deepEqual(rec(chain, ['hair:y'], { hash: 'Y3', tuple: 'c6', note: 'y', severity: 2, sheet: '0004', today: '2026-10-07' }).seen, ['T003'], 'the chain that ends open wins over the one that ends closed');
+  assert.deepEqual(rec(chain, ['hair:w'], { hash: 'W2', tuple: 'c7', note: 'w', severity: 2, sheet: '0004', today: '2026-10-07' }).seen, ['T003']);
+  const sub = []; rec(sub, ['hair:p', 'hat:q'], { hash: 'P1', tuple: 'c1', note: 'p', severity: 2, sheet: '0001', today: '2026-10-01' });
+  assert.deepEqual(rec(sub, ['hair:p'], { hash: 'P2', tuple: 'c2', note: 'p', severity: 2, sheet: '0002', today: '2026-10-02' }).seen, ['T001'], 'a finding naming a subset of an open entry\'s parts counts there');
+  assert.equal(rec(sub, ['hair:r'], { hash: 'R1', tuple: 'c3', note: 'r', severity: 2, sheet: '0003', today: '2026-10-03' }).opened.length, 1, 'a part the entry does not name opens a new one');
 
   const dir = mkdtempSync(join(tmpdir(), 'harden-merge-'));
   try {
