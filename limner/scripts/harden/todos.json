@@ -6198,11 +6198,11 @@
    "0200",
    "0236"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
-  "lint": null,
+  "closed": "2026-10-08",
+  "commit": "f571b16",
+  "lint": "pose:hand-on-face",
   "wontfix": null,
   "attempts": 0,
   "tried": []
@@ -6694,11 +6694,11 @@
    "0312",
    "0318"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
-  "lint": null,
+  "closed": "2026-10-08",
+  "commit": "f571b16",
+  "lint": "pose:hand-on-face",
   "wontfix": null,
   "attempts": 0,
   "tried": []
@@ -8585,10 +8585,10 @@
    "0321",
    "0330"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
+  "closed": "2026-10-08",
+  "commit": "71c5dd3",
   "lint": null,
   "wontfix": null,
   "attempts": 0,
@@ -9577,11 +9577,11 @@
   "sheets": [
    "0292"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
-  "lint": null,
+  "closed": "2026-10-08",
+  "commit": "f571b16",
+  "lint": "pose:hand-on-face",
   "wontfix": null,
   "attempts": 0,
   "tried": []
