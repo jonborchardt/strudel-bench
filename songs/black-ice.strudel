@@ -57,7 +57,7 @@ const chop = (mask) => voice(s(CHOP).slice(8, "0 ~ 0 3 ~ 0 5 ~").attack(.08).rel
 const V = { level: .8, space: .7 };
 const VA = { level: .55, space: .7 };        // the held "ah" is long and loud: a colour under the parts, not a line over them
 
-song({ cps: 132 / 240, key: 'A:minor', seed: 95, kit: 'RolandTR909', packs: ['black-ice-cuts', 'rooms'],
+song({ saturate: .6, cps: 132 / 240, key: 'A:minor', seed: 95, kit: 'RolandTR909', packs: ['black-ice-cuts', 'rooms'],
        room: { ir: 'room', size: .9, damping: 6000 },   // the whole 0.9 s impulse: a longer size asked for a tail it does not have
        // loom full frame; rave visits over it for eight bars once every thirty-two, strongest in the loud sections
        visual: { composition: 'overlay', worlds: ['loom', 'rave'], every: 32 } }, [

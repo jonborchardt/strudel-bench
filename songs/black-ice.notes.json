@@ -252,6 +252,16 @@
           "why": "room size 1.1>.9: the room impulse is 0.9 s, so a longer size asked for a tail it does not have (test/check caught it)"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate 0>.6 bus saturation; kit, room, bass sub, sidechain and entries unchanged: kit kept, room already set, bass below midi 40, no bass/pad-drums low-band pair in the measure, no single-part section pairs"
+        }
+      ]
     }
   ]
 }
