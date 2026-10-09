@@ -1,1 +1,10 @@
-{ "kits": {}, "sounds": {} }
+{
+  "kits": {
+    "KorgT3": "sample rate under 44.1 kHz (25000 Hz): lo-fi by the file, not by choice",
+    "RolandD110": "sample rate under 44.1 kHz (39063 Hz): lo-fi by the file, not by choice",
+    "RolandTR505": "sample rate under 44.1 kHz (22050 Hz): lo-fi by the file, not by choice",
+    "XdrumLM8953": "sample rate under 44.1 kHz (33000 Hz): lo-fi by the file, not by choice",
+    "YamahaRX5": "sample rate under 44.1 kHz (32000 Hz): lo-fi by the file, not by choice"
+  },
+  "sounds": {}
+}
