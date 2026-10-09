@@ -14,7 +14,7 @@ export const KIT_VOICES = ['bd', 'sd', 'hh', 'oh', 'rim', 'cb', 'rd', 'cr', 'cp'
 const GRIDS = { bd: 'x...x...x...x...|x...x...x...x...', sd: '....x.......x...|....x.......x...', hh: 'x.x.x.x.x.x.x.x.|................', oh: '..x...x...x...x.|..x...x...x.....', rim: '.......x.......x|.......x........', cb: '......x.......x.|......x.......x.', rd: '................|x.x.x.x.x.x.x.x.', cr: '................|x...............', cp: '................|....x.......x...', ht: '................|............x...', mt: '................|.............x..', lt: '................|..............xx' };
 
 export const kitVoices = (map, kit) => KIT_VOICES.filter((v) => map[`${kit}_${v}`]);
-export const sheetSource = (kits, map) => `// kit audit sheet, written by scripts/kitsheet.mjs\nsong({ bpm: 120, seed: 1 }, [\n${kits.map((k) => `  section('${k}', 2, { kit: '${k}', drums: { template: { ${kitVoices(map, k).map((v) => `${v}: '${GRIDS[v]}'`).join(', ')} } } }),`).join('\n')}\n])\n`;
+export const sheetSource = (kits, map, userPacks = []) => `// kit audit sheet, written by scripts/kitsheet.mjs\nsong({ bpm: 120, seed: 1${userPacks.length ? `, packs: [${userPacks.map((p) => `'${p}'`).join(', ')}]` : ''} }, [\n${kits.map((k) => `  section('${k}', 2, { kit: '${k}', drums: { template: { ${kitVoices(map, k).map((v) => `${v}: '${GRIDS[v]}'`).join(', ')} } } }),`).join('\n')}\n])\n`;
 
 export function kitTable(kits, map, meta, usage) {
   const range = (xs, fmt = String) => (xs.length ? (Math.min(...xs) === Math.max(...xs) ? fmt(xs[0]) : `${fmt(Math.min(...xs))}-${fmt(Math.max(...xs))}`) : '?');
@@ -39,11 +39,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const j = JSON.parse(fs.readFileSync(path.join(packsDir, f), 'utf8'));
     if (f.endsWith('.meta.json')) Object.assign(meta, j); else for (const [k, v] of Object.entries(j)) if (k !== '_base') map[k] = [v].flat();
   }
-  const userDir = path.join(ROOT, 'samples', 'user'); // user packs: a folder <kit>_<voice> is a kit voice; meta keyed pack/folder/file
+  const userOf = {}; // kit -> the user pack that holds it
+  const userDir =path.join(ROOT, 'samples', 'user'); // user packs: a folder <kit>_<voice> is a kit voice; meta keyed pack/folder/file
   for (const p of fs.existsSync(userDir) ? fs.readdirSync(userDir) : []) {
     const mf = path.join(userDir, p, 'meta.json');
     if (fs.existsSync(mf)) Object.assign(meta, JSON.parse(fs.readFileSync(mf, 'utf8')));
-    for (const d of fs.existsSync(mf) ? fs.readdirSync(path.join(userDir, p), { withFileTypes: true }).filter((e) => e.isDirectory() && e.name.includes('_')) : []) map[d.name] = fs.readdirSync(path.join(userDir, p, d.name)).map((x) => `${p}/${d.name}/${x}`);
+    for (const d of fs.existsSync(mf) ? fs.readdirSync(path.join(userDir, p), { withFileTypes: true }).filter((e) => e.isDirectory() && e.name.includes('_')) : []) (userOf[d.name.split('_')[0]] ??= p), map[d.name] = fs.readdirSync(path.join(userDir, p, d.name)).map((x) => `${p}/${d.name}/${x}`);
   }
   const kits = Object.keys(KITS).filter((k) => kitVoices(map, k).length);
   const usage = {};
@@ -56,7 +57,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   console.log(md);
   if (process.argv.includes('--render')) {
     const song = path.join(ROOT, 'songs', '_t_kitsheet.strudel');
-    fs.writeFileSync(song, sheetSource(kits, map));
+    fs.writeFileSync(song, sheetSource(kits, map, [...new Set(kits.map((k) => userOf[k]).filter(Boolean))]));
     try { console.log(await renderVia({ song: '_t_kitsheet.strudel', name: 'kitsheet', mp3: true })); }
     finally { fs.rmSync(song, { force: true }); }
   }

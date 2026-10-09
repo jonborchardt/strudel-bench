@@ -7,6 +7,10 @@ test('kitVoices lists what the map has, in KIT_VOICES order', () => {
   assert.deepEqual(kitVoices(map, 'RolandTR909'), ['bd', 'sd', 'hh']);
   assert.deepEqual(kitVoices(map, 'Tiny'), ['bd']);
 });
+test('sheetSource declares user packs only when given', () => {
+  assert.match(sheetSource(['Tiny'], map, ['freekit']), /packs: \['freekit'\]/);
+  assert.doesNotMatch(sheetSource(['Tiny'], map), /packs:/);
+});
 test('sheetSource: one two-bar section per kit, only its voices, bar lines in the template', () => {
   const src = sheetSource(['RolandTR909', 'Tiny'], map);
   assert.match(src, /section\('RolandTR909', 2, \{ kit: 'RolandTR909', drums: \{ template: \{ bd: '[^']+\|[^']+', sd: /);
