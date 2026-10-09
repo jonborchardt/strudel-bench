@@ -450,3 +450,20 @@ test('patch: ftype/drive/lpf are patch keys; driven and warm exist; ftype is val
   assert.throws(() => hap('bass', { patch: { ftype: 'moog' } }), /ftype must be one of 12db, 24db, ladder/);
   assert.throws(() => hap('bass', { patch: { drive: 9 } }), /drive must be a number in 0\.\.3/);
 });
+
+test('sub: a clean sine an octave under each bass note at sub × gain, none of the voice controls, at the note itself under midi 28', async () => {
+  await ready;
+  const haps = (attrs) => song({ cps: .5 }, [section('a', 4, { bass: attrs })]).strudel.sections[0].layers.bass.pattern.queryArc(0, 1).filter((h) => h.hasOnset()).map((h) => h.value);
+  const plain = haps({ notes: '0 0 0 0', patch: 'driven', register: 1 }), withSub = haps({ notes: '0 0 0 0', patch: 'driven', register: 1, sub: .5 }); // octave 3, so the sub's octave is above midi 28
+  assert.equal(withSub.length, plain.length * 2);
+  const subs = withSub.filter((v) => v.s === 'sine');
+  assert.equal(subs.length, plain.length);
+  const main = withSub.find((v) => v.s !== 'sine');
+  assert.equal(subs[0].note, main.note - 12);
+  assert.ok(Math.abs(subs[0].gain - main.gain * .5) < 1e-9);
+  for (const k of ['cutoff', 'ftype', 'drive', 'distort', 'shape', 'lpenv', 'unison']) assert.equal(subs[0][k], undefined, k);
+  assert.equal(subs[0].orbit, main.orbit);
+  const low = haps({ notes: '0 0 0 0', sub: .5, register: 0 }).filter((v) => v.s === 'sine'); // the lowest register
+  if (low[0].note + 12 < 28) assert.equal(low[0].note, haps({ notes: '0 0 0 0', register: 0 })[0].note, 'under midi 28 the sub sits on the note');
+  assert.throws(() => haps({ sub: 2 }), /sub must be a number in 0\.\.1/);
+});

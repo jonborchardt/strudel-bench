@@ -115,6 +115,23 @@ out`);
   } finally { fs.unlinkSync(file); }
 });
 
+test('bass sub prints as a withValue closure with the number and the expansion plays the same sines', async () => {
+  const { evaluate } = await import('@strudel/core');
+  const { transpiler } = await import('@strudel/transpiler');
+  await ready;
+  globalThis.aliasBank ??= async () => {};
+  const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_sub.strudel');
+  fs.writeFileSync(file, "song({ cps: .5 }, [section('v', 4, { bass: { notes: '0 0 0 0', sub: .4 } })])\n");
+  try {
+    const out = await dumpFile(file);
+    assert.match(out, /s: 'sine'/);
+    const sines = (p) => p.queryArc(0, 1).filter((h) => h.hasOnset() && h.value.s === 'sine').length;
+    const built = (await evaluate(fs.readFileSync(file, 'utf8'), transpiler)).pattern, dumped = (await evaluate(out, transpiler)).pattern;
+    assert.ok(sines(built) > 0);
+    assert.equal(sines(dumped), sines(built));
+  } finally { fs.rmSync(file, { force: true }); }
+});
+
 test('enter/exit print as masks and the expansion plays the same gap', async () => {
   const { evaluate } = await import('@strudel/core');
   const { transpiler } = await import('@strudel/transpiler');

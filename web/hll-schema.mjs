@@ -70,6 +70,7 @@ export const SCHEMA = {
     // layer material
     level: { type: 'number', min: 0, max: 2, step: 0.01, title: "the part's gain multiplier" },
     postgain: { type: 'number', min: 0, max: 2, step: 0.01, title: "the part's gain after its distortion (superdough's postgain): the only level a distorted part answers to" },
+    sub: { type: 'number', min: 0, max: 1, step: 0.05, title: 'bass only: a clean sine an octave under each note at this gain (on the note itself under midi 28)' },
     enter: int(0, 'bars of silence at the section start before the part comes in'),
     exit: int(0, 'bars of silence before the section ends after the part leaves (counted from the end, like dropout)'),
     position: { type: 'number', min: -1, max: 1, step: 0.01, title: 'where the part sits, left -1 to right 1 (0 centre); width moves around it' },

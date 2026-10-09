@@ -233,6 +233,7 @@ Rhythm has one written grammar everywhere it appears: `x` hit, `X` accent, `o` g
 | section | `dropout` | bars `n` | silences every part but fx for the last `n` bars |
 | section | `sweep` | bars `n` | over every part but fx during the last `n` bars, opens the filter to 8 kHz at the start of the tail and closes it to 150 Hz by the end, overriding that part's own brightness for those bars |
 | any part | `enter` | bars `n` | the part is silent for the section's first `n` bars (a late hat, a pad that joins) |
+| bass | `sub` | 0..1 | a sine an octave under every note at that gain, stripped of the voice's filter and drive: the fundamental a driven bass loses |
 | any part | `exit` | bars `n` | the part is silent for the section's last `n` bars, counted from the end like dropout |
 
 A key that is neither an axis nor that layer's material throws, naming both lists: a typo (`arpp: 'up'`) is a build error, not a silent no-op. The same goes for song metadata (`bmp: 120` throws).
