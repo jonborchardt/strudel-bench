@@ -86,6 +86,16 @@
           "why": "saturate .6 (bus saturator, peak down, rms within 2 dB); no kit swap, room kept, no sub (bass reaches midi <=40), no sidechain pair named by measure, no entries merged"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "room:",
+          "why": "ir plate (recorded impulse) with packs rooms, size 1.4 kept; rms -0.4 dB"
+        }
+      ]
     }
   ]
 }
