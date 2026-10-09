@@ -30,7 +30,7 @@ const pulse    = { template: 'halftime', sounds: { bd: 'timpani', sd: 'snare_low
 
 // second pass: a generated hall (samples/user/rooms, 3.2 s, 30 ms pre-delay) instead of the synthetic tail; the piano and the pulse humanized
 // (seeded, correlated) instead of organicness (dice per hit); the bells compressed; depth by the closer/farther words on the theme, choir and arp.
-const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808', packs: ['rooms'], room: { ir: 'hall', size: 3.2, damping: 4500 } }, [
+const score = song({ bpm: 64, key: 'D:minor', seed: 41, saturate: .6, kit: 'RolandTR808', packs: ['rooms'], room: { ir: 'hall', size: 3.2, damping: 4500 } }, [
   section('void', 1, { role: 'establish', progression: 'i',
     pad:  { ...organ, density: .2, brightness: .1, space: 1 },
     pad2: { ...strings, density: .2, brightness: .15, weight: .8, register: .2, level: .5 },

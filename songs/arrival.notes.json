@@ -356,6 +356,16 @@
           "why": "farther on the bowed arp: darker (.68), lighter (.52)"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate .6 bus warmth; hall room, 808 kit kept; no sub (bass at midi 14), no sidechain (measure names no drums/bass low pair), no entries"
+        }
+      ]
     }
   ]
 }
