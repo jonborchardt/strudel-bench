@@ -78,6 +78,17 @@ export function close(todos, id, { commit = null, lint = null, wontfix = null, t
   return t;
 }
 
+/** A fixed entry the review found does not hold: open again, the fix counted as an attempt, the reason in `tried`. */
+export function reopen(todos, id, why, { today }) {
+  const t = todos.find((x) => x.id === id); if (!t) throw new Error(`no todo ${id}`);
+  if (t.status !== 'fixed') throw new Error(`${id} is ${t.status}, not fixed`);
+  if (!why) throw new Error('reopen needs the reason the fix does not hold');
+  (t.tried ??= []).push(`${today}: reopened by review, the fix ${t.commit} does not hold: ${why}`);
+  t.attempts = (t.attempts ?? 0) + 1;
+  Object.assign(t, { status: 'open', closed: null, commit: null, lint: null });
+  return t;
+}
+
 /** Fold open entries that are one fault under different parts into `keep`; they leave the ranking as `merged`. All or nothing. */
 export function merge(todos, keep, ids, { parts, today }) {
   const k = todos.find((x) => x.id === keep); if (!k) throw new Error(`no todo ${keep}`);

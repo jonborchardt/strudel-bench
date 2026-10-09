@@ -14,7 +14,12 @@
 //   node limner/scripts/harden.mjs attempt <id> "<what was tried>"      three park the entry
 //   node limner/scripts/harden.mjs related <id> [--cells 8] [--html]    other combinations drawing its parts: the regression check
 //   node limner/scripts/harden.mjs stats                                defects per sheet, fresh cells told apart
+//   node limner/scripts/harden.mjs test [files...]                      the suite, judged by its fail line: PASS or FAIL with the failing tests
+//   node limner/scripts/harden.mjs cycle [--note "..."] [--trailer "..."] [--dry]   the cycle's commit, written from its ten sheets and the ledger
+//   node limner/scripts/harden.mjs reopen <id> "<why>"                  a fixed entry the review found does not hold
 //
+// verify writes eight pairs per png (--per n): <id>-verify.png, then <id>-verify-2.png, ...
+// With cycle.json present, next refuses an eleventh sheet in a cycle.
 // --dir names the folder holding todos.json, coverage.json and sheets/ (default: limner/scripts/harden).
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
@@ -24,18 +29,20 @@ import { feetY, FEET_Y } from '../index.mjs';
 import { lintState } from './harden/lint.mjs';
 import { pickCells, bump, keyOf, relatedCells, nowState, partsOf } from './harden/sampler.mjs';
 import { sheetHtml, pairsHtml, screenshot, svgOf, LAYOUT, CROPS, VIEWBOX } from './harden/sheet.mjs';
-import { record, merge, rank, close, load, save, attempt, isParked, statsOf, MAX_ATTEMPTS } from './harden/ledger.mjs';
+import { record, merge, rank, close, load, save, attempt, reopen, isParked, statsOf, MAX_ATTEMPTS } from './harden/ledger.mjs';
+import { SHEETS_PER_CYCLE, pad, sheetsOf, cycleCommit, testSummary } from './harden/cycle.mjs';
+import { spawnSync, execFileSync } from 'node:child_process';
 
 const argv = process.argv.slice(2);
 const flag = (name, dflt) => { const i = argv.indexOf('--' + name); return i < 0 ? dflt : argv[i + 1]; };
 const has = (name) => argv.includes('--' + name);
-const VALUED = new Set(['dir', 'view', 'cells', 'pool', 'stance', 'commit', 'lint', 'wontfix', 'crop', 'parts']); // html and all are booleans
+const VALUED = new Set(['dir', 'view', 'cells', 'pool', 'stance', 'commit', 'lint', 'wontfix', 'crop', 'parts', 'per', 'note', 'trailer']); // html and all are booleans
 const positional = argv.filter((a, i) => !a.startsWith('--') && !(argv[i - 1]?.startsWith('--') && VALUED.has(argv[i - 1].slice(2))));
 const [cmd, ...args] = positional;
 const dir = flag('dir', join(dirname(fileURLToPath(import.meta.url)), 'harden'));
 const sheets = join(dir, 'sheets'), fixes = join(sheets, 'fixes'); // fixes/ is made by snap
 mkdirSync(sheets, { recursive: true });
-const TODOS = join(dir, 'todos.json'), COVERAGE = join(dir, 'coverage.json');
+const TODOS = join(dir, 'todos.json'), COVERAGE = join(dir, 'coverage.json'), CYCLE = join(dir, 'cycle.json');
 const d = new Date(), today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; // local, not UTC
 const readJson = (f, dflt) => (existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : dflt);
 const link = (st) => `limner.html#editor/${encode(st)}`;
@@ -56,7 +63,8 @@ const commands = {
     // past the sheets on disk and past every sheet the committed ledger names: sheets/ is gitignored, a fresh checkout has none
     const onDisk = readdirSync(sheets).filter((f) => /^\d{4}\.json$/.test(f)).map((f) => +f.slice(0, 4));
     const named = load(TODOS).flatMap((t) => t.sheets ?? []).filter((s) => /^\d+$/.test(s)).map(Number);
-    const n = Math.max(0, ...onDisk, ...named) + 1, num = String(n).padStart(4, '0');
+    const cyc = readJson(CYCLE, null), n = Math.max(cyc ? cyc.from - 1 : 0, ...onDisk, ...named) + 1, num = pad(n);
+    if (cyc && n >= cyc.from + SHEETS_PER_CYCLE) { console.log(`cycle ${cyc.cycle} has its ${SHEETS_PER_CYCLE} sheets (${sheetsOf(cyc)[0]}-${sheetsOf(cyc).at(-1)}): fix, then \`harden cycle\``); process.exit(1); }
     const view = flag('view', n % 2 ? 'bust' : 'figure'), coverage = readJson(COVERAGE, {});
     const cells = pickCells({ coverage, n: +flag('cells', 9), view, sheet: n, pool: +flag('pool', 200) });
     const { file, rects } = await emit(sheetHtml(cells, { view }), join(sheets, num), view);
@@ -154,17 +162,50 @@ const commands = {
       const view = viewOf(t); // the then side is gone: the now side alone
       t.evidence.forEach((h, i) => pairs.push({ label: `${id} evidence ${i + 1}`, before: null, after: svgOf(nowState(h, keyFor(h)), view, crop) }));
     }
-    const width = Math.max(...pairs.map((q) => q.before?.rect.w ?? LAYOUT.bust.cell)), html = pairsHtml(pairs, width), base = join(sheets, `${id}-verify`);
-    let file;
-    if (has('html')) { file = base + '.html'; writeFileSync(file, html); } else { file = base + '.png'; await screenshot(html, file, width * 2 + 24); }
-    console.log(`${file}\n${t.evidence.map((h) => link(decode(h))).join('\n')}`);
+    // eight pairs a page: a png of fifteen or more was too small to judge, and readers judged from the snaps instead
+    const width = Math.max(...pairs.map((q) => q.before?.rect.w ?? LAYOUT.bust.cell)), per = +flag('per', 8), files = [];
+    for (let i = 0; i < pairs.length; i += per) {
+      const html = pairsHtml(pairs.slice(i, i + per), width), base = join(sheets, `${id}-verify${i ? '-' + (i / per + 1) : ''}`);
+      if (has('html')) { files.push(base + '.html'); writeFileSync(base + '.html', html); } else { files.push(base + '.png'); await screenshot(html, base + '.png', width * 2 + 24); }
+    }
+    console.log(`${files.join('\n')}\n${t.evidence.map((h) => link(decode(h))).join('\n')}`);
   },
   close([id]) {
     const todos = load(TODOS);
     const t = close(todos, id, { commit: flag('commit', null), lint: flag('lint', null), wontfix: flag('wontfix', null), today }); save(TODOS, todos);
     console.log(`${t.id} ${t.status}${t.commit ? ' ' + t.commit : ''}${t.wontfix ? ': ' + t.wontfix : ''}`);
   },
+  reopen([id, why]) {
+    const todos = load(TODOS), t = reopen(todos, id, why, { today }); save(TODOS, todos);
+    console.log(`${id} open again, attempt ${t.attempts}/${MAX_ATTEMPTS}${isParked(t) ? '  parked' : ''}`);
+  },
+  test(files) {
+    // no files: the host's own `npm test` (run from where npm run put us), so limner names no path outside itself
+    const opts = { encoding: 'utf8', maxBuffer: 1 << 30 };
+    const r = files.length ? spawnSync(process.execPath, ['--test', '--test-concurrency=1', '--test-reporter=spec', ...files], opts) : spawnSync('npm test -- --test-reporter=spec', { ...opts, shell: true });
+    const out = (r.stdout ?? '') + (r.stderr ?? ''), s = testSummary(out, r.status);
+    if (s.ok) return console.log(`PASS ${s.tests} tests`);
+    console.log(`FAIL ${s.why}${s.names.length ? '\n' + s.names.map((n) => '  ✖ ' + n).join('\n') : ''}\n\n${s.block || out.slice(-4000)}`);
+    process.exit(1);
+  },
+  cycle() {
+    const cyc = readJson(CYCLE, null); if (!cyc) throw new Error(`no ${CYCLE}: write { "cycle": <n>, "from": <first sheet>, "last": 0, "open": [], "unreviewed": [] }`);
+    const nums = sheetsOf(cyc), missing = nums.filter((n) => !existsSync(join(sheets, `${n}.json`)) || !Array.isArray(sheetJson(n).findings));
+    if (missing.length) throw new Error(`cycle ${cyc.cycle}: sheets ${missing.join(', ')} not rendered or not recorded`);
+    const recorded = readdirSync(sheets).filter((f) => /^\d{4}\.json$/.test(f)).sort().map((f) => JSON.parse(readFileSync(join(sheets, f), 'utf8'))).filter((s) => Array.isArray(s.findings));
+    const c = cycleCommit(cyc, nums.map(sheetJson), load(TODOS), { recorded, note: flag('note', null) }), trailer = flag('trailer', null);
+    const msg = `${c.subject}\n\n${c.body}${trailer ? '\n\n' + trailer : ''}\n`;
+    if (has('dry')) return console.log(msg + (c.review.length ? `review due: ${c.review.join(', ')}` : ''));
+    const was = readFileSync(CYCLE, 'utf8'), paths = ['todos.json', 'coverage.json', 'cycle.json'];
+    writeFileSync(CYCLE, JSON.stringify(c.next, null, 1) + '\n');
+    try {
+      execFileSync('git', ['add', ...paths], { cwd: dir });
+      execFileSync('git', ['commit', '-q', '-F', '-', '--', ...paths], { cwd: dir, input: msg });
+    } catch (e) { writeFileSync(CYCLE, was); throw new Error(`commit failed, cycle.json put back: ${e.stderr?.toString() || e.message}`); }
+    console.log(msg + `cycle ${c.next.cycle} starts at sheet ${pad(c.next.from)}`);
+    if (c.review.length) console.log(`review due: ${c.review.join(', ')} (the skill's Review step, by a separate agent, before cycle ${c.next.cycle}'s survey)`);
+  },
 };
 
-if (!commands[cmd]) { console.error(`usage: harden next|crop|lint|record|todos|verify|close|merge|attempt|related|snap|stats (see the header of ${fileURLToPath(import.meta.url)})`); process.exit(2); }
+if (!commands[cmd]) { console.error(`usage: harden next|crop|lint|record|todos|verify|close|merge|attempt|related|snap|stats|test|cycle|reopen (see the header of ${fileURLToPath(import.meta.url)})`); process.exit(2); }
 try { await commands[cmd](args); } catch (e) { console.error(e.message); process.exit(1); }

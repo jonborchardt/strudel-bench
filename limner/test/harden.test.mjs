@@ -15,6 +15,8 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { cycleCommit, sheetsOf, testSummary } from '../scripts/harden/cycle.mjs';
+import { prng, pick } from '../rng.mjs';
 import { CATEGORIES, fingerprint, nextId, record, merge, rank, close, load, save, MAX_ATTEMPTS, attempt, isParked, statsOf } from '../scripts/harden/ledger.mjs';
 
 test('lint: pointsOf reads every op kind as x,y pairs', () => {
@@ -683,4 +685,73 @@ test('the calibration face draws the ops it drew (test/fixtures/calibration-gold
   const url = new URL('./fixtures/calibration-golden.json', import.meta.url), now = JSON.parse(JSON.stringify(portraitOps(params(decode(CALIBRATION)))));
   if (process.env.UPDATE_GOLDEN) writeFileSync(url, JSON.stringify(now));
   assert.deepEqual(now, JSON.parse(readFileSync(url, 'utf8')), 'the calibration face moved: a regression unless the user asked for it');
+});
+
+// A new lint that fires on a whole cast fills a third of every sheet until someone notices: caught here when it is written.
+const NOISE_CELLS = 150, NOISE_MAX = 0.05;
+test(`lint: no lint fires on more than ${NOISE_MAX * 100}% of a fixed slice of the grid`, () => {
+  const rng = prng(4242), grid = gridOf(), counts = {};
+  for (let i = 0; i < NOISE_CELLS; i++) { const t = pick(rng, grid); for (const name of new Set(lintState(stateFor(t, 1 + Math.floor(rng() * 999998)), t).map((f) => f.name))) counts[name] = (counts[name] ?? 0) + 1; }
+  const loud = Object.entries(counts).filter(([, n]) => n / NOISE_CELLS > NOISE_MAX);
+  assert.deepEqual(loud, [], `noisy lints (cells of ${NOISE_CELLS}): ${loud.map(([k, n]) => `${k} ${n}`).join(', ')}`);
+});
+
+test('cycle: testSummary passes on the fail line, never on the exit code alone', () => {
+  const sum = (fail, extra = '') => `✔ a (1ms)\n${fail ? '✖ b (2.1ms)\n' : ''}ℹ tests 2\nℹ pass ${2 - fail}\nℹ fail ${fail}\nℹ cancelled 0\n${extra}`;
+  assert.equal(testSummary(sum(0), 0).ok, true);
+  const f = testSummary(sum(1, '\n✖ failing tests:\n\ntest at x.mjs:2\n✖ b (2.1ms)\n  AssertionError: 1 == 2\n'), 0);
+  assert.equal(f.ok, false, 'exit 0 with a failing test is a failure'); assert.deepEqual(f.names, ['b']); assert.match(f.why, /1 failed/); assert.match(f.block, /AssertionError/);
+  assert.match(testSummary(sum(0), 1).why, /exit 1 with no failing test/);
+  assert.match(testSummary('Error: boom', 1).why, /no summary line/);
+});
+
+const cycleTodos = () => [
+  { id: 'T001', status: 'fixed', commit: 'abc', severity: 2, seen: 1, attempts: 0 }, // fixed this cycle
+  { id: 'T002', status: 'open', severity: 2, seen: 1, attempts: 3 }, // parked this cycle
+  { id: 'T003', status: 'open', severity: 2, seen: 1, attempts: 0 },
+  { id: 'T004', status: 'merged', mergedInto: 'T003', severity: 2, seen: 1, attempts: 0 }, // opened and merged this cycle
+  { id: 'T005', status: 'open', severity: 1, seen: 1, attempts: 0 }, // opened this cycle
+].map((t) => ({ opened: '2026-10-08', ...t }));
+const cycleSheet = (n, findings) => ({ sheet: n, cells: [{ n: 1, tuple: { cast: 'calibration' } }, { n: 2, tuple: { cast: 'elves' }, fresh: true }, { n: 3, tuple: { cast: 'orcs' } }], findings });
+
+test('cycle: the commit is written from the sheets and the ledger against the cycle start; a review falls due every third cycle', () => {
+  const start = { cycle: 4, from: 11, last: 3, open: ['T001', 'T002', 'T003'], unreviewed: ['T000'] };
+  const sheets = sheetsOf(start).map((n, i) => cycleSheet(n, i ? [] : [{ cell: 2, severity: 3 }, { cell: 3, severity: 1 }]));
+  const c = cycleCommit(start, sheets, cycleTodos());
+  assert.equal(c.subject, 'limner: harden, cycle 4');
+  assert.match(c.body, /^Sheets 0011-0020: 20 cells judged, 2 findings \(1 at severity 3, 0 at 2, 1 at 1\)\./);
+  assert.match(c.body, /New: T004 \(merged into T003\), T005\. Fixed: T001 \(abc\)\. Wontfix: none\. Merged: none\. Parked: T002\. 3 open\./);
+  assert.deepEqual(c.review, []); assert.deepEqual(c.next.unreviewed, ['T000', 'T001']);
+  assert.deepEqual({ cycle: c.next.cycle, from: c.next.from, last: c.next.last, open: c.next.open }, { cycle: 5, from: 21, last: 5, open: ['T003', 'T005'] });
+  const r = cycleCommit({ ...start, cycle: 6 }, sheets, cycleTodos());
+  assert.deepEqual(r.review, ['T000', 'T001']); assert.deepEqual(r.next.unreviewed, [], 'a review clears the list');
+});
+
+test('cli: with cycle.json, next refuses an eleventh sheet, cycle refuses an unrecorded one and --dry prints the commit', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'harden-cli-'));
+  try {
+    writeFileSync(join(dir, 'cycle.json'), JSON.stringify({ cycle: 1, from: 1, last: 0, open: [], unreviewed: [] }));
+    for (let i = 1; i <= 10; i++) cli(dir, 'next', '--html', '--cells', '2', '--pool', '0');
+    assert.throws(() => cli(dir, 'next', '--html', '--cells', '2', '--pool', '0'), (e) => e.status === 1 && /cycle 1 has its 10 sheets \(0001-0010\)/.test(e.stdout));
+    assert.throws(() => cli(dir, 'cycle', '--dry'), (e) => e.status === 1 && /sheets 0001, .*0010 not rendered or not recorded/.test(e.stderr));
+    for (let i = 1; i <= 10; i++) cliIn(dir, '[]', 'record', String(i).padStart(4, '0'));
+    const out = cli(dir, 'cycle', '--dry', '--note', 'Quiet.', '--trailer', 'Co-Authored-By: x');
+    assert.match(out, /^limner: harden, cycle 1\n\nSheets 0001-0010: 10 cells judged, 0 findings .* Quiet\.\n\nCo-Authored-By: x\n/);
+    assert.equal(JSON.parse(readFileSync(join(dir, 'cycle.json'), 'utf8')).cycle, 1, '--dry writes nothing');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('cli: verify writes eight pairs a page; reopen puts a fixed entry back with the fix counted', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'harden-cli-'));
+  try {
+    const hs = Array.from({ length: 10 }, (_, i) => encode(stateFor({ cast: 'elves', stance: 'none', expression: 'grin', view: 'bust' }, i + 3)));
+    writeFileSync(join(dir, 'todos.json'), JSON.stringify([{ id: 'T001', status: 'fixed', commit: 'abc', category: 'style', severity: 1, seen: 1, parts: ['eyes:almond'], title: 't', sheets: [], evidence: hs, tuples: [], attempts: 0, tried: [] }]));
+    const out = cli(dir, 'verify', 'T001', '--html');
+    assert.match(out, /T001-verify\.html\r?\n.*T001-verify-2\.html/);
+    assert.equal(readFileSync(join(dir, 'sheets', 'T001-verify-2.html'), 'utf8').match(/<figure/g).length, 2);
+    assert.throws(() => cli(dir, 'reopen', 'T001'), (e) => e.status === 1 && /needs the reason/.test(e.stderr));
+    assert.match(cli(dir, 'reopen', 'T001', 'the iris is still flat'), /T001 open again, attempt 1\/3/);
+    const t = JSON.parse(readFileSync(join(dir, 'todos.json'), 'utf8'))[0];
+    assert.equal(t.status, 'open'); assert.equal(t.commit, null); assert.match(t.tried[0], /fix abc does not hold: the iris is still flat/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
