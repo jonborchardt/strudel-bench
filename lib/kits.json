@@ -288,5 +288,6 @@
     "label": "Clean big early-90s digital, broad variants",
     "kind": "Yamaha RY30 (1991, 16-bit)",
     "about": "Clean, big, tweakable early-90s digital; broad variant set. Early-90s R&B/pop/dance with a polished kit."
-  }
+  },
+  "freekit": { "label": "Full-bodied recorded hits, CC0 from Freesound", "kind": "Figure Drum Kits by tripjazz (Freesound, CC0, 44.1 kHz 16-bit)", "about": "Recorded acoustic and electronic hits chosen for body and a clean tail: the kit the thin machine samples were missing. Anything that wants weight without lo-fi." }
 }
