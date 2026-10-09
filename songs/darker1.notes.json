@@ -1,4 +1,16 @@
 {
   "made": "2026-09-10",
-  "prompt": "demo with the drop's drums and bass at brightness 0 and the bass at register .3: the blog's first \"darker\" step."
+  "prompt": "demo with the drop's drums and bass at brightness 0 and the bass at register .3: the blog's first \"darker\" step.",
+  "requests": [
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "saturate .6 on the bus; drums and bass level 1.25 in verse and drop to hold loudness (saturate alone was -2.7 dB); 909 kit kept, bass below midi 40 so no sub, no low-band pair named by the measure lint on drop, no sections merged"
+        }
+      ]
+    }
+  ]
 }
