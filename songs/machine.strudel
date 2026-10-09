@@ -34,7 +34,7 @@ const top = { ...M, level: 1.6, postgain: .5, sound: 'square', position: .1, wei
 const sub = { level: .4, postgain: .6, sound: 'triangle', duck: 'drums', duckDepth: .4, duckAttack: .15 };
 // second pass: the generated small room (samples/user/rooms) cut to half a second: early reflections and a door, no tail. No humanize: the
 // machine is mechanical by design. Depth on the melody by the closer word.
-const machine = song({ cps: .5, key: 'E:minor', seed: 23, kit: 'RolandTR909', packs: ['rooms'], room: { ir: 'room', size: .5, damping: 3500 } }, [
+const machine = song({ cps: .5, key: 'E:minor', seed: 23, saturate: .6, kit: 'RolandTR909', packs: ['rooms'], room: { ir: 'room', size: .5, damping: 3500 } }, [
   section('intro', 4, { role: 'establish', progression: 'i',
     drums: { ...kit, template: 'minimal', density: .2, drive: .9, articulation: .9, brightness: .2, space: .1, variation: 0 },
   }),
