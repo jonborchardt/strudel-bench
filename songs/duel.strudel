@@ -31,7 +31,7 @@ const CODA3 = '[[2 4 6 2] [4 6 2 4] [6 2 4 6] [9 8 6 4]] [[6,8]@3 [4,6]@2 [2,4]@
 // player two under it in the finale: the hemiola's accents alone (a 3-against-4 pulse on the root), the 3+2+3 bar as single notes, held chord tones under the sequence, the same landing
 const CODA2 = '[[0 ~ ~ 0] [~ ~ 0 ~] [~ 0 ~ ~] [7 6 4 2]] [4@3 2@2 0@3 ~ 4 2@2 4@2 6@2] [0@3 ~ 4@3 ~] [[~ 7 ~ 4] [2 1 ~ 1] 1 8]';
 
-song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8', visual: { composition: 'overlay', worlds: ['ink', 'signal'] }, packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
+song({ cps: .52, key: 'E:dorian', seed: 11, saturate: .6, kit: 'RolandR8', visual: { composition: 'overlay', worlds: ['ink', 'signal'] }, packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
   section('intro', 4, { role: 'establish', progression: 'i IV i VII',
     raw:    pick([Em, A, Em, D].join(' ')),
     // player two picks chord tones between player one's, an octave up
