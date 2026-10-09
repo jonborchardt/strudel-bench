@@ -17,7 +17,7 @@ const safeDecode = (s) => { try { return decodeURIComponent(s); } catch { return
 
 /** { seconds, rms, peak } of one wav file (rms over its loudest half second, so a long tail does not hide a loud hit). */
 export function measureWav(buf) {
-  const { rate, frames } = readWav(buf);
+  const { rate, frames, bits, float } = readWav(buf);
   const x = frames[0];
   let peak = 0;
   for (let i = 0; i < x.length; i++) peak = Math.max(peak, Math.abs(x[i]));
@@ -30,7 +30,7 @@ export function measureWav(buf) {
     for (let i = s + win - step; i < s + win; i++) e += x[i] * x[i];
     best = Math.max(best, e);
   }
-  return { seconds: +(x.length / rate).toFixed(2), rms: db(Math.sqrt(best / win)), peak: db(peak) };
+  return { seconds: +(x.length / rate).toFixed(2), rms: db(Math.sqrt(best / win)), peak: db(peak), rate, bits: float ? '32f' : bits };
 }
 
 /** Meta for every wav in a pack map: keyed by the map's own file string, so the check can look a map entry up as written. */

@@ -22,6 +22,15 @@ test('measureWav: seconds, peak and rms of the loudest half second, in dBFS', ()
   } finally { fs.unlinkSync(f); }
 });
 
+test('measureWav reports rate and bits', () => {
+  const tmp = path.resolve(import.meta.dirname, '_t_meta2.wav');
+  try {
+    writeWav(tmp, 22050, [Float32Array.from({ length: 2205 }, (_, i) => Math.sin(i / 10) * .5)]);
+    const m = measureWav(fs.readFileSync(tmp));
+    assert.equal(m.rate, 22050); assert.equal(m.bits, 16);
+  } finally { fs.rmSync(tmp, { force: true }); }
+});
+
 test('metaFor and packMaps: a local pack is keyed the way userPacks() spells its files; a non-wav is left out', () => {
   const dir = path.join(USER, '_t_metapack');
   fs.mkdirSync(path.join(dir, 'hit'), { recursive: true });
