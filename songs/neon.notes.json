@@ -188,6 +188,19 @@
           "why": "impact the 909 arrives on a hit"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "saturate",
+          "from": 0,
+          "to": 0.6,
+          "why": "bus saturation; DMX/909 kits and the room/plate pair kept; reese/acid bass reaches midi 21 so no sub; every bass and chord part already ducks drums; no entries merged"
+        }
+      ]
     }
   ]
 }
