@@ -27,6 +27,16 @@
           "why": "room.ir=hall irbegin .015 reads past the silent head: the same hall with the pre-delay removed, to A/B against hall"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "saturate .6; drums and bass level 1.4 to hold loudness (rms -1.7 dB); rooms and ducks kept"
+        }
+      ]
     }
   ]
 }
