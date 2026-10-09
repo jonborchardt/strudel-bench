@@ -245,3 +245,18 @@ test('saturate: a song-level number in 0..1, carried on meta', async () => {
   assert.throws(() => song({ cps: .5, saturate: 1.5 }, [section('a', 4, { drums: {} })]), /saturate must be a number in 0\.\.1/);
   assert.throws(() => song({ cps: .5, saturate: 'hot' }, [section('a', 4, { drums: {} })]), /saturate must be a number in 0\.\.1/);
 });
+
+test('duck: parts ducking the same source alike share an orbit; a different depth splits them', async () => {
+  await ready;
+  const orbits = (spec) => { const s = song({ cps: .5, room: { size: 1 } }, [section('a', 4, spec)]).strudel.sections[0]; return Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, l.orbit])); };
+  const same = orbits({ drums: {}, bass: { duck: 'drums', duckDepth: .4 }, pad: { duck: 'drums', duckDepth: .4 } });
+  assert.equal(same.bass, same.pad);
+  assert.notEqual(same.bass, same.drums);
+  const split = orbits({ drums: {}, bass: { duck: 'drums', duckDepth: .4 }, pad: { duck: 'drums', duckDepth: .7 } });
+  assert.notEqual(split.bass, split.pad);
+  // the source lists the shared orbit once
+  const s = song({ cps: .5, room: { size: 1 } }, [section('a', 4, { drums: {}, bass: { duck: 'drums' }, pad: { duck: 'drums' } })]).strudel.sections[0];
+  const kick = s.layers.drums.pattern.queryArc(0, 1).find((h) => h.hasOnset()).value;
+  assert.deepEqual(kick.duckorbit, [s.layers.bass.orbit]);
+  assert.equal(kick.duckdepth.length, 1);
+});

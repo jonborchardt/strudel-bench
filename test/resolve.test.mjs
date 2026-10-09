@@ -360,3 +360,12 @@ test('applyVerb surfaces refusals instead of silently doing nothing on an all-sp
   assert.match(h.src, /template: 'halftime'/);
   assert.ok(h.refused.length > 0, 'the phrase half is still refused: density comes from the spread');
 });
+
+test('verb sidechain writes duck onto bass and pad, not drums', async () => {
+  const { applyVerb } = await import('../lib/resolve.mjs');
+  const src = "song({ cps: .5 }, [section('a', 8, { drums: {}, bass: { density: .5 }, pad: {} })])\n";
+  const { src: out } = applyVerb(src, 'a', 'sidechain');
+  assert.match(out, /bass: \{[^}]*duck: 'drums'[^}]*duckDepth: \.4/);
+  assert.match(out, /pad: \{[^}]*duck: 'drums'/);
+  assert.doesNotMatch(out, /drums: \{[^}]*duck/);
+});
