@@ -264,6 +264,16 @@
           "why": "three of those level changes were silent no-ops: I applied them with a string replace against a literal I assumed was in the file, and the climax bass was 1.7 rather than the 1.45 I thought I had set, so three successive edits matched nothing. It surfaced only because the re-measure came back byte-identical. Every level in the file was verified afterwards"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate .6 (bus saturator, peak down, rms within 2 dB); no kit swap, room kept, no sub (bass reaches midi <=40), no sidechain pair named by measure, no entries merged"
+        }
+      ]
     }
   ]
 }
