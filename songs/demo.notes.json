@@ -63,6 +63,16 @@
           "why": "saturate .6; drums and bass level 1.25 in verse and drop to hold rms after saturation; drop.melody2 glockenspiel>handchimes (the swap was made because the glockenspiel measured 49 dB under the mix); dry room kept on purpose, no sub (bass at midi 24), no sidechain (no low pair named)"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10), level lifts reverted",
+      "changes": [
+        {
+          "section": "drums/bass",
+          "why": "level 1.25: the spec asks for harmonics, not level; peaks fell, rms sits 2-3 dB under the baseline by design"
+        }
+      ]
     }
   ]
 }
