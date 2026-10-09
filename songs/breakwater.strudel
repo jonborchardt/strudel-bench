@@ -26,7 +26,7 @@ const under = { duck: 'drums', duckDepth: .15, duckAttack: .2 }; // the pad unde
 
 // second pass: a generated small room (samples/user/rooms, 0.9 s, 8 ms pre-delay) so the break's attacks stay in front of the reverb; the
 // lead humanized; depth by the closer/farther words, not level alone.
-song({ bpm: 132, key: 'F:minor', seed: 19, kit: 'RolandTR909', packs: ['demo-pack', 'rooms'], room: { ir: 'room', size: .9, damping: 6000 } }, [
+song({ saturate: .6, bpm: 132, key: 'F:minor', seed: 19, kit: 'RolandTR909', packs: ['demo-pack', 'rooms'], room: { ir: 'room', size: .9, damping: 6000 } }, [
 
   // the loop as recorded, filtered and far off: the break is the whole arrangement, and nothing answers it yet.
   section('shoreline', 8, { role: 'establish', progression: 'i',
