@@ -106,7 +106,7 @@ interest. Do these, in this order, on every new song and whenever a song is call
    an octave up or down, on the beats the hook leaves empty. That is the one place "more instruments" helps.
 4. **Contrast per section**, already the system's strength: drums `template` per section, `variation` rising
    toward the end, `fill`/`riser`/`impact` at the boundaries, pad `arp` in one section only, `dropout`/`sweep`
-   before a drop.
+   before a drop. A part that should join late or leave early takes `enter: n` / `exit: n` on its own layer object, so a late hat or an early pad exit does not cost a section; dropout and sweep still act on top.
 5. **A `raw` part inside the section, `stack()` around the song only for what must span sections.** `raw: { pattern:
    s("...").struct(...) }` puts a plain Strudel pattern in with the layers, so mute, solo, pin, the check table and
    the dump all see it, for anything the built layers do not model: noise beds, one-shots, a drone. `stack(theSong,

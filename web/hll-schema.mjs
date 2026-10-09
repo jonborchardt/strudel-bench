@@ -68,9 +68,9 @@ export const SCHEMA = {
     kit: { type: 'enum', values: () => host.kits(), title: 'drum machine bank' },
     // layer material
     level: { type: 'number', min: 0, max: 2, step: 0.01, title: "the part's gain multiplier" },
-    enter: { type: 'number', min: 0, max: 64, step: 1, title: 'bars of silence at the head of the section before this part sounds' },
-    exit: { type: 'number', min: 0, max: 64, step: 1, title: 'bars of silence at the tail of the section after this part stops' },
     postgain: { type: 'number', min: 0, max: 2, step: 0.01, title: "the part's gain after its distortion (superdough's postgain): the only level a distorted part answers to" },
+    enter: int(0, 'bars of silence at the section start before the part comes in'),
+    exit: int(0, 'bars of silence before the section ends after the part leaves (counted from the end, like dropout)'),
     position: { type: 'number', min: -1, max: 1, step: 0.01, title: 'where the part sits, left -1 to right 1 (0 centre); width moves around it' },
     duckDepth: { ...unit, title: 'how deep the named part ducks this one' },
     duckAttack: { type: 'number', min: 0, max: 2, step: 0.01, title: 'seconds the duck takes to recover' },

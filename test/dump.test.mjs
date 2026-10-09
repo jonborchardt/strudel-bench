@@ -114,3 +114,21 @@ out`);
     assert.match(out, /\nstack\(\n  layers,\n  s\("metal"\)\n    \.gain\(0\.3\)\n\)$/);
   } finally { fs.unlinkSync(file); }
 });
+
+test('enter/exit print as masks and the expansion plays the same gap', async () => {
+  const { evaluate } = await import('@strudel/core');
+  const { transpiler } = await import('@strudel/transpiler');
+  await ready;
+  globalThis.aliasBank ??= async () => {};
+  const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_entries.strudel');
+  fs.writeFileSync(file, "song({ cps: .5 }, [section('v', 8, { drums: {}, bass: { enter: 2, exit: 2 } })])\n");
+  try {
+    const out = await dumpFile(file);
+    assert.match(out, /\.mask\(/);
+    const built = (await evaluate(fs.readFileSync(file, 'utf8'), transpiler)).pattern, dumped = (await evaluate(out, transpiler)).pattern;
+    const bassOnsets = (p, a, b) => p.queryArc(a, b).filter((h) => h.hasOnset() && h.value.note !== undefined).length; // the bass is the only pitched part
+    assert.equal(bassOnsets(dumped, 0, 2), 0, 'silent head in the expansion');
+    assert.equal(bassOnsets(dumped, 6, 8), 0, 'silent tail in the expansion');
+    assert.equal(bassOnsets(dumped, 2, 6), bassOnsets(built, 2, 6));
+  } finally { fs.rmSync(file, { force: true }); }
+});
