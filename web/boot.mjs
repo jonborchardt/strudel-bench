@@ -63,30 +63,20 @@ export function softClipCurve(n = 8193, knee = 0.8) {
   return c;
 }
 
-/** The bus saturator's transfer: tanh(k·x)/tanh(k), k = 4·amount, so 0 is a line and 1 is a hard bend. Odd, monotonic, ±1 at the ends. */
+/** The bus saturator's transfer: tanh(k·x)/k, k = 4·amount. A static curve's gain depends on level, so any makeup tuned at one level boosts everything quieter (a whole mix sits near -25 dBFS); normalising the slope at zero to exactly 1 leaves quiet material alone, and the ceiling 1/k only softens peaks. More amount is more harmonics, never more level. Odd, monotonic; 0 is a line. */
 export function satCurve(amount, n = 8193) {
-  const k = 4 * amount, c = new Float32Array(n), t = k ? Math.tanh(k) : 1;
-  for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = k ? Math.tanh(k * x) / t : x; }
+  const k = 4 * amount, c = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = k > 1e-9 ? Math.tanh(k * x) / k : x; }
   return c;
 }
 
-/** Drive before the curve and the makeup after it that keeps a -12 dBFS sine's rms, so turning the amount up adds harmonics, not level. */
-export function satGains(amount) {
-  if (!amount) return { pre: 1, post: 1 };
-  const pre = 1 + 3 * amount, c = satCurve(amount), N = 1024, a = .25;
-  const at = (x) => c[Math.round(((Math.max(-1, Math.min(1, x)) + 1) / 2) * (c.length - 1))];
-  let i2 = 0, o2 = 0;
-  for (let i = 0; i < N; i++) { const x = a * Math.sin(2 * Math.PI * i / N); i2 += x * x; o2 += at(x * pre) ** 2; }
-  return { pre, post: Math.sqrt(i2 / o2) };
-}
-
 let satAmount = 0; // the song's `saturate`, read when an orbit is built (live or in an offline render context) and pushed to live orbits on change
-/** The bus saturator between an orbit's sum and its output: drive, a tanh curve (2x oversampled), makeup. Native nodes, one set per orbit, nothing per hit. */
+/** The bus saturator between an orbit's sum and its output: a unity-slope tanh curve (2x oversampled). Native nodes, one set per orbit, nothing per hit. */
 function saturate(orbit) {
-  const ac = orbit.audioContext, pre = new GainNode(ac), shaper = new WaveShaperNode(ac, { oversample: '2x' }), post = new GainNode(ac);
+  const ac = orbit.audioContext, shaper = new WaveShaperNode(ac, { oversample: '2x' });
   orbit.summingNode.disconnect(); // was -> output; delay and reverb feed summingNode so they pass through too. setDjf would re-route around this (unused here)
-  orbit.summingNode.connect(pre); pre.connect(shaper); shaper.connect(post); post.connect(orbit.output);
-  const set = (amount) => { const g = satGains(amount); pre.gain.value = g.pre; shaper.curve = amount ? satCurve(amount) : null; post.gain.value = g.post; };
+  orbit.summingNode.connect(shaper); shaper.connect(orbit.output);
+  const set = (amount) => { shaper.curve = amount ? satCurve(amount) : null; };
   set(satAmount);
   orbit.saturator = { set };
 }

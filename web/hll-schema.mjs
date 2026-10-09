@@ -54,7 +54,7 @@ export const SCHEMA = {
     bpm: { type: 'number', min: 40, max: 240, step: 1, title: 'tempo in beats per minute' },
     cps: { type: 'number', min: 0.125, max: 2, step: 0.001, scale: 'log', title: 'tempo in cycles per second' },
     seed: int(1, 'seed of the generated lines'),
-    saturate: { type: 'number', min: 0, max: 1, step: 0.01, title: 'bus saturation on every orbit (web/boot.mjs): 0 is a wire, 1 drives 4x into a tanh with rms makeup' },
+    saturate: { type: 'number', min: 0, max: 1, step: 0.01, title: 'bus saturation on every orbit: 0 is a wire; the curve tanh(k·x)/k, k = 4·amount, leaves quiet material alone and softens peaks toward 1/k, so more amount is more harmonics, never more level' },
     meter: { type: 'enum', values: METERS, title: 'beats per bar over the beat unit: any n/4, n/8 or n/16' },
     key: { type: 'enum', values: () => ROOTS.flatMap((r) => HARMONY.modes.map((m) => `${r}:${m}`)), list: 'keys', title: 'root and mode' },
     progression: { type: 'tokens', values: CHORDS, sep: ' ', title: 'one chord per bar, roman numerals over the key; [a b] shares a bar' },
