@@ -19,8 +19,8 @@ JACKETS.quiltedCoat = (p) => { const c = p.jacket.color, dark = shade(c, 0.62); 
   path('M 164 352 Q 200 376 236 352', stroke(dark, 4, 0.5)), ellipse(200, 360, 5, 5, { fill: '#8d7046' })]; };
 HATS.strawCap = (p) => [path('M 92 140 C 130 126, 270 126, 308 140 C 272 158, 240 162, 200 162 C 160 162, 128 158, 92 140 Z', { fill: shade(p.hat.color, 0.74) }),
   path('M 90 138 C 128 118, 272 118, 310 138 C 272 152, 128 152, 90 138 Z', { fill: p.hat.color }),
-  path('M 134 138 C 136 86, 166 66, 200 66 C 234 66, 264 86, 266 138 Z', { fill: p.hat.color }),
-  ...[0, 1, 2, 3].map((i) => path(`M ${140 + i * 2} ${126 - i * 16} Q 200 ${112 - i * 18} ${260 - i * 2} ${126 - i * 16}`, stroke(shade(p.hat.color, 0.8), 1.4, 0.55))), // the straw's coiled rows
+  path('M 134 138 C 136 86, 166 66, 200 66 C 234 66, 264 86, 266 138 Z', { fill: p.hat.color, crown: true }),
+  ...[[126, 140, 112], [110, 142, 94], [94, 150, 78], [78, 166, 64]].map(([y, x, c]) => path(`M ${x} ${y} Q 200 ${c} ${400 - x} ${y}`, stroke(shade(p.hat.color, 0.8), 1.4, 0.55))), // the straw's coiled rows, each [y, x, peak] ending inside the crown's curve
   path('M 134 134 Q 200 148 266 134', stroke(p.hat.accent, 7, 0.9, 'butt'))];
 HAT_CROWN.strawCap = 138;
 

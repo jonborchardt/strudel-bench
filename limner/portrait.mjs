@@ -373,7 +373,9 @@ export function eyeShape(p, side, cx = 200 + side * p.eyes.spacing / 2) {
   const e = p.eyes, k = featureScale(p) * (e.size ?? 1), st0 = EYES[e.style] ?? EYES.almond, st = { ...st0, w: st0.w * k, top: st0.top * k, bot: st0.bot * k, iris: st0.iris * k, inn: (st0.inn ?? 0) * k, out: (st0.out ?? 0) * k, crease: st0.crease && { ...st0.crease, dy: st0.crease.dy * k, ctl: st0.crease.ctl * k } }, o = e.openness * (side < 0 ? e.asym : 1), y = e.y + (side < 0 ? e.dy ?? 0 : 0);
   const sq = unit(e.squint ?? 0); // a smile does not shut the eye from above: the cheek pushes the lower lid up and the upper lid comes down a little after it
   const tl = (e.tilt ?? 0) * st.w * 0.6; // the slant: the outer corner up by most of it, the inner down by the rest
-  const xi = cx - st.w * side, xo = cx + st.w * side, yi = y + (st.inn ?? 0) + 0.3 * tl, yo = y + (st.out ?? 0) - tl, th = st.top * o * (1 - 0.25 * sq), bh = st.bot * o * (1 - 0.6 * sq), px = cx + 2 * side; // the upper lid peaks past the centre toward the outer corner
+  const irTop = st.top * 0.22 + st.iris * (1.5 - 0.55 * (e.sclera ?? st.sclera)); // the iris's top at rest, as eye() places it
+  const wide = o > 1 ? Math.max(st.top * o, irTop + 14 * k * (o - 1)) : st.top * o; // eyes opened past rest show white over the iris: a narrow or lidded eye's small top scaled by openness never clears its own iris (T015)
+  const xi = cx - st.w * side, xo = cx + st.w * side, yi = y + (st.inn ?? 0) + 0.3 * tl, yo = y + (st.out ?? 0) - tl, th = wide * (1 - 0.25 * sq), bh = st.bot * o * (1 - 0.6 * sq), px = cx + 2 * side; // the upper lid peaks past the centre toward the outer corner
   return { cx, y, k, st, o, sq, xi, xo, yi, yo, th, bh, px, w: st.w, lid: `M ${xi} ${yi} Q ${px} ${y - th} ${xo} ${yo} Q ${cx - side} ${y + bh} ${xi} ${yi} Z` };
 }
 function eye(cx, p, side) { // side: +1 the right eye, -1 the left (its outer corner at -x)
@@ -485,24 +487,33 @@ export const TEETH = {
   none: () => [],
 };
 export const TEETH_STYLES = Object.keys(TEETH);
+// where the mouth's parting sits on a laid-out face: its own line, or with a muzzle the end of the pad (the nose's own
+// scaling, so the parting runs under the nostrils and never through them: a mouth line across the nostrils reads as a ring)
+const mouthLine = (p) => { const mz = Math.max(0, Math.min(1, p.nose?.muzzle ?? 0)); if (!mz) return p.mouth.y; const st = NOSES[p.nose.style] ?? NOSES.straight; return p.mouth.y + mz * (p.eyes.y + 10 + (st.len + st.tip * 1.625) * (p.nose.length / 38) + 6 - p.mouth.y); };
 /** How the lips move: a smile lifts the corners (a frown drops them) by `lift` and the parting bows by the rest, so a grin is corners pulled up and out, not a lip bent down at the middle; `ctl` is where the parting's control point sits under the resting line. Exported because the moustache rides the same lip. */
 export const lipMove = (m) => { const s = m.smile ?? 0, o = m.open ?? 0; return { lift: 9 * s, ctl: 9 * s - 14 * o }; }; // an open jaw lifts the upper lip's middle as it drops the lower, so the opening is an oval and not a crescent hung off the parting
+/** How far past a muzzle's nostril pad, each side, its mouth may run (T066: the pad is the nose's own width, a straight nose's half as broad as a broad one's, while the mouth was sized from the face, so a straight-nosed dragonborn's mouth ran 30 past the pad at every style and expression, a slash cheek to cheek). The mouth follows the snout it ends. */
+const MOUTH_PAD_MARGIN = 12;
 function mouth(p) {
   if (p.mouth.mode && p.mouth.mode !== 'human') return machineMouth(p);
   const mz = Math.max(0, Math.min(1, p.nose?.muzzle ?? 0)); // a muzzle's mouth is the same mouth, wider and with less lip: it still smiles, opens and shows its teeth, because it is this code and not a line drawn over it
-  const m = { ...p.mouth, y: p.mouth.y - 3 * mz, color: p.mouth.color ?? underSkin(p.skin, '#8b5149', 0.72) }, st = MOUTHS[m.style] ?? MOUTHS.plain, open = m.open ?? 0, sm = m.smile, kw = m.skew ?? 0, pr = unit(m.press ?? 0), a = st.asym ?? 0; // a muzzle's mouth is up at the end of it, not a lip gap below: there is no lip to leave room for
-  const w = m.width * (st.wide ?? 1) * (1 + 0.7 * mz) * (1 + 0.14 * Math.max(0, sm) - 0.16 * open - 0.08 * pr), x1 = 200 - w / 2, x2 = 200 + w / 2; // a smile pulls the corners out, a dropped jaw draws them in, pressed lips go a little narrower
+  const m = { ...p.mouth, y: mouthLine(p), color: p.mouth.color ?? underSkin(p.skin, '#8b5149', 0.72) }, st = MOUTHS[m.style] ?? MOUTHS.plain, open = m.open ?? 0, sm = m.smile, kw = m.skew ?? 0, pr = unit(m.press ?? 0), a = st.asym ?? 0; // a muzzle's mouth is up at the end of it, not a lip gap below: there is no lip to leave room for
+  const sw = st.wide ?? 1, pad = mz ? (NOSES[p.nose.style] ?? NOSES.straight).w * (1 + 1.5 * mz) * (p.nose.width / 20) : 0, w = Math.min(m.width * Math.min(sw * (1 + 0.7 * mz), Math.max(sw, 1 + 0.7 * mz)) * (1 + 0.14 * Math.max(0, sm) - 0.16 * open - 0.08 * pr), mz ? (2 * (pad + MOUTH_PAD_MARGIN)) / mz : Infinity), x1 = 200 - w / 2, x2 = 200 + w / 2; // a smile pulls the corners out, a dropped jaw draws them in, pressed lips go a little narrower; under a muzzle a wide style is no wider than a plain mouth there (T058: wide on top of the muzzle's own widening ran the line past the pad to the cheeks, and off the jaw on a turned head), a small one stays small
   const { lift, ctl } = lipMove(m), yl = m.y + a * 2 - lift + 1.5 * kw, yr = m.y - a * 4 - lift - 7 * kw, qx = 200 - a * 7 + 3 * kw, mid = m.y + ctl, dark = shade(m.color, 0.45); // skew: the +x corner hitched up, the other barely moving
   const yAt = (t) => (1 - t) ** 2 * yl + 2 * t * (1 - t) * mid + t * t * yr; // the parting itself, so the upper lip is built on it however far the corners have gone
   const parted = open > 0.08 || sm > 0.6, inside = open > 0.08 ? mid + 6 + 50 * open : mid + 16 * unit((sm - 0.6) / 0.4), drop = parted ? inside - mid : 0; // a broad smile parts the lips over the teeth; the lower lip's top edge is `inside`
   const upper = `M ${x1} ${yl} Q ${qx} ${mid} ${x2} ${yr}`, out = [ellipse(200, m.y + 11 + 6 * m.fullness + drop * 0.5, w * 0.36, 4.5, { fill: TONE, op: 0.12 }), ellipse(200, m.y + 5 + 5 * m.fullness + drop * 0.5, w * 0.28, 3, { fill: '#fff', op: 0.1 }), ellipse(200, m.y - 9 - lift * 0.5, w * 0.2, 4, { fill: TONE, op: 0.05 })]; // the shadow under the lower lip and the light on it, and the philtrum's shade above, so the mouth sits in a face rather than on it
   // the cheeks a smile pushes up: the apple lit, and the fold from the nose's wing down past the corner; a hitched corner (skew) folds its own side
+  // a hitched corner with no smile behind it is the lip lifted off the teeth on that side, a sneer, not the cheek's pull a smirk is: the upper lip's +x half rises off the parting and the teeth show under it (T042: at skew .5, smile -.3 the mouth was a short tilted line, a stare)
+  const cu = unit(kw / 0.6) * unit((-sm - 0.1) / 0.2), L = 7 * cu, c1 = `${x1 + (2 / 3) * (qx - x1)} ${yl + (2 / 3) * (mid - yl)}`, c2x = x2 + (2 / 3) * (qx - x2), c2y = yr + (2 / 3) * (mid - yr);
+  const lip = cu > 0.02 ? `M ${x1} ${yl} C ${c1} ${c2x} ${c2y - 1.6 * L} ${x2} ${yr}` : upper; // the parting as a cubic, its +x control raised
   const ink = underSkin(p.skin, '#6e4236', 0.55);
-  for (const s of [-1, 1]) { const f = (1 - mz) * Math.min(1, unit((sm - 0.15) / 0.6) + 0.8 * unit((s * kw) / 0.7)), cxr = s > 0 ? x2 : x1, cyr = s > 0 ? yr : yl; if (f < 0.03) continue;
+  for (const s of [-1, 1]) { const f = (1 - mz) * Math.min(1, unit((sm - 0.15) / 0.6) + 0.8 * unit((s * kw) / 0.7) + (s > 0 ? cu : 0)), cxr = s > 0 ? x2 : x1, cyr = s > 0 ? yr : yl; if (f < 0.03) continue;
     out.push(...soft(200 + s * (w * 0.62 + 10), m.y - 30 - 0.4 * lift, 15, 10, '#fff', 0.05 * f), path(`M ${200 + s * (w * 0.36 + 6)} ${m.y - 32} Q ${200 + s * (w * 0.5 + 14)} ${m.y - 14 - lift * 0.4} ${cxr + s * 7} ${cyr + 9}`, stroke(ink, 1.6, 0.5 * f))); }
   // every mouth is two lips, not a line: the upper a bowed lens in shadow, the lower a fuller lens in the light, the parting drawn between them; the style sets how much lip there is, pressed lips have less of it
   const k = (st.thin ? 0.45 : st.full ? 1.5 : 1) * (1 - 0.55 * mz) * (1 - 0.65 * pr), top = (4 + 4 * m.fullness) * k, bot = (6 + 8 * m.fullness) * k, low = parted ? inside : mid;
-  out.push(path(`${upper} Q ${qx + w * 0.26} ${yAt(0.75) - top * 1.15} ${qx} ${yAt(0.5) - (top * 0.55) / (st.bow ?? 1)} Q ${qx - w * 0.26} ${yAt(0.25) - top * 1.15} ${x1} ${yl} Z`, { fill: shade(m.color, 0.82), op: 0.88 }), path(`M ${x1} ${yl} Q ${qx} ${low} ${x2} ${yr} Q ${qx} ${low + bot + (st.pout ?? 0)} ${x1} ${yl} Z`, { fill: shade(m.color, 1.08), op: 0.82 }));
+  out.push(path(`${lip} Q ${qx + w * 0.26} ${yAt(0.75) - top * 1.15 - L} ${qx} ${yAt(0.5) - (top * 0.55) / (st.bow ?? 1)} Q ${qx - w * 0.26} ${yAt(0.25) - top * 1.15} ${x1} ${yl} Z`, { fill: shade(m.color, 0.82), op: 0.88 }), path(`M ${x1} ${yl} Q ${qx} ${low} ${x2} ${yr} Q ${qx} ${low + bot + (st.pout ?? 0)} ${x1} ${yl} Z`, { fill: shade(m.color, 1.08), op: 0.82 }));
+  if (cu > 0.02) out.push(path(`${lip} C ${c2x} ${c2y} ${c1} ${x1} ${yl} Z`, { fill: '#ece4d6', op: 0.92 }), path(lip, stroke(dark, 1.4, 0.8))); // the teeth under the lifted half, between it and the parting
   // the teeth: the band between the two lips, from the parting down (a parted mouth) or the row a broad smile shows
   const rows = TEETH[m.teeth ?? 'even'] ?? TEETH.even, bx1 = x1 + 5, bx2 = x2 - 5, bl = yl + (mid - yl) * 0.15, br = yr + (mid - yr) * 0.15;
   // the band is also the clip: a gap, a crooked edge or a grill's dividers are straight marks across a lens that is
@@ -521,11 +532,13 @@ const CAP = (p) => [path('M 126 163 C 124 121, 150 91, 199 90 C 247 91, 275 121,
 const longBack = (bottom, p) => [path(`M 110 150 C 110 78, 150 60, 200 60 C 250 60, 290 78, 290 150 L 294 ${bottom} Q 294 ${bottom + 20} 274 ${bottom + 20} L 126 ${bottom + 20} Q 106 ${bottom + 20} 106 ${bottom} Z`, { fill: shade(p.hairColor, 0.8) })]; // the sheet of long hair behind the neck and shoulders
 const gloss = (d, sw = 2.1) => path(d, stroke('#fff', sw, 0.09));
 // strands: a fan of fine lines combed from the crown, darker and lighter than the hair by turns, jittered by the seed; clipped to the hair's mass by the caller, so they read as its grain on any style
-// `from` is the crown they fan from, `a0..a1` the fan in radians, `len` how far; a beard combs down from the chin with the same
-const strands =(p, { from = [200, 64], a0 = -0.15, a1 = Math.PI + 0.15, len = 150, n = 22 } = {}) => { const rnd = lcg(p.seed), out = [];
+// `from` is the crown they fan from, `a0..a1` the fan in radians, `len` how far; a beard combs down from the chin with the same.
+// Head hair (`fall`) starts each strand on a ring 40..68 out from the crown in its own direction: started at the one point, the fan met there and read as wireframe spokes on pale hair (T011)
+const strands =(p, { from = [200, 64], a0 = -0.15, a1 = Math.PI + 0.15, len = 150, n = 22, fall = false } = {}) => { const rnd = lcg(p.seed), out = [];
   const dark = 0.16 * (1 - 0.7 * luma(p.hairColor)); // a dark strand on white hair is a crack, so it fades with the hair's lightness
-  for (let i = 0; i < n; i++) { const a = a0 + (i / (n - 1)) * (a1 - a0) + (rnd() - 0.5) * 0.12, l = len + rnd() * len * 0.6, x0 = from[0] + (rnd() - 0.5) * 30, y0 = from[1] + (rnd() - 0.5) * 16, x1 = x0 + Math.cos(a) * l, y1 = y0 + Math.sin(a) * l; // out from the crown, then it falls
-    out.push(path(`M ${x0} ${y0} Q ${x1} ${y1} ${x1 + Math.cos(a) * l * 0.15 + (rnd() - 0.5) * 12} ${y1 + l * 0.8}`, stroke(i % 2 ? '#fff' : '#000', 1 + rnd() * 1.2, i % 2 ? 0.08 : dark))); }
+  for (let i = 0; i < n; i++) { const a = a0 + (i / (n - 1)) * (a1 - a0) + (rnd() - 0.5) * 0.12, l = len + rnd() * len * 0.6, rs = fall ? 40 + (i % 3) * 14 : 0, x0 = from[0] + (rnd() - 0.5) * 30 + Math.cos(a) * rs, y0 = from[1] + (rnd() - 0.5) * 16 + Math.max(Math.sin(a), 0) * rs * 0.6, x1 = x0 + Math.cos(a) * l, y1 = y0 + Math.sin(a) * l; // out from the crown, then it falls
+    const j = (rnd() - 0.5) * 12, r = l * 0.4, sx = x0 + Math.cos(a) * r, sy = y0 + Math.max(Math.sin(a), 0.2) * r, hang = `M ${x0} ${y0} Q ${sx} ${sy - r * 0.35} ${sx + Math.cos(a) * r * 0.2} ${sy + r * 0.3} L ${sx + Math.cos(a) * r * 0.2 + j} ${sy + l * 1.2}`; // head hair: over the skull from the crown, then down under its own weight, not a straight spoke
+    out.push(path(fall ? hang : `M ${x0} ${y0} Q ${x1} ${y1} ${x1 + Math.cos(a) * l * 0.15 + j} ${y1 + l * 0.8}`, stroke(i % 2 ? '#fff' : '#000', 1 + rnd() * 1.2, i % 2 ? 0.08 : dark))); }
   return out; };
 // curls: small arcs scattered over the mass, for hair that has no comb direction
 const curls = (p) => { const rnd = lcg(p.seed + 7), out = [];
@@ -535,8 +548,56 @@ const curls = (p) => { const rnd = lcg(p.seed + 7), out = [];
 const K = 0.5523, ellipsePath = (o) => `M ${o.cx + o.rx} ${o.cy} C ${o.cx + o.rx} ${o.cy + K * o.ry}, ${o.cx + K * o.rx} ${o.cy + o.ry}, ${o.cx} ${o.cy + o.ry} C ${o.cx - K * o.rx} ${o.cy + o.ry}, ${o.cx - o.rx} ${o.cy + K * o.ry}, ${o.cx - o.rx} ${o.cy} C ${o.cx - o.rx} ${o.cy - K * o.ry}, ${o.cx - K * o.rx} ${o.cy - o.ry}, ${o.cx} ${o.cy - o.ry} C ${o.cx + K * o.rx} ${o.cy - o.ry}, ${o.cx + o.rx} ${o.cy - K * o.ry}, ${o.cx + o.rx} ${o.cy} Z`; // an ellipse as a path, so a clip can take it
 // the wreath a head that has lost the top is left with: WREATH is the mass behind the skull, a shade darker as
 // `longBack` is, showing past its sides as the volume hair has; WINGS is the same band's near side, on the head.
-const WREATH = (p) => [path('M 114 174 C 109 204, 117 232, 136 254 L 164 244 C 143 220, 134 196, 135 170 Z', { fill: shade(p.hairColor, 0.88) }), path('M 286 174 C 291 204, 283 232, 264 254 L 236 244 C 257 220, 266 196, 265 170 Z', { fill: shade(p.hairColor, 0.88) })];
-const WINGS = (p) => [path('M 126 154 C 121 172, 122 187, 127 197 C 137 195, 146 187, 150 177 C 153 168, 152 159, 149 152 C 140 148, 131 149, 126 154 Z', { fill: p.hairColor }), path('M 274 154 C 279 172, 278 187, 273 197 C 263 195, 254 187, 250 177 C 247 168, 248 159, 251 152 C 260 148, 269 149, 274 154 Z', { fill: p.hairColor })];
+const WREATH = (p) => [path('M 124 140 C 108 156, 102 196, 108 228 C 113 246, 124 256, 138 258 L 164 244 C 143 220, 134 196, 135 150 Z', { fill: shade(p.hairColor, 0.88) }), path('M 276 140 C 292 156, 298 196, 292 228 C 287 246, 276 256, 262 258 L 236 244 C 257 220, 266 196, 265 150 Z', { fill: shade(p.hairColor, 0.88) })]; // the hair left round the back, a mass the head and the ears stand in front of, showing past the skull from the temple to the nape (T142)
+const WINGS = (p) => [path('M 127 140 C 121 156, 119 180, 121 206 C 124 196, 127 176, 131 150 C 130 146, 129 142, 127 140 Z', { fill: p.hairColor }), path('M 273 140 C 279 156, 281 180, 279 206 C 276 196, 273 176, 269 150 C 270 146, 271 142, 273 140 Z', { fill: p.hairColor })]; // a narrow band on the skull's own edge, let out past the outline so it runs on into the wreath behind: drawn inside the outline as a rounded block, with skin showing beside it, it read as an ear muff (T084)
+// A panel that hangs beside the face is drawn for the default head and follows this one. Below HANG_TOP each point
+// keeps the distance from the face's outline it was drawn at: it moves by how much wider this face's own outline is
+// where the point lands than the default's where it was drawn (fullness, a fuller cheek, the jaw, the skew), and
+// `cut`, the default cut's bottom, is carried down to this face's jaw corner, so the jaw does not come out under a
+// flat cut at the mouth. Then the inner edge, read along its curve, keeps HANG_EYE clear of each eye's outer corner
+// near the eye line (T012), the eyes sitting at their own spacing (not the face's width) and sliding HANG_TURN past
+// the hair per unit of turn (the features 12 x turn, the head and hair 4). In the default frame: `fit` scales it after.
+// Width alone moved the panels, so a full cheek or a broad jaw stood out past and under them, and the hair read as a
+// see-through sheet laid on the face (T113).
+const HANG_TOP = 170, HANG_BLEND = 30, HANG_TURN = 8, HANG_EYE = 12, HANG_OUT = 2;
+const flatten = (d, n = 24) => { const t = tokens(d), out = []; let c = [0, 0], start = c, cmd = 'M';
+  for (let i = 0; i < t.length;) {
+    if (/[MLCQZ]/i.test(t[i])) { cmd = t[i++].toUpperCase(); if (cmd === 'Z') { for (let k = 1; k <= n; k++) out.push([0, 1].map((j) => c[j] + (k / n) * (start[j] - c[j]))); c = start; } continue; }
+    const m = ARGS[cmd], v = t.slice(i, i + m).map(Number); i += m;
+    if (cmd === 'C') for (let k = 1; k <= n; k++) { const u = k / n, w = 1 - u; out.push([0, 1].map((j) => w * w * w * c[j] + 3 * w * w * u * v[j] + 3 * w * u * u * v[2 + j] + u * u * u * v[4 + j])); }
+    else if (cmd === 'Q') for (let k = 1; k <= n; k++) { const u = k / n, w = 1 - u; out.push([0, 1].map((j) => w * w * c[j] + 2 * w * u * v[j] + u * u * v[2 + j])); }
+    else if (cmd === 'L') for (let k = 1; k <= n; k++) out.push([0, 1].map((j) => c[j] + (k / n) * (v[j] - c[j])));
+    else out.push([v[0], v[1]]);
+    c = [v[m - 2], v[m - 1]]; if (cmd === 'M') start = c;
+  }
+  return out; };
+const halfAt = (pts, s, y) => { let w = 0; for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; if (y0 !== y1 && (y0 - y) * (y1 - y) <= 0 && Math.sign(x0 + x1 - 400) === s) w = Math.max(w, Math.abs(x0 + ((x1 - x0) * (y - y0)) / (y1 - y0) - 200)); } return w; };
+const jawYOf = (face) => 112 + face.height - (face.corner ?? 32);
+const hang = (p, ops, cut, edges = true) => { // edges: a front panel, whose edges are measured against the face; a back sheet only follows the outline
+  const ref = DEFAULTS.face, k = p.face.width / 156, turn = p.pose?.turn ?? 0, ey = 112 + ((p.eyes.y - 112) * p.face.height) / 204;
+  const me = flatten(facePath(p)), base = flatten(facePath({ face: ref })), jy = jawYOf(p.face), jr = jawYOf(ref), stretch = cut ? (jy - HANG_TOP) / (cut - HANG_TOP) : 1;
+  const ramp = (y) => unit((y - HANG_TOP + HANG_BLEND) / HANG_BLEND), inside = (x, y, s, need = 0) => y > HANG_TOP - HANG_BLEND && s * (x - 200) > 0 && Math.abs(x - 200) < Math.max(halfAt(me, s, Math.min(y, jy)) / k, need + 1); // the inner edge: inside the face, or short of where it has to be
+  let out = mapPts(ops, (x, y) => { if (y <= HANG_TOP - HANG_BLEND) return [x, y];
+    const y1 = y > HANG_TOP ? HANG_TOP + (y - HANG_TOP) * stretch : y, s = x < 200 ? -1 : 1;
+    return [x + s * ramp(y) * (halfAt(me, s, Math.min(y1, jy)) / k - halfAt(base, s, Math.min(y, jr))), y1]; });
+  if (edges) for (const s of [-1, 1]) {
+    // the outer edge is straight between its points while the cheek bulges between them, and a fuller cheek or one lowered by the skew bulges where no point is: it moves out by what still shows
+    const from = out, lines = from.filter((o) => o.k === 'path').map((o) => flatten(o.d)), bottom = Math.max(...lines.flat().filter(([x]) => s * (x - 200) > 0).map(([, y]) => y)), reach = (y) => Math.max(0, ...lines.map((l) => halfAt(l, s, y)));
+    // and the ear behind it: hair that falls over an ear covers it, so the shell (cx 78 off the middle, 15 x 27 at
+    // ears.size, the near one standing out on a turn) is under the panel too; an ear standing out past the panel's
+    // edge put the hair on the cheek in front of it, a sheet laid on the face (T138)
+    const ek = p.ears?.mode === 'none' ? 0 : p.ears?.size ?? 1, eo = 78 + (s === Math.sign(turn) ? 0 : EAR_TURN_OUT * turn * turn);
+    const ear = (y) => { const v = (y - 212) / (27 * ek); return ek && Math.abs(v) < 1 ? eo + 15 * ek * Math.sqrt(1 - v * v) : 0; };
+    let show = 0; for (let y = HANG_TOP + 40; y <= Math.min(bottom, jy); y += 4) show = Math.max(show, Math.max(halfAt(me, s, y) / k, ear(y)) + HANG_OUT - reach(y));
+    if (show > 0) out = mapPts(from, (x, y) => (y > HANG_TOP - HANG_BLEND && s * (x - 200) > halfAt(me, s, Math.min(y, jy)) / k ? [x + s * show * ramp(y), y] : [x, y]));
+  }
+  if (edges) for (const s of [-1, 1]) {
+    const need = (Math.abs(eyeShape(p, s).xo - 200) + HANG_EYE + HANG_TURN * Math.max(0, s * turn)) / k, from = out, push = (g) => mapPts(from, (x, y) => (inside(x, y, s, need) ? [x + s * g * ramp(y), y] : [x, y]));
+    let g = 0; for (let pass = 0; pass < 4; pass++) { // the edge's curve follows its moved points only part of the way, so the shift is found in a few passes, always from the same points
+      const near = out.filter((o) => o.k === 'path').flatMap((o) => flatten(o.d)).filter(([x, y]) => Math.abs(y - ey) <= 25 && s * (x - 200) > 0 && s * (x - 200) < need + 1 + g), gap = near.length ? need - Math.min(...near.map(([x]) => s * (x - 200))) : 0;
+      if (gap <= 0.05) break; g += gap; out = push(g); }
+  }
+  return out; };
 const HAIR_TEXTURE = { curlyMedium: 'curls', afroShort: 'curls', afroMedium: 'curls', locsShort: 'none', boxBraids: 'none', cornrows: 'none', shortMohawk: 'none' }; // the grain each style takes; unlisted styles are combed strands
 export const HAIR = {
   bald: () => [],
@@ -553,19 +614,24 @@ export const HAIR = {
   afroShort: { back: (p) => [ellipse(200, 110, 84, 63, { fill: p.hairColor }), ellipse(135, 125, 28, 39, { fill: p.hairColor }), ellipse(265, 125, 28, 39, { fill: p.hairColor })], front: CAP },
   afroMedium: { back: (p) => [ellipse(200, 103, 96, 72, { fill: p.hairColor }), ellipse(120, 134, 33, 45, { fill: p.hairColor }), ellipse(280, 134, 33, 45, { fill: p.hairColor })], front: CAP },
   pixie: (p) => [path('M 129 165 C 118 125, 131 96, 154 82 C 172 71, 198 71, 216 75 C 246 81, 270 104, 271 158 C 257 147, 249 134, 240 126 C 220 117, 198 115, 180 120 C 160 124, 144 136, 129 165 Z', { fill: p.hairColor }), gloss('M 172 83 Q 187 70 198 86', 2), gloss('M 199 79 Q 215 69 226 87', 2)],
-  bob: { back: (p) => longBack(240, p), front: (p) => [path('M 118 171 C 108 126, 121 90, 151 76 C 177 64, 223 64, 249 76 C 279 90, 292 126, 282 171 L 272 246 C 256 236, 250 211, 248 183 C 245 145, 228 117, 200 112 C 172 117, 155 145, 152 183 C 150 211, 144 236, 128 246 Z', { fill: p.hairColor })] },
-  bluntBob: { back: (p) => longBack(240, p), front: (p) => [path('M 116 170 C 108 121, 124 86, 154 73 C 178 62, 222 62, 246 73 C 276 86, 292 121, 284 170 L 272 245 L 243 245 C 248 210, 247 166, 236 140 C 221 112, 179 112, 164 140 C 153 166, 152 210, 157 245 L 128 245 Z', { fill: p.hairColor })] },
-  longStraight: { back: (p) => longBack(350, p), front: (p) => [path('M 114 178 C 103 125, 120 84, 151 70 C 177 58, 223 58, 249 70 C 280 84, 297 125, 286 178 L 299 355 L 259 355 C 264 285, 259 220, 247 171 C 239 140, 223 120, 200 118 C 177 120, 161 140, 153 171 C 141 220, 136 285, 141 355 L 101 355 Z', { fill: p.hairColor })] },
+  bob: { back: (p) => hang(p, [path('M 118 160 C 114 100, 152 66, 200 66 C 248 66, 286 100, 282 160 L 285 244 L 115 244 Z', { fill: shade(p.hairColor, 0.8) })], 248, false), front: (p) => hang(p, [path('M 118 171 C 108 126, 121 90, 151 76 C 177 64, 223 64, 249 76 C 279 90, 292 126, 282 171 L 288 248 C 281 252, 274 251, 267 246 C 268 222, 268 204, 268 183 C 266 148, 236 117, 200 112 C 164 117, 134 148, 132 183 C 132 204, 132 222, 133 246 C 126 251, 119 252, 112 248 Z', { fill: p.hairColor })], 248) }, // a hanging panel's inner edge stays outside the eyes' outer corners (x 132 at the eye line) and its outer edge outside the face's widest (x 112 at the jaw): cut nearer the middle and narrowing to a point it lay across the cheek with the face's edge showing past it, which read as a see-through sheet over the face (T022). The back is its own, inside the front's outline, as bluntBob's is (T068): the shared longBack stood out round a pale bob as a grey rim, blinkers off the head (T120)
+  bluntBob: { back: (p) => hang(p, [path('M 118 160 C 114 100, 152 66, 200 66 C 248 66, 286 100, 282 160 L 281 244 L 119 244 Z', { fill: shade(p.hairColor, 0.8) })], 248, false), front: (p) => hang(p, [path('M 112 170 C 104 121, 122 84, 154 72 C 178 62, 222 62, 246 72 C 278 84, 296 121, 288 170 L 284 248 L 254 248 C 262 214, 262 172, 250 144 C 234 114, 166 114, 150 144 C 138 172, 138 214, 146 248 L 116 248 Z', { fill: p.hairColor })], 248) }, // the panels hang beside the face, their inner edge outside the eyes' outer corners: cut nearer the middle they laid a slab of hair across the cheeks and eyes (T012). The back is the blunt cut's own, inside the front's outline: the shared longBack is wider and longer than these panels, so it stood out round every edge as a darker rim and the panels read as see-through sheets laid on the face (T068)
+  longStraight: { back: (p) => hang(p, longBack(350, p), null, false), front: (p) => hang(p, [path('M 114 178 C 103 125, 120 84, 151 70 C 177 58, 223 58, 249 70 C 280 84, 297 125, 286 178 L 299 355 L 259 355 C 266 285, 268 222, 268 183 C 266 146, 234 120, 200 118 C 166 120, 134 146, 132 183 C 132 222, 134 285, 141 355 L 101 355 Z', { fill: p.hairColor })]) }, // the same panel rule as bob's (T022)
   ponytailLow: { back: (p) => [path('M 254 139 C 292 150, 303 195, 284 229 C 273 248, 260 257, 249 264 C 263 221, 261 176, 254 139 Z', { fill: p.hairColor })], front: (p) => [path('M 122 168 C 116 124, 128 93, 154 78 C 179 64, 221 64, 246 78 C 272 93, 284 124, 278 168 C 258 140, 234 122, 200 120 C 166 122, 142 140, 122 168 Z', { fill: p.hairColor })] },
   highBun: { back: (p) => [ellipse(200, 54, 36, 31, { fill: p.hairColor })], front: (p) => [path('M 121 168 C 117 124, 129 92, 155 78 C 179 66, 221 66, 245 78 C 271 92, 283 124, 279 168 C 259 139, 235 122, 200 120 C 165 122, 141 139, 121 168 Z', { fill: p.hairColor })] },
   lowBun: { back: (p) => [ellipse(268, 171, 29, 31, { fill: p.hairColor })], front: (p) => [path('M 122 169 C 118 125, 130 93, 155 78 C 179 64, 221 64, 245 78 C 270 93, 282 125, 278 169 C 258 140, 234 122, 200 120 C 166 122, 142 140, 122 169 Z', { fill: p.hairColor })] },
-  locsShort: { back: (p) => [[135, 96, 126, 167], [151, 82, 145, 176], [169, 74, 165, 179], [187, 70, 184, 175], [205, 69, 205, 179], [223, 72, 225, 177], [241, 80, 247, 176], [257, 94, 270, 168]].map(([x1, y1, x2, y2]) => path(`M ${x1} ${y1} Q ${(x1 + x2) / 2 + 6} ${(y1 + y2) / 2} ${x2} ${y2}`, stroke(p.hairColor, 11))), front: CAP },
-  boxBraids: { back: (p) => [130, 142, 155, 169, 184, 216, 231, 245, 258, 270].flatMap((x) => { const s = x < 200 ? -1 : 1, x1 = x - 12 * s, y0 = 150, y1 = 322; return [line(x, y0, x1, y1, stroke(p.hairColor, 7)), ...Array.from({ length: 10 }, (_, i) => { const t = 0.2 + i * 0.08, bx = x + (x1 - x) * t, by = y0 + (y1 - y0) * t; return line(bx - 3, by - 2 * s, bx + 3, by + 2 * s, stroke('#fff', 2, 0.12)); })]; }), front: (p) => [...CAP(p), ...[-40, -14, 14, 40].map((d) => path(`M ${200 + d} 92 Q ${200 + d * 1.3} 120 ${200 + d * 1.6} 150`, stroke(p.skin, 1.6, 0.5)))] }, // a braided cap parted into sections, the braids starting under its edge and falling in toward the neck (none hangs out beside the head), each knotted along its length
+  // the locs lie on the cap, rooted at the crown and falling over it to the hairline, each one edged in its own shade
+  // so the rope reads: columns standing up off the crown behind the head with their round tips in a row read as a
+  // comb or a crown (T122)
+  locsShort: (p) => { const top = (x) => 90 + 73 * ((x - 200) / 74) ** 2, line = (x) => 128 + 35 * ((x - 200) / 74) ** 2;
+    const locs = [-70, -56, -42, -28, -14, 0, 14, 28, 42, 56, 70].map((d) => { const rx = 200 + d * 0.5, ry = top(rx) + 8, tx = 200 + d * 1.08, ty = line(tx) + 8; return `M ${rx} ${ry} Q ${(rx + tx) / 2 + d * 0.15} ${(ry + ty) / 2 - 4} ${tx} ${ty}`; });
+    return [...CAP(p), ...locs.map((d) => path(d, stroke(shade(p.hairColor, 0.62), 11))), ...locs.map((d) => path(d, stroke(p.hairColor, 7.5)))]; },
+  boxBraids: { back: (p) => { const hw = p.face.width / 2; return [-1, 1].flatMap((s) => [-2, 6, 14, 22].flatMap((o) => { const x0 = 200 + s * (hw - 20), y0 = 118, xm = 200 + s * (hw + o), ym = 210, x1 = xm + s * 4, y1 = 340, at = (t, a, b, c) => (1 - t) ** 2 * a + 2 * t * (1 - t) * b + t * t * c; return [path(`M ${x0} ${y0} Q ${xm} ${ym} ${x1} ${y1}`, stroke(p.hairColor, 7)), ...Array.from({ length: 10 }, (_, i) => { const t = 0.2 + i * 0.08, bx = at(t, x0, xm, x1), by = at(t, y0, ym, y1); return line(bx - 3, by - 2 * s, bx + 3, by + 2 * s, stroke('#fff', 2, 0.12)); })]; })); }, front: (p) => [...CAP(p), ...[-40, -14, 14, 40].map((d) => path(`M ${200 + d} 92 Q ${200 + d * 1.3} 120 ${200 + d * 1.6} 150`, stroke(p.skin, 1.6, 0.5)))] }, // a braided cap parted into sections, the braids starting behind the skull and falling beside the face from the temples, so each is seen joined to the head (T021: started inside the face's outline they showed only past the jaw, sticks attached to nothing), each knotted along its length
   // rows braided flat to the scalp, parted to the skin between them, each knotted along its length: a cap with the head's own partings showing, nothing hanging
   cornrows: (p) => [...CAP(p), ...[-60, -47, -34, -21, -8, 5, 18, 31, 44, 56].flatMap((d) => { const x0 = 200 + d * 0.58, x1 = 200 + d * 1.2; return [path(`M ${x0} 94 Q ${(x0 + x1) / 2} 124 ${x1} 158`, stroke(p.skin, 1.3, 0.4)), ...[0.25, 0.55, 0.8].map((t) => line(x0 + (x1 - x0) * t - 2, 94 + 64 * t, x0 + (x1 - x0) * t + 2, 94 + 64 * t + 1.5, stroke('#fff', 1.4, 0.1)))]; })],
   // shaved to the skin either side of a crest standing off the crown: the crest is the whole style, so a hat sits on the skull
   shortMohawk: (p) => [path('M 183 138 C 177 114, 181 86, 200 76 C 219 86, 223 114, 217 138 Z', { fill: p.hairColor }), gloss('M 192 132 C 190 112, 192 94, 199 82', 2.2), gloss('M 208 134 C 210 114, 208 96, 202 84', 1.8)],
-  receding: (p) => [path('M 127 163 C 126 125, 140 104, 166 98 C 172 112, 184 118, 200 114 C 216 118, 228 112, 234 98 C 260 104, 274 125, 273 163 C 251 139, 228 129, 200 129 C 172 129, 149 139, 127 163 Z', { fill: p.hairColor })], // the crown bare between two low tufts that follow the skull (tall narrow tufts read as horns on a narrow head)
+  receding: (p) => [path('M 127 163 C 125 121, 150 91, 199 90 C 248 91, 275 121, 273 163 C 266 148, 250 134, 236 126 C 232 118, 226 116, 216 118 C 210 120, 205 126, 200 133 C 195 126, 190 120, 184 118 C 174 116, 168 118, 164 126 C 150 134, 134 148, 127 163 Z', { fill: p.hairColor })], // past the widowsPeak: the temples gone deep up the dome to a thin forelock, the top edge the skull's own (a notch in the top made two tufts that read as cat ears, T055)
   // the rest of the way bald, in the order it goes: the temples first (widowsPeak), then the top (horseshoe, with
   // combOver over it), and the whole head shaved down to the shadow hair leaves (shavedHead). A head that has lost
   // the top is the one case that needs the mass drawn behind the skull as well: the wreath is hair with a head in
@@ -576,6 +642,7 @@ export const HAIR = {
   shavedHead: (p) => CAP(p).map((o) => ({ ...o, op: 0.34 })), // shaved to the skin: the hair is only the shadow it leaves where it grows
 };
 export const HAIR_STYLES = Object.keys(HAIR);
+const ON_SKIN = ['shavedHead']; // styles that are only a shadow on the scalp: clipped to the head's outline, or the cap's fitted crown stands clear above a flat-topped skull as a halo (T008)
 export const LONG_HAIR = ['bob', 'bluntBob', 'longStraight']; // the styles that hang past the jaw: never on a long oval head, which they stretch further
 const hairOf = (p) => { const r = HAIR[p.hair.style] ?? HAIR.sidePart; return typeof r === 'function' ? { back: [], front: r(p) } : { back: r.back(p), front: r.front(p) }; };
 
@@ -583,13 +650,22 @@ const hairOf = (p) => { const r = HAIR[p.hair.style] ?? HAIR.sidePart; return ty
 // ear, down the cheek, under the mouth's corners and the lower lip) cut to this face's own outline let out a little
 // (`hull`: wider at the jaw, longer under the chin), so a beard on a square jaw is square and one on a narrow chin is
 // narrow. Drawn in the face's real coordinates (the eye line, the mouth), not fitted from a default beard.
-const hull = (p, chin) => { const ey = p.eyes.y, bot = 112 + p.face.height + 16 * p.face.chin; return mapXY([path(facePath(p))], scaleAbout(200, 1.03), (y) => ey + (y - ey) * (1 + chin / (bot - ey)))[0].d; }; // the outline let out: the chin pushed down by `chin`, the jaw with it
+// The beard's own silhouette, not the face's: the head's sides down to the cheekbone, then one curve each side out
+// over the jaw's corner and round under the chin, `chin` below it. A copy of the face outline let out kept the face's
+// straight cheek-to-jaw side, its corner and its flat chin, so every beard was a straight-sided box (T062).
+const hull = (p, chin) => { const hw = (p.face.width / 2) * 1.03, ey = p.eyes.y, jawY = 112 + p.face.height - (p.face.corner ?? 32), jx = (p.face.width / 2) * p.face.jaw * 0.94 * 1.1, B = 112 + p.face.height + 16 * p.face.chin + chin;
+  return `M ${200 - hw} ${ey - 20} L ${200 + hw} ${ey - 20} L ${200 + hw} 216 C ${200 + jx} ${jawY + 20}, ${200 + hw * 0.35} ${B}, 200 ${B} C ${200 - hw * 0.35} ${B}, ${200 - jx} ${jawY + 20}, ${200 - hw} 216 Z`; };
 // top: the sideburn's y under the eye line; cheek: how far in from the outline the beard line runs (0..1 of the half width); lip: how far under the lower lip the beard starts; chin: how far the mass hangs past the chin; sharp: a straight, barbered line; width: how far out the band reaches (1 past the face, less for a beard that leaves the jaw's sides bare and sits round the mouth)
 function beardBand(p, { top = 26, cheek = 0.1, lip = 9, chin = 6, sharp = false, op = 1, width = 1 } = {}) {
   const w = p.face.width / 2, ey = p.eyes.y, my = p.mouth.y, mw = p.mouth.width / 2, x0 = 200 - (w + 30) * width, x1 = 200 + (w + 30) * width, ya = ey + top, cx = Math.min(w * (1 - cheek), (w + 30) * width), c2 = w * 0.44; // c2: how tightly the beard line closes on the mouth. Swung wide it leaves the mouth sitting on a bare island in the middle of the beard, which is what a beard never looks like
+  // A barbered line (sharp) runs straight from the sideburn to the mouth's corner, and a narrow beard (width under 1)
+  // leaves the cheek sloping from its outer edge and rounds its sides in under the chin: a level run across the cheek
+  // and straight sides down to the bottom of the sheet were a box over the lower face (T136). A full beard keeps its line.
+  const narrow = width < 1, ys = narrow ? ya + (my - ya) * 0.5 : ya, yb = narrow ? ys + (my - ys) * 0.5 : ya, cb = 112 + p.face.height + 16 * p.face.chin + chin;
+  const sides = narrow ? `C ${x1} ${ys + (cb - ys) * 0.7}, ${200 + (x1 - 200) * 0.55} ${cb}, 200 ${cb} C ${200 - (200 - x0) * 0.55} ${cb}, ${x0} ${ys + (cb - ys) * 0.7}, ${x0} ${ys} Z` : `L ${x1} 700 L ${x0} 700 Z`;
   const band = sharp
-    ? `M ${x0} ${ya} L ${200 - cx} ${ya} L ${200 - mw} ${my + lip * 0.25} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.25} L ${200 + cx} ${ya} L ${x1} ${ya} L ${x1} 700 L ${x0} 700 Z`
-    : `M ${x0} ${ya} C ${200 - cx} ${ya}, ${200 - c2} ${my - 6}, ${200 - mw} ${my + lip * 0.25} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.25} C ${200 + c2} ${my - 6}, ${200 + cx} ${ya}, ${x1} ${ya} L ${x1} 700 L ${x0} 700 Z`;
+    ? `M ${x0} ${ys} L ${Math.max(x0, 200 - w)} ${ys} L ${200 - mw} ${my + lip * 0.25} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.25} L ${Math.min(x1, 200 + w)} ${ys} L ${x1} ${ys} ${sides}`
+    : `M ${x0} ${ys} C ${200 - cx} ${yb}, ${200 - c2} ${my - 6}, ${200 - mw} ${my + lip * 0.25} Q 200 ${my + lip} ${200 + mw} ${my + lip * 0.25} C ${200 + c2} ${my - 6}, ${200 + cx} ${yb}, ${x1} ${ys} ${sides}`;
   return [clip(hull(p, chin)), path(band, { fill: p.hairColor, op }), ...(op >= 0.5 ? [clip(band), ...strands(p, { from: [200, my + 10], a0: 0.4, a1: Math.PI - 0.4, len: 55, n: 16 }), UNCLIP] : []), UNCLIP]; // a stubble is a wash with no grain
 }
 const onMouth = (p, ops) => mapXY(ops, scaleAbout(200, p.mouth.width / 48), (y) => y + p.mouth.y - 260); // ops drawn for the default mouth (48 wide on the line 260) follow this one
@@ -607,7 +683,7 @@ export const LIP_PULL = 1, BEARD_PULL = 0.55;
 export const MUSTACHES = {
   chevron: { d: 'M 175 252 C 184 243, 194 245, 200 251 C 206 245, 216 243, 225 252 C 216 254, 207 260, 200 258 C 193 260, 184 254, 175 252 Z' },
   walrus: { d: 'M 166 246 C 179 240, 192 244, 200 249 C 208 244, 221 240, 234 246 C 236 253, 231 259, 222 260 C 212 260, 206 257, 200 256 C 194 257, 188 260, 178 260 C 169 259, 164 253, 166 246 Z', w: 1.3 },
-  handlebar: { d: 'M 168 246 C 164 239, 171 237, 175 244 C 180 250, 188 253, 195 254 C 197 252, 203 252, 205 254 C 212 253, 220 250, 225 244 C 229 237, 236 239, 232 246 C 227 256, 212 260, 203 258 L 197 258 C 188 260, 173 256, 168 246 Z', w: 1.35 },
+  handlebar: { d: 'M 172 245 C 168.5 238, 175 236, 177.5 242 C 181 247, 187.5 246, 193 245 C 196.5 244, 199 246, 200 248 C 201 246, 203.5 244, 207 245 C 212.5 246, 219 247, 222.5 242 C 225 236, 231.5 238, 228 245 C 223.5 255, 211 260, 203 259 L 197 259 C 189 260, 176.5 255, 172 245 Z' }, // a body as full as the chevron's on the lip, only its ends past the corners and turned up; drawn 56 wide, so no `w` over it (T001: a thin 64-wide bar scaled again by 1.35 was a stripe twice the mouth, clear of the lip)
   pencil: { d: 'M 180 253 C 188 250, 194 251, 200 253 C 206 251, 212 250, 220 253 C 212 258, 206 256, 200 255 C 194 256, 188 258, 180 253 Z', w: 0.86 },
   horseshoe: { d: 'M 172 246 C 182 242, 193 245, 200 250 C 207 245, 218 242, 228 246 C 231 252, 230 258, 227 260 C 224 254, 220 251, 214 250 C 208 250, 205 253, 200 254 C 195 253, 192 250, 186 250 C 180 251, 176 254, 173 260 C 170 258, 169 252, 172 246 Z', w: 1.2 },
 };
@@ -637,6 +713,11 @@ const mustache = (p, pull = LIP_PULL, op = 1, style = 'chevron') => {
 };
 // Each style is the band's shape and whether it carries a moustache; `facialHair`'s own dials (color, density,
 // mustache, cheekLine) go over it, so the gap between a stubble and a beard is a number and not a missing style.
+// The chin patch (goatee, vanDyke), drawn for the default mouth (48 wide on the line 260) and clipped to the chin: a tuft under the lip that fills out over the chin and tapers to it, curved sides, not a straight-sided box (T052)
+// It is sized by the chin it covers, the face's width, not by the mouth: a patch as narrow as a small mouth hung from the lip as a tongue (T123)
+// Its foot is the chin's own: the patch runs on past the chin and the clip to the face's outline (no overhang) is its bottom edge, so it covers the chin. A rounded foot of its own, narrow at the lip and hanging past the chin, was a tongue out of the mouth (T188)
+const CHIN_PATCH = 'M 189 271 Q 200 274 211 271 Q 226 280 230 300 Q 232 318 232 360 Q 200 372 168 360 Q 168 318 170 300 Q 174 280 189 271 Z';
+const chinPatch = (q) => { const [patch] = mapXY([path(CHIN_PATCH, { fill: q.hairColor })], scaleAbout(200, q.face.width / 156), (y) => y + q.mouth.y - 260); return [clip(hull(q, 0)), patch, clip(patch.d), ...strands(q, { from: [200, q.mouth.y + 8], a0: 1.25, a1: Math.PI - 1.25, len: 34, n: 7 }), UNCLIP, UNCLIP]; }; // the grain the full beard has, so the patch reads as hair
 const BEARDS = {
   none: null,
   lightStubble: { op: 0.09, chin: 0, stubble: true, stache: true, stacheStyle: 'walrus' }, // a shadow of hair grows on the upper lip as well: a stubble with a shaved moustache is a choice, not the default (facialHair.mustache 0 makes it one) // a stubble is a shadow of hair, so it is never lighter than the skin: pale hair is pulled toward dark for it
@@ -654,6 +735,14 @@ const BEARDS = {
   stubbleStache: { op: 0.22, chin: 0, stubble: true, stache: true, pull: LIP_PULL, stacheStyle: 'horseshoe', stacheOp: 1 }, // the one the other way round: the beard is a shadow and the moustache is grown out, at its own full weight // a shadow of a beard with a real moustache standing in it
   pencilStache: { band: false, stache: true, pull: LIP_PULL, stacheStyle: 'pencil' },
 };
+/** A beard with a density: sparse on the cheeks and full from the mouth down, so the band is laid in four steps from
+ *  its cheek line to the mouth, the first at the dial's weight and the last solid, and its top edge fades in rather
+ *  than standing as one hard line across the face. */
+// The cheek is FADE thin layers, each a little lower and each so light that together they build to `cheek` at the mouth: four steps at .3 to .6 each stood a hard line high on the cheek and left a see-through sheet under it, a mask over the lower face (T215)
+const FADE = 8;
+// and from the mouth to the solid mass in four more, so the step to solid is no level line across the mouth either
+const thinBeard = (q, band, top, mouth, cheek) => { const m = Math.max(top, mouth), a = 1 - (1 - cheek) ** (1 / FADE), b = 1 - Math.min(1, 0.04 / (1 - cheek)) ** (1 / 4);
+  return [...Array.from({ length: FADE }, (_, i) => [top + ((m - top) * i) / FADE, a]), ...Array.from({ length: 4 }, (_, i) => [m + 4 * i, b]), [m + 16, 1]].flatMap(([t, op]) => beardBand(q, { ...band, top: t, op })); };
 /** One style's ops with the character's own dials applied: a density anywhere between a wash and a mass, a beard colour of its own, a moustache added or dropped, and how high the mass climbs the cheek. */
 export function beardOps(p, spec) { // exported for a pack that registers a beard of its own (parts/dwarf.mjs): a spec shaped like a BEARDS entry
   if (!spec) return [];
@@ -663,16 +752,28 @@ export function beardOps(p, spec) { // exported for a pack that registers a bear
   // shows the mouth and the cheek's planes through itself, which reads as a stain and not as a thin beard, and on a
   // pale-haired face it is a dark smudge whichever way the hair goes. The two stubble styles keep their wash when no
   // density is asked for, since a stubble with no dial on it is a shadow of hair and drawn as one.
-  const fill = d == null ? (spec.stubble ? mix(color, '#3a2a24', 0.45) : color) : mix(p.skin, color, 0.35 + 0.65 * d);
+  // A stubble with a density builds up toward a short beard: the hair's own colour, its weight growing with the dial
+  // and its grain coming in once it is past a wash. It is never tinted toward the skin and never opaque, the skin and
+  // the jaw always showing through: an opaque skin-tinted band read as a tan sheet on pale hair and a solid mask on
+  // black (T132). The calibration face (heavyStubble at 0.42, the user's own likeness) is this short beard.
+  // A beard with a density is the hair's own colour, never tinted toward the skin: an opaque skin-tinted band was a
+  // pale sheet with a hard top edge across the cheeks (T192). Thin hair is sparse on the cheeks and full on the jaw and
+  // chin, so the band over the cheeks takes the dial's weight and the mass from the mouth down is solid.
+  const thin = !spec.stubble && d != null, band = { cheek: spec.cheek, lip: spec.lip, chin: spec.chin, sharp: spec.sharp, width: spec.width };
+  // A stubble is a shadow of hair, so it never lightens the skin it grows on: hair paler than the skin, washed over it at a stubble's weight, was a pale sheet from cheek to cheek on a dark face (T187, T197), so it is drawn as the skin's own shadow
+  const fill = spec.stubble ? (luma(color) > luma(p.skin) ? shade(p.skin, 0.62) : d == null ? mix(color, '#3a2a24', 0.45) : color) : color;
   const q = { ...p, hairColor: fill };
-  const op = d == null ? spec.op ?? 1 : 1;
+  const op = spec.stubble ? (d == null ? spec.op : Math.min(0.72, spec.op + d)) : d == null ? spec.op ?? 1 : 1;
+  // A built-up stubble's moustache and mouth corners overlap the band: drawn at its weight they doubled it into dark
+  // patches, so they are drawn solid in the colour the band shows over the skin, and meet it without a seam.
+  const builtUp = spec.stubble && d != null, built = builtUp ? { ...p, hairColor: mix(p.skin, fill, op) } : q, builtOp = builtUp ? 1 : op;
   const top = f.cheekLine == null ? spec.top : 46 - 32 * unit(f.cheekLine); // 0: a beard line low on the jaw; 1: up to the cheekbone
   const stache = f.mustache == null ? !!spec.stache : !!f.mustache, stacheStyle = f.mustacheStyle ?? spec.stacheStyle ?? 'chevron'; // the style's own moustache, or the one this face asks for over it
   return [
-    ...(spec.band === false ? [] : beardBand(q, { top, cheek: spec.cheek, lip: spec.lip, chin: spec.chin, sharp: spec.sharp, width: spec.width, op })),
-    ...(spec.chinPatch ? [clip(hull(q, 8)), ...onMouth(q, [path('M 184 271 Q 200 282 216 271 L 211 313 Q 200 321 189 313 Z', { fill: q.hairColor })]), UNCLIP] : []),
-    ...(stache && spec.band !== false ? stacheJoin(q, stacheStyle, spec.lip ?? 14, op) : []), // the corners of the mouth, so the moustache and the mass under it are one beard
-    ...(stache ? mustache(q, spec.pull ?? (spec.band === false ? LIP_PULL : BEARD_PULL), spec.stacheOp ?? op, stacheStyle) : []), // the moustache is the same hair: the beard's colour and the beard's weight
+    ...(spec.band === false ? [] : thin ? thinBeard(q, band, top, p.mouth.y - p.eyes.y, 0.3 + 0.7 * d) : beardBand(q, { ...band, top, op })),
+    ...(spec.chinPatch ? chinPatch(q) : []),
+    ...(stache && spec.band !== false ? stacheJoin(built, stacheStyle, spec.lip ?? 14, builtOp) : []), // the corners of the mouth, so the moustache and the mass under it are one beard
+    ...(stache ? mustache(spec.stacheOp == null ? built : q, spec.pull ?? (spec.band === false ? LIP_PULL : BEARD_PULL), spec.stacheOp ?? builtOp, stacheStyle) : []), // the moustache is the same hair: the beard's colour and the beard's weight
   ];
 }
 export const FACIAL_HAIR = Object.fromEntries(Object.entries(BEARDS).map(([name, spec]) => [name, (p) => beardOps(p, spec)]));
@@ -691,17 +792,22 @@ export const GLASSES = {
 export const GLASSES_STYLES = Object.keys(GLASSES);
 const glasses = (p) => (p.glasses ? mapXY((GLASSES[p.glasses.style] ?? GLASSES.rectangularThin)(p.glasses.color ?? '#2b2927'), scaleAbout(200, p.eyes.spacing / 68), (y) => y + p.eyes.y - 196) : []);
 
+const dy = (d, k) => mapXY([path(d)], (x) => x, (y) => y + k)[0].d;
+/** A cap's peak in the accent: dark (seam shadow and underside), then the lit middle cut between the two edges. */
+const capPeak = (d, p) => [path(d, { fill: mix(shade(p.hat.accent, 0.7), p.hat.color, 0.35) }), clip(d), clip(dy(d, -2)), path(dy(d, 2.5), { fill: p.hat.accent }), UNCLIP, UNCLIP];
 export const HATS = {
   none: () => [],
-  baseballCap: (p) => [path('M 127 137 C 128 92, 157 70, 197 70 C 237 70, 264 94, 269 137 Z', { fill: p.hat.color }), path('M 190 126 C 239 122, 275 127, 309 142 C 276 146, 238 144, 198 139 Z', { fill: p.hat.accent }), line(196, 72, 196, 126, stroke('#fff', 2, 0.08))],
-  dadCap: (p) => [path('M 128 137 C 130 96, 158 76, 198 76 C 238 76, 263 97, 268 137 C 240 130, 175 130, 128 137 Z', { fill: p.hat.color }), path('M 193 127 C 229 124, 258 129, 283 139 C 250 142, 220 141, 192 137 Z', { fill: p.hat.accent })],
-  snapback: (p) => [path('M 125 137 L 132 91 Q 198 66 266 91 L 272 137 Z', { fill: p.hat.color }), path('M 193 125 C 243 122, 279 128, 313 141 C 274 144, 236 143, 196 139 Z', { fill: p.hat.accent })],
+  // a cap's peak is modelled cloth, not a flat blade: the crown's seam shades its top edge and its thickness darkens the
+  // underside, so a peak in the accent colour reads as stitched on rather than pasted over the crown
+  baseballCap: (p) => [path('M 127 137 C 128 92, 157 70, 197 70 C 237 70, 264 94, 269 137 Z', { fill: p.hat.color }), ...capPeak('M 128 133 C 180 125, 262 124, 309 142 C 276 147, 236 145, 200 141 C 172 140, 148 139, 128 138 Z', p), line(196, 72, 196, 126, stroke('#fff', 2, 0.08)), ellipse(197, 72, 6, 3, { fill: p.hat.accent })],
+  dadCap: (p) => [path('M 128 137 C 130 96, 158 76, 198 76 C 238 76, 263 97, 268 137 C 240 130, 175 130, 128 137 Z', { fill: p.hat.color }), ...capPeak('M 130 134 C 175 127, 240 126, 283 139 C 250 143, 220 142, 195 139 C 170 138, 148 138, 130 138 Z', p)],
+  snapback: (p) => [path('M 125 137 L 132 91 Q 198 66 266 91 L 272 137 Z', { fill: p.hat.color }), ...capPeak('M 126 133 C 180 125, 262 123, 313 141 C 274 145, 236 144, 200 141 C 172 140, 148 139, 126 138 Z', p)],
   truckerCap: (p) => [path('M 126 137 L 134 89 Q 172 72 198 74 L 198 133 Z', { fill: p.hat.color }), path('M 198 74 Q 246 72 267 93 L 272 137 L 198 133 Z', { fill: p.hat.accent, op: 0.7 }), path('M 192 126 C 241 122, 280 127, 313 142 C 276 145, 236 144, 194 138 Z', { fill: p.hat.color })],
   beanie: (p) => [path('M 123 137 C 127 79, 158 52, 200 52 C 242 52, 273 79, 277 137 Z', { fill: p.hat.color }), path('M 119 129 Q 200 113 281 129 L 278 154 Q 200 138 122 154 Z', { fill: p.hat.accent })],
   cuffedBeanie: (p) => [path('M 128 132 C 130 80, 158 56, 200 56 C 242 56, 270 80, 272 132 Z', { fill: p.hat.color }), rect(120, 124, 160, 32, { rx: 9, fill: p.hat.accent })],
   fishermanBeanie: (p) => [path('M 133 125 C 137 89, 159 69, 200 69 C 241 69, 263 89, 267 125 Z', { fill: p.hat.color }), rect(129, 118, 142, 24, { rx: 7, fill: p.hat.accent })],
   bucketHat: (p) => [path('M 138 108 Q 200 77 262 108 L 272 141 Q 200 125 128 141 Z', { fill: p.hat.color }), path('M 88 139 Q 200 121 312 139 Q 200 170 88 139 Z', { fill: p.hat.accent }), path('M 104 146 Q 200 168 296 146', stroke('#000', 4, 0.12))],
-  flatCap: (p) => [path('M 122 127 C 138 86, 171 73, 215 78 C 245 81, 267 95, 277 118 L 268 134 Q 200 123 122 134 Z', { fill: p.hat.color }), path('M 184 126 Q 248 119 289 132 Q 242 139 185 137 Z', { fill: p.hat.accent })],
+  flatCap: (p) => [path('M 122 127 C 138 86, 171 73, 215 78 C 245 81, 267 95, 277 118 L 268 134 Q 200 123 122 134 Z', { fill: p.hat.color }), ...capPeak('M 123 131 Q 200 121 289 132 Q 242 139 200 137 Q 160 136 123 135 Z', p)],
   wideBrimFelt: (p) => [path('M 142 112 L 151 68 Q 200 50 249 68 L 258 112 Z', { fill: p.hat.color }), rect(146, 98, 108, 14, { rx: 3, fill: p.hat.accent }), path('M 74 118 Q 200 100 326 118 Q 200 150 74 118 Z', { fill: p.hat.color }), path('M 90 124 Q 200 148 310 124', stroke('#000', 4, 0.14))], // the brim seen from a little above: its front edge dips, and its underside is in shade
   cowboy: (p) => [path('M 145 115 L 155 62 Q 200 42 245 62 L 255 115 Z', { fill: p.hat.color }), path('M 90 119 C 119 128, 148 117, 170 113 L 230 113 C 252 117, 281 128, 310 119 C 292 145, 251 142, 200 136 C 149 142, 108 145, 90 119 Z', { fill: p.hat.color }), rect(148, 98, 104, 16, { fill: p.hat.accent })],
   sunHat: (p) => [path('M 128 126 C 132 74, 162 55, 200 55 C 238 55, 268 74, 272 126 Z', { fill: p.hat.color }), path('M 52 128 C 80 112, 120 104, 200 104 C 280 104, 320 112, 348 128 C 330 150, 300 138, 270 148 C 240 156, 220 140, 200 150 C 180 140, 160 156, 130 148 C 100 138, 70 150, 52 128 Z', { fill: p.hat.color }), path('M 52 128 C 80 112, 120 104, 200 104 C 280 104, 320 112, 348 128', stroke('#000', 2, 0.15)), rect(132, 104, 136, 16, { rx: 4, fill: p.hat.accent })],
@@ -710,7 +816,7 @@ export const HATS = {
   // a hood up: one path with the face opening wound the other way (a nonzero hole), from the crown down over the shoulders; its shadow rims the face
   hood: (p) => { // the outer shape with the face cut out (even-odd), the hole this head's own face a little larger, and the dark lining between the hole and the face, so the hood hugs any head; the hat fit scales its width
     const face = facePath({ face: { ...p.face, width: 156 } }), hole = mapXY([path(face)], scaleAbout(200, 1.07), scaleAbout(112 + p.face.height / 2, 1.04))[0].d;
-    return [path(`M 200 40 C 282 40, 320 120, 312 236 C 310 296, 318 336, 338 386 L 62 386 C 82 336, 90 296, 88 236 C 80 120, 118 40, 200 40 Z ${hole}`, { fill: p.hat.color, rule: 'evenodd' }), path(`${hole} ${face}`, { fill: shade(p.hat.color, 0.32), rule: 'evenodd' }), path(hole, stroke('#000', 8, 0.22)), path('M 128 300 C 118 340, 104 360, 76 386', stroke('#000', 3, 0.14)), path('M 272 300 C 282 340, 296 360, 324 386', stroke('#000', 3, 0.14))];
+    return [path(`M 200 40 C 282 40, 320 120, 312 236 C 310 296, 318 336, 338 386 L 62 386 C 82 336, 90 296, 88 236 C 80 120, 118 40, 200 40 Z ${hole}`, { fill: p.hat.color, rule: 'evenodd' }), path(`${hole} ${face}`, { fill: shade(p.hat.color, 0.32), rule: 'evenodd' }), path(hole, stroke('#000', 8, 0.22)), path('M 128 300 C 118 340, 104 360, 76 386', stroke('#000', 3, 0.14)), path('M 272 300 C 282 340, 296 360, 324 386', stroke('#000', 3, 0.14)), { ...path(hole, { fill: shade(p.hat.color, 0.32) }), back: true }]; // `back`: the whole opening lined again behind the head, so a turned head, which slides less than the hood, never opens a gap onto the background
   },
 };
 export const HAT_STYLES = Object.keys(HATS);
@@ -850,15 +956,15 @@ export const MAKEUP = {
 export const MAKEUP_STYLES = Object.keys(MAKEUP);
 export const MARKS = {
   none: {},
-  chestSparse: { body: () => [ellipse(166, 412, 7, 7, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.65 }), path('M 236 396 L 248 420 L 224 420 Z', INKL(2)), line(200, 444, 200, 476, INKL(2))] },
-  chestDense: { body: () => [ellipse(166, 412, 7, 7, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.65 }), path('M 236 396 L 248 420 L 224 420 Z', INKL(2)), line(200, 440, 200, 476, INKL(2)), path('M 140 440 Q 160 430 176 446', INKL(1.8)), path('M 260 440 Q 240 430 224 446', INKL(1.8)), path('M 150 470 L 166 462 L 158 484 Z', INKL(1.6)), path('M 250 470 L 234 462 L 242 484 Z', INKL(1.6)), ellipse(200, 500, 12, 12, { fill: 'none', stroke: '#1c1a1e', sw: 1.8, op: 0.6 }), line(186, 500, 214, 500, INKL(1.6)), path('M 176 396 Q 200 388 224 396', INKL(1.6))] },
+  chestSparse: { chest: () => [ellipse(166, 412, 7, 7, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.65 }), path('M 236 396 L 248 420 L 224 420 Z', INKL(2)), line(200, 444, 200, 476, INKL(2))] },
+  chestDense: { chest: () => [ellipse(166, 412, 7, 7, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.65 }), path('M 236 396 L 248 420 L 224 420 Z', INKL(2)), line(200, 440, 200, 476, INKL(2)), path('M 140 440 Q 160 430 176 446', INKL(1.8)), path('M 260 440 Q 240 430 224 446', INKL(1.8)), path('M 150 470 L 166 462 L 158 484 Z', INKL(1.6)), path('M 250 470 L 234 462 L 242 484 Z', INKL(1.6)), ellipse(200, 500, 12, 12, { fill: 'none', stroke: '#1c1a1e', sw: 1.8, op: 0.6 }), line(186, 500, 214, 500, INKL(1.6)), path('M 176 396 Q 200 388 224 396', INKL(1.6))] },
   neckMarks: { neck: () => [line(186, 322, 214, 322, INKL(2)), path('M 190 340 Q 200 348 210 340', INKL(2)), ellipse(200, 358, 3, 3, facePaint('#1c1a1e', 0.7))] },
   faceMarkSmall: { fit: 'eyes', face: () => [line(150, 214, 156, 220, INKL(1.6)), line(156, 214, 150, 220, INKL(1.6))] },
-  abstractLineWork: { body: () => [path('M 130 400 C 170 440, 230 380, 270 430', INKL(2)), path('M 140 460 C 180 420, 220 500, 262 458', INKL(1.8)), path('M 160 500 Q 200 470 240 500', INKL(1.6))] },
-  redGraphicLines: { body: () => [line(150, 400, 250, 400, INKL(3, 0.8, REDP)), line(200, 408, 200, 480, INKL(3, 0.8, REDP)), path('M 160 470 L 240 470', INKL(2.4, 0.8, REDP)), path('M 168 430 L 232 430', INKL(2.4, 0.8, REDP))] },
-  scriptLikeMarks: { body: () => [path('M 140 420 C 150 406, 156 434, 166 418 C 176 402, 182 436, 192 420 C 202 404, 208 434, 218 418 C 228 402, 236 436, 246 420 C 252 410, 258 428, 264 418', INKL(1.6)), path('M 150 456 C 160 442, 166 470, 176 454 C 186 438, 192 472, 202 456 C 212 440, 218 470, 228 454 C 238 438, 244 466, 252 456', INKL(1.6))] },
-  ceremonialSymbols: { body: () => [ellipse(200, 420, 16, 16, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.7 }), ellipse(200, 420, 4, 4, facePaint('#1c1a1e', 0.7)), path('M 152 470 L 170 440 L 188 470 Z', INKL(2)), path('M 212 470 L 230 440 L 248 470 Z', INKL(2)), ...[150, 200, 250].map((x) => ellipse(x, 496, 2.5, 2.5, facePaint('#1c1a1e', 0.7)))] },
-  geometricBodyMarks: { body: () => [rect(150, 396, 34, 34, facePaint('#1c1a1e', 0.8)), path('M 216 396 L 250 396 L 233 430 Z', facePaint('#1c1a1e', 0.8)), rect(176, 452, 48, 10, facePaint('#1c1a1e', 0.8)), ellipse(200, 494, 14, 14, { fill: 'none', stroke: '#1c1a1e', sw: 3, op: 0.8 })] },
+  abstractLineWork: { chest: () => [path('M 130 400 C 170 440, 230 380, 270 430', INKL(2)), path('M 140 460 C 180 420, 220 500, 262 458', INKL(1.8)), path('M 160 500 Q 200 470 240 500', INKL(1.6))] },
+  redGraphicLines: { chest: () => [line(150, 400, 250, 400, INKL(3, 0.8, REDP)), line(200, 408, 200, 480, INKL(3, 0.8, REDP)), path('M 160 470 L 240 470', INKL(2.4, 0.8, REDP)), path('M 168 430 L 232 430', INKL(2.4, 0.8, REDP))] },
+  scriptLikeMarks: { chest: () => [path('M 140 420 C 150 406, 156 434, 166 418 C 176 402, 182 436, 192 420 C 202 404, 208 434, 218 418 C 228 402, 236 436, 246 420 C 252 410, 258 428, 264 418', INKL(1.6)), path('M 150 456 C 160 442, 166 470, 176 454 C 186 438, 192 472, 202 456 C 212 440, 218 470, 228 454 C 238 438, 244 466, 252 456', INKL(1.6))] },
+  ceremonialSymbols: { chest: () => [ellipse(200, 420, 16, 16, { fill: 'none', stroke: '#1c1a1e', sw: 2, op: 0.7 }), ellipse(200, 420, 4, 4, facePaint('#1c1a1e', 0.7)), path('M 152 470 L 170 440 L 188 470 Z', INKL(2)), path('M 212 470 L 230 440 L 248 470 Z', INKL(2)), ...[150, 200, 250].map((x) => ellipse(x, 496, 2.5, 2.5, facePaint('#1c1a1e', 0.7)))] },
+  geometricBodyMarks: { chest: () => [rect(150, 396, 34, 34, facePaint('#1c1a1e', 0.8)), path('M 216 396 L 250 396 L 233 430 Z', facePaint('#1c1a1e', 0.8)), rect(176, 452, 48, 10, facePaint('#1c1a1e', 0.8)), ellipse(200, 494, 14, 14, { fill: 'none', stroke: '#1c1a1e', sw: 3, op: 0.8 })] },
 };
 export const MARK_STYLES = Object.keys(MARKS);
 // hands and sleeves: a hand is the skin (a glove when the character wears them), a sleeve the outer garment's colour
@@ -870,7 +976,8 @@ const sleeveColor = (p) => { if (p.jacket.style !== 'none') return p.jacket.colo
 const ARM_W = 58, FORE_W = 52, SHOULDER = (side) => [200 + 86 * side, 398];
 const mitten = (p, x, y, a, k0 = 1) => { const k = k0 * bld(p).hands; const c = Math.cos(a), sn = Math.sin(a), at = (dx, dy) => [x + (dx * c - dy * sn) * k, y + (dx * sn + dy * c) * k], col = handColor(p), f = at(11, 0), t = at(2, -14); return [ellipse(x, y, 15 * k, 17 * k, { fill: col }), ellipse(f[0], f[1], 12 * k, 12 * k, { fill: col }), ellipse(t[0], t[1], 6.5 * k, 8 * k, { fill: col })]; };
 /** An arm from the shoulder on `side` through `elbow` to `wrist` (sheet points), with a hand unless `hand` is false. The upper arm and the forearm are round tubes from the joint; over the joint sits the deltoid, a soft bulge that continues the trunk's own shoulder curve out over the top of the arm and fades into it, so the arm grows out of a shoulder rather than hanging off a corner. No outline: a highlight along the top of the shoulder, a soft shadow where the upper arm meets the chest, and a soft edge under the forearm so a sleeve the colour of the shirt still reads against the body. `lift` moves the joint up and out as the arm rises. */
-export function arm(p, side, { lift = 0, elbow, wrist, hand = true }) {
+export function arm(p, side, { lift = 0, elbow, wrist, hand = true, clear }) {
+  if (clear != null) { elbow = [handsOut(p, side, elbow[0], clear + 4), elbow[1]]; wrist = [handsOut(p, side, wrist[0], clear), wrist[1]]; } // a raised hand kept `clear` outside the face edge, as handsUp's are (T073: a claw on the eye, a hand on the brim)
   const [sx0, sy0] = SHOULDER(side), sx = sx0 - (16 - 24 * lift) * side, sy = sy0 - 8 * lift, col = sleeveColor(p), ak = bld(p).arms, dark = shade(col, 0.5);
   const [ex, ey] = ak === 1 ? elbow : [sx + (elbow[0] - sx) * ak, sy + (elbow[1] - sy) * ak], [wx, wy] = ak === 1 ? wrist : [sx + (wrist[0] - sx) * ak, sy + (wrist[1] - sy) * ak]; // the arm's length is the build's, about the joint
   const dx = wx - ex, dy = wy - ey, L = Math.hypot(dx, dy) || 1, a = Math.atan2(dy, dx), hx = wx + (dx / L) * 16, hy = wy + (dy / L) * 16;
@@ -886,9 +993,17 @@ export function arm(p, side, { lift = 0, elbow, wrist, hand = true }) {
     ...(lift > 0.5 ? [path(`M ${P(sx - 18 * side, sy + 18)} Q ${P(sx, sy + 30)} ${P(sx + 14 * side, sy + 20)}`, stroke('#000', 2.5, 0.09))] : []), // the crease under a lifted arm
     line(ex, ey, wx, wy, stroke(col, FORE_W)),
     ellipse(ex, ey, 9, 7, { fill: '#000', op: 0.07 }), // the elbow
-    ...(hand ? mitten(p, hx + (dx / L) * 4, hy + (dy / L) * 4, a, 1.25) : []),
+    ...(typeof hand === 'function' ? hand(wx, wy) : hand ? mitten(p, hx + (dx / L) * 4, hy + (dy / L) * 4, a, 1.25) : []), // a function draws its own hand at the wrist as drawn (a claw)
   ];
 }
+/** A raised arm's x (arm space, as `arm` takes it) that lands at least `gap` outside the face edge on the sheet. `arm` scales the point about the shoulder by the build's arms and the body maps it about 200 by the shoulders' width, while the head scales by its own: a short-armed people with a big head (a halfling) would otherwise put its hands on its cheeks. A broad, long-armed people (a dragonborn, an orc: shoulders 1.44 times a body up to 1.28) would carry the point as far out again as its shoulders, past the figure's frame, so the reach is capped at a human's of the same body width: up is beside the head, not a span. A human's point is already clear and inside its own reach and comes back unchanged. */
+const handsOut = (p, side, x, gap) => {
+  const b = bld(p), bw = p.body.width * b.shoulders, sx = 200 + 94 * side; // the lifted shoulder joint (SHOULDER less the lift's inset)
+  const sheet = 200 + (sx + (x - sx) * b.arms - 200) * bw, clear = (p.face.width / 2) * b.head + gap;
+  const off = Math.max(clear, Math.min(Math.abs(sheet - 200), Math.abs(x - 200) * p.body.width)); // clear of the face, within a human's reach
+  if (off === Math.abs(sheet - 200)) return x;
+  return sx + (200 + (Math.sign(x - 200) * off) / bw - sx) / b.arms; // the point's own side: a far arm reaching across keeps to the side it reached
+};
 const sleeve = (p, x0, y0, x1, y1, sw = 34) => line(x0, y0, x1, y1, stroke(sleeveColor(p), sw));
 const hand = (p, x, y, a = 0, k = 1) => mitten(p, x, y, a - Math.PI / 2, k);
 const GOLD_OBJ = (cx, cy, r) => [ellipse(cx, cy, r, r, { fill: '#b8892b' }), ellipse(cx - r * 0.3, cy - r * 0.35, r * 0.35, r * 0.25, { fill: '#fff3c8', op: 0.7 }), ellipse(cx + r * 0.25, cy + r * 0.3, r * 0.5, r * 0.4, { fill: '#6e4d12', op: 0.35 })];
@@ -906,8 +1021,8 @@ export const PROPS = {
   abstractGoldObject: { arms: [1], front: (p) => [...arm(p, 1, { lift: 0.35, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), ...GOLD_OBJ(250, 432, 24)] },
   abstractToyLikeProp: { arms: [1], front: (p) => [...arm(p, 1, { lift: 0.35, elbow: [302, 486], wrist: [262, 470], hand: false }), ...hand(p, 258, 466, -0.9), rect(240, 420, 28, 32, { rx: 5, fill: '#b3202a' }), ellipse(248, 432, 3.5, 3.5, { fill: '#fff' }), ellipse(260, 432, 3.5, 3.5, { fill: '#fff' }), rect(246, 442, 16, 4, { fill: '#fff' })] },
   handHeartGesture: { arms: [-1, 1], front: (p) => [...arm(p, -1, { lift: 0.35, elbow: [96, 490], wrist: [176, 476], hand: false }), ...arm(p, 1, { lift: 0.35, elbow: [304, 490], wrist: [224, 476], hand: false }), path('M 200 498 C 172 480, 160 452, 178 442 C 188 437, 197 443, 200 452 C 203 443, 212 437, 222 442 C 240 452, 228 480, 200 498 Z', stroke(handColor(p), 19)), path('M 200 494 C 176 478, 166 456, 180 448 C 190 444, 198 449, 200 458 C 202 449, 210 444, 220 448 C 234 456, 224 478, 200 494 Z', { fill: '#000', op: 0.16 })] },
-  handsUp: { lift: [-1, 1], front: (p) => [...arm(p, -1, { lift: 1, elbow: [70, 300], wrist: [92, 190] }), ...arm(p, 1, { lift: 1, elbow: [330, 300], wrist: [308, 190] })] }, // both shoulders lifted, elbows out past the ears, hands above the head
-  armRaised: { lift: [1], front: (p) => [...arm(p, 1, { lift: 1, elbow: [332, 296], wrist: [312, 184] })] },
+  handsUp: { lift: [-1, 1], front: (p) => [...arm(p, -1, { lift: 1, elbow: [handsOut(p, -1, 34, 32), 326], wrist: [handsOut(p, -1, 42, 24), 196] }), ...arm(p, 1, { lift: 1, elbow: [handsOut(p, 1, 366, 32), 326], wrist: [handsOut(p, 1, 358, 24), 196] })] }, // both shoulders lifted, elbows wide and forearms upright, palms beside the head clear of the face and the hat: this figure's arms (about 4.6 heads tall) cannot reach over the crown, so up is beside it, not on it
+  armRaised: { lift: [1], front: (p) => [...arm(p, 1, { lift: 1, elbow: [332, 296], wrist: [312, 184], clear: 40 })] },
 };
 export const PROP_STYLES = Object.keys(PROPS);
 // The body is a figure: a trunk the body's own width (shoulders rounded at the joint, the sides straight to the hip),
@@ -1056,7 +1171,7 @@ const rough = (ops, seed) => { const rnd = lcg(seed + 29); return ops.map((o) =>
 const onHead = (p, y) => { const k = bld(p).head; return (k === 1 ? y : NECK_BASE[1] + (y - NECK_BASE[1]) * k) + headDrop(p); }; // a head-local y as the sheet reads it (less HEAD_DY and the pose, the convention every framing shares): the head group scales about the neck base, so a bigger head lifts its features
 export const eyeY = (p) => onHead(p, faceY(p)(p.eyes?.y ?? DEFAULTS.eyes.y)); // on the sheet: the face's layout, the head's scale, plus how far the head moved on the neck to seat its chin
 /** Where the mouth sits on the sheet, laid out the same way: the other line a likeness is judged on (the third, the chin, is `CHIN_Y` on every face). */
-export const mouthY = (p) => onHead(p, faceY(p)(p.mouth?.y ?? DEFAULTS.mouth.y));
+export const mouthY = (p) => { const q = merge(DEFAULTS, p), fy = faceY(q); return onHead(p, mouthLine({ ...q, eyes: { ...q.eyes, y: fy(q.eyes.y) }, mouth: { ...q.mouth, y: fy(q.mouth.y) }, nose: { ...q.nose, length: q.nose.length * q.face.height / 204 } })); }; // laid out as portraitOps lays it out, so a muzzle's mouth is where it is drawn
 /** The drawing, back to front, without the background: a plain list of primitives for `toSvg` or `drawOn`. */
 export function portraitOps(options = {}) {
   const p = merge(DEFAULTS, options), hair = hairOf(p), q = p.pose, turn = q.turn ?? 0, sd = p.light.side || -1, fy = faceY(p);
@@ -1075,7 +1190,7 @@ export function portraitOps(options = {}) {
   const crown0 = HAT_CROWN[p.hat.style], back = fit(hair.back), front = hairline(fit(hair.front));
   const grain = HAIR_TEXTURE[p.hair.style] ?? 'strands', mass = region(grain === 'curls' ? [...back, ...front] : front); // the hair's mass: the front, or with the back for curls (an afro's mass is behind the head)
   const textured = (ops, mass, grainOps) => (grain !== 'none' && mass ? [...ops, clip(mass), ...grainOps, ...soft(200, 96, 46, 22, '#fff', 0.14), UNCLIP] : ops); // the hair with its grain (strands combed from the crown, or curls) and a light on it inside its mass, so it is hair and not a cap
-  const backHair = grain === 'curls' ? textured(back, region(back), curls(p)) : back, frontHair = textured(front, region(front), grain === 'curls' ? curls(p) : strands(p)); // the back's texture goes on behind the head, since the face sits inside an afro's footprint
+  const backHair = grain === 'curls' ? textured(back, region(back), curls(p)) : back, frontHair = textured(front, region(front), grain === 'curls' ? curls(p) : strands(p, { fall: true })), skinHair = ON_SKIN.includes(p.hair.style) ? [clip(facePath(p)), ...frontHair, UNCLIP] : frontHair; // the back's texture goes on behind the head, since the face sits inside an afro's footprint
   const hairShadow = front.length ? [clip(facePath(p)), ...mapXY(front.filter(solid), (x) => x, (y) => y + 6).map((o) => ({ ...o, fill: '#000', op: 0.14 })), UNCLIP] : []; // the hair's cast shadow on the forehead: the front hair a little lower, dark, inside the face
   const facial = (FACIAL_HAIR[p.facialHair.style] ?? FACIAL_HAIR.none)(p), masked = p.makeup.some((n) => MAKEUP[n]?.mask); // the beard is built on this face's own outline and mouth (beardBand); a mask goes on over the beard, so the beard goes under the skin overlays
   const beard = facial.filter((o) => !o.stache), stache = facial.filter((o) => o.stache); // the mass belongs to the jaw and the moustache to the features, and on a turned head they travel at different rates; a moustache is never inside a clip group, so the two split cleanly
@@ -1093,6 +1208,7 @@ export function portraitOps(options = {}) {
   const puff = crown && crown < 300 ? Math.min(HAT_PUFF_MAX, Math.max(1, reach([...back, ...front].filter(solid)) / (p.face.width / 2))) : 1;
   const plainHat = mapXY(fit((HATS[p.hat.style] ?? HATS.none)(p)), scaleAbout(200, puff), (y) => (crown0 === undefined ? y : crown0 + seat + (y - crown0) * puff)); // a hat with no crown line (a headband, a veil's comb) sits on the hair as drawn // the hat before any sheen: what the skirt below is built from, since a sheen's patches are clipped to the garment and a copy of them would leave loose bars on the background
   let hat = plainHat; if (p.hat.metal) hat = metalize(hat, p.hat.color, p.seed + 2, [40, 390]);
+  const hatBack = hat.filter((o) => o.back); if (hatBack.length) hat = hat.filter((o) => !o.back); // a hood's inside, drawn behind the head (as a top's `hood` ops are)
   const hw = hatWidth(hat.slice(0, 1), crown), under = (ops) => (crown && ops.length ? [clip(`M -100 900 L -100 ${crown + 50} L ${200 + hatDx - hw - 50} ${crown + 50} L ${200 + hatDx - hw} ${crown} L ${200 + hatDx + hw} ${crown} L ${200 + hatDx + hw + 50} ${crown + 50} L 500 ${crown + 50} L 500 900 Z`), ...ops, UNCLIP] : ops); // under a hat the hair stops at the crown line and is pressed in under the hat's edge: the mass above is inside the hat (a cap does not take an afro's shape), and what is below springs out past the brim at a slant, not as a shelf
   // a crown's bottom edge arcs upward, so cutting the hair level with the crown line leaves a crescent of bare
   // forehead under the arc. The hat wears a skirt to fill it: its own filled shapes again, HAT_TUCK lower, in its own
@@ -1130,14 +1246,14 @@ export function portraitOps(options = {}) {
     ...wide(shear(hoodBack)), // a hood hangs behind the neck
     neckG, ...neck(p), ...overlays(p, 'neck', fits), POP, // the neck goes behind every garment, so a collar, a lapel or a neckline covers its base: a collar, a lapel or a neckline covers its base, or the skin reads as a column standing on the shirt
     ...wide(shear(legs)), // the legs under the hem
-    ...wide(shear([clip(TRUNK(640, b.trunk)), ...top, ...edge, UNCLIP])), // a top is the trunk's shape to its hem
+    ...wide(shear([clip(TRUNK(640, b.trunk)), ...top, ...(p.top.style === 'bare' ? overlays(p, 'chest', fits) : []), ...edge, UNCLIP])), // a top is the trunk's shape to its hem; a mark in the `chest` slot is on the skin (a tattoo, body paint), so it shows on a bare chest, under any jacket, and never on cloth
     ...(onNeck.length ? [neckG, ...onNeck, POP] : []), // a turtleneck's collar wraps the neck, so it rides in the neck's group and leans with it, over the shirt it belongs to and under any jacket (which shows it again through its own neckline)
     ...wide(shear([clip(TRUNK(690, b.trunk)), ...jacket, UNCLIP, ...overlays(p, 'body', fits)])), // a jacket, longer
     ...through, // and shows again through the outermost neckline, because a neckline is a hole, not a curve painted on the cloth
     ...accessories(p, 'neck'), ...wide(shear(collar.filter((o) => !o.onNeck))), ...accessories(p, 'tie'), // a chain lies on the shirt, the collar goes back over it, a tie over that
-    headG, ...tf(fit(ears(p, turn)), 4), ...tf(fit(accessories(p, 'ear')), 4), ...tf(head(p), 4), ...tf(masked ? beard : [], 8), ...tf(masked ? stache : [], 12), ...tf(masked ? model : [], 4), ...tf(overlays(p, 'skin', fits, (f) => f !== 'eyes'), 4), ...tf(overlays(p, 'skin', fits, (f) => f === 'eyes'), 12), ...tf(masked ? [] : model, 4), ...tf(masked ? [] : details(p, fitFace, fitEyes), 12), // the planes go over paint on the skin (one modelling for a painted face and a bare one); a mask is a shell with its own shading, so they go under it, with the beard; paint laid out on the eyes (sockets, under-eye) rides with the eyes on a turn (12), the rest with the outline (4)
+    headG, ...tf(hatBack, HAT_TURN), ...tf(fit(ears(p, turn)), 4), ...tf(fit(accessories(p, 'ear')), 4), ...tf(head(p), 4), ...tf(masked ? beard : [], 8), ...tf(masked ? stache : [], 12), ...tf(masked ? model : [], 4), ...tf(overlays(p, 'skin', fits, (f) => f !== 'eyes'), 4), ...tf(overlays(p, 'skin', fits, (f) => f === 'eyes'), 12), ...tf(masked ? [] : model, 4), ...tf(masked ? [] : details(p, fitFace, fitEyes), 12), // the planes go over paint on the skin (one modelling for a painted face and a bare one); a mask is a shell with its own shading, so they go under it, with the beard; paint laid out on the eyes (sockets, under-eye) rides with the eyes on a turn (12), the rest with the outline (4)
     ...tf(masked ? [clip(maskHoles(p)), ...eyes(p, false), UNCLIP] : eyes(p), 12), ...tf(masked ? [] : nose(p), 12), ...tf(masked ? [] : mouth(p), 12), ...tf(overlays(p, 'face', fits), 12), ...tf(masked ? [] : beard, 8), ...tf(masked ? [] : stache, 12), ...tf(overlays(p, 'mouth', fits), 12), // the `mouth` slot is what comes out of the mouth, a tusk or a fang: over the lips, the beard and the moustache (paint on the `face` slot stays under them, since hair grows over paint), and riding with the features on a turned head. A mask is a rigid thing: none of the wearer's face is drawn on it, no brows, no nose, no mouth, no lines, and the eyes show only through its holes, where they still look about and blink
-    ...tf(faceLight(p, facePath(p)), 4), ...tf(hairShadow, 4), ...tf(under(frontHair), 4), ...tf(specShadow, 12), ...tf(specs, 12), ...tf(brim, HAT_TURN), ...tf(skirt, HAT_TURN), ...tf(hat, HAT_TURN), ...tf(fit(accessories(p, 'over')), 4), ...tf(overlays(p, 'over', fits), 4), POP,
+    ...tf(faceLight(p, facePath(p)), 4), ...tf(hairShadow, 4), ...tf(under(skinHair), 4), ...tf(specShadow, 12), ...tf(specs, 12), ...tf(brim, HAT_TURN), ...tf(skirt, HAT_TURN), ...tf(hat, HAT_TURN), ...tf(fit(accessories(p, 'over')), 4), ...tf(overlays(p, 'over', fits), 4), POP,
     ...wide([...hangs, ...overlays(p, 'front', fits)]), // the arms: hanging, then what a prop does with them
     POP,
     ...(see ? [{ k: 'unlayer' }] : []),
@@ -1157,7 +1273,7 @@ export const renderPortrait = (options = {}) => toSvg(portraitOps(options), merg
 /** The standing figure: the same drawing down to the floor, dropped so the shoes land on the view's bottom edge
  *  whatever the build, so a short people (a halfling, a gnome) draws as a short figure beside a tall one rather than
  *  the same figure scaled. */
-export const renderFigure = (options = {}) => { const p = merge(DEFAULTS, options); return toSvg(portraitOps(p), p.background, '-30 -200 460 1284', FEET_Y - feetY(p)); }; // the shoes on the bottom edge, 200 units of headroom above the sheet: a dragonborn's build stands its crown 91 above a human's and it wears a horn crest on top of that
+export const renderFigure = (options = {}) => { const p = merge(DEFAULTS, options); return toSvg(portraitOps(p), p.background, '-90 -200 580 1284', FEET_Y - feetY(p)); }; // the shoes on the bottom edge, 200 units of headroom above the sheet: a dragonborn's build stands its crown 91 above a human's and it wears a horn crest on top of that; and 90 either side of the bust's 0..400, because the broadest builds (a dragonborn's shoulders 1.44, an orc's 1.37) times the widest body.width a person is given draw hands and a skirt's hem out to about -67..478
 
 /** Walk an absolute M/L/C/Q/Z path onto a canvas context. */
 export function tracePath(ctx, d) {

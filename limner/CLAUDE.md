@@ -100,7 +100,7 @@ its own build.
 
 One sheet, in its own units; the host scales. The head is 204 tall, every chin lands on `CHIN_Y` (327.2) and every pair
 of feet on `FEET_Y` (1078). `renderPortrait` is the bust (`viewBox="0 0 400 480"`), `renderFigure` the whole standing
-body (`-30 -200 460 1284`, shifted so the feet land on the floor). `eyeY(p)`, `mouthY(p)`, `feetY(p)` and `headBox(p)`
+body (`-90 -200 580 1284`, shifted so the feet land on the floor, wide enough for the broadest build). `eyeY(p)`, `mouthY(p)`, `feetY(p)` and `headBox(p)`
 read where a given figure's features actually landed, which is what a host frames on — never assume the defaults.
 
 ## Ops, not SVG
@@ -130,7 +130,7 @@ Nobody can review a face from a description. Render it.
 
     npm test                                     # from here: the whole suite, both goldens
     node scripts/portrait.mjs "<hash|url|{json}>" # one face -> renders/portrait.svg
-    node scripts/portrait.mjs <hash> --out x.png  # a png, through playwright-core's chromium
+    node scripts/portrait.mjs <hash> --out x.png  # a png, through playwright-core's chromium (the newest headless shell under ms-playwright, found by `chromePath` in scripts/harden/sheet.mjs; CHROME overrides)
     node scripts/portrait.mjs <hash> --photo p.png --crop "95 105 210 220"
     node scripts/portrait.mjs <hash> --sweep "facialHair.density=0.2,0.6" --sweep "eyes.squint=0,.5"
 
@@ -141,6 +141,17 @@ sheets, served by the parent repo's dev server, are the other half: `parts.html?
 `scripts/` and `test/` are not published (`files` excludes them), so they may use the parent's dev dependencies —
 `scripts/portrait.mjs` reaches for `playwright-core` for the png path. The published library itself has **no
 dependencies**, and that is worth keeping.
+
+## The hardening loop
+
+`scripts/harden.mjs` (`npm run harden -- next|crop|lint|record|todos|verify|close|merge|attempt|related|snap|stats` from the parent) is the loop that
+finds faults nobody rendered: a sheet of cast × stance × expression cells (cell 1 always the same calibration face),
+geometric lints in `scripts/harden/lint.mjs` ranking cells for eyes, a ledger `scripts/harden/todos.json` that merges
+findings by category plus parts and ranks by severity × seen, `coverage.json` counting what has been rendered, and
+`verify <id>` re-rendering an entry's evidence then-and-now, `related <id>` rendering other combinations that draw the same parts, one per cast (the regression check), `snap <id> before|after` rendering an entry's evidence from the current code into `sheets/fixes/`, the before taken once before any edit (`verify` then uses it as its then side), `attempt` counting repair tries (three parks an entry), `stats` the defects per sheet by severity with fresh cells told apart. The rubric is `scripts/harden/rubric.md`; the procedure is
+the parent's `.claude/skills/limner-harden/SKILL.md`. A closed geometric fault leaves a lint and a test behind. The sheet
+pngs (`scripts/harden/sheets/`, gitignored) are `verify`'s then side and live only in the checkout that rendered them; a fresh one shows the now side alone, and `next` numbers past the sheets `todos.json` names. Nothing
+under `scripts/` ships.
 
 ## When the host's expectations matter
 

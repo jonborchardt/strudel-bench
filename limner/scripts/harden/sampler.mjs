@@ -1,0 +1,116 @@
+// Which cells a sheet shows. The grid is every cast x its stances x its expressions x view; a sheet is one calibration
+// face, then the cells the lints flag out of a seeded pool, then the tuples rendered least often. A state is the
+// editor's own { seed, family, theme, ov }, built through schema.mjs's presets, so every cell is an editor link.
+import { CASTS } from '../../registry.mjs';
+import { stanceNames } from '../../stances.mjs';
+import { EXPRESSIONS, EDITORIAL_EXPRESSIONS } from '../../people.mjs';
+import { controlsFor, posePreset, decode, encode, params } from '../../schema.mjs';
+import { prng, pick } from '../../rng.mjs';
+import { lintState } from './lint.mjs';
+
+/** The known-good face every sheet opens with (renders/portrait-match/links.md, entry 9, FINAL): the reader's scale. */
+export const CALIBRATION = 'eyJzZWVkIjo3LCJmYW1pbHkiOiJhbnkiLCJvdiI6eyJza2luIjoiI2U3Yjk5YSIsImhhaXJDb2xvciI6IiMzYjJhMjAiLCJoYWlyLnN0eWxlIjoic2lkZVBhcnQiLCJmYWNpYWxIYWlyLnN0eWxlIjoiaGVhdnlTdHViYmxlIiwiZ2xhc3NlcyI6bnVsbCwiYWNjZXNzb3JpZXMiOltdLCJkZXRhaWxzIjpbImNyb3dzRmVldCJdLCJtYWtldXAiOltdLCJtYXJrcyI6W10sInByb3BzIjpbXSwiaGF0LnN0eWxlIjoibm9uZSIsImphY2tldC5zdHlsZSI6Im5vbmUiLCJmYWNlLndpZHRoIjoxNzQsImZhY2UuaGVpZ2h0IjoxOTYsImZhY2UuamF3IjowLjg1LCJmYWNlLmNoaW4iOjAuMSwiZmFjZS5jb3JuZXIiOjMyLCJmYWNlLnNrZXciOjAsImZhY2UuYXN5bS5jaGVlayI6MCwiZmFjZS5hc3ltLmphdyI6MCwiZmFjZS5hc3ltLnRlbXBsZSI6MCwiZmFjZS5hc3ltLmNoaW4iOjAsIm5lY2sud2lkdGgiOjcwLCJuZWNrLmhlaWdodCI6NjgsImVhcnMuc2l6ZSI6MC45LCJleWVzLnN0eWxlIjoiYWxtb25kIiwiZXllcy5icm93U3R5bGUiOiJ0aGluIiwiZXllcy5pcmlzIjoiIzYxNzc4MyIsImV5ZXMub3Blbm5lc3MiOjAuODgsImV5ZXMuYnJvd0xpZnQiOi0xLjUsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYmFncyI6MC40NSwiZXllcy5kZXB0aCI6MC41NSwibm9zZS5zdHlsZSI6InJvdW5kZWRUaXAiLCJub3NlLmxlbmd0aCI6NDIsIm5vc2Uud2lkdGgiOjIyLCJtb3V0aC5zdHlsZSI6InBsYWluIiwibW91dGgud2lkdGgiOjU2LCJtb3V0aC5zbWlsZSI6MC42NSwibW91dGgub3BlbiI6MC4xNSwibW91dGguZnVsbG5lc3MiOjAuNCwiZXllcy55IjoyMDIsImV5ZXMuc3BhY2luZyI6NTYsIm1vdXRoLnkiOjI3NCwidG9wLnN0eWxlIjoiY3Jld1RzaGlydCIsInRvcC5jb2xvciI6IiM1ZjY0NjgiLCJ0b3AuZ3JhcGhpYyI6ImNvbmNlbnRyaWMiLCJiYWNrZ3JvdW5kIjoiIzNkNTM0MCIsInBvc2UudHVybiI6LTEsInBvc2UuaGVhZFRpbHQiOi0wLjA1LCJwb3NlLmdhemUiOiJjYW1lcmEiLCJleWVzLmxvb2sueSI6MCwicG9zZS5zaG91bGRlciI6MC4yLCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjowLCJwb3NlLmJvZHlYIjowLCJwb3NlLmJvZHlUaWx0IjowLCJib2R5LndpZHRoIjoxLjE1LCJibHVzaCI6MC4zLCJsaWdodC5zaWRlIjoxLCJsaWdodC5hbW91bnQiOjAuNSwibGlnaHQuY29udHJhc3QiOjEsImZhY2lhbEhhaXIuZGVuc2l0eSI6MC40MiwiZmFjaWFsSGFpci5jaGVla0xpbmUiOjAuNSwiZmFjaWFsSGFpci5tdXN0YWNoZSI6MSwiZXllcy5zcXVpbnQiOjAuMzUsImZhY2UuZnVsbG5lc3MiOjAuNCwiaGFpci5oYWlybGluZSI6MC40LCJoYWlyLnJlY2Vzc2lvbiI6MC4xNX19';
+
+export const VIEWS = ['bust', 'figure'];
+export const keyOf = (t) => `${t.cast}/${t.stance}/${t.expression}/${t.view}`;
+
+/** Every cell: each cast, 'none' plus its stances (the editorial set and its own pack), its expressions (its pool, else the editorial set; only names EXPRESSIONS has), both views for 'none' and the figure alone for a stance. */
+export function gridOf(casts = CASTS) {
+  const out = [];
+  for (const [cast, c] of Object.entries(casts)) {
+    const stances = ['none', ...new Set(stanceNames(cast === 'editorial' ? null : cast))];
+    const exprs = [...new Set(c.expressions?.length ? c.expressions : EDITORIAL_EXPRESSIONS)].filter((e) => EXPRESSIONS[e]);
+    for (const stance of stances) for (const expression of exprs) for (const view of stance === 'none' ? VIEWS : ['figure']) out.push({ cast, stance, expression, view });
+  }
+  return out;
+}
+
+/** The editor state of a cell: a seed's person of the cast, in the expression and the stance. */
+export function stateFor(t, seed) {
+  const st = { seed, family: 'any', theme: t.cast === 'editorial' ? 'none' : t.cast, ov: {} };
+  const expr = controlsFor(st).find((c) => c.kind === 'preset' && c.path === 'expression');
+  st.ov = { ...(t.expression !== 'none' ? expr.apply(t.expression) : {}), ...(t.stance !== 'none' ? posePreset(t.stance) : {}) };
+  return st;
+}
+
+/** A cell's state as the current code would build it: its tuple re-run through today's presets on the hash's own seed. An evidence hash freezes the expression and stance as numbers, so without this a fix to EXPRESSIONS or STANCES is invisible to verify. Falls back to the decoded hash when the tuple is unknown (calibration, or a key that no longer parses). stateFor builds `ov` from the presets alone, so any other `ov` keys the hash carries (none today, from `next`) are dropped. */
+export function nowState(hash, key) {
+  const st = decode(hash), [cast, stance, expression, view] = (key ?? '').split('/');
+  if (!view || !CASTS[cast] || !(expression === 'none' || EXPRESSIONS[expression])) return st;
+  return stateFor({ cast, stance, expression, view }, st.seed);
+}
+
+/** One sheet's cells. `lint(state, tuple)` ranks a pool of random cells; coverage counts fill the rest, least seen first, a seeded shuffle breaking ties; `sheet` seeds everything, so the same inputs give the same sheet. */
+export function pickCells({ coverage = {}, n = 9, view = 'bust', sheet = 1, lint = lintState, pool = 200, casts = CASTS } = {}) {
+  const rng = prng(sheet), draw = () => 1 + Math.floor(rng() * 999998);
+  const grid = gridOf(casts).filter((t) => t.view === view);
+  const cells = [{ tuple: { cast: 'calibration', stance: 'none', expression: 'none', view }, state: decode(CALIBRATION), flags: [], source: 'calibration' }];
+  const taken = new Set();
+  const flagged = [];
+  for (let i = 0; i < pool && grid.length; i++) {
+    const tuple = pick(rng, grid), state = stateFor(tuple, draw()), flags = lint(state, tuple);
+    if (flags.length) flagged.push({ tuple, state, flags, source: 'flagged' });
+  }
+  flagged.sort((a, b) => b.flags.length - a.flags.length);
+  // flagged cells take at most a third of a sheet (at least one): a lint that fires on a whole cast once filled ten sheets with that cast, and the survey stopped seeing the rest
+  const cap = 1 + Math.max(1, Math.floor((n - 1) / 3));
+  for (const c of flagged) { const k = keyOf(c.tuple); if (cells.length < cap && !taken.has(k)) { taken.add(k); cells.push(c); } }
+  // ties break by a seeded shuffle, not grid order: grid order put the biggest cast (the undead, with a stance pack of their own) on every figure sheet
+  const rest = grid.map((t, i) => ({ t, i, c: coverage[keyOf(t)] ?? 0, r: rng() })).sort((a, b) => a.c - b.c || a.r - b.r);
+  for (const { t } of rest) { const k = keyOf(t); if (cells.length >= n) break; if (taken.has(k)) continue; taken.add(k); cells.push({ tuple: t, state: stateFor(t, draw()), flags: [], source: 'coverage' }); }
+  return cells;
+}
+
+/** Whether a cell draws one of the parts a todo names: a stance or expression by its tuple, any other `kind:name` by the name appearing as a value in the drawn params, `unknown` never. */
+/** The parts a cell actually draws, as `kind:name` in the editor's spelling, so a reader names a finding's parts from the sheet json instead of guessing from the picture. Styled parts by `style`, list parts by each name, the feature styles last; `none` and empty are left out. */
+export function partsOf(state) {
+  const p = params(state), out = [];
+  for (const k of ['hair', 'hat', 'facialHair', 'glasses', 'top', 'jacket', 'pants']) { const s = p[k]?.style; if (s && s !== 'none') out.push(`${k}:${s}`); }
+  for (const k of ['makeup', 'marks', 'props', 'accessories', 'details']) for (const n of [p[k] ?? []].flat()) if (n && n !== 'none') out.push(`${k}:${n}`);
+  if (p.top?.graphic && p.top.graphic !== 'none') out.push(`graphics:${p.top.graphic}`);
+  for (const k of ['eyes', 'nose', 'mouth']) { const s = p[k]?.style; if (s) out.push(`${k}:${s}`); }
+  return out;
+}
+
+export function drawsPart(state, tuple, part) {
+  const [kind, name] = part.split(':');
+  if (kind === 'unknown' || !name) return false;
+  if (kind === 'stance') return tuple.stance === name;
+  if (kind === 'expression') return tuple.expression === name;
+  return JSON.stringify(params(state)).includes(`"${name}"`); // ponytail: a value match, not a path match; a colour named like a part would false-positive, and none is
+}
+
+const CAST_TRIES = 40;
+
+/** Other combinations that carry a todo's parts, for the regression check after a fix: one cell per cast that can wear a part (the horseshoe, boxBraids and face-panel fixes each reopened under a cast's own light, hat or makeup that a random pool never drew), then random cells of the whole grid up to n; none is the todo's own evidence, no tuple twice. The seed is the todo's number, so the same todo always gets the same neighbours. */
+export function relatedCells(todo, { n = 24, pool = 2000, casts = CASTS } = {}) {
+  const rng = prng(1000 + +todo.id.slice(1)), draw = () => 1 + Math.floor(rng() * 999998);
+  const stancePart = todo.parts.some((p) => p.startsWith('stance:'));
+  // no part can be drawn (unknown only): the casts the todo was seen on stand in, any cell of them
+  const attributed = todo.parts.some((p) => !p.startsWith('unknown') && p.includes(':'));
+  const seenOn = new Set((todo.tuples ?? []).map((k) => k.split('/')[0]).filter((c) => c !== 'calibration'));
+  if (!attributed && !seenOn.size) return [];
+  const grid = gridOf(casts).filter((t) => (stancePart ? t.view === 'figure' : true) && (attributed || seenOn.has(t.cast)));
+  const cells = [], taken = new Set(todo.evidence);
+  const tryCell = (tuple) => {
+    const state = stateFor(tuple, draw()), hash = encode(state);
+    if (taken.has(hash) || taken.has(keyOf(tuple))) return false;
+    if (attributed && !todo.parts.some((p) => drawsPart(state, tuple, p))) return false;
+    taken.add(hash); taken.add(keyOf(tuple)); cells.push({ tuple, state, flags: [], source: 'related' });
+    return true;
+  };
+  // one cell per cast first (a cast that never draws the part in its tries cannot wear it), then random cells of the whole grid
+  if (attributed) for (const cast of Object.keys(casts).sort()) {
+    if (cells.length >= n) break;
+    const own = grid.filter((t) => t.cast === cast);
+    for (let i = 0; i < CAST_TRIES && own.length; i++) if (tryCell(pick(rng, own))) break;
+  }
+  for (let i = 0; i < pool && cells.length < n && grid.length; i++) tryCell(pick(rng, grid));
+  return cells;
+}
+
+/** Count the sheet's cells into the coverage map (the calibration face is not coverage). */
+export function bump(coverage, cells) {
+  for (const c of cells) if (c.tuple.cast !== 'calibration') { const k = keyOf(c.tuple); coverage[k] = (coverage[k] ?? 0) + 1; }
+  return coverage;
+}

@@ -21,6 +21,8 @@
     "note": "node scripts/note.mjs",
     "verify": "node scripts/verify.mjs",
     "portrait": "node limner/scripts/portrait.mjs",
+    "harden": "node limner/scripts/harden.mjs",
+    "harden:gifs": "node limner/scripts/harden/fixgifs.mjs",
     "test:limner": "node --test \"limner/test/*.test.mjs\"",
     "vocab": "node scripts/vocab.mjs > .claude/skills/strudel/reference/vocab.md",
     "lint": "node scripts/lint.mjs",

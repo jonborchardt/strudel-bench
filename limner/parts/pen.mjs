@@ -42,6 +42,6 @@ export const zonesOf = (ops) => { const zones = [], stack = []; let run = null;
   }
   return zones.map((z) => z.map((d) => (Array.isArray(d) ? d.join(' ') : d))); };
 /** The hair as the portrait lays it out: drawn for the default head and following this one's width. */
-export const hairZones = (p) => { const r = HAIR[p.hair?.style] ?? (() => []), h = typeof r === 'function' ? r(p) : [...r.back(p), ...r.front(p)]; return zonesOf(p.face.width === 156 ? h : mapX(h, scaleAbout(200, p.face.width / 156))); };
+export const hairZones = (p, { back = true } = {}) => { const r = HAIR[p.hair?.style] ?? (() => []), h = typeof r === 'function' ? r(p) : [...(back ? r.back(p) : []), ...r.front(p)]; return zonesOf(p.face.width === 156 ? h : mapX(h, scaleAbout(200, p.face.width / 156))); }; // back: false is the hair in front of the face only (the back hangs behind the head, so its zone covers the face)
 /** A beard is already on this face's own outline. */
 export const beardZones = (p) => zonesOf((FACIAL_HAIR[p.facialHair?.style] ?? (() => []))(p));

@@ -86,7 +86,7 @@ Prefer ops when you draw repeatedly. If you are animating or exporting video, co
 them; rasterising an SVG string per frame will not keep up at 1080p30.
 
 `renderPortrait(params)` is the bust (`viewBox="0 0 400 480"`). `renderFigure(params)` is the whole standing body
-(`-30 -200 460 1284`), shifted so the feet land on the floor.
+(`-90 -200 580 1284`), shifted so the feet land on the floor.
 
 ## Parameters
 

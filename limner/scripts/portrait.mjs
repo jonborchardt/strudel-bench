@@ -55,7 +55,8 @@ const page = () => {
 mkdirSync(dirname(resolve(out)), { recursive: true });
 if (out.endsWith('.png')) {
   const { chromium } = await import('playwright-core');
-  const b = await chromium.launch({ executablePath: process.env.CHROME });
+  const { chromePath } = await import('./harden/sheet.mjs'); // CHROME, else the newest headless shell installed here
+  const b = await chromium.launch({ executablePath: chromePath() });
   const p = await b.newPage({ viewport: { width: Math.min(1600, (cell + 8) * Math.min(5, list.length + (photo ? 1 : 0))), height: 900 } });
   await p.setContent(page());
   await p.screenshot({ path: out, fullPage: true });

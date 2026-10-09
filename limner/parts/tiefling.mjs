@@ -7,12 +7,16 @@ import { TOPS, MAKEUP, NECKLINES, shade, path, ellipse, line, stroke } from '../
 import { tagPack, torso } from './pen.mjs';
 
 const HORN = '#4a3b39', EMBER = '#8d1f22', GOLD = '#c9a03c';
+// the horn's two edges as cubics off its root (x out from the temple, y up), and a point along one
+const HORN_OUT = [[0, 0], [28, -32], [36, -74], [18, -98]], HORN_IN = [[18, -98], [26, -68], [14, -34], [-12, -4]];
+const cubicAt = (c, t) => [0, 1].map((k) => (1 - t) ** 3 * c[0][k] + 3 * (1 - t) ** 2 * t * c[1][k] + 3 * (1 - t) * t * t * c[2][k] + t ** 3 * c[3][k]);
 
 /** A horn from each temple, up and back over the skull, ridged; laid out for the default head and fitted to this face's width. */
-MAKEUP.curvedHorns = { fit: 'face', over: () => [-1, 1].flatMap((sd) => { const x = 200 + sd * 62, y = 146; return [
-  path(`M ${x} ${y} C ${x + sd * 28} ${y - 32}, ${x + sd * 36} ${y - 74}, ${x + sd * 18} ${y - 98} C ${x + sd * 26} ${y - 68}, ${x + sd * 14} ${y - 34}, ${x - sd * 12} ${y - 4} Z`, { fill: HORN, horn: true }),
-  path(`M ${x + sd * 4} ${y - 12} C ${x + sd * 24} ${y - 40}, ${x + sd * 30} ${y - 70}, ${x + sd * 17} ${y - 92}`, stroke('#8d7a72', 2, 0.45)),
-  ...[0, 1, 2].map((i) => path(`M ${x - sd * (6 - i * 6)} ${y - 10 - i * 24} Q ${x + sd * (10 + i * 6)} ${y - 18 - i * 26} ${x + sd * (20 + i * 4)} ${y - 14 - i * 26}`, stroke('#2b2220', 1.6, 0.45)))]; }) }; // the growth ridges across it
+MAKEUP.curvedHorns = { fit: 'face', over: () => [-1, 1].flatMap((sd) => { const x = 200 + sd * 62, y = 146, P = ([u, v]) => `${x + sd * u} ${y + v}`; return [
+  path(`M ${P(HORN_OUT[0])} C ${HORN_OUT.slice(1).map(P).join(', ')} C ${HORN_IN.slice(1).map(P).join(', ')} Z`, { fill: HORN, horn: true }),
+  path(`M ${x + sd * 4} ${y - 12} C ${x + sd * 24} ${y - 40}, ${x + sd * 30} ${y - 70}, ${x + sd * 21} ${y - 90}`, stroke('#8d7a72', 2, 0.45)), // the light along it, ending short of the tip inside the outline
+  ...[0.18, 0.42, 0.66].map((t) => { const a = cubicAt(HORN_OUT, t), b = cubicAt(HORN_IN, 1 - t), at = (f) => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f], m = at(0.5); // edge to edge at one height, inset from both
+    return path(`M ${P(at(0.12))} Q ${P([m[0], m[1] + 2.5])} ${P(at(0.88))}`, stroke('#2b2220', 1.6, 0.45)); })]; }) }; // the growth ridges across it, each bowed toward the root and ending inside the horn's own outline
 /** A sigil between the brows: a ring with two rays and a stem, placed off this face's own brow line. */
 MAKEUP.infernalSigil = { face: (p) => { const by = p.eyes.y - p.eyes.browLift - 46; return [ellipse(200, by, 9, 9, { fill: 'none', stroke: EMBER, sw: 2.4, op: 0.9 }), ...[-1, 1].map((sd) => line(200 + sd * 9, by - 6, 200 + sd * 17, by - 15, stroke(EMBER, 2.2, 0.9))), line(200, by + 9, 200, by + 21, stroke(EMBER, 2.2, 0.9))]; } };
 

@@ -47,7 +47,7 @@ MAKEUP.neonKey = {
     ...KEY.flatMap(([s, c]) => soft(200 + s * (h + 4), 300, h * 0.55, 62, c, 0.5)), UNCLIP]; }, // the side of the column facing each light, falling off toward the throat; soft and gone by the collar, because a neckline (an off-shoulder top) shows the neck slot through it and a hard-ended band read as a broken neck
   skin: (p) => { const d = facePath(p), w = p.face.width / 2, bot = 112 + p.face.height + 16 * p.face.chin; return [
     clip(d), rect(100, 90, 200, 270, { fill: NIGHT, op: 0.26 }), // the front of the face, which neither light reaches
-    ...KEY.flatMap(([s, c]) => [path(facePlane(p, s, 0.86), { fill: c, op: 0.2 }), sideOf(s, w * 0.05, w * 0.55, 100, bot), ...rim(d, c), UNCLIP, ...soft(200 + s * w * 0.66, p.eyes.y + 28, 12, 20, mix(c, '#ffffff', 0.6), 0.3)]), // the cheek's outer face as a plane, the rim along the outline itself, and the hot spot where the cheekbone turns into the light
+    ...KEY.flatMap(([s, c]) => [path(facePlane(p, s, 0.86), { fill: c, op: 0.2 }), sideOf(s, w * 0.05, w * 0.55, 100, bot), clip(`M 0 ${f1(p.eyes.y - 24)} L 400 ${f1(p.eyes.y - 24)} L 400 760 L 0 760 Z`), ...rim(d, c), UNCLIP, UNCLIP, ...soft(200 + s * w * 0.66, p.eyes.y + 28, 12, 20, mix(c, '#ffffff', 0.6), 0.3)]), // the cheek's outer face as a plane, the rim along the outline from the temple down to the jaw, and the hot spot where the cheekbone turns into the light. The rim starts under the brow: run from the crown it went round the whole head and sealed the face in a glass helmet (T150)
     UNCLIP,
     OUTSIDE(d), ...KEY.flatMap(([s, c]) => { const e = earAt(p, s); return e.rx > 1 ? [ellipse(e.x, e.y, e.rx, e.ry, { fill: c, op: 0.4 }), ellipse(e.x + s * e.rx * 0.35, e.y - 2, e.rx * 0.5, e.ry * 0.8, { fill: mix(c, '#ffffff', 0.4), op: 0.35 })] : []; }), UNCLIP]; }, // the ears face the lights square on: the brightest skin there is
   face: (p) => { const y0 = p.eyes.y + 12, yt = p.eyes.y + 8 + p.nose.length, my = p.mouth.y, mw = p.mouth.width / 2; return KEY.flatMap(([s, c]) => [
@@ -55,7 +55,7 @@ MAKEUP.neonKey = {
     path(`M ${f1(200 + s * mw * 0.25)} ${f1(my + 4)} Q ${f1(200 + s * mw * 0.6)} ${f1(my + 6)} ${f1(200 + s * mw * 0.85)} ${f1(my + 2)}`, stroke(mix(c, '#ffffff', 0.5), 1.8, 0.7)), // the glint along the lower lip
   ]); },
   over: (p) => { const w = p.face.width / 2, lit = (z) => KEY.flatMap(([s, c]) => [...soft(200 + s * (w + 80), 170, 120, 260, c, 0.75), ...soft(200 + s * (w + 70), 150, 60, 200, mix(c, '#ffffff', 0.5), 0.45)]); // falling off from the outside in: a stroked rim here outlined every curl and the cut round the face, which read as tubes
-    return [...hairZones(p), ...beardZones(p)].flatMap((z) => [...z.map((d) => clip(d)), ...lit(z), ...z.map(() => UNCLIP)]); }, // the outside of the hair and the beard along their own edges, the crown left dark
+    return [...hairZones(p, { back: false }), ...beardZones(p)].flatMap((z) => [...z.map((d) => clip(d)), ...lit(z), ...z.map(() => UNCLIP)]); }, // the outside of the hair and the beard along their own edges, the crown left dark
   body: () => [clip(TRUNK(690)), rect(60, 330, 280, 400, { fill: NIGHT, op: 0.16 }),
     ...KEY.flatMap(([s, c]) => [...soft(200 + s * 140, 470, 80, 230, c, 0.55), path(`M ${200 + s * 40} 356 C ${200 + s * 74} 356, ${200 + s * 100} 366, ${200 + s * 110} 400`, stroke(mix(c, '#ffffff', 0.3), 8, 0.45))]), UNCLIP], // the chest's sides falling off toward the middle, and the tops of the shoulders
   front: (p) => KEY.flatMap(([s, c]) => { if (armed(p, s)) return []; const a = ARM(s); return [
