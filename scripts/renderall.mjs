@@ -26,3 +26,52 @@ export function compareTable(a, b) {
     ...Object.fromEntries(KEYS.slice(2).map((k) => [k, +(b[s][k] - a[s][k]).toFixed(3)])),
   }));
 }
+
+/** The header tempo as cps, for the analyzer's cycle grid: bpm over 4/4, or cps, or the default. */
+const cpsOf = (src) => { const c = /\bcps:\s*([\d.]+)/.exec(src), b = /\bbpm:\s*([\d.]+)/.exec(src); return c ? +c[1] : b ? +b[1] / 240 : .5; };
+
+export async function renderAll(tag, songs, { port = process.env.PORT || 3000, mp3 = false } = {}) {
+  const dir = path.join(RENDERS, tag); fs.mkdirSync(dir, { recursive: true });
+  const failed = [];
+  for (const song of songs) {
+    const base = song.replace(/\.strudel$/, ''), out = path.join(dir, `${base}.wav`);
+    if (fs.existsSync(out)) { console.log(`${base}: have`); continue; }
+    let wav = null;
+    for (let attempt = 0; attempt < 2 && !wav; attempt++) {
+      const got = path.join(ROOT, (await renderVia({ song, name: `${tag}-${base}`, mp3 }, port)).replace(/\.mp3$/, '.wav'));
+      if (silent(fs.readFileSync(got))) { console.log(`${base}: silent render, retrying`); fs.rmSync(got, { force: true }); continue; }
+      wav = got;
+    }
+    if (!wav) { failed.push(base); console.log(`${base}: FAILED twice: relaunch the headless page and re-run`); continue; }
+    fs.renameSync(wav, out);
+    const m = wav.replace(/\.wav$/, '.mp3');
+    if (fs.existsSync(m)) fs.renameSync(m, path.join(dir, `${base}.mp3`));
+    const a = analyze(readWav(fs.readFileSync(out)), { cps: cpsOf(fs.readFileSync(path.join(ROOT, 'songs', song), 'utf8')) });
+    fs.writeFileSync(path.join(dir, `${base}.json`), JSON.stringify(a, null, 1));
+    console.log(`${base}: rms ${a.rms} peak ${a.peak} centroid ${a.centroidHz} Hz`);
+  }
+  return failed;
+}
+
+export const loadTag = (tag) => {
+  const dir = path.join(RENDERS, tag);
+  return Object.fromEntries(fs.readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => [f.slice(0, -5), JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'))]));
+};
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const args = process.argv.slice(2);
+  if (args[0] === '--compare') {
+    const rows = compareTable(loadTag(args[1]), loadTag(args[2]));
+    const cols = ['song', 'rmsDb', 'peakDb', ...KEYS.slice(2)];
+    console.log(cols.map((c) => c.padStart(c === 'song' ? 28 : 11)).join(''));
+    for (const r of rows) console.log(cols.map((c) => String(r[c]).padStart(c === 'song' ? 28 : 11)).join(''));
+    const mean = (k) => +(rows.reduce((s, r) => s + r[k], 0) / (rows.length || 1)).toFixed(2);
+    console.log(['mean', ...cols.slice(1).map(mean)].map((c, i) => String(c).padStart(i ? 11 : 28)).join(''));
+    process.exit(0);
+  }
+  const mp3 = args.includes('--mp3'), tag = args.find((a) => !a.startsWith('--') && !a.endsWith('.strudel'));
+  if (!tag) { console.error('usage: node scripts/renderall.mjs <tag> [song.strudel ...] [--mp3] | --compare a b'); process.exit(2); }
+  const only = args.filter((a) => a.endsWith('.strudel')).map((a) => path.basename(a));
+  const failed = await renderAll(tag, only.length ? only : songList(), { mp3 });
+  if (failed.length) { console.error(`failed: ${failed.join(', ')}`); process.exit(1); }
+}
