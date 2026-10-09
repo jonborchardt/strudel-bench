@@ -117,7 +117,7 @@ HATS.shemagh = (p) => { const c = p.hat.color, dk = shade(c, 0.74), lt = shade(c
     path(opening, stroke('#000', 9, 0.2)), path(opening, stroke(shade(c, 0.45), 2, 0.7)), // the opening's shadow on the face and its folded edge
     path(`M 118 ${jy + 10} C 96 ${jy + 60}, 86 360, 82 420 L 92 432 L 98 424 L 106 436 L 113 426 L 121 434 L 126 420 C 128 380, 134 ${jy + 70}, 150 ${jy + 36} Z`, { fill: c }), // the tail over the shoulder, frayed at its end
     path(`M 116 ${jy + 30} C 106 ${jy + 80}, 100 370, 98 420`, stroke(dk, 3, 0.5)), path(`M 132 ${jy + 40} C 122 ${jy + 80}, 118 370, 116 418`, stroke(lt, 2, 0.35)),
-    ...[[84, 432], [96, 440], [108, 442], [120, 438]].map(([x, y]) => path(`M ${x} ${y - 6} L ${x + 1} ${y + 6} L ${x + 3} ${y - 6} Z`, fp(dk, 0.8)))];
+    ...[[84, 432], [96, 440], [108, 442], [120, 438]].map(([x, y]) => path(`M ${x} ${y - 6} L ${x + 1} ${y + 6} L ${x + 3} ${y - 6} Z`, fp(dk, 0.8))), { ...path(opening, { fill: shade(c, 0.32) }), back: true }]; // `back`: the whole opening lined again behind the head, so a turned head never shows the background past its cheek
 };
 HAT_CROWN.shemagh = 400; // like the hood: no crown line on the skull, the hair goes under it
 /** A salvaged helmet: a dented dome, its paint chipped to the steel, a scrap plate riveted over a hole at the front, the rim's lip and the chin strap hanging loose. */
