@@ -511,9 +511,10 @@
     if (op === 'dup') return did(() => { const { src, name } = duplicateSection(code.text, s.name); mixSection = name; if (pinned) pinned = name; return src; }, `duplicated ${s.name}`);
     if (op === 'verb') return openPickList(opBtn, { names: Object.keys(VERBS), labels: Object.fromEntries(Object.entries(VERBS).map(([k, v]) => [k, v.title])),
       onPick: (v) => { // applyVerb can refuse every layer (all spread); say so rather than silently doing nothing
-        let refused = 0;
-        const ok = did(() => { const r = applyVerb(code.text, s.name, v, effective()); refused = r.refused.length; return r.src; }, `${s.name} ${v}`, false, s.name);
+        let refused = 0, note = [];
+        const ok = did(() => { const r = applyVerb(code.text, s.name, v, effective()); refused = r.refused.length; note = [...r.skipped, ...r.report.filter((x) => /duck was/.test(x))]; return r.src; }, `${s.name} ${v}`, false, s.name);
         if (ok && refused) $('mixstatus').textContent += ` (${refused} refused)`;
+        if (ok && note.length) $('mixstatus').textContent += ` (${note.join('; ')})`;
       } });
     did(() => moveSection(code.text, s.name, op === 'left' ? -1 : 1), `moved ${s.name} ${op === 'left' ? 'earlier' : 'later'}`);
   };

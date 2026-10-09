@@ -369,3 +369,14 @@ test('verb sidechain writes duck onto bass and pad, not drums', async () => {
   assert.match(out, /pad: \{[^}]*duck: 'drums'/);
   assert.doesNotMatch(out, /drums: \{[^}]*duck/);
 });
+
+test('verb sidechain skips a section with no drums and notes an overwritten duck', async () => {
+  const { applyVerb } = await import('../lib/resolve.mjs');
+  const src = "song({ cps: .5 }, [section('a', 8, { bass: {}, pad: {} })])\n";
+  const r = applyVerb(src, 'a', 'sidechain');
+  assert.doesNotMatch(r.src, /duck/);
+  assert.equal(r.skipped.length, 2);
+  assert.match(r.skipped.join(), /bass/); assert.match(r.skipped.join(), /pad/);
+  const src2 = "song({ cps: .5 }, [section('a', 8, { drums: {}, bass: { duck: 'kick' } })])\n";
+  assert.match(applyVerb(src2, 'a', 'sidechain').report.join(), /bass: duck was/);
+});

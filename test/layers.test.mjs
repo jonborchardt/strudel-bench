@@ -463,7 +463,16 @@ test('sub: a clean sine an octave under each bass note at sub × gain, none of t
   assert.ok(Math.abs(subs[0].gain - main.gain * .5) < 1e-9);
   for (const k of ['cutoff', 'ftype', 'drive', 'distort', 'shape', 'lpenv', 'unison']) assert.equal(subs[0][k], undefined, k);
   assert.equal(subs[0].orbit, main.orbit);
-  const low = haps({ notes: '0 0 0 0', sub: .5, register: 0 }).filter((v) => v.s === 'sine'); // the lowest register
-  if (low[0].note + 12 < 28) assert.equal(low[0].note, haps({ notes: '0 0 0 0', register: 0 })[0].note, 'under midi 28 the sub sits on the note');
+  // the axes see only the bass: a heavy, driven, aggressive bass leaves the sine clean and above the floor
+  const hot = haps({ notes: '0 0 0 0', patch: 'driven', weight: .8, aggression: .9, sub: .5, register: 1 }).filter((v) => v.s === 'sine');
+  assert.ok(hot.length > 0);
+  for (const v of hot) {
+    for (const k of ['cutoff', 'distort', 'shape', 'ftype', 'drive']) assert.equal(v[k], undefined, `hot sub ${k}`);
+    assert.ok(v.note >= 28, `sub note ${v.note} >= 28`);
+  }
+  const lowAll = haps({ notes: '0 0 0 0', sub: .5, register: 0 });
+  const low = lowAll.filter((v) => v.s === 'sine'), lowMain = lowAll.find((v) => v.s !== 'sine');
+  assert.ok(lowMain.note < 40, `register 0 main note ${lowMain.note} is under 40`);
+  assert.equal(low[0].note, lowMain.note, 'under midi 28 the sub sits on the note');
   assert.throws(() => haps({ sub: 2 }), /sub must be a number in 0\.\.1/);
 });
