@@ -1741,7 +1741,7 @@
    "unknown:neck"
   ],
   "severity": 2,
-  "seen": 11,
+  "seen": 12,
   "evidence": [
    "eyJzZWVkIjo2MzU4NDAsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4wNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MC4yLCJtb3V0aC5wcmVzcyI6MC4zLCJleWVzLm9wZW5uZXNzIjowLjYsImV5ZXMuYnJvd0xpZnQiOi00LCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6LTIsImV5ZXMuc3F1aW50IjowLjV9fQ",
    "eyJzZWVkIjozNDEzMDIsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC45MiwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuODUsImV5ZXMuYnJvd0xpZnQiOjEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC43NSwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6MC4wMiwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLjE1LCJwb3NlLnNob3VsZGVyIjowLjMsInByb3BzIjpbXX19",
@@ -1753,7 +1753,8 @@
    "eyJzZWVkIjo0MjkxODQsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MCwibW91dGgub3BlbiI6MC41NSwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjEuMzUsImV5ZXMuYnJvd0xpZnQiOjksImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjozLCJleWVzLnNxdWludCI6MH19",
    "eyJzZWVkIjo5NTc2OTYsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4wNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MC4yLCJtb3V0aC5wcmVzcyI6MC4zLCJleWVzLm9wZW5uZXNzIjowLjYsImV5ZXMuYnJvd0xpZnQiOi00LCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6LTIsImV5ZXMuc3F1aW50IjowLjV9fQ",
    "eyJzZWVkIjo5NjU1NzYsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4wNiwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuMDQsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjoxLCJleWVzLnNxdWludCI6MH19",
-   "eyJzZWVkIjo5NDk3MzAsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6LTEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo1LCJleWVzLnNxdWludCI6MH19"
+   "eyJzZWVkIjo5NDk3MzAsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6LTEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo1LCJleWVzLnNxdWludCI6MH19",
+   "eyJzZWVkIjoxOTMwNDIsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4zOCwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOTUsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLjUsImV5ZXMuc3F1aW50IjowLjMsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOi02LCJwb3NlLmhlYWRUaWx0IjotMC4wNSwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6WyJoYW5kc1VwIl19fQ"
   ],
   "tuples": [
    "punks/none/squint/bust",
@@ -1764,7 +1765,8 @@
    "punks/slightLeanRight/shut/figure",
    "punks/none/openMouth/bust",
    "punks/none/shut/bust",
-   "punks/none/pout/bust"
+   "punks/none/pout/bust",
+   "punks/handsUp/slightSmile/figure"
   ],
   "sheets": [
    "0015",
@@ -1777,7 +1779,8 @@
    "0197",
    "0233",
    "0307",
-   "0315"
+   "0315",
+   "0322"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -2757,14 +2760,15 @@
    "the receding hair is two pale tufts rising to the top of the head with a notch between: at cell size they read as two horns or cat ears, not a bald crown",
    "the pale receding hair is two tufts rising to the top of the head with a notch between, above the leafCirclet: they read as two lumps or ears, not a bald crown",
    "the pale receding hair is two white lobes rising to the top of the head with a notch between: at cell size they read as two horns or cat ears, not a bald crown",
-   "the black receding hair is two tufts rising to the top of the head with a notch between: at cell size they read as two horns or cat ears, not a bald crown"
+   "the black receding hair is two tufts rising to the top of the head with a notch between: at cell size they read as two horns or cat ears, not a bald crown",
+   "the blond receding hair is two tufts rising at the temples with a notch between: reads as two horns or cat ears, not a bald crown"
   ],
   "category": "style",
   "parts": [
    "hair:receding"
   ],
   "severity": 2,
-  "seen": 14,
+  "seen": 15,
   "evidence": [
    "eyJzZWVkIjo5MTM3NjcsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4zLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjUsIm1vdXRoLnByZXNzIjowLjMsImV5ZXMub3Blbm5lc3MiOjAuOCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotMywiZXllcy5zcXVpbnQiOjAuNCwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6NCwicG9zZS5oZWFkVGlsdCI6MCwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjotMC4yLCJwb3NlLnNob3VsZGVyIjotMC4yNSwicHJvcHMiOltdfX0",
    "eyJzZWVkIjozMDAyODYsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjEyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjgsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjksImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAuMzUsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC4yNSwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6NCwicG9zZS5oZWFkVGlsdCI6MCwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjotMC4yLCJwb3NlLnNob3VsZGVyIjotMC4yNSwicHJvcHMiOltdfX0",
@@ -2779,7 +2783,8 @@
    "eyJzZWVkIjo0ODE0MywiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJzY2lmaSIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MC40NSwiZXllcy5vcGVubmVzcyI6MS4xNCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOjAuMDIsInBvc2UuYm9keVRpbHQiOjAsInBvc2UudHVybiI6MC4xNSwicG9zZS5zaG91bGRlciI6MC4zLCJwcm9wcyI6W119fQ",
    "eyJzZWVkIjo3NzkwMTAsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZWx2ZXMiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4zOCwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOTUsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLjUsImV5ZXMuc3F1aW50IjowLjMsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjQsInBvc2UuaGVhZFRpbHQiOjAsInBvc2UuYm9keVRpbHQiOjAsInBvc2UudHVybiI6LTAuMiwicG9zZS5zaG91bGRlciI6LTAuMjUsInByb3BzIjpbXX19",
    "eyJzZWVkIjo3MTE2NzAsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZWx2ZXMiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6LTEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo1LCJleWVzLnNxdWludCI6MH19",
-   "eyJzZWVkIjo3OTYzMDUsImZhbWlseSI6ImFueSIsInRoZW1lIjoic2NpZmkiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4xMiwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MC44LCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC45LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLjM1LCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAuMjV9fQ"
+   "eyJzZWVkIjo3OTYzMDUsImZhbWlseSI6ImFueSIsInRoZW1lIjoic2NpZmkiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4xMiwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MC44LCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC45LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLjM1LCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAuMjV9fQ",
+   "eyJzZWVkIjo2ODI0NDcsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjEyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjgsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjksImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAuMzUsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC4yNX19"
   ],
   "tuples": [
    "editorial/statueStill/sneer/figure",
@@ -2793,7 +2798,8 @@
    "holograms/none/wideEyed/bust",
    "scifi/directFrontal/stare/figure",
    "elves/statueStill/slightSmile/figure",
-   "elves/none/pout/bust"
+   "elves/none/pout/bust",
+   "editorial/none/smirk/bust"
   ],
   "sheets": [
    "0038",
@@ -2806,7 +2812,8 @@
    "0168",
    "0212",
    "0283",
-   "0291"
+   "0291",
+   "0317"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -2822,14 +2829,15 @@
   "title": "the brocadeRobe's collar is a flat straight-edged dark trapezoid across the base of the neck, not a band curving round it",
   "notes": [
    "the brocadeRobe's collar is a flat straight-edged dark trapezoid across the base of the neck, not a band curving round it",
-   "the brocadeRobe's collar is a flat straight-edged black trapezoid across the base of the neck, not a band curving round it"
+   "the brocadeRobe's collar is a flat straight-edged black trapezoid across the base of the neck, not a band curving round it",
+   "the brocadeRobe's collar is a flat straight-edged dark band across the base of the neck, not a band curving round it"
   ],
   "category": "costume",
   "parts": [
    "top:brocadeRobe"
   ],
   "severity": 2,
-  "seen": 15,
+  "seen": 16,
   "evidence": [
    "eyJzZWVkIjo5NDc1NSwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJ0aWVmbGluZ3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4zOCwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOTUsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLjUsImV5ZXMuc3F1aW50IjowLjN9fQ",
    "eyJzZWVkIjo2NjQ4NjcsImZhbWlseSI6ImFueSIsInRoZW1lIjoidGllZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAsIm1vdXRoLm9wZW4iOjAuNTUsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjM1LCJleWVzLmJyb3dMaWZ0Ijo5LCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MywiZXllcy5zcXVpbnQiOjB9fQ",
@@ -2845,7 +2853,8 @@
    "eyJzZWVkIjo5MTM3ODksImZhbWlseSI6ImFueSIsInRoZW1lIjoidGllZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOi0wLjEsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLjQ1LCJleWVzLm9wZW5uZXNzIjoxLjE0LCJleWVzLmJyb3dMaWZ0IjotMywiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi00LCJleWVzLnNxdWludCI6MH19",
    "eyJzZWVkIjoxNzY1NzMsImZhbWlseSI6ImFueSIsInRoZW1lIjoidGllZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMDYsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjA0LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MSwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOi0wLjA0LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOi0wLjMsInBvc2Uuc2hvdWxkZXIiOjAuNCwicHJvcHMiOltdfX0",
    "eyJzZWVkIjoyODg5NjMsImZhbWlseSI6ImFueSIsInRoZW1lIjoidGllZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMjQsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAuMTV9fQ",
-   "eyJzZWVkIjoxMDcxNDcsImZhbWlseSI6ImFueSIsInRoZW1lIjoidGllZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMDYsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjA0LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MSwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjgsInBvc2UuaGVhZFRpbHQiOjAuMDYsInBvc2UuYm9keVRpbHQiOjAsInBvc2UudHVybiI6MC4yLCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6WyJoYW5kSGVhcnRHZXN0dXJlIl19fQ"
+   "eyJzZWVkIjoxMDcxNDcsImZhbWlseSI6ImFueSIsInRoZW1lIjoidGllZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMDYsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjA0LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MSwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjgsInBvc2UuaGVhZFRpbHQiOjAuMDYsInBvc2UuYm9keVRpbHQiOjAsInBvc2UudHVybiI6MC4yLCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6WyJoYW5kSGVhcnRHZXN0dXJlIl19fQ",
+   "eyJzZWVkIjoxMDcxNTEsImZhbWlseSI6ImFueSIsInRoZW1lIjoidGllZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMDYsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjA0LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MSwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjQsInBvc2UuaGVhZFRpbHQiOjAsInBvc2UuYm9keVRpbHQiOjAsInBvc2UudHVybiI6LTAuMiwicG9zZS5zaG91bGRlciI6LTAuMjUsInByb3BzIjpbXX19"
   ],
   "tuples": [
    "tieflings/none/slightSmile/bust",
@@ -2859,7 +2868,8 @@
    "tieflings/none/wideEyed/bust",
    "tieflings/handsAtSides/shut/figure",
    "tieflings/none/halfSmile/bust",
-   "tieflings/handHeart/shut/figure"
+   "tieflings/handHeart/shut/figure",
+   "tieflings/statueStill/shut/figure"
   ],
   "sheets": [
    "0041",
@@ -2874,7 +2884,8 @@
    "0285",
    "0308",
    "0309",
-   "0310"
+   "0310",
+   "0320"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -4006,7 +4017,8 @@
    "monolid eyes under punkLiner show no iris or sclera, only liner and lash: the sneer reads as eyes shut",
    "narrow eyes under punkLiner show no iris or sclera, only liner and lash: the pout reads as eyes shut",
    "narrow eyes under punkLiner show no iris or sclera, only the dark liner and lash: the smirk reads as eyes shut",
-   "round eyes under punkLiner show no iris or sclera, only the dark liner and lash: the grin reads as eyes shut"
+   "round eyes under punkLiner show no iris or sclera, only the dark liner and lash: the grin reads as eyes shut",
+   "narrow monolid eyes under punkLiner show almost no iris or sclera, only liner and lash line: halfSmile reads as eyes shut"
   ],
   "category": "expression",
   "parts": [
@@ -4014,14 +4026,15 @@
    "makeup:punkLiner"
   ],
   "severity": 2,
-  "seen": 6,
+  "seen": 7,
   "evidence": [
    "eyJzZWVkIjo3NDU5NTQsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4yNCwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjEsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC4xNX19",
    "eyJzZWVkIjoxNzk2MjAsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuMywibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MC41LCJtb3V0aC5wcmVzcyI6MC4zLCJleWVzLm9wZW5uZXNzIjowLjgsImV5ZXMuYnJvd0xpZnQiOi0zLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6LTMsImV5ZXMuc3F1aW50IjowLjQsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOi02LCJwb3NlLmhlYWRUaWx0IjotMC4wNSwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6WyJoYW5kc1VwIl19fQ",
    "eyJzZWVkIjoyMzk4NjIsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6LTEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo1LCJleWVzLnNxdWludCI6MH19",
    "eyJzZWVkIjo4OTQyMDMsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4xMiwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MC44LCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC45LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLjM1LCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAuMjUsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOi02LCJwb3NlLmhlYWRUaWx0IjotMC4wNSwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6WyJoYW5kc1VwIl19fQ",
    "eyJzZWVkIjo2NjU0NDgsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC45MiwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuODUsImV5ZXMuYnJvd0xpZnQiOjEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC43NSwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6OCwicG9zZS5oZWFkVGlsdCI6MC4wNiwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLjIsInBvc2Uuc2hvdWxkZXIiOjAsInByb3BzIjpbImhhbmRIZWFydEdlc3R1cmUiXX19",
-   "eyJzZWVkIjo2MjgxOTcsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC45MiwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuODUsImV5ZXMuYnJvd0xpZnQiOjEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC43NSwicG9zZS5oZWFkWCI6LTgsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOi0wLjEyLCJwb3NlLmJvZHlUaWx0IjotMC4wNiwicG9zZS50dXJuIjotMC40LCJwb3NlLnNob3VsZGVyIjowLjUsInByb3BzIjpbXX19"
+   "eyJzZWVkIjo2MjgxOTcsImZhbWlseSI6ImFueSIsInRoZW1lIjoicHVua3MiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC45MiwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuODUsImV5ZXMuYnJvd0xpZnQiOjEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC43NSwicG9zZS5oZWFkWCI6LTgsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOi0wLjEyLCJwb3NlLmJvZHlUaWx0IjotMC4wNiwicG9zZS50dXJuIjotMC40LCJwb3NlLnNob3VsZGVyIjowLjUsInByb3BzIjpbXX19",
+   "eyJzZWVkIjo5Mjk4NiwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJwdW5rcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjI0LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjE1LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjotMC4wNCwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjotMC4zLCJwb3NlLnNob3VsZGVyIjowLjQsInByb3BzIjpbXX19"
   ],
   "tuples": [
    "punks/none/halfSmile/bust",
@@ -4029,14 +4042,16 @@
    "punks/none/pout/bust",
    "punks/handsUp/smirk/figure",
    "punks/handHeart/grin/figure",
-   "punks/slightLeanLeft/grin/figure"
+   "punks/slightLeanLeft/grin/figure",
+   "punks/handsAtSides/halfSmile/figure"
   ],
   "sheets": [
    "0077",
    "0188",
    "0267",
    "0270",
-   "0276"
+   "0276",
+   "0318"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -5941,14 +5956,16 @@
    "the pale locsShort is a row of flat round-topped columns standing straight up off the crown with gaps between: a white glove or a crown, not locs",
    "the pale locsShort is a row of flat round-topped columns standing straight up off the crown with gaps between: at cell size it reads as a white crown, not locs",
    "the black locsShort is a row of flat round-topped columns standing straight up off the crown with gaps between: at cell size it reads as a comb or a crown, not locs",
-   "the grey locsShort is a row of flat round-topped columns standing straight up off the crown with gaps between: at cell size it reads as a comb or a crown, not locs"
+   "the grey locsShort is a row of flat round-topped columns standing straight up off the crown with gaps between: at cell size it reads as a comb or a crown, not locs",
+   "the holographic locsShort is a row of flat round-topped columns standing straight up off the crown with gaps between: reads as a comb or a crown, not locs",
+   "the brown locsShort is a row of flat round-topped columns standing straight up off the crown with gaps between: reads as a comb or a crown, not locs"
   ],
   "category": "style",
   "parts": [
    "hair:locsShort"
   ],
   "severity": 2,
-  "seen": 15,
+  "seen": 17,
   "evidence": [
    "eyJzZWVkIjoxMDEwMiwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJ3YXN0ZWxhbmRlcnMiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6LTEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo1LCJleWVzLnNxdWludCI6MH19",
    "eyJzZWVkIjo0MTkwNDgsImZhbWlseSI6ImFueSIsInRoZW1lIjoidGllZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuOTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjg1LCJleWVzLmJyb3dMaWZ0IjoxLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAuNzV9fQ",
@@ -5964,7 +5981,9 @@
    "eyJzZWVkIjo3MDM0NjIsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZ290aGljIiwib3YiOnsibW91dGguc21pbGUiOi0wLjEsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLjQ1LCJleWVzLm9wZW5uZXNzIjoxLjE0LCJleWVzLmJyb3dMaWZ0IjotMywiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi00LCJleWVzLnNxdWludCI6MH19",
    "eyJzZWVkIjo2MDE2NzIsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZ290aGljIiwib3YiOnsibW91dGguc21pbGUiOjAuMTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuOCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MC4zNSwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjI1fX0",
    "eyJzZWVkIjo5NjUzOTYsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9pciIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4wNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjEsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MCwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6LTYsInBvc2UuaGVhZFRpbHQiOi0wLjA1LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAsInBvc2Uuc2hvdWxkZXIiOjAsInByb3BzIjpbImhhbmRzVXAiXX19",
-   "eyJzZWVkIjo2NzQ5NjIsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOjAuMTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuOCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MC4zNSwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjI1fX0"
+   "eyJzZWVkIjo2NzQ5NjIsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOjAuMTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuOCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MC4zNSwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjI1fX0",
+   "eyJzZWVkIjoxMTYyMDUsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaG9sb2dyYW1zIiwib3YiOnsibW91dGguc21pbGUiOjAuMjQsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAuMTV9fQ",
+   "eyJzZWVkIjo5Mzg1MzAsImZhbWlseSI6ImFueSIsInRoZW1lIjoic2NpZmkiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC45MiwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuODUsImV5ZXMuYnJvd0xpZnQiOjEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC43NSwicG9zZS5oZWFkWCI6LTgsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOi0wLjEyLCJwb3NlLmJvZHlUaWx0IjotMC4wNiwicG9zZS50dXJuIjotMC40LCJwb3NlLnNob3VsZGVyIjowLjUsInByb3BzIjpbXX19"
   ],
   "tuples": [
    "wastelanders/none/pout/bust",
@@ -5981,7 +6000,9 @@
    "gothic/none/stare/bust",
    "gothic/none/smirk/bust",
    "noir/handsUp/deadpan/figure",
-   "humans/none/smirk/bust"
+   "humans/none/smirk/bust",
+   "holograms/none/halfSmile/bust",
+   "scifi/slightLeanLeft/grin/figure"
   ],
   "sheets": [
    "0177",
@@ -5997,16 +6018,20 @@
    "0303",
    "0309",
    "0310",
-   "0315"
+   "0315",
+   "0321",
+   "0326"
   ],
-  "status": "open",
+  "status": "fixed",
   "opened": "2026-10-08",
-  "closed": null,
-  "commit": null,
+  "closed": "2026-10-08",
+  "commit": "5c02f62",
   "lint": null,
   "wontfix": null,
-  "attempts": 0,
-  "tried": []
+  "attempts": 1,
+  "tried": [
+   "2026-10-08: rooted each loc under the cap and arched it out and down beside the head: the comb is gone but the eleven-wide strokes fuse into one smooth bowl with a rounded flap standing off each side at the ear, a bowl cut with dog ears, still not locs"
+  ]
  },
  {
   "id": "T123",
@@ -6590,7 +6615,8 @@
   "notes": [
    "graveReach lands both claws on the dadCap's brim at the temples, the sleeves standing up beside the face: hands clutching the head rather than reaching (lint pose:hand-on-face)",
    "graveReach lands both claws on the wideBrimFelt's brim at the temples, the red sleeves standing up beside the face: hands clutching the head rather than reaching",
-   "graveReach lands both claws on the dadCap's brim at the temples, the sleeves standing up beside the face: hands clutching the head rather than reaching"
+   "graveReach lands both claws on the dadCap's brim at the temples, the sleeves standing up beside the face: hands clutching the head rather than reaching",
+   "graveReach lands both claws on the beanie's brim at the temples, the sleeves standing up beside the face: hands clutching the head rather than reaching"
   ],
   "category": "pose",
   "parts": [
@@ -6598,11 +6624,12 @@
    "stance:graveReach"
   ],
   "severity": 2,
-  "seen": 3,
+  "seen": 4,
   "evidence": [
    "eyJzZWVkIjo3NzY3ODksImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjIsIm1vdXRoLm9wZW4iOjAuMDgsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjMyLCJleWVzLmJyb3dMaWZ0IjoyLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjEwLCJwb3NlLmhlYWRUaWx0IjotMC4xNiwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLjUsInBvc2Uuc2hvdWxkZXIiOjAsInByb3BzIjpbImNsYXdzVXAiXX19",
    "eyJzZWVkIjo0MzI4MDUsImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjMsIm1vdXRoLm9wZW4iOjAuNDUsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjgsImV5ZXMuYnJvd0xpZnQiOi0xLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MSwiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOjEwLCJwb3NlLmhlYWRUaWx0IjotMC4xNiwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLjUsInBvc2Uuc2hvdWxkZXIiOjAsInByb3BzIjpbImNsYXdzVXAiXX19",
-   "eyJzZWVkIjo1ODYwNjksImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjM1LCJtb3V0aC5vcGVuIjowLjMsIm1vdXRoLnNrZXciOjAuNiwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuNywiZXllcy5icm93TGlmdCI6LTUsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNiwiZXllcy5zcXVpbnQiOjAuNSwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6MTAsInBvc2UuaGVhZFRpbHQiOi0wLjE2LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuNSwicG9zZS5zaG91bGRlciI6MCwicHJvcHMiOlsiY2xhd3NVcCJdfX0"
+   "eyJzZWVkIjo1ODYwNjksImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjM1LCJtb3V0aC5vcGVuIjowLjMsIm1vdXRoLnNrZXciOjAuNiwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuNywiZXllcy5icm93TGlmdCI6LTUsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNiwiZXllcy5zcXVpbnQiOjAuNSwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6MTAsInBvc2UuaGVhZFRpbHQiOi0wLjE2LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuNSwicG9zZS5zaG91bGRlciI6MCwicHJvcHMiOlsiY2xhd3NVcCJdfX0",
+   "eyJzZWVkIjo4ODc2NCwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJ1bmRlYWQiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuMzUsIm1vdXRoLm9wZW4iOjAuMywibW91dGguc2tldyI6MC42LCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC43LCJleWVzLmJyb3dMaWZ0IjotNSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi02LCJleWVzLnNxdWludCI6MC41LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjoxMCwicG9zZS5oZWFkVGlsdCI6LTAuMTYsInBvc2UuYm9keVRpbHQiOjAsInBvc2UudHVybiI6MC41LCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6WyJjbGF3c1VwIl19fQ"
   ],
   "tuples": [
    "undead/graveReach/deadStare/figure",
@@ -6612,7 +6639,8 @@
   "sheets": [
    "0198",
    "0246",
-   "0312"
+   "0312",
+   "0318"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -7040,16 +7068,19 @@
    "under the strawCap no boxBraids hair is drawn at the head, but pale translucent braid sticks hang beside the jaw on both sides from the brim to the shoulders, attached to nothing",
    "under the leatherCap no boxBraids hair is drawn at the head, but ginger braid sticks hang beside the jaw on both sides from the brim to the shoulders, standing off the head",
    "under the feltTravelHat no boxBraids hair is drawn at the head, but ginger braid sticks hang beside the jaw on both sides from the brim down the neck, standing off the head",
-   "under the feltTravelHat no boxBraids hair is drawn at the head, but pale translucent braid sticks hang beside the jaw on both sides from the brim down to the shoulders, attached to nothing"
+   "under the feltTravelHat no boxBraids hair is drawn at the head, but pale translucent braid sticks hang beside the jaw on both sides from the brim down to the shoulders, attached to nothing",
+   "under the strawCap no boxBraids hair is drawn at the head, but braid sticks hang beside the jaw on both sides down to the shoulders, attached to nothing",
+   "under the feltTravelHat no boxBraids hair is drawn at the head, but dark braid sticks hang beside the jaw on both sides down to the shoulders, attached to nothing"
   ],
   "category": "stack",
   "parts": [
    "hair:boxBraids",
+   "hat:feltTravelHat",
    "hat:pointedFeltHat",
    "hat:strawCap"
   ],
   "severity": 2,
-  "seen": 10,
+  "seen": 12,
   "evidence": [
    "eyJzZWVkIjo4MzcwODQsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9pciIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC41LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC45LCJleWVzLmJyb3dMaWZ0IjotMSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjUsImV5ZXMuc3F1aW50IjowfX0",
    "eyJzZWVkIjo3NzY5MCwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJnbm9tZXMiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuNSwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6LTEsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjo1LCJleWVzLnNxdWludCI6MCwicG9zZS5oZWFkWCI6OCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6MC4xMiwicG9zZS5ib2R5VGlsdCI6MC4wNiwicG9zZS50dXJuIjowLjQsInBvc2Uuc2hvdWxkZXIiOi0wLjUsInByb3BzIjpbXX19",
@@ -7060,7 +7091,9 @@
    "eyJzZWVkIjo5MTgwOTksImZhbWlseSI6ImFueSIsInRoZW1lIjoiaGFsZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMzgsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjk1LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MC41LCJleWVzLnNxdWludCI6MC4zLCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjo4LCJwb3NlLmhlYWRUaWx0IjowLjA2LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMiwicG9zZS5zaG91bGRlciI6MCwicHJvcHMiOlsiaGFuZEhlYXJ0R2VzdHVyZSJdfX0",
    "eyJzZWVkIjo4MTU5MzAsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHdhcnZlcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4zLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjUsIm1vdXRoLnByZXNzIjowLjMsImV5ZXMub3Blbm5lc3MiOjAuOCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotMywiZXllcy5zcXVpbnQiOjAuNH19",
    "eyJzZWVkIjoxNjU5MjEsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaGFsZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAsIm1vdXRoLm9wZW4iOjAuNTUsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjM1LCJleWVzLmJyb3dMaWZ0Ijo5LCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MywiZXllcy5zcXVpbnQiOjB9fQ",
-   "eyJzZWVkIjo5NjA0NjMsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOi0wLjMsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuNSwibW91dGgucHJlc3MiOjAuMywiZXllcy5vcGVubmVzcyI6MC44LCJleWVzLmJyb3dMaWZ0IjotMywiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi0zLCJleWVzLnNxdWludCI6MC40LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjAyLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMTUsInBvc2Uuc2hvdWxkZXIiOjAuMywicHJvcHMiOltdfX0"
+   "eyJzZWVkIjo5NjA0NjMsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOi0wLjMsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuNSwibW91dGgucHJlc3MiOjAuMywiZXllcy5vcGVubmVzcyI6MC44LCJleWVzLmJyb3dMaWZ0IjotMywiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi0zLCJleWVzLnNxdWludCI6MC40LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjAyLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMTUsInBvc2Uuc2hvdWxkZXIiOjAuMywicHJvcHMiOltdfX0",
+   "eyJzZWVkIjo5ODA2ODQsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaGFsZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMzgsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjk1LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MC41LCJleWVzLnNxdWludCI6MC4zfX0",
+   "eyJzZWVkIjo5ODY0MTksImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOjAuMDUsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuMiwibW91dGgucHJlc3MiOjAuMywiZXllcy5vcGVubmVzcyI6MC42LCJleWVzLmJyb3dMaWZ0IjotNCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi0yLCJleWVzLnNxdWludCI6MC41LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjotNiwicG9zZS5oZWFkVGlsdCI6LTAuMDUsInBvc2UuYm9keVRpbHQiOjAsInBvc2UudHVybiI6MCwicG9zZS5zaG91bGRlciI6MCwicHJvcHMiOlsiaGFuZHNVcCJdfX0"
   ],
   "tuples": [
    "noir/none/pout/figure",
@@ -7072,7 +7105,9 @@
    "halflings/handHeart/slightSmile/figure",
    "dwarves/none/sneer/bust",
    "halflings/none/openMouth/bust",
-   "humans/directFrontal/sneer/figure"
+   "humans/directFrontal/sneer/figure",
+   "halflings/none/slightSmile/figure",
+   "humans/handsUp/squint/figure"
   ],
   "sheets": [
    "0212",
@@ -7084,7 +7119,9 @@
    "0260",
    "0267",
    "0275",
-   "0286"
+   "0286",
+   "0322",
+   "0324"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -7095,7 +7132,8 @@
   "attempts": 0,
   "tried": [],
   "aliases": [
-   "stack:hair:boxBraids"
+   "stack:hair:boxBraids",
+   "stack:hair:boxBraids+hat:pointedFeltHat+hat:strawCap"
   ]
  },
  {
@@ -8444,18 +8482,21 @@
    "under the boneHelm the longStraight hangs from the brim beside both temples as two dark flat pointed wedges standing off the head: blinkers rather than hair",
    "under the boneHelm the black longStraight hangs from the brim beside both temples as two grey flat pointed wedges standing off the head: blinkers rather than hair",
    "under the boneHelm the dark ponytailLow hangs from the brim beside both temples as two flat wedges standing off the head down to the cheeks: blinkers rather than hair",
-   "under the boneHelm the grey afroMedium hangs from the brim beside both temples as two flat pointed wedges standing off the head: blinkers rather than hair"
+   "under the boneHelm the grey afroMedium hangs from the brim beside both temples as two flat pointed wedges standing off the head: blinkers rather than hair",
+   "under the boneHelm the grey locsShort hangs from the brim beside both temples as flat pointed wedges standing off the head: blinkers rather than hair",
+   "under the boneHelm the dark lowBun hangs from the brim beside both temples as two flat pointed wedges standing off the head: blinkers rather than hair"
   ],
   "category": "stack",
   "parts": [
    "hair:afroMedium",
    "hair:locsShort",
+   "hair:lowBun",
    "hair:ponytailLow",
    "hair:sweptBack",
    "hat:boneHelm"
   ],
   "severity": 2,
-  "seen": 7,
+  "seen": 9,
   "evidence": [
    "eyJzZWVkIjoxNjMzNzgsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4zLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjUsIm1vdXRoLnByZXNzIjowLjMsImV5ZXMub3Blbm5lc3MiOjAuOCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotMywiZXllcy5zcXVpbnQiOjAuNCwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6LTYsInBvc2UuaGVhZFRpbHQiOi0wLjA1LCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAsInBvc2Uuc2hvdWxkZXIiOjAsInByb3BzIjpbImhhbmRzVXAiXX19",
    "eyJzZWVkIjo3NzY4MzEsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjA2LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC4wNCwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjEsImV5ZXMuc3F1aW50IjowfX0",
@@ -8463,7 +8504,9 @@
    "eyJzZWVkIjo1NDUsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjkyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC44NSwiZXllcy5icm93TGlmdCI6MSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjc1fX0",
    "eyJzZWVkIjo3MDYzNzksImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjI0LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjE1LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjAyLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMTUsInBvc2Uuc2hvdWxkZXIiOjAuMywicHJvcHMiOltdfX0",
    "eyJzZWVkIjoyMjkwNDMsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjM4LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC45NSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAuNSwiZXllcy5zcXVpbnQiOjAuMywicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6NCwicG9zZS5oZWFkVGlsdCI6MCwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjotMC4yLCJwb3NlLnNob3VsZGVyIjotMC4yNSwicHJvcHMiOltdfX0",
-   "eyJzZWVkIjo3ODgyNDUsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjkyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC44NSwiZXllcy5icm93TGlmdCI6MSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjc1LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjAyLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMTUsInBvc2Uuc2hvdWxkZXIiOjAuMywicHJvcHMiOltdfX0"
+   "eyJzZWVkIjo3ODgyNDUsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjkyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC44NSwiZXllcy5icm93TGlmdCI6MSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjc1LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjAyLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMTUsInBvc2Uuc2hvdWxkZXIiOjAuMywicHJvcHMiOltdfX0",
+   "eyJzZWVkIjo1NzM5ODUsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjA2LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC4wNCwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjEsImV5ZXMuc3F1aW50IjowLCJwb3NlLmhlYWRYIjotOCwicG9zZS5oZWFkWSI6MCwicG9zZS5oZWFkVGlsdCI6LTAuMTIsInBvc2UuYm9keVRpbHQiOi0wLjA2LCJwb3NlLnR1cm4iOi0wLjQsInBvc2Uuc2hvdWxkZXIiOjAuNSwicHJvcHMiOltdfX0",
+   "eyJzZWVkIjo4NjM2ODksImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjA2LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC4wNCwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjEsImV5ZXMuc3F1aW50IjowfX0"
   ],
   "tuples": [
    "orcs/handsUp/sneer/figure",
@@ -8472,7 +8515,8 @@
    "orcs/none/grin/bust",
    "orcs/directFrontal/halfSmile/figure",
    "orcs/statueStill/slightSmile/figure",
-   "orcs/directFrontal/grin/figure"
+   "orcs/directFrontal/grin/figure",
+   "orcs/slightLeanLeft/shut/figure"
   ],
   "sheets": [
    "0262",
@@ -8481,7 +8525,9 @@
    "0273",
    "0276",
    "0306",
-   "0314"
+   "0314",
+   "0326",
+   "0321"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -8494,7 +8540,8 @@
   "aliases": [
    "stack:hat:boneHelm",
    "stack:hair:locsShort+hair:sweptBack+hat:boneHelm",
-   "stack:hair:locsShort+hair:ponytailLow+hair:sweptBack+hat:boneHelm"
+   "stack:hair:locsShort+hair:ponytailLow+hair:sweptBack+hat:boneHelm",
+   "stack:hair:afroMedium+hair:locsShort+hair:ponytailLow+hair:sweptBack+hat:boneHelm"
   ]
  },
  {
@@ -8693,7 +8740,9 @@
    "the dark brown goatee is a rounded strip hanging from the lower lip down past the chin onto the neck: it reads as a tongue, not hair on the chin",
    "the brown goatee is a narrow tapered strip hanging from the lower lip down past the chin to the collar: it reads as a tongue sticking out, not hair on the chin",
    "the undead's dark goatee is a narrow tapered strip hanging from the snarling lower lip down past the chin: it reads as a tongue, not hair on the chin",
-   "the ginger vanDyke's chin patch is a narrow tapered strip hanging from the lower lip down past the chin onto the neck: it reads as a tongue sticking out, not hair on the chin"
+   "the ginger vanDyke's chin patch is a narrow tapered strip hanging from the lower lip down past the chin onto the neck: it reads as a tongue sticking out, not hair on the chin",
+   "the pale vanDyke chin patch is a narrow tapered strip hanging from the lower lip down past the chin onto the neck: a tongue, not hair on the chin",
+   "the holographic goatee is a rounded strip hanging from the lower lip down past the chin outline onto the neck: a tongue sticking out, not hair on the chin"
   ],
   "category": "stack",
   "parts": [
@@ -8701,7 +8750,7 @@
    "facialHair:vanDyke"
   ],
   "severity": 2,
-  "seen": 8,
+  "seen": 10,
   "evidence": [
    "eyJzZWVkIjo4MTM1NTcsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaGFsZmxpbmdzIiwib3YiOnsibW91dGguc21pbGUiOjAuMzgsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjk1LCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MC41LCJleWVzLnNxdWludCI6MC4zfX0",
    "eyJzZWVkIjo3ODg1MjAsImZhbWlseSI6ImFueSIsInRoZW1lIjoic2NpZmkiLCJvdiI6eyJtb3V0aC5zbWlsZSI6LTAuMywibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MC41LCJtb3V0aC5wcmVzcyI6MC4zLCJleWVzLm9wZW5uZXNzIjowLjgsImV5ZXMuYnJvd0xpZnQiOi0zLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6LTMsImV5ZXMuc3F1aW50IjowLjQsInBvc2UuaGVhZFgiOjgsInBvc2UuaGVhZFkiOjAsInBvc2UuaGVhZFRpbHQiOjAuMTIsInBvc2UuYm9keVRpbHQiOjAuMDYsInBvc2UudHVybiI6MC40LCJwb3NlLnNob3VsZGVyIjotMC41LCJwcm9wcyI6W119fQ",
@@ -8710,7 +8759,9 @@
    "eyJzZWVkIjo4ODExNDYsImZhbWlseSI6ImFueSIsInRoZW1lIjoiY3lib3JncyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjEyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjgsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjksImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAuMzUsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC4yNSwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6NCwicG9zZS5oZWFkVGlsdCI6MCwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjotMC4yLCJwb3NlLnNob3VsZGVyIjotMC4yNSwicHJvcHMiOltdfX0",
    "eyJzZWVkIjo3OTI1MSwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJzdGVhbXB1bmtzIiwib3YiOnsibW91dGguc21pbGUiOi0wLjUsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjksImV5ZXMuYnJvd0xpZnQiOi0xLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6NSwiZXllcy5zcXVpbnQiOjB9fQ",
    "eyJzZWVkIjo1OTY1MjEsImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjM1LCJtb3V0aC5vcGVuIjowLjMsIm1vdXRoLnNrZXciOjAuNiwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuNywiZXllcy5icm93TGlmdCI6LTUsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNiwiZXllcy5zcXVpbnQiOjAuNX19",
-   "eyJzZWVkIjo4MDk4NzgsImZhbWlseSI6ImFueSIsInRoZW1lIjoid2FzdGVsYW5kZXJzIiwib3YiOnsibW91dGguc21pbGUiOjAuMDUsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuMiwibW91dGgucHJlc3MiOjAuMywiZXllcy5vcGVubmVzcyI6MC42LCJleWVzLmJyb3dMaWZ0IjotNCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi0yLCJleWVzLnNxdWludCI6MC41LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjo0LCJwb3NlLmhlYWRUaWx0IjowLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOi0wLjIsInBvc2Uuc2hvdWxkZXIiOi0wLjI1LCJwcm9wcyI6W119fQ"
+   "eyJzZWVkIjo4MDk4NzgsImZhbWlseSI6ImFueSIsInRoZW1lIjoid2FzdGVsYW5kZXJzIiwib3YiOnsibW91dGguc21pbGUiOjAuMDUsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuMiwibW91dGgucHJlc3MiOjAuMywiZXllcy5vcGVubmVzcyI6MC42LCJleWVzLmJyb3dMaWZ0IjotNCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi0yLCJleWVzLnNxdWludCI6MC41LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjo0LCJwb3NlLmhlYWRUaWx0IjowLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOi0wLjIsInBvc2Uuc2hvdWxkZXIiOi0wLjI1LCJwcm9wcyI6W119fQ",
+   "eyJzZWVkIjozNjUxNDksImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjM1LCJtb3V0aC5vcGVuIjowLjMsIm1vdXRoLnNrZXciOjAuNiwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuNywiZXllcy5icm93TGlmdCI6LTUsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNiwiZXllcy5zcXVpbnQiOjAuNSwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6MiwicG9zZS5oZWFkVGlsdCI6MCwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6W119fQ",
+   "eyJzZWVkIjozNjA0ODUsImZhbWlseSI6ImFueSIsInRoZW1lIjoiaG9sb2dyYW1zIiwib3YiOnsibW91dGguc21pbGUiOjAuMTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuOCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MC4zNSwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjI1LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjowLCJwb3NlLmhlYWRUaWx0IjowLjAyLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOjAuMTUsInBvc2Uuc2hvdWxkZXIiOjAuMywicHJvcHMiOltdfX0"
   ],
   "tuples": [
    "halflings/none/slightSmile/bust",
@@ -8720,7 +8771,9 @@
    "cyborgs/statueStill/smirk/figure",
    "steampunks/none/pout/bust",
    "undead/none/snarl/figure",
-   "wastelanders/statueStill/squint/figure"
+   "wastelanders/statueStill/squint/figure",
+   "undead/deadStill/snarl/figure",
+   "holograms/directFrontal/smirk/figure"
   ],
   "sheets": [
    "0269",
@@ -8729,7 +8782,9 @@
    "0284",
    "0291",
    "0292",
-   "0316"
+   "0316",
+   "0318",
+   "0326"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -8988,7 +9043,8 @@
   "id": "T194",
   "title": "under the boneHelm the grey longStraight hangs from the brim to the shoulders as a translucent sheet wider than the head on both sides, the background showing through it",
   "notes": [
-   "under the boneHelm the grey longStraight hangs from the brim to the shoulders as a translucent sheet wider than the head on both sides, the background showing through it"
+   "under the boneHelm the grey longStraight hangs from the brim to the shoulders as a translucent sheet wider than the head on both sides, the background showing through it",
+   "under the boneHelm the black longStraight hangs from the brim to the shoulders as a flat sheet wider than the head on both sides"
   ],
   "category": "stack",
   "parts": [
@@ -8996,15 +9052,18 @@
    "hat:boneHelm"
   ],
   "severity": 2,
-  "seen": 1,
+  "seen": 2,
   "evidence": [
-   "eyJzZWVkIjo1NDUsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjkyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC44NSwiZXllcy5icm93TGlmdCI6MSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjc1fX0"
+   "eyJzZWVkIjo1NDUsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjkyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC44NSwiZXllcy5icm93TGlmdCI6MSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjc1fX0",
+   "eyJzZWVkIjoyOTgzMjIsImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4zLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjUsIm1vdXRoLnByZXNzIjowLjMsImV5ZXMub3Blbm5lc3MiOjAuOCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotMywiZXllcy5zcXVpbnQiOjAuNCwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6OCwicG9zZS5oZWFkVGlsdCI6MC4wNiwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLjIsInBvc2Uuc2hvdWxkZXIiOjAsInByb3BzIjpbImhhbmRIZWFydEdlc3R1cmUiXX19"
   ],
   "tuples": [
-   "orcs/none/grin/bust"
+   "orcs/none/grin/bust",
+   "orcs/handHeart/sneer/figure"
   ],
   "sheets": [
-   "0273"
+   "0273",
+   "0322"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -9052,28 +9111,35 @@
   "notes": [
    "the right half of the pale vampire face is a grey translucent plane in stepped bands from the temple to the jaw: a pasted banded shadow rather than a tonal plane",
    "one half of the pale vampire face is a grey translucent plane in stepped contour bands from the temple to the jaw: a banded pasted shadow rather than a tonal plane",
-   "the pale vampire face's shadowed half is grey translucent planes in stepped bands from the temple to the jaw: a pasted banded shadow rather than a tonal plane"
+   "the pale vampire face's shadowed half is grey translucent planes in stepped bands from the temple to the jaw: a pasted banded shadow rather than a tonal plane",
+   "the pale vampire face carries faint stepped grey bands down the left cheek from temple to jaw: a banded pasted shadow rather than a tonal plane"
   ],
   "category": "style",
   "parts": [
    "makeup:vampirePallor"
   ],
   "severity": 1,
-  "seen": 3,
+  "seen": 5,
   "evidence": [
    "eyJzZWVkIjo5NjU0NTMsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZ290aGljIiwib3YiOnsibW91dGguc21pbGUiOi0wLjMsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuNSwibW91dGgucHJlc3MiOjAuMywiZXllcy5vcGVubmVzcyI6MC44LCJleWVzLmJyb3dMaWZ0IjotMywiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi0zLCJleWVzLnNxdWludCI6MC40LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjo0LCJwb3NlLmhlYWRUaWx0IjowLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOi0wLjIsInBvc2Uuc2hvdWxkZXIiOi0wLjI1LCJwcm9wcyI6W119fQ",
    "eyJzZWVkIjo5MjMyMTksImZhbWlseSI6ImFueSIsInRoZW1lIjoiZ290aGljIiwib3YiOnsibW91dGguc21pbGUiOjAsIm1vdXRoLm9wZW4iOjAuNTUsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjM1LCJleWVzLmJyb3dMaWZ0Ijo5LCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MywiZXllcy5zcXVpbnQiOjAsInBvc2UuaGVhZFgiOjAsInBvc2UuaGVhZFkiOi02LCJwb3NlLmhlYWRUaWx0IjotMC4wNSwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLCJwb3NlLnNob3VsZGVyIjowLCJwcm9wcyI6WyJoYW5kc1VwIl19fQ",
-   "eyJzZWVkIjo4MzM1MDEsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZ290aGljIiwib3YiOnsibW91dGguc21pbGUiOjAuMTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuOCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MC4zNSwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjI1LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjo0LCJwb3NlLmhlYWRUaWx0IjowLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOi0wLjIsInBvc2Uuc2hvdWxkZXIiOi0wLjI1LCJwcm9wcyI6W119fQ"
+   "eyJzZWVkIjo4MzM1MDEsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZ290aGljIiwib3YiOnsibW91dGguc21pbGUiOjAuMTIsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuOCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuOSwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MC4zNSwiZXllcy5icm93SW5uZXIiOjAsImV5ZXMuc3F1aW50IjowLjI1LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjo0LCJwb3NlLmhlYWRUaWx0IjowLCJwb3NlLmJvZHlUaWx0IjowLCJwb3NlLnR1cm4iOi0wLjIsInBvc2Uuc2hvdWxkZXIiOi0wLjI1LCJwcm9wcyI6W119fQ",
+   "eyJzZWVkIjoyNTU5OSwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJnb3RoaWMiLCJvdiI6eyJtb3V0aC5zbWlsZSI6MC4yNCwibW91dGgub3BlbiI6MCwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjEsImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC4xNSwicG9zZS5oZWFkWCI6MCwicG9zZS5oZWFkWSI6OCwicG9zZS5oZWFkVGlsdCI6MC4wNiwicG9zZS5ib2R5VGlsdCI6MCwicG9zZS50dXJuIjowLjIsInBvc2Uuc2hvdWxkZXIiOjAsInByb3BzIjpbImhhbmRIZWFydEdlc3R1cmUiXX19",
+   "eyJzZWVkIjo0MDYwMDgsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZ290aGljIiwib3YiOnsibW91dGguc21pbGUiOjAuMDUsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuMiwibW91dGgucHJlc3MiOjAuMywiZXllcy5vcGVubmVzcyI6MC42LCJleWVzLmJyb3dMaWZ0IjotNCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi0yLCJleWVzLnNxdWludCI6MC41fX0"
   ],
   "tuples": [
    "gothic/statueStill/sneer/figure",
    "gothic/handsUp/openMouth/figure",
-   "gothic/statueStill/smirk/figure"
+   "gothic/statueStill/smirk/figure",
+   "gothic/handHeart/halfSmile/figure",
+   "gothic/none/squint/bust"
   ],
   "sheets": [
    "0276",
    "0292",
-   "0308"
+   "0308",
+   "0318",
+   "0325"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -9091,7 +9157,9 @@
    "under the noirKey the pale grey lightStubble is a translucent sheet with a straight top edge from cheek to cheek under the nose and down past the chin, lighter than the shadowed half it lies on: a grey mask, not stubble on the jaw",
    "under the noirKey the pale grey heavyStubble is a translucent sheet with a straight top edge from cheek to cheek under the nose and down past the chin, lighter than the shadowed half it lies on: a grey mask, not stubble on the jaw",
    "the undead's pale lightStubble is a grey translucent sheet with a straight top edge from cheek to cheek under the nose and down past the chin, lighter than the grey skin: a mask, not stubble on the jaw",
-   "under the noirKey the pale lightStubble is a translucent sheet with a straight top edge from cheek to cheek under the nose and down past the chin, lighter than the shadowed half it lies on: a grey mask"
+   "under the noirKey the pale lightStubble is a translucent sheet with a straight top edge from cheek to cheek under the nose and down past the chin, lighter than the shadowed half it lies on: a grey mask",
+   "under the noirKey the lightStubble is a pale grey-white translucent sheet with a straight top edge from cheek to cheek under the nose down past the chin, lighter than the shadowed half: a mask, not stubble",
+   "the white heavyStubble on the dwarf's dark skin is a pale grey translucent sheet with a straight top edge from cheek to cheek under the nose down past the chin: a grey wash over the lower face, not stubble on the jaw"
   ],
   "category": "stack",
   "parts": [
@@ -9099,23 +9167,29 @@
    "facialHair:lightStubble"
   ],
   "severity": 2,
-  "seen": 4,
+  "seen": 6,
   "evidence": [
    "eyJzZWVkIjo5NzE2MjUsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9pciIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjEyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjgsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjksImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAuMzUsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC4yNX19",
    "eyJzZWVkIjo2MTg3MiwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJub2lyIiwib3YiOnsibW91dGguc21pbGUiOjAuMDUsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuMiwibW91dGgucHJlc3MiOjAuMywiZXllcy5vcGVubmVzcyI6MC42LCJleWVzLmJyb3dMaWZ0IjotNCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi0yLCJleWVzLnNxdWludCI6MC41fX0",
    "eyJzZWVkIjoxNzI4NTQsImZhbWlseSI6ImFueSIsInRoZW1lIjoidW5kZWFkIiwib3YiOnsibW91dGguc21pbGUiOi0wLjMsIm1vdXRoLm9wZW4iOjAuNiwibW91dGguc2tldyI6MCwibW91dGgucHJlc3MiOjAsImV5ZXMub3Blbm5lc3MiOjAuNSwiZXllcy5icm93TGlmdCI6MywiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjYsImV5ZXMuc3F1aW50IjowfX0",
-   "eyJzZWVkIjo2MTQ4OTEsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9pciIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLCJtb3V0aC5vcGVuIjowLjU1LCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MS4zNSwiZXllcy5icm93TGlmdCI6OSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjMsImV5ZXMuc3F1aW50IjowfX0"
+   "eyJzZWVkIjo2MTQ4OTEsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9pciIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLCJtb3V0aC5vcGVuIjowLjU1LCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MS4zNSwiZXllcy5icm93TGlmdCI6OSwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjMsImV5ZXMuc3F1aW50IjowfX0",
+   "eyJzZWVkIjozMTU0NCwiZmFtaWx5IjoiYW55IiwidGhlbWUiOiJub2lyIiwib3YiOnsibW91dGguc21pbGUiOjAuMjQsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLCJleWVzLmJyb3dMaWZ0IjowLCJleWVzLmJyb3dTa2V3IjowLCJleWVzLmJyb3dJbm5lciI6MCwiZXllcy5zcXVpbnQiOjAuMTV9fQ",
+   "eyJzZWVkIjo0NTM3OTEsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZHdhcnZlcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjotMC4xLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MC40NSwiZXllcy5vcGVubmVzcyI6MS4xNCwiZXllcy5icm93TGlmdCI6LTMsImV5ZXMuYnJvd1NrZXciOjAsImV5ZXMuYnJvd0lubmVyIjotNCwiZXllcy5zcXVpbnQiOjB9fQ"
   ],
   "tuples": [
    "noir/none/smirk/bust",
    "noir/none/squint/bust",
    "undead/none/moan/bust",
-   "noir/none/openMouth/bust"
+   "noir/none/openMouth/bust",
+   "noir/none/halfSmile/figure",
+   "dwarves/none/stare/bust"
   ],
   "sheets": [
    "0277",
    "0283",
-   "0287"
+   "0287",
+   "0322",
+   "0325"
   ],
   "status": "open",
   "opened": "2026-10-08",
@@ -9660,5 +9734,102 @@
   "attempts": 0,
   "tried": [],
   "mergedInto": "T188"
+ },
+ {
+  "id": "T215",
+  "title": "the white boxedBeard is a translucent white sheet with a straight top edge from cheek to cheek under the eyes, the face showing through it: a mask over the lower face, not a beard on the jaw",
+  "notes": [
+   "the white boxedBeard is a translucent white sheet with a straight top edge from cheek to cheek under the eyes, the face showing through it: a mask over the lower face, not a beard on the jaw",
+   "the blond boxedBeard on dark skin is a pale translucent sheet with a straight top edge from ear to ear just under the eyes, the jaw and mouth showing through: a mask over the lower face, not a beard"
+  ],
+  "category": "stack",
+  "parts": [
+   "facialHair:boxedBeard"
+  ],
+  "severity": 2,
+  "seen": 2,
+  "evidence": [
+   "eyJzZWVkIjozMjEzNzIsImZhbWlseSI6ImFueSIsInRoZW1lIjoiZ25vbWVzIiwib3YiOnsibW91dGguc21pbGUiOi0wLjEsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjoxLjQ1LCJleWVzLmJyb3dMaWZ0IjoxMCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjQsImV5ZXMuc3F1aW50IjowfX0",
+   "eyJzZWVkIjo2ODI0NDcsImZhbWlseSI6ImFueSIsInRoZW1lIjoibm9uZSIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjEyLCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLjgsIm1vdXRoLnByZXNzIjowLCJleWVzLm9wZW5uZXNzIjowLjksImV5ZXMuYnJvd0xpZnQiOjAsImV5ZXMuYnJvd1NrZXciOjAuMzUsImV5ZXMuYnJvd0lubmVyIjowLCJleWVzLnNxdWludCI6MC4yNX19"
+  ],
+  "tuples": [
+   "gnomes/none/wideEyed/bust",
+   "editorial/none/smirk/bust"
+  ],
+  "sheets": [
+   "0317"
+  ],
+  "status": "open",
+  "opened": "2026-10-08",
+  "closed": null,
+  "commit": null,
+  "lint": null,
+  "wontfix": null,
+  "attempts": 0,
+  "tried": []
+ },
+ {
+  "id": "T216",
+  "title": "under the boneHelm the dark lowBun hangs from the brim beside both temples as two flat pointed wedges standing off the head: blinkers rather than hair",
+  "notes": [
+   "under the boneHelm the dark lowBun hangs from the brim beside both temples as two flat pointed wedges standing off the head: blinkers rather than hair"
+  ],
+  "category": "stack",
+  "parts": [
+   "hair:lowBun",
+   "hat:boneHelm"
+  ],
+  "severity": 2,
+  "seen": 1,
+  "evidence": [
+   "eyJzZWVkIjo4NjM2ODksImZhbWlseSI6ImFueSIsInRoZW1lIjoib3JjcyIsIm92Ijp7Im1vdXRoLnNtaWxlIjowLjA2LCJtb3V0aC5vcGVuIjowLCJtb3V0aC5za2V3IjowLCJtb3V0aC5wcmVzcyI6MCwiZXllcy5vcGVubmVzcyI6MC4wNCwiZXllcy5icm93TGlmdCI6MCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOjEsImV5ZXMuc3F1aW50IjowfX0"
+  ],
+  "tuples": [
+   "orcs/none/shut/bust"
+  ],
+  "sheets": [
+   "0321"
+  ],
+  "status": "merged",
+  "opened": "2026-10-08",
+  "closed": "2026-10-08",
+  "commit": null,
+  "lint": null,
+  "wontfix": null,
+  "attempts": 0,
+  "tried": [],
+  "mergedInto": "T182"
+ },
+ {
+  "id": "T217",
+  "title": "under the feltTravelHat no boxBraids hair is drawn at the head, but dark braid sticks hang beside the jaw on both sides down to the shoulders, attached to nothing",
+  "notes": [
+   "under the feltTravelHat no boxBraids hair is drawn at the head, but dark braid sticks hang beside the jaw on both sides down to the shoulders, attached to nothing"
+  ],
+  "category": "stack",
+  "parts": [
+   "hair:boxBraids",
+   "hat:feltTravelHat"
+  ],
+  "severity": 2,
+  "seen": 1,
+  "evidence": [
+   "eyJzZWVkIjo5ODY0MTksImZhbWlseSI6ImFueSIsInRoZW1lIjoiaHVtYW5zIiwib3YiOnsibW91dGguc21pbGUiOjAuMDUsIm1vdXRoLm9wZW4iOjAsIm1vdXRoLnNrZXciOjAuMiwibW91dGgucHJlc3MiOjAuMywiZXllcy5vcGVubmVzcyI6MC42LCJleWVzLmJyb3dMaWZ0IjotNCwiZXllcy5icm93U2tldyI6MCwiZXllcy5icm93SW5uZXIiOi0yLCJleWVzLnNxdWludCI6MC41LCJwb3NlLmhlYWRYIjowLCJwb3NlLmhlYWRZIjotNiwicG9zZS5oZWFkVGlsdCI6LTAuMDUsInBvc2UuYm9keVRpbHQiOjAsInBvc2UudHVybiI6MCwicG9zZS5zaG91bGRlciI6MCwicHJvcHMiOlsiaGFuZHNVcCJdfX0"
+  ],
+  "tuples": [
+   "humans/handsUp/squint/figure"
+  ],
+  "sheets": [
+   "0324"
+  ],
+  "status": "merged",
+  "opened": "2026-10-08",
+  "closed": "2026-10-08",
+  "commit": null,
+  "lint": null,
+  "wontfix": null,
+  "attempts": 0,
+  "tried": [],
+  "mergedInto": "T143"
  }
 ]
