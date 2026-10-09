@@ -21,7 +21,7 @@ const choir    = { sound: 'super64_vib', articulation: .1, space: .9, width: .9,
 const pedal    = { sound: 'pipeorgan_loud_pedal', register: .1, weight: .9, articulation: .1, space: .6, brightness: .2, drive: .8 };
 const pulse    = { template: 'halftime', sounds: { bd: 'timpani', sd: 'snare_low', hh: 'triangles', oh: 'sus_cymbal', cp: 'bassdrum2' }, space: .9, brightness: .2, articulation: .3, variation: 0, organicness: .3 };
 
-const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808' }, [
+const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808', saturate: .6 }, [
   section('void', 1, { role: 'establish', progression: 'i',
     pad:  { ...organ, density: .2, brightness: .1, space: 1 },
     pad2: { ...strings, density: .2, brightness: .15, weight: .8, register: .2, level: .5 },

@@ -1,4 +1,16 @@
 {
   "made": "2026-09-12",
-  "prompt": "arrival as it stood before the mixing pass (commit 4b97ac9), kept so the blog can play before and after clips of the mix; hidden from the list."
+  "prompt": "arrival as it stood before the mixing pass (commit 4b97ac9), kept so the blog can play before and after clips of the mix; hidden from the list.",
+  "requests": [
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "saturate .6 on the bus (808 kit, rooms and bass below midi 40 kept: no sub; no drums/bass low-band pair named by the measure lint on contact; nothing merged)"
+        }
+      ]
+    }
+  ]
 }
