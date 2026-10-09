@@ -227,6 +227,19 @@
           "why": "ruled out by name: no organicness anywhere (every part is humanized), compressor only on the pizzicato since it is the one part over crest 9 (11.0; piano 7.8, flute 6.3), depth set by hand on the spread layers rather than by resolve, which refuses them on the CLI"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "saturate",
+          "from": 0,
+          "to": 0.6,
+          "why": "bus saturation on the acoustic ensemble (peak -23%, rms +0.4 dB). Room kept (hall); no sub (gm_contrabass pizzicato, no drums to duck: no sidechain pair); no entries merged"
+        }
+      ]
     }
   ]
 }
