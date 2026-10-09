@@ -235,7 +235,7 @@ const bed = { level: 1, width: .6, position: .32,
 const V = { level: 1.2, space: .4, width: .35 };        // the voice: dry and close, it brings its own room
 const VF = { level: 1.4, space: .3, width: .3 };
 
-song({ cps: 110 / 240, key: 'C:minor', seed: 41, kit: 'LinnDrum', packs: ['lights-in-the-sky-low-orbit-remix-cuts', 'rooms'],
+song({ cps: 110 / 240, key: 'C:minor', seed: 41, saturate: .6, kit: 'LinnDrum', packs: ['lights-in-the-sky-low-orbit-remix-cuts', 'rooms'],
        room: { ir: 'hall', size: 3.2, damping: 4500 },
        visual: { composition: 'overlay', worlds: ['orrery', 'sediment'], every: 16 } }, [
 
