@@ -166,7 +166,7 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   if (pattern.strudel) {
     sections = pattern.strudel.sections.map((s) => {
       return {
-        name: s.name, cycles: s.cycles, offset: s.offset, span: s.span, role: s.role, grid: s.grid, cps: s.cps,
+        name: s.name, cycles: s.cycles, offset: s.offset, span: s.span, role: s.role, kit: s.kit, grid: s.grid, cps: s.cps,
         harmony: `${s.key}  ${s.progression} → ${chordNames(s.key, parseProgression(s.progression))}`,
         layers: Object.fromEntries(Object.entries(s.layers).map(([k, l]) => {
           const lh = l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset());

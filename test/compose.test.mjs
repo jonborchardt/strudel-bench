@@ -120,3 +120,7 @@ test('levelRows: the mix in dBFS, each part relative to the mix, warnings for cl
   const rows = levelRows([{ name: 'mix', rms: .1, peak: .99 }, { name: 'drums', rms: .05, peak: .5 }, { name: 'pad', rms: 0, peak: 0 }]);
   assert.deepEqual(rows, [{ name: 'mix', db: -20, warn: 'no headroom' }, { name: 'drums', db: -6, warn: null }, { name: 'pad', db: -Infinity, warn: 'silent' }]);
 });
+
+test('kitsIn drops banned kits', () => {
+  assert.deepEqual(kitsIn(['A', 'B'], ['a_bd', 'a_sd', 'a_hh', 'b_bd', 'b_sd', 'b_hh'], ['B']), ['A']);
+});

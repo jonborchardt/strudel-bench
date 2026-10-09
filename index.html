@@ -200,7 +200,8 @@
 
   const ready = boot({ onError: (m) => ($('err').textContent = m), onStatus: status });
   // the synths and every loaded sample: what any layer can name
-  const soundNames = () => [...new Set([...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()])];
+  let quality = { kits: {}, sounds: {} }; // lib/quality.json: banned kits and sounds, hidden from the picks
+  const soundNames = () => [...new Set([...SYNTHS, ...Object.keys(strudel.soundMap.get()).sort()])].filter((n) => !quality.sounds[n] && !quality.sounds[n.replace(/^[^_]+_/, '')]);
   // plus the packs' named sample definitions (a part naming one inherits its region, bars and slices). Only a sample
   // part resolves them (resolveSample), so they are offered there and nowhere else: s("loop-kick") on a melody is
   // silence in the page and an unknown sound at check time.
@@ -210,9 +211,10 @@
     $('snds').innerHTML = soundNames().map((n) => `<option value="${esc(n)}">`).join('');
     host.sounds = soundNames;
   }
-  Promise.all([ready, fetch('lib/kits.json').then((r) => r.json())]).then(([, info]) => { // what the packs actually loaded, local or cdn
+  Promise.all([ready, fetch('lib/kits.json').then((r) => r.json()), fetch('lib/quality.json').then((r) => r.json()).catch(() => quality)]).then(([, info, q]) => {
+    quality = q; // what the packs actually loaded, local or cdn
     kitInfo = info;
-    kits = kitsIn(Object.keys(info), Object.keys(strudel.soundMap.get()));
+    kits = kitsIn(Object.keys(info), Object.keys(strudel.soundMap.get()), Object.keys(quality.kits));
     refreshSounds(); host.kits = () => kits; // the section pane's sound and kit controls list what is loaded
     sourceChanged();
   });

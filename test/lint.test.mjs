@@ -86,3 +86,9 @@ test('lint: static audibility from the sample meta, and a sub-audible lowest not
   const sub = lint({ sections: [{ name: 'a', role: 'climax', energy: 2, voices: 1, layers: { bass: P({ notes: '0' }, [{ name: 'sawtooth', n: 0 }], 24) } }] });
   assert.ok(!sub.some((x) => /reaches midi/.test(x.text)), 'C1 (33 Hz) is a normal synth sub');
 });
+
+test('a banned kit or sound is an error naming it and the reason', () => {
+  const out = lint({ sections: [{ name: 'a', role: 'climax', kit: 'AkaiLinn', energy: 1, layers: { drums: { attrs: {}, onsetsPerCycle: 4 } } }], sounds: [{ name: 'bd', n: 0 }] }, { kits: { AkaiLinn: '12-bit crunch' }, sounds: { bd: 'Dirt-Samples bd, 8-bit' } });
+  assert.ok(out.some((f) => f.level === 'error' && /kit AkaiLinn.*12-bit crunch/.test(f.text)));
+  assert.ok(out.some((f) => f.level === 'error' && /sound "bd".*8-bit/.test(f.text)));
+});
