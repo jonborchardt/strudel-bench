@@ -238,3 +238,10 @@ test('enter/exit: whole bars, and together under the section length, naming sect
   bad({ enter: 4, exit: 12 });
   bad({ enter: 16 });
 });
+
+test('saturate: a song-level number in 0..1, carried on meta', async () => {
+  await ready;
+  assert.equal(song({ cps: .5, saturate: .4 }, [section('a', 4, { drums: {} })]).strudel.meta.saturate, .4);
+  assert.throws(() => song({ cps: .5, saturate: 1.5 }, [section('a', 4, { drums: {} })]), /saturate must be a number in 0\.\.1/);
+  assert.throws(() => song({ cps: .5, saturate: 'hot' }, [section('a', 4, { drums: {} })]), /saturate must be a number in 0\.\.1/);
+});

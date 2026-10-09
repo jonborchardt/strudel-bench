@@ -141,7 +141,7 @@
 } }</script>
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
-  import { boot, playCode, expandCode, evalCode, nav, footer, localPacks } from './web/boot.mjs';
+  import { boot, playCode, expandCode, evalCode, nav, footer, localPacks, setSaturation } from './web/boot.mjs';
   import { kitsIn, buildRequest, notesView, notesFile, youtubeView, verifyRows, shareEncode, shareDecode, levelRows } from './web/compose.mjs';
   import { packsOf, packKind, registerSamples, resolveSample, sampleDef, SAMPLES, SYNTHS, PATCHES } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
@@ -450,6 +450,7 @@
   async function applyPin(at) { // point the running scheduler at the pinned section (or back at the song) at song cycle `at`
     const r = await ready;
     setcps(loop ? loop.cps : songPat.strudel.meta.cps);
+    setSaturation(songPat.strudel?.meta.saturate ?? 0);
     await setLive();
     r.scheduler.setCycle(loop ? toLocal(at) : at);
   }
@@ -568,7 +569,7 @@
     if (!wasPlaying && paused == null) stage.reset();
     stage.start();
     if (!wasPlaying && paused == null && loop) paused = loop.offset; // Play from stopped starts at the pin
-    if (loop) setcps(loop.cps); // the pinned section loops on its own, at its own tempo
+    if (loop) { setcps(loop.cps); setSaturation(songPat.strudel?.meta.saturate ?? 0); } // the pinned section loops on its own, at its own tempo
     await setLive(); // the pinned section, solo/mute, A/B
     if (paused != null) { (await ready).scheduler.setCycle(loop ? toLocal(paused) : paused); paused = null; }
     console.log('[strudel] evaluated', $('song').value);
@@ -1482,6 +1483,7 @@
       if (playing) await stop(); // the render replaces the audio context
       await strudel.getAudioContext().resume(); // this click is the gesture that lets the live context finish loading its worklets
       const song = await strudel.evaluate(code.text, false); // once, not once per render
+      setSaturation(song?.strudel?.meta.saturate ?? 0);
       const stats = async (layer) => metricsOf(await renderSong({ song, section: mixSection, layer, cycles: Math.min(ev.cycles, 4), progress: (i, n) => mstate('busy', `measuring ${layer ?? mixSection} ${Math.round((i / n) * 100)}%`) }), { cps: ev.cps }); // levelRows reads rms and peak
       const parts = [{ name: 'mix', ...(await stats()) }];
       for (const l of Object.keys(ev.layers)) parts.push({ name: l, ...(await stats(l)) }); // one render at a time: renderSong shares the offline context
@@ -1617,6 +1619,7 @@
     let begin = 0, end = cycles ?? (song.strudel ? song.strudel.total : 8);
     // read cps off the song pattern before a layer selector replaces it with a sub-pattern that has no .strudel
     let cps = song.strudel?.meta.cps ?? 0.5;
+    setSaturation(song.strudel?.meta.saturate ?? 0);
     if (section || layer) {
       if (layer && !section) throw new Error('layer requires --section');
       const s = song.strudel?.sections.find((x) => x.name === section);

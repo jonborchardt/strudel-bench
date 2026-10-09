@@ -45,6 +45,8 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
     r.scheduler.latency = 0.3;
     const C = strudel.getSuperdoughAudioController(), P = Object.getPrototypeOf(C), duck = P.duck;
     if (!P.ducksOnDemand) { P.ducksOnDemand = true; P.duck = function (targets, ...rest) { for (const t of [targets].flat()) this.getOrbit(t, [0, 1]); return duck.call(this, targets, ...rest); }; }
+    const getOrbit = P.getOrbit;
+    if (!P.saturated) { P.saturated = true; P.getOrbit = function (n, ch) { const fresh = this.nodes[n] == null; const o = getOrbit.call(this, n, ch); if (fresh) saturate(o); return o; }; }
     // The master wall: superdough sums every orbit into one gain straight into the destination, so a downbeat of
     // full-scale 909 samples clips the output. `limit` puts a soft clip between them, on this output and on every one
     // superdough builds later (the offline render context rebuilds the controller), so a render measures what is heard.
@@ -78,6 +80,22 @@ export function satGains(amount) {
   return { pre, post: Math.sqrt(i2 / o2) };
 }
 
+let satAmount = 0; // the song's `saturate`, read when an orbit is built (live or in an offline render context) and pushed to live orbits on change
+/** The bus saturator between an orbit's sum and its output: drive, a tanh curve (2x oversampled), makeup. Native nodes, one set per orbit, nothing per hit. */
+function saturate(orbit) {
+  const ac = orbit.audioContext, pre = new GainNode(ac), shaper = new WaveShaperNode(ac, { oversample: '2x' }), post = new GainNode(ac);
+  orbit.summingNode.disconnect(); // was -> output; delay and reverb feed summingNode so they pass through too. setDjf would re-route around this (unused here)
+  orbit.summingNode.connect(pre); pre.connect(shaper); shaper.connect(post); post.connect(orbit.output);
+  const set = (amount) => { const g = satGains(amount); pre.gain.value = g.pre; shaper.curve = amount ? satCurve(amount) : null; post.gain.value = g.post; };
+  set(satAmount);
+  orbit.saturator = { set };
+}
+/** Set the amount for every orbit alive and every one built later. */
+export function setSaturation(amount) {
+  satAmount = amount;
+  for (const o of Object.values(strudel.getSuperdoughAudioController()?.nodes ?? {})) o.saturator?.set(amount);
+}
+
 /** Re-route a SuperdoughOutput's last gain through a soft clip on its context. */
 function limit(output) {
   const ac = output.audioContext, wall = new WaveShaperNode(ac, { curve: softClipCurve(), oversample: '4x' });
@@ -92,6 +110,7 @@ export async function playCode(ready, code) {
   await ready;
   const pat = await strudel.evaluate(code);
   setcps(pat?.strudel?.meta.cps ?? 0.5);
+  setSaturation(pat?.strudel?.meta.saturate ?? 0);
   return pat;
 }
 
