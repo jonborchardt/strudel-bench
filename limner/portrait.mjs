@@ -773,18 +773,22 @@ export const GLASSES = {
 export const GLASSES_STYLES = Object.keys(GLASSES);
 const glasses = (p) => (p.glasses ? mapXY((GLASSES[p.glasses.style] ?? GLASSES.rectangularThin)(p.glasses.color ?? '#2b2927'), scaleAbout(200, p.eyes.spacing / 68), (y) => y + p.eyes.y - 196) : []);
 
+const dy = (d, k) => mapXY([path(d)], (x) => x, (y) => y + k)[0].d;
+/** A cap's peak in the accent: dark (seam shadow and underside), then the lit middle cut between the two edges. */
+const capPeak = (d, p) => [path(d, { fill: mix(shade(p.hat.accent, 0.7), p.hat.color, 0.35) }), clip(d), clip(dy(d, -2)), path(dy(d, 2.5), { fill: p.hat.accent }), UNCLIP, UNCLIP];
 export const HATS = {
   none: () => [],
-  // a cap's peak is the crown's own cloth, a shade darker: an accent-coloured peak read as a strip pasted on
-  baseballCap: (p) => [path('M 127 137 C 128 92, 157 70, 197 70 C 237 70, 264 94, 269 137 Z', { fill: p.hat.color }), path('M 190 126 C 239 122, 275 127, 309 142 C 276 146, 238 144, 198 139 Z', { fill: shade(p.hat.color, 0.8) }), line(196, 72, 196, 126, stroke('#fff', 2, 0.08))],
-  dadCap: (p) => [path('M 128 137 C 130 96, 158 76, 198 76 C 238 76, 263 97, 268 137 C 240 130, 175 130, 128 137 Z', { fill: p.hat.color }), path('M 193 127 C 229 124, 258 129, 283 139 C 250 142, 220 141, 192 137 Z', { fill: shade(p.hat.color, 0.8) })],
-  snapback: (p) => [path('M 125 137 L 132 91 Q 198 66 266 91 L 272 137 Z', { fill: p.hat.color }), path('M 193 125 C 243 122, 279 128, 313 141 C 274 144, 236 143, 196 139 Z', { fill: shade(p.hat.color, 0.8) })],
+  // a cap's peak is modelled cloth, not a flat blade: the crown's seam shades its top edge and its thickness darkens the
+  // underside, so a peak in the accent colour reads as stitched on rather than pasted over the crown
+  baseballCap: (p) => [path('M 127 137 C 128 92, 157 70, 197 70 C 237 70, 264 94, 269 137 Z', { fill: p.hat.color }), ...capPeak('M 128 133 C 180 125, 262 124, 309 142 C 276 147, 236 145, 200 141 C 172 140, 148 139, 128 138 Z', p), line(196, 72, 196, 126, stroke('#fff', 2, 0.08)), ellipse(197, 72, 6, 3, { fill: p.hat.accent })],
+  dadCap: (p) => [path('M 128 137 C 130 96, 158 76, 198 76 C 238 76, 263 97, 268 137 C 240 130, 175 130, 128 137 Z', { fill: p.hat.color }), ...capPeak('M 130 134 C 175 127, 240 126, 283 139 C 250 143, 220 142, 195 139 C 170 138, 148 138, 130 138 Z', p)],
+  snapback: (p) => [path('M 125 137 L 132 91 Q 198 66 266 91 L 272 137 Z', { fill: p.hat.color }), ...capPeak('M 126 133 C 180 125, 262 123, 313 141 C 274 145, 236 144, 200 141 C 172 140, 148 139, 126 138 Z', p)],
   truckerCap: (p) => [path('M 126 137 L 134 89 Q 172 72 198 74 L 198 133 Z', { fill: p.hat.color }), path('M 198 74 Q 246 72 267 93 L 272 137 L 198 133 Z', { fill: p.hat.accent, op: 0.7 }), path('M 192 126 C 241 122, 280 127, 313 142 C 276 145, 236 144, 194 138 Z', { fill: p.hat.color })],
   beanie: (p) => [path('M 123 137 C 127 79, 158 52, 200 52 C 242 52, 273 79, 277 137 Z', { fill: p.hat.color }), path('M 119 129 Q 200 113 281 129 L 278 154 Q 200 138 122 154 Z', { fill: p.hat.accent })],
   cuffedBeanie: (p) => [path('M 128 132 C 130 80, 158 56, 200 56 C 242 56, 270 80, 272 132 Z', { fill: p.hat.color }), rect(120, 124, 160, 32, { rx: 9, fill: p.hat.accent })],
   fishermanBeanie: (p) => [path('M 133 125 C 137 89, 159 69, 200 69 C 241 69, 263 89, 267 125 Z', { fill: p.hat.color }), rect(129, 118, 142, 24, { rx: 7, fill: p.hat.accent })],
   bucketHat: (p) => [path('M 138 108 Q 200 77 262 108 L 272 141 Q 200 125 128 141 Z', { fill: p.hat.color }), path('M 88 139 Q 200 121 312 139 Q 200 170 88 139 Z', { fill: p.hat.accent }), path('M 104 146 Q 200 168 296 146', stroke('#000', 4, 0.12))],
-  flatCap: (p) => [path('M 122 127 C 138 86, 171 73, 215 78 C 245 81, 267 95, 277 118 L 268 134 Q 200 123 122 134 Z', { fill: p.hat.color }), path('M 184 126 Q 248 119 289 132 Q 242 139 185 137 Z', { fill: shade(p.hat.color, 0.8) })],
+  flatCap: (p) => [path('M 122 127 C 138 86, 171 73, 215 78 C 245 81, 267 95, 277 118 L 268 134 Q 200 123 122 134 Z', { fill: p.hat.color }), ...capPeak('M 123 131 Q 200 121 289 132 Q 242 139 200 137 Q 160 136 123 135 Z', p)],
   wideBrimFelt: (p) => [path('M 142 112 L 151 68 Q 200 50 249 68 L 258 112 Z', { fill: p.hat.color }), rect(146, 98, 108, 14, { rx: 3, fill: p.hat.accent }), path('M 74 118 Q 200 100 326 118 Q 200 150 74 118 Z', { fill: p.hat.color }), path('M 90 124 Q 200 148 310 124', stroke('#000', 4, 0.14))], // the brim seen from a little above: its front edge dips, and its underside is in shade
   cowboy: (p) => [path('M 145 115 L 155 62 Q 200 42 245 62 L 255 115 Z', { fill: p.hat.color }), path('M 90 119 C 119 128, 148 117, 170 113 L 230 113 C 252 117, 281 128, 310 119 C 292 145, 251 142, 200 136 C 149 142, 108 145, 90 119 Z', { fill: p.hat.color }), rect(148, 98, 104, 16, { fill: p.hat.accent })],
   sunHat: (p) => [path('M 128 126 C 132 74, 162 55, 200 55 C 238 55, 268 74, 272 126 Z', { fill: p.hat.color }), path('M 52 128 C 80 112, 120 104, 200 104 C 280 104, 320 112, 348 128 C 330 150, 300 138, 270 148 C 240 156, 220 140, 200 150 C 180 140, 160 156, 130 148 C 100 138, 70 150, 52 128 Z', { fill: p.hat.color }), path('M 52 128 C 80 112, 120 104, 200 104 C 280 104, 320 112, 348 128', stroke('#000', 2, 0.15)), rect(132, 104, 136, 16, { rx: 4, fill: p.hat.accent })],
