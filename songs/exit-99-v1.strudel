@@ -1,0 +1,90 @@
+// exit 99 v1 (the first arrangement, kept for A/B against the rewrite): motorik in E minor at 118, 64 bars, about 2:10. Driving for hours at night: the pulse never changes and
+// everything around it does. The rule is Hallogallo's: keep the pulse constant, not the music. Kick on every quarter,
+// snare on 2 and 4, hats on the eighths from the first bar to the last; around that a shakuhachi phrase, timpani that
+// re-colour it through an echo, a bass with an octave pop, a viola hook that asks and answers, and one moment where it all opens up.
+//   out    bars 1-24. The shakuhachi first (an eight-bar phrase of held notes and breaths, E G A up to a whole bar of B, a fall from D5, a long E5;
+//          the bass keeps the eighths under it), the bass at 9 (E2 G2 B2 and the E3 pop at the end of every second bar, driven, ducked
+//          under the kick), the timpani at 17 (six notes of three eighths each through a dotted-eighth
+//          echo, so its C and F# land on a different beat of the shakuhachi phrase every bar and the line keeps changing colour).
+//   rise   bars 25-40. The hook (a viola, eight bars: B4 D5 E5 up to G5, a second run up to B5 that stops short,
+//          the same again landing on E4), a noise swell under everything, the pad at 33
+//          (a hollow square, E3 and B3, an octave under the hook). A snare roll into 41.
+//   open   bars 41-48. The arrangement opens: a crash, the ride on the eighths, the pad up an octave, wider and
+//          bright, the harmony finally moving (i VI i VII, two bars each), the bass popping its octave on the beat,
+//          the timpani higher, a handchimes counter-line on the hook's rests. The hook keeps playing; the swell
+//          stops here, and the bass has no ladder drive anywhere: both traced the audio thread past real time (open
+//          at 85% busy with dropouts; under 45% as written), and the bus saturation carries the dirt instead.
+//   back   bars 49-64. The chord is i again and the hook is gone. The timpani leave at 57, the swell and pad at 59,
+//          the bass at 61, the shakuhachi at 63, and the kit is alone for the last two bars, as if it would keep going.
+// Kit: LinnDrum, one source, dry. From the catalogue words: kick tight mid click (0.21 s), snare medium deep snap
+// noisy, closed hat (the third take) tight bright click, ride long mid click airy, crash medium soft airy.
+const BEAT = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.x.', oh: '................|..............x.' };
+const GHOST = { ...BEAT, rim: '.............o..' };                                 // a sidestick ghost before the 4, in open and back
+const OPEN = { ...GHOST, hh: '................', oh: '................', rim: '................', bd: 'x...x...x...x...|x...x...x...x..x', rd: 'x.x.x.x.x.x.x.x.',   // the hats, open hat and sidestick hand the eighths to the ride
+  cr: 'x...............|................|................|................|................|................|................|................' };
+const BACK = { ...GHOST, hh: 'x.x.x.x.x.x.x.X.' };                                 // the last hat of the bar leans in
+
+// picking A: the shakuhachi phrase, eight bars. E held, G A, a whole bar on B, a breath, D5 falling to B, A and G held, a breath; then the
+// same opening, B into D5, a long E5, and the fall D5 B A G E. The bass keeps the eighths; this is the line over them.
+const GTR = (pat) => pat.s('gm_shakuhachi').clip(.95).release(.3).gain(1);   // a shakuhachi: held notes and breaths, an octave above the bass's register
+const RIFF = GTR(note("<[e4@3 ~ g4 a4@3] [b4@7 ~] [~ ~ d5@3 b4@2 ~] [a4@2 g4@4 ~ ~] [e4@3 ~ g4 a4@3] [b4@5 d5@3] [e5@6 ~ ~] [d5@2 b4@3 a4 g4@2]>"));
+const RIFF2 = GTR(note("<[e4@3 ~ g4 a4@3] [b4@7 ~] [~ ~ d5@3 b4@2 ~] [a4@2 fs4@4 ~ ~] [e4@3 ~ g4 a4@3] [b4@5 d5@3] [e5@6 ~ ~] [d5@2 b4@3 a4 fs4 d4]>"));   // the F# where the G was, and a D at the end
+// picking B: timpani, six notes of three eighths each (2.25 bars a cycle, realigns with the riff every nine),
+// the C and F# the riff does not have, through a dotted-eighth echo
+const PLUCK = (pat) => pat.s('gm_timpani').clip(.6).release(.2).gain(1.4)   // timpani in their top register, through the echo
+  .delay(.35).delaytime(.3814).delayfeedback(.45).gain(.6);
+const B = PLUCK(note("b3 c4 b3 g3 fs3 a3").slow(2.25));
+const B_OPEN = PLUCK(note("e4 d4 b3 d4 g4 e4").slow(2.25));                        // higher when it opens
+// the swell: filtered noise rising and falling over sixteen bars, the jet on the autobahn
+const SWELL = s("white*4").clip(1).hpf(250).lpf(sine.slow(16).range(400, 2500)).gain(sine.slow(16).range(0, .4));
+
+// the hook: eight bars as degrees of E minor in octave 4. Bars 1-4 climb B4 D5 E5 to G5, fall, climb again to B5 and
+// stop on E5 (the question); bars 5-8 the same climb, then down through D5 B4 G4 to E4 (the answer).
+const HOOK = '4@2 6 7@3 ~ 9  9@2 7 6@3 4 ~  3@2 4 6@2 7 9@2  11@3 9 7@2 ~ ~  4@2 6 7@3 ~ 9  9@2 7 6@3 4 ~  3@2 4 6@2 7 9@2  6@2 4 2@2 0@3';
+
+const drums = { template: BEAT, sounds: { hh: 'hh:2' }, density: .7, fill: false, drive: .5, articulation: .6, space: .3, brightness: .5, weight: .6, level: .6 };
+const riff = { pattern: RIFF, level: 1.2, position: -.25, space: .35, humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };   // a player, not a sequencer
+const pluck = { pattern: B, level: 1.8, position: .4, space: .45, humanize: { timingMs: 10, velocity: .12, correlation: 'bar' } };
+const swell = { pattern: SWELL, level: 1, width: .7, space: .75 };   // farther: more send, a lower top
+const bass = { sound: 'square', notes: '<[0 0 0 0 2 0 4 2] [0 0 0 0 2 0 4 7]>', density: .8, register: .5, brightness: .5,
+  articulation: .6, weight: .6, space: .3, level: .8, velocity: '1 .7 .85 .7 1 .7 .9 .75', duck: 'drums', duckDepth: .4, duckAttack: .08 };
+const hook = { sound: 'gm_viola', notes: HOOK, phrase: 8, register: .5, follow: false, articulation: .35, brightness: .7,
+  space: .4, width: .55, level: 2, velocity: '.9 1 .85 .95 1 .9 .85 .9', humanize: { timingMs: 8, velocity: .08, correlation: 'phrase' } };
+const pad = { sound: 'square', density: .4, register: .3, brightness: .35, space: .8, width: .7, articulation: .3,
+  level: .4, duck: 'drums', duckDepth: .4, duckAttack: .2 };   // farther and under the bass: it shared the lows with it in back
+
+song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: ['rooms'], room: { ir: 'hall', size: .4 },
+  visual: { world: 'cabaret', composition: 'single' } }, [   // the cabaret alone
+  section('out', 24, { role: 'establish', progression: 'i',
+    drums,
+    raw: riff,
+    bass: { ...bass, enter: 8 },
+    raw2: { ...pluck, enter: 16 },
+  }),
+  section('rise', 16, { role: 'build', progression: 'i',
+    drums: { ...drums, fill: true, level: .55 },                                  // the one roll: into 41
+    raw: { ...riff, pattern: RIFF2 },
+    bass: { ...bass, notes: '<[0 0 0 0 2 0 4 2] [0 0 7 0 2 0 4 3]>' },
+    raw2: pluck,
+    melody: hook,
+    raw3: swell,
+    pad: { ...pad, enter: 8 },
+  }),
+  section('open', 8, { role: 'climax', progression: 'i@2 VI@2 i@2 VII@2',
+    drums: { ...drums, template: OPEN, brightness: .55, level: .45 },   // the ride and crash are bright: the kit comes down here
+    raw: { ...riff, pattern: RIFF2, level: 1 },   // the riff cedes a little to the hook here
+    bass: { ...bass, notes: '<[0 0 7 0 2 0 4 2] [0 0 7 0 2 2 4 7]>', rhythm: 'x.x.x.x.x.x.x.xx', weight: .65, level: .9 },
+    raw2: { ...pluck, pattern: B_OPEN, level: 2 },
+    melody: { ...hook, brightness: .65 },
+    melody2: { sound: 'handchimes', notes: '~ ~ 7 ~ ~ ~ 9 ~ ~ ~ 11 ~ 9 ~ ~ ~', phrase: 2, register: .5, follow: false, level: 2, space: .7, position: -.5, humanize: { timingMs: 10, velocity: .1, correlation: 'phrase' } },
+    pad: { ...pad, register: .5, brightness: .5, width: .6, articulation: .4, level: .6 },
+  }),
+  section('back', 16, { role: 'release', progression: 'i',
+    drums: { ...drums, template: BACK, fill: false },
+    raw: { ...riff, pattern: RIFF2, exit: 2 },
+    bass: { ...bass, exit: 4 },
+    raw2: { ...pluck, exit: 8 },
+    raw3: { ...swell, exit: 6 },
+    pad: { ...pad, register: .5, exit: 6 },   // an octave up here: no hook to collide with, and it shared the lows with the bass at octave 3
+  }),
+])

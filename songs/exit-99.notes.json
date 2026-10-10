@@ -1,6 +1,6 @@
 {
   "made": "2026-10-09",
-  "prompt": "exit 99: motorik in E minor at 118, 64 bars, every change a part's own enter/exit bar; the branch's saturate, hall impulse, driven bass, ducking and the catalogue kit used together",
+  "prompt": "exit 99: motorik in E minor at 118, 56 bars; a bass motif and a harp motif from the first eight bars, a cello hook at 17, the motif moving to a shakuhachi over a pedal, then everything, then the kit alone under one breath",
   "requests": [
     {
       "date": "2026-10-10",
@@ -305,6 +305,44 @@
           "section": "song",
           "layer": "visual",
           "why": "composition overlay>single: the cabaret alone, no second world"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "Make Exit 99 a song worth listening to: rescue this composition, not a generic krautrock track. Diagnose, sketch three cores, pick one, build, validate. Preserve the original for A/B",
+      "changes": [
+        {
+          "section": "diagnosis:",
+          "why": "the opening was eight bars of kit under long shakuhachi notes with no bass; the bass opened on four repeated E2s; nothing hummable before the viola at bar 25; the harmony sat on i for 56 bars with its one move buried under the climax's extra percussion; development was only addition; three nasal GM fonts at level ceilings"
+        },
+        {
+          "section": "sketches",
+          "why": "(songs/_x99-sketch.strudel, deleted): A a groove bass motif with rests plus a folk-harp motif; B a plain bass with the hook on sax from bar 1 over i VI i VII; C the bass motif doubled by a pipe organ over a pad pedal. Hook timbre on the same melody over the same groove: viola centroid 1619 Hz, gm_cello 1007 at 6 dB under the mix, sax 1359 but 15 under, ocarina 1381 with no attack. Chosen: A's groove and motif, C's pedal, the cello hook"
+        },
+        {
+          "section": "the",
+          "why": "bass motif (identity 1): E E . E G . A . | B . A G E . D ., rhythm X.x...x.X...x...|X...x.x.x...x..., accents on 1 and on the G, the D leading home; from the first beat. Lowest note D2 (midi 38)"
+        },
+        {
+          "section": "the",
+          "why": "harp motif (identity 2, folkharp): E G F# / D B (question), the same displaced an eighth late / D E (answer), four bars, from bar 5; compressor -18/3 on it (crest 9, level at the ceiling)"
+        },
+        {
+          "section": "the",
+          "why": "hook (gm_cello, octave 3): the viola's melody kept, an octave down, from bar 17 over Em C Em D; its answer at bar 41 is the peak. Viola, timpani, handchimes and the noise swell removed"
+        },
+        {
+          "section": "tunnel",
+          "why": "(25-32): the bass stops, the organ pad (organ_8inch) holds an E pedal with its upper tones moving Em Em C/E D/E (pad chord '<0 0 5 6>'), the motif moves to the shakuhachi in long notes, the bass returns at 29; signs (9-16): a dark piano (piano1) doubles the bass motif an octave up and the last two bars lean on the VII"
+        },
+        {
+          "section": "open",
+          "why": "(33-48): the ride takes the eighths with ghosts on its off-beats, a crash, the bass popping its octave, the kit at .32 and darker (the ride read bright and loud: drums hi .32 > .24, 2 dB under the mix > 4.5); on (49-56): the motif far (level 1, space .75, articulation .3) and the bass close, one shakuhachi E over the last four bars, the kit alone at the end"
+        },
+        {
+          "section": "kit:",
+          "why": "hits keep their tails (articulation .5), accents on 1 and 3 in the kick and hats and on the snare; level .6 > .5; traces open 31%, lights 24%, tunnel 21%, no dropouts; mix lint clean on every full section but on (its three parts read near one depth: a plucked harp has no tail to push back); render peak .61, no clipping; arc 14/21/27/16/30/13"
         }
       ]
     }
