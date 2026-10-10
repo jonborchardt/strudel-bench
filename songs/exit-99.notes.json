@@ -373,6 +373,18 @@
           "why": "notes: a comma inside brackets stacks notes in the line's mini-notation, so [0,-3]@3 is a held E with the B under it. The harp motif's answer now lands on that open fifth (one chord in its ten notes) and the cello hook's last E is a double stop with the B above ([0,4]@3). Verified in the event stream: two notes at one onset in both parts"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "folkharp level .8 in road and signs, .9 in lights",
+      "changes": [
+        {
+          "section": "road",
+          "layer": "melody",
+          "axis": "level",
+          "why": "1.2>.8, signs 1.2>.8, lights 1.2>.9: by ear; open keeps 2, on 1"
+        }
+      ]
     }
   ]
 }
