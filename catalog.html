@@ -39,7 +39,7 @@
 <footer class="site" id="foot"></footer>
 <script type="module">
   import { nav, footer } from './web/boot.mjs';
-  document.getElementById('nav').innerHTML = nav('Catalogue');
+  document.getElementById('nav').innerHTML = nav('Catalogue', { local: true });
   document.getElementById('foot').innerHTML = footer();
   const j = async (u) => { const r = await fetch(u); return r.ok ? r.json() : null; };
   const rows = [];
@@ -60,9 +60,14 @@
     const meta = (await j(`samples/user/${p}/meta.json`)) ?? {};
     for (const [name, files] of Object.entries(info.sounds ?? {})) files.forEach((f, n) => add(p, name, n, `samples/user/${f}`, meta[f] ?? {}));
   }
-  // candidates measured by scripts/hitfeatures.mjs but not packs yet
+  // candidates measured by scripts/hitfeatures.mjs but not packs yet: the Freesound downloads, and the community packs
+  // (samples/_candidates/candidates.json carries each one's licence verdict, which the pack column shows)
   const cand = await j('samples/_candidates/freekit/features.json');
-  for (const v of cand?.voices ?? []) for (const r of (await j(`samples/_candidates/freekit/features-${v}.json`))?.rows ?? []) if (r.kind !== 'strudel') add('candidate', r.label, 0, r.url, { ...r, voice: v }, true);
+  for (const v of cand?.voices ?? []) for (const r of (await j(`samples/_candidates/freekit/features-${v}.json`))?.rows ?? []) if (r.kind !== 'strudel') add('candidate · freesound', r.label, 0, r.url, { ...r, voice: v }, true);
+  for (const c of (await j('samples/_candidates/candidates.json')) ?? []) {
+    const d = await j(`samples/_candidates/${c.file}`), list = Array.isArray(d) ? d : d?.rows ?? [];
+    for (const r of list) add(`candidate · ${c.label} · ${c.verdict}`, r.label, 0, r.url ?? `samples/_candidates/${c.label}/${r.id}`, r, true);
+  }
   const vs = [...new Set(rows.map((r) => r.voice).filter(Boolean))].sort(), ps = [...new Set(rows.map((r) => r.pack))].sort();
   document.getElementById('voice').innerHTML += vs.map((v) => `<option>${v}</option>`).join('');
   document.getElementById('pack').innerHTML += ps.map((p) => `<option>${p}</option>`).join('');

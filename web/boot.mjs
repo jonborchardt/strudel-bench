@@ -121,11 +121,16 @@ export async function expandCode(ready, code) {
 }
 
 /** Nav bar shared by every page; `page` marks the current one. */
-export function nav(page) {
-  const link = (href, name, extra = '') => `<a href="${href}" class="${page === name ? 'on' : ''}"${extra}>${name}</a>`;
-  // the sample workshop is local-only (it writes samples/user/), so it stays hidden until a page knows it has the server.
-  // Limner ships and so is always here, though it is noindex and out of the sitemap: a tool, reached on purpose.
-  return `<a class="brand" href="./">strudel-bench</a>${link('./', 'Compose')}${link('examples.html', 'Examples')}${link('listen.html', 'Listen')}${link('limner.html', 'Limner')}${link('samples.html', 'Samples', ' hidden')}${link('about.html', 'About')}<span class="status" id="status"></span><span class="narrow" role="alert">Made for a desktop browser: this window is too narrow for the mix card and panes.</span>`;
+/**
+ * The header: the three pages a visitor uses, then the tools, then the small print. A local-only tool (it needs the server:
+ * the sample workshop writes samples/user/, the catalogue reads every pack's meta) carries `data-local` and stays hidden
+ * until a page knows it has the server (Compose reveals them when its /events stream opens); a page that is itself local-only
+ * passes `{ local: true }` and shows them at once. Limner ships and is always here, though it is noindex and out of the sitemap.
+ */
+export function nav(page, { local = false } = {}) {
+  const link = (href, name, { minor = false, localOnly = false } = {}) => `<a href="${href}" class="${[page === name ? 'on' : '', minor ? 'minor' : ''].filter(Boolean).join(' ')}"${localOnly ? ` data-local${local ? '' : ' hidden'}` : ''}>${name}</a>`;
+  const sep = '<span class="sep" aria-hidden="true"></span>';
+  return `<a class="brand" href="./">strudel-bench</a>${link('./', 'Compose')}${link('examples.html', 'Examples')}${link('listen.html', 'Listen')}${sep}${link('limner.html', 'Limner', { minor: true })}${link('samples.html', 'Samples', { minor: true, localOnly: true })}${link('catalog.html', 'Catalogue', { minor: true, localOnly: true })}${sep}${link('about.html', 'About', { minor: true })}${link('legal.html', 'Legal', { minor: true })}<span class="status" id="status"></span><span class="narrow" role="alert">Made for a desktop browser: this window is too narrow for the mix card and panes.</span>`;
 }
 
 /** Site footer shared by every page: author line, links, copyright. */

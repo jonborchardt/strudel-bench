@@ -1564,7 +1564,7 @@
   // reload from disk when the current song file changes (fs.watch fires twice on Windows, hence the debounce)
   let timer;
   const events = new EventSource('events');
-  events.onopen = () => { $('nav').querySelector('a[href="samples.html"]').hidden = false; }; // the server is there: the sample workshop can be reached
+  events.onopen = () => { for (const a of $('nav').querySelectorAll('a[data-local]')) a.hidden = false; }; // the server is there: the local-only tools can be reached
   // a static host (github pages) answers /events with 404, which closes the stream for good: disable what needs the server
   events.onerror = () => {
     if (events.readyState !== EventSource.CLOSED) return;
