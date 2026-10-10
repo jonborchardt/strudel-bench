@@ -57,11 +57,16 @@ export function mountStage(box, canvas, { clock, debug = false, solo = null }) {
   const label = (sc) => { const p = shown(sc), c = p.composition; return c && c.preset !== 'single' && c.worlds.length > 1 ? `${c.preset} (${c.worlds.join(' + ')})` : WORLDS[p.world] ? p.world : 'tunnel'; };
   const idOf = (sc) => JSON.stringify([label(sc), sc.seed, sc.palette]);
   const lastAt = {}; // part -> audio time of its last event, for the overlay's "active" list
-  const size = () => { // true when the box is on screen (the stage card open); closed, it has no size and nothing is worth drawing
+  // visible: the box is on screen (the stage card open); closed, it has no size and nothing is worth drawing. Measured
+  // by the ResizeObserver, never per frame: getBoundingClientRect forces a layout, and at sixty a second it was 17% of
+  // the main thread while a song played (profiled 2026-10-09), more than Strudel itself.
+  let visible = false;
+  const size = () => {
     const dpr = Math.min(2, window.devicePixelRatio || 1), r = box.getBoundingClientRect();
     const w = Math.max(2, Math.round(r.width * dpr)), h = Math.max(2, Math.round(r.height * dpr));
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
-    return r.width > 0 && r.height > 0;
+    visible = r.width > 0 && r.height > 0;
+    return visible;
   };
   new ResizeObserver(() => (running ? size() : idle())).observe(box); // a resize (the stage card opening, fullscreen) clears the canvas, so a still frame is redrawn from state
 
@@ -90,7 +95,7 @@ export function mountStage(box, canvas, { clock, debug = false, solo = null }) {
   }
   function frame() {
     if (!running) return;
-    const shown = size(), c = clock();
+    const shown = visible, c = clock();
     fired = perf.advance(c.now, c.cycle); // the state always advances, so opening the card later shows the song where it is
     if (shown) { perf.draw(ctx, canvas.width, canvas.height); if (stage.debug) overlay(c); }
     requestAnimationFrame(frame);
