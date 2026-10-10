@@ -1,0 +1,39 @@
+{
+  "prompt": "exit 99: motorik in E minor at 118, 64 bars, every change a part's own enter/exit bar; the branch's saturate, hall impulse, driven bass, ducking and the catalogue kit used together",
+  "requests": [
+    {
+      "date": "2026-10-10",
+      "ask": "Write Exit 99 (motorik / krautrock, 118 bpm, E minor, 64 bars): one unchanging beat, two interlocking picking lines, an eighth-note bass, a hook that appears and leaves, a pad in the second half; use saturate .6, packs rooms with the hall impulse at size .4, enter/exit bars instead of extra sections, duck bass and pad under the kick at depth .4, driven bass with its fundamental at 65-100 Hz, a one-source kit from the catalogue words, every note written",
+      "changes": [
+        {
+          "section": "song",
+          "why": "kit LinnDrum: the catalogue words wanted kick tight deep click, snare medium snap noisy, hat tight bright; LinnDrum's three voices score best from one source (kick tight mid click 0.21 s, snare medium deep snap noisy, Hat Closed-03 tight bright click), Linn9000 the runner-up"
+        },
+        {
+          "section": "out",
+          "layer": "bass",
+          "axis": "sound",
+          "why": "sawtooth>square: the lint flagged two raw saws (bass and pad) in one section; a driven square keeps the bite and leaves the saw to the pad"
+        },
+        {
+          "section": "back",
+          "layer": "pad",
+          "axis": "register",
+          "why": ".5>.3: the hook and the pad shared the mid band (masking .60 in the measure); an octave down (E3 B3) took it to .18 and the worst pair is now the guitar against the hook at .46, on opposite sides of the stage"
+        },
+        {
+          "section": "back",
+          "layer": "pad",
+          "axis": "density",
+          "why": ".5>.4: two tones, E and B, an open fifth; the G is the guitar's and the hook's"
+        },
+        {
+          "section": "back",
+          "layer": "melody",
+          "axis": "brightness",
+          "why": ".45>ramp(.4,.62): the only peak the brief allows, the hook at its brightest in bars 41-48 just before it leaves"
+        }
+      ]
+    }
+  ]
+}

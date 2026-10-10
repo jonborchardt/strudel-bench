@@ -1,0 +1,60 @@
+// exit 99: motorik in E minor at 118, 64 bars, about 2:10. Driving for hours at night: everything stays the same and
+// your perception of it changes. One beat for the whole song (kick on every quarter, snare on 2 and 4, hats on the
+// eighths, no fill, no drop), one chord, and every change is one part joining or leaving on its own `enter`/`exit`
+// bar, so the two sections are the only seams. Every eight bars one thing changes: a part arrives, a note moves, an
+// accent shifts. Neu!, Kraftwerk, early Stereolab.
+//   out    bars 1-32. Picking A alone over the kit (a dry muted synth pluck, eight eighths a bar, E3 to B3), the bass
+//          at 9 (E2 G2 B2 only, driven, ducked under the kick), picking B at 17 (clean electric guitar, a six-note
+//          cycle of dotted quarters, so it lands on a different eighth of A each bar and realigns every nine), the
+//          hook at 25 (a square, B4 D5 E5 G5 E5 D5 B4 A4, long notes against the eighths, the second phrase ending on
+//          G4 E4 instead of B4 A4).
+//   back   bars 33-64. The pad arrives under everything (an open fifth, E3 and B3, dark, wide, ducked; an octave under
+//          the hook, since at the hook's octave the two masked each other). A's last note moves from B3 to D4, a hint
+//          of the VII with the harmony never leaving i; the last hat of the bar leans in. Bars 41-48 are the peak,
+//          which is only the hook a little louder and brightening on a ramp until it leaves at 49; then B leaves at 57,
+//          the pad at 59, the bass at 61, A at 63, and the kit is alone for the last two bars, as if it would keep going.
+// Kit: LinnDrum, one source, dry. From the catalogue words: kick tight mid click (0.21 s), snare medium deep snap
+// noisy (dry and rough), closed hat (the third take) tight bright click. The bass is a driven square, not a saw, so
+// the pad is the section's one saw.
+const KIT = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.x.' };
+const KIT2 = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.X.' };   // the one accent shift: the last hat leans in
+
+// picking A: eight eighths a bar, a muted analog pluck, no sustain. One note changes at bar 33.
+const PLUCK = (pat) => pat.s('triangle').attack(.004).decay(.11).sustain(0).release(.04).lpf(1800).clip(.5).gain(.9);
+const A1 = PLUCK(note("e3 b3 e4 b3 g3 b3 e4 b3"));
+const A2 = PLUCK(note("e3 b3 e4 b3 g3 b3 e4 d4"));
+// picking B: six notes, each three eighths long (2.25 bars a cycle), a clean guitar in the gaps A leaves, ringing over it
+const B = note("g4 b4 d5 b4 e5 d5").slow(2.25).s('gm_electric_guitar_clean').clip(1).release(.5).gain(.7);
+
+// the hook: B4 D5 E5 G5 E5 D5 B4 A4 as degrees of E minor in octave 4 (4 6 7 9 7 6 4 3), four bars, the second
+// phrase lands on G4 E4
+const HOOK = '4@2 6 7@2 9@3 7 6@2 4@2 3@2 4@2 6 7@2 9@3 7 6@2 2@2 0@2';
+
+const drums = { template: KIT, sounds: { hh: 'hh:2' }, fill: false, drive: .5, space: .3, brightness: .5, level: .85 };
+const pickA = { pattern: A1, level: .8, position: -.2, brightness: .5, space: .3 };
+const pickB = { pattern: B, level: .75, position: .4, space: .5 };
+const bass = { sound: 'square', notes: '0 0 0 0 2 0 4 2', density: .8, register: .5, patch: 'driven', brightness: .45, articulation: .6, weight: .6,
+  space: .3, level: .8, duck: 'drums', duckDepth: .4, duckAttack: .08 };
+const hook = { sound: 'square', notes: HOOK, phrase: 4, register: .5, follow: false, articulation: .35, brightness: .45,
+  space: .55, width: .55, level: .7, velocity: '.9 1 .85 .95 1 .9 .85 .9', humanize: { timingMs: 8, velocity: .08, correlation: 'phrase' } };
+// two tones (E and B, an open fifth: the G is the guitar's and the hook's), dark, so it sits under the hook instead of on it
+const pad = { sound: 'sawtooth', density: .4, register: .3, brightness: .28, space: .7, width: .7, articulation: .3,
+  level: .5, duck: 'drums', duckDepth: .4, duckAttack: .2 };
+
+song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: ['rooms'], room: { ir: 'hall', size: .4 } }, [
+  section('out', 32, { role: 'establish', progression: 'i',
+    drums,
+    raw: pickA,
+    bass: { ...bass, enter: 8 },
+    raw2: { ...pickB, enter: 16 },
+    melody: { ...hook, enter: 24 },
+  }),
+  section('back', 32, { role: 'climax', progression: 'i',
+    drums: { ...drums, template: KIT2 },
+    raw: { ...pickA, pattern: A2, exit: 2 },
+    bass: { ...bass, exit: 4 },
+    raw2: { ...pickB, exit: 8 },
+    melody: { ...hook, level: .8, brightness: ramp(.4, .62), exit: 16 },   // brightest just before it leaves at 48: the peak
+    pad: { ...pad, exit: 6 },
+  }),
+])
