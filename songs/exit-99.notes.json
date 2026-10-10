@@ -253,6 +253,30 @@
           "why": "with the viola: rise 47%, open 54% with three dropouts in fifteen seconds; the held viola notes are soundfont voices alive for whole beats; the next trim if open crackles is the hook's articulation"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "orrery to parlor; open drums too loud; the shakuhachi needs breaks and long notes",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "visual",
+          "why": "worlds cabaret+orrery>cabaret+parlor every 16 bars"
+        },
+        {
+          "section": "open",
+          "layer": "drums",
+          "axis": "level",
+          "from": 0.6,
+          "to": 0.45,
+          "why": "(rise .6>.55): the ride and crash are bright and the kit sat 3.6 dB under the mix in open; now 4.9, with open's pad .5>.7 and bass .8>.9 so the climax still peaks (arc 17/35/36/22)"
+        },
+        {
+          "section": "out",
+          "layer": "raw",
+          "why": "shakuhachi line: eight eighths a bar > an eight-bar phrase of held notes and breaths (E held, G A, a whole bar of B, a breath, D5 falling to B, A and G held, a breath; then the same opening into a long E5 and the fall D5 B A G E); release .12>.3. Fewer, longer voices: rise 47%>41%, open 54%>48%"
+        }
+      ]
     }
   ]
 }

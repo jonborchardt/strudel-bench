@@ -2,8 +2,8 @@
 // everything around it does. The rule is Hallogallo's: keep the pulse constant, not the music. Kick on every quarter,
 // snare on 2 and 4, hats on the eighths from the first bar to the last; around that a guitar riff, a pluck that
 // re-colours it, a bass with an octave pop, a hook that asks and answers, and one moment where it all opens up.
-//   out    bars 1-24. The riff first (a shakuhachi, two bars, E G A B up and D B A G E down with rests where
-//          the kick is alone), the bass at 9 (E2 G2 B2 and the E3 pop at the end of every second bar, driven, ducked
+//   out    bars 1-24. The shakuhachi first (an eight-bar phrase of held notes and breaths, E G A up to a whole bar of B, a fall from D5, a long E5;
+//          the bass keeps the eighths under it), the bass at 9 (E2 G2 B2 and the E3 pop at the end of every second bar, driven, ducked
 //          under the kick), the timpani at 17 (six notes of three eighths each through a dotted-eighth
 //          echo, so its C and F# land on a different beat of the riff every bar and the riff keeps changing colour).
 //   rise   bars 25-40. The hook (a viola, eight bars: B4 D5 E5 up to G5, a second run up to B5 that stops short,
@@ -24,10 +24,11 @@ const OPEN = { ...GHOST, hh: '................', oh: '................', rim: '.
   cr: 'x...............|................|................|................|................|................|................|................' };
 const BACK = { ...GHOST, hh: 'x.x.x.x.x.x.x.X.' };                                 // the last hat of the bar leans in
 
-// picking A: the riff, a shakuhachi. Two bars, eight eighths each, rests on the and of 1 and on 3 so the kick stands alone there.
-const GTR = (pat) => pat.s('gm_shakuhachi').clip(.95).release(.12).gain(1);   // a shakuhachi, an octave above where the riff was written so its breath attack fits an eighth
-const RIFF = GTR(note("<[e4 ~ e4 g4 ~ a4 b4 ~] [d5 ~ b4 a4 ~ g4 e4 ~]>"));
-const RIFF2 = GTR(note("<[e4 ~ e4 g4 ~ a4 b4 ~] [d5 ~ b4 a4 ~ fs4 e4 d4]>"));       // one note changes: the F#, and a D pickup
+// picking A: the shakuhachi phrase, eight bars. E held, G A, a whole bar on B, a breath, D5 falling to B, A and G held, a breath; then the
+// same opening, B into D5, a long E5, and the fall D5 B A G E. The bass keeps the eighths; this is the line over them.
+const GTR = (pat) => pat.s('gm_shakuhachi').clip(.95).release(.3).gain(1);   // a shakuhachi: held notes and breaths, an octave above the bass's register
+const RIFF = GTR(note("<[e4@3 ~ g4 a4@3] [b4@7 ~] [~ ~ d5@3 b4@2 ~] [a4@2 g4@4 ~ ~] [e4@3 ~ g4 a4@3] [b4@5 d5@3] [e5@6 ~ ~] [d5@2 b4@3 a4 g4@2]>"));
+const RIFF2 = GTR(note("<[e4@3 ~ g4 a4@3] [b4@7 ~] [~ ~ d5@3 b4@2 ~] [a4@2 fs4@4 ~ ~] [e4@3 ~ g4 a4@3] [b4@5 d5@3] [e5@6 ~ ~] [d5@2 b4@3 a4 fs4 d4]>"));   // the F# where the G was, and a D at the end
 // picking B: timpani, six notes of three eighths each (2.25 bars a cycle, realigns with the riff every nine),
 // the C and F# the riff does not have, through a dotted-eighth echo
 const PLUCK = (pat) => pat.s('gm_timpani').clip(.6).release(.2).gain(1.4)   // timpani in their top register, through the echo
@@ -53,7 +54,7 @@ const pad = { sound: 'square', density: .4, register: .3, brightness: .3, space:
   level: .5, duck: 'drums', duckDepth: .4, duckAttack: .2 };
 
 song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: ['rooms'], room: { ir: 'hall', size: .4 },
-  visual: { world: 'cabaret', composition: 'overlay', worlds: ['cabaret', 'orrery'], every: 16 } }, [   // the cabaret, the orrery visiting every sixteen bars
+  visual: { world: 'cabaret', composition: 'overlay', worlds: ['cabaret', 'parlor'], every: 16 } }, [   // the cabaret, the parlor visiting every sixteen bars
   section('out', 24, { role: 'establish', progression: 'i',
     drums,
     raw: riff,
@@ -61,7 +62,7 @@ song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: 
     raw2: { ...pluck, enter: 16 },
   }),
   section('rise', 16, { role: 'build', progression: 'i',
-    drums: { ...drums, fill: true },                                              // the one roll: into 41
+    drums: { ...drums, fill: true, level: .55 },                                  // the one roll: into 41
     raw: { ...riff, pattern: RIFF2 },
     bass: { ...bass, notes: '<[0 0 0 0 2 0 4 2] [0 0 7 0 2 0 4 3]>' },
     raw2: pluck,
@@ -70,13 +71,13 @@ song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: 
     pad: { ...pad, enter: 8 },
   }),
   section('open', 8, { role: 'climax', progression: 'i@2 VI@2 i@2 VII@2',
-    drums: { ...drums, template: OPEN, brightness: .55 },
+    drums: { ...drums, template: OPEN, brightness: .55, level: .45 },   // the ride and crash are bright: the kit comes down here
     raw: { ...riff, pattern: RIFF2, level: 1 },   // the riff cedes a little to the hook here
-    bass: { ...bass, notes: '<[0 0 7 0 2 0 4 2] [0 0 7 0 2 2 4 7]>', rhythm: 'x.x.x.x.x.x.x.xx', weight: .65 },
+    bass: { ...bass, notes: '<[0 0 7 0 2 0 4 2] [0 0 7 0 2 2 4 7]>', rhythm: 'x.x.x.x.x.x.x.xx', weight: .65, level: .9 },
     raw2: { ...pluck, pattern: B_OPEN, level: 2 },
     melody: { ...hook, brightness: .65 },
     melody2: { sound: 'handchimes', notes: '~ ~ 7 ~ ~ ~ 9 ~ ~ ~ 11 ~ 9 ~ ~ ~', phrase: 2, register: .5, follow: false, level: 2, space: .7, position: -.5 },
-    pad: { ...pad, register: .5, brightness: .5, width: .6, articulation: .4, level: .5 },
+    pad: { ...pad, register: .5, brightness: .5, width: .6, articulation: .4, level: .7 },
   }),
   section('back', 16, { role: 'release', progression: 'i',
     drums: { ...drums, template: BACK, fill: false },
