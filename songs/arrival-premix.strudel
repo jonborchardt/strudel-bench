@@ -18,7 +18,7 @@ const winds    = { sound: 'recorder_alto_sus', follow: true, notes: '~ ~ ~ ~ 4@4
 const strings  = { sound: 'psaltery_bow', articulation: .1, space: .8, width: .85, weight: .6, brightness: .35 };
 const organ    = { sound: 'pipeorgan_quiet', articulation: .05, space: .9, width: .5, weight: .8, register: .2, brightness: .2, level: .7 };
 const choir    = { sound: 'super64_vib', articulation: .1, space: .9, width: .9, register: .6, brightness: .4, level: .4 };
-const pedal    = { sound: 'pipeorgan_loud_pedal', register: .1, weight: .9, articulation: .1, space: .6, brightness: .2, drive: .8 };
+const pedal    = { sound: 'pipeorgan_loud_pedal', register: .9, weight: .9, articulation: .1, space: .6, brightness: .2, drive: .8 };
 const pulse    = { template: 'halftime', sounds: { bd: 'timpani', sd: 'snare_low', hh: 'triangles', oh: 'sus_cymbal', cp: 'bassdrum2' }, space: .9, brightness: .2, articulation: .3, variation: 0, organicness: .3 };
 
 const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808', saturate: .6 }, [
@@ -58,7 +58,7 @@ const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808', satu
   }),
   section('will', 8, { role: 'develop', key: 'D:phrygian', progression: 'i II i II',
     drums:   { ...pulse, template: 'minimal', density: .25, space: .6 },
-    bass:    { ...pedal, sound: 'didgeridoo:8', density: .4, notes: '0 ~', register: .15, brightness: .15, weight: 1, aggression: .55, space: .4 },
+    bass:    { ...pedal, sound: 'didgeridoo:8', density: .4, notes: '0 ~', register: .9, brightness: .15, weight: 1, aggression: .55, space: .4 },
     melody:  { ...theme, notes: '0 ~ ~ ~ 1 ~ 0@2 ~ ~ ~ ~ 1 ~ 0@2', density: .3, register: .35, brightness: .25, space: .9 },
     melody2: { ...signal, density: .4, level: .75, brightness: .6, space: .6 },
     melody3: { ...bells, density: .5, level: .6, register: .2, space: .7 },
@@ -67,7 +67,7 @@ const score = song({ bpm: 64, key: 'D:minor', seed: 41, kit: 'RolandTR808', satu
   }),
   section('plea', 8, { role: 'develop', key: 'F:major', progression: 'I V vi IV',
     drums:   { ...pulse, density: .3, space: .95 },
-    bass:    { ...pedal, density: .4, notes: '0 4', weight: .7, brightness: .3 },
+    bass:    { ...pedal, density: .4, notes: '0 4', weight: .7, register: .5, brightness: .3 },
     melody:  { ...theme, density: .5, brightness: saw.range(.45, .8).slow(8), register: .65, width: .6 },
     melody2: { ...harp, density: .5, brightness: saw.range(.5, .8).slow(8) },
     melody3: { ...winds, density: .5, level: .5, notes: '~ ~ 4@4 ~ ~ 5@4 ~ ~ 7@2' },
