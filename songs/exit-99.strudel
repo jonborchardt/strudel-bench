@@ -1,60 +1,87 @@
-// exit 99: motorik in E minor at 118, 64 bars, about 2:10. Driving for hours at night: everything stays the same and
-// your perception of it changes. One beat for the whole song (kick on every quarter, snare on 2 and 4, hats on the
-// eighths, no fill, no drop), one chord, and every change is one part joining or leaving on its own `enter`/`exit`
-// bar, so the two sections are the only seams. Every eight bars one thing changes: a part arrives, a note moves, an
-// accent shifts. Neu!, Kraftwerk, early Stereolab.
-//   out    bars 1-32. Picking A alone over the kit (a dry muted synth pluck, eight eighths a bar, E3 to B3), the bass
-//          at 9 (E2 G2 B2 only, driven, ducked under the kick), picking B at 17 (clean electric guitar, a six-note
-//          cycle of dotted quarters, so it lands on a different eighth of A each bar and realigns every nine), the
-//          hook at 25 (a square, B4 D5 E5 G5 E5 D5 B4 A4, long notes against the eighths, the second phrase ending on
-//          G4 E4 instead of B4 A4).
-//   back   bars 33-64. The pad arrives under everything (an open fifth, E3 and B3, dark, wide, ducked; an octave under
-//          the hook, since at the hook's octave the two masked each other). A's last note moves from B3 to D4, a hint
-//          of the VII with the harmony never leaving i; the last hat of the bar leans in. Bars 41-48 are the peak,
-//          which is only the hook a little louder and brightening on a ramp until it leaves at 49; then B leaves at 57,
-//          the pad at 59, the bass at 61, A at 63, and the kit is alone for the last two bars, as if it would keep going.
+// exit 99: motorik in E minor at 118, 64 bars, about 2:10. Driving for hours at night: the pulse never changes and
+// everything around it does. The rule is Hallogallo's: keep the pulse constant, not the music. Kick on every quarter,
+// snare on 2 and 4, hats on the eighths from the first bar to the last; around that a guitar riff, a pluck that
+// re-colours it, a bass with an octave pop, a hook that asks and answers, and one moment where it all opens up.
+//   out    bars 1-24. The riff first (a dirty electric guitar, two bars, E G A B up and D B A G E down with rests where
+//          the kick is alone), the bass at 9 (E2 G2 B2 and the E3 pop at the end of every second bar, driven, ducked
+//          under the kick), the pluck at 17 (a glassy FM square, six notes of three eighths each through a dotted-eighth
+//          echo, so its C and F# land on a different beat of the riff every bar and the riff keeps changing colour).
+//   rise   bars 25-40. The hook (a warm saw, eight bars: B4 D5 E5 up to G5, a second run up to B5 that stops short,
+//          the same again landing on E4), a sidestick ghost in the kit, a noise swell under everything, the pad at 33
+//          (a hollow square, E3 and B3, an octave under the hook). A snare roll into 41.
+//   open   bars 41-48. The arrangement opens: a crash, the ride on the eighths, the pad up an octave and wide and
+//          bright, the harmony finally moving (i VI i VII, two bars each), the bass popping its octave on the beat,
+//          the pluck high and ringing, a handchimes counter-line on the hook's rests. The hook keeps playing.
+//   back   bars 49-64. The chord is i again and the hook is gone. The pluck leaves at 57, the swell and pad at 59,
+//          the bass at 61, the riff at 63, and the kit is alone for the last two bars, as if it would keep going.
 // Kit: LinnDrum, one source, dry. From the catalogue words: kick tight mid click (0.21 s), snare medium deep snap
-// noisy (dry and rough), closed hat (the third take) tight bright click. The bass is a driven square, not a saw, so
-// the pad is the section's one saw.
-const KIT = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.x.' };
-const KIT2 = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.X.' };   // the one accent shift: the last hat leans in
+// noisy, closed hat (the third take) tight bright click, ride long mid click airy, crash medium soft airy.
+const BEAT = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.x.', oh: '................|..............x.' };
+const GHOST = { ...BEAT, rim: '.............o..' };                                 // a sidestick ghost before the 4
+const OPEN = { ...GHOST, bd: 'x...x...x...x...|x...x...x...x..x', rd: 'x.x.x.x.x.x.x.x.',
+  cr: 'x...............|................|................|................|................|................|................|................' };
+const BACK = { ...GHOST, hh: 'x.x.x.x.x.x.x.X.' };                                 // the last hat of the bar leans in
 
-// picking A: eight eighths a bar, a muted analog pluck, no sustain. One note changes at bar 33.
-const PLUCK = (pat) => pat.s('triangle').attack(.004).decay(.11).sustain(0).release(.04).lpf(1800).clip(.5).gain(.9);
-const A1 = PLUCK(note("e3 b3 e4 b3 g3 b3 e4 b3"));
-const A2 = PLUCK(note("e3 b3 e4 b3 g3 b3 e4 d4"));
-// picking B: six notes, each three eighths long (2.25 bars a cycle), a clean guitar in the gaps A leaves, ringing over it
-const B = note("g4 b4 d5 b4 e5 d5").slow(2.25).s('gm_electric_guitar_clean').clip(1).release(.5).gain(.7);
+// picking A: the riff. Two bars, eight eighths each, rests on the and of 1 and on 3 so the kick stands alone there.
+const GTR = (pat) => pat.s('gm_overdriven_guitar').clip(.9).release(.15).lpf(2800).gain(.55);
+const RIFF = GTR(note("<[e3 ~ e3 g3 ~ a3 b3 ~] [d4 ~ b3 a3 ~ g3 e3 ~]>"));
+const RIFF2 = GTR(note("<[e3 ~ e3 g3 ~ a3 b3 ~] [d4 ~ b3 a3 ~ fs3 e3 d3]>"));       // one note changes: the F#, and a D pickup
+// picking B: a glassy pluck, six notes of three eighths each (2.25 bars a cycle, realigns with the riff every nine),
+// the C and F# the riff does not have, through a dotted-eighth echo
+const PLUCK = (pat) => pat.s('square').fmi(1.5).fmh(2).attack(.002).decay(.16).sustain(.08).release(.12).lpf(3400)
+  .delay(.35).delaytime(.3814).delayfeedback(.45).gain(.5);
+const B = PLUCK(note("b4 c5 b4 g4 fs4 a4").slow(2.25));
+const B_OPEN = PLUCK(note("e5 d5 b4 d5 g5 e5").slow(2.25));                        // high and ringing when it opens
+// the swell: filtered noise rising and falling over sixteen bars, the jet on the autobahn
+const SWELL = s("white*16").clip(1).hpf(250).lpf(sine.slow(16).range(400, 3500)).gain(sine.slow(16).range(0, .4));
 
-// the hook: B4 D5 E5 G5 E5 D5 B4 A4 as degrees of E minor in octave 4 (4 6 7 9 7 6 4 3), four bars, the second
-// phrase lands on G4 E4
-const HOOK = '4@2 6 7@2 9@3 7 6@2 4@2 3@2 4@2 6 7@2 9@3 7 6@2 2@2 0@2';
+// the hook: eight bars as degrees of E minor in octave 4. Bars 1-4 climb B4 D5 E5 to G5, fall, climb again to B5 and
+// stop on E5 (the question); bars 5-8 the same climb, then down through D5 B4 G4 to E4 (the answer).
+const HOOK = '4@2 6 7@3 ~ 9  9@2 7 6@3 4 ~  3@2 4 6@2 7 9@2  11@3 9 7@2 ~ ~  4@2 6 7@3 ~ 9  9@2 7 6@3 4 ~  3@2 4 6@2 7 9@2  6@2 4 2@2 0@3';
 
-const drums = { template: KIT, sounds: { hh: 'hh:2' }, fill: false, drive: .5, space: .3, brightness: .5, level: .85 };
-const pickA = { pattern: A1, level: .8, position: -.2, brightness: .5, space: .3 };
-const pickB = { pattern: B, level: .75, position: .4, space: .5 };
-const bass = { sound: 'square', notes: '0 0 0 0 2 0 4 2', density: .8, register: .5, patch: 'driven', brightness: .45, articulation: .6, weight: .6,
-  space: .3, level: .8, duck: 'drums', duckDepth: .4, duckAttack: .08 };
-const hook = { sound: 'square', notes: HOOK, phrase: 4, register: .5, follow: false, articulation: .35, brightness: .45,
-  space: .55, width: .55, level: .7, velocity: '.9 1 .85 .95 1 .9 .85 .9', humanize: { timingMs: 8, velocity: .08, correlation: 'phrase' } };
-// two tones (E and B, an open fifth: the G is the guitar's and the hook's), dark, so it sits under the hook instead of on it
-const pad = { sound: 'sawtooth', density: .4, register: .3, brightness: .28, space: .7, width: .7, articulation: .3,
+const drums = { template: BEAT, sounds: { hh: 'hh:2' }, density: .7, fill: false, drive: .5, space: .3, brightness: .5, weight: .6, level: .6 };
+const riff = { pattern: RIFF, level: 1.6, position: -.25, space: .35 };
+const pluck = { pattern: B, level: 1.3, position: .4, space: .45 };
+const swell = { pattern: SWELL, level: 1, width: .8, space: .6 };
+const bass = { sound: 'square', notes: '<[0 0 0 0 2 0 4 2] [0 0 0 0 2 0 4 7]>', density: .8, register: .5, patch: 'driven', brightness: .45,
+  articulation: .6, weight: .6, space: .3, level: .8, velocity: '1 .7 .85 .7 1 .7 .9 .75', duck: 'drums', duckDepth: .4, duckAttack: .08 };
+const hook = { sound: 'sawtooth', patch: 'warm', notes: HOOK, phrase: 8, register: .5, follow: false, articulation: .35, brightness: .45,
+  space: .55, width: .55, level: 1.3, velocity: '.9 1 .85 .95 1 .9 .85 .9', humanize: { timingMs: 8, velocity: .08, correlation: 'phrase' } };
+const pad = { sound: 'square', density: .4, register: .3, brightness: .3, space: .7, width: .7, articulation: .3,
   level: .5, duck: 'drums', duckDepth: .4, duckAttack: .2 };
 
 song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: ['rooms'], room: { ir: 'hall', size: .4 } }, [
-  section('out', 32, { role: 'establish', progression: 'i',
+  section('out', 24, { role: 'establish', progression: 'i',
     drums,
-    raw: pickA,
+    raw: riff,
     bass: { ...bass, enter: 8 },
-    raw2: { ...pickB, enter: 16 },
-    melody: { ...hook, enter: 24 },
+    raw2: { ...pluck, enter: 16 },
   }),
-  section('back', 32, { role: 'climax', progression: 'i',
-    drums: { ...drums, template: KIT2 },
-    raw: { ...pickA, pattern: A2, exit: 2 },
+  section('rise', 16, { role: 'build', progression: 'i',
+    drums: { ...drums, template: GHOST, fill: true },                              // the one roll: into 41
+    raw: { ...riff, pattern: RIFF2 },
+    bass: { ...bass, notes: '<[0 0 0 0 2 0 4 2] [0 0 7 0 2 0 4 3]>' },
+    raw2: pluck,
+    melody: hook,
+    raw3: swell,
+    pad: { ...pad, enter: 8 },
+  }),
+  section('open', 8, { role: 'climax', progression: 'i@2 VI@2 i@2 VII@2',
+    drums: { ...drums, template: OPEN, brightness: .55, level: .5 },
+    raw: { ...riff, pattern: RIFF2 },
+    bass: { ...bass, notes: '<[0 0 7 0 2 0 4 2] [0 0 7 0 2 2 4 7]>', rhythm: 'x.x.x.x.x.x.x.xx', weight: .65 },
+    raw2: { ...pluck, pattern: B_OPEN, level: 1.4 },
+    melody: { ...hook, level: 1.5, brightness: .55 },
+    melody2: { sound: 'handchimes', notes: '~ ~ 7 ~ ~ ~ 9 ~ ~ ~ 11 ~ 9 ~ ~ ~', phrase: 2, register: .5, follow: false, level: 1.7, space: .7, position: -.5 },
+    raw3: { ...swell, level: 1.2 },
+    pad: { ...pad, register: .5, density: .5, brightness: .5, width: .8, level: .4 },
+  }),
+  section('back', 16, { role: 'release', progression: 'i',
+    drums: { ...drums, template: BACK, fill: false },
+    raw: { ...riff, pattern: RIFF2, exit: 2 },
     bass: { ...bass, exit: 4 },
-    raw2: { ...pickB, exit: 8 },
-    melody: { ...hook, level: .8, brightness: ramp(.4, .62), exit: 16 },   // brightest just before it leaves at 48: the peak
+    raw2: { ...pluck, exit: 8 },
+    raw3: { ...swell, exit: 6 },
     pad: { ...pad, exit: 6 },
   }),
 ])

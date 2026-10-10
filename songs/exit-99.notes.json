@@ -34,6 +34,65 @@
           "why": ".45>ramp(.4,.62): the only peak the brief allows, the hook at its brightest in bars 41-48 just before it leaves"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "It's boring. Make it hypnotic, not boring: keep the pulse constant, not the music. A distinctive riff in the first ten seconds, a second picking line that transforms how the riff feels, a memorable hook with anticipation and resolution, a bass with personality, at least one moment where the arrangement opens up, saturation and dirt and contrasting timbres; a slightly dirty electric guitar for picking A and a synth pluck for B",
+      "changes": [
+        {
+          "section": "song",
+          "why": "form 2 sections>4 (out 24, rise 16, open 8, back 16): the first version's two 32-bar sections held the pulse and everything else still; the arc read 25/28 and the render's level moved under a dB across the song. Now 21/38/53/28, with enter/exit still carrying the entrances inside each section"
+        },
+        {
+          "section": "out",
+          "layer": "raw",
+          "axis": "pattern",
+          "why": "arpeggio>riff: picking A is a dirty electric guitar (gm_overdriven_guitar, lpf 2800) playing a two-bar riff with rests on the and of 1 and on 3, E G A B up and D B A G E down, so there is a riff in the first ten seconds and gaps for the kick and the pluck"
+        },
+        {
+          "section": "out",
+          "layer": "raw2",
+          "axis": "pattern",
+          "why": "triangle>FM square through a dotted-eighth echo: the pluck carries the C and F# the riff lacks, six notes of three eighths each, so every bar the riff is coloured differently; in open it moves high (E5 D5 B4 D5 G5 E5)"
+        },
+        {
+          "section": "out",
+          "layer": "bass",
+          "axis": "notes",
+          "why": "one bar>two bars with the E3 pop: '<[0 0 0 0 2 0 4 2] [0 0 0 0 2 0 4 7]>', velocity accents 1 .7 .85 .7 1 .7 .9 .75; rise ends its second bar 7 0 2 0 4 3, open pops the octave on the beat with a sixteenth pickup"
+        },
+        {
+          "section": "rise",
+          "layer": "melody",
+          "axis": "notes",
+          "why": "4 bars>8 bars, patch warm: a question (B4 D5 E5 G5, then a climb to B5 that stops on E5) and an answer (the same climb, down through D5 B4 G4 to E4); the warm ladder drive gives the saw its edge"
+        },
+        {
+          "section": "open:",
+          "why": "the moment it opens: crash, ride on the eighths, kick pickup, harmony i@2 VI@2 i@2 VII@2 (the only chord move in the song), pad up an octave, three tones, jux wide and bright, handchimes counter-line on the hook's rests, swell at its loudest"
+        },
+        {
+          "section": "rise",
+          "layer": "drums",
+          "axis": "fill",
+          "why": "false>true: the one roll, into 41"
+        },
+        {
+          "section": "rise",
+          "layer": "raw3",
+          "why": "noise swell: filtered white noise rising and falling over sixteen bars under the rise, open and back (gain 0..0.4, lpf 400..3500)"
+        },
+        {
+          "section": "levels",
+          "why": "from the measure: the first measure had drums 2 dB under the mix and the riff, hook and pluck 14-20 dB under, the swell at -38; now drums .6 (open .5), riff 1.6, pluck 1.3 (open 1.4), hook 1.3 (open 1.5), handchimes 1.7, swell 1 (open 1.2), open pad .4; open: drums -2.4, riff -11.4, hook -10.9, pluck -13.3, chimes -15.5, swell -21.6; mix lint clean"
+        },
+        {
+          "section": "open",
+          "layer": "melody2",
+          "axis": "position",
+          "why": ".3>-.5: the pluck sits right (pan .83), so the counter-line goes left"
+        }
+      ]
     }
   ]
 }
