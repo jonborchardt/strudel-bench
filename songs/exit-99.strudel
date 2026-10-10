@@ -1,11 +1,11 @@
 // exit 99: motorik in E minor at 118, 64 bars, about 2:10. Driving for hours at night: the pulse never changes and
 // everything around it does. The rule is Hallogallo's: keep the pulse constant, not the music. Kick on every quarter,
-// snare on 2 and 4, hats on the eighths from the first bar to the last; around that a guitar riff, a pluck that
-// re-colours it, a bass with an octave pop, a hook that asks and answers, and one moment where it all opens up.
+// snare on 2 and 4, hats on the eighths from the first bar to the last; around that a shakuhachi phrase, timpani that
+// re-colour it through an echo, a bass with an octave pop, a viola hook that asks and answers, and one moment where it all opens up.
 //   out    bars 1-24. The shakuhachi first (an eight-bar phrase of held notes and breaths, E G A up to a whole bar of B, a fall from D5, a long E5;
 //          the bass keeps the eighths under it), the bass at 9 (E2 G2 B2 and the E3 pop at the end of every second bar, driven, ducked
 //          under the kick), the timpani at 17 (six notes of three eighths each through a dotted-eighth
-//          echo, so its C and F# land on a different beat of the riff every bar and the riff keeps changing colour).
+//          echo, so its C and F# land on a different beat of the shakuhachi phrase every bar and the line keeps changing colour).
 //   rise   bars 25-40. The hook (a viola, eight bars: B4 D5 E5 up to G5, a second run up to B5 that stops short,
 //          the same again landing on E4), a noise swell under everything, the pad at 33
 //          (a hollow square, E3 and B3, an octave under the hook). A snare roll into 41.
@@ -14,8 +14,8 @@
 //          the timpani higher, a handchimes counter-line on the hook's rests. The hook keeps playing; the swell
 //          stops here, and the bass has no ladder drive anywhere: both traced the audio thread past real time (open
 //          at 85% busy with dropouts; under 45% as written), and the bus saturation carries the dirt instead.
-//   back   bars 49-64. The chord is i again and the hook is gone. The pluck leaves at 57, the swell and pad at 59,
-//          the bass at 61, the riff at 63, and the kit is alone for the last two bars, as if it would keep going.
+//   back   bars 49-64. The chord is i again and the hook is gone. The timpani leave at 57, the swell and pad at 59,
+//          the bass at 61, the shakuhachi at 63, and the kit is alone for the last two bars, as if it would keep going.
 // Kit: LinnDrum, one source, dry. From the catalogue words: kick tight mid click (0.21 s), snare medium deep snap
 // noisy, closed hat (the third take) tight bright click, ride long mid click airy, crash medium soft airy.
 const BEAT = { bd: 'x...x...x...x...', sd: '....x.......x...', hh: 'x.x.x.x.x.x.x.x.', oh: '................|..............x.' };
