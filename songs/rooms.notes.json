@@ -47,6 +47,18 @@
           "why": "level 1.4: the spec asks for harmonics, not level; peaks fell, rms sits 2-3 dB under the baseline by design"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "bass register",
+      "changes": [
+        {
+          "section": "small",
+          "layer": "bass",
+          "axis": "register",
+          "why": ".3>.5, plate.bass.register .3>.5, hall.bass.register .3>.9 hall's weight .8 dropped the bass to midi 14 (18 Hz); the three sections now share D2, lowest midi 38 (73 Hz)"
+        }
+      ]
     }
   ]
 }

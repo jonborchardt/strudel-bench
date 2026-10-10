@@ -22,7 +22,7 @@ song({ cps: .52, key: 'D:minor', seed: 7, saturate: .6, kit: 'RolandTR909', pack
 
   section('small', 8, { role: 'develop', progression: 'i VI III VII', room: { ir: 'room', size: .9 },
     drums:  { density: .55, space: .5, position: -.05 },
-    bass:   { sound: 'square', patch: 'sub', notes: '0 ~ 0 5', density: .75, weight: .7, register: .3, space: .35, duck: 'drums', duckDepth: .3 },
+    bass:   { sound: 'square', patch: 'sub', notes: '0 ~ 0 5', density: .75, weight: .7, register: .5, space: .35, duck: 'drums', duckDepth: .3 },
     melody: { sound: 'marimba', notes: '0 ~ 2 ~ 4 ~ ~ 3 ~ 2 ~ ~ 0 ~ ~ ~', follow: true, phrase: 2, register: .55, space: .75, articulation: .65 },
     perc:   { sound: 'rim', rhythm: '..x.....x...x...', space: .8, position: .35, level: .7, humanize: { timingMs: 9, velocity: .1, correlation: 'bar' } },
     pad:    { density: .4, space: .6, brightness: .35, width: .7, level: .5 },
@@ -30,7 +30,7 @@ song({ cps: .52, key: 'D:minor', seed: 7, saturate: .6, kit: 'RolandTR909', pack
 
   section('plate', 8, { role: 'develop', progression: 'i VI III VII', room: { ir: 'plate', size: 1.8, damping: 9000 },
     drums:  { density: .6, space: .5, variation: .4, position: -.05 },
-    bass:   { sound: 'square', patch: 'sub', notes: '0 ~ 0 5', density: .75, weight: .7, register: .3, space: .35, duck: 'drums', duckDepth: .3 },
+    bass:   { sound: 'square', patch: 'sub', notes: '0 ~ 0 5', density: .75, weight: .7, register: .5, space: .35, duck: 'drums', duckDepth: .3 },
     melody: { sound: 'marimba', notes: '0 ~ 2 ~ 4 ~ ~ 3 ~ 2 ~ 4 5 ~ 4 ~', follow: true, phrase: 2, register: .55, space: .8, articulation: .7, brightness: .6 },
     perc:   { sound: 'rim', rhythm: '..x.....x...x.x.', space: .85, position: .35, level: .7, humanize: { timingMs: 9, velocity: .1, correlation: 'bar' } },
     pad:    { density: .45, space: .6, brightness: .4, width: .75, level: .5 },
@@ -38,7 +38,7 @@ song({ cps: .52, key: 'D:minor', seed: 7, saturate: .6, kit: 'RolandTR909', pack
 
   section('hall', 8, { role: 'climax', progression: 'i VI III VII', room: { ir: 'hall', size: 3.2, damping: 5000 },
     drums:   { density: .75, space: .55, drive: .65, articulation: .6, variation: .5, position: -.05 },
-    bass:    { sound: 'square', patch: 'sub', notes: '0 ~ 0 5 ~ 3 ~ ~', density: .8, weight: .8, register: .3, space: .3, duck: 'drums', duckDepth: .4, duckAttack: .15 },
+    bass:    { sound: 'square', patch: 'sub', notes: '0 ~ 0 5 ~ 3 ~ ~', density: .8, weight: .8, register: .9, space: .3, duck: 'drums', duckDepth: .4, duckAttack: .15 },
     melody:  { sound: 'marimba', notes: '0 ~ 2 ~ 4 ~ 7@2 ~ 5 ~ 4 ~ 2 0 ~', follow: true, phrase: 2, register: .55, space: .85, articulation: .7, brightness: .6 },
     melody2: { sound: 'glockenspiel', notes: '~ ~ ~ 7 ~ ~ ~ ~ ~ 5 ~ ~ ~ ~ ~ ~', follow: true, register: .85, level: .55, space: .9, width: .6, position: .25 },
     perc:    { sound: 'rim', rhythm: '..x.....x...x.x.', space: .9, position: .35, level: .7, humanize: { timingMs: 9, velocity: .1, correlation: 'bar' } },
