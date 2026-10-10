@@ -16,7 +16,7 @@ const SONG_FILE = /^[\w.-]+\.(strudel|notes\.json)$/; // a song and its provenan
 const SAMPLE_FILE = /^[\w-]+\/(?:[\w-]+\.(?:wav|mp3|ogg|flac|aif|aiff|m4a|webm)|pack\.json)$/i;
 const AUDIO = new Set(['.wav', '.mp3', '.ogg', '.flac', '.aif', '.aiff', '.m4a', '.webm']);
 const MIME = {
-  '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
+  '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.txt': 'text/plain; charset=utf-8',
   '.css': 'text/css', '.svg': 'image/svg+xml', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.flac': 'audio/flac',
   '.aif': 'audio/aiff', '.aiff': 'audio/aiff', '.m4a': 'audio/mp4', '.webm': 'audio/webm', '.strudel': 'text/plain',
 };
@@ -223,7 +223,8 @@ export function createServer() {
     // range with the whole file are what make a track "not seekable" in chrome, so serve 206 properly.
     if (p.startsWith('/renders/') && req.method === 'GET') {
       const name = decodeURIComponent(p.slice('/renders/'.length));
-      if (!/^[\w.-]+\.(mp3|wav)$/.test(name)) return send(res, 400, 'bad render name');
+      // one level of folder, for the before/after sets scripts/renderall.mjs writes (compare.html plays them side by side)
+      if (!/^(?:(?:baseline|after)\/)?[\w.-]+\.(mp3|wav|txt|json)$/.test(name)) return send(res, 400, 'bad render name');
       const file = path.join(RENDERS, name);
       if (!fs.existsSync(file)) return send(res, 404, 'no such render');
       const size = fs.statSync(file).size, type = MIME[path.extname(file).toLowerCase()];
