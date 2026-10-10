@@ -21,6 +21,20 @@
           "why": "consts level 1.1 back to .8: the spec asks for harmonics, not level; peaks fell, rms sits 2-3 dB under the baseline by design"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "bass register",
+      "changes": [
+        {
+          "section": "*",
+          "layer": "bass",
+          "axis": "register",
+          "from": 0.3,
+          "to": 0.9,
+          "why": "the sub-patch square at weight .8 reached midi 14 (18 Hz); octave 3 less the weight drop is D2, lowest midi 38 (73 Hz)"
+        }
+      ]
     }
   ]
 }
