@@ -21,6 +21,20 @@
           "why": "level 1.8, melody/pad level 1.4: the spec asks for harmonics, not level; peaks fell, rms sits 2-3 dB under the baseline by design"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "bass register",
+      "changes": [
+        {
+          "section": "*",
+          "layer": "bass",
+          "axis": "register",
+          "from": 0.15,
+          "to": 0.9,
+          "why": "every section's weight (.8 to 1) dropped octave 1 to midi 16 (21 Hz); octave 3 less that drop is E2, lowest midi 40 (82 Hz), drive and aggression kept"
+        }
+      ]
     }
   ]
 }
