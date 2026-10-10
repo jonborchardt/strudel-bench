@@ -54,7 +54,7 @@ const pad = { sound: 'square', density: .4, register: .3, brightness: .35, space
   level: .4, duck: 'drums', duckDepth: .4, duckAttack: .2 };   // farther and under the bass: it shared the lows with it in back
 
 song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: ['rooms'], room: { ir: 'hall', size: .4 },
-  visual: { world: 'cabaret', composition: 'overlay', worlds: ['cabaret', 'ink'], every: 16 } }, [   // the cabaret, ink visiting every sixteen bars
+  visual: { world: 'cabaret', composition: 'single' } }, [   // the cabaret alone
   section('out', 24, { role: 'establish', progression: 'i',
     drums,
     raw: riff,

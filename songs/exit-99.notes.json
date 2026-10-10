@@ -296,6 +296,17 @@
           "why": "mix lint clean on rise, open and back (out's two silent rows are parts that enter after bar 4); every section differs in dB, centroid and onsets per second (out -19.4 dB/1526 Hz/4.1, rise -16.9/999/5.7, open -15.2/1240/4.7, back -16.5/913/6.4); traces rise 40%, open 44%; render peak .81, no clipping"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "drop ink",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "visual",
+          "why": "composition overlay>single: the cabaret alone, no second world"
+        }
+      ]
     }
   ]
 }
