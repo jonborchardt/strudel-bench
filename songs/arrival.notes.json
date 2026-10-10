@@ -366,6 +366,20 @@
           "why": "saturate .6 bus warmth; hall room, 808 kit kept; no sub (bass at midi 14), no sidechain (measure names no drums/bass low pair), no entries"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "bass register",
+      "changes": [
+        {
+          "section": "*",
+          "layer": "bass",
+          "axis": "register",
+          "from": 0.1,
+          "to": 0.9,
+          "why": "(plea .5, the didgeridoo .15>.9) the pedal sat at midi 14 (18 Hz) because weight over .7 drops an octave under octave 1: felt on a subwoofer, not heard; octave 3 less that drop is D2, lowest midi 38 (73 Hz), the line and every other value kept"
+        }
+      ]
     }
   ]
 }
