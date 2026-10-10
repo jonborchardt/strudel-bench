@@ -136,6 +136,80 @@
           "why": "rise 39-43%, open 42-47%, no dropouts; mix lint clean on both; render peak .73 no clipping. The page's own cost is separate: the stage measured its box every frame (web/visual/stage.mjs), 17% of the main thread"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "raw and raw2 are annoying, use different instruments",
+      "changes": [
+        {
+          "section": "out",
+          "layer": "raw",
+          "axis": "sound",
+          "why": "gm_overdriven_guitar>clavisynth: the riff on a clavinet through the bus saturation, the Stereolab way; the sample is quiet (rms -25.6) so gain 1.3 in the pattern and level 1.8, measured -7 to -8 dB under the mix as the foreground"
+        },
+        {
+          "section": "out",
+          "layer": "raw2",
+          "axis": "sound",
+          "why": "FM square>steinway: the six-note line on a piano, high and ringing through the same dotted-eighth echo; a loud sample (rms -18.3), so level 1.3>.55 (open 1.4>.6), measured -8.5 under the mix in rise and -12 in open"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "raw still bad or worse, raw2 might be better",
+      "changes": [
+        {
+          "section": "out",
+          "layer": "raw",
+          "axis": "sound",
+          "why": "clavisynth>fmpiano: the riff on an electric piano, round and dark (lpf 2200), level 1.8>1.6; measured -7.7 under the mix in open and -6.8 in rise, centroid 727 Hz where the clavinet sat at 1574. The piano line stays"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "changes": [
+        {
+          "section": "out",
+          "layer": "raw2",
+          "why": "piano clip 1>.7, release .4>.2 and out.raw clip .9>.8, release .15>.08: the sampled instruments cost what the synth and the font did not (open 57% busy); shorter voices took it to 51"
+        },
+        {
+          "section": "open",
+          "layer": "drums",
+          "why": "oh and rim rest: with the hats already handed to the ride, the open hat and sidestick were worth eight points there (interleaved: 52% with, 44% without, no dropouts); the ride carries the section"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "changes": [
+        {
+          "section": "open",
+          "layer": "drums",
+          "axis": "level",
+          "from": 0.5,
+          "to": 0.6,
+          "why": "and open.melody2.level 1.7>2: with four drum voices gone from open its energy (35.6) fell under rise (36.1) and the lint said the climax was not the peak"
+        },
+        {
+          "section": "rise",
+          "layer": "drums",
+          "axis": "template",
+          "why": "GHOST>BEAT: the sidestick ghost waits for open and back; rise traced 49% with the piano in it and the ghost was the cheapest cut"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "changes": [
+        {
+          "section": "out",
+          "layer": "raw2",
+          "why": "piano clip .7>.5, release .2>.15: the echo carries the ring, so the note itself can be short; rise 47-49%>39-47%, open 48%>43%, no dropouts in four traces"
+        }
+      ]
     }
   ]
 }
