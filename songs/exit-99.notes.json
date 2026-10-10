@@ -396,6 +396,17 @@
           "why": "notes MOTIF>MOTIF_HARD (the first two notes of each phrase struck twice), brightness .55>.75, articulation .55>.65, aggression .5>.65 (a distort of .12, a little string buzz), velocity contrast 1/.7 instead of 1/.9, humanize 10>6 ms: the attack changes, not the volume. Measured: level -9.1>-8.4 under the mix, crest 9>6.4 (denser), centroid 786>803; open traces 40%, no dropouts. The user: it's working, sounding great"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "make the last breath end on 6",
+      "changes": [
+        {
+          "section": "on",
+          "layer": "raw",
+          "why": "LAST e4>d5: degree 6 of E minor, the seventh of the key, held over the last four bars; the song ends unresolved"
+        }
+      ]
     }
   ]
 }

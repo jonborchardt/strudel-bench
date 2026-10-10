@@ -13,7 +13,7 @@
 //   open    bars 33-48  everything, the ride on the quarters, the crash, the bass popping its octave; the hook's answer
 //                       at 41 is the song's peak, with the chords moving under it.
 //   on      bars 49-56  the hook is gone; the harp motif and the bass over the kit, as at the start, then one held
-//                       shakuhachi E over the last four bars while the bass and harp leave, and the kit alone at the end.
+//                       shakuhachi D over the last four bars while the bass and harp leave, and the kit alone at the end.
 // Kit: LinnDrum, one source, dry; accents on 1 and 3 in the kick and hats, on the snare; the open hat on the and of 4
 // every second bar. No fills but a roll into 33. Hits are not clipped: the cymbals keep their tails.
 const BEAT = { bd: 'X...x...X...x...', sd: '....X.......X...', hh: 'X.x.x.x.X.x.x.x.', oh: '................|..............x.' };
@@ -47,8 +47,8 @@ const breath = { sound: 'gm_shakuhachi', notes: BREATH, phrase: 4, register: .5,
 // the organ pad: three tones of the chord, dark and wide, ducked under the kick
 const pad = { sound: 'organ_8inch', density: .5, register: .5, brightness: .4, space: .7, width: .7, articulation: .35, level: 1.2,
   duck: 'drums', duckDepth: .4, duckAttack: .2 };
-// the last breath: one shakuhachi E across the final four bars
-const LAST = note("~ e4").slow(8).s('gm_shakuhachi').clip(1).release(.5).gain(.9);
+// the last breath: one shakuhachi D (the 6th degree, the seventh of the key, unresolved) across the final four bars
+const LAST = note("~ d5").slow(8).s('gm_shakuhachi').clip(1).release(.5).gain(.9);
 
 song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: ['rooms'], room: { ir: 'hall', size: .4 },
   visual: { world: 'cabaret', composition: 'single' } }, [
