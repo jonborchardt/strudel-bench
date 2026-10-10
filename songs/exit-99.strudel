@@ -28,6 +28,7 @@ const bass = { sound: 'square', notes: GROOVE, rhythm: 'X.x...x.X...x...|X...x.x
   articulation: .6, weight: .6, space: .3, level: .8, duck: 'drums', duckDepth: .4, duckAttack: .08 };
 // the harp motif: E G F# / D B (question), then the same displaced an eighth late / D E (answer); four bars
 const MOTIF = '0 ~ 2 ~ 1 ~ ~ ~  -1 ~ -3@3 ~ ~ ~  ~ 0 ~ 2 ~ 1 ~ ~  ~ -1 ~ [0,-3]@3 ~ ~';   // the answer lands on an open fifth: one chord in ten notes
+const MOTIF_HARD = '[0 0] ~ [2 2] ~ 1 ~ ~ ~  -1 ~ -3@3 ~ ~ ~  ~ [0 0] ~ [2 2] ~ 1 ~ ~  ~ -1 ~ [0,-3]@3 ~ ~';   // open: the first two notes of each phrase struck twice
 const motif = { sound: 'folkharp', notes: MOTIF, phrase: 4, register: .5, follow: false, articulation: .55, brightness: .55, space: .45, width: .5,
   level: 1.2, position: -.2, velocity: '1 .9 .95 .9 1 .9 .95 .9', humanize: { timingMs: 10, velocity: .1, correlation: 'phrase' },
   compressor: { threshold: -18, ratio: 3 } };   // a sparse part with a crest of 9: the compressor is what lifts it, its level being at the ceiling
@@ -78,7 +79,8 @@ song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: 
   section('open', 16, { role: 'climax', progression: 'i@2 VI@2 i@2 VII@2',
     drums: { ...drums, template: RIDE, level: .32, brightness: .35, articulation: .6 },   // the ride on the quarters, clipped to its step: on every eighth and ringing it drowned the section
     bass: { ...bass, notes: GROOVE_OPEN, weight: .65 },
-    melody: { ...motif, level: 2 },
+    melody: { ...motif, notes: MOTIF_HARD, level: 2, brightness: .75, articulation: .65, aggression: .65, velocity: '1 .7 .9 .75 1 .75 .95 .75',
+      humanize: { timingMs: 6, velocity: .12, correlation: 'phrase' } },   // hit harder, not louder: a brighter, shorter pluck, a wider accent, a little string buzz, doubled strokes
     melody2: { ...double, level: 1 },
     melody3: { ...hook, level: 1.8, brightness: .6 },
     pad: { ...pad, brightness: .5, width: .6 },

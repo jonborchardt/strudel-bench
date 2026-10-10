@@ -385,6 +385,17 @@
           "why": "1.2>.8, signs 1.2>.8, lights 1.2>.9: by ear; open keeps 2, on 1"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "make the harp in open play with more force, like the player is hitting harder, without making it louder; he seems bored there",
+      "changes": [
+        {
+          "section": "open",
+          "layer": "melody:",
+          "why": "notes MOTIF>MOTIF_HARD (the first two notes of each phrase struck twice), brightness .55>.75, articulation .55>.65, aggression .5>.65 (a distort of .12, a little string buzz), velocity contrast 1/.7 instead of 1/.9, humanize 10>6 ms: the attack changes, not the volume. Measured: level -9.1>-8.4 under the mix, crest 9>6.4 (denser), centroid 786>803; open traces 40%, no dropouts. The user: it's working, sounding great"
+        }
+      ]
     }
   ]
 }
