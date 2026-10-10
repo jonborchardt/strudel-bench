@@ -210,6 +210,28 @@
           "why": "piano clip .7>.5, release .2>.15: the echo carries the ring, so the note itself can be short; rise 47-49%>39-47%, open 48%>43%, no dropouts in four traces"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "raw is still bad, try a flute, a Japanese flute would be epic; for raw2 something like gm_timpani",
+      "changes": [
+        {
+          "section": "out",
+          "layer": "raw",
+          "axis": "sound",
+          "why": "fmpiano>gm_shakuhachi, riff an octave up (E4-D5): a shakuhachi's range starts around D4 and its breath attack has to fit an eighth; measured -6 to -7.6 under the mix, centroid 444 Hz, left at pan .37"
+        },
+        {
+          "section": "out",
+          "layer": "raw2",
+          "axis": "sound",
+          "why": "steinway>gm_timpani, line an octave down (B3 C4 B3 G3 F#3 A3; open E4 D4 B3 D4 G4 E4): the top of a real timpani's register rather than two octaves above it; the dotted-eighth echo stays. Quiet font: gain 1.4 in the pattern, level 1.8 (open 2), measured -12.6 in rise and -14.2 in open as support"
+        },
+        {
+          "section": "traces:",
+          "why": "rise 46%, open 49%, two or three dropouts in fifteen seconds; the soundfont voices cost a little more than the piano did, borderline but under the knee; mix lint clean, render peak .87, no clipping"
+        }
+      ]
     }
   ]
 }
