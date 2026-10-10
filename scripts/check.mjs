@@ -245,7 +245,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (files.length === 1) console.log(r.events.join('\n'));
     if (files.length === 1 && r.sounds?.length) { // which file each sample name plays: a name says nothing about its variants
       console.log('  sounds');
-      for (const u of r.sounds) console.log(`    ${`${u.name}:${u.n}`.padEnd(24)} ${u.file}${u.seconds !== undefined ? `  ${u.seconds} s, rms ${u.rms} dB, peak ${u.peak} dB` : ''}`);
+      for (const u of r.sounds) console.log(`    ${`${u.name}:${u.n}`.padEnd(24)} ${u.file}${u.seconds !== undefined ? `  ${u.seconds} s, rms ${u.rms} dB, peak ${u.peak} dB` : ''}${u.words ? `  — ${u.words}` : ''}`);
     }
     for (const sct of r.sections ?? []) {
       console.log(`  [${sct.offset}-${sct.offset + sct.span}) ${sct.name}${sct.role ? ' (' + sct.role + ')' : ''}  ~${sct.voices} voices at once${sct.outside ? ` (${sct.outside} outside the parts)` : ''}`);
