@@ -96,6 +96,18 @@
           "why": "ir plate (recorded impulse) with packs rooms, size 1.4 kept; rms -0.4 dB"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "bass register",
+      "changes": [
+        {
+          "section": "*",
+          "layer": "bass",
+          "axis": "register",
+          "why": ".3>.5, drop.bass.register .9, drop2.bass.register .9 the drops' weight .8/.85 dropped the reese to midi 16 (21 Hz); verse and build now E2 and up, the drops octave 3 less the weight drop = E2 too, lowest midi 40 (82 Hz)"
+        }
+      ]
     }
   ]
 }
