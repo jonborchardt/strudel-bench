@@ -277,6 +277,25 @@
           "why": "shakuhachi line: eight eighths a bar > an eight-bar phrase of held notes and breaths (E held, G A, a whole bar of B, a breath, D5 falling to B, A and G held, a breath; then the same opening into a long E5 and the fall D5 B A G E); release .12>.3. Fewer, longer voices: rise 47%>41%, open 54%>48%"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "do a final mix; change parlor to ink",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "visual",
+          "why": "worlds cabaret+parlor>cabaret+ink every 16 bars"
+        },
+        {
+          "section": "mix",
+          "why": "pass over every section from the measure tables (hierarchy, collisions, depth, stage, material). Hierarchy: open.pad.level .7>.6 and the rise/back pad .5>.4, both read above the hook they support. Collisions: back.pad.register .3>.5, an octave up where no hook plays, took bass/pad low masking .33>.00; the swell's filter top 3500>2500 Hz against the hook in rise; kick/bass is the written convention, ducked. Depth: the hook closer by the words (brightness .6>.7, space .55>.4, its level being at the ceiling), the swell and pad farther (space .6>.75 and .7>.8, pad brightness .3>.35 off the lows). Material: humanize on the played parts (shakuhachi and handchimes by phrase, timpani by bar; the kit stays mechanical on purpose); no part's crest is over 9, so no compressor; positions and duck attacks were already written"
+        },
+        {
+          "section": "result:",
+          "why": "mix lint clean on rise, open and back (out's two silent rows are parts that enter after bar 4); every section differs in dB, centroid and onsets per second (out -19.4 dB/1526 Hz/4.1, rise -16.9/999/5.7, open -15.2/1240/4.7, back -16.5/913/6.4); traces rise 40%, open 44%; render peak .81, no clipping"
+        }
+      ]
     }
   ]
 }
