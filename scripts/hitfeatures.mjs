@@ -4,57 +4,19 @@
 // Per file: seconds, peak dB, attack ms (0 -> 90% of peak), decay ms (peak -> -30 dB), spectral centroid Hz, and the share
 // of energy under 150 Hz and over 5 kHz. The candidates come from samples/_candidates/freekit/manifest.json (mapped by the
 // same name rules kitpick.html uses); the references are Strudel's own takes for the voice (909, 808, uzu-drumkit).
-// Grouping: named buckets on the two axes that separate kicks, decay and tone (see `bucket`), so an A/B inside a group
-// compares like with like and the Strudel take sits inside its own group.
+// Grouping: named buckets on decay and tone (lib/hitwords.mjs: EDGES, bucket, words), so an A/B inside a group compares
+// like with like and the Strudel take sits inside its own group.
 import fs from 'node:fs';
 import path from 'node:path';
 import { readWav, analyze } from '../lib/analyze.mjs';
+import { EDGES, guessVoice as guess, bucket, words, hitFeatures } from '../lib/hitwords.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..'), CAND = path.join(ROOT, 'samples', '_candidates', 'freekit');
-const RULES = [ // kitpick.html's rules, the first match wins
-  [/open|\boh\b|ohh|ohat/, 'oh'], [/closed|\bch\b|chh|hihat|hi-?hat|\bhat|\bhh\b/, 'hh'],
-  [/kick|bass ?drum|\bbd\b|\bkik/, 'bd'], [/snare|\bsnr?\b|\bsd\b/, 'sd'], [/clap|\bcp\b/, 'cp'],
-  [/rim|stick|cross/, 'rim'], [/cowbell|bell|bling|\bcb\b/, 'cb'], [/ride|\brd\b/, 'rd'], [/crash|cymbal|splash|china|\bcr\b/, 'cr'],
-  [/floor|low ?tom|\blt\b/, 'lt'], [/hi(gh)? ?tom|rack|\bht\b/, 'ht'], [/tom|\bmt\b/, 'mt'],
-];
-const guess = (name) => { const n = name.toLowerCase().replace(/[_-]+/g, ' '); for (const [re, v] of RULES) if (re.test(n)) return v; return 'other'; };
-
 export function features(buf) {
   const w = readWav(buf), x = w.frames[0], rate = w.rate;
-  let peak = 0, at = 0; for (let i = 0; i < x.length; i++) if (Math.abs(x[i]) > peak) { peak = Math.abs(x[i]); at = i; }
-  let a90 = 0; for (let i = 0; i < x.length; i++) if (Math.abs(x[i]) >= .9 * peak) { a90 = i; break; }
-  // decay: the envelope (peak over 5 ms blocks) after the peak, the first block under -30 dB of the peak
-  const blk = Math.round(rate * .005); let dec = x.length;
-  for (let i = at; i + blk <= x.length; i += blk) { let m = 0; for (let j = i; j < i + blk; j++) m = Math.max(m, Math.abs(x[j])); if (m < peak * 10 ** (-30 / 20)) { dec = i; break; } }
+  let peak = 0; for (let i = 0; i < x.length; i++) peak = Math.max(peak, Math.abs(x[i]));
   const a = analyze(w, { cps: .5 });
-  return { seconds: +(x.length / rate).toFixed(3), peakDb: +(20 * Math.log10(peak || 1e-9)).toFixed(1), rmsDb: +(20 * Math.log10(a.rms || 1e-9)).toFixed(1), crest: a.crest, attackMs: +((a90 / rate) * 1000).toFixed(1), decayMs: +(((dec - at) / rate) * 1000).toFixed(0), centroidHz: a.centroidHz, low: a.lowRatio, high: a.highRatio, flatness: a.flatness };
-}
-
-/**
- * The group a hit belongs to, named so a person can read it: decay (tight < 150 ms, medium to 350, long past that) by
- * tone (deep: centroid under 75 Hz, mid to 110, bright above). k-means was tried first and put 34 of 43 kicks in one
- * group because two outliers (a 3 s 808, a bright boom-bap) stretched the axes; two musical axes with fixed edges read
- * better. The edges suit kicks and toms; hats and cymbals would want higher tone edges (a later voice can pass its own).
- */
-export const EDGES = {
-  bd: { decay: [150, 350], tone: [75, 110] }, lt: { decay: [150, 400], tone: [90, 140] }, mt: { decay: [150, 400], tone: [110, 180] }, ht: { decay: [150, 400], tone: [140, 240] },
-  sd: { decay: [120, 300], tone: [900, 1800] }, cp: { decay: [120, 300], tone: [900, 1800] }, rim: { decay: [60, 200], tone: [900, 2000] }, cb: { decay: [100, 300], tone: [600, 1200] },
-  hh: { decay: [60, 200], tone: [3500, 6500] }, oh: { decay: [200, 600], tone: [3500, 6500] }, rd: { decay: [300, 900], tone: [2500, 5000] }, cr: { decay: [400, 1200], tone: [2500, 5000] },
-  other: { decay: [150, 400], tone: [1000, 4000] },
-};
-export function bucket(r, edges = EDGES.bd) {
-  const d = r.decayMs < edges.decay[0] ? 'tight' : r.decayMs < edges.decay[1] ? 'medium' : 'long';
-  const t = r.centroidHz < edges.tone[0] ? 'deep' : r.centroidHz < edges.tone[1] ? 'mid' : 'bright';
-  return `${d} · ${t}`;
-}
-/** Plain words for a hit, for reading rather than listening: attack, decay, tone, weight, air, texture. */
-export function words(r, edges) {
-  const attack = r.attackMs < 3 ? 'click' : r.attackMs < 10 ? 'snap' : 'soft';
-  const [d, t] = bucket(r, edges).split(' · ');
-  const weight = r.low > .9 ? 'all low' : r.low > .6 ? 'heavy' : r.low > .25 ? 'some low' : 'no low';
-  const air = r.high > .3 ? 'airy' : r.high > .08 ? 'some air' : 'dull';
-  const texture = r.flatness > .35 ? 'noisy' : r.flatness > .12 ? 'mixed' : 'tonal';
-  return `${d} ${t} ${attack}, ${weight}, ${air}, ${texture}`;
+  return { seconds: +(x.length / rate).toFixed(3), peakDb: +(20 * Math.log10(peak || 1e-9)).toFixed(1), rmsDb: +(20 * Math.log10(a.rms || 1e-9)).toFixed(1), ...hitFeatures(w) };
 }
 
 const VOICES = ['bd', 'sd', 'hh', 'oh', 'cp', 'rim', 'cb', 'rd', 'cr', 'ht', 'mt', 'lt', 'other'];
@@ -68,13 +30,13 @@ function measureVoice(voice, manifest) {
   const out = [];
   for (const r of rows) { if (!fs.existsSync(r.file)) { console.error(`missing ${r.file}`); continue; } out.push({ kind: r.kind, id: r.id, label: r.label, url: r.url, ...features(fs.readFileSync(r.file)) }); }
   const edges = EDGES[voice] ?? EDGES.other;
-  for (const r of out) { r.group = bucket(r, edges); r.words = words(r, edges); }
+  for (const r of out) { r.group = bucket(r, edges); r.words = words(r, voice); }
   fs.writeFileSync(path.join(CAND, `features-${voice}.json`), JSON.stringify({ voice, edges, rows: out }, null, 1));
   return out;
 }
 
 // --dir <folder> [--label <name>]: every wav under the folder, its voice guessed from the sound name in the folder's
-// strudel.json (else the path) and the file name with RULES. Non-wav files are listed, not measured (readWav is wav only).
+// strudel.json (else the path) and the file name with lib/hitwords.mjs's rules. Non-wav files are listed, not measured (readWav is wav only).
 // Writes samples/_candidates/features-<label>.md and .json.
 function measureDir(argv) {
   const at = (f) => (argv.indexOf(f) > 0 ? argv[argv.indexOf(f) + 1] : null);
@@ -96,7 +58,7 @@ function measureDir(argv) {
     const voice = [guess(sound), guess(path.basename(rel, path.extname(rel)))].find((v) => v !== 'other') ?? 'other';
     try { rows.push({ kind: label, id: rel, label: rel, sound, voice, ...features(fs.readFileSync(f)) }); } catch (e) { bad.push(`${rel} (${e.message})`); }
   }
-  for (const r of rows) { const e = EDGES[r.voice]; r.group = bucket(r, e); r.words = words(r, e); }
+  for (const r of rows) { r.group = bucket(r, EDGES[r.voice]); r.words = words(r, r.voice); }
   fs.writeFileSync(path.join(outDir, `features-${label}.json`), JSON.stringify({ label, notMeasured: skipped, unreadable: bad, rows }, null, 1));
   const exts = [...new Set(skipped.map((s) => path.extname(s).toLowerCase()))].join(' ');
   const md = [`# ${label}, measured`, '', `${rows.length} wavs measured; ${skipped.length} non-wav not measured${exts ? ` (${exts})` : ''}; ${bad.length} unreadable. Columns as in features.md.`, ''];
