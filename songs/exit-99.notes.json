@@ -232,6 +232,27 @@
           "why": "rise 46%, open 49%, two or three dropouts in fifteen seconds; the soundfont voices cost a little more than the piano did, borderline but under the knee; mix lint clean, render peak .87, no clipping"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "change melody to gm_viola; make the main visual cabaret with the occasional orrery",
+      "changes": [
+        {
+          "section": "rise",
+          "layer": "melody",
+          "axis": "sound",
+          "why": "sawtooth>gm_viola: the hook on a bowed viola; a quiet font, so level 1.3>2 (the ceiling) and brightness .45>.6 (open .65) for its body, measured -11.7 under the mix in rise and -12.7 in open, where the riff cedes to it (open riff level 1.2>1)"
+        },
+        {
+          "section": "song",
+          "layer": "visual",
+          "why": "cabaret + orrery every 16 bars: the cabaret as the world, the orrery breathing in once every sixteen bars instead of every eight"
+        },
+        {
+          "section": "traces",
+          "why": "with the viola: rise 47%, open 54% with three dropouts in fifteen seconds; the held viola notes are soundfont voices alive for whole beats; the next trim if open crackles is the hook's articulation"
+        }
+      ]
     }
   ]
 }

@@ -6,7 +6,7 @@
 //          the kick is alone), the bass at 9 (E2 G2 B2 and the E3 pop at the end of every second bar, driven, ducked
 //          under the kick), the timpani at 17 (six notes of three eighths each through a dotted-eighth
 //          echo, so its C and F# land on a different beat of the riff every bar and the riff keeps changing colour).
-//   rise   bars 25-40. The hook (a saw, eight bars: B4 D5 E5 up to G5, a second run up to B5 that stops short,
+//   rise   bars 25-40. The hook (a viola, eight bars: B4 D5 E5 up to G5, a second run up to B5 that stops short,
 //          the same again landing on E4), a noise swell under everything, the pad at 33
 //          (a hollow square, E3 and B3, an octave under the hook). A snare roll into 41.
 //   open   bars 41-48. The arrangement opens: a crash, the ride on the eighths, the pad up an octave, wider and
@@ -47,12 +47,13 @@ const pluck = { pattern: B, level: 1.8, position: .4, space: .45 };
 const swell = { pattern: SWELL, level: 1, width: .7, space: .6 };
 const bass = { sound: 'square', notes: '<[0 0 0 0 2 0 4 2] [0 0 0 0 2 0 4 7]>', density: .8, register: .5, brightness: .5,
   articulation: .6, weight: .6, space: .3, level: .8, velocity: '1 .7 .85 .7 1 .7 .9 .75', duck: 'drums', duckDepth: .4, duckAttack: .08 };
-const hook = { sound: 'sawtooth', notes: HOOK, phrase: 8, register: .5, follow: false, articulation: .35, brightness: .45,
-  space: .55, width: .55, level: 1.3, velocity: '.9 1 .85 .95 1 .9 .85 .9', humanize: { timingMs: 8, velocity: .08, correlation: 'phrase' } };
+const hook = { sound: 'gm_viola', notes: HOOK, phrase: 8, register: .5, follow: false, articulation: .35, brightness: .6,
+  space: .55, width: .55, level: 2, velocity: '.9 1 .85 .95 1 .9 .85 .9', humanize: { timingMs: 8, velocity: .08, correlation: 'phrase' } };
 const pad = { sound: 'square', density: .4, register: .3, brightness: .3, space: .7, width: .7, articulation: .3,
   level: .5, duck: 'drums', duckDepth: .4, duckAttack: .2 };
 
-song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: ['rooms'], room: { ir: 'hall', size: .4 } }, [
+song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: ['rooms'], room: { ir: 'hall', size: .4 },
+  visual: { world: 'cabaret', composition: 'overlay', worlds: ['cabaret', 'orrery'], every: 16 } }, [   // the cabaret, the orrery visiting every sixteen bars
   section('out', 24, { role: 'establish', progression: 'i',
     drums,
     raw: riff,
@@ -70,10 +71,10 @@ song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: 
   }),
   section('open', 8, { role: 'climax', progression: 'i@2 VI@2 i@2 VII@2',
     drums: { ...drums, template: OPEN, brightness: .55 },
-    raw: { ...riff, pattern: RIFF2 },
+    raw: { ...riff, pattern: RIFF2, level: 1 },   // the riff cedes a little to the hook here
     bass: { ...bass, notes: '<[0 0 7 0 2 0 4 2] [0 0 7 0 2 2 4 7]>', rhythm: 'x.x.x.x.x.x.x.xx', weight: .65 },
     raw2: { ...pluck, pattern: B_OPEN, level: 2 },
-    melody: { ...hook, level: 1.5, brightness: .55 },
+    melody: { ...hook, brightness: .65 },
     melody2: { sound: 'handchimes', notes: '~ ~ 7 ~ ~ ~ 9 ~ ~ ~ 11 ~ 9 ~ ~ ~', phrase: 2, register: .5, follow: false, level: 2, space: .7, position: -.5 },
     pad: { ...pad, register: .5, brightness: .5, width: .6, articulation: .4, level: .5 },
   }),
