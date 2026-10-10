@@ -363,6 +363,16 @@
           "why": "in road, signs and lights; open keeps 2, on stays 1"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "can the melody ever play a chord, one in ten or fifteen notes",
+      "changes": [
+        {
+          "section": "melody",
+          "why": "notes: a comma inside brackets stacks notes in the line's mini-notation, so [0,-3]@3 is a held E with the B under it. The harp motif's answer now lands on that open fifth (one chord in its ten notes) and the cello hook's last E is a double stop with the B above ([0,4]@3). Verified in the event stream: two notes at one onset in both parts"
+        }
+      ]
     }
   ]
 }
