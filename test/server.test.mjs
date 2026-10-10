@@ -86,15 +86,6 @@ test('static files and user sample map', async () => {
   });
 });
 
-test('GET /renders/ takes one level of folder (the before/after sets) and nothing deeper', async () => {
-  await withServer(async (base) => {
-    assert.equal((await fetch(`${base}/renders/after/_t_none.mp3`)).status, 404); // the shape is accepted, the file is not there
-    assert.equal((await fetch(`${base}/renders/baseline/_t_none.json`)).status, 404);
-    assert.equal((await fetch(`${base}/renders/after/x/_t_none.mp3`)).status, 400);
-    assert.equal((await fetch(`${base}/renders/other/_t_none.mp3`)).status, 400);
-  });
-});
-
 test('render route: 409 without a page, PUT stores a wav and releases the waiter', async () => {
   await withServer(async (base) => {
     const r409 = await fetch(`${base}/render`, { method: 'POST', body: JSON.stringify({ song: 'demo.strudel' }) });

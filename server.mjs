@@ -223,8 +223,7 @@ export function createServer() {
     // range with the whole file are what make a track "not seekable" in chrome, so serve 206 properly.
     if (p.startsWith('/renders/') && req.method === 'GET') {
       const name = decodeURIComponent(p.slice('/renders/'.length));
-      // one level of folder, for the before/after sets scripts/renderall.mjs writes (compare.html plays them side by side)
-      if (!/^(?:(?:baseline|after)\/)?[\w.-]+\.(mp3|wav|txt|json)$/.test(name)) return send(res, 400, 'bad render name');
+      if (!/^[\w.-]+\.(mp3|wav)$/.test(name)) return send(res, 400, 'bad render name');
       const file = path.join(RENDERS, name);
       if (!fs.existsSync(file)) return send(res, 404, 'no such render');
       const size = fs.statSync(file).size, type = MIME[path.extname(file).toLowerCase()];
