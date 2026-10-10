@@ -16,7 +16,7 @@
   .row .id { color: #777; width: 5rem; }
   .row .pk { width: 4.5rem; color: #2a7; font-weight: bold; }
   .row .how { width: 4rem; color: #999; font-size: .75rem; }
-  .row .lv { width: 7rem; color: #777; font-variant-numeric: tabular-nums; }
+  .row .lv { width: 14rem; color: #777; font-variant-numeric: tabular-nums; font-size: .75rem; }
   button.play { width: 2rem; }
   textarea { width: 100%; height: 8rem; font-family: ui-monospace, monospace; }
 </style>
@@ -94,6 +94,7 @@
     for (const r of refs(v)) { // the Strudel reference rows, first in every section
       const d = document.createElement('div'); d.className = 'row ref';
       d.innerHTML = `<button class="play" title="play">▶</button><span class="id">strudel</span><span class="nm">${r.label}</span><span class="lv"></span><span class="how">built-in</span>`;
+      d.dataset.ref = r.label;
       d.querySelector('button').onclick = () => play(r.url, d.querySelector('.lv'));
       sec.appendChild(d);
     }
@@ -109,6 +110,28 @@
     sections[r.voice].appendChild(d);
   }
   for (const v of VOICES) { count(v); if (!sections[v].querySelector('.row:not(.ref)')) sections[v].remove(); }
+  // a voice that has been measured (node scripts/hitfeatures.mjs <voice>) is shown in groups of hits that measure alike,
+  // decay by tone, with the Strudel takes inside their own group: an A/B inside a group compares like with like
+  const ORDER = ['tight · deep', 'tight · mid', 'tight · bright', 'medium · deep', 'medium · mid', 'medium · bright', 'long · deep', 'long · mid', 'long · bright'];
+  const measured = (await (await fetch(`${base}features.json`)).json().catch(() => ({ voices: [] }))).voices;
+  for (const v of measured) {
+    if (!sections[v]?.isConnected) continue;
+    const res = await fetch(`${base}features-${v}.json`); if (!res.ok) continue;
+    const { rows: fr, edges } = await res.json(), sec = sections[v];
+    const find = (r) => (r.kind === 'strudel' ? sec.querySelector(`.row[data-ref="${r.label}"]`) : sec.querySelector(`.row[data-id="${r.id}"]`));
+    const note = document.createElement('p'); note.className = 'muted'; note.textContent = `grouped by decay (tight < ${edges.decay[0]} ms, medium < ${edges.decay[1]} ms, long) and tone (deep < ${edges.tone[0]} Hz, mid < ${edges.tone[1]} Hz, bright); the numbers are length, decay, centroid, share under 150 Hz`;
+    sec.querySelector('h2').after(note);
+    for (const g of ORDER) {
+      const mine = fr.filter((r) => r.group === g); if (!mine.length) continue;
+      const h = document.createElement('h3'); h.style.cssText = 'font-size:.85rem;margin:.6rem 0 .1rem;color:#556'; h.textContent = `${g} (${mine.length}, Strudel: ${mine.filter((r) => r.kind === 'strudel').length})`;
+      sec.appendChild(h);
+      for (const r of mine) {
+        const d = find(r); if (!d) continue;
+        d.querySelector('.lv').textContent = `${r.seconds} s · ${r.decayMs} ms · ${r.centroidHz} Hz · ${Math.round(r.low * 100)}%`;
+        sec.appendChild(d); // moves it under its group heading
+      }
+    }
+  }
   document.getElementById('onlypicked').onchange = (e) => { for (const d of list.querySelectorAll('.row:not(.ref)')) d.style.display = e.target.checked && !d.querySelector('input[type=checkbox]').checked ? 'none' : ''; };
   document.getElementById('export').onclick = async () => {
     const out = {}, moved = [];
