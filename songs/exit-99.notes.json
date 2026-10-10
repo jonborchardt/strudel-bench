@@ -407,6 +407,17 @@
           "why": "LAST e4>d5: degree 6 of E minor, the seventh of the key, held over the last four bars; the song ends unresolved"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "the last breath exactly: note('~@8 e4@3 ~ e4@3 ~').slow(8)",
+      "changes": [
+        {
+          "section": "on",
+          "layer": "raw",
+          "why": "LAST d5>two E4s: a bar and a half each with half a bar of air between, over the last four bars, as written by the user"
+        }
+      ]
     }
   ]
 }
