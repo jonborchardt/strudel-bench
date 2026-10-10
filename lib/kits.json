@@ -289,5 +289,109 @@
     "kind": "Yamaha RY30 (1991, 16-bit)",
     "about": "Clean, big, tweakable early-90s digital; broad variant set. Early-90s R&B/pop/dance with a polished kit."
   },
-  "freekit": { "label": "Full-bodied recorded hits, CC0 from Freesound", "kind": "Figure Drum Kits by tripjazz (Freesound, CC0, 44.1 kHz 16-bit)", "about": "Recorded acoustic and electronic hits chosen for body and a clean tail: the kit the thin machine samples were missing. Anything that wants weight without lo-fi." }
+  "animal": {
+    "label": "Tight deep kicks, long noisy hats: a rough live kit",
+    "kind": "Figure Drum Kits by tripjazz: Animal (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "Two tight kicks with all the low end, three noisy hats from a tick to a long sizzle, a mid snare with some air, two toms. Rough, played, a garage band kit."
+  },
+  "bern": {
+    "label": "Mid-weight clicky kicks, bright noisy snare, congas",
+    "kind": "Figure Drum Kits by tripjazz: Bern (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "Two medium kicks with a click on top, a bright airy snare, crisp hats, a clap and three congas (congalo, congahi). Latin-leaning house without the machine."
+  },
+  "boom": {
+    "label": "Boom-bap: dull heavy kicks, dusty snare, soft hats",
+    "kind": "Figure Drum Kits by tripjazz: Boom Bap (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "A sampled-off-vinyl hip-hop kit: two kicks that are all low, a mid snare with a little air, soft hats, two claps, a ride and an fx hit. Dusty, warm, head-nod tempo."
+  },
+  "code": {
+    "label": "Short digital clicks: tight bright claps and a deep kick",
+    "kind": "Figure Drum Kits by tripjazz: Code (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "Clean, short and electronic: a deep kick, a bright snapping snare, a seven-millisecond hat, two bright claps and two tool blips. Minimal techno, IDM, anything that wants precision."
+  },
+  "elektro": {
+    "label": "Long deep 808-style kick, clicky bright snares",
+    "kind": "Figure Drum Kits by tripjazz: Elektro (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "An electro kit: one long deep kick that is all low, two bright clicky snares, a tiny hat, a long open hat and two short synthetic toms. Boomy bottom, brittle top."
+  },
+  "gosh": {
+    "label": "Long deep kicks, soft tight snares, odd perc",
+    "kind": "Figure Drum Kits by tripjazz: Gosh (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "Two long deep kicks, two soft tight snares, a mid hat, an open hat, a deep tom and two percussion hits (prc). Deep and a little strange; downtempo, trip-hop."
+  },
+  "hornstull": {
+    "label": "Tight punchy kick and snare, airy hats, derp blips",
+    "kind": "Figure Drum Kits by tripjazz: Hornstull (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "A short deep kick with a click, a tight bright snare, long airy hats, a clap and two derp blips (derplo, derphi). Punchy and dry, a club kit with a sense of humour."
+  },
+  "jazz": {
+    "label": "Brushed jazz kit: deep kicks, tight snares, real cymbals",
+    "kind": "Figure Drum Kits by tripjazz: GBS Jazz (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "A recorded jazz kit: two medium deep kicks, two tight snares with some air, a crisp hat, an open hat, a crash, a sidestick rim and three toms. Swing, brushes, anything acoustic."
+  },
+  "leeloo": {
+    "label": "Deep kicks and a tight hat with a scratch and a woop",
+    "kind": "Figure Drum Kits by tripjazz: Leeloo (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "Two medium deep kicks that are all low, a bright snare, a tight noisy hat, a ride, plus a vinyl scratch and a woop. Big-beat and trip-hop colour."
+  },
+  "mansion": {
+    "label": "Heavy mid kick, soft snareclap, tiny hat, fillers",
+    "kind": "Figure Drum Kits by tripjazz: Mansion (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "A heavy mid kick, a soft snare-clap, a six-millisecond hat, a long open hat, a clap and three filler hits. Deep house, lounge."
+  },
+  "northeast": {
+    "label": "Long deep kick, dull snare, bling bell, tambourine",
+    "kind": "Figure Drum Kits by tripjazz: Northeast (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "A long deep kick, a dull deep snare, a mid hat, an open hat, a soft clap, a long bright bell (cb), a tambourine and a woodblock. A neighbourhood kit: warm, a little muffled, percussion to spare."
+  },
+  "rock": {
+    "label": "Rock kit: tight deep kick, cracking snares, heavy toms",
+    "kind": "Figure Drum Kits by tripjazz: Rock Snare (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "A tight deep kick, two mid snares with air, a long noisy hat, an open hat and three heavy toms. The one for a backbeat."
+  },
+  "rumble": {
+    "label": "Deep clicky kicks, bright snares, short perc",
+    "kind": "Figure Drum Kits by tripjazz: Rumble (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "Two deep kicks with a click, two bright snares, a tiny hat, a noisy open hat, a crash and two short percussion hits (perc). Punchy and bright; breaks, drum and bass."
+  },
+  "sonny": {
+    "label": "Long deep sub kicks, long snare and clap: slow and huge",
+    "kind": "Figure Drum Kits by tripjazz: Sonny (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "Two long deep kicks that are all low, a long bright snare, a long clap, a long soft hat and an open hat. Everything rings; slow tempos, trap, downtempo. The toms ran past two seconds and were left out."
+  },
+  "studio": {
+    "label": "Studio kit: tight kick, long deep snare and rim",
+    "kind": "Figure Drum Kits by tripjazz: Studio (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "A tight mid kick, a long deep snare, a long rimshot, a noisy hat and an open hat. Dry, recorded, close-miked; the cymbals ran past two seconds and were left out."
+  },
+  "syntax": {
+    "label": "Heavy bright kicks, dull snares, noisy hats and hits",
+    "kind": "Figure Drum Kits by tripjazz: Syntax Error (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "Two heavy bright kicks, two dull snares, two noisy hats and three noisy hits (hit). Glitchy, harsh, an error kit."
+  },
+  "technologic": {
+    "label": "Deep soft kick, bright noisy hats, shaker and triangle",
+    "kind": "Figure Drum Kits by tripjazz: Technologic (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "A deep soft kick, a mid snare, two bright noisy hats, a tight clap, a shaker and a triangle. Electro-pop, French house."
+  },
+  "tr": {
+    "label": "TR-flavoured: long deep kick, airy snare, cowbell",
+    "kind": "Figure Drum Kits by tripjazz: TR Bob (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "A long deep kick, a bright airy snare, a short hat, a long noisy open hat and a cowbell. The machine idea, recorded."
+  },
+  "urban": {
+    "label": "Tight mid kick, long dull snare, bongos",
+    "kind": "Figure Drum Kits by tripjazz: Urban (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "A tight mid kick that is all low, a long dull snare, two bright noisy hats and two bongos (bongolo, bongohi). Hip-hop and neo-soul."
+  },
+  "weekend": {
+    "label": "Tight deep kick, dull snare, three hats, tambourine, vinyl",
+    "kind": "Figure Drum Kits by tripjazz: Weekend (Freesound, CC0, 44.1 kHz 16-bit, peak-normalised to -3 dBFS)",
+    "about": "A tight deep kick, a dull mid snare, three noisy hats, a long rim, a tambourine and a vinyl crackle. Lo-fi house, a lazy weekend kit."
+  },
+  "garden": {
+    "label": "Re-amped one-shots: big deep kicks, heavy snares, long cymbals",
+    "kind": "Garden by mot4i (GitHub, credit required, 48 kHz 24-bit)",
+    "about": "Ten deep kicks that are all low, four heavy snares, four hats, two open hats, five rims, seven toms, three claps and two snaps (sn), plus textures: cymbals (8 to 19 s, unclipped they play to the end), strings, metal, fx and four acid loops (garden_loop). Warm and punchy, re-amped through analog gear."
+  }
 }

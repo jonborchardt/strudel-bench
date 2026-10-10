@@ -1,7 +1,7 @@
 // Turn a folder of Freesound downloads into a drum-kit user pack, keeping only what the API says is CC0.
 // usage: FREESOUND_TOKEN=... node scripts/freesound.mjs <dir> <kit>
-// Files in <dir> are named <voice>_<id>__<user>__<name>.wav (Freesound's own name with the voice put in front; voices:
-// bd sd hh oh rim cb rd cr cp ht mt lt). Each id is looked up (GET /apiv2/sounds/<id>/); a licence other than CC0 is
+// Files in <dir> are named <sound>_<id>__<user>__<name>.wav (Freesound's own name with the sound put in front: a kit voice,
+// bd sd hh oh rim cb rd cr cp ht mt lt, or any other lowercase name for an extra such as tambourine). Each id is looked up (GET /apiv2/sounds/<id>/); a licence other than CC0 is
 // rejected and named. Writes samples/user/<kit>/<kit>_<voice>/<id>.wav, pack.json { deploy, license, source } and
 // LICENSE-ASSETS.md with one row per file. Then: node scripts/samplemeta.mjs <kit>; add the kit to lib/kits.json; node scripts/kiticons.mjs
 import fs from 'node:fs';
@@ -11,10 +11,9 @@ import { readWav } from '../lib/analyze.mjs';
 import { writeWav } from './analyze.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const VOICES = ['bd', 'sd', 'hh', 'oh', 'rim', 'cb', 'rd', 'cr', 'cp', 'ht', 'mt', 'lt'];
 const FIELDS = 'id,name,username,license,url,samplerate,bitdepth,channels,duration';
 
-export const parseName = (file) => { const m = /^([a-z]+)_(\d+)__/.exec(file); return m && VOICES.includes(m[1]) ? { voice: m[1], id: m[2] } : null; };
+export const parseName = (file) => { const m = /^([a-z][a-z0-9]*)_(\d+)__/.exec(file); return m ? { voice: m[1], id: m[2] } : null; };
 export const isCc0 = (license) => /creativecommons\.org\/publicdomain\/zero|^Creative Commons 0$/i.test(String(license));
 
 export async function importKit(dir, kit, { fetchJson, root = ROOT, peakDb = -3 } = {}) {
@@ -24,7 +23,7 @@ export async function importKit(dir, kit, { fetchJson, root = ROOT, peakDb = -3 
   for (const file of fs.readdirSync(dir).filter((f) => /\.(wav|flac|aif|aiff)$/i.test(f)).sort()) { // look every id up first: an API failure writes nothing
     if (peakDb != null && !/\.wav$/i.test(file)) throw new Error(`${file}: only wav can be peak-normalised (convert it, or pass --peak none)`);
     const p = parseName(file);
-    if (!p) { rejected.push({ file, why: 'name must be <voice>_<id>__...' }); continue; }
+    if (!p) { rejected.push({ file, why: 'name must be <sound>_<id>__...' }); continue; }
     const m = await fetchJson(p.id);
     if (!m) { rejected.push({ file, why: 'not found on Freesound' }); continue; }
     if (!isCc0(m.license)) { rejected.push({ file, why: `licence ${m.license}` }); continue; }

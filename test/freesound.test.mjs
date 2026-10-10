@@ -8,7 +8,8 @@ import { parseName, isCc0, importKit } from '../scripts/freesound.mjs';
 
 test('parseName: voice prefix and the Freesound id', () => {
   assert.deepEqual(parseName('bd_123456__someone__big-kick.wav'), { voice: 'bd', id: '123456' });
-  assert.equal(parseName('kick_123456__x__y.wav'), null, 'not a voice');
+  assert.deepEqual(parseName('tambourine_123456__x__y.wav'), { voice: 'tambourine', id: '123456' }, 'an extra sound');
+  assert.equal(parseName('Kick_123456__x__y.wav'), null, 'not a sound name');
   assert.equal(parseName('bd_nokick.wav'), null, 'no id');
 });
 test('isCc0 accepts the CC0 url and name, nothing else', () => {
