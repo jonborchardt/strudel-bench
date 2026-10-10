@@ -10,14 +10,14 @@
 //   lights  bars 17-24  the cello hook, over Em C Em D; the organ pad holds the chords; the harp motif keeps going.
 //   tunnel  bars 25-32  the bass stops. The pad holds an E pedal while its upper tones move (Em Em C/E D/E), the
 //                       motif is played by the shakuhachi in long notes, and the bass returns at 29 for the lift.
-//   open    bars 33-48  everything, the ride on the eighths, the crash, the bass popping its octave; the hook's answer
+//   open    bars 33-48  everything, the ride on the quarters, the crash, the bass popping its octave; the hook's answer
 //                       at 41 is the song's peak, with the chords moving under it.
 //   on      bars 49-56  the hook is gone; the harp motif and the bass over the kit, as at the start, then one held
 //                       shakuhachi E over the last four bars while the bass and harp leave, and the kit alone at the end.
 // Kit: LinnDrum, one source, dry; accents on 1 and 3 in the kick and hats, on the snare; the open hat on the and of 4
 // every second bar. No fills but a roll into 33. Hits are not clipped: the cymbals keep their tails.
 const BEAT = { bd: 'X...x...X...x...', sd: '....X.......X...', hh: 'X.x.x.x.X.x.x.x.', oh: '................|..............x.' };
-const RIDE = { ...BEAT, hh: '................', rd: 'X.o.x.o.X.o.x.o.', bd: 'X...x...X...x...|X...x...X...x..x',
+const RIDE = { ...BEAT, hh: '................', rd: 'X...x...X...x...', bd: 'X...x...X...x...|X...x...X...x..x',
   cr: 'x...............|................|................|................|................|................|................|................' };
 const drums = { template: BEAT, sounds: { hh: 'hh:2' }, density: .7, fill: false, drive: .5, space: .3, brightness: .5, weight: .6, level: .5 };
 
@@ -29,7 +29,7 @@ const bass = { sound: 'square', notes: GROOVE, rhythm: 'X.x...x.X...x...|X...x.x
 // the harp motif: E G F# / D B (question), then the same displaced an eighth late / D E (answer); four bars
 const MOTIF = '0 ~ 2 ~ 1 ~ ~ ~  -1 ~ -3@3 ~ ~ ~  ~ 0 ~ 2 ~ 1 ~ ~  ~ -1 ~ 0@3 ~ ~';
 const motif = { sound: 'folkharp', notes: MOTIF, phrase: 4, register: .5, follow: false, articulation: .55, brightness: .55, space: .45, width: .5,
-  level: 2, position: -.2, velocity: '1 .9 .95 .9 1 .9 .95 .9', humanize: { timingMs: 10, velocity: .1, correlation: 'phrase' },
+  level: 1.2, position: -.2, velocity: '1 .9 .95 .9 1 .9 .95 .9', humanize: { timingMs: 10, velocity: .1, correlation: 'phrase' },
   compressor: { threshold: -18, ratio: 3 } };   // a sparse part with a crest of 9: the compressor is what lifts it, its level being at the ceiling
 // the dark piano: the bass motif's notes an octave up, the same rests, under the harp
 const double = { sound: 'piano1', notes: '0 0 ~ 0 2 ~ 3 ~  4 ~ 3 2 0 ~ -1 ~', phrase: 2, register: .3, follow: true, articulation: .6, brightness: .35, space: .6,
@@ -76,9 +76,9 @@ song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: 
     pad: { ...pad, chord: '<0 0 5 6>', level: 1 },                            // the pedal: Em Em C/E D/E
   }),
   section('open', 16, { role: 'climax', progression: 'i@2 VI@2 i@2 VII@2',
-    drums: { ...drums, template: RIDE, level: .32, brightness: .35 },   // the ride on every eighth is bright and loud: ghosts on its off-beats, the kit down and darker here
+    drums: { ...drums, template: RIDE, level: .32, brightness: .35, articulation: .6 },   // the ride on the quarters, clipped to its step: on every eighth and ringing it drowned the section
     bass: { ...bass, notes: GROOVE_OPEN, weight: .65 },
-    melody: motif,
+    melody: { ...motif, level: 2 },
     melody2: { ...double, level: 1 },
     melody3: { ...hook, level: 1.8, brightness: .6 },
     pad: { ...pad, brightness: .5, width: .6 },

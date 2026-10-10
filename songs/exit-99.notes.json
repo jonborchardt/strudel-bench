@@ -345,6 +345,24 @@
           "why": "hits keep their tails (articulation .5), accents on 1 and 3 in the kick and hats and on the snare; level .6 > .5; traces open 31%, lights 24%, tunnel 21%, no dropouts; mix lint clean on every full section but on (its three parts read near one depth: a plucked harp has no tail to push back); render peak .61, no clipping; arc 14/21/27/16/30/13"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "hh:2 is still too loud in open; the melody in road, signs and lights is too loud, fine elsewhere",
+      "changes": [
+        {
+          "section": "open",
+          "layer": "drums",
+          "why": "ride eighths>quarters, articulation .5>.6: no closed hat sounds in open (the check counts zero hat hits there and 64 in every other section); what rang on every eighth was the LinnDrum ride, a 1.28 s sample unclipped; now four a bar, each clipped to its step"
+        },
+        {
+          "section": "melody",
+          "layer": "level",
+          "from": 2,
+          "to": 1.2,
+          "why": "in road, signs and lights; open keeps 2, on stays 1"
+        }
+      ]
     }
   ]
 }
