@@ -94,6 +94,48 @@
           "why": ".3>-.5: the pluck sits right (pan .83), so the counter-line goes left"
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "rise clips out massively, open does not play at all; investigate and fix",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "the audio thread, not the output wall: npm run trace read rise at 65% busy with 20 dropouts and open at 85% with a quarter of its quanta late, against 13% for out; no trigger errors. Single removals traced interleaved against the baseline"
+        },
+        {
+          "section": "song",
+          "layer": "bass",
+          "axis": "patch",
+          "why": "driven>none: the ladder filter is a four-pole with eight tanh calls per sample per channel in a JavaScript worklet, one per bass note; dropping it alone took rise from 50% to 40%. The bus saturation (.6) carries the dirt; brightness .45>.5 for the presence the drive gave"
+        },
+        {
+          "section": "rise",
+          "layer": "melody",
+          "axis": "patch",
+          "why": "warm>none: the same ladder on every hook note"
+        },
+        {
+          "section": "open",
+          "layer": "drums",
+          "axis": "template",
+          "why": "hats>rests, ride on the eighths: the hats hand the pulse to the ride (eight hits a bar fewer); drums articulation .5>.6 everywhere so the ride, crash and open hat are clipped to their steps instead of ringing their files out"
+        },
+        {
+          "section": "open",
+          "layer": "raw3",
+          "why": "swell removed: interleaved pairs read open at 51-55% with it (dropouts) and 42-47% without (none); rise and back keep it at four noise events a bar instead of sixteen"
+        },
+        {
+          "section": "open",
+          "layer": "pad",
+          "why": "width .8>.6, density .5>.4, articulation .3>.4: no jux doubling, two tones, a shorter release; the biggest single part cost in the first trace"
+        },
+        {
+          "section": "result:",
+          "why": "rise 39-43%, open 42-47%, no dropouts; mix lint clean on both; render peak .73 no clipping. The page's own cost is separate: the stage measured its box every frame (web/visual/stage.mjs), 17% of the main thread"
+        }
+      ]
     }
   ]
 }
