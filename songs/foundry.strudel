@@ -28,7 +28,7 @@ const low   = { sound: 'square', patch: 'reese', register: .3, weight: .7, artic
 const bed   = { sound: 'organ_8inch', articulation: .1, space: .75, brightness: .3, position: -.25 };
 const shake = { sound: ['tambourine', 'cajon'], rhythm: '..x...x...x...x.', position: -.35, humanize: { timingMs: 12, velocity: .12, correlation: 'bar' } };
 
-song({ bpm: 124, key: 'E:minor', seed: 5, saturate: .6, kit: 'RolandTR808', packs: ['rooms'], room: { ir: 'plate', size: 1.4, fade: .35, damping: 6500 } }, [
+song({ bpm: 124, key: 'E:minor', seed: 5, saturate: .6, kit: 'RolandTR808', packs: ['rooms'], room: { ir: 'plate', size: 1.4 } }, [
 
   // ride and rim alone: the written extras play whatever density says, the five kit voices wait for it
   section('intro', 8, { role: 'establish', progression: 'i@2 VI VII',
