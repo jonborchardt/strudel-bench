@@ -417,3 +417,16 @@ test('locate: a negative material literal (position -.5, transpose -5) is a numb
   assert.equal(s.layers.pad.mats.position.value, -.5);
   assert.equal(s.layers.sample.mats.transpose.value, -5);
 });
+
+test('setVisual writes the world, keeps a seed, refuses a composition', async () => {
+  await ready;
+  const { setVisual } = await import('../lib/resolve.mjs');
+  const base = `song({ cps: .5 }, [section('a', 4, { drums: {} })])`;
+  assert.match(setVisual(base, { world: 'ink' }), /visual: 'ink'/);
+  assert.match(setVisual(base, { world: 'tableau', theme: 'thriller' }), /visual: \{ world: 'tableau', theme: 'thriller' \}/);
+  const seeded = `song({ visual: { world: 'ink', seed: 4 } }, [section('a', 4, { drums: {} })])`;
+  assert.match(setVisual(seeded, { world: 'train' }), /visual: \{ world: 'train', seed: 4 \}/);
+  assert.match(setVisual(`song({ visual: { world: 'tableau', theme: 'elves' } }, [section('a', 4, { drums: {} })])`, { world: 'tableau' }), /visual: 'tableau'/, 'no theme drops the theme');
+  assert.throws(() => setVisual(`song({ visual: { composition: 'overlay', worlds: ['ink', 'train'] } }, [section('a', 4, { drums: {} })])`, { world: 'ink' }), /composes/);
+  assert.throws(() => setVisual(`song({ visual: V }, [section('a', 4, { drums: {} })])`, { world: 'ink' }), /expression/);
+});

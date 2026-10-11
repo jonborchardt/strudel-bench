@@ -34,7 +34,7 @@
   </header>
 
   <!-- stage: the song's visual performance (web/visual/): a world composed from the song's score at every play, driven by the parts as they sound; the box fullscreens as a whole -->
-  <details class="card rack stage pane" aria-label="stage"><summary><h2>Stage</h2><small>&middot; the song's visual performance</small></summary><div class="stagebox" id="stagebox"><canvas id="stage"></canvas><select id="world" title="the world the stage plays: auto is the song's own pick (its visual header, else the selection), a name plays that world alone, overlay composes two (the director: the second world breathing over the first); a pick here is a view setting, never written to the song and not what the video exports. [ and ] step through them"></select><button id="fullscreen" title="fullscreen (esc leaves)">&#x26F6;</button></div></details>
+  <details class="card rack stage pane" aria-label="stage"><summary><h2>Stage</h2><small>&middot; the song's visual performance</small></summary><div class="stagebox" id="stagebox"><canvas id="stage"></canvas><span class="worldbar"><select id="world" title="the world the stage plays: auto is the song's own pick (its visual header, else the selection), a name plays that world alone, overlay composes two (the director: the second world breathing over the first); a pick here is a view setting, never written to the song and not what the video exports. [ and ] step through them"></select><select id="theme" title="a world's alternative cast, part packs and dance (lib/visual.json themes); written with the world" hidden></select><button id="worldsave" title="write this world (and theme) into the song's visual header, so the video and the listen page play it too" hidden>&#9998;</button></span><button id="fullscreen" title="fullscreen (esc leaves)">&#x26F6;</button></div></details>
 
   <!-- transport: one play/pause toggle, stop, the position slider with a tick per section, and where the playhead is -->
   <section class="card rack transport" id="transport" aria-label="transport">
@@ -149,7 +149,8 @@
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
   import { SCHEMA, host, CHORDS } from './web/hll-schema.mjs';
-  import { fmt, locate, setAxis, setAxisText, motionText, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField, setSongField, addPack, VERBS, applyVerb } from './lib/resolve.mjs';
+  import { fmt, locate, setAxis, setAxisText, motionText, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField, setSongField, setVisual, addPack, VERBS, applyVerb } from './lib/resolve.mjs';
+  import VISUAL from './lib/visual.json' with { type: 'json' };
   import { lanePoints, laneSvg } from './web/lane.mjs';
   import { AXES, cells } from './lib/axes.mjs';
   import { layerNames, layerBase, layerMaterial, arrange, parseMeter, META_KEYS, SECTION_KEYS } from './lib/song.mjs';
@@ -439,7 +440,16 @@
   // the world picker over the stage: auto (the song's own pick, named once a score exists), any built world alone, or a composition preset (the director,
   // web/visual/director.mjs, over the song's world and the selection's next-best); a view setting, never written to the song and not what the video exports
   $('world').replaceChildren(...['auto', ...Object.keys(WORLDS), ...PRESETS].map((w) => Object.assign(document.createElement('option'), { value: w, textContent: w })));
-  $('world').onchange = () => { stage.setWorld($('world').value === 'auto' ? null : $('world').value); $('world').blur(); };
+  $('world').onchange = () => {
+    const w = $('world').value;
+    stage.setWorld(w === 'auto' ? null : w); $('world').blur();
+    // a world (not auto, not a preset) can be written into the song: the ✎ shows, and a theme pick when that world has themes
+    const themes = Object.entries(VISUAL.themes).filter(([, t]) => t.world === w).map(([k]) => k);
+    $('worldsave').hidden = !WORLDS[w];
+    $('theme').hidden = !themes.length;
+    $('theme').replaceChildren(...['', ...themes].map((t) => Object.assign(document.createElement('option'), { value: t, textContent: t || 'default cast' })));
+  };
+  $('worldsave').onclick = () => { const w = $('world').value, t = $('theme').value || undefined; did(() => setVisual(code.text, { world: w, theme: t }), `visual ${w}${t ? ` / ${t}` : ''}`); };
   const worldLabel = () => { const c = stage.score?.composition; $('world').options[0].textContent = stage.score ? `auto · ${c && c.worlds.length > 1 ? `${c.preset}: ${c.worlds.join(' + ')}` : stage.score.world}` : 'auto'; };
   const stepWorld = (by) => { const o = $('world'), n = o.options.length; o.selectedIndex = (o.selectedIndex + by + n) % n; o.onchange(); };
   globalThis.strudelBench.stage = stage; // for headless checks: the running performance's state and clock
