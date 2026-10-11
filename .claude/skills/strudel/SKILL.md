@@ -225,6 +225,27 @@ done half the job. Before reporting, every one of these has been used or ruled o
 pairs), which pass each change came from, and what could not be measured. "Verified directionally" stays the
 strongest claim.
 
+## The YouTube block
+
+A finished song gets `youtube: { url, title, description, tags, hashtags }` in `songs/<name>.notes.json`, the
+paste-ready upload text the Compose card shows. Write it with a small script that reads the JSON, sets the key and
+writes it back (the shell mangles em-dashes and template literals; a `.mjs` in the scratchpad is the safe way).
+
+- **Title: 100 characters at most**, counted. The song's name, an em-dash, then what it is in plain words and one or
+  two instruments: `exit 99 — motorik for a night drive: a bass motif, a folk harp, a cello and a shakuhachi`. Not a
+  list of every part.
+- **Description**: the first two lines are what search results show, so the genre, key, tempo, the instruments and
+  the references go there, then the length and one line of concept. Then a paragraph on what the song does (the
+  riff, the hook, the harmony move, the room), one line on the kit and the room with their sources and licences,
+  then `Chapters` with one line per section. Chapter times are the section's start in seconds **plus the video's
+  1.5 s title lead**, since the upload is the video (`npm run video`), not the mp3. End with the standing tail every
+  song shares (play-in-browser link, the repo, what strudel-bench is, the blog, the note that the video is generated,
+  the Strudel and sample credits): copy it from an existing song's description from "Play and edit this song" on,
+  with the song file name swapped in.
+- **Tags**: about twenty, genre first, then references, instruments, key, then the standing ones (`generative music`,
+  `live coding`, `strudel`, `tidalcycles`, `creative coding`, `music video`). **Hashtags**: three.
+- `url` stays empty until the upload, then the user fills it.
+
 ## Rules
 
 - Never invent sound names; the checker fails on unknown sounds.
