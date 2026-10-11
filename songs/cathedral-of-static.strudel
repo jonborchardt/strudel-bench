@@ -1,0 +1,117 @@
+// a cathedral of static: industrial darkwave in G minor at 110, 64 bars, about 2:20. An abandoned stone church with
+// machinery running in it. The room is the instrument: the kick and the bass stay close and dry, the snare, clap and
+// triangle strike the building and the two-second church impulse answers in the gaps the writing leaves. The bass
+// growls through a ladder filter in short phrases and stops; a warm ladder synth sings a melody that does not belong
+// to the machinery; and by the end the whole room is in the rhythm. NIN's physicality, Depeche Mode's melodic darkness,
+// Massive Attack's weight. Kit: technologic (Freesound, CC0), the only kit here, two parts of it so the voices can
+// sit at two distances. Nothing below D2.
+//   awaken     1-8    one triangle strike reveals the room; the bass riff from bar 2 (G . . G . . Bb . | F . . . D),
+//                     the kit, a fragment of the hook at 5.
+//   recognise  9-16   the whole hook (D5 falling to Bb, back to D; C Bb A G; again; F held, D held) over Gm with an
+//                     Eb at the end of each four.
+//   expand     17-24  Gm Eb Bb F under it, the pad arrives, the bass pops its octave at the turn, the shaker joins.
+//   tension    25-32  Gm Cm Gm D; the hook in fragments, the hats gone, a low hum, the room tails longest here.
+//   transform  33-40  Eb Bb Cm F, no tonic: the same melody heard in a new light, the bass resting on long notes,
+//                     a low piano answering each phrase.
+//   cathedral  41-48  everything: the riff, the hook, Gm Eb Bb F, the clap on the backbeat, the triangle on every bar.
+//   afterglow  49-56  the pad and the hook's first phrase only, the bass back to its first shape, hats gone.
+//   continue   57-64  the riff and the kit; the hook leaves at 61, the bass at 63, one last triangle into the dark.
+// Grid: 16 steps a bar. X accent, x hit, o ghost. Two bars where there is a bar line.
+const KICK   = { bd: 'X.....x.X.....x.', hh: 'o.x.o.x.o.x.o.x.' };                // close: the pulse and the off-beat hats
+const STRIKE = { sd: '....X.......X...|....X.......X..o' };   // far: the backbeat, a triangle every four bars
+const STRIKE_FULL = { ...STRIKE, cp: '............X...', triangle: '................|........x.......' };          // cathedral: the clap on 4, the triangle every bar
+const OPEN_HIT = { triangle: 'x...............|................|................|................|................|................|................|................' };
+
+const kick = { template: KICK, density: .7, fill: false, drive: .5, articulation: .6, space: .25, brightness: .45, weight: .6, level: .7 };
+const strike = { template: STRIKE, density: .7, fill: false, drive: .5, articulation: .5, space: .8, brightness: .5, level: .8, position: .15 };
+
+// the riff: eight attacks in two bars, G on 1, the and-of-2 and the and-of-3, Bb on 4; F on 1 and the and-of-2, D on the and-of-3 and the and-of-4, with a
+// long release so each note growls and stops; degree -1 is F2, -3 is D2
+const RIFF = '<[0 ~ ~ 0 ~ 0 2 ~] [-1 ~ ~ -1 ~ -3 ~ -3]>';
+const RIFF_TURN = '<[0 ~ ~ 0 ~ 0 2 ~] [-1 ~ ~ -1 ~ -3 7 -3]>';                                   // the octave pop at the turn
+// the bass layer transposes a line with every chord, and the riff written on G climbed a sixth over Eb: so in the
+// sections with chord changes the line is written per bar, the root dropped an octave (-7) where it would climb.
+// Degree -7 over VI is Eb2, over VII F2, over iv C2, over V D2; over III (Bb) the plain figure is Bb2.
+const G1 = '[0 ~ ~ 0 ~ 0 2 ~]', G2 = '[-1 ~ ~ -1 ~ -3 ~ -3]', LOW = '[-7 ~ ~ -7 ~ -7 -5 ~]', LOW_POP = '[-7 ~ ~ -7 ~ -7 0 -5]';
+const RIFF_3 = '<' + G1 + ' ' + G2 + ' ' + G1 + ' ' + LOW + '>';                                      // i i i VI
+const RIFF_4 = '<' + G1 + ' ' + LOW + ' ' + G1 + ' ' + LOW + '>';                                     // i VI III VII
+const RIFF_4_POP = '<' + G1 + ' ' + LOW + ' ' + G1 + ' ' + LOW_POP + '>';                             // the same with the pop at the turn
+const RIFF_T = '<' + [G1, G2, LOW, LOW, G1, G2, LOW, LOW].join(' ') + '>';                                   // i i iv iv i i V V
+const RIFF_LONG = '<[-7 ~ ~ ~ ~ ~ ~ ~] [-7 ~ ~ ~ ~ ~ ~ ~] [0 ~ ~ ~ ~ ~ ~ ~] [0 ~ ~ ~ ~ ~ ~ ~] [-7 ~ ~ ~ ~ ~ ~ ~] [-7 ~ ~ ~ ~ ~ ~ ~] [-7 ~ ~ ~ ~ ~ ~ ~] [-7 ~ ~ ~ ~ ~ ~ ~]>';   // transform: one long note a bar, Eb Eb Bb Bb C C F F
+const bass = { sound: 'sawtooth', notes: RIFF, rhythm: 'X.....x...x.x...|X.....x...x...x.', density: .8, register: .5, patch: 'driven',
+  brightness: .65, articulation: .25, weight: .6, space: .25, level: 1.6, velocity: '1 .8 .9 .85 1 .8 .9 .85', duck: 'drums', duckDepth: .4, duckAttack: .06 };
+
+// the hook, eight bars as degrees of G minor in octave 4: D5 held, falling to Bb4, back to D5; C5 Bb4 A4 G4; the same;
+// then F5 held and D5 held, a question; the second four answer by landing on G4 and staying
+const HOOK = '4@3 2 ~ 4@2 ~  3 2@2 1@2 0@2 ~  4@3 2 ~ 4@2 ~  6@3 4@3 ~ ~  4@3 2 ~ 4@2 ~  3 2@2 1@2 0@2 ~  4@3 2 ~ 4@2 ~  3 2@2 1@2 0@3';
+const FRAG = '4@3 2 ~ 4@2 ~  ~ ~ ~ ~ ~ ~ ~ ~';                                                   // the first bar of it, then silence
+const FRAG2 = '4@3 2 ~ 4@2 ~  ~ ~ ~ ~ ~ ~ ~ ~  ~ ~ ~ ~ ~ ~ ~ ~  6@3 4@3 ~ ~';                   // tension: the motif, two bars of room, the question
+const hook = { sound: 'square', patch: 'warm', notes: HOOK, phrase: 8, register: .5, follow: false, articulation: .35, brightness: .45, space: .55,
+  width: .5, level: .7, velocity: '.9 1 .85 .95 1 .9 .85 .9', humanize: { timingMs: 10, velocity: .1, correlation: 'phrase' } };
+
+// the answer: a low piano, three notes after each of the hook's phrases (Bb3 A3 G3), and the pad behind everything
+const answer = { sound: 'piano1', notes: '~ ~ ~ ~ ~ ~ ~ ~  ~ ~ ~ ~ ~ ~ 2 1  0@3 ~ ~ ~ ~ ~  ~ ~ ~ ~ ~ ~ ~ ~', phrase: 4, register: .3, follow: true, articulation: .4,
+  brightness: .4, space: .6, level: 2, position: -.3, humanize: { timingMs: 10, velocity: .1, correlation: 'phrase' } };
+const pad = { sound: 'triangle', density: .5, register: .3, brightness: .3, space: .6, width: .6, articulation: .3, level: .35, duck: 'drums', duckDepth: .4, duckAttack: .2 };
+// the machinery: a low hum, two brown-noise events a bar under a 300 Hz low-pass
+const HUM = s("brown*2").clip(1).lpf(300).hpf(40).gain(.3);
+
+song({ bpm: 110, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, packs: ['technologic', 'rooms'], room: { ir: 'church', size: 2 },
+  visual: { world: 'tunnel', composition: 'single' } }, [
+  section('awaken', 8, { role: 'establish', progression: 'i',
+    drums: kick,
+    drums2: { ...strike, template: { ...STRIKE, ...OPEN_HIT } },
+    bass,
+    melody: { ...hook, notes: FRAG, phrase: 2, enter: 2 },
+  }),
+  section('recognise', 8, { role: 'develop', progression: 'i@3 VI',
+    drums: kick,
+    drums2: strike,
+    bass: { ...bass, notes: RIFF_3 },
+    melody: hook,
+  }),
+  section('expand', 8, { role: 'build', progression: 'i VI III VII',
+    drums: { ...kick, template: { ...KICK, shaker: '..x...x...x...x.' } },
+    drums2: strike,
+    bass: { ...bass, notes: RIFF_4 },
+    melody: hook,
+    pad: { ...pad, enter: 4 },
+  }),
+  section('tension', 8, { role: 'develop', progression: 'i@2 iv@2 i@2 VM@2',
+    drums: { ...kick, template: { bd: KICK.bd } },                                 // no hats: the room tails are the hats
+    drums2: strike,
+    bass: { ...bass, notes: RIFF_T, space: .35 },
+    melody: { ...hook, notes: FRAG2, phrase: 4, space: .7 },
+    raw: { pattern: HUM, level: 1, space: .8, width: .6 },
+    pad,
+  }),
+  section('transform', 8, { role: 'build', progression: 'VI@2 III@2 iv@2 VII@2',
+    drums: kick,
+    drums2: strike,
+    bass: { ...bass, notes: RIFF_LONG, rhythm: 'X...............|X...............', articulation: .15, level: 1.4 },
+    melody: { ...hook, brightness: .5 },
+    melody2: answer,
+    pad: { ...pad, brightness: .35, level: .55 },
+  }),
+  section('cathedral', 8, { role: 'climax', progression: 'i VI III VII',
+    drums: { ...kick, template: { ...KICK, shaker: '..x...x...x...x.' }, weight: .65 },
+    drums2: { ...strike, template: STRIKE_FULL, level: .75 },
+    bass: { ...bass, notes: RIFF_4_POP, weight: .65, level: 1.7 },
+    melody: hook,
+    melody2: answer,
+    pad: { ...pad, brightness: .4, level: .55 },
+  }),
+  section('afterglow', 8, { role: 'release', progression: 'i@3 VI',
+    drums: { ...kick, template: { bd: KICK.bd } },
+    drums2: strike,
+    bass: { ...bass, notes: RIFF_3 },
+    melody: { ...hook, notes: FRAG, phrase: 2, level: .6, space: .7 },
+    pad: { ...pad, level: .4 },
+  }),
+  section('continue', 8, { role: 'release', progression: 'i',
+    drums: kick,
+    drums2: { ...strike, template: { ...STRIKE, triangle: '................|................|................|................|................|................|................|............x...' } },   // the last strike
+    bass: { ...bass, exit: 2 },
+    melody: { ...hook, notes: FRAG, phrase: 2, level: .55, space: .7, exit: 4 },
+  }),
+])

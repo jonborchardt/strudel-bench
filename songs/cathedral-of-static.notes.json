@@ -1,0 +1,44 @@
+{
+  "prompt": "a cathedral of static: industrial darkwave in G minor at 110, 64 bars, the technologic kit at two distances in a two-second church impulse, a driven ladder bass riff, a warm ladder square hook, every note written",
+  "requests": [
+    {
+      "date": "2026-10-11",
+      "ask": "A new song to work the new features (technologic kit as a hard requirement, the church or cave room, driven bass and warm hook where the load allows, enter/exit, ducking), from the Cathedral of Static brief; not boring",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "kit technologic (Freesound CC0: deep soft kick, mid snare, two bright noisy hats, clap, shaker, triangle), two drums parts so the voices sit at two distances: drums = kick and hats, dry (space .25), the duck source; drums2 = snare, clap, triangle, wet (space .8). The brief's per-voice sends are not possible inside one part; two parts of one kit are"
+        },
+        {
+          "section": "song",
+          "layer": "room",
+          "why": "church size 2 (not .8): size is seconds of impulse kept, the church impulse is 2 s long, and .8 would have cut it to early reflections with no tail. Cave (3 s) is the alternative to audition"
+        },
+        {
+          "section": "bass:",
+          "why": "sawtooth, patch driven (ladder, drive 1.2), eight attacks in two bars (G . . G . G Bb . | F . . F . D . D), register 2, release long (articulation .25) so each note growls and stops; ducked under the kick .4/.06. Traces with the warm hook: cathedral 29%, transform 27%, recognise 16%, no dropouts: both ladders fit. First draft had five attacks and the user heard it as slow and dorky"
+        },
+        {
+          "section": "bass",
+          "why": "per chord: the bass layer transposes a line with every chord and the G riff climbed a sixth over Eb (the dorky start of expand); the chord sections now write the line per bar with the root dropped an octave (-7: Eb2, F2, C2, D2), lowest note midi 36"
+        },
+        {
+          "section": "hook:",
+          "why": "square through patch warm (triangle read dorky, sawtooth tripped the two-saws lint), D5 falling to Bb4 and back, C Bb A G, F5 held then D5 held as the question, the second four landing on G; level .7 everywhere (the climax at .9 and brighter jumped out, the user heard it as suddenly super loud); a fragment at bar 3, the whole at 9, fragments in tension and afterglow"
+        },
+        {
+          "section": "tempo",
+          "why": "92>100>110: the user, listening live, twice: too slow. The brief's 92 is noted as the starting point"
+        },
+        {
+          "section": "harmony:",
+          "why": "i; i@3 VI; i VI III VII; i@2 iv@2 i@2 VM@2 (VM forces the major dominant: a plain V keeps the key's minor); VI@2 III@2 iv@2 VII@2 with no tonic under the hook (transform: the user said it starts to be a song); i VI III VII; i@3 VI; i"
+        },
+        {
+          "section": "pad",
+          "why": "triangle, octave 3, ducked, behind the hook (masking .62>.47 after the octave move); a low piano answer (Bb A G) after each hook phrase in transform and cathedral; a brown-noise hum in tension; the triangle strike only at bar 1, every second bar of the climax, and the last beat"
+        }
+      ]
+    }
+  ]
+}
