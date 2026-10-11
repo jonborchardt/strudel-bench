@@ -152,5 +152,39 @@
         }
       ]
     }
-  ]
+  ],
+  "youtube": {
+    "url": "",
+    "title": "a cathedral of static — industrial electronic in a real church: driven ladder bass, chromatic hook, two-voice choir",
+    "description": "Dark industrial electronic in G minor at 124 BPM: a driven ladder bass, a chromatic synth hook, a two-voice choir and a drum kit recorded into a real church impulse response. Nine Inch Nails weight, Massive Attack space, no synthpop.\nInstrumental, 2:04. An abandoned stone cathedral with machinery running in it.\n\nThe room is the instrument. The kick and the bass stay close and dry; the snare strikes the building and the two-second church impulse answers in the gaps the writing leaves. The bass pumps eighth notes with a sixteenth stutter into every bar, and a Moog-style ladder filter growls on its accents. The hook is a three-note cell on the off-beats, G up to Bb down to Ab, that never lands on the tonic; it ends on Ab against F#, then on Eb. The harmony is a G pedal pulled sideways: the Neapolitan Ab, E flat minor, the major D, and in the middle eight bars no tonic at all. A choir answers the hook in its gaps, then a second choir voice joins a third below and a beat behind. In the climax the hook and its octave are struck twice per note. The last thing you hear is one triangle, and the room.\n\nKit: Technologic (Figure Drum Kits by tripjazz, Freesound, CC0), used as two parts so the kick sits close and the snare far. Room: the church impulse from OpenAIR, University of York.\n\nChapters\n0:00 Awaken — the strike, the pump, the cell\n0:17 Recognise — the hook, the Neapolitan\n0:32 Expand — Gm Ab Gm D; the pad; the choir\n0:48 Tension — Gm Ebm Gm Ab; no hats; the hum\n1:03 Transform — Cm Ab Ebm D, no tonic\n1:19 Cathedral — the hook and its octave, struck twice\n1:34 Afterglow — the pedal, the cell, the choirs\n1:50 Continue — the pump, the kit, the last triangle\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. \n\nEvery song here is a text file. This one is songs/cathedral-of-static.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+    "tags": [
+      "industrial",
+      "darkwave",
+      "industrial electronic",
+      "dark electronic",
+      "cinematic electronic",
+      "G minor",
+      "Nine Inch Nails",
+      "Massive Attack",
+      "Depeche Mode",
+      "ladder filter",
+      "Moog",
+      "impulse response",
+      "church reverb",
+      "choir",
+      "drum machine",
+      "Freesound",
+      "generative music",
+      "live coding",
+      "strudel",
+      "tidalcycles",
+      "creative coding",
+      "music video"
+    ],
+    "hashtags": [
+      "#industrial",
+      "#darkwave",
+      "#livecoding"
+    ]
+  }
 }
