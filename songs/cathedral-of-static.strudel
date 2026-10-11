@@ -43,9 +43,9 @@ const RIFF_TRF = '<' + [PUMP_C, PUMP_C, PUMP_AB, PUMP_AB, PUMP_LOW, PUMP_LOW, PU
 // dark square plays the eighths between them. Eight driven notes a bar paid for nothing the ear could place and left
 // no room for the choir: the split keeps the drive where the accents are and halves the ladder's cost.
 const bass = { sound: 'sawtooth', notes: RIFF, rhythm: 'X.......X......x', density: .8, register: .5, patch: 'driven', brightness: .6, articulation: .7,
-  weight: .6, space: .2, level: 2, velocity: '1 .75 .85 .75 1 .75 .85 .8', duck: 'drums', duckDepth: .4, duckAttack: .06 };
+  weight: .7, space: .2, level: 2, velocity: '1 .75 .85 .75 1 .75 .85 .8', duck: 'drums', duckDepth: .4, duckAttack: .06 };   // weight .7: the most gain the axis gives before it drops the octave; the ladder's output is quiet
 const pump = { sound: 'square', notes: RIFF, rhythm: '..x.x.x...x.x.x.', density: .8, register: .5, brightness: .55, articulation: .7,
-  weight: .6, space: .2, level: 1.1, velocity: '1 .75 .85 .75 1 .75 .85 .8', duck: 'drums', duckDepth: .4, duckAttack: .06 };
+  weight: .6, space: .2, level: .9, velocity: '1 .75 .85 .75 1 .75 .85 .8', duck: 'drums', duckDepth: .4, duckAttack: .06 };
 
 // the hook, as a raw part so it can use the notes the scale lacks (Ab, F#), through the same warm ladder the `warm`
 // patch is (drive .8, cutoff 2.5 kHz, low resonance). Four bars: the cell G Bb Ab on the and-of-1, the and-of-2 and 3;
