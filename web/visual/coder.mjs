@@ -270,7 +270,6 @@ function enter(s) {
   s.edit = null; s.nudge = 1;
   const cur = s.buf.length;
   if (cur - s.top > ROWS * 0.66) s.topTarget = cur - ROWS * 0.66;
-  s.hits.push(0);
 }
 
 /** A snare: go back to a visible committed line and retune a number, or comment the line out. */
@@ -279,10 +278,13 @@ function backEdit(s, strength = 1) {
   if (hi < lo) return;
   const numbered = [];
   for (let i = lo; i <= hi; i++) if (/\d/.test(s.buf[i].text) && !/^\s*(\/\/|#\s)/.test(s.buf[i].text)) numbered.push(i);
-  const i = numbered.length ? numbered[Math.floor(rand(s) * numbered.length)] : lo + Math.floor(rand(s) * (hi - lo + 1));
+  const retune = numbered.length > 0 && rand(s) < 0.95; // mostly a number retuned; now and then a line commented out, or a commented one put back first
+  const out = [];
+  for (let i = lo; i <= hi; i++) if (/^\s*(\/\/|#\s)/.test(s.buf[i].text) && s.buf[i].edited) out.push(i);
+  const i = retune ? numbered[Math.floor(rand(s) * numbered.length)] : out.length ? out[Math.floor(rand(s) * out.length)] : lo + Math.floor(rand(s) * (hi - lo + 1));
   const line = s.buf[i];
-  const ms = [...line.text.matchAll(/\b\d+(\.\d+)?\b/g)];
-  if (ms.length && rand(s) < 0.85) {
+  const ms = retune ? [...line.text.matchAll(/\b\d+(\.\d+)?\b/g)] : [];
+  if (ms.length) {
     const m = ms[Math.floor(rand(s) * ms.length)];
     const was = m[0], dec = was.includes('.') ? was.split('.')[1].length : 0;
     const v = parseFloat(was), bump = (rand(s) < 0.5 ? -1 : 1) * (dec ? 10 ** -dec * Math.ceil(rand(s) * 3 * strength) : Math.max(1, Math.round(Math.abs(v) * 0.1 * strength)));
@@ -306,7 +308,7 @@ function popup(s, kind, bars = 6) {
   if (have) { have.life = Math.max(have.life, life); return have; }
   const max = Math.round(lerp(1, 4, s.energy));
   if (s.popups.length >= max) return null;
-  const p = { kind, x: 0.3 + rand(s) * 0.45, y: 0.12 + rand(s) * 0.5, w: kind === 'cells' ? 0.36 : 0.42, h: kind === 'log' ? 0.3 : 0.24, life, age: 0, hot: 1 };
+  const p = { kind, x: 0.38 + rand(s) * 0.36, y: 0.08 + rand(s) * 0.55, w: kind === 'cells' ? 0.36 : 0.42, h: kind === 'log' ? 0.3 : 0.24, life, age: 0, hot: 1 };
   s.popups.push(p);
   return p;
 }
@@ -337,7 +339,7 @@ export default {
       buf: [], top: 0, topTarget: 0, tabs: [], tab: 0, edit: null,
       t: 0, flash: 0, glow: 0, nudge: 0, blink: 0, energy: 0.5, dark: 0, riserAcc: 0,
       popups: [], log: [], hits: [0], scope: { amp: 0, note: 40, phase: 0 },
-      cw: 24, ch: 14, cells: [], beat: -1,
+      cw: 24, ch: 14, cells: [], beat: -1, bar: -1,
       section: null,
     };
     seed(s, rng);
@@ -358,13 +360,16 @@ export default {
     s.top = ease(s.top, s.topTarget, 6, dt);
     if (clock.boundary || (s.section !== null && s.section !== clock.section && clock.section !== null)) {
       // save and open the next file as a new tab
-      s.file++; s.srcLine = 0; s.buf = []; s.top = 0; s.topTarget = 0; s.edit = null; s.hits = [0];
+      // the buffer stays, so the old file scrolls off the top under the new one rather than the screen going blank
+      if (s.buf.length) { if (!s.buf[s.buf.length - 1].done) enter(s); s.buf.push({ text: '', hot: 0, done: true, edited: false }); }
+      s.file++; s.srcLine = 0; s.edit = null;
       s.tabs.push(`${clock.section ?? 'main'}.${fileAt(s)[1]}`); s.tab = s.tabs.length - 1;
       if (s.tabs.length > 6) { s.tabs.shift(); s.tab--; }
       s.log.push(`saved ${s.tabs[s.tab]}`);
     }
     s.section = clock.section;
     if (clock.beat !== s.beat) { s.beat = clock.beat; if (s.popups.some((p) => p.kind === 'cells')) lifeStep(s); }
+    if (clock.bar !== s.bar) { s.bar = clock.bar; s.hits.push(0); }
     // the riser: the operator going back up the file, retuning faster and faster toward the drop
     if (clock.riser > 0 && clock.riserBars > 0) {
       s.riserAcc += dt * lerp(1.5, 10, 1 - clock.riser / clock.riserBars);
@@ -390,15 +395,16 @@ export default {
   },
 
   draw(s, ctx, w, h) {
-    const lh = h / ROWS, fs = lh * 0.78, cw = fs * 0.6, gut = cw * 5, tabH = lh * 1.3, status = lh * 1.1;
+    const lh = h / ROWS, fs = lh * 0.78, tabH = lh * 1.3, status = lh * 1.1;
     const { pal } = s, dim = (l, a = 1) => hsla(pal.hue, 18, l * (1 - s.dark * 0.6), a);
     const nudge = -s.nudge * lh * 0.25;
     ctx.save();
     ctx.fillStyle = hsla(...s.bg); ctx.fillRect(0, 0, w, h);
     ctx.font = `${fs}px ui-monospace, Menlo, Consolas, monospace`; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+    const cw = ctx.measureText?.('M')?.width || fs * 0.6, gut = cw * 5, mapW = w * 0.06; // the real glyph width (a stub context has none)
     // the editor body: gutter, lines, cursor
     ctx.save();
-    ctx.beginPath(); ctx.rect(0, tabH, w, h - tabH - status); ctx.clip();
+    ctx.beginPath(); ctx.rect(0, tabH, w - mapW, h - tabH - status); ctx.clip();
     ctx.fillStyle = dim(8); ctx.fillRect(0, tabH, gut, h);
     const colour = { comment: dim(38), string: hsla(pal.field, pal.sat, 62), number: hsla(pal.line, pal.sat, 66), keyword: hsla(pal.hue, pal.sat, 68), ident: dim(s.ink), plain: dim(s.ink - 20) };
     const first = Math.max(0, Math.floor(s.top) - 1), last = Math.min(s.buf.length - 1, first + ROWS + 2);
@@ -414,7 +420,7 @@ export default {
         if (tk.k !== 'plain' || !/^\s+$/.test(tk.t)) ctx.fillText(tk.t, x, y + lh * 0.1);
         x += cw * tk.t.length;
       }
-      if (line.hot > 0.02) { ctx.fillStyle = hsla(pal.line, pal.sat, 70, line.hot * (i === cur ? 0.1 : 0.25)); ctx.fillRect(gut, y, Math.max(w - gut, 0), lh); }
+      if (line.hot > 0.02) { ctx.fillStyle = hsla(pal.line, pal.sat, 70, line.hot * (i === cur ? 0.06 : 0.14)); ctx.fillRect(gut, y, Math.max(w - gut, 0), lh); }
       if (i === cur && (s.glow > 0.05)) { const tk = tokens(line.text).filter((t) => t.k !== 'plain').pop(); if (tk) { ctx.fillStyle = hsla(pal.line, 90, 75, s.glow * 0.6); ctx.fillRect(x - cw * tk.t.length, y, cw * tk.t.length, lh); } }
     }
     // the cursors: the typing one on the open line, the editing one where the snare sent it
@@ -426,6 +432,18 @@ export default {
     }
     if (s.edit) { const y = tabH + (s.edit.line - s.top) * lh + nudge; ctx.fillStyle = hsla(pal.line, pal.sat, 70, 0.9); ctx.fillRect(gut + cw + cw * s.edit.col, y, cw * 0.5, lh); }
     ctx.restore();
+    // the minimap: the whole buffer at a sixth of the line height, the viewport boxed, the hot lines lit
+    {
+      const mx = w - mapW, mlh = lh / 6, mcw = mapW / 90, top = tabH + lh * 0.3;
+      ctx.fillStyle = dim(7); ctx.fillRect(mx, tabH, mapW, h - tabH - status);
+      const from = Math.max(0, s.buf.length - Math.floor((h - tabH - status - lh * 0.6) / mlh));
+      for (let i = from; i < s.buf.length; i++) {
+        const line = s.buf[i], y = top + (i - from) * mlh, m = /^(\s*)(.*)$/.exec(line.text);
+        ctx.fillStyle = line.edited ? hsla(pal.line, pal.sat, 55, 0.7) : dim(line.hot > 0.1 ? 60 : 32, 0.8);
+        ctx.fillRect(mx + mcw * 2 + mcw * m[1].length, y, Math.min(mapW - mcw * 4, mcw * m[2].length), mlh * 0.7);
+      }
+      ctx.fillStyle = dim(60, 0.12); ctx.fillRect(mx, top + (s.top - from) * mlh, mapW, ROWS * mlh);
+    }
     // tab bar
     ctx.fillStyle = dim(6); ctx.fillRect(0, 0, w, tabH);
     let tx = 0;

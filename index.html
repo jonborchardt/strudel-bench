@@ -142,7 +142,7 @@
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks, setSaturation } from './web/boot.mjs';
-  import { kitsIn, buildRequest, notesView, notesFile, youtubeView, verifyRows, shareEncode, shareDecode, levelRows, keyDefault, addableKeys } from './web/compose.mjs';
+  import { kitsIn, buildRequest, notesView, notesFile, youtubeView, verifyRows, shareEncode, shareDecode, levelRows, keyDefault, addableKeys, takesWith } from './web/compose.mjs';
   import { banReason, packsOf, packKind, registerSamples, resolveSample, sampleDef, SAMPLES, SYNTHS, PATCHES } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
@@ -344,7 +344,7 @@
   let loop = null; // its section object from the last evaluation (offset, span), or null
   function stripRender() { // a block per section, flex-grown by its span; a row per layer whose opacity is its density (× level when set)
     const at = sections.findLast((x) => x.offset <= Number($('pos').value));
-    $('strip').innerHTML = sections.map((s, i) => `<div class="blk${s.name === pinned ? ' pin' : ''}${s === at ? ' on' : ''}" data-i="${i}" style="flex-grow:${s.span}" title="${esc(s.name)}: ${s.cycles} bars${s.role ? ', ' + s.role : ''}. Click to scrub here."><span class="nm">${esc(s.name)}</span><span class="ops"><button data-op="pin" title="${s.name === pinned ? 'unpin: follow the playhead again' : 'pin: loop this section, start Play here, keep the mix on it'}">&#128204;</button><button data-op="left" title="move earlier"${i ? '' : ' disabled'}>&#9664;</button><button data-op="right" title="move later"${i < sections.length - 1 ? '' : ' disabled'}>&#9654;</button><button data-op="dup" title="duplicate it after this one">&#10697;</button><button data-op="ren" title="rename (or double-click the name)">&#9998;</button><button data-op="verb" title="a transform: breakdown, lift, strip, halftime">&#9889;</button><button data-op="del" title="remove this section (undo brings it back)">&times;</button></span>${layerNames().map((l) => {
+    $('strip').innerHTML = sections.map((s, i) => `<div class="blk${s.name === pinned ? ' pin' : ''}${s === at ? ' on' : ''}" data-i="${i}" style="flex-grow:${s.span}" title="${esc(s.name)}: ${s.cycles} bars${s.role ? ', ' + s.role : ''}. Click to scrub here."><span class="nm">${esc(s.name)}</span><span class="ops"><button data-op="pin" title="${s.name === pinned ? 'unpin: follow the playhead again' : 'pin: loop this section, start Play here, keep the mix on it'}">&#128204;</button><button data-op="left" title="move earlier"${i ? '' : ' disabled'}>&#9664;</button><button data-op="right" title="move later"${i < sections.length - 1 ? '' : ' disabled'}>&#9654;</button><button data-op="dup" title="duplicate it after this one">&#10697;</button><button data-op="ren" title="rename (or double-click the name)">&#9998;</button><button data-op="verb" title="a transform: ${Object.keys(VERBS).join(', ')}">&#9889;</button><button data-op="del" title="remove this section (undo brings it back)">&times;</button></span>${layerNames().map((l) => {
       const a = s.layers[l]?.attrs, d = typeof a?.density === 'number' ? a.density : .5;
       const ml = a?.enter ? (100 * a.enter / s.cycles).toFixed(1) : 0, mr = a?.exit ? (100 * a.exit / s.cycles).toFixed(1) : 0;
       return `<i style="opacity:${a ? ((.3 + .7 * d) * Math.min(1, a.level ?? 1)).toFixed(2) : 0};margin-left:${ml}%;margin-right:${mr}%" title="${l}${a ? `: density ${d}${a.enter ? `, after ${a.enter} bars` : ''}${a.exit ? `, out ${a.exit} bars early` : ''}` : ' (silent)'}"></i>`;
@@ -886,13 +886,15 @@
       const i = b % prog.length, cy = prog[i], rep = b >= prog.length;
       return `<button class="bar${rep ? ' rep' : ''}" data-bar="${i}" title="bar ${b + 1}: ${esc(cy.map((c) => c.numeral).join(' '))}${rep ? ` (repeats bar ${i + 1})` : ''}${atN ? ' (@n: edit in the source)' : ''}"><b>${esc(cy.map((c) => chordName(h.key, c)).join(' '))}</b><small>${esc(cy.map((c) => c.numeral).join(' '))}</small></button>`;
     }).join('');
-    $('harm').innerHTML = `<button class="pick key" data-key title="${own ? "this section's key" : "the song's key: pick one for this section"}"><b>${esc(h.key.replace(':', ' '))}</b>${own ? '' : '<small>song</small>'}</button><span class="bars">${cells}</span><button class="pick add" data-bar="${prog.length}" title="add a chord (a bar) to the progression">+</button>`;
+    const role = s.roleNode?.value.value; // the section's role in the arc: a pick, since only the block tooltip showed it
+    $('harm').innerHTML = `<button class="pick role" data-role title="the section's role in the arc (establish, develop, climax, release); the drums fill into a climax">${role ? esc(role) : '<i>role</i>'}</button><button class="pick key" data-key title="${own ? "this section's key" : "the song's key: pick one for this section"}"><b>${esc(h.key.replace(':', ' '))}</b>${own ? '' : '<small>song</small>'}</button><span class="bars">${cells}</span><button class="pick add" data-bar="${prog.length}" title="add a chord (a bar) to the progression">+</button>`;
   }
   $('harm').onclick = (e) => {
     const b = e.target.closest('button'); if (!b) return;
     const ev = sections.find((x) => x.name === mixSection); if (!ev) return;
     let src; try { src = locate(code.text).sections.find((x) => x.name === mixSection); } catch { return; }
     const h = harmOf(src ?? {}, ev); // rebuild from what is written, so a progression typed but not yet updated is not thrown away
+    if ('role' in b.dataset) return openPickList(b, { names: SCHEMA.props.role.values, cur: src?.roleNode?.value.value ?? '', ph: 'no role', onPick: (v) => did(() => setSectionField(code.text, mixSection, 'role', v ? q(v) : null), `${mixSection} role ${v || 'none'}`) });
     if ('key' in b.dataset) return openPickList(b, { names: SCHEMA.props.key.values(), cur: h.key, ph: 'the song\'s key', onPick: (v) => did(() => setSectionField(code.text, mixSection, 'key', v ? q(v) : null), `${mixSection} key ${v || 'from the song'}`) });
     if (/@/.test(h.progression)) return status('@n is hand-written: edit the progression in the source'); // only the per-bar chord picks below need the expanded-bars round trip; the key pick above does not touch the progression
     let prog; try { prog = parseProgression(h.progression); } catch { return status(`progression "${h.progression}" does not parse: edit it in the source`); }
@@ -949,7 +951,10 @@
     const text = (L, e, key, ph, extra = '', over) => { const v = over === undefined ? val(L, e, key) : over, ih = inh(L, e, key); return v === 'expr' || (v && typeof v === 'object') ? expr : `<span class="tb"><input class="snd${extra ? ' num' : ' wide'}${ih ? ' inh' : ''}"${ih} ${extra} data-mat="${key}" value="${v == null ? '' : esc(clean(v))}" placeholder="${ph}" spellcheck="false"><button class="pv" data-pv title="hear ${esc(layer(L))} with this (pauses the song)">&#9654;</button></span>`; };
     // a menu button: the popover lists `names` with a play button per row, so a choice can be heard before it is picked
     const pick = (L, e, key, ph, voice) => { const v = val(L, e, key); const cur = voice ? v?.[voice] : v; if (v === 'expr' || (cur && typeof cur === 'object' && !Array.isArray(cur))) return expr;
-      return `<button class="pick" data-mat="${key}"${voice ? ` data-voice="${voice}"` : ''} data-ph="${esc(ph)}"${Array.isArray(cur) ? ` data-list="${esc(JSON.stringify(cur))}" title="a list: a take per hit. A pick replaces the first name; edit the rest in the source"` : ''}>${cur ? esc(clean(Array.isArray(cur) ? cur.join(', ') : cur)) : `<i>${esc(ph)}</i>`}</button>`; };
+      const at = (i, t) => `<button class="pick" data-mat="${key}"${voice ? ` data-voice="${voice}"` : ''} data-idx="${i}" data-list="${esc(JSON.stringify(cur))}" title="${t}">`;
+      // a list: a take per hit, one chip each (a pick replaces that take, the empty row removes it) and a + that appends one
+      if (Array.isArray(cur)) return cur.map((t, i) => `${at(i, `take ${i + 1} of ${cur.length}: one is picked per hit`)}${esc(clean(t))}</button>`).join('') + `${at(cur.length, 'add a take')}+</button>`;
+      return `<button class="pick" data-mat="${key}"${voice ? ` data-voice="${voice}"` : ''} data-ph="${esc(ph)}">${cur ? esc(clean(cur)) : `<i>${esc(ph)}</i>`}</button>`; };
     const layer = (L) => L.layerName;
     const openRolls = new Set([...$('matlist').querySelectorAll('details.rollwrap[open]')].map((d) => d.dataset.part)); // a click in a roll re-renders the list: keep the roll open
     $('matlist').innerHTML = Object.entries(s.layers).map(([name, L]) => {
@@ -961,6 +966,8 @@
         if (tmpl && typeof tmpl === 'object') bits.push(`<details class="gridwrap" open><summary>grid</summary><div class="stepgrid" data-grid="${esc(name)}"></div><label>+ voice <input class="snd num" data-addvoice="${esc(name)}" placeholder="rd" title="add a row for a kit voice or a pack sound (Enter)"></label></details>`);
         else if (tmpl !== 'expr') bits.push(`<button class="pick" data-gridify="${esc(name)}" title="copy the named template into the source as a grid you can click">edit as grid</button>`);
         bits.push(val(L, e, 'sounds') === 'expr' ? `<label>sounds ${expr}</label>` : `<label>sounds</label>${DRUM_ORDER.map((v) => `<label class="voice">${v} ${pick(L, e, 'sounds', 'kit', v)}</label>`).join('')}`);
+        const fv = val(L, e, 'fill'); // the snare roll into the next section: unwritten it comes before a climax; true = the last bar; n = every n bars
+        bits.push(fv === 'expr' ? `<label>fill ${expr}</label>` : `<label>fill <select class="snd" data-mat="fill" title="a snare roll into the next section: auto is the last bar before a climax, or the last bar always, never, or every n bars"><option value=""${fv === undefined ? ' selected' : ''}>auto</option><option value="true"${fv === true ? ' selected' : ''}>last bar</option><option value="false"${fv === false ? ' selected' : ''}>never</option>${[2, 4, 8].map((n) => `<option value="${n}"${fv === n ? ' selected' : ''}>every ${n}</option>`).join('')}</select></label>`);
       } else if (base === 'sample') {
         // the sampler: import (local server only), the sound, what the region stands for, the cut, the order, and the waveform with a button per slice
         const snd = val(L, e, 'sound'), d = snd && sampleDef(snd); // a named definition in a pack: its keys show greyed under what the part writes
@@ -1004,7 +1011,8 @@
           const seed = sd ?? songSeed(), ph = Number(val(L, e, 'phrase')) || 1, steps = sections.find((x) => x.name === s.name)?.grid.steps ?? 16;
           bits.push(`<label class="seed" title="the generated line: seed ${seed}${sd == null ? ' (the song\'s)' : ' (this part\'s own)'}; ◀ ▶ try another, ▶ hears it">line <button class="pick step" data-seed="-1" data-cur="${seed}" title="previous seed"${seed <= 1 ? ' disabled' : ''}>&#9664;</button><span class="seedno">seed ${seed}${sd == null ? '<small>song</small>' : ''}</span><button class="pick step" data-seed="1" data-cur="${seed}" title="next seed">&#9654;</button><code>${esc(melodyLine(seed, steps / 2 * ph))}</code><button class="pv" data-pvseed="${seed}" title="hear this line (pauses the song)">&#9654;</button></label>`);
         }
-        const f = val(L, e, 'follow'); bits.push(`<label><input type="checkbox" data-mat="follow"${f === true ? ' checked' : ''}${f === 'expr' ? ' disabled' : ''}> follow the chords</label>`);
+        const f = val(L, e, 'follow'); // free: the line as written or seeded; chords: shifted onto each bar's chord; tones: snapped to the chord's tones
+        bits.push(f === 'expr' ? `<label>follow ${expr}</label>` : `<label>follow <select class="snd" data-mat="follow" title="free: the written or seeded line as is; chords: each note shifted onto the bar's chord; tones: snapped to the chord's tones">${[['', 'free'], ['true', 'chords'], ['tones', 'tones']].map(([v, l]) => `<option value="${v}"${(f === true ? 'true' : f === 'tones' ? 'tones' : '') === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`);
       }
       if (base === 'pad') bits.push(`<label>arp ${pick(L, e, 'arp', 'none')}</label>`);
       bits.push(`<button class="pick addkey" data-addkey="${esc(name)}" title="add a material or mix key to ${esc(name)} (position, duck, enter/exit, postgain, humanize&hellip;)">+ key</button>`);
@@ -1032,7 +1040,8 @@
   const q = (v) => `'${String(v).replace(/['"\\]/g, '').trim()}'`;
   // the source text for material `key` at `value` ('' removes it); `sounds` is the whole voice map with one voice replaced
   function matText(layer, key, value, voice, section = mixSection) {
-    if (key === 'follow') return value ? 'true' : null;
+    if (key === 'follow') return value === 'tones' ? `'tones'` : value === 'true' || value === true ? 'true' : null;
+    if (key === 'fill') return value === '' ? null : String(value); // 'true', 'false' or a bar count, as the select has it
     if (key === 'phrase') return value > 1 ? String(Math.round(value)) : null; // 1 is the default, so it is dropped
     if (key === 'level') return Number(value) === 1 ? null : String(Number(value)); // 1 = untouched, so it is dropped
     if (key === 'seed') return String(value).trim() ? String(Math.max(1, Math.round(Number(value)))) : null;
@@ -1346,12 +1355,13 @@
     $('picklist').querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'center' });
   }
   function openPick(btn, layer) { // a materials-panel button: names by key, the change through setMaterial, previews through audition
-    const { mat: key, voice, ph, list } = btn.dataset;
+    const { mat: key, voice, list } = btn.dataset;
     const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS) : key === 'patch' ? Object.keys(PATCHES)
       : key === 'sound' && layerBase(layer) === 'sample' ? sampleSounds() : [...$('snds').options].map((o) => o.value);
-    const takes = list ? JSON.parse(list) : null; // a list: a pick replaces the first take, the rest stay (data-list, from pick())
-    const text = (v) => matText(layer, key, takes ? [v, ...takes.slice(1)] : v, voice);
-    openPickList(btn, { names, cur: takes ? takes[0] : (btn.querySelector('i') ? '' : btn.textContent), ph, labels: key === 'sound' ? defLabels() : {}, onPick: (v) => setMat(layer, key, text(v)), preview: (v, pv) => audition(pv, layer, key, text(v), voice) });
+    const takes = list ? JSON.parse(list) : null, idx = Number(btn.dataset.idx); // a list: this chip's take (data-idx, from pick()); past the end, a new one
+    const ph = takes ? (idx < takes.length ? 'remove this take' : undefined) : btn.dataset.ph;
+    const text = (v) => matText(layer, key, takes ? takesWith(takes, idx, v) : v, voice);
+    openPickList(btn, { names, cur: takes ? takes[idx] ?? '' : (btn.querySelector('i') ? '' : btn.textContent), ph, labels: key === 'sound' ? defLabels() : {}, onPick: (v) => setMat(layer, key, text(v)), preview: (v, pv) => v && audition(pv, layer, key, text(v), voice) });
   }
   function filterPick() { const words = $('pickq').value.toLowerCase().split(/\s+/).filter(Boolean); for (const b of $('picklist').children) b.hidden = !words.every((w) => b.textContent.toLowerCase().includes(w)); }
   $('pickq').oninput = filterPick;

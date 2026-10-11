@@ -15,6 +15,11 @@ export function keyDefault(key, spec) {
   if (spec.type === 'number') return spec.max === undefined ? String(Math.max(spec.min, 1)) : String(+((spec.min + spec.max) / 2).toFixed(2)).replace(/^0\./, '.');
   return null; // enum, map, tokens: pick the value
 }
+/** A sound list (a take per hit) with take `idx` set to `v`, appended when idx is past the end, removed when v is empty: an array, the plain name when one is left, null when none. */
+export function takesWith(takes, idx, v) {
+  const out = v ? Object.assign([...takes], { [idx]: v }) : takes.filter((_, i) => i !== idx);
+  return out.length === 0 ? null : out.length === 1 ? out[0] : out;
+}
 /** The keys a "+ key" menu offers: every key the scope takes, minus the written ones and those a control already shows. */
 export const addableKeys = (all, written, shown = []) => all.filter((k) => !written.includes(k) && !shown.includes(k));
 

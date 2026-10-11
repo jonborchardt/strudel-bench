@@ -141,3 +141,12 @@ test('keyDefault: a sensible first value per key, null when the value wants a pi
   assert.deepEqual(addableKeys(['cps', 'bpm', 'key', 'kit'], ['bpm', 'kit']), ['cps', 'key']);
   assert.deepEqual(addableKeys(['sound', 'level', 'position'], [], ['sound', 'level']), ['position']);
 });
+
+test('takesWith: replace, append, remove a take; one take left is the plain name', async () => {
+  const { takesWith } = await import('../web/compose.mjs');
+  assert.deepEqual(takesWith(['bd', 'sd'], 1, 'cp'), ['bd', 'cp']);
+  assert.deepEqual(takesWith(['bd', 'sd'], 2, 'cp'), ['bd', 'sd', 'cp']);
+  assert.equal(takesWith(['bd', 'sd'], 1, ''), 'bd', 'removing down to one take is the plain name');
+  assert.deepEqual(takesWith(['bd', 'sd', 'cp'], 0, ''), ['sd', 'cp']);
+  assert.equal(takesWith(['bd'], 0, ''), null, 'removing the last take removes the key');
+});

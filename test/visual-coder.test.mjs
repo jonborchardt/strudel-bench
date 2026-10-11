@@ -68,7 +68,7 @@ test('a boundary saves the file and opens a new tab; a riser retunes by itself; 
   for (let i = 0; i < 4; i++) coder.step(st, STEP, [KICK], clockOf(score, 0));
   assert.equal(st.tabs.length, 1);
   coder.step(st, STEP, [], clockOf(score, 2, clockOf(score, 1.95)));
-  assert.equal(st.tabs.length, 2); assert.equal(st.buf.length, 0); assert.match(st.tabs[1], /^drop\./);
+  assert.equal(st.tabs.length, 2); assert.ok(st.buf.length >= 4, 'the buffer stays, so the old file scrolls off'); assert.match(st.tabs[1], /^drop\./);
   const r = createPerformance(coder, score).state;
   for (let i = 0; i < 6; i++) coder.step(r, STEP, [KICK], clockOf(score, 1.2));
   for (let i = 0; i < 120; i++) coder.step(r, STEP, [], clockOf(score, 1.9)); // the intro's last bar: the riser
