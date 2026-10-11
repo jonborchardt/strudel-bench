@@ -133,6 +133,24 @@
           "why": "raw and raw3: HOOK_HARD and its octave, the cell's notes struck twice ([g4 g4], [bb4 bb4], [d5 d5], [c5 c5]), the ladder drive .8>1, cutoff 2500>3200, clip .85>.75, release .12>.08, velocity contrast 1/.7, humanize 5 ms; levels unchanged (1.1 and 1). The held notes stay single. The line is a single-quoted string through mini() so the octave can be made from it as text"
         }
       ]
+    },
+    {
+      "date": "2026-10-11",
+      "ask": "sounds great; do a final mix",
+      "changes": [
+        {
+          "section": "mix",
+          "why": "pass over all eight sections from the measure tables. Hierarchy: the kick sat 2-3 dB under the mix everywhere (it was the mix) while the strikes sat 13-14 down: kick level .7>.65 and brighter (.6>.7, the click), strikes level .65>.95 (climax .85>1.1) and darker (.45>.35), the clean pump .9>1. Depth: awaken read kick, snare, bass and pump at one distance; the brighter kick and darker strikes spread them. Collisions: the only pair above .4 is the two choir voices in the mids, one instrument in two parts, left alone; kick under bass is the written convention, ducked. Stage: the pad moved a little left (position -.15) since snare, pad and the second choir all leaned right. Ruled out by name: a compressor on the strikes would flatten the crest that makes them strikes; the kit stays unhumanized because it is machinery"
+        },
+        {
+          "section": "load:",
+          "why": "transform traced 56% against a 35% reference, with dropouts; the second choir voice and the pad left that section (51% then 35%). The choir voices stay everywhere else; the pad returns in cathedral"
+        },
+        {
+          "section": "final:",
+          "why": "check and lint clean, mix lint clean on every measured section, render peak .95 with no clipped samples"
+        }
+      ]
     }
   ]
 }

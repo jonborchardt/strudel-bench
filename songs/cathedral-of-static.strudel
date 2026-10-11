@@ -23,8 +23,8 @@ const STRIKE_T = { ...STRIKE, triangle: '........x.......|................|.....
 const OPEN_HIT = { triangle: 'x...............|................|................|................|................|................|................|................' };
 const LAST_HIT = { triangle: '................|................|................|................|................|................|................|............x...' };
 
-const kick = { template: KICK, density: .7, fill: false, drive: .5, articulation: .6, aggression: .62, space: .25, brightness: .6, weight: .6, level: .7 };
-const strike = { template: STRIKE, density: .7, fill: false, drive: .5, articulation: .5, space: .8, brightness: .45, level: .65, position: .15 };
+const kick = { template: KICK, density: .7, fill: false, drive: .5, articulation: .6, aggression: .62, space: .25, brightness: .7, weight: .6, level: .65 };
+const strike = { template: STRIKE, density: .7, fill: false, drive: .5, articulation: .5, space: .8, brightness: .35, level: .95, position: .15 };
 
 // the pump: eighth notes on the root with a sixteenth stutter into the next bar, accents on 1 and 3, and a turn at the
 // end of each bar: F and D under G (degrees -1 and -3). Under the other chords the bass layer transposes, so the bars are
@@ -45,7 +45,7 @@ const RIFF_TRF = '<' + [PUMP_C, PUMP_C, PUMP_AB, PUMP_AB, PUMP_LOW, PUMP_LOW, PU
 const bass = { sound: 'sawtooth', notes: RIFF, rhythm: 'X.......X......x', density: .8, register: .5, patch: 'driven', brightness: .6, articulation: .7,
   weight: .7, space: .2, level: 2, velocity: '1 .75 .85 .75 1 .75 .85 .8', duck: 'drums', duckDepth: .4, duckAttack: .06 };   // weight .7: the most gain the axis gives before it drops the octave; the ladder's output is quiet
 const pump = { sound: 'square', notes: RIFF, rhythm: '..x.x.x...x.x.x.', density: .8, register: .5, brightness: .55, articulation: .7,
-  weight: .6, space: .2, level: .9, velocity: '1 .75 .85 .75 1 .75 .85 .8', duck: 'drums', duckDepth: .4, duckAttack: .06 };
+  weight: .6, space: .2, level: 1, velocity: '1 .75 .85 .75 1 .75 .85 .8', duck: 'drums', duckDepth: .4, duckAttack: .06 };
 
 // the hook, as a raw part so it can use the notes the scale lacks (Ab, F#), through the same warm ladder the `warm`
 // patch is (drive .8, cutoff 2.5 kHz, low resonance). Four bars: the cell G Bb Ab on the and-of-1, the and-of-2 and 3;
@@ -81,7 +81,7 @@ const HARD = { velocity: '.7 1 .7 1 1 .7 .95 .8', humanize: { timingMs: 5, veloc
 const lead = { pattern: HOOK, level: 1, space: .55, width: .5, velocity: '.85 1 .85 .95 1 .85 .9 .9', humanize: { timingMs: 8, velocity: .1, correlation: 'phrase' } };
 
 // the pad behind everything: a dark triangle, three tones, an octave under the hook, ducked
-const pad = { sound: 'triangle', density: .4, register: .3, brightness: .3, space: .6, width: .6, articulation: .3, level: .4, duck: 'drums', duckDepth: .4, duckAttack: .2 };
+const pad = { sound: 'triangle', density: .4, register: .3, brightness: .3, space: .6, width: .6, articulation: .3, level: .4, position: -.15, duck: 'drums', duckDepth: .4, duckAttack: .2 };
 // the machinery: a low hum, two brown-noise events a bar under a 300 Hz low-pass
 const HUM = s("brown*2").clip(1).lpf(300).hpf(60).gain(1);
 
@@ -129,12 +129,10 @@ song({ bpm: 124, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, pac
     bass2: { ...pump, notes: RIFF_TRF },
     raw: lead,
     raw2: respond,
-    raw25: respond2,
-    pad: { ...pad, brightness: .35, level: .5 },
   }),
   section('cathedral', 8, { role: 'climax', progression: 'i bII i VM',
     drums: { ...kick, template: KICK_OPEN, weight: .65, aggression: .66 },
-    drums2: { ...strike, template: STRIKE_T, level: .85 },
+    drums2: { ...strike, template: STRIKE_T, level: 1.1 },
     bass: { ...bass, notes: RIFF_EXP, weight: .65, level: 1.7 },
     bass2: { ...pump, notes: RIFF_EXP, weight: .65 },
     raw: { ...lead, ...HARD, pattern: HOOK_HARD, level: 1.1 },
