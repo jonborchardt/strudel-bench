@@ -123,6 +123,16 @@
           "why": "1.6>2, bass2.level 1.3>1.1: the driven accents measured 9.7 dB under the mix against the clean pump's 5.3, the wrong way round; the growl is the accent"
         }
       ]
+    },
+    {
+      "date": "2026-10-11",
+      "ask": "in cathedral have raw and raw3 do the hit-harder trick: double tap the notes, not louder",
+      "changes": [
+        {
+          "section": "cathedral",
+          "why": "raw and raw3: HOOK_HARD and its octave, the cell's notes struck twice ([g4 g4], [bb4 bb4], [d5 d5], [c5 c5]), the ladder drive .8>1, cutoff 2500>3200, clip .85>.75, release .12>.08, velocity contrast 1/.7, humanize 5 ms; levels unchanged (1.1 and 1). The held notes stay single. The line is a single-quoted string through mini() so the octave can be made from it as text"
+        }
+      ]
     }
   ]
 }

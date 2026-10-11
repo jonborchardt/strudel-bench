@@ -69,6 +69,15 @@ const RESP2_HOOK = VOICE(note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ bb3] [~ ~ ~ ~ ~
 const RESP2_CELL = VOICE(note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ bb3 ~ c4 ab3@2]>"));
 const respond2 = { pattern: RESP2_HOOK, level: 1.7, space: .65, position: .3, humanize: { timingMs: 14, velocity: .1, correlation: 'phrase' } };
 const respond = { pattern: RESP_HOOK, level: 2, space: .65, position: -.3, humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };
+// cathedral: the lead and its octave hit harder, not louder. The cell's notes are struck twice, the pluck is brighter
+// and shorter, the ladder drive is up a notch, and the accents are wider; the levels are the same as everywhere else.
+const LEAD_HARD = (pat) => pat.s('square').ftype('ladder').drive(1).lpf(3200).lpq(.15).attack(.01).clip(.75).release(.08).gain(.5);
+const LEAD_LOW_HARD = (pat) => pat.s('square').lpf(1200).attack(.01).clip(.75).release(.1).gain(.5);
+// a single-quoted string, since a double-quoted one is mini-notation at once and cannot be transposed as text
+const HOOK_HARD_LINE = '<[~ [g4 g4] ~ [bb4 bb4] ab4 ~ ~ ~] [~ [g4 g4] ~ [bb4 bb4] ab4 ~ [g4 g4] ~] [~ [d5 d5] ~ [c5 c5] ~ bb4 ~ ~] [ab4@3 ~ fs4@3 ~] [~ [g4 g4] ~ [bb4 bb4] ab4 ~ ~ ~] [~ [g4 g4] ~ [bb4 bb4] ab4 ~ [g4 g4] ~] [~ [d5 d5] ~ [c5 c5] ~ bb4 ~ ~] [d5@2 ~ eb5@4 ~]>';
+const HOOK_HARD = LEAD_HARD(note(mini(HOOK_HARD_LINE)));
+const HOOK_8VB_HARD = LEAD_LOW_HARD(note(mini(HOOK_HARD_LINE.replace(/([a-g]b?s?)4/g, '$13').replace(/([a-g]b?s?)5/g, '$14')))).gain(.7);
+const HARD = { velocity: '.7 1 .7 1 1 .7 .95 .8', humanize: { timingMs: 5, velocity: .12, correlation: 'phrase' } };
 const lead = { pattern: HOOK, level: 1, space: .55, width: .5, velocity: '.85 1 .85 .95 1 .85 .9 .9', humanize: { timingMs: 8, velocity: .1, correlation: 'phrase' } };
 
 // the pad behind everything: a dark triangle, three tones, an octave under the hook, ducked
@@ -128,8 +137,8 @@ song({ bpm: 124, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, pac
     drums2: { ...strike, template: STRIKE_T, level: .85 },
     bass: { ...bass, notes: RIFF_EXP, weight: .65, level: 1.7 },
     bass2: { ...pump, notes: RIFF_EXP, weight: .65 },
-    raw: { ...lead, level: 1.1 },
-    raw3: { pattern: HOOK_8VB, level: 1, space: .5, position: -.2 },                   // the hook an octave under itself
+    raw: { ...lead, ...HARD, pattern: HOOK_HARD, level: 1.1 },
+    raw3: { pattern: HOOK_8VB_HARD, level: 1, space: .5, position: -.2, ...HARD },     // the hook an octave under itself
     pad: { ...pad, brightness: .4, level: .5 },
   }),
   section('afterglow', 8, { role: 'release', progression: 'i',
