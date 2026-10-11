@@ -3,7 +3,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generate } from '../lib/form.mjs';
-export { generate, MOODS } from '../lib/form.mjs';
+export { generate, moods } from '../lib/form.mjs';
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const opt = (k, d) => { const a = process.argv.find((a) => a.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };

@@ -13,7 +13,6 @@ import { banReason, GM_SOUNDS, packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS
 import { describeAxes } from '../lib/vocab.mjs';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
 import { formLetters, plainAttrs } from '../lib/lint.mjs';
-export { formLetters };
 const { evalScope, evaluate } = await import('@strudel/core');
 const { transpiler } = await import('@strudel/transpiler');
 const { miniAllStrings } = await import('@strudel/mini');

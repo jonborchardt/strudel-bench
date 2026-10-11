@@ -6,7 +6,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkFile, missingPackOnly } from './check.mjs';
 import { lint, lintMeasure } from '../lib/lint.mjs';
-export { lint, lintMeasure };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const ROOT = path.resolve(import.meta.dirname, '..');

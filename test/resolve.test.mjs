@@ -237,12 +237,12 @@ test('setSectionField sets, replaces and drops a section key or progression', as
   assert.throws(() => setSectionField(`song({}, [section('a', 1, { key: K })])`, 'a', 'key', "'C:minor'"), /expression/);
 });
 
-test('setSectionField sets a section dropout, and locate exposes dropoutNode', async () => {
+test('setSectionField sets a section dropout, and locate exposes it under fields', async () => {
   await ready;
   const { setSectionField, locate } = await import('../lib/resolve.mjs');
   const a = setSectionField(SRC, 'verse', 'dropout', '1');
   assert.match(a, /section\('verse', 8, \{ role: 'develop', dropout: 1,\n/, 'after role');
-  assert.equal(locate(a).sections[0].dropoutNode.value, 1);
+  assert.equal(locate(a).sections[0].fields.dropout.value.value, 1);
 });
 
 test('addPack declares a pack in the song header: inserts, appends, or leaves an existing one alone', async () => {
@@ -391,7 +391,7 @@ test('locate: section keys (kit, room, meter, bpm) are fields, never layers', as
   const s = locate(src).sections[0];
   assert.deepEqual(Object.keys(s.layers), ['drums']);
   assert.deepEqual(Object.keys(s.fields).sort(), ['bpm', 'kit', 'meter', 'role', 'room']);
-  assert.equal(s.roleNode, s.fields.role, 'the old alias still points at the property');
+  assert.equal(s.fields.kit.value.value, 'RolandTR808');
 });
 
 test('setSectionField: any section key, insert / replace / remove', async () => {

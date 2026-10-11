@@ -18,7 +18,7 @@ test('generate is deterministic per seed and passes check', async () => {
 });
 
 test('gen/form.mjs: a skeleton per mood, deterministic per seed, that checks clean and has a climax', async () => {
-  const { generate, MOODS } = await import('../gen/form.mjs');
+  const { generate, moods } = await import('../gen/form.mjs');
   assert.equal(generate(3, { mood: 'sad' }), generate(3, { mood: 'sad' }));
   assert.notEqual(generate(3, { mood: 'sad' }), generate(4, { mood: 'sad' }));
   assert.throws(() => generate(1, { mood: 'grumpy' }), /unknown mood/);
@@ -26,7 +26,7 @@ test('gen/form.mjs: a skeleton per mood, deterministic per seed, that checks cle
   assert.equal(cycles(generate(1)), 64, 'the default length is 64 bars');
   assert.equal(cycles(generate(1, { bars: 128 })), 128);
   assert.ok(new Set([1, 2, 3, 4, 5, 6].map((s) => generate(s).match(/key: '(\w+)/)[1])).size > 1, 'small seeds pick different keys');
-  for (const mood of MOODS) {
+  for (const mood of moods()) {
     const f = path.join(import.meta.dirname, `_t_form_${mood}.strudel`);
     fs.writeFileSync(f, generate(1, { mood, bars: 32 }));
     try {
@@ -43,8 +43,7 @@ test('lib/form.mjs carries generate for the page: no node imports, the same outp
   assert.doesNotMatch(src, /from 'node:/, 'lib ships to the browser');
   const lib = await import('../lib/form.mjs'), gen = await import('../gen/form.mjs');
   assert.equal(lib.generate(5, { mood: 'ominous', bars: 32 }), gen.generate(5, { mood: 'ominous', bars: 32 }));
-  assert.deepEqual(lib.MOODS, gen.MOODS);
-  assert.deepEqual(lib.moods(), lib.MOODS, 'moods() reads the overlays when called: on the page they load after the import, so the dialog asks at open');
+  assert.ok(lib.moods().length > 4 && lib.moods().includes('cinematic'), 'moods() reads the overlays when called: on the page they load after the import, so the dialog asks at open');
   const { OVERLAYS } = await import('../lib/vocab.mjs'), was = OVERLAYS.cinematic; // generate validates against the live table too, not the snapshot taken at import
   delete OVERLAYS.cinematic;
   try { assert.throws(() => lib.generate(1, { mood: 'cinematic' }), /unknown mood/); } finally { OVERLAYS.cinematic = was; }

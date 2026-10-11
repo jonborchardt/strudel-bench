@@ -362,15 +362,15 @@
   let loop = null; // its section object from the last evaluation (offset, span), or null
   // the check's reading of a section on its block: its form letter (the same sounding parts share one, a prime is a lift or a
   // breakdown of it) and its energy as a bar glyph against the loudest section; the lint's warnings for it go on the block's title
-  function formMark(s) { const t = table.find((x) => x.name === s.name), max = Math.max(...table.map((x) => x.energy), 1e-9); return t ? `${esc(t.form)} ${'▁▂▃▄▅▆▇█'[Math.min(7, Math.round(7 * t.energy / max))]}` : ''; }
+  function formMark(s, max) { const t = table.find((x) => x.name === s.name); return t ? `${esc(t.form)} ${'▁▂▃▄▅▆▇█'[Math.min(7, Math.round(7 * t.energy / max))]}` : ''; }
   function warnsOf(s) { return findings.filter((f) => f.section === s.name).map((f) => `\n! ${esc(f.text)}`).join(''); }
   function lintRender() { // the lint panel: every finding, the section's name first; its summary counts them
     $('lintn').textContent = findings.length ? ` · ${findings.length}` : table.length ? ' · clean' : '';
     $('lintlist').innerHTML = findings.map((f) => `<li class="${f.level}">${f.section ? `<b>${esc(f.section)}</b> ` : ''}${esc(f.text)}</li>`).join('') || `<li>${table.length ? 'clean' : 'a song() file is linted once it evaluates'}</li>`;
   }
   function stripRender() { // a block per section, flex-grown by its span; a row per layer whose opacity is its density (× level when set)
-    const at = sections.findLast((x) => x.offset <= Number($('pos').value));
-    $('strip').innerHTML = sections.map((s, i) => `<div class="blk${s.name === pinned ? ' pin' : ''}${s === at ? ' on' : ''}" data-i="${i}" style="flex-grow:${s.span}" title="${esc(s.name)}: ${s.cycles} bars${s.role ? ', ' + s.role : ''}. Click to scrub here.${warnsOf(s)}"><span class="nm">${esc(s.name)}<small class="form" title="form letter and energy: the same sounding parts share a letter, a prime is a lift or a breakdown">${formMark(s)}</small></span><span class="ops"><button data-op="pin" title="${s.name === pinned ? 'unpin: follow the playhead again' : 'pin: loop this section, start Play here, keep the mix on it'}">&#128204;</button><button data-op="left" title="move earlier"${i ? '' : ' disabled'}>&#9664;</button><button data-op="right" title="move later"${i < sections.length - 1 ? '' : ' disabled'}>&#9654;</button><button data-op="dup" title="duplicate it after this one">&#10697;</button><button data-op="ren" title="rename (or double-click the name)">&#9998;</button><button data-op="verb" title="a transform: ${Object.keys(VERBS).join(', ')}">&#9889;</button><button data-op="del" title="remove this section (undo brings it back)">&times;</button></span>${layerNames().map((l) => {
+    const at = sections.findLast((x) => x.offset <= Number($('pos').value)), max = Math.max(...table.map((x) => x.energy), 1e-9);
+    $('strip').innerHTML = sections.map((s, i) => `<div class="blk${s.name === pinned ? ' pin' : ''}${s === at ? ' on' : ''}" data-i="${i}" style="flex-grow:${s.span}" title="${esc(s.name)}: ${s.cycles} bars${s.role ? ', ' + s.role : ''}. Click to scrub here.${warnsOf(s)}"><span class="nm">${esc(s.name)}<small class="form" title="form letter and energy: the same sounding parts share a letter, a prime is a lift or a breakdown">${formMark(s, max)}</small></span><span class="ops"><button data-op="pin" title="${s.name === pinned ? 'unpin: follow the playhead again' : 'pin: loop this section, start Play here, keep the mix on it'}">&#128204;</button><button data-op="left" title="move earlier"${i ? '' : ' disabled'}>&#9664;</button><button data-op="right" title="move later"${i < sections.length - 1 ? '' : ' disabled'}>&#9654;</button><button data-op="dup" title="duplicate it after this one">&#10697;</button><button data-op="ren" title="rename (or double-click the name)">&#9998;</button><button data-op="verb" title="a transform: ${Object.keys(VERBS).join(', ')}">&#9889;</button><button data-op="del" title="remove this section (undo brings it back)">&times;</button></span>${layerNames().map((l) => {
       const a = s.layers[l]?.attrs, d = typeof a?.density === 'number' ? a.density : .5;
       const ml = a?.enter ? (100 * a.enter / s.cycles).toFixed(1) : 0, mr = a?.exit ? (100 * a.exit / s.cycles).toFixed(1) : 0;
       return `<i style="opacity:${a ? ((.3 + .7 * d) * Math.min(1, a.level ?? 1)).toFixed(2) : 0};margin-left:${ml}%;margin-right:${mr}%" title="${l}${a ? `: density ${d}${a.enter ? `, after ${a.enter} bars` : ''}${a.exit ? `, out ${a.exit} bars early` : ''}` : ' (silent)'}"></i>`;
@@ -676,8 +676,7 @@
     dlg.showModal();
     const ok = await new Promise((r) => (dlg.onclose = () => r(dlg.returnValue === 'ok')));
     if (!ok) return;
-    const f = new FormData(dlg.querySelector('form')), raw = String(f.get('name')).trim();
-    if (!raw) return;
+    const f = new FormData(dlg.querySelector('form')), raw = String(f.get('name')).trim(); // never empty: the input is required
     const name = raw.endsWith('.strudel') ? raw : `${raw}.strudel`;
     if (!NAME.test(name)) return status(`bad name: ${name} (letters, digits, . _ -)`);
     if ([...$('song').options].some((o) => o.value === name) && !confirm(`${name} exists. Overwrite it?`)) return;
@@ -849,8 +848,8 @@
     openPickList(btn, { names, subs: Object.fromEntries(names.map((k) => [k, SCHEMA.props[k]?.title ?? SCHEMA.free[k] ?? ''])), onPick: (key) => {
       const text = keyDefault(key, SCHEMA.props[key]);
       if (text !== null) return write(key, text);
-      const vals = key === 'duck' ? Object.keys(s.layers).filter((p) => p !== layer) : key === 'kit' ? host.kits() : typeof SCHEMA.props[key]?.values === 'function' ? SCHEMA.props[key].values() : SCHEMA.props[key]?.values ?? [];
-      setTimeout(() => openPickList(btn, { names: vals, ph: undefined, onPick: (v) => write(key, q(v)) }), 0); // the first menu is closing on this click: reopen for the value
+      const vals = key === 'duck' ? Object.keys(s.layers).filter((p) => p !== layer) : typeof SCHEMA.props[key]?.values === 'function' ? SCHEMA.props[key].values() : SCHEMA.props[key]?.values ?? [];
+      setTimeout(() => openPickList(btn, { names: vals, onPick: (v) => write(key, q(v)) }), 0); // the first menu is closing on this click: reopen for the value
     } });
   }
   try { if (localStorage.getItem('strudel:tweak')) setTweak(true); } catch {}
@@ -917,18 +916,19 @@
     setTimeout(evFill, 0, gen);
   }
   // the section's harmony as written: the source literal when there is one (typed while playing, it is not evaluated yet), else what the evaluated song has
-  const harmOf = (s, ev) => ({ key: s.keyNode?.type === 'Literal' ? s.keyNode.value : ev.key, progression: s.progressionNode?.type === 'Literal' ? s.progressionNode.value : ev.progression });
+  const lit = (s, f) => (s.fields?.[f]?.value.type === 'Literal' ? s.fields[f].value.value : undefined); // a section field written as a literal, else undefined
+  const harmOf = (s, ev) => ({ key: lit(s, 'key') ?? ev.key, progression: lit(s, 'progression') ?? ev.progression });
   function harmRender(s) {
     const ev = sections.find((x) => x.name === s.name); if (!ev) return ($('harm').innerHTML = '');
     const h = harmOf(s, ev);
     let prog; try { prog = parseProgression(h.progression); } catch { return ($('harm').innerHTML = `<i>${esc(h.progression)}</i>`); }
-    const own = s.keyNode && s.keyNode.type === 'Literal'; // the section names its key, else the song's applies
+    const own = lit(s, 'key') !== undefined; // the section names its key, else the song's applies
     const atN = /@/.test(h.progression); // a hand-written @n repeat count: the per-bar picker cannot round-trip it, so bars are read-only
     const cells = Array.from({ length: Math.max(ev.cycles, prog.length) }, (_, b) => { // one cell per bar, the progression repeating; a repeat edits the chord it repeats
       const i = b % prog.length, cy = prog[i], rep = b >= prog.length;
       return `<button class="bar${rep ? ' rep' : ''}" data-bar="${i}" title="bar ${b + 1}: ${esc(cy.map((c) => c.numeral).join(' '))}${rep ? ` (repeats bar ${i + 1})` : ''}${atN ? ' (@n: edit in the source)' : ''}"><b>${esc(cy.map((c) => chordName(h.key, c)).join(' '))}</b><small>${esc(cy.map((c) => c.numeral).join(' '))}</small></button>`;
     }).join('');
-    const role = s.roleNode?.value.value; // the section's role in the arc: a pick, since only the block tooltip showed it
+    const role = lit(s, 'role'); // the section's role in the arc: a pick, since only the block tooltip showed it
     $('harm').innerHTML = `<button class="pick role" data-role title="the section's role in the arc (establish, develop, climax, release); the drums fill into a climax">${role ? esc(role) : '<i>role</i>'}</button><button class="pick key" data-key title="${own ? "this section's key" : "the song's key: pick one for this section"}"><b>${esc(h.key.replace(':', ' '))}</b>${own ? '' : '<small>song</small>'}</button><span class="bars">${cells}</span><button class="pick add" data-bar="${prog.length}" title="add a chord (a bar) to the progression">+</button>`;
   }
   $('harm').onclick = (e) => {
@@ -936,7 +936,7 @@
     const ev = sections.find((x) => x.name === mixSection); if (!ev) return;
     let src; try { src = locate(code.text).sections.find((x) => x.name === mixSection); } catch { return; }
     const h = harmOf(src ?? {}, ev); // rebuild from what is written, so a progression typed but not yet updated is not thrown away
-    if ('role' in b.dataset) return openPickList(b, { names: SCHEMA.props.role.values, cur: src?.roleNode?.value.value ?? '', ph: 'no role', onPick: (v) => did(() => setSectionField(code.text, mixSection, 'role', v ? q(v) : null), `${mixSection} role ${v || 'none'}`) });
+    if ('role' in b.dataset) return openPickList(b, { names: SCHEMA.props.role.values, cur: lit(src ?? {}, 'role') ?? '', ph: 'no role', onPick: (v) => did(() => setSectionField(code.text, mixSection, 'role', v ? q(v) : null), `${mixSection} role ${v || 'none'}`) });
     if ('key' in b.dataset) return openPickList(b, { names: SCHEMA.props.key.values(), cur: h.key, ph: 'the song\'s key', onPick: (v) => did(() => setSectionField(code.text, mixSection, 'key', v ? q(v) : null), `${mixSection} key ${v || 'from the song'}`) });
     if (/@/.test(h.progression)) return status('@n is hand-written: edit the progression in the source'); // only the per-bar chord picks below need the expanded-bars round trip; the key pick above does not touch the progression
     let prog; try { prog = parseProgression(h.progression); } catch { return status(`progression "${h.progression}" does not parse: edit it in the source`); }

@@ -231,6 +231,7 @@ const COMMENT = { c: '// ', py: '# ', rs: '// ', js: '// ' };
 const LOG = ['colony %n diverged', 'gen %n: climate drifted', 'checkpoint %n written', 'body %n captured', 'lineage %n extinct', 'storm over lon %n', 'entropy %n.%n%n', 'reseed epoch %n', 'tick %n ok', 'cells alive: %n%n%n'];
 
 const ROWS = 30; // text rows per frame height (the tab bar and status line take their own)
+const mono = (px) => `${px}px ui-monospace, Menlo, Consolas, monospace`;
 const SLOT_OF = (s, e) => s.slotOf[e.layer] ?? DEFAULT_SLOT[e.kind] ?? 'grain';
 
 /** One line of source as coloured tokens: comment, string, number, keyword, or plain. */
@@ -276,11 +277,9 @@ function enter(s) {
 function backEdit(s, strength = 1) {
   const lo = Math.max(0, Math.floor(s.top)), hi = s.buf.length - 2;
   if (hi < lo) return;
-  const numbered = [];
-  for (let i = lo; i <= hi; i++) if (/\d/.test(s.buf[i].text) && !/^\s*(\/\/|#\s)/.test(s.buf[i].text)) numbered.push(i);
+  const numbered = [], out = []; // lines with a number to retune; lines this world commented out, to put back
+  for (let i = lo; i <= hi; i++) { const c = /^\s*(\/\/|#\s)/.test(s.buf[i].text); if (!c && /\d/.test(s.buf[i].text)) numbered.push(i); else if (c && s.buf[i].edited) out.push(i); }
   const retune = numbered.length > 0 && rand(s) < 0.95; // mostly a number retuned; now and then a line commented out, or a commented one put back first
-  const out = [];
-  for (let i = lo; i <= hi; i++) if (/^\s*(\/\/|#\s)/.test(s.buf[i].text) && s.buf[i].edited) out.push(i);
   const i = retune ? numbered[Math.floor(rand(s) * numbered.length)] : out.length ? out[Math.floor(rand(s) * out.length)] : lo + Math.floor(rand(s) * (hi - lo + 1));
   const line = s.buf[i];
   const ms = retune ? [...line.text.matchAll(/\b\d+(\.\d+)?\b/g)] : [];
@@ -331,9 +330,8 @@ export default {
   init(score, rng, size) {
     const p = score.palette, pal = paletteOf(score, rng);
     const s = {
-      pal, size: { ...size }, cps: score.cps,
+      pal, cps: score.cps,
       bg: [pal.hue, 22, lerp(5, 9, p.luminance)], ink: lerp(68, 84, p.luminance),
-      roles: score.sections.map((x) => x.role ?? 'none'), names: score.sections.map((x) => x.name),
       slotOf: Object.fromEntries(Object.entries(score.cast).map(([n, c]) => [n, c.slot])),
       order: [], file: 0, srcLine: 0, // which corpus file this tab types from, and where in it
       buf: [], top: 0, topTarget: 0, tabs: [], tab: 0, edit: null,
@@ -400,7 +398,7 @@ export default {
     const nudge = -s.nudge * lh * 0.25;
     ctx.save();
     ctx.fillStyle = hsla(...s.bg); ctx.fillRect(0, 0, w, h);
-    ctx.font = `${fs}px ui-monospace, Menlo, Consolas, monospace`; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+    ctx.font = mono(fs); ctx.textBaseline = 'top'; ctx.textAlign = 'left';
     const cw = ctx.measureText?.('M')?.width || fs * 0.6, gut = cw * 5, mapW = w * 0.06; // the real glyph width (a stub context has none)
     // the editor body: gutter, lines, cursor
     ctx.save();
@@ -447,7 +445,7 @@ export default {
     // tab bar
     ctx.fillStyle = dim(6); ctx.fillRect(0, 0, w, tabH);
     let tx = 0;
-    const tfs = fs * 0.85; ctx.font = `${tfs}px ui-monospace, Menlo, Consolas, monospace`;
+    const tfs = fs * 0.85; ctx.font = mono(tfs);
     s.tabs.forEach((name, i) => {
       const tw = tfs * 0.6 * (name.length + 3);
       ctx.fillStyle = i === s.tab ? hsla(...s.bg) : dim(6); ctx.fillRect(tx, 0, tw, tabH);
@@ -458,7 +456,7 @@ export default {
     // status line
     const sy = h - status;
     ctx.fillStyle = hsla(pal.hue, pal.sat, 22); ctx.fillRect(0, sy, w, status);
-    ctx.fillStyle = dim(88); ctx.font = `${tfs}px ui-monospace, Menlo, Consolas, monospace`;
+    ctx.fillStyle = dim(88); ctx.font = mono(tfs);
     const l = s.buf.length, c = (s.buf[cur]?.text.length ?? 0) + 1;
     ctx.fillText(`${s.tabs[s.tab] ?? ''}   Ln ${l}, Col ${c}   ${s.section ?? 'sim'}   ${(s.energy * 100).toFixed(0)}% load   ${s.dark > 0.5 ? 'halted' : 'running'}`, cw, sy + (status - tfs) / 2);
     // popups, newest on top
@@ -469,7 +467,7 @@ export default {
       ctx.fillStyle = dim(10); ctx.fillRect(px, py, pw, ph);
       ctx.fillStyle = hsla(pal.hue, pal.sat, 26 + p.hot * 30); ctx.fillRect(px, py, pw, th);
       ctx.strokeStyle = dim(30); ctx.lineWidth = Math.max(1, h / 900); ctx.strokeRect(px, py, pw, ph);
-      ctx.fillStyle = dim(88); ctx.font = `${tfs * 0.9}px ui-monospace, Menlo, Consolas, monospace`;
+      ctx.fillStyle = dim(88); ctx.font = mono(tfs * 0.9);
       ctx.fillText({ log: 'universe.log', scope: 'bass carrier', pop: 'population', cells: 'cells' }[p.kind], px + cw, py + (th - tfs * 0.9) / 2);
       ctx.save(); ctx.beginPath(); ctx.rect(px, py + th, pw, ph - th); ctx.clip();
       const ix = px + cw, iy = py + th + lh * 0.3, iw = pw - cw * 2, ih = ph - th - lh * 0.6;

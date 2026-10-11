@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { lint } from '../scripts/lint.mjs';
+import { lint } from '../lib/lint.mjs';
 import { checkFile } from '../scripts/check.mjs';
 
 const sec = (name, role, layers, energy) => ({ name, role, energy, layers: Object.fromEntries(Object.entries(layers).map(([l, attrs]) => [l, { attrs, onsetsPerCycle: 1 }])) });
@@ -43,7 +43,7 @@ test('lint: a load warning for a per-hit compressor on a dense part; density alo
 });
 
 test('lintMeasure: headroom, inaudible and dominant parts, a flat stage, masking pairs and no depth contrast', async () => {
-  const { lintMeasure } = await import('../scripts/lint.mjs');
+  const { lintMeasure } = await import('../lib/lint.mjs');
   const row = (name, relativeDb, more = {}) => ({ name, relativeDb, highRatio: .1, tail: .2, meanPan: .5, panStd: 0, depth: .4, peak: .5, ...more });
   const grazed = lintMeasure({ section: 'a', parts: [row('mix', -6, { peak: 1, clipped: .00002 }), row('bass', -8)] });
   assert.ok(grazed.length === 1 && /^transients touch full scale \(0\.002%/.test(grazed[0].text), JSON.stringify(grazed));
