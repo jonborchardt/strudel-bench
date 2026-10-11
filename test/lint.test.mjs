@@ -96,3 +96,21 @@ test('banReason: case-blind, strips a prefix only when it is a kit', async () =>
   assert.match(banReason('korgt3_bd', { kits: { KorgT3: 'lo-fi' } }, ['KorgT3', ...kits]), /kit KorgT3 is banned: lo-fi/);
   assert.equal(banReason('korgt3_bd', { kits: { KorgT3: 'lo-fi' } }, kits), undefined, 'not a known kit, not stripped');
 });
+
+test('tableOf: the check table a page can build from the evaluated song and its onsets', async () => {
+  const { ready } = await import('./_scope.mjs');
+  const g = await ready;
+  const { tableOf, lint } = await import('../lib/lint.mjs');
+  const { onsetsOf } = await import('../lib/visual.mjs');
+  const pat = g.song({ cps: .5 }, [
+    g.section('a', 4, { role: 'establish', drums: { density: .3, sounds: { bd: ['bd', 'sd'] } } }),
+    g.section('b', 4, { role: 'climax', drums: { density: .9 }, bass: { density: .5, brightness: g.saw } }),
+  ]);
+  const t = tableOf(pat.strudel, onsetsOf(pat.strudel, 2));
+  assert.deepEqual(t.map((s) => [s.name, s.role, s.form]), [['a', 'establish', 'A'], ['b', 'climax', 'B']]);
+  assert.ok(t[1].energy > t[0].energy, 'the climax carries more onsets');
+  assert.equal(t[0].layers.drums.attrs.sounds, '{"bd":["bd","sd"]}', 'an object reads as its JSON, as the check prints it');
+  assert.equal(t[1].layers.bass.attrs.brightness, 'signal');
+  assert.ok(lint({ sections: t }).some((f) => /bass plays the seeded line/.test(f.text)), 'the lint runs over the page table');
+  assert.deepEqual(tableOf(null, {}), [], 'a plain strudel file has no table');
+});

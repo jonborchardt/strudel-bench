@@ -12,6 +12,8 @@ import QUALITY from '../lib/quality.json' with { type: 'json' };
 import { banReason, GM_SOUNDS, packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS } from '../lib/packs.mjs';
 import { describeAxes } from '../lib/vocab.mjs';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
+import { formLetters, plainAttrs } from '../lib/lint.mjs';
+export { formLetters };
 const { evalScope, evaluate } = await import('@strudel/core');
 const { transpiler } = await import('@strudel/transpiler');
 const { miniAllStrings } = await import('@strudel/mini');
@@ -176,9 +178,7 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
         layers: Object.fromEntries(Object.entries(s.layers).map(([k, l]) => {
           const lh = l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset());
           return [k, {
-            attrs: Object.fromEntries(Object.entries(l.attrs).map(([a, v]) => [a,
-              typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean' ? v
-              : v && typeof v === 'object' && typeof v.queryArc !== 'function' ? JSON.stringify(v) : 'signal'])),
+            attrs: plainAttrs(l.attrs),
             onsetsPerCycle: +(lh.length / s.cycles).toFixed(2),
             // voices sounding at once, on average (`load`: the audio thread's load; a section near 50 crackled on a laptop, see lint)
             voices: +(lh.reduce((n, h) => n + load(h, h.duration.valueOf(), s.cps, metaOf(h)), 0) / s.cycles).toFixed(1),
@@ -206,21 +206,6 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
     visual = composeVisual(pattern.strudel, { onsets: Object.fromEntries(sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, l.onsetsPerCycle]))])) });
   }
   return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps, saturate: pattern.strudel?.meta.saturate, visual };
-}
-
-/**
- * Form letters: sections with the same set of sounding parts share a letter (A, B, ...), so the arc reads as ABAB or
- * through-composed at a glance; a prime marks one whose energy differs from that letter's first section by more than a
- * fifth of the loudest section's (the same parts, but a lift or a breakdown).
- */
-export function formLetters(sections) {
-  const max = Math.max(...sections.map((s) => s.energy), 1e-9), seen = new Map();
-  return sections.map((s) => {
-    const sig = Object.entries(s.layers).filter(([, l]) => l.onsetsPerCycle > 0).map(([k]) => k).sort().join(' ');
-    if (!seen.has(sig)) seen.set(sig, { letter: String.fromCharCode(65 + seen.size), energy: s.energy });
-    const f = seen.get(sig);
-    return f.letter + (Math.abs(s.energy - f.energy) > max / 5 ? "'" : '');
-  });
 }
 
 /**
