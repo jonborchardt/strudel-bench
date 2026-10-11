@@ -52,11 +52,11 @@
     <summary><h2>Mix</h2><small>&middot; the song, the shown section, one slider per axis the layer adapts</small><span class="grow"></span><button class="undo" title="undo (ctrl+z)" disabled>&#8630;</button><button class="redo" title="redo (ctrl+shift+z)" disabled>&#8631;</button><button id="ab" title="hear the song as it was before the last change, at the same place; press again for the current one. Any edit returns to the current one." disabled>A/B</button><button id="measure" title="render this section and each part alone; levels in dB next to level (nothing is written)">measure</button><span class="xstate" id="mstate" role="status" aria-live="polite" hidden></span></summary>
     <!-- two panes over spans of the song source, each a CodeMirror editor (web/cm-editor.mjs) that follows every edit and whose own edits land in the song at that span; "controls" puts a widget after each literal the schema knows (web/hll-schema.mjs) -->
     <!-- song: the header object of song(...), parsed as one expression whose keys read as song's; above the strip, since it is not about one section -->
-    <details class="panel song" id="songsrc"><summary>song<label class="tweak" title="a widget after each value with known semantics; alt-drag a number works either way"><input type="checkbox" id="tweak0"> controls</label></summary><div id="songtext" title="the song header: tempo, key, seed, kit, packs"></div></details>
+    <details class="panel song" id="songsrc"><summary>song<label class="tweak" title="a widget after each value with known semantics; alt-drag a number works either way"><input type="checkbox" id="tweak0"> controls</label><button class="addkey" data-scope="song" title="add a song header key (tempo, meter, saturate, visual, room&hellip;) at a first value">+ key</button></summary><div id="songtext" title="the song header: tempo, key, seed, kit, packs"></div></details>
     <!-- strip: a block per section, flex-grown by its span, one row per layer shaded by density. Click scrubs there (and re-pins when pinned); the pin loops it, starts Play there and keeps the card on it; arrows reorder; the copy duplicates it under a numbered name; × removes it -->
     <div class="strip" id="strip"></div>
     <!-- section: the shown section's own section(...) call, the second of the two source panes (the song one sits above the strip) -->
-    <details class="panel" id="secsrc"><summary>section<small class="mixsec"></small><label class="tweak" title="a widget after each value with known semantics; alt-drag a number works either way"><input type="checkbox" id="tweak"> controls</label></summary><div id="sectext" title="this section's code: edits land in the song and the knobs follow"></div></details>
+    <details class="panel" id="secsrc"><summary>section<small class="mixsec"></small><label class="tweak" title="a widget after each value with known semantics; alt-drag a number works either way"><input type="checkbox" id="tweak"> controls</label><button class="addkey" data-scope="section" title="add a section key (kit, meter, tempo, dropout&hellip;) at a first value">+ key</button></summary><div id="sectext" title="this section's code: edits land in the song and the knobs follow"></div></details>
     <!-- both part lists end with an "add part" dropdown (mixRender fills it: one option per kind, numbered when the section has one already) -->
     <details class="panel" id="axes" open><summary>axes<small class="mixsec"></small></summary><!-- harmony: the section's key and one chord per bar of its progression; each is a pick, so harmony is as hands-on as the axes -->
     <div class="harm" id="harm"></div><div class="knobs" id="knobs"></div><div class="addpart" id="addaxes"></div></details>
@@ -142,7 +142,7 @@
 <script src="node_modules/@strudel/web/dist/index.js"></script>
 <script type="module">
   import { boot, playCode, expandCode, evalCode, nav, footer, localPacks, setSaturation } from './web/boot.mjs';
-  import { kitsIn, buildRequest, notesView, notesFile, youtubeView, verifyRows, shareEncode, shareDecode, levelRows } from './web/compose.mjs';
+  import { kitsIn, buildRequest, notesView, notesFile, youtubeView, verifyRows, shareEncode, shareDecode, levelRows, keyDefault, addableKeys } from './web/compose.mjs';
   import { banReason, packsOf, packKind, registerSamples, resolveSample, sampleDef, SAMPLES, SYNTHS, PATCHES } from './lib/packs.mjs';
   import { encodeMp3 } from './web/mp3.mjs';
   import { createEditor } from './web/cm-editor.mjs';
@@ -150,7 +150,7 @@
   import { fmt, locate, setAxis, setAxisText, motionText, planEdits, applyEdits, moveSection, duplicateSection, addLayer, removeSection, removeLayer, setMaterial, renameSection, setSectionField, setSongField, addPack, VERBS, applyVerb } from './lib/resolve.mjs';
   import { lanePoints, laneSvg } from './web/lane.mjs';
   import { AXES, cells } from './lib/axes.mjs';
-  import { layerNames, layerBase, arrange, parseMeter } from './lib/song.mjs';
+  import { layerNames, layerBase, layerMaterial, arrange, parseMeter, META_KEYS, SECTION_KEYS } from './lib/song.mjs';
   import { addVoice, templateText, mountStepGrid } from './web/stepgrid.mjs';
   import { parseLine, lineText, mountRoll } from './web/roll.mjs';
   import { ARP_ORDERS, DRUM_ORDER, voiceSound, melodyLine, bassLine, slicePoints } from './lib/layers.mjs';
@@ -793,6 +793,24 @@
   const tweaks = [...document.querySelectorAll('input[id^=tweak]')];
   const setTweak = (on) => { for (const t of tweaks) t.checked = on; for (const e of [code, ...panes.map((p) => p.ed)]) e.setControls(on); try { localStorage.setItem('strudel:tweak', on ? '1' : ''); } catch {} };
   for (const t of tweaks) { t.onclick = (e) => e.stopPropagation(); t.onchange = () => setTweak(t.checked); } // the click must not fold the panel
+  for (const b of document.querySelectorAll('summary .addkey')) b.onclick = (e) => { e.stopPropagation(); e.preventDefault(); addKeyPick(b); }; // likewise: open the menu, leave the pane as it is
+  // "+ key": the keys this scope (the song header, the shown section, or one part) takes and does not write yet; a pick writes the
+  // key's first value (keyDefault), or opens a second menu for it when the value is a choice (a sound, a kit, a world, a part to duck under)
+  function addKeyPick(btn, layer) {
+    const m = locate(code.text), s = m.sections.find((x) => x.name === mixSection);
+    const scope = layer ? 'layer' : btn.dataset.scope;
+    const written = scope === 'song' ? (m.song?.properties ?? []).map((p) => p.key?.name ?? p.key?.value) : scope === 'section' ? Object.keys(s.fields) : Object.keys(s.layers[layer].mats);
+    const shown = layer ? ['seed', ...[...btn.closest('.matrow').querySelectorAll('[data-mat]')].map((el) => el.dataset.mat)] : []; // a part's row already has a control for these
+    const all = scope === 'song' ? META_KEYS : scope === 'section' ? SECTION_KEYS : layerMaterial(layerBase(layer));
+    const names = addableKeys(all, written, shown);
+    const write = (key, text) => did(() => (scope === 'song' ? setSongField(code.text, key, text) : scope === 'section' ? setSectionField(code.text, mixSection, key, text) : setMaterial(code.text, mixSection, layer, key, text)), `${layer ?? scope} + ${key}: ${text}`);
+    openPickList(btn, { names, subs: Object.fromEntries(names.map((k) => [k, SCHEMA.props[k]?.title ?? SCHEMA.free[k] ?? ''])), onPick: (key) => {
+      const text = keyDefault(key, SCHEMA.props[key]);
+      if (text !== null) return write(key, text);
+      const vals = key === 'duck' ? Object.keys(s.layers).filter((p) => p !== layer) : key === 'kit' ? host.kits() : typeof SCHEMA.props[key]?.values === 'function' ? SCHEMA.props[key].values() : SCHEMA.props[key]?.values ?? [];
+      setTimeout(() => openPickList(btn, { names: vals, ph: undefined, onPick: (v) => write(key, q(v)) }), 0); // the first menu is closing on this click: reopen for the value
+    } });
+  }
   try { if (localStorage.getItem('strudel:tweak')) setTweak(true); } catch {}
   let updateTimer;
   function edited() { // the source changed under a control: derived views follow, and the player picks it up shortly
@@ -989,6 +1007,7 @@
         const f = val(L, e, 'follow'); bits.push(`<label><input type="checkbox" data-mat="follow"${f === true ? ' checked' : ''}${f === 'expr' ? ' disabled' : ''}> follow the chords</label>`);
       }
       if (base === 'pad') bits.push(`<label>arp ${pick(L, e, 'arp', 'none')}</label>`);
+      bits.push(`<button class="pick addkey" data-addkey="${esc(name)}" title="add a material or mix key to ${esc(name)} (position, duck, enter/exit, postgain, humanize&hellip;)">+ key</button>`);
       // level: the part's gain multiplier (1 = as built), the volume control the axes lack; a preview plays the part at this level too
       const lv = val(L, e, 'level');
       bits.push(`<label class="lvl" data-level="${esc(name)}">level ${lv === 'expr' ? expr : `<input type="range" min="0" max="2" step=".05" data-mat="level" value="${lv ?? 1}" title="${esc(name)} level x${lv ?? 1}"><output>x${lv ?? 1}</output>`}<small class="db"></small></label>`);
@@ -1298,6 +1317,7 @@
     const sb = e.target.closest('[data-songbpm]');
     if (sb) return did(() => setSongField(code.text, 'bpm', sb.dataset.songbpm), `song bpm ${sb.dataset.songbpm} (from ${matOf(layer, 'sound') ?? 'the sample'})`);
     if (e.target.closest('[data-import]')) return e.target.closest('label').querySelector('input[type=file]').click();
+    const ak = e.target.closest('[data-addkey]'); if (ak) return addKeyPick(ak, layer);
     const b = e.target.closest('button.pick');
     if (b) openPick(b, layer);
   };

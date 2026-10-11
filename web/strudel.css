@@ -214,6 +214,9 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .panel summary .tweak { float: right; text-transform: none; letter-spacing: 0; color: #c8c8d0; display: inline-flex; align-items: center; gap: .3rem; cursor: pointer; }
 .panel summary .tweak input { margin: 0; }
 .panel:not([open]) > summary .tweak { display: none; } /* a closed pane has no controls to toggle */
+.panel summary .addkey { float: right; margin-left: .6rem; font: inherit; font-size: .65rem; text-transform: none; letter-spacing: 0; padding: 0 .4rem; color: #c8c8d0; background: #1e1e22; border: 1px solid #111; border-radius: 4px; cursor: pointer; }
+.panel:not([open]) > summary .addkey { display: none; }
+.matrow button.addkey { color: #9a9aa2; }
 .matrow { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin: .3rem 0; }
 .matrow b { min-width: 4.5rem; font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: #eee; }
 .matrow label { display: inline-flex; align-items: center; gap: .3rem; color: #9a9aa2; }

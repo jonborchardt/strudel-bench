@@ -1,6 +1,22 @@
 // Pure helpers behind the Compose page: the kit list, the "Ask Claude" card, notes, verify rows, share links. No DOM, no strudel: index.html feeds
 // them text and gets text back, and test/compose.test.mjs runs them in Node.
 import { axis } from '../lib/axes.mjs';
+import { DEFAULT_PROGRESSION } from '../lib/harmony.mjs';
+
+// "+ key": the first value written for a key the song does not have yet. A named one here, else the spec's shape (web/hll-schema.mjs:
+// a bounded number at its midpoint, a whole number at 1, a bool on); null means the value is a pick (a sound, a kit, a world, a part to duck under)
+const FIRST = { bpm: '120', seed: '1', every: '8', enter: '1', exit: '1', dropout: '1', sweep: '1', riser: '4', follow: `'tones'`, meter: `'4/4'`, progression: `'${DEFAULT_PROGRESSION}'`,
+  packs: '[]', room: '{ size: .5 }', humanize: '{ timingMs: 10, velocity: .1 }', compressor: '{ threshold: -18, ratio: 4 }', velocity: `'1 .8 1 .8'`, notes: `'0 2 4 7'`, rhythm: `'x...x...x...x...'`, chord: `'0'`, pattern: `'0 1 2 3'`,
+  duck: null, key: null, impact: null };
+export function keyDefault(key, spec) {
+  if (key in FIRST) return FIRST[key];
+  if (!spec) return null;
+  if (spec.type === 'bool') return 'true';
+  if (spec.type === 'number') return spec.max === undefined ? String(Math.max(spec.min, 1)) : String(+((spec.min + spec.max) / 2).toFixed(2)).replace(/^0\./, '.');
+  return null; // enum, map, tokens: pick the value
+}
+/** The keys a "+ key" menu offers: every key the scope takes, minus the written ones and those a control already shows. */
+export const addableKeys = (all, written, shown = []) => all.filter((k) => !written.includes(k) && !shown.includes(k));
 
 const VOICES = ['bd', 'sd', 'hh']; // the drums layer's baseline voices: a kit missing one would log "sound not found"
 
