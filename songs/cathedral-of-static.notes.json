@@ -75,6 +75,16 @@
           "why": "render peak .95, no clipping, average -14.4 dBFS, the climax -13.0; the whole song is dark (centroid 170-470 Hz, under 3% of energy above 5 kHz), which is the brief, and the one thing to listen for is whether it has gone dull. Mix lint clean on tension and cathedral; recognise reads kick, bass and snare at one depth. Lowest bass note midi 36"
         }
       ]
+    },
+    {
+      "date": "2026-10-11",
+      "ask": "sometimes add a raw2 that is not a copy of raw, more of a call and response",
+      "changes": [
+        {
+          "section": "raw2",
+          "why": "respond (piano1, left, space .6): a second player answering in the hook's gaps. Under the full hook it speaks in bar 4 (D4 then C4 under the held Ab and F#) and bar 8 (C4 then Bb3 under the held Eb); under the cell alone it fills the empty bar with D4 Eb4 C4. In recognise and transform with the hook, afterglow and continue with the cell; not in the climax, where the octave double already answers. The hum moved to raw4"
+        }
+      ]
     }
   ]
 }

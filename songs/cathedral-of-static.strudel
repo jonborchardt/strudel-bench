@@ -52,6 +52,12 @@ const CELL = LEAD(note("<[~ g4 ~ bb4 ab4 ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~]>"));          
 const CELL_Q = LEAD(note("<[~ g4 ~ bb4 ab4 ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [ab4@3 ~ fs4@3 ~]>"));    // tension: the cell, two bars of room, the question
 const LEAD_LOW = (pat) => pat.s('square').lpf(900).attack(.02).clip(.9).release(.2).gain(.5);   // no ladder: the octave under the hook is a plain dark square, so the climax does not pay a second processor per note
 const HOOK_8VB = LEAD_LOW(note("<[~ g3 ~ bb3 ab3 ~ ~ ~] [~ g3 ~ bb3 ab3 ~ g3 ~] [~ d4 ~ c4 ~ bb3 ~ ~] [ab3@3 ~ fs3@3 ~] [~ g3 ~ bb3 ab3 ~ ~ ~] [~ g3 ~ bb3 ab3 ~ g3 ~] [~ d4 ~ c4 ~ bb3 ~ ~] [d4@2 ~ eb4@4 ~]>")).gain(.7);
+// the response: a dark sampled piano answering in the hook's gaps, a second player, not a double. Under the full hook it
+// speaks in bar 4 (D, then C under the held Ab and F#) and bar 8 (C, then Bb under the held Eb); under the cell alone it
+// fills the empty bar: D, Eb, C.
+const RESP_HOOK = note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ d4 ~ ~ ~ c4] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ c4 ~ ~ ~ ~ bb3]>").s('piano1').clip(.9).release(.3).gain(.9);
+const RESP_CELL = note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ d4 ~ eb4 ~ c4 ~]>").s('piano1').clip(.9).release(.3).gain(.9);
+const respond = { pattern: RESP_HOOK, level: 1.5, space: .6, position: -.3, humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };
 const lead = { pattern: HOOK, level: 1, space: .55, width: .5, velocity: '.85 1 .85 .95 1 .85 .9 .9', humanize: { timingMs: 8, velocity: .1, correlation: 'phrase' } };
 
 // the pad behind everything: a dark triangle, three tones, an octave under the hook, ducked
@@ -72,6 +78,7 @@ song({ bpm: 124, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, pac
     drums2: strike,
     bass: { ...bass, notes: RIFF_AB4 },
     raw: lead,
+    raw2: respond,
   }),
   section('expand', 8, { role: 'build', progression: 'i bII i VM',
     drums: { ...kick, template: KICK_OPEN },
@@ -85,7 +92,7 @@ song({ bpm: 124, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, pac
     drums2: strike,
     bass: { ...bass, notes: RIFF_TEN, space: .3 },
     raw: { ...lead, pattern: CELL_Q, space: .7 },
-    raw2: { pattern: HUM, level: 1.5, space: .8, width: .6 },
+    raw4: { pattern: HUM, level: 1.5, space: .8, width: .6 },
     pad,
   }),
   section('transform', 8, { role: 'build', progression: 'iv@2 bII@2 VIm@2 VM@2',
@@ -93,6 +100,7 @@ song({ bpm: 124, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, pac
     drums2: strike,
     bass: { ...bass, notes: RIFF_TRF },
     raw: lead,
+    raw2: respond,
     pad: { ...pad, brightness: .35, level: .5 },
   }),
   section('cathedral', 8, { role: 'climax', progression: 'i bII i VM',
@@ -108,6 +116,7 @@ song({ bpm: 124, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, pac
     drums2: strike,
     bass,
     raw: { ...lead, pattern: CELL, level: .9, space: .7 },
+    raw2: { ...respond, pattern: RESP_CELL, level: 1.3 },
     pad: { ...pad, chord: '<0 0 1 0>', level: .45 },                                  // over the pedal: Gm Gm A dim Gm
   }),
   section('continue', 8, { role: 'release', progression: 'i',
@@ -115,5 +124,6 @@ song({ bpm: 124, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, pac
     drums2: { ...strike, template: { ...STRIKE, ...LAST_HIT } },
     bass: { ...bass, exit: 2 },
     raw: { ...lead, pattern: CELL, level: .8, space: .7, exit: 4 },
+    raw2: { ...respond, pattern: RESP_CELL, level: 1.2, exit: 4 },
   }),
 ])
