@@ -1,0 +1,94 @@
+// exit 99: motorik in E minor at 118, 56 bars, about 1:54. Driving for hours at night. The pulse never changes; the
+// music does. Two ideas carry it, both there inside the first eight bars: a bass motif with rests and a phrase ending
+// (E E . E G . A . | B . A G E . D .) and a five-note harp motif over it (E G F#, then D to B as the question, D to E
+// as the answer, the second time displaced by an eighth). The tune is a cello, an octave under where a viola used to
+// play it, and it arrives at bar 17, not 25. The second half of the song is the first half heard differently: the
+// motif moves to a shakuhachi over a pedal while the bass is away, comes back with the chords moving, and ends alone
+// with the kit under one long breath.
+//   road    bars 1-8    kit and the bass motif from the first beat; the harp motif at 5.
+//   signs   bars 9-16   a dark piano doubles the bass motif an octave up; the last two bars lean on the VII (D).
+//   lights  bars 17-24  the cello hook, over Em C Em D; the organ pad holds the chords; the harp motif keeps going.
+//   tunnel  bars 25-32  the bass stops. The pad holds an E pedal while its upper tones move (Em Em C/E D/E), the
+//                       motif is played by the shakuhachi in long notes, and the bass returns at 29 for the lift.
+//   open    bars 33-48  everything, the ride on the quarters, the crash, the bass popping its octave; the hook's answer
+//                       at 41 is the song's peak, with the chords moving under it.
+//   on      bars 49-56  the hook is gone; the harp motif and the bass over the kit, as at the start, then one held
+//                       shakuhachi E, twice, over the last four bars while the bass and harp leave, and the kit alone at the end.
+// Kit: LinnDrum, one source, dry; accents on 1 and 3 in the kick and hats, on the snare; the open hat on the and of 4
+// every second bar. No fills but a roll into 33. Hits are not clipped: the cymbals keep their tails.
+const BEAT = { bd: 'X...x...X...x...', sd: '....X.......X...', hh: 'X.x.x.x.X.x.x.x.', oh: '................|..............x.' };
+const RIDE = { ...BEAT, hh: '................', rd: 'X...x...X...x...', bd: 'X...x...X...x...|X...x...X...x..x',
+  cr: 'x...............|................|................|................|................|................|................|................' };
+const drums = { template: BEAT, sounds: { hh: 'hh:2' }, density: .7, fill: false, drive: .5, space: .3, brightness: .5, weight: .6, level: .5 };
+
+// the bass motif: two bars, rests on the and of 2 and on 4, accents on 1 and on the G, the D at the end leading home
+const GROOVE = '<[0 0 ~ 0 2 ~ 3 ~] [4 ~ 3 2 0 ~ -1 ~]>';
+const GROOVE_OPEN = '<[0 0 ~ 0 2 ~ 3 ~] [4 ~ 3 2 7 ~ -1 ~]>';            // the octave pop where the phrase turns
+const bass = { sound: 'square', notes: GROOVE, rhythm: 'X.x...x.X...x...|X...x.x.x...x...', density: .8, register: .5, brightness: .55,
+  articulation: .6, weight: .6, space: .3, level: .8, duck: 'drums', duckDepth: .4, duckAttack: .08 };
+// the harp motif: E G F# / D B (question), then the same displaced an eighth late / D E (answer); four bars
+const MOTIF = '0 ~ 2 ~ 1 ~ ~ ~  -1 ~ -3@3 ~ ~ ~  ~ 0 ~ 2 ~ 1 ~ ~  ~ -1 ~ [0,-3]@3 ~ ~';   // the answer lands on an open fifth: one chord in ten notes
+const MOTIF_HARD = '[0 0] ~ [2 2] ~ 1 ~ ~ ~  -1 ~ -3@3 ~ ~ ~  ~ [0 0] ~ [2 2] ~ 1 ~ ~  ~ -1 ~ [0,-3]@3 ~ ~';   // open: the first two notes of each phrase struck twice
+const motif = { sound: 'folkharp', notes: MOTIF, phrase: 4, register: .5, follow: false, articulation: .55, brightness: .55, space: .45, width: .5,
+  level: 1.2, position: -.2, velocity: '1 .9 .95 .9 1 .9 .95 .9', humanize: { timingMs: 10, velocity: .1, correlation: 'phrase' },
+  compressor: { threshold: -18, ratio: 3 } };   // a sparse part with a crest of 9: the compressor is what lifts it, its level being at the ceiling
+// the dark piano: the bass motif's notes an octave up, the same rests, under the harp
+const double = { sound: 'piano1', notes: '0 0 ~ 0 2 ~ 3 ~  4 ~ 3 2 0 ~ -1 ~', phrase: 2, register: .3, follow: true, articulation: .6, brightness: .35, space: .6,
+  width: .5, level: 1, position: .25, humanize: { timingMs: 8, velocity: .08, correlation: 'bar' } };
+// the hook, eight bars, as degrees in octave 3 (B3 D4 E4 up to G4, a second climb to B4 that stops on E4: the question;
+// the same climb, then down through D4 B3 G3 to E3: the answer)
+const HOOK = '4@2 6 7@3 ~ 9  9@2 7 6@3 4 ~  3@2 4 6@2 7 9@2  11@3 9 7@2 ~ ~  4@2 6 7@3 ~ 9  9@2 7 6@3 4 ~  3@2 4 6@2 7 9@2  6@2 4 2@2 [0,4]@3';   // the answer's last E as a double stop with the B above
+const hook = { sound: 'gm_cello', notes: HOOK, phrase: 8, register: .3, follow: false, articulation: .4, brightness: .55, space: .45, width: .5,
+  level: 1.6, velocity: '.9 1 .85 .95 1 .9 .85 .9', humanize: { timingMs: 8, velocity: .08, correlation: 'phrase' } };
+// the motif on the shakuhachi, in long notes: E G F# held, then D to B; D to E
+const BREATH = '0@2 2@2 1@4  -1@2 -3@6  0@2 2@2 1@4  -1@2 0@6';
+const breath = { sound: 'gm_shakuhachi', notes: BREATH, phrase: 4, register: .5, follow: false, articulation: .3, brightness: .5, space: .6, width: .5,
+  level: 1.4, position: -.3, humanize: { timingMs: 14, velocity: .1, correlation: 'phrase' } };
+// the organ pad: three tones of the chord, dark and wide, ducked under the kick
+const pad = { sound: 'organ_8inch', density: .5, register: .5, brightness: .4, space: .7, width: .7, articulation: .35, level: 1.2,
+  duck: 'drums', duckDepth: .4, duckAttack: .2 };
+// the last breaths: two shakuhachi Es over the final four bars, a bar and a half each with half a bar of air between
+const LAST = note("~@8 e4@3 ~ e4@3 ~").slow(8).s('gm_shakuhachi').clip(1).release(.5).gain(.9);
+
+song({ bpm: 118, key: 'E:minor', seed: 7, kit: 'LinnDrum', saturate: .6, packs: ['rooms'], room: { ir: 'hall', size: .4 },
+  visual: { world: 'cabaret', composition: 'single' } }, [
+  section('road', 8, { role: 'establish', progression: 'i',
+    drums,
+    bass,
+    melody: { ...motif, level: .8, enter: 4 },
+  }),
+  section('signs', 8, { role: 'develop', progression: 'i@6 VII@2',
+    drums,
+    bass,
+    melody: { ...motif, level: .8 },
+    melody2: double,
+  }),
+  section('lights', 8, { role: 'build', progression: 'i@2 VI@2 i@2 VII@2',
+    drums,
+    bass,
+    melody: { ...motif, level: .9 },
+    melody3: hook,
+    pad,
+  }),
+  section('tunnel', 8, { role: 'develop', progression: 'i',
+    drums: { ...drums, fill: true },                                           // the roll into 33
+    bass: { ...bass, enter: 4 },
+    melody: { ...breath },
+    pad: { ...pad, chord: '<0 0 5 6>', level: 1 },                            // the pedal: Em Em C/E D/E
+  }),
+  section('open', 16, { role: 'climax', progression: 'i@2 VI@2 i@2 VII@2',
+    drums: { ...drums, template: RIDE, level: .32, brightness: .35, articulation: .6 },   // the ride on the quarters, clipped to its step: on every eighth and ringing it drowned the section
+    bass: { ...bass, notes: GROOVE_OPEN, weight: .65 },
+    melody: { ...motif, notes: MOTIF_HARD, level: 2, brightness: .75, articulation: .65, aggression: .65, velocity: '1 .7 .9 .75 1 .75 .95 .75',
+      humanize: { timingMs: 6, velocity: .12, correlation: 'phrase' } },   // hit harder, not louder: a brighter, shorter pluck, a wider accent, a little string buzz, doubled strokes
+    melody2: { ...double, level: 1 },
+    melody3: { ...hook, level: 1.8, brightness: .6 },
+    pad: { ...pad, brightness: .5, width: .6 },
+  }),
+  section('on', 8, { role: 'release', progression: 'i',
+    drums,
+    bass: { ...bass, brightness: .7, exit: 2 },   // forward: the bass up close at the end
+    melody: { ...motif, level: 1, space: .75, brightness: .35, articulation: .3, exit: 2 },   // farther: the motif as a memory of itself
+    raw: { pattern: LAST, level: 1.4, position: -.3, space: .6 },
+  }),
+])

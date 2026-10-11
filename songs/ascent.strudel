@@ -30,7 +30,7 @@ const CAPSULE = { ir: 'room', size: .5 };
 const reese = { sound: 'square', patch: 'reese', register: .3, weight: .7, articulation: .55, brightness: .4, space: .35, duck: 'drums', duckDepth: .35, duckAttack: .15 };
 const wide = { sound: 'sawtooth', patch: 'wide', articulation: .15, space: .6, width: .7, brightness: .4, duck: 'drums', duckDepth: .15, duckAttack: .25 };
 
-song({ bpm: 108, key: 'D:minor', seed: 11, kit: 'RolandTR909', packs: ['rooms'], visual: { composition: 'overlay', worlds: ['growth', 'swarm'] } }, [
+song({ saturate: .6, bpm: 108, key: 'D:minor', seed: 11, kit: 'RolandTR909', packs: ['rooms'], visual: { composition: 'overlay', worlds: ['growth', 'swarm'] } }, [
 
   // I stone: skins, a slit log, a drone, three notes on a clay flute, in a cave
   section('stone', 16, { role: 'establish', progression: 'i', room: CAVE,

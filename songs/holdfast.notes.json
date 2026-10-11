@@ -50,6 +50,19 @@
           "why": "humanize timingMs 10 velocity .1 per bar instead of organicness .15: a drummer counting slowly, not dice per hit"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "saturate",
+          "from": 0,
+          "to": 0.6,
+          "why": "bus saturation; R8 kit and room kept; bass lowest note midi 38 so no sub; bass already ducks drums .25; no entries merged"
+        }
+      ]
     }
   ]
 }

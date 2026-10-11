@@ -360,3 +360,26 @@ test('applyVerb surfaces refusals instead of silently doing nothing on an all-sp
   assert.match(h.src, /template: 'halftime'/);
   assert.ok(h.refused.length > 0, 'the phrase half is still refused: density comes from the spread');
 });
+
+test('verb sidechain writes duck onto bass and pad, not drums', async () => {
+  const { applyVerb } = await import('../lib/resolve.mjs');
+  const src = "song({ cps: .5 }, [section('a', 8, { drums: {}, bass: { density: .5 }, pad: {} })])\n";
+  const { src: out } = applyVerb(src, 'a', 'sidechain');
+  assert.match(out, /bass: \{[^}]*duck: 'drums'[^}]*duckDepth: \.4/);
+  assert.match(out, /pad: \{[^}]*duck: 'drums'/);
+  assert.doesNotMatch(out, /drums: \{[^}]*duck/);
+});
+
+test('verb sidechain skips a section with no drums and notes an overwritten duck', async () => {
+  const { applyVerb } = await import('../lib/resolve.mjs');
+  const src = "song({ cps: .5 }, [section('a', 8, { bass: {}, pad: {} })])\n";
+  const r = applyVerb(src, 'a', 'sidechain');
+  assert.doesNotMatch(r.src, /duck/);
+  assert.equal(r.skipped.length, 2);
+  assert.match(r.skipped.join(), /bass/); assert.match(r.skipped.join(), /pad/);
+  const src2 = "song({ cps: .5 }, [section('a', 8, { drums: {}, bass: { duck: 'kick' } })])\n";
+  assert.match(applyVerb(src2, 'a', 'sidechain').report.join(), /bass: duck was/);
+  const { VERBS } = await import('../lib/resolve.mjs'), was = VERBS.sidechain.material.bass.duck;
+  VERBS.sidechain.material.bass.duck = '"drums"'; // a double-quoted target is read too
+  try { assert.match(applyVerb(src, 'a', 'sidechain').skipped.join(), /bass: no part "drums"/); } finally { VERBS.sidechain.material.bass.duck = was; }
+});

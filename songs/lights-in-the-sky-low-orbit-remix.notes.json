@@ -519,6 +519,19 @@
           "why": "whole-song render: no 10 ms block over the soft clip's 0.8 knee, true sample peak 0.776 at lift bar 7.29, analyzer peak 0.713, clipped 0, rms -21.1 dBFS unchanged from before the pass, so nothing got quieter, only the peaks came off"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "saturate",
+          "from": 0,
+          "to": 0.6,
+          "why": "bus saturation; LinnDrum kit and hall kept; bass lowest midi 36 and already on the sub patch so no sub; bass and pad already duck drums; no entries merged"
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,456 @@
+{
+  "made": "2026-10-09",
+  "prompt": "exit 99: motorik in E minor at 118, 56 bars; a bass motif and a harp motif from the first eight bars, a cello hook at 17, the motif moving to a shakuhachi over a pedal, then everything, then the kit alone under one breath",
+  "requests": [
+    {
+      "date": "2026-10-10",
+      "ask": "Write Exit 99 (motorik / krautrock, 118 bpm, E minor, 64 bars): one unchanging beat, two interlocking picking lines, an eighth-note bass, a hook that appears and leaves, a pad in the second half; use saturate .6, packs rooms with the hall impulse at size .4, enter/exit bars instead of extra sections, duck bass and pad under the kick at depth .4, driven bass with its fundamental at 65-100 Hz, a one-source kit from the catalogue words, every note written",
+      "changes": [
+        {
+          "section": "song",
+          "why": "kit LinnDrum: the catalogue words wanted kick tight deep click, snare medium snap noisy, hat tight bright; LinnDrum's three voices score best from one source (kick tight mid click 0.21 s, snare medium deep snap noisy, Hat Closed-03 tight bright click), Linn9000 the runner-up"
+        },
+        {
+          "section": "out",
+          "layer": "bass",
+          "axis": "sound",
+          "why": "sawtooth>square: the lint flagged two raw saws (bass and pad) in one section; a driven square keeps the bite and leaves the saw to the pad"
+        },
+        {
+          "section": "back",
+          "layer": "pad",
+          "axis": "register",
+          "why": ".5>.3: the hook and the pad shared the mid band (masking .60 in the measure); an octave down (E3 B3) took it to .18 and the worst pair is now the guitar against the hook at .46, on opposite sides of the stage"
+        },
+        {
+          "section": "back",
+          "layer": "pad",
+          "axis": "density",
+          "why": ".5>.4: two tones, E and B, an open fifth; the G is the guitar's and the hook's"
+        },
+        {
+          "section": "back",
+          "layer": "melody",
+          "axis": "brightness",
+          "why": ".45>ramp(.4,.62): the only peak the brief allows, the hook at its brightest in bars 41-48 just before it leaves"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "It's boring. Make it hypnotic, not boring: keep the pulse constant, not the music. A distinctive riff in the first ten seconds, a second picking line that transforms how the riff feels, a memorable hook with anticipation and resolution, a bass with personality, at least one moment where the arrangement opens up, saturation and dirt and contrasting timbres; a slightly dirty electric guitar for picking A and a synth pluck for B",
+      "changes": [
+        {
+          "section": "song",
+          "why": "form 2 sections>4 (out 24, rise 16, open 8, back 16): the first version's two 32-bar sections held the pulse and everything else still; the arc read 25/28 and the render's level moved under a dB across the song. Now 21/38/53/28, with enter/exit still carrying the entrances inside each section"
+        },
+        {
+          "section": "out",
+          "layer": "raw",
+          "axis": "pattern",
+          "why": "arpeggio>riff: picking A is a dirty electric guitar (gm_overdriven_guitar, lpf 2800) playing a two-bar riff with rests on the and of 1 and on 3, E G A B up and D B A G E down, so there is a riff in the first ten seconds and gaps for the kick and the pluck"
+        },
+        {
+          "section": "out",
+          "layer": "raw2",
+          "axis": "pattern",
+          "why": "triangle>FM square through a dotted-eighth echo: the pluck carries the C and F# the riff lacks, six notes of three eighths each, so every bar the riff is coloured differently; in open it moves high (E5 D5 B4 D5 G5 E5)"
+        },
+        {
+          "section": "out",
+          "layer": "bass",
+          "axis": "notes",
+          "why": "one bar>two bars with the E3 pop: '<[0 0 0 0 2 0 4 2] [0 0 0 0 2 0 4 7]>', velocity accents 1 .7 .85 .7 1 .7 .9 .75; rise ends its second bar 7 0 2 0 4 3, open pops the octave on the beat with a sixteenth pickup"
+        },
+        {
+          "section": "rise",
+          "layer": "melody",
+          "axis": "notes",
+          "why": "4 bars>8 bars, patch warm: a question (B4 D5 E5 G5, then a climb to B5 that stops on E5) and an answer (the same climb, down through D5 B4 G4 to E4); the warm ladder drive gives the saw its edge"
+        },
+        {
+          "section": "open:",
+          "why": "the moment it opens: crash, ride on the eighths, kick pickup, harmony i@2 VI@2 i@2 VII@2 (the only chord move in the song), pad up an octave, three tones, jux wide and bright, handchimes counter-line on the hook's rests, swell at its loudest"
+        },
+        {
+          "section": "rise",
+          "layer": "drums",
+          "axis": "fill",
+          "why": "false>true: the one roll, into 41"
+        },
+        {
+          "section": "rise",
+          "layer": "raw3",
+          "why": "noise swell: filtered white noise rising and falling over sixteen bars under the rise, open and back (gain 0..0.4, lpf 400..3500)"
+        },
+        {
+          "section": "levels",
+          "why": "from the measure: the first measure had drums 2 dB under the mix and the riff, hook and pluck 14-20 dB under, the swell at -38; now drums .6 (open .5), riff 1.6, pluck 1.3 (open 1.4), hook 1.3 (open 1.5), handchimes 1.7, swell 1 (open 1.2), open pad .4; open: drums -2.4, riff -11.4, hook -10.9, pluck -13.3, chimes -15.5, swell -21.6; mix lint clean"
+        },
+        {
+          "section": "open",
+          "layer": "melody2",
+          "axis": "position",
+          "why": ".3>-.5: the pluck sits right (pan .83), so the counter-line goes left"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "rise clips out massively, open does not play at all; investigate and fix",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "the audio thread, not the output wall: npm run trace read rise at 65% busy with 20 dropouts and open at 85% with a quarter of its quanta late, against 13% for out; no trigger errors. Single removals traced interleaved against the baseline"
+        },
+        {
+          "section": "song",
+          "layer": "bass",
+          "axis": "patch",
+          "why": "driven>none: the ladder filter is a four-pole with eight tanh calls per sample per channel in a JavaScript worklet, one per bass note; dropping it alone took rise from 50% to 40%. The bus saturation (.6) carries the dirt; brightness .45>.5 for the presence the drive gave"
+        },
+        {
+          "section": "rise",
+          "layer": "melody",
+          "axis": "patch",
+          "why": "warm>none: the same ladder on every hook note"
+        },
+        {
+          "section": "open",
+          "layer": "drums",
+          "axis": "template",
+          "why": "hats>rests, ride on the eighths: the hats hand the pulse to the ride (eight hits a bar fewer); drums articulation .5>.6 everywhere so the ride, crash and open hat are clipped to their steps instead of ringing their files out"
+        },
+        {
+          "section": "open",
+          "layer": "raw3",
+          "why": "swell removed: interleaved pairs read open at 51-55% with it (dropouts) and 42-47% without (none); rise and back keep it at four noise events a bar instead of sixteen"
+        },
+        {
+          "section": "open",
+          "layer": "pad",
+          "why": "width .8>.6, density .5>.4, articulation .3>.4: no jux doubling, two tones, a shorter release; the biggest single part cost in the first trace"
+        },
+        {
+          "section": "result:",
+          "why": "rise 39-43%, open 42-47%, no dropouts; mix lint clean on both; render peak .73 no clipping. The page's own cost is separate: the stage measured its box every frame (web/visual/stage.mjs), 17% of the main thread"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "raw and raw2 are annoying, use different instruments",
+      "changes": [
+        {
+          "section": "out",
+          "layer": "raw",
+          "axis": "sound",
+          "why": "gm_overdriven_guitar>clavisynth: the riff on a clavinet through the bus saturation, the Stereolab way; the sample is quiet (rms -25.6) so gain 1.3 in the pattern and level 1.8, measured -7 to -8 dB under the mix as the foreground"
+        },
+        {
+          "section": "out",
+          "layer": "raw2",
+          "axis": "sound",
+          "why": "FM square>steinway: the six-note line on a piano, high and ringing through the same dotted-eighth echo; a loud sample (rms -18.3), so level 1.3>.55 (open 1.4>.6), measured -8.5 under the mix in rise and -12 in open"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "raw still bad or worse, raw2 might be better",
+      "changes": [
+        {
+          "section": "out",
+          "layer": "raw",
+          "axis": "sound",
+          "why": "clavisynth>fmpiano: the riff on an electric piano, round and dark (lpf 2200), level 1.8>1.6; measured -7.7 under the mix in open and -6.8 in rise, centroid 727 Hz where the clavinet sat at 1574. The piano line stays"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "changes": [
+        {
+          "section": "out",
+          "layer": "raw2",
+          "why": "piano clip 1>.7, release .4>.2 and out.raw clip .9>.8, release .15>.08: the sampled instruments cost what the synth and the font did not (open 57% busy); shorter voices took it to 51"
+        },
+        {
+          "section": "open",
+          "layer": "drums",
+          "why": "oh and rim rest: with the hats already handed to the ride, the open hat and sidestick were worth eight points there (interleaved: 52% with, 44% without, no dropouts); the ride carries the section"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "changes": [
+        {
+          "section": "open",
+          "layer": "drums",
+          "axis": "level",
+          "from": 0.5,
+          "to": 0.6,
+          "why": "and open.melody2.level 1.7>2: with four drum voices gone from open its energy (35.6) fell under rise (36.1) and the lint said the climax was not the peak"
+        },
+        {
+          "section": "rise",
+          "layer": "drums",
+          "axis": "template",
+          "why": "GHOST>BEAT: the sidestick ghost waits for open and back; rise traced 49% with the piano in it and the ghost was the cheapest cut"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "changes": [
+        {
+          "section": "out",
+          "layer": "raw2",
+          "why": "piano clip .7>.5, release .2>.15: the echo carries the ring, so the note itself can be short; rise 47-49%>39-47%, open 48%>43%, no dropouts in four traces"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "raw is still bad, try a flute, a Japanese flute would be epic; for raw2 something like gm_timpani",
+      "changes": [
+        {
+          "section": "out",
+          "layer": "raw",
+          "axis": "sound",
+          "why": "fmpiano>gm_shakuhachi, riff an octave up (E4-D5): a shakuhachi's range starts around D4 and its breath attack has to fit an eighth; measured -6 to -7.6 under the mix, centroid 444 Hz, left at pan .37"
+        },
+        {
+          "section": "out",
+          "layer": "raw2",
+          "axis": "sound",
+          "why": "steinway>gm_timpani, line an octave down (B3 C4 B3 G3 F#3 A3; open E4 D4 B3 D4 G4 E4): the top of a real timpani's register rather than two octaves above it; the dotted-eighth echo stays. Quiet font: gain 1.4 in the pattern, level 1.8 (open 2), measured -12.6 in rise and -14.2 in open as support"
+        },
+        {
+          "section": "traces:",
+          "why": "rise 46%, open 49%, two or three dropouts in fifteen seconds; the soundfont voices cost a little more than the piano did, borderline but under the knee; mix lint clean, render peak .87, no clipping"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "change melody to gm_viola; make the main visual cabaret with the occasional orrery",
+      "changes": [
+        {
+          "section": "rise",
+          "layer": "melody",
+          "axis": "sound",
+          "why": "sawtooth>gm_viola: the hook on a bowed viola; a quiet font, so level 1.3>2 (the ceiling) and brightness .45>.6 (open .65) for its body, measured -11.7 under the mix in rise and -12.7 in open, where the riff cedes to it (open riff level 1.2>1)"
+        },
+        {
+          "section": "song",
+          "layer": "visual",
+          "why": "cabaret + orrery every 16 bars: the cabaret as the world, the orrery breathing in once every sixteen bars instead of every eight"
+        },
+        {
+          "section": "traces",
+          "why": "with the viola: rise 47%, open 54% with three dropouts in fifteen seconds; the held viola notes are soundfont voices alive for whole beats; the next trim if open crackles is the hook's articulation"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "orrery to parlor; open drums too loud; the shakuhachi needs breaks and long notes",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "visual",
+          "why": "worlds cabaret+orrery>cabaret+parlor every 16 bars"
+        },
+        {
+          "section": "open",
+          "layer": "drums",
+          "axis": "level",
+          "from": 0.6,
+          "to": 0.45,
+          "why": "(rise .6>.55): the ride and crash are bright and the kit sat 3.6 dB under the mix in open; now 4.9, with open's pad .5>.7 and bass .8>.9 so the climax still peaks (arc 17/35/36/22)"
+        },
+        {
+          "section": "out",
+          "layer": "raw",
+          "why": "shakuhachi line: eight eighths a bar > an eight-bar phrase of held notes and breaths (E held, G A, a whole bar of B, a breath, D5 falling to B, A and G held, a breath; then the same opening into a long E5 and the fall D5 B A G E); release .12>.3. Fewer, longer voices: rise 47%>41%, open 54%>48%"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "do a final mix; change parlor to ink",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "visual",
+          "why": "worlds cabaret+parlor>cabaret+ink every 16 bars"
+        },
+        {
+          "section": "mix",
+          "why": "pass over every section from the measure tables (hierarchy, collisions, depth, stage, material). Hierarchy: open.pad.level .7>.6 and the rise/back pad .5>.4, both read above the hook they support. Collisions: back.pad.register .3>.5, an octave up where no hook plays, took bass/pad low masking .33>.00; the swell's filter top 3500>2500 Hz against the hook in rise; kick/bass is the written convention, ducked. Depth: the hook closer by the words (brightness .6>.7, space .55>.4, its level being at the ceiling), the swell and pad farther (space .6>.75 and .7>.8, pad brightness .3>.35 off the lows). Material: humanize on the played parts (shakuhachi and handchimes by phrase, timpani by bar; the kit stays mechanical on purpose); no part's crest is over 9, so no compressor; positions and duck attacks were already written"
+        },
+        {
+          "section": "result:",
+          "why": "mix lint clean on rise, open and back (out's two silent rows are parts that enter after bar 4); every section differs in dB, centroid and onsets per second (out -19.4 dB/1526 Hz/4.1, rise -16.9/999/5.7, open -15.2/1240/4.7, back -16.5/913/6.4); traces rise 40%, open 44%; render peak .81, no clipping"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "drop ink",
+      "changes": [
+        {
+          "section": "song",
+          "layer": "visual",
+          "why": "composition overlay>single: the cabaret alone, no second world"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "Make Exit 99 a song worth listening to: rescue this composition, not a generic krautrock track. Diagnose, sketch three cores, pick one, build, validate. Preserve the original for A/B",
+      "changes": [
+        {
+          "section": "diagnosis:",
+          "why": "the opening was eight bars of kit under long shakuhachi notes with no bass; the bass opened on four repeated E2s; nothing hummable before the viola at bar 25; the harmony sat on i for 56 bars with its one move buried under the climax's extra percussion; development was only addition; three nasal GM fonts at level ceilings"
+        },
+        {
+          "section": "sketches",
+          "why": "(songs/_x99-sketch.strudel, deleted): A a groove bass motif with rests plus a folk-harp motif; B a plain bass with the hook on sax from bar 1 over i VI i VII; C the bass motif doubled by a pipe organ over a pad pedal. Hook timbre on the same melody over the same groove: viola centroid 1619 Hz, gm_cello 1007 at 6 dB under the mix, sax 1359 but 15 under, ocarina 1381 with no attack. Chosen: A's groove and motif, C's pedal, the cello hook"
+        },
+        {
+          "section": "the",
+          "why": "bass motif (identity 1): E E . E G . A . | B . A G E . D ., rhythm X.x...x.X...x...|X...x.x.x...x..., accents on 1 and on the G, the D leading home; from the first beat. Lowest note D2 (midi 38)"
+        },
+        {
+          "section": "the",
+          "why": "harp motif (identity 2, folkharp): E G F# / D B (question), the same displaced an eighth late / D E (answer), four bars, from bar 5; compressor -18/3 on it (crest 9, level at the ceiling)"
+        },
+        {
+          "section": "the",
+          "why": "hook (gm_cello, octave 3): the viola's melody kept, an octave down, from bar 17 over Em C Em D; its answer at bar 41 is the peak. Viola, timpani, handchimes and the noise swell removed"
+        },
+        {
+          "section": "tunnel",
+          "why": "(25-32): the bass stops, the organ pad (organ_8inch) holds an E pedal with its upper tones moving Em Em C/E D/E (pad chord '<0 0 5 6>'), the motif moves to the shakuhachi in long notes, the bass returns at 29; signs (9-16): a dark piano (piano1) doubles the bass motif an octave up and the last two bars lean on the VII"
+        },
+        {
+          "section": "open",
+          "why": "(33-48): the ride takes the eighths with ghosts on its off-beats, a crash, the bass popping its octave, the kit at .32 and darker (the ride read bright and loud: drums hi .32 > .24, 2 dB under the mix > 4.5); on (49-56): the motif far (level 1, space .75, articulation .3) and the bass close, one shakuhachi E over the last four bars, the kit alone at the end"
+        },
+        {
+          "section": "kit:",
+          "why": "hits keep their tails (articulation .5), accents on 1 and 3 in the kick and hats and on the snare; level .6 > .5; traces open 31%, lights 24%, tunnel 21%, no dropouts; mix lint clean on every full section but on (its three parts read near one depth: a plucked harp has no tail to push back); render peak .61, no clipping; arc 14/21/27/16/30/13"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "hh:2 is still too loud in open; the melody in road, signs and lights is too loud, fine elsewhere",
+      "changes": [
+        {
+          "section": "open",
+          "layer": "drums",
+          "why": "ride eighths>quarters, articulation .5>.6: no closed hat sounds in open (the check counts zero hat hits there and 64 in every other section); what rang on every eighth was the LinnDrum ride, a 1.28 s sample unclipped; now four a bar, each clipped to its step"
+        },
+        {
+          "section": "melody",
+          "layer": "level",
+          "from": 2,
+          "to": 1.2,
+          "why": "in road, signs and lights; open keeps 2, on stays 1"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "can the melody ever play a chord, one in ten or fifteen notes",
+      "changes": [
+        {
+          "section": "melody",
+          "why": "notes: a comma inside brackets stacks notes in the line's mini-notation, so [0,-3]@3 is a held E with the B under it. The harp motif's answer now lands on that open fifth (one chord in its ten notes) and the cello hook's last E is a double stop with the B above ([0,4]@3). Verified in the event stream: two notes at one onset in both parts"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "folkharp level .8 in road and signs, .9 in lights",
+      "changes": [
+        {
+          "section": "road",
+          "layer": "melody",
+          "axis": "level",
+          "why": "1.2>.8, signs 1.2>.8, lights 1.2>.9: by ear; open keeps 2, on 1"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "make the harp in open play with more force, like the player is hitting harder, without making it louder; he seems bored there",
+      "changes": [
+        {
+          "section": "open",
+          "layer": "melody:",
+          "why": "notes MOTIF>MOTIF_HARD (the first two notes of each phrase struck twice), brightness .55>.75, articulation .55>.65, aggression .5>.65 (a distort of .12, a little string buzz), velocity contrast 1/.7 instead of 1/.9, humanize 10>6 ms: the attack changes, not the volume. Measured: level -9.1>-8.4 under the mix, crest 9>6.4 (denser), centroid 786>803; open traces 40%, no dropouts. The user: it's working, sounding great"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "make the last breath end on 6",
+      "changes": [
+        {
+          "section": "on",
+          "layer": "raw",
+          "why": "LAST e4>d5: degree 6 of E minor, the seventh of the key, held over the last four bars; the song ends unresolved"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "the last breath exactly: note('~@8 e4@3 ~ e4@3 ~').slow(8)",
+      "changes": [
+        {
+          "section": "on",
+          "layer": "raw",
+          "why": "LAST d5>two E4s: a bar and a half each with half a bar of air between, over the last four bars, as written by the user"
+        }
+      ]
+    }
+  ],
+  "youtube": {
+    "url": "",
+    "title": "exit 99 — motorik for a night drive: a bass motif, a folk harp, a cello and a shakuhachi over a LinnDrum",
+    "description": "Motorik krautrock for a night drive: E minor at 118 BPM, a bass motif with rests, a folk harp, a cello, a shakuhachi, a pipe organ and a LinnDrum. Neu!, Kraftwerk and early Stereolab, with a harp where the guitar would be.\nInstrumental, 1:54. The pulse never changes; the music does.\n\nTwo ideas carry it, both there inside the first eight bars. The bass plays a two-bar motif with rests and a phrase ending (E E . E G . A . | B . A G E . D .) from the first beat. The harp answers it from bar 5 with five notes: E G F#, then D to B as the question, the same figure displaced by an eighth, then D to E as the answer, landing on an open fifth. A dark piano doubles the bass an octave up, the harmony leans on D, and at bar 17 a cello takes the tune over Em C Em D. Then the bass stops: an organ holds an E pedal while its upper tones move, and the motif passes to a shakuhachi in long notes. The bass comes back, the ride takes the beat, the chords move under the cello's answer, and the song ends the way it began, the motif far away under two shakuhachi breaths and the kit alone, as if it would keep going.\n\nKick on every quarter, snare on 2 and 4, hats on the eighths, for every bar. No fills but one roll.\n\nChapters\n0:00 Road — the bass motif, the harp at bar 5\n0:18 Signs — the piano double, the lean on D\n0:34 Lights — the cello hook over Em C Em D\n0:50 Tunnel — the bass stops; the pedal; the shakuhachi takes the motif\n1:07 Open — the ride, the chords, the hook's answer\n1:39 On — the motif far away, two last breaths, the kit alone\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. \n\nEvery song here is a text file. This one is songs/exit-99.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+    "tags": [
+      "krautrock",
+      "motorik",
+      "night drive music",
+      "driving music",
+      "instrumental",
+      "E minor",
+      "Neu!",
+      "Kraftwerk",
+      "Stereolab",
+      "folk harp",
+      "cello",
+      "shakuhachi",
+      "LinnDrum",
+      "pipe organ",
+      "post-rock",
+      "generative music",
+      "live coding",
+      "strudel",
+      "tidalcycles",
+      "creative coding",
+      "music video"
+    ],
+    "hashtags": [
+      "#krautrock",
+      "#motorik",
+      "#livecoding"
+    ]
+  }
+}

@@ -1,4 +1,40 @@
 {
   "made": "2026-09-19",
-  "prompt": "Pairs of sections for the blog post \"mixing as a scene\": the same material with one mix key changed (duck on and off, organicness against humanize, separate reverbs against one hall)."
+  "prompt": "Pairs of sections for the blog post \"mixing as a scene\": the same material with one mix key changed (duck on and off, organicness against humanize, separate reverbs against one hall).",
+  "requests": [
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "saturate .6 on the bus; kit and sub level .8 to 1.1 to hold loudness. room, ducks and no-duck pairs left as the demo's content; no new sub (it already uses the sub patch, bass midi 14)"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10), level lifts reverted",
+      "changes": [
+        {
+          "section": "kit/sub",
+          "why": "consts level 1.1 back to .8: the spec asks for harmonics, not level; peaks fell, rms sits 2-3 dB under the baseline by design"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "bass register",
+      "changes": [
+        {
+          "section": "*",
+          "layer": "bass",
+          "axis": "register",
+          "from": 0.3,
+          "to": 0.9,
+          "why": "the sub-patch square at weight .8 reached midi 14 (18 Hz); octave 3 less the weight drop is D2, lowest midi 38 (73 Hz)"
+        }
+      ]
+    }
+  ]
 }

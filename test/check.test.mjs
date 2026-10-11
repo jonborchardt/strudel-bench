@@ -5,6 +5,7 @@ import path from 'node:path';
 import { checkFile, checkCode, missingPackOnly, formLetters } from '../scripts/check.mjs';
 import { describeVisual } from '../lib/visual.mjs';
 import { isUnlisted } from '../server.mjs';
+import QUALITY from '../lib/quality.json' with { type: 'json' };
 
 const tmp = (name, code) => {
   const f = path.join(import.meta.dirname, name);
@@ -188,4 +189,38 @@ test('song() files carry a visual score the check describes; a plain file has no
   assert.equal(d.at(-1), 'peak drop (climax)');
   const f = tmp('_t_plainvisual.strudel', 's("bd sd")');
   try { assert.equal((await checkFile(f)).visual, undefined); } finally { fs.rmSync(f); }
+});
+
+test('a user-pack kit resolves to its own files and needs its pack declared', async () => {
+  const song = (head) => `song({ ${head}kit: 'jazz', seed: 1 }, [ section('a', 2, { drums: { density: .6 } }) ])`;
+  const f = tmp('_t_jazzkit.strudel', song(''));
+  const g = tmp('_t_jazzkit2.strudel', song("packs: ['jazz'], "));
+  try {
+    assert.ok((await checkFile(f)).problems.some((p) => p.includes("packs: ['jazz']")));
+    const r = await checkFile(g);
+    assert.deepEqual(r.problems, []);
+    assert.ok(r.sounds.some((u) => u.file && u.name === 'jazz_bd'), 'reads jazz_bd, not uzu bd');
+    assert.ok(r.sounds.some((u) => u.seconds !== undefined && u.name.startsWith('jazz_')), 'meta comes from the pack');
+  } finally { fs.rmSync(f, { force: true }); fs.rmSync(g, { force: true }); }
+});
+
+test('a banned kit or sound is a check problem', async () => {
+  const [kit, why] = Object.entries(QUALITY.kits)[0] ?? [];
+  if (!kit) return; // nothing banned yet
+  const file = path.resolve(import.meta.dirname, '..', 'songs', '_t_banned.strudel');
+  fs.writeFileSync(file, `song({ cps: .5, kit: '${kit}' }, [section('a', 4, { drums: {} })])\n`);
+  try { const r = await checkFile(file); assert.ok(r.problems.some((p) => p.includes(`kit ${kit} is banned`) && p.includes(why))); }
+  finally { fs.rmSync(file, { force: true }); }
+});
+
+test('a banned kit\'s sample named directly is a check problem', async () => {
+  const kit = Object.keys(QUALITY.kits)[0];
+  if (!kit) return;
+  const plain = path.resolve(import.meta.dirname, '..', 'songs', '_t_banned_plain.strudel');
+  const sg = path.resolve(import.meta.dirname, '..', 'songs', '_t_banned_song.strudel');
+  fs.writeFileSync(plain, `s("${kit}_bd")\n`);
+  fs.writeFileSync(sg, `song({ cps: .5, kit: 'RolandTR909' }, [section('a', 4, { drums: { sounds: { bd: '${kit}_bd' } } })])\n`);
+  try {
+    for (const f of [plain, sg]) assert.ok((await checkFile(f)).problems.some((p) => p.includes(kit) && p.includes('banned')), f);
+  } finally { fs.rmSync(plain, { force: true }); fs.rmSync(sg, { force: true }); }
 });

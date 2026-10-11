@@ -171,6 +171,16 @@
           "why": "a shape worklet on every timpani-kit hit peaked the audio thread at 70% on whole's downbeat (traced), 51-58% at .5; gain folded into level .3>.34"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate .6 bus saturation tames the 808 and timpani peaks (.57>.42); bass is a pitched sample already ducked under drums, so no sub"
+        }
+      ]
     }
   ]
 }

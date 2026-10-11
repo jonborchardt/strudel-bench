@@ -187,7 +187,7 @@ const BRIDGE = [
   '[0 ~ ~ ~ ~ ~ ~ ~]',
 ].join(' ');
 
-song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, visual: { world: 'combo', composition: 'single' },
+song({ bpm: 290, meter: '11/8', key: 'E:phrygian', seed: 3, saturate: .6, visual: { world: 'combo', composition: 'single' },
        packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
 
   // the head states the tune with no piano and the kit down to its bones, so the solo's full band is an arrival

@@ -1,4 +1,30 @@
 {
   "made": "2026-09-12",
-  "prompt": "arrival as it stood before the mixing pass (commit 4b97ac9), kept so the blog can play before and after clips of the mix; hidden from the list."
+  "prompt": "arrival as it stood before the mixing pass (commit 4b97ac9), kept so the blog can play before and after clips of the mix; hidden from the list.",
+  "requests": [
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "saturate .6 on the bus (808 kit, rooms and bass below midi 40 kept: no sub; no drums/bass low-band pair named by the measure lint on contact; nothing merged)"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "bass register",
+      "changes": [
+        {
+          "section": "*",
+          "layer": "bass",
+          "axis": "register",
+          "from": 0.1,
+          "to": 0.9,
+          "why": "(plea .5, the didgeridoo .15>.9) lowest bass midi 14>38: weight over .7 drops an octave, so octave 3 lands on D2 (73 Hz) instead of a subwoofer-only 18 Hz"
+        }
+      ]
+    }
+  ]
 }

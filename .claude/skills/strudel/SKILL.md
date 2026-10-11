@@ -77,7 +77,9 @@ interest. Do these, in this order, on every new song and whenever a song is call
    moves the line with the progression. A bass line has as many tokens as its density grid (`density` .8 = 8 slots,
    .75 = 4, .4 = 2): `'0 ~ 0 7 ~ 4 3 ~'` syncopates, `'0 7 0 4'` pops the octave.
 2. **Pick instruments, not waveforms.** Any name in the loaded packs works as `sound:`, or a `patch` on a synth:
-   `pluck`, `reese`, `hollow`, `glass`, `breath`, `wide`, `sub`; `npm run check` fails on a wrong one.
+   `pluck`, `reese`, `hollow`, `glass`, `breath`, `wide`, `sub`, `driven`, `warm`; `npm run check` fails on a wrong one.
+   A bass or hook that should bite takes `patch: 'driven'` / `'warm'` (a ladder with drive, a worklet per hit, so never on a hat pattern); try the bus `saturate` first (P3), the voice drive second.
+   `bass: { sub: .4 }` stacks a clean sine an octave under every note (stripped of filter and drive): the fundamental a driven bass loses. A felt bass sits at 65-100 Hz, so `sub` is for a bass written above that, not a way to go lower (it stays on the note under midi 28).
    **A name says nothing about what its variants are.** `didgeridoo` is a bark at index 0 and a sustained
    note at `:8`; `sus_cymbal:0` is bowed; the Dirt `space` samples are sub-second blips. The single-song check prints a
    `sounds` block naming the file behind every `sound:index` it heard (pitched instruments show their sampled range)
@@ -106,7 +108,7 @@ interest. Do these, in this order, on every new song and whenever a song is call
    an octave up or down, on the beats the hook leaves empty. That is the one place "more instruments" helps.
 4. **Contrast per section**, already the system's strength: drums `template` per section, `variation` rising
    toward the end, `fill`/`riser`/`impact` at the boundaries, pad `arp` in one section only, `dropout`/`sweep`
-   before a drop.
+   before a drop. A part that should join late or leave early takes `enter: n` / `exit: n` on its own layer object, so a late hat or an early pad exit does not cost a section; dropout and sweep still act on top.
 5. **A `raw` part inside the section, `stack()` around the song only for what must span sections.** `raw: { pattern:
    s("...").struct(...) }` puts a plain Strudel pattern in with the layers, so mute, solo, pin, the check table and
    the dump all see it, for anything the built layers do not model: noise beds, one-shots, a drone. `stack(theSong,

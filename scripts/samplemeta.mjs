@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readWav } from '../lib/analyze.mjs';
+import { hitFeatures, guessVoice, words } from '../lib/hitwords.mjs';
 import { fileList } from './samples.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -15,12 +16,17 @@ const USER = path.join(ROOT, 'samples', 'user');
 const db = (x) => (x > 0 ? +(20 * Math.log10(x)).toFixed(1) : -Infinity);
 const safeDecode = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
 
-/** { seconds, rms, peak } of one wav file (rms over its loudest half second, so a long tail does not hide a loud hit). */
-export function measureWav(buf) {
-  const { rate, frames } = readWav(buf);
-  const x = frames[0];
+/**
+ * { seconds, rms, peak, rate, bits } of one wav file (rms over its loudest half second, so a long tail does not hide a loud
+ * hit), plus what it is made of (lib/hitwords.mjs: attack, decay, centroid, low and high shares, flatness) and the words
+ * that say so, under the drum voice its `name` (the map's file string) points at: the catalogue page and the check read them.
+ */
+export function measureWav(buf, name = '') {
+  const w = readWav(buf), { rate, frames, bits, float } = w;
+  const voice = guessVoice(name), feat = hitFeatures(w);
   let peak = 0;
-  for (let i = 0; i < x.length; i++) peak = Math.max(peak, Math.abs(x[i]));
+  for (const c of frames) for (let i = 0; i < c.length; i++) peak = Math.max(peak, Math.abs(c[i]));
+  const x = frames.length === 1 ? frames[0] : Float32Array.from(frames[0], (_, i) => frames.reduce((s, c) => s + c[i], 0) / frames.length); // rms over the mono mix
   const win = Math.min(x.length, Math.floor(rate / 2)), step = Math.max(1, Math.floor(win / 4));
   let e = 0;
   for (let i = 0; i < win; i++) e += x[i] * x[i];
@@ -30,7 +36,7 @@ export function measureWav(buf) {
     for (let i = s + win - step; i < s + win; i++) e += x[i] * x[i];
     best = Math.max(best, e);
   }
-  return { seconds: +(x.length / rate).toFixed(2), rms: db(Math.sqrt(best / win)), peak: db(peak) };
+  return { seconds: +(x.length / rate).toFixed(2), rms: db(Math.sqrt(best / win)), peak: db(peak), rate, bits: float ? '32f' : bits, voice, ...feat, words: words(feat, voice) };
 }
 
 /** Meta for every wav in a pack map: keyed by the map's own file string, so the check can look a map entry up as written. */
@@ -39,7 +45,7 @@ export function metaFor(json, dir) {
   for (const f of fileList(json)) {
     const file = path.join(dir, ...String(f).split('/').map(safeDecode));
     if (!/\.wav$/i.test(file) || !fs.existsSync(file)) continue;
-    try { out[f] = measureWav(fs.readFileSync(file)); } catch { /* not a wav we can read: left out */ }
+    try { out[f] = measureWav(fs.readFileSync(file), f); } catch { /* not a wav we can read: left out */ }
   }
   return out;
 }

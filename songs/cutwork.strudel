@@ -27,7 +27,7 @@ const organ = { sound: 'pipeorgan_quiet', articulation: .1, width: .7, position:
 
 // second pass: a generated small room (samples/user/rooms, 0.9 s) instead of the synthetic tail; the line humanized; the two spiky sparse
 // parts (bursts, rattle) compressed; depth by the closer/farther words, not level alone.
-song({ cps: .5, key: 'C:minor', seed: 11, kit: 'RolandTR909', packs: ['demo-pack', 'rooms'], room: { ir: 'room', size: .9, damping: 6500 } }, [
+song({ cps: .5, key: 'C:minor', seed: 11, saturate: .6, kit: 'RolandTR909', packs: ['demo-pack', 'rooms'], room: { ir: 'room', size: .9, damping: 6500 } }, [
 
   // a kick or a snare on every quarter, dealt by the hit's own position, so the deal is the same every play
   section('deal', 8, { role: 'establish', progression: 'i@2 VI VII',

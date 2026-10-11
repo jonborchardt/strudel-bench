@@ -54,6 +54,7 @@ export const SCHEMA = {
     bpm: { type: 'number', min: 40, max: 240, step: 1, title: 'tempo in beats per minute' },
     cps: { type: 'number', min: 0.125, max: 2, step: 0.001, scale: 'log', title: 'tempo in cycles per second' },
     seed: int(1, 'seed of the generated lines'),
+    saturate: { type: 'number', min: 0, max: 1, step: 0.01, title: 'bus saturation on every orbit: 0 is a wire; the curve tanh(k·x)/k, k = 4·amount, leaves quiet material alone and softens peaks toward 1/k, so more amount is more harmonics, never more level' },
     meter: { type: 'enum', values: METERS, title: 'beats per bar over the beat unit: any n/4, n/8 or n/16' },
     key: { type: 'enum', values: () => ROOTS.flatMap((r) => HARMONY.modes.map((m) => `${r}:${m}`)), list: 'keys', title: 'root and mode' },
     progression: { type: 'tokens', values: CHORDS, sep: ' ', title: 'one chord per bar, roman numerals over the key; [a b] shares a bar' },
@@ -69,6 +70,9 @@ export const SCHEMA = {
     // layer material
     level: { type: 'number', min: 0, max: 2, step: 0.01, title: "the part's gain multiplier" },
     postgain: { type: 'number', min: 0, max: 2, step: 0.01, title: "the part's gain after its distortion (superdough's postgain): the only level a distorted part answers to" },
+    sub: { type: 'number', min: 0, max: 1, step: 0.05, title: 'bass only: a clean sine an octave under each note at this gain (on the note itself under midi 28)' },
+    enter: int(0, 'bars of silence at the section start before the part comes in'),
+    exit: int(0, 'bars of silence before the section ends after the part leaves (counted from the end, like dropout)'),
     position: { type: 'number', min: -1, max: 1, step: 0.01, title: 'where the part sits, left -1 to right 1 (0 centre); width moves around it' },
     duckDepth: { ...unit, title: 'how deep the named part ducks this one' },
     duckAttack: { type: 'number', min: 0, max: 2, step: 0.01, title: 'seconds the duck takes to recover' },

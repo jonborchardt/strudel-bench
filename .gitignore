@@ -24,3 +24,5 @@ _t_*
 
 # the superpowers plan workspace: ledger and review packages, scratch that must never be committed
 .superpowers/
+samples/_candidates/
+.env

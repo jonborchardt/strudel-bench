@@ -86,3 +86,13 @@ test('lint: static audibility from the sample meta, and a sub-audible lowest not
   const sub = lint({ sections: [{ name: 'a', role: 'climax', energy: 2, voices: 1, layers: { bass: P({ notes: '0' }, [{ name: 'sawtooth', n: 0 }], 24) } }] });
   assert.ok(!sub.some((x) => /reaches midi/.test(x.text)), 'C1 (33 Hz) is a normal synth sub');
 });
+
+test('banReason: case-blind, strips a prefix only when it is a kit', async () => {
+  const { banReason } = await import('../lib/packs.mjs');
+  const kits = ['RolandTR909'];
+  assert.ok(banReason('rolandtr909_cb', { sounds: { RolandTR909_cb: 'x' } }, kits), 'CamelCase entry, lowercase name');
+  assert.equal(banReason('snare_modern', { sounds: { modern: 'x' } }, kits), undefined);
+  assert.ok(banReason('rolandtr909_cb', { sounds: { cb: 'x' } }, kits), 'bare ban hides the kit voice');
+  assert.match(banReason('korgt3_bd', { kits: { KorgT3: 'lo-fi' } }, ['KorgT3', ...kits]), /kit KorgT3 is banned: lo-fi/);
+  assert.equal(banReason('korgt3_bd', { kits: { KorgT3: 'lo-fi' } }, kits), undefined, 'not a known kit, not stripped');
+});

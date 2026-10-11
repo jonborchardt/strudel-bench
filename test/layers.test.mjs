@@ -403,7 +403,7 @@ test('patch: a named bundle of voice controls, or an object of them, applied und
   const g = await ready;
   const { resolvePatch, PATCHES } = await import('../lib/packs.mjs');
   assert.deepEqual(resolvePatch('pluck'), PATCHES.pluck); assert.deepEqual(resolvePatch({ unison: 3 }), { unison: 3 }); assert.equal(resolvePatch(undefined), null);
-  assert.throws(() => resolvePatch('nope'), /unknown patch "nope"/); assert.throws(() => resolvePatch({ lpf: 300 }), /patch: unknown key "lpf"/);
+  assert.throws(() => resolvePatch('nope'), /unknown patch "nope"/); assert.throws(() => resolvePatch({ hpf: 300 }), /patch: unknown key "hpf"/);
   const v = (L, attrs) => onsets(g[L](attrs, ctx))[0].value;
   assert.equal(v('pad', { patch: 'wide' }).unison, 5); assert.equal(v('pad', { patch: 'wide' }).detune, .18);
   assert.equal(onsets(g.pad({ patch: 'wide' }, ctx)).length, onsets(g.pad({}, ctx)).length, 'unison adds voices inside a hap, not onsets');
@@ -436,4 +436,43 @@ test('bass rhythm: a written grid replaces the density grid, keeps drive and acc
   assert.equal(at({ rhythm: 'x.....x.....x...', drive: .9 }).length, 6, 'drive keeps the count');
   const gains = onsets(g.bass({ rhythm: 'X.....o.....x...' }, { ...ctx, cycles: 1 }), 1).map((h) => h.value.gain);
   assert.ok(gains[0] > gains[2] && gains[1] < gains[2], 'accent and ghost');
+});
+
+test('patch: ftype/drive/lpf are patch keys; driven and warm exist; ftype is validated', async () => {
+  await ready;
+  const hap = (layer, attrs) => song({ cps: .5 }, [section('a', 4, { [layer]: attrs })]).strudel.sections[0].layers[layer].pattern.queryArc(0, 1).find((h) => h.hasOnset()).value;
+  const b = hap('bass', { patch: 'driven', notes: '0 0 0 0' });
+  assert.equal(b.ftype, 'ladder'); assert.ok(b.drive > 0); assert.ok(b.cutoff > 0, 'the bass always carries a cutoff');
+  const m = hap('melody', { patch: 'warm', notes: '0 2 4 5' });
+  assert.equal(m.ftype, 'ladder'); assert.equal(m.cutoff, 6000, "warm's own lpf, since brightness is unwritten");
+  const bright = hap('melody', { patch: 'warm', notes: '0 2 4 5', brightness: .9 });
+  assert.ok(bright.cutoff > 6000, 'a written brightness overrides the patch lpf');
+  assert.throws(() => hap('bass', { patch: { ftype: 'moog' } }), /ftype must be one of 12db, 24db, ladder/);
+  assert.throws(() => hap('bass', { patch: { drive: 9 } }), /drive must be a number in 0\.\.3/);
+});
+
+test('sub: a clean sine an octave under each bass note at sub × gain, none of the voice controls, at the note itself under midi 28', async () => {
+  await ready;
+  const haps = (attrs) => song({ cps: .5 }, [section('a', 4, { bass: attrs })]).strudel.sections[0].layers.bass.pattern.queryArc(0, 1).filter((h) => h.hasOnset()).map((h) => h.value);
+  const plain = haps({ notes: '0 0 0 0', patch: 'driven', register: 1 }), withSub = haps({ notes: '0 0 0 0', patch: 'driven', register: 1, sub: .5 }); // octave 3, so the sub's octave is above midi 28
+  assert.equal(withSub.length, plain.length * 2);
+  const subs = withSub.filter((v) => v.s === 'sine');
+  assert.equal(subs.length, plain.length);
+  const main = withSub.find((v) => v.s !== 'sine');
+  assert.equal(subs[0].note, main.note - 12);
+  assert.ok(Math.abs(subs[0].gain - main.gain * .5) < 1e-9);
+  for (const k of ['cutoff', 'ftype', 'drive', 'distort', 'shape', 'lpenv', 'unison']) assert.equal(subs[0][k], undefined, k);
+  assert.equal(subs[0].orbit, main.orbit);
+  // the axes see only the bass: a heavy, driven, aggressive bass leaves the sine clean and above the floor
+  const hot = haps({ notes: '0 0 0 0', patch: 'driven', weight: .8, aggression: .9, sub: .5, register: 1 }).filter((v) => v.s === 'sine');
+  assert.ok(hot.length > 0);
+  for (const v of hot) {
+    for (const k of ['cutoff', 'distort', 'shape', 'ftype', 'drive']) assert.equal(v[k], undefined, `hot sub ${k}`);
+    assert.ok(v.note >= 28, `sub note ${v.note} >= 28`);
+  }
+  const lowAll = haps({ notes: '0 0 0 0', sub: .5, register: 0 });
+  const low = lowAll.filter((v) => v.s === 'sine'), lowMain = lowAll.find((v) => v.s !== 'sine');
+  assert.ok(lowMain.note < 40, `register 0 main note ${lowMain.note} is under 40`);
+  assert.equal(low[0].note, lowMain.note, 'under midi 28 the sub sits on the note');
+  assert.throws(() => haps({ sub: 2 }), /sub must be a number in 0\.\.1/);
 });

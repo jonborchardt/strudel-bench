@@ -7,7 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { userPacks } from '../server.mjs';
 import './esm-fix.mjs'; // must run before the strudel imports below are resolved, hence dynamic imports
 import { parseProgression, chordNames } from '../lib/harmony.mjs';
-import { GM_SOUNDS, packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS } from '../lib/packs.mjs';
+import KITS from '../lib/kits.json' with { type: 'json' };
+import QUALITY from '../lib/quality.json' with { type: 'json' };
+import { banReason, GM_SOUNDS, packsOf, registerSamples, SAMPLE_PROBLEMS, SYNTHS } from '../lib/packs.mjs';
 import { describeAxes } from '../lib/vocab.mjs';
 import { composeVisual, describeVisual } from '../lib/visual.mjs';
 const { evalScope, evaluate } = await import('@strudel/core');
@@ -25,9 +27,9 @@ const WORKLETS = ['coarse', 'crush', 'shape', 'distort']; // superdough builds a
 const load = (h, cycles, cps, meta) => {
   const v = h.value, s = String(v.s ?? '').split(':')[0];
   // the synth worklets too: a supersaw is one processor running `unison` (5) detuned voices, a wavetable (wt_*) one processor
-  // per note, and a `compressor` is a DynamicsCompressorNode per hit; neon's drop2 read 15 with these uncounted and traced
+  // per note, and a `compressor` is a DynamicsCompressorNode per hit, the ladder filter a processor per hit too; neon's drop2 read 15 with these uncounted and traced
   // 65% busy with dropouts, machine's chorus3 read 33 by the same model and traced 43%
-  const worklets = WORKLETS.filter((k) => v[k] !== undefined).length + (s === 'supersaw' ? Math.max(1, v.unison ?? 5) - 1 : 0) + (s.startsWith('wt_') ? 1 : 0) + (v.compressor !== undefined ? 1 : 0);
+  const worklets = WORKLETS.filter((k) => v[k] !== undefined).length + (s === 'supersaw' ? Math.max(1, v.unison ?? 5) - 1 : 0) + (s.startsWith('wt_') ? 1 : 0) + (v.compressor !== undefined ? 1 : 0) + (v.ftype === 'ladder' ? 1 : 0);
   const file = v.clip === undefined && meta?.seconds ? meta.seconds * (typeof v.end === 'number' ? v.end - (v.begin ?? 0) : 1) / Math.max(Math.abs(v.speed ?? 1), 1e-3) : 0;
   return (1 + worklets) * (Math.max(cycles, file * cps) + (v.release ?? 0) * cps);
 };
@@ -128,11 +130,12 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
   const known = builtinSounds();
   const local = localSounds(packs);
   loadMeta(packs);
+  const fullName = (v, bare) => { const k = `${v.bank}_${bare}`; return v.bank && (known.has(k) || local.has(k)) ? k : bare; };
   // the sound a hap plays as superdough resolves it (the bank-prefixed name when the kit has it, else the bare name) and its take
   const soundOf = (v) => {
     if (typeof v !== 'object' || v === null || v.s === undefined) return null;
     const bare = String(v.s).split(':')[0].split(',')[0].trim();
-    return { name: v.bank && known.has(`${v.bank}_${bare}`) ? `${v.bank}_${bare}` : bare, n: v.n ?? +(String(v.s).split(':')[1] ?? 0) };
+    return { name: fullName(v, bare), n: v.n ?? +(String(v.s).split(':')[1] ?? 0) };
   };
   const metaOf = (h) => { const u = soundOf(h.value); return u && soundMeta(u.name, u.n, packs); };
   // a bad sample definition in a pack the song declares, and a definition of that pack another pack's name took
@@ -150,23 +153,25 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
     const names = typeof v === 'object' && v !== null ? [...(v.s === undefined ? [] : String(v.s).split(':')[0].split(',')), ...(typeof v.ir === 'string' ? [v.ir] : [])] : [];
     for (const name of names) {
       const bare = name.trim();
-      const full = v.bank && known.has(`${v.bank}_${bare}`) ? `${v.bank}_${bare}` : bare;
+      const full = fullName(v, bare);
       const idx = bare === v.ir ? 0 : v.n ?? +(String(v.s).split(':')[1] ?? 0);
       used.set(`${full}:${idx}`, { name: full, n: idx });
       if (known.has(full)) continue;
-      const pack = local.get(bare);
-      if (!pack) unknown.add(bare);
-      else if (!declared.includes(pack)) undeclared.set(bare, pack);
+      const pack = local.get(full);
+      if (!pack) unknown.add(full);
+      else if (!declared.includes(pack)) undeclared.set(full, pack);
     }
   }
   const sounds = [...used.values()].map((u) => ({ ...u, file: soundFile(u.name, u.n, packs), ...soundMeta(u.name, u.n, packs) })).filter((u) => u.file);
   for (const u of unknown) problems.push(`${path.basename(file)}: unknown sound "${u}"`);
   for (const [s, p] of undeclared) problems.push(`${path.basename(file)}: sound "${s}" is in local pack "${p}" which the song does not declare: add packs: ['${p}']`);
+  for (const u of used.values()) { const why = banReason(u.name, QUALITY, Object.keys(KITS)); if (why) problems.push(`${path.basename(file)}: sound "${u.name}" is banned (lib/quality.json: ${why})`); }
+  for (const s of pattern.strudel?.sections ?? []) if (s.kit && QUALITY.kits[s.kit]) problems.push(`${path.basename(file)}: section "${s.name}": kit ${s.kit} is banned (lib/quality.json: ${QUALITY.kits[s.kit]})`);
   let sections, visual;
   if (pattern.strudel) {
     sections = pattern.strudel.sections.map((s) => {
       return {
-        name: s.name, cycles: s.cycles, offset: s.offset, span: s.span, role: s.role, grid: s.grid, cps: s.cps,
+        name: s.name, cycles: s.cycles, offset: s.offset, span: s.span, role: s.role, kit: s.kit, grid: s.grid, cps: s.cps,
         harmony: `${s.key}  ${s.progression} → ${chordNames(s.key, parseProgression(s.progression))}`,
         layers: Object.fromEntries(Object.entries(s.layers).map(([k, l]) => {
           const lh = l.pattern.queryArc(0, s.cycles).filter((h) => h.hasOnset());
@@ -200,7 +205,7 @@ export async function checkCode(code, file = 'code', cycles = 4, packs = userPac
     // the visual score (lib/visual.mjs): what a renderer composes from, fed the onset counts above so nothing is queried twice
     visual = composeVisual(pattern.strudel, { onsets: Object.fromEntries(sections.map((s) => [s.name, Object.fromEntries(Object.entries(s.layers).map(([k, l]) => [k, l.onsetsPerCycle]))])) });
   }
-  return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps, visual };
+  return { ok: problems.length === 0, events, problems, sections, sounds, cycles, cps: pattern.strudel?.meta.cps, saturate: pattern.strudel?.meta.saturate, visual };
 }
 
 /**
@@ -236,11 +241,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       console.log(`== ${path.relative(ROOT, f)} skipped: ${r.problems[0].replace(/^[^:]+: /, '')}`);
       continue;
     }
-    console.log(`== ${path.relative(ROOT, f)} (${r.events.length} events in ${r.cycles} cycles)`);
+    console.log(`== ${path.relative(ROOT, f)} (${r.events.length} events in ${r.cycles} cycles${r.saturate ? `, saturate ${r.saturate}` : ''})`);
     if (files.length === 1) console.log(r.events.join('\n'));
     if (files.length === 1 && r.sounds?.length) { // which file each sample name plays: a name says nothing about its variants
       console.log('  sounds');
-      for (const u of r.sounds) console.log(`    ${`${u.name}:${u.n}`.padEnd(24)} ${u.file}${u.seconds !== undefined ? `  ${u.seconds} s, rms ${u.rms} dB, peak ${u.peak} dB` : ''}`);
+      for (const u of r.sounds) console.log(`    ${`${u.name}:${u.n}`.padEnd(24)} ${u.file}${u.seconds !== undefined ? `  ${u.seconds} s, rms ${u.rms} dB, peak ${u.peak} dB` : ''}${u.words ? `  — ${u.words}` : ''}`);
     }
     for (const sct of r.sections ?? []) {
       console.log(`  [${sct.offset}-${sct.offset + sct.span}) ${sct.name}${sct.role ? ' (' + sct.role + ')' : ''}  ~${sct.voices} voices at once${sct.outside ? ` (${sct.outside} outside the parts)` : ''}`);

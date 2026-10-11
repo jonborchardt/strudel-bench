@@ -1,0 +1,130 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>strudel-bench · sound catalogue</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="web/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="web/strudel.css">
+<style>
+  .bar { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin: .6rem 0; }
+  .bar input[type=search] { flex: 1 1 18rem; font-size: 1rem; padding: .3rem .5rem; }
+  table { border-collapse: collapse; width: 100%; font-size: .8rem; }
+  th, td { padding: .2rem .4rem; border-bottom: 1px solid #e4e4e4; text-align: left; vertical-align: middle; white-space: nowrap; }
+  th { cursor: pointer; user-select: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; color: #666; }
+  td.nm { font-family: ui-monospace, monospace; cursor: copy; }
+  td.words { color: #456; }
+  .tag { display: inline-block; padding: 0 .4rem; border-radius: 9px; background: #eef1f5; color: #345; cursor: pointer; line-height: 1.4; }
+  .tag:hover { background: #dde4ee; }
+  .tag.on { background: #2f6fed; color: #fff; }
+  tr.ref td { background: #f4f6fa; }
+  button.play { width: 1.8rem; }
+  .count { color: #777; }
+</style>
+<nav class="top" id="nav"></nav>
+<main>
+  <article class="card prose">
+    <h1>Sound catalogue</h1>
+    <p class="muted">Every sound on this machine, with what it is made of as words (from <code>scripts/samplemeta.mjs</code>: decay, tone,
+      attack, weight, air, texture) and numbers. Search matches the pack, the name, the voice and the words; every word, voice
+      and pack is a tag: click it to filter on it, again to clear; ▶ plays the file peak-normalised to −3 dBFS; click a name
+      to copy what a song writes (<code>sound:n</code>, or the kit voice). Candidates
+      that are not packs yet (grey) come from <code>samples/_candidates/</code>.</p>
+    <div class="bar">
+      <input type="search" id="q" placeholder="search: 909 bd · tight deep click · airy noisy · vcsl conga …" autofocus>
+      <select id="voice" data-f="voice"><option value="">any voice</option></select>
+      <select id="pack" data-f="pack"><option value="">any pack</option></select>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="bar" id="filters">
+      <select data-f="source"><option value="">any source</option><option>pack</option><option>local pack</option><option>candidate</option></select>
+      <select data-f="decay"><option value="">any decay</option><option>tight</option><option>medium</option><option>long</option></select>
+      <select data-f="tone"><option value="">any tone</option><option>deep</option><option>mid</option><option>bright</option></select>
+      <select data-f="attack"><option value="">any attack</option><option>click</option><option>snap</option><option>soft</option></select>
+      <select data-f="weight"><option value="">any weight</option><option>all low</option><option>heavy</option><option>some low</option><option>no low</option></select>
+      <select data-f="air"><option value="">any air</option><option>airy</option><option>some air</option><option>dull</option></select>
+      <select data-f="texture"><option value="">any texture</option><option>tonal</option><option>mixed</option><option>noisy</option></select>
+      <select data-f="length"><option value="">any length</option><option value="hit">hit (under .5 s)</option><option value="short">short (.5 to 2 s)</option><option value="long">long (over 2 s)</option></select>
+      <select data-f="licence"><option value="">any licence</option><option value="ships">ships with the site</option><option value="local">local only</option><option value="cannot">cannot use</option></select>
+      <button id="reset" type="button">reset</button>
+    </div>
+    <table id="t"><thead><tr><th></th><th data-k="pack">pack</th><th data-k="name">name</th><th data-k="voice">voice</th><th data-k="words">words</th><th data-k="seconds">s</th><th data-k="decayMs">decay</th><th data-k="centroidHz">Hz</th><th data-k="low">low</th><th data-k="peak">peak</th></tr></thead><tbody></tbody></table>
+    <p class="muted" id="more"></p>
+  </article>
+</main>
+<footer class="site" id="foot"></footer>
+<script type="module">
+  import { nav, footer } from './web/boot.mjs';
+  document.getElementById('nav').innerHTML = nav('Catalogue', { local: true });
+  document.getElementById('foot').innerHTML = footer();
+  const j = async (u) => { const r = await fetch(u); return r.ok ? r.json() : null; };
+  const rows = [];
+  // each row carries its words split into the filter fields: "tight deep click, all low, dull, tonal" -> decay, tone, attack, weight, air, texture
+  const add = (pack, name, n, url, m, ref = false, extra = {}) => {
+    const [dta = '', weight = '', air = '', texture = ''] = (m.words ?? '').split(', '), [decay = '', tone = '', attack = ''] = dta.split(' ');
+    const s = +m.seconds || 0;
+    rows.push({ pack, name, n, url, ref, voice: m.voice ?? '', words: m.words ?? '', seconds: m.seconds ?? '', decayMs: m.decayMs ?? '', centroidHz: m.centroidHz ?? '', low: m.low ?? '', peak: m.peak ?? '', decay, tone, attack, weight, air, texture, length: s ? (s < .5 ? 'hit' : s < 2 ? 'short' : 'long') : '', source: extra.source ?? 'pack', licence: extra.licence ?? 'ships' });
+  };
+  // the downloaded CDN packs: map + meta, keyed by the map's file strings
+  for (const p of (await j('samples/packs/packs.json')) ?? []) {
+    const map = await j(`samples/packs/${p}.json`), meta = (await j(`samples/packs/${p}.meta.json`)) ?? {};
+    if (!map) continue;
+    const base = map._base.replace(/^\//, '');
+    for (const [name, v] of Object.entries(map)) {
+      if (name === '_base') continue;
+      const files = Array.isArray(v) ? v : typeof v === 'object' ? Object.values(v) : [v];
+      files.forEach((f, n) => add(p, name, n, base + f, meta[f] ?? {}));
+    }
+  }
+  // the local packs: the server's index gives each pack's sounds; meta.json beside them
+  for (const [p, info] of Object.entries((await j('samples/user/packs.json')) ?? {})) {
+    const meta = (await j(`samples/user/${p}/meta.json`)) ?? {};
+    for (const [name, files] of Object.entries(info.sounds ?? {})) files.forEach((f, n) => add(p, name, n, `samples/user/${f}`, meta[f] ?? {}, false, { source: 'local pack', licence: info.deploy ? 'ships' : 'local' }));
+  }
+  // candidates measured by scripts/hitfeatures.mjs but not packs yet: the Freesound downloads, and the community packs
+  // (samples/_candidates/candidates.json carries each one's licence verdict, which the pack column shows)
+  const cand = await j('samples/_candidates/freekit/features.json');
+  for (const v of cand?.voices ?? []) for (const r of (await j(`samples/_candidates/freekit/features-${v}.json`))?.rows ?? []) if (r.kind !== 'strudel') add('candidate · freesound', r.label, 0, r.url, { ...r, voice: v }, true, { source: 'candidate', licence: 'ships' }); // CC0, checked per id
+  for (const c of (await j('samples/_candidates/candidates.json')) ?? []) {
+    const d = await j(`samples/_candidates/${c.file}`), list = Array.isArray(d) ? d : d?.rows ?? [];
+    const licence = /^ship/.test(c.verdict) ? 'ships' : /^local/.test(c.verdict) ? 'local' : 'cannot';
+    for (const r of list) add(`candidate · ${c.label} · ${c.verdict}`, r.label, 0, r.url ?? `samples/_candidates/${c.label}/${r.id}`, r, true, { source: 'candidate', licence });
+  }
+  const vs = [...new Set(rows.map((r) => r.voice).filter(Boolean))].sort(), ps = [...new Set(rows.map((r) => r.pack))].sort();
+  document.getElementById('voice').innerHTML += vs.map((v) => `<option>${v}</option>`).join('');
+  document.getElementById('pack').innerHTML += ps.map((p) => `<option>${p}</option>`).join('');
+  for (const r of rows) r.hay = `${r.pack} ${r.name} ${r.voice} ${r.words}`.toLowerCase();
+  const ac = new AudioContext(), buffers = new Map(); let playing = null;
+  async function play(url) {
+    await ac.resume(); if (playing) { try { playing.stop(); } catch {} }
+    if (!buffers.has(url)) buffers.set(url, ac.decodeAudioData(await (await fetch(url)).arrayBuffer()));
+    const buf = await buffers.get(url); let peak = 0; for (let c = 0; c < buf.numberOfChannels; c++) for (const v of buf.getChannelData(c)) if (Math.abs(v) > peak) peak = Math.abs(v);
+    const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = buf; g.gain.value = peak > 0 ? 10 ** (-3 / 20) / peak : 1;
+    src.connect(g).connect(ac.destination); src.start(); playing = src;
+  }
+  const tb = document.querySelector('#t tbody'), LIMIT = 400;
+  let sortKey = 'pack', sortDir = 1;
+  function render() {
+    const q = document.getElementById('q').value.toLowerCase().split(/\s+/).filter(Boolean);
+    const on = [...document.querySelectorAll('select[data-f]')].filter((s) => s.value).map((s) => [s.dataset.f, s.value]);
+    const hit = rows.filter((r) => on.every(([f, v]) => r[f] === v) && q.every((w) => r.hay.includes(w)));
+    hit.sort((a, b) => (a[sortKey] > b[sortKey] ? 1 : a[sortKey] < b[sortKey] ? -1 : 0) * sortDir);
+    document.getElementById('count').textContent = `${hit.length} of ${rows.length}`;
+    const active = Object.fromEntries(on);
+    const tag = (f, v) => (v ? `<span class="tag${active[f] === v ? ' on' : ''}" data-f="${f}" data-v="${v}" title="filter on ${f}: ${v}">${v}</span>` : '');
+    const tags = (r) => ['decay', 'tone', 'attack', 'weight', 'air', 'texture'].map((f) => tag(f, r[f])).join(' ');
+    tb.innerHTML = hit.slice(0, LIMIT).map((r) => `<tr class="${r.ref ? 'ref' : ''}"><td><button class="play" data-u="${r.url}">▶</button></td><td>${tag('pack', r.pack)}</td><td class="nm" data-c="${r.n ? `${r.name}:${r.n}` : r.name}">${r.name}${r.n ? `:${r.n}` : ''}</td><td>${tag('voice', r.voice)}</td><td class="words">${tags(r)}</td><td class="num">${r.seconds}</td><td class="num">${r.decayMs}</td><td class="num">${r.centroidHz}</td><td class="num">${r.low}</td><td class="num">${r.peak}</td></tr>`).join('');
+    document.getElementById('more').textContent = hit.length > LIMIT ? `showing the first ${LIMIT}; narrow the search for the rest` : '';
+  }
+  tb.onclick = (e) => {
+    const b = e.target.closest('button.play'); if (b) return play(b.dataset.u);
+    const t = e.target.closest('.tag'); // a word is a filter: click sets it, click again clears it
+    if (t) { const s = document.querySelector(`select[data-f="${t.dataset.f}"]`); s.value = s.value === t.dataset.v ? '' : t.dataset.v; return render(); }
+    const c = e.target.closest('td.nm'); if (c) navigator.clipboard?.writeText(c.dataset.c);
+  };
+  document.querySelectorAll('th[data-k]').forEach((th) => { th.onclick = () => { if (sortKey === th.dataset.k) sortDir = -sortDir; else { sortKey = th.dataset.k; sortDir = 1; } render(); }; });
+  document.getElementById('q').oninput = render;
+  for (const s of document.querySelectorAll('select[data-f]')) s.onchange = render;
+  document.getElementById('reset').onclick = () => { document.getElementById('q').value = ''; for (const s of document.querySelectorAll('select[data-f]')) s.value = ''; render(); };
+  render();
+</script>

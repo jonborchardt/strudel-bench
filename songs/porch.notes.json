@@ -149,6 +149,16 @@
           "why": "climax again, solo6 the coda: the lint said the fifth is the peak, and it is the one that goes for it"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate .6 bus saturation rounds the acoustic bass and R8 kit peaks (peak .65>.46 at same rms); no sub, the bass is a raw gm_acoustic_bass at e2"
+        }
+      ]
     }
   ]
 }

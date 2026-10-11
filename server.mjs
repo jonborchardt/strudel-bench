@@ -16,7 +16,7 @@ const SONG_FILE = /^[\w.-]+\.(strudel|notes\.json)$/; // a song and its provenan
 const SAMPLE_FILE = /^[\w-]+\/(?:[\w-]+\.(?:wav|mp3|ogg|flac|aif|aiff|m4a|webm)|pack\.json)$/i;
 const AUDIO = new Set(['.wav', '.mp3', '.ogg', '.flac', '.aif', '.aiff', '.m4a', '.webm']);
 const MIME = {
-  '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
+  '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.txt': 'text/plain; charset=utf-8',
   '.css': 'text/css', '.svg': 'image/svg+xml', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.flac': 'audio/flac',
   '.aif': 'audio/aiff', '.aiff': 'audio/aiff', '.m4a': 'audio/mp4', '.webm': 'audio/webm', '.strudel': 'text/plain',
 };

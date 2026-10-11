@@ -17,7 +17,7 @@ const DRIVE = '[e2 e2 e2 e2 e2 e2 b2 b2] [a1 a1 a1 a1 a1 a1 e2 e2] [c2 c2 c2 c2 
 const lead = { sound: G, register: .5, brightness: .8, level: 1.7, space: .4, humanize: played };
 const LIFT = 'i IV bVI VII';
 
-song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8', visual: { composition: 'overlay', worlds: ['ink', 'signal'] }, packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
+song({ cps: .52, key: 'E:dorian', seed: 11, kit: 'RolandR8', saturate: .6, visual: { composition: 'overlay', worlds: ['ink', 'signal'] }, packs: ['rooms'], room: { ir: 'room', size: .9 } }, [
   section('intro', 4, { role: 'establish', progression: 'i IV i VII',
     raw:    pick([Em, A, Em, D].join(' ')),
   }),

@@ -1,4 +1,26 @@
 {
   "made": "2026-09-10",
-  "prompt": "A verbatim copy of demo.strudel, the \"before\" clip for the blog's darker example; hidden."
+  "prompt": "A verbatim copy of demo.strudel, the \"before\" clip for the blog's darker example; hidden.",
+  "requests": [
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "saturate .6 on the bus; drums and bass level 1.25 in verse and drop to hold loudness (saturate alone was -2.7 dB); 909 kit kept, bass below midi 40 so no sub, no low-band pair named by the measure lint on drop, no sections merged"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10), level lifts reverted",
+      "changes": [
+        {
+          "section": "drums/bass",
+          "why": "level 1.25: the spec asks for harmonics, not level; peaks fell, rms sits 2-3 dB under the baseline by design"
+        }
+      ]
+    }
+  ]
 }

@@ -5,7 +5,7 @@ import { axis } from '../lib/axes.mjs';
 const VOICES = ['bd', 'sd', 'hh']; // the drums layer's baseline voices: a kit missing one would log "sound not found"
 
 /** The kits of `kitNames` (lib/kits.json keys) whose baseline voices are among the loaded `soundNames` (strudel keys its sound map in lower case), sorted. */
-export const kitsIn = (kitNames, soundNames) => { const have = new Set(soundNames); return kitNames.filter((k) => VOICES.every((v) => have.has(`${k.toLowerCase()}_${v}`))).sort(); };
+export const kitsIn = (kitNames, soundNames, banned = []) => { const have = new Set(soundNames), out = new Set(banned); return kitNames.filter((k) => !out.has(k) && VOICES.every((v) => have.has(`${k.toLowerCase()}_${v}`))).sort(); };
 
 /** Source of one section(...) call, or '' when `src` has none by that name. */
 export const sectionSource = (src, name) => src.match(new RegExp(`section\\(\\s*['"]${name}['"][\\s\\S]*?\\n\\s*\\}\\),?`))?.[0].trim() ?? '';

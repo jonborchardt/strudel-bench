@@ -130,6 +130,16 @@
           "why": "the mix lint's 'melody dominates' stands: two guitars alone and the lead is most of what is heard, which is the point of the pickup"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate .6 (bus saturator, peak down, rms within 2 dB); no kit swap, room kept, no sub (bass reaches midi <=40), no sidechain pair named by measure, no entries merged"
+        }
+      ]
     }
   ]
 }

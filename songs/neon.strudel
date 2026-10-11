@@ -31,7 +31,7 @@ const stabs = { sound: 'piano', density: .7, articulation: .85, register: .5, we
 const arp = { sound: 'square', patch: 'wide', arp: 'up', density: .6, articulation: .6, register: .5, brightness: .55, space: .55, width: .7, position: -.25, duck: 'drums', duckDepth: .15, duckAttack: .2 };
 const answer = { sound: 'square', patch: 'hollow', register: .4, articulation: .7, space: .5, brightness: .55, position: -.35, follow: true }; // a low counter-stab in the holes the hoover leaves
 
-song({ bpm: 132, key: 'A:dorian', seed: 7, kit: 'OberheimDMX', packs: ['rooms'], visual: 'rave' }, [
+song({ bpm: 132, key: 'A:dorian', seed: 7, saturate: .6, kit: 'OberheimDMX', packs: ['rooms'], visual: 'rave' }, [
 
   // the reese holds the root under the arpeggio, then the DMX walks in
   section('intro', 8, { role: 'establish', progression: 'i7', room: ROOM,

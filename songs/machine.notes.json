@@ -249,6 +249,16 @@
           "why": "weight .85>.5 no shape worklet on every kit hit; the gain it gave was x1.08"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate .6; room, ducks and 909 kit kept; no sub (bass lowest midi 40, already distorted), no entries (arrive/verse and rebuild/verse2 differ in more than one part's presence)"
+        }
+      ]
     }
   ],
   "prompt": "Filthy mechanical industrial rock at 120 BPM on one E minor chord, corroding textures stacked outside the axes"

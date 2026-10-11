@@ -2,7 +2,7 @@
 // @blog
 // demo: intro → verse → drop, written in the strudel-bench axis vocabulary.
 // Axis values are 0..1 with 0.5 = the layer's baseline. See docs/superpowers/specs/2026-09-11-musical-axes-design.md
-song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909' }, [
+song({ cps: .5, key: 'C:minor', seed: 3, saturate: .6, kit: 'RolandTR909' }, [
   section('intro', 4, { role: 'establish',
     drums: { density: .3, space: .6 },
     pad:   { space: .8, articulation: .2, brightness: .35 },

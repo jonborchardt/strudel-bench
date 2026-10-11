@@ -20,7 +20,7 @@ test('buildRequest places each note at its cycle and quotes the sections around 
   assert.match(req, /^Song: songs\/demo\.strudel\n/);
   assert.match(req, /1\. cycle 15\.0 \(drop, bar 4 of 8\): less hats\n2\. cycle 6\.2 \(verse, bar 3 of 8\): darker pad/);
   assert.match(req, /that exact\nspot, the section it is in, or what led into it just before/);
-  assert.ok(req.includes("song({ cps: .5, key: 'C:minor', seed: 3, kit: 'RolandTR909' }"), 'song header for key/kit/tempo');
+  assert.ok(req.includes("song({ cps: .5, key: 'C:minor', seed: 3, saturate: .6, kit: 'RolandTR909' }"), 'song header for key/kit/tempo');
   assert.ok(req.includes(sectionSource(demo, 'verse')) && req.includes(sectionSource(demo, 'drop')));
   assert.ok(!req.includes("section('intro'"), 'section nobody pinned is left out');
   assert.equal(sectionSource(demo, 'nope'), '');
@@ -119,4 +119,8 @@ test('a share link round-trips the name and source, url-safe and smaller than th
 test('levelRows: the mix in dBFS, each part relative to the mix, warnings for clipping and silence', () => {
   const rows = levelRows([{ name: 'mix', rms: .1, peak: .99 }, { name: 'drums', rms: .05, peak: .5 }, { name: 'pad', rms: 0, peak: 0 }]);
   assert.deepEqual(rows, [{ name: 'mix', db: -20, warn: 'no headroom' }, { name: 'drums', db: -6, warn: null }, { name: 'pad', db: -Infinity, warn: 'silent' }]);
+});
+
+test('kitsIn drops banned kits', () => {
+  assert.deepEqual(kitsIn(['A', 'B'], ['a_bd', 'a_sd', 'a_hh', 'b_bd', 'b_sd', 'b_hh'], ['B']), ['A']);
 });

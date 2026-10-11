@@ -58,7 +58,7 @@ const HALFTIME = { bd: 'x.......x.....x.', sd: '........x.......' };
 const RIDE = { bd: 'x.......x.....x.', sd: '........x.......', rd: '....x.......x...' };   // the ride arrives on 2 and 4
 const OPENED = { bd: 'x.......x.....x.', sd: '........x.......', rd: 'x...x...x...x...', lt: '..............x.' };
 
-song({ cps: CPS, key: 'D:minor', seed: 23, kit: 'RolandR8', packs: ['holdfast-cuts', 'rooms'],
+song({ cps: CPS, key: 'D:minor', seed: 23, saturate: .6, kit: 'RolandR8', packs: ['holdfast-cuts', 'rooms'],
        room: { ir: 'room', size: .9, damping: 5000 } }, [
   // 0:00 minor thirds and a falling bass, kick on one, snare on three
   section('sink', 16, { role: 'establish', key: 'D:minor', progression: 'i VII VI v',

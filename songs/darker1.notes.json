@@ -1,4 +1,38 @@
 {
   "made": "2026-09-10",
-  "prompt": "demo with the drop's drums and bass at brightness 0 and the bass at register .3: the blog's first \"darker\" step."
+  "prompt": "demo with the drop's drums and bass at brightness 0 and the bass at register .3: the blog's first \"darker\" step.",
+  "requests": [
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song:",
+          "why": "saturate .6 on the bus; drums and bass level 1.25 in verse and drop to hold loudness (saturate alone was -2.7 dB); 909 kit kept, bass below midi 40 so no sub, no low-band pair named by the measure lint on drop, no sections merged"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10), level lifts reverted",
+      "changes": [
+        {
+          "section": "drums/bass",
+          "why": "level 1.25: the spec asks for harmonics, not level; peaks fell, rms sits 2-3 dB under the baseline by design"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "bass register",
+      "changes": [
+        {
+          "section": "verse",
+          "layer": "bass",
+          "axis": "register",
+          "why": ".3>.5, drop.bass.register .3>.9 the drop's weight .9 dropped octave 1 to midi 12 (16 Hz); now both sections sit at C2, lowest midi 36 (65 Hz)"
+        }
+      ]
+    }
+  ]
 }

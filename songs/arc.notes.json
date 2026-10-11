@@ -140,6 +140,16 @@
           "why": "impact none>bd a hit on the drop downbeat to land the riser"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate .6; plate room, ducks and 909 kit kept; no sub (bass lowest midi 24-39), no entries"
+        }
+      ]
     }
   ],
   "prompt": "A longer take on demo that travels from sad C minor to happy Eb major: intro, verse, lift, drop, outro"

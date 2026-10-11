@@ -4,7 +4,7 @@
 // recorded. `stretch: true` fits each slice to its step; without it a slice keeps its own length at the fitted speed.
 // `slices` can also be a list of break points (fractions of the file inside the region) for uneven slices, as the
 // third section shows.
-song({ cps: .5, key: 'C:minor', seed: 7, kit: 'RolandTR909', packs: ['demo-pack'] }, [
+song({ saturate: .6, cps: .5, key: 'C:minor', seed: 7, kit: 'RolandTR909', packs: ['demo-pack'] }, [
   section('loop', 4, { role: 'establish',
     // the pack's definition of 'loop' (samples/user/demo-pack/pack.json) supplies bars 2 and slices 8, and an
     // unwritten pattern is every slice in order, so naming the sample alone plays the loop as recorded

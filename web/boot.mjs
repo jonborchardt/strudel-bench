@@ -45,6 +45,8 @@ export function boot({ onError = () => {}, onStatus = () => {} } = {}) {
     r.scheduler.latency = 0.3;
     const C = strudel.getSuperdoughAudioController(), P = Object.getPrototypeOf(C), duck = P.duck;
     if (!P.ducksOnDemand) { P.ducksOnDemand = true; P.duck = function (targets, ...rest) { for (const t of [targets].flat()) this.getOrbit(t, [0, 1]); return duck.call(this, targets, ...rest); }; }
+    const getOrbit = P.getOrbit;
+    if (!P.saturated) { P.saturated = true; P.getOrbit = function (n, ch) { const fresh = this.nodes[n] == null; const o = getOrbit.call(this, n, ch); if (fresh) saturate(o); return o; }; }
     // The master wall: superdough sums every orbit into one gain straight into the destination, so a downbeat of
     // full-scale 909 samples clips the output. `limit` puts a soft clip between them, on this output and on every one
     // superdough builds later (the offline render context rebuilds the controller), so a render measures what is heard.
@@ -61,6 +63,32 @@ export function softClipCurve(n = 8193, knee = 0.8) {
   return c;
 }
 
+/** The bus saturator's transfer: tanh(k·x)/k, k = 4·amount. A static curve's gain depends on level, so any makeup tuned at one level boosts everything quieter (a whole mix sits near -25 dBFS); normalising the slope at zero to exactly 1 leaves quiet material alone, and the ceiling 1/k only softens peaks. More amount is more harmonics, never more level. Odd, monotonic; 0 is a line.
+ *  A WaveShaper clamps its input to ±1, and an orbit's sum goes past that (hence the master wall), which at low amounts would hard-clip a hot bus. So the curve is laid over u = x/R in −1..1 (tanh(k·R·u)/(k·R)) and `saturate` scales by 1/R before the shaper and R after: the end-to-end transfer is tanh(k·x)/k out to ±R. */
+export function satCurve(amount, n = 8193, R = 4) {
+  const k = 4 * amount * R, c = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const u = (i / (n - 1)) * 2 - 1; c[i] = k > 1e-9 ? Math.tanh(k * u) / k : u; }
+  return c;
+}
+const SAT_RANGE = 4;
+
+let satAmount = 0; // the song's `saturate`, read when an orbit is built (live or in an offline render context) and pushed to live orbits on change
+/** The bus saturator between an orbit's sum and its output: a unity-slope tanh curve (2x oversampled). Native nodes, one set per orbit, nothing per hit. */
+function saturate(orbit) {
+  const ac = orbit.audioContext, shaper = new WaveShaperNode(ac, { oversample: '2x' });
+  const pre = new GainNode(ac), post = new GainNode(ac); // 1/R and R around the shaper: it clamps at ±1, a hot bus does not
+  orbit.summingNode.disconnect(); // was -> output; delay and reverb feed summingNode so they pass through too. setDjf would re-route around this (unused here)
+  orbit.summingNode.connect(pre); pre.connect(shaper); shaper.connect(post); post.connect(orbit.output);
+  const set = (amount) => { const g = amount ? SAT_RANGE : 1; pre.gain.value = 1 / g; post.gain.value = g; shaper.curve = amount ? satCurve(amount) : null; };
+  set(satAmount);
+  orbit.saturator = { set };
+}
+/** Set the amount for every orbit alive and every one built later. */
+export function setSaturation(amount) {
+  satAmount = amount;
+  for (const o of Object.values(strudel.getSuperdoughAudioController()?.nodes ?? {})) o.saturator?.set(amount);
+}
+
 /** Re-route a SuperdoughOutput's last gain through a soft clip on its context. */
 function limit(output) {
   const ac = output.audioContext, wall = new WaveShaperNode(ac, { curve: softClipCurve(), oversample: '4x' });
@@ -75,6 +103,7 @@ export async function playCode(ready, code) {
   await ready;
   const pat = await strudel.evaluate(code);
   setcps(pat?.strudel?.meta.cps ?? 0.5);
+  setSaturation(pat?.strudel?.meta.saturate ?? 0);
   return pat;
 }
 
@@ -92,11 +121,16 @@ export async function expandCode(ready, code) {
 }
 
 /** Nav bar shared by every page; `page` marks the current one. */
-export function nav(page) {
-  const link = (href, name, extra = '') => `<a href="${href}" class="${page === name ? 'on' : ''}"${extra}>${name}</a>`;
-  // the sample workshop is local-only (it writes samples/user/), so it stays hidden until a page knows it has the server.
-  // Limner ships and so is always here, though it is noindex and out of the sitemap: a tool, reached on purpose.
-  return `<a class="brand" href="./">strudel-bench</a>${link('./', 'Compose')}${link('examples.html', 'Examples')}${link('listen.html', 'Listen')}${link('limner.html', 'Limner')}${link('samples.html', 'Samples', ' hidden')}${link('about.html', 'About')}<span class="status" id="status"></span><span class="narrow" role="alert">Made for a desktop browser: this window is too narrow for the mix card and panes.</span>`;
+/**
+ * The header: the three pages a visitor uses, then the tools, then the small print. A local-only tool (it needs the server:
+ * the sample workshop writes samples/user/, the catalogue reads every pack's meta) carries `data-local` and stays hidden
+ * until a page knows it has the server (Compose reveals them when its /events stream opens); a page that is itself local-only
+ * passes `{ local: true }` and shows them at once. Limner ships and is always here, though it is noindex and out of the sitemap.
+ */
+export function nav(page, { local = false } = {}) {
+  const link = (href, name, { minor = false, localOnly = false } = {}) => `<a href="${href}" class="${[page === name ? 'on' : '', minor ? 'minor' : ''].filter(Boolean).join(' ')}"${localOnly ? ` data-local${local ? '' : ' hidden'}` : ''}>${name}</a>`;
+  const sep = '<span class="sep" aria-hidden="true"></span>';
+  return `<a class="brand" href="./">strudel-bench</a>${link('./', 'Compose')}${link('examples.html', 'Examples')}${link('listen.html', 'Listen')}${sep}${link('limner.html', 'Limner', { minor: true })}${link('samples.html', 'Samples', { minor: true, localOnly: true })}${link('catalog.html', 'Catalogue', { minor: true, localOnly: true })}${sep}${link('about.html', 'About', { minor: true })}${link('legal.html', 'Legal', { minor: true })}<span class="status" id="status"></span><span class="narrow" role="alert">Made for a desktop browser: this window is too narrow for the mix card and panes.</span>`;
 }
 
 /** Site footer shared by every page: author line, links, copyright. */

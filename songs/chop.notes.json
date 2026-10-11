@@ -1,4 +1,16 @@
 {
   "made": "2026-09-16",
-  "prompt": "The worked example for sample parts: a generated two-bar drum loop on demo-pack cut into slices and resequenced by pattern, covered by check, dump and the Pages build."
+  "prompt": "The worked example for sample parts: a generated two-bar drum loop on demo-pack cut into slices and resequenced by pattern, covered by check, dump and the Pages build.",
+  "requests": [
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate 0>.6 bus saturation; kit, room, bass sub, sidechain and entries unchanged: kit kept, dry on purpose (no room), bass below midi 40, no bass/pad-drums low-band pair in the measure; the loop>chop pair also changes the sample part, so no merge"
+        }
+      ]
+    }
+  ]
 }

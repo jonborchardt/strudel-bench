@@ -54,6 +54,26 @@
           "why": ".15 and pad .25: the recovery written, not the default"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate .6 (bus saturator, peak down, rms within 2 dB); no kit swap, room kept, no sub (bass reaches midi <=40), no sidechain pair named by measure, no entries merged"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "room:",
+          "why": "ir room (recorded impulse) with packs rooms, size 1.2 kept; rms -1.1 dB"
+        }
+      ]
     }
   ]
 }

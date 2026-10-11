@@ -164,6 +164,30 @@
           "why": "farther: darker (.38), lighter (.42)"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate 0>.6 bus saturation; kit, room, bass sub, sidechain and entries unchanged: kit kept, room already set, bass below midi 40, no bass/pad-drums low-band pair in the measure, no single-part section pairs"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "ask": "bass register",
+      "changes": [
+        {
+          "section": "*",
+          "layer": "bass",
+          "axis": "register",
+          "from": 0.25,
+          "to": 0.9,
+          "why": "(undertow .15>.9) the square bass reached midi 17 (22 Hz): weight .75 and .9 drop an octave, so octave 3 less that is F2, lowest midi 41 (87 Hz); line, weight, duck kept"
+        }
+      ]
     }
   ]
 }

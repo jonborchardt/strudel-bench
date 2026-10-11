@@ -456,6 +456,16 @@
           "why": "level .5>.34 and verse3.raw5 .42>.32: the picking is decoration behind the answers, and it measured 1 dB off the lead"
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "ask": "sound rework (2026-10)",
+      "changes": [
+        {
+          "section": "song",
+          "why": "saturate .6 bus saturation on the uke and R8 mix; no bass part so no sub or sidechain"
+        }
+      ]
     }
   ],
   "youtube": {
