@@ -39,14 +39,19 @@ const RIFF_AB4 = '<' + [PUMP, PUMP, PUMP, PUMP_AB].join(' ') + '>';             
 const RIFF_EXP = '<' + [PUMP, PUMP_AB, PUMP, PUMP_LOW].join(' ') + '>';             // i bII i V
 const RIFF_TEN = '<' + [PUMP, PUMP, PUMP_LOW, PUMP_LOW, PUMP, PUMP, PUMP_AB, PUMP_AB].join(' ') + '>';   // i i VIm VIm i i bII bII
 const RIFF_TRF = '<' + [PUMP_C, PUMP_C, PUMP_AB, PUMP_AB, PUMP_LOW, PUMP_LOW, PUMP_LOW, PUMP_LOW].join(' ') + '>';   // iv iv bII bII VIm VIm V V
-const bass = { sound: 'sawtooth', notes: RIFF, rhythm: 'X.x.x.x.X.x.x.xx', density: .8, register: .5, patch: 'driven', brightness: .6, articulation: .75,
+// the pump is two parts on one line: the ladder growls on the accents and the stutter (three notes a bar), and a clean
+// dark square plays the eighths between them. Eight driven notes a bar paid for nothing the ear could place and left
+// no room for the choir: the split keeps the drive where the accents are and halves the ladder's cost.
+const bass = { sound: 'sawtooth', notes: RIFF, rhythm: 'X.......X......x', density: .8, register: .5, patch: 'driven', brightness: .6, articulation: .7,
   weight: .6, space: .2, level: 1.6, velocity: '1 .75 .85 .75 1 .75 .85 .8', duck: 'drums', duckDepth: .4, duckAttack: .06 };
+const pump = { sound: 'square', notes: RIFF, rhythm: '..x.x.x...x.x.x.', density: .8, register: .5, brightness: .55, articulation: .7,
+  weight: .6, space: .2, level: 1.3, velocity: '1 .75 .85 .75 1 .75 .85 .8', duck: 'drums', duckDepth: .4, duckAttack: .06 };
 
 // the hook, as a raw part so it can use the notes the scale lacks (Ab, F#), through the same warm ladder the `warm`
 // patch is (drive .8, cutoff 2.5 kHz, low resonance). Four bars: the cell G Bb Ab on the and-of-1, the and-of-2 and 3;
 // again with a G on the and-of-4; the answer higher, D C Bb falling on the off-beats; then Ab held against F# held,
 // never G. The second four end on Eb instead: the sixth, not the tonic.
-const LEAD = (pat) => pat.s('square').ftype('ladder').drive(.8).lpf(2500).lpq(.15).attack(.02).clip(.9).release(.25).gain(.5);
+const LEAD = (pat) => pat.s('square').ftype('ladder').drive(.8).lpf(2500).lpq(.15).attack(.02).clip(.85).release(.12).gain(.5);
 const HOOK = LEAD(note("<[~ g4 ~ bb4 ab4 ~ ~ ~] [~ g4 ~ bb4 ab4 ~ g4 ~] [~ d5 ~ c5 ~ bb4 ~ ~] [ab4@3 ~ fs4@3 ~] [~ g4 ~ bb4 ab4 ~ ~ ~] [~ g4 ~ bb4 ab4 ~ g4 ~] [~ d5 ~ c5 ~ bb4 ~ ~] [d5@2 ~ eb5@4 ~]>"));
 const CELL = LEAD(note("<[~ g4 ~ bb4 ab4 ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~]>"));                                          // the cell, then a bar of room
 const CELL_Q = LEAD(note("<[~ g4 ~ bb4 ab4 ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [ab4@3 ~ fs4@3 ~]>"));    // tension: the cell, two bars of room, the question
@@ -55,9 +60,14 @@ const HOOK_8VB = LEAD_LOW(note("<[~ g3 ~ bb3 ab3 ~ ~ ~] [~ g3 ~ bb3 ab3 ~ g3 ~] 
 // the response: a choir answering in the hook's gaps, the cathedral's own voice, a second player and not a double. It
 // answers the cell's second bar with a D, holds an Eb and a D under the hook's long Ab and F#, and under the final Eb
 // sings Bb then C, never the tonic; when only the cell plays it fills the empty bar with D, Eb, then a held C.
-const VOICE = (pat) => pat.s('gm_choir_aahs').attack(.08).clip(1).release(.4).gain(1.3);
+const VOICE = (pat) => pat.s('gm_choir_aahs').attack(.08).clip(1).release(.2).gain(1.3);
 const RESP_HOOK = VOICE(note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ d4] [~ ~ ~ ~ ~ ~ ~ ~] [eb4@3 ~ d4@3 ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ d4] [~ ~ ~ ~ ~ ~ ~ ~] [bb3@2 ~ c4@4 ~]>"));
 const RESP_CELL = VOICE(note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ d4 ~ eb4 ~ c4@2]>"));
+// the second choir voice, raw 2.5: the same instrument a third or a fourth under the first and a beat behind it, so the
+// two sing together without doubling; it sits right where the first sits left
+const RESP2_HOOK = VOICE(note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ bb3] [~ ~ ~ ~ ~ ~ ~ ~] [~ c4@3 ~ bb3@3] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ bb3] [~ ~ ~ ~ ~ ~ ~ ~] [~ g3@2 ~ ab3@3 ~]>"));
+const RESP2_CELL = VOICE(note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ bb3 ~ c4 ab3@2]>"));
+const respond2 = { pattern: RESP2_HOOK, level: 1.7, space: .65, position: .3, humanize: { timingMs: 14, velocity: .1, correlation: 'phrase' } };
 const respond = { pattern: RESP_HOOK, level: 2, space: .65, position: -.3, humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };
 const lead = { pattern: HOOK, level: 1, space: .55, width: .5, velocity: '.85 1 .85 .95 1 .85 .9 .9', humanize: { timingMs: 8, velocity: .1, correlation: 'phrase' } };
 
@@ -72,27 +82,33 @@ song({ bpm: 124, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, pac
     drums: kick,
     drums2: { ...strike, template: { ...STRIKE, ...OPEN_HIT } },
     bass,
+    bass2: pump,
     raw: { ...lead, pattern: CELL, enter: 4 },
   }),
   section('recognise', 8, { role: 'develop', progression: 'i@3 bII',
     drums: kick,
     drums2: strike,
     bass: { ...bass, notes: RIFF_AB4 },
+    bass2: { ...pump, notes: RIFF_AB4 },
     raw: lead,
     raw2: respond,
+    raw25: respond2,
   }),
   section('expand', 8, { role: 'build', progression: 'i bII i VM',
     drums: { ...kick, template: KICK_OPEN },
     drums2: strike,
     bass: { ...bass, notes: RIFF_EXP },
+    bass2: { ...pump, notes: RIFF_EXP },
     raw: lead,
     raw2: respond,
+    raw25: respond2,
     pad: { ...pad, enter: 4 },
   }),
   section('tension', 8, { role: 'develop', progression: 'i@2 VIm@2 i@2 bII@2',
     drums: { ...kick, template: { bd: KICK.bd } },                                  // no hats: the room tails are the hats
     drums2: strike,
     bass: { ...bass, notes: RIFF_TEN, space: .3 },
+    bass2: { ...pump, notes: RIFF_TEN, space: .3 },
     raw: { ...lead, pattern: CELL_Q, space: .7 },
     raw4: { pattern: HUM, level: 1.5, space: .8, width: .6 },
     pad,
@@ -101,14 +117,17 @@ song({ bpm: 124, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, pac
     drums: kick,
     drums2: strike,
     bass: { ...bass, notes: RIFF_TRF },
+    bass2: { ...pump, notes: RIFF_TRF },
     raw: lead,
     raw2: respond,
+    raw25: respond2,
     pad: { ...pad, brightness: .35, level: .5 },
   }),
   section('cathedral', 8, { role: 'climax', progression: 'i bII i VM',
     drums: { ...kick, template: KICK_OPEN, weight: .65, aggression: .66 },
     drums2: { ...strike, template: STRIKE_T, level: .85 },
     bass: { ...bass, notes: RIFF_EXP, weight: .65, level: 1.7 },
+    bass2: { ...pump, notes: RIFF_EXP, weight: .65 },
     raw: { ...lead, level: 1.1 },
     raw3: { pattern: HOOK_8VB, level: 1, space: .5, position: -.2 },                   // the hook an octave under itself
     pad: { ...pad, brightness: .4, level: .5 },
@@ -117,15 +136,19 @@ song({ bpm: 124, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, pac
     drums: { ...kick, template: { bd: KICK.bd } },
     drums2: strike,
     bass,
+    bass2: pump,
     raw: { ...lead, pattern: CELL, level: .9, space: .7 },
     raw2: { ...respond, pattern: RESP_CELL, level: 1.3 },
+    raw25: { ...respond2, pattern: RESP2_CELL, level: 1.1 },
     pad: { ...pad, chord: '<0 0 1 0>', level: .45 },                                  // over the pedal: Gm Gm A dim Gm
   }),
   section('continue', 8, { role: 'release', progression: 'i',
     drums: kick,
     drums2: { ...strike, template: { ...STRIKE, ...LAST_HIT } },
     bass: { ...bass, exit: 2 },
+    bass2: { ...pump, exit: 2 },
     raw: { ...lead, pattern: CELL, level: .8, space: .7, exit: 4 },
     raw2: { ...respond, pattern: RESP_CELL, level: 1.2, exit: 4 },
+    raw25: { ...respond2, pattern: RESP2_CELL, level: 1, exit: 4 },
   }),
 ])
