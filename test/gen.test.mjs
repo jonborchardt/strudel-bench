@@ -37,3 +37,16 @@ test('gen/form.mjs: a skeleton per mood, deterministic per seed, that checks cle
     } finally { fs.rmSync(f); }
   }
 });
+
+test('lib/form.mjs carries generate for the page: no node imports, the same output as gen/form.mjs', async () => {
+  const src = fs.readFileSync(path.join(import.meta.dirname, '..', 'lib', 'form.mjs'), 'utf8');
+  assert.doesNotMatch(src, /from 'node:/, 'lib ships to the browser');
+  const lib = await import('../lib/form.mjs'), gen = await import('../gen/form.mjs');
+  assert.equal(lib.generate(5, { mood: 'ominous', bars: 32 }), gen.generate(5, { mood: 'ominous', bars: 32 }));
+  assert.deepEqual(lib.MOODS, gen.MOODS);
+  assert.deepEqual(lib.moods(), lib.MOODS, 'moods() reads the overlays when called: on the page they load after the import, so the dialog asks at open');
+  const { OVERLAYS } = await import('../lib/vocab.mjs'), was = OVERLAYS.cinematic; // generate validates against the live table too, not the snapshot taken at import
+  delete OVERLAYS.cinematic;
+  try { assert.throws(() => lib.generate(1, { mood: 'cinematic' }), /unknown mood/); } finally { OVERLAYS.cinematic = was; }
+  assert.ok(lib.generate(1, { mood: 'cinematic' }).includes("section('drop'"));
+});

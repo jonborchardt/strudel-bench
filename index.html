@@ -18,7 +18,16 @@
   <header class="card row" id="head">
     <!-- the song pick: the shared popover, each row the song's name over the date it was made and what it is; the select stays as the page's state -->
     <label class="field">Song <button id="songpick" class="song" aria-haspopup="listbox"></button></label><select id="song" hidden></select>
-    <button id="new" title="create a song from the minimal template">+ New song</button>
+    <button id="new" title="create a song: blank (the minimal template), or a skeleton shaped by a mood (lib/form.mjs, what gen/form.mjs prints)">+ New song</button>
+    <!-- New song: a native dialog for the name and, optionally, a mood, a length and a seed for a generated skeleton -->
+    <dialog id="newdlg"><form method="dialog">
+      <h2>New song</h2>
+      <label>name <input name="name" value="untitled" required pattern="[\w.\-]+" spellcheck="false"></label>
+      <label title="blank: two sections at the baseline; a mood: six sections (intro, verse, build, drop, breakdown, outro) with roles, harmony and axis values shaped by that mood">mood <select name="mood"><option value="">blank (two sections)</option></select></label>
+      <label>bars <input name="bars" type="number" min="16" max="256" step="16" value="64"></label>
+      <label>seed <input name="seed" type="number" min="1" step="1" value="1"></label>
+      <menu><button value="cancel" type="submit">Cancel</button><button value="ok" type="submit" class="primary">Create</button></menu>
+    </form></dialog>
     <span class="field" id="packs" title="sample packs this song declares (packs: [...]): deployed ships with the site, local stays on this machine, missing is not in samples/user/ so its sounds will not play" hidden></span>
     <span class="grow"></span>
     <button id="save" title="write the source back to songs/" disabled>Save</button>
@@ -167,6 +176,7 @@
   import { DESCRIPTORS, OVERLAYS, HARMONY, MODIFIERS, COMPARATIVE } from './lib/vocab.mjs';
   import { composeVisual, onsetsOf, samplesOf } from './lib/visual.mjs';
   import { tableOf, lint } from './lib/lint.mjs';
+  import { generate, moods } from './lib/form.mjs';
   import { mountStage, worldOf, WORLDS, PRESETS } from './web/visual/stage.mjs';
   import { fallbackScore } from './web/visual/host.mjs';
   import { streamOf, exportVideo, pickCodecs, TAIL } from './web/visual/export.mjs';
@@ -660,12 +670,18 @@
   }
   async function newSong() {
     if (code.text !== loaded && !confirm('Discard unsaved edits?')) return;
-    const raw = prompt('New song name', 'untitled')?.trim();
+    const dlg = $('newdlg'), moodSel = dlg.querySelector('[name=mood]');
+    moodSel.replaceChildren(moodSel.options[0], ...moods().map((m) => Object.assign(document.createElement('option'), { value: m, textContent: m }))); // the moods are known once the vocabulary has loaded, so they are listed at open
+    dlg.showModal();
+    const ok = await new Promise((r) => (dlg.onclose = () => r(dlg.returnValue === 'ok')));
+    if (!ok) return;
+    const f = new FormData(dlg.querySelector('form')), raw = String(f.get('name')).trim();
     if (!raw) return;
     const name = raw.endsWith('.strudel') ? raw : `${raw}.strudel`;
     if (!NAME.test(name)) return status(`bad name: ${name} (letters, digits, . _ -)`);
     if ([...$('song').options].some((o) => o.value === name) && !confirm(`${name} exists. Overwrite it?`)) return;
-    await store(name, TEMPLATE);
+    const mood = f.get('mood'); // a mood: the skeleton gen/form.mjs prints; none: the minimal template
+    await store(name, mood ? generate(Number(f.get('seed')) || 1, { mood, bars: Number(f.get('bars')) || 64 }) : TEMPLATE);
     if (server) await fetch(`songs/${notesFile(name)}`, { method: 'PUT', body: JSON.stringify({ made: new Date().toISOString().slice(0, 10) }, null, 1) }); // the metadata file starts with the date the song was made
     await loadList(name);
     status(`created ${name}${server ? '' : ' in this browser'}`);
