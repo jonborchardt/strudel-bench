@@ -1030,6 +1030,12 @@
         bits.push(f === 'expr' ? `<label>follow ${expr}</label>` : `<label>follow <select class="snd" data-mat="follow" title="free: the written or seeded line as is; chords: each note shifted onto the bar's chord; tones: snapped to the chord's tones">${[['', 'free'], ['true', 'chords'], ['tones', 'tones']].map(([v, l]) => `<option value="${v}"${(f === true ? 'true' : f === 'tones' ? 'tones' : '') === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`);
       }
       if (base === 'pad') bits.push(`<label>arp ${pick(L, e, 'arp', 'none')}</label>`);
+      if (base !== 'raw') { // the mix keys every part takes (lib/song.mjs MIX_KEYS): where it sits, what it ducks under, when it comes in and leaves
+        const pos = val(L, e, 'position'), dk = val(L, e, 'duck');
+        bits.push(`<label class="pan" title="where the part sits, left -1 to right 1 (position); 0 is centre, width moves around it">pan ${pos === 'expr' ? expr : `<input type="range" min="-1" max="1" step=".05" data-mat="position" value="${typeof pos === 'number' ? pos : 0}"><output>${typeof pos === 'number' ? pos : 0}</output>`}</label>`);
+        bits.push(`<label title="the part this one ducks under (sidechain: superdough's duckorbit); depth and attack are keys (duckDepth, duckAttack)">duck ${dk === 'expr' ? expr : `<button class="pick" data-mat="duck" data-ph="none">${dk ? esc(clean(dk)) : '<i>none</i>'}</button>`}</label>`);
+        bits.push(`<label title="bars of silence before the part comes in (enter) and before the section ends (exit)">in ${text(L, e, 'enter', '0', 'type="number" min="0" step="1"')} out ${text(L, e, 'exit', '0', 'type="number" min="0" step="1"')}</label>`);
+      }
       bits.push(`<button class="pick addkey" data-addkey="${esc(name)}" title="add a material or mix key to ${esc(name)} (position, duck, enter/exit, postgain, humanize&hellip;)">+ key</button>`);
       // level: the part's gain multiplier (1 = as built), the volume control the axes lack; a preview plays the part at this level too
       const lv = val(L, e, 'level');
@@ -1057,6 +1063,9 @@
   function matText(layer, key, value, voice, section = mixSection) {
     if (key === 'follow') return value === 'tones' ? `'tones'` : value === 'true' || value === true ? 'true' : null;
     if (key === 'fill') return value === '' ? null : String(value); // 'true', 'false' or a bar count, as the select has it
+    if (key === 'position') return Number(value) === 0 ? null : fmt(Number(value)).replace(/^-0\./, '-.'); // 0 is centre, the default, so it is dropped
+    if (key === 'enter' || key === 'exit') { const n = Math.round(Number(value)); return String(value).trim() && n > 0 ? String(n) : null; } // 0 bars is no gap
+    if (key === 'duck') return value ? q(value) : null;
     if (key === 'phrase') return value > 1 ? String(Math.round(value)) : null; // 1 is the default, so it is dropped
     if (key === 'level') return Number(value) === 1 ? null : String(Number(value)); // 1 = untouched, so it is dropped
     if (key === 'seed') return String(value).trim() ? String(Math.max(1, Math.round(Number(value)))) : null;
@@ -1308,6 +1317,7 @@
   for (const i of document.querySelectorAll('input.pvin')) pv.bindLevel(i);
   $('mats').oninput = (e) => {
     if (e.target.dataset.mat === 'level') e.target.nextElementSibling.value = `x${e.target.value}`; // the readout follows the drag; the source changes on release (change)
+    if (e.target.dataset.mat === 'position') e.target.nextElementSibling.value = e.target.value;
     if (e.target.dataset.trim) { clampTrim(e.target); waveRender(e.target.closest('.wave')); } // the region follows the drag (stopping at the other end); the source changes on release
   };
   $('mats').onmousedown = (e) => { if (e.target.closest('[data-pv]')) e.preventDefault(); }; // keep the text box focused, so its play button stays
@@ -1372,11 +1382,13 @@
   function openPick(btn, layer) { // a materials-panel button: names by key, the change through setMaterial, previews through audition
     const { mat: key, voice, list } = btn.dataset;
     const names = key === 'template' ? Object.keys(TEMPLATES) : key === 'arp' ? Object.keys(ARP_ORDERS) : key === 'patch' ? Object.keys(PATCHES)
+      : key === 'duck' ? parts.filter((p) => p !== layer) // the section's other parts
       : key === 'sound' && layerBase(layer) === 'sample' ? sampleSounds() : [...$('snds').options].map((o) => o.value);
     const takes = list ? JSON.parse(list) : null, idx = Number(btn.dataset.idx); // a list: this chip's take (data-idx, from pick()); past the end, a new one
     const ph = takes ? (idx < takes.length ? 'remove this take' : undefined) : btn.dataset.ph;
     const text = (v) => matText(layer, key, takes ? takesWith(takes, idx, v) : v, voice);
-    openPickList(btn, { names, cur: takes ? takes[idx] ?? '' : (btn.querySelector('i') ? '' : btn.textContent), ph, labels: key === 'sound' ? defLabels() : {}, onPick: (v) => setMat(layer, key, text(v)), preview: (v, pv) => v && audition(pv, layer, key, text(v), voice) });
+    openPickList(btn, { names, cur: takes ? takes[idx] ?? '' : (btn.querySelector('i') ? '' : btn.textContent), ph, labels: key === 'sound' ? defLabels() : {}, onPick: (v) => setMat(layer, key, text(v)),
+      preview: key === 'duck' ? undefined : (v, pv) => v && audition(pv, layer, key, text(v), voice) }); // a part alone cannot show what ducks it
   }
   function filterPick() { const words = $('pickq').value.toLowerCase().split(/\s+/).filter(Boolean); for (const b of $('picklist').children) b.hidden = !words.every((w) => b.textContent.toLowerCase().includes(w)); }
   $('pickq').oninput = filterPick;

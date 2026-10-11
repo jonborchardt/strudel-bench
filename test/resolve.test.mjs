@@ -409,3 +409,11 @@ test('setSectionField: any section key, insert / replace / remove', async () => 
   assert.throws(() => setSectionField(src, 'a', 'drums', '{}'), /not a section field/);
   assert.throws(() => setSectionField(`song({}, [section('a', 8, { room: CAVE })])`, 'a', 'room', '{ size: .5 }'), /expression/);
 });
+
+test('locate: a negative material literal (position -.5, transpose -5) is a number, not an expression', async () => {
+  await ready;
+  const { locate } = await import('../lib/resolve.mjs');
+  const s = locate(`song({}, [section('a', 8, { pad: { position: -.5 }, sample: { sound: 'loop', transpose: -5 } })])`).sections[0];
+  assert.equal(s.layers.pad.mats.position.value, -.5);
+  assert.equal(s.layers.sample.mats.transpose.value, -5);
+});
