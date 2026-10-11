@@ -383,3 +383,29 @@ test('verb sidechain skips a section with no drums and notes an overwritten duck
   VERBS.sidechain.material.bass.duck = '"drums"'; // a double-quoted target is read too
   try { assert.match(applyVerb(src, 'a', 'sidechain').skipped.join(), /bass: no part "drums"/); } finally { VERBS.sidechain.material.bass.duck = was; }
 });
+
+test('locate: section keys (kit, room, meter, bpm) are fields, never layers', async () => {
+  await ready;
+  const { locate } = await import('../lib/resolve.mjs');
+  const src = `const CAVE = { size: .9 };\nsong({}, [section('a', 8, { role: 'develop', kit: 'RolandTR808', room: CAVE, meter: '3/4', bpm: 100, drums: { density: .5 } })])`;
+  const s = locate(src).sections[0];
+  assert.deepEqual(Object.keys(s.layers), ['drums']);
+  assert.deepEqual(Object.keys(s.fields).sort(), ['bpm', 'kit', 'meter', 'role', 'room']);
+  assert.equal(s.roleNode, s.fields.role, 'the old alias still points at the property');
+});
+
+test('setSectionField: any section key, insert / replace / remove', async () => {
+  await ready;
+  const { setSectionField, locate } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 8, { role: 'develop', drums: { density: .5 } })])`;
+  let out = setSectionField(src, 'a', 'kit', `'RolandTR808'`);
+  assert.match(out, /role: 'develop', kit: 'RolandTR808',/);
+  out = setSectionField(out, 'a', 'kit', `'LinnDrum'`);
+  assert.match(out, /kit: 'LinnDrum'/); assert.doesNotMatch(out, /TR808/);
+  out = setSectionField(out, 'a', 'bpm', '96');
+  assert.equal(locate(out).sections[0].fields.bpm.value.value, 96);
+  out = setSectionField(out, 'a', 'kit', null);
+  assert.doesNotMatch(out, /kit:/);
+  assert.throws(() => setSectionField(src, 'a', 'drums', '{}'), /not a section field/);
+  assert.throws(() => setSectionField(`song({}, [section('a', 8, { room: CAVE })])`, 'a', 'room', '{ size: .5 }'), /expression/);
+});
