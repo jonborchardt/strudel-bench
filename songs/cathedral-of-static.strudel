@@ -39,7 +39,7 @@ const RIFF_AB4 = '<' + [PUMP, PUMP, PUMP, PUMP_AB].join(' ') + '>';             
 const RIFF_EXP = '<' + [PUMP, PUMP_AB, PUMP, PUMP_LOW].join(' ') + '>';             // i bII i V
 const RIFF_TEN = '<' + [PUMP, PUMP, PUMP_LOW, PUMP_LOW, PUMP, PUMP, PUMP_AB, PUMP_AB].join(' ') + '>';   // i i VIm VIm i i bII bII
 const RIFF_TRF = '<' + [PUMP_C, PUMP_C, PUMP_AB, PUMP_AB, PUMP_LOW, PUMP_LOW, PUMP_LOW, PUMP_LOW].join(' ') + '>';   // iv iv bII bII VIm VIm V V
-const bass = { sound: 'sawtooth', notes: RIFF, rhythm: 'X.x.x.x.X.x.x.xx', density: .8, register: .5, patch: 'driven', brightness: .6, articulation: .7,
+const bass = { sound: 'sawtooth', notes: RIFF, rhythm: 'X.x.x.x.X.x.x.xx', density: .8, register: .5, patch: 'driven', brightness: .6, articulation: .75,
   weight: .6, space: .2, level: 1.6, velocity: '1 .75 .85 .75 1 .75 .85 .8', duck: 'drums', duckDepth: .4, duckAttack: .06 };
 
 // the hook, as a raw part so it can use the notes the scale lacks (Ab, F#), through the same warm ladder the `warm`
@@ -52,12 +52,13 @@ const CELL = LEAD(note("<[~ g4 ~ bb4 ab4 ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~]>"));          
 const CELL_Q = LEAD(note("<[~ g4 ~ bb4 ab4 ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [ab4@3 ~ fs4@3 ~]>"));    // tension: the cell, two bars of room, the question
 const LEAD_LOW = (pat) => pat.s('square').lpf(900).attack(.02).clip(.9).release(.2).gain(.5);   // no ladder: the octave under the hook is a plain dark square, so the climax does not pay a second processor per note
 const HOOK_8VB = LEAD_LOW(note("<[~ g3 ~ bb3 ab3 ~ ~ ~] [~ g3 ~ bb3 ab3 ~ g3 ~] [~ d4 ~ c4 ~ bb3 ~ ~] [ab3@3 ~ fs3@3 ~] [~ g3 ~ bb3 ab3 ~ ~ ~] [~ g3 ~ bb3 ab3 ~ g3 ~] [~ d4 ~ c4 ~ bb3 ~ ~] [d4@2 ~ eb4@4 ~]>")).gain(.7);
-// the response: a dark sampled piano answering in the hook's gaps, a second player, not a double. Under the full hook it
-// speaks in bar 4 (D, then C under the held Ab and F#) and bar 8 (C, then Bb under the held Eb); under the cell alone it
-// fills the empty bar: D, Eb, C.
-const RESP_HOOK = note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ d4 ~ ~ ~ c4] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ c4 ~ ~ ~ ~ bb3]>").s('piano1').clip(.9).release(.3).gain(.9);
-const RESP_CELL = note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ d4 ~ eb4 ~ c4 ~]>").s('piano1').clip(.9).release(.3).gain(.9);
-const respond = { pattern: RESP_HOOK, level: 1.5, space: .6, position: -.3, humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };
+// the response: a choir answering in the hook's gaps, the cathedral's own voice, a second player and not a double. It
+// answers the cell's second bar with a D, holds an Eb and a D under the hook's long Ab and F#, and under the final Eb
+// sings Bb then C, never the tonic; when only the cell plays it fills the empty bar with D, Eb, then a held C.
+const VOICE = (pat) => pat.s('gm_choir_aahs').attack(.08).clip(1).release(.4).gain(1.3);
+const RESP_HOOK = VOICE(note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ d4] [~ ~ ~ ~ ~ ~ ~ ~] [eb4@3 ~ d4@3 ~] [~ ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ~ d4] [~ ~ ~ ~ ~ ~ ~ ~] [bb3@2 ~ c4@4 ~]>"));
+const RESP_CELL = VOICE(note("<[~ ~ ~ ~ ~ ~ ~ ~] [~ ~ d4 ~ eb4 ~ c4@2]>"));
+const respond = { pattern: RESP_HOOK, level: 2, space: .65, position: -.3, humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' } };
 const lead = { pattern: HOOK, level: 1, space: .55, width: .5, velocity: '.85 1 .85 .95 1 .85 .9 .9', humanize: { timingMs: 8, velocity: .1, correlation: 'phrase' } };
 
 // the pad behind everything: a dark triangle, three tones, an octave under the hook, ducked
@@ -85,6 +86,7 @@ song({ bpm: 124, key: 'G:minor', seed: 11, kit: 'technologic', saturate: .6, pac
     drums2: strike,
     bass: { ...bass, notes: RIFF_EXP },
     raw: lead,
+    raw2: respond,
     pad: { ...pad, enter: 4 },
   }),
   section('tension', 8, { role: 'develop', progression: 'i@2 VIm@2 i@2 bII@2',
