@@ -672,6 +672,7 @@
     if (code.text !== loaded && !confirm('Discard unsaved edits?')) return;
     const dlg = $('newdlg'), moodSel = dlg.querySelector('[name=mood]');
     moodSel.replaceChildren(moodSel.options[0], ...moods().map((m) => Object.assign(document.createElement('option'), { value: m, textContent: m }))); // the moods are known once the vocabulary has loaded, so they are listed at open
+    dlg.returnValue = ''; // Escape closes without setting it, so a stale 'ok' from the last Create would create again
     dlg.showModal();
     const ok = await new Promise((r) => (dlg.onclose = () => r(dlg.returnValue === 'ok')));
     if (!ok) return;

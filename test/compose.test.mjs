@@ -138,7 +138,9 @@ test('keyDefault: a sensible first value per key, null when the value wants a pi
   assert.equal(d('room'), '{ size: .5 }'); assert.equal(d('humanize'), '{ timingMs: 10, velocity: .1 }');
   assert.equal(d('compressor'), '{ threshold: -18, ratio: 4 }'); assert.equal(d('packs'), '[]');
   assert.equal(d('velocity'), `'1 .8 1 .8'`); assert.equal(d('notes'), `'0 2 4 7'`); assert.equal(d('rhythm'), `'x...x...x...x...'`); assert.equal(d('pattern'), `'0 1 2 3'`); assert.equal(d('chord'), `'0'`);
-  assert.deepEqual(addableKeys(['cps', 'bpm', 'key', 'kit'], ['bpm', 'kit']), ['cps', 'key']);
+  assert.deepEqual(addableKeys(['cps', 'bpm', 'key', 'kit'], ['bpm', 'kit']), ['key'], 'bpm and cps are one tempo: a written one hides the other (song() refuses both, setSongField swaps them)');
+  assert.deepEqual(addableKeys(['cps', 'bpm', 'key'], ['cps']), ['key']);
+  assert.equal(d('cps'), '.5', "the engine's default tempo, not the log scale's midpoint");
   assert.deepEqual(addableKeys(['sound', 'level', 'position'], [], ['sound', 'level']), ['position']);
 });
 
