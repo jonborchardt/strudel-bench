@@ -76,6 +76,8 @@
       </div>
       <div id="vout" hidden></div>
     </div></details>
+    <!-- lint: the musical lint (lib/lint.mjs, what npm run lint prints) over the evaluated song: the arc, saws together, seeded lines, axes out of range -->
+    <details class="panel" id="lintpanel"><summary>lint<small id="lintn"></small></summary><ul id="lintlist" title="the musical lint over the evaluated song (npm run lint): no climax, a climax that is not the peak, identical sections, raw saws together, seeded lines, axes out of range"></ul></details>
     <small id="mixstatus"></small>
   </details>
 
@@ -163,6 +165,7 @@
   import { analyze } from './lib/analyze.mjs';
   import { DESCRIPTORS, OVERLAYS, HARMONY, MODIFIERS, COMPARATIVE } from './lib/vocab.mjs';
   import { composeVisual, onsetsOf, samplesOf } from './lib/visual.mjs';
+  import { tableOf, lint } from './lib/lint.mjs';
   import { mountStage, worldOf, WORLDS, PRESETS } from './web/visual/stage.mjs';
   import { fallbackScore } from './web/visual/host.mjs';
   import { streamOf, exportVideo, pickCodecs, TAIL } from './web/visual/export.mjs';
@@ -175,6 +178,7 @@
   let loaded = '';      // text as last loaded from disk (or saved)
   let playing = false;
   let sections = []; // of the song on the transport (the last evaluation while stopped, the playing one otherwise), for the scrubber
+  let table = [], findings = []; // the check's table over those sections (lib/lint.mjs tableOf: energy, form letters) and the lint over it, for the strip and the lint panel
   let paused = null; // cycle to resume from; the worker clock resets to 0 on stop, so pause (and scrubbing while paused) must remember it
   let evaluated = null; // source text the scheduler is playing, so an edit while playing offers Update instead of silently drifting
   let server = true; // false on a static host (github pages): no export/dump, songs save to this browser
@@ -331,6 +335,9 @@
   // jumps the clock while playing and moves the resume point otherwise, so Play always starts where the knob is.
   function setSections(pat) {
     sections = pat?.strudel?.sections ?? []; // only song() files have sections to scrub through
+    table = tableOf(pat?.strudel, pat?.strudel ? onsetsOf(pat.strudel, 8) : {}); // eight bars per section: enough for energy and form, cheap on a 300-bar song
+    findings = lint({ sections: table });
+    lintRender();
     for (const p of [$('pos'), $('fbpos')]) { p.disabled = !sections.length; p.max = pat?.strudel?.total ?? 1; } // the comments card mirrors the transport
     const f = (s) => s.offset / (pat?.strudel?.total || 1); $('ticks').innerHTML = sections.map((s) => `<i style="left:calc(${f(s) * 100}% + ${7 - f(s) * 14}px)" title="${esc(s.name)}"></i>`).join(''); // section ticks under the fader, on its cap's centre line
     $('fbadd').disabled = !sections.length;
@@ -342,9 +349,17 @@
   }
   let pinned = null; // name of the pinned section: looped, Play starts there, the mix card stays on it
   let loop = null; // its section object from the last evaluation (offset, span), or null
+  // the check's reading of a section on its block: its form letter (the same sounding parts share one, a prime is a lift or a
+  // breakdown of it) and its energy as a bar glyph against the loudest section; the lint's warnings for it go on the block's title
+  function formMark(s) { const t = table.find((x) => x.name === s.name), max = Math.max(...table.map((x) => x.energy), 1e-9); return t ? `${esc(t.form)} ${'▁▂▃▄▅▆▇█'[Math.min(7, Math.round(7 * t.energy / max))]}` : ''; }
+  function warnsOf(s) { return findings.filter((f) => f.section === s.name).map((f) => `\n! ${esc(f.text)}`).join(''); }
+  function lintRender() { // the lint panel: every finding, the section's name first; its summary counts them
+    $('lintn').textContent = findings.length ? ` · ${findings.length}` : table.length ? ' · clean' : '';
+    $('lintlist').innerHTML = findings.map((f) => `<li class="${f.level}">${f.section ? `<b>${esc(f.section)}</b> ` : ''}${esc(f.text)}</li>`).join('') || `<li>${table.length ? 'clean' : 'a song() file is linted once it evaluates'}</li>`;
+  }
   function stripRender() { // a block per section, flex-grown by its span; a row per layer whose opacity is its density (× level when set)
     const at = sections.findLast((x) => x.offset <= Number($('pos').value));
-    $('strip').innerHTML = sections.map((s, i) => `<div class="blk${s.name === pinned ? ' pin' : ''}${s === at ? ' on' : ''}" data-i="${i}" style="flex-grow:${s.span}" title="${esc(s.name)}: ${s.cycles} bars${s.role ? ', ' + s.role : ''}. Click to scrub here."><span class="nm">${esc(s.name)}</span><span class="ops"><button data-op="pin" title="${s.name === pinned ? 'unpin: follow the playhead again' : 'pin: loop this section, start Play here, keep the mix on it'}">&#128204;</button><button data-op="left" title="move earlier"${i ? '' : ' disabled'}>&#9664;</button><button data-op="right" title="move later"${i < sections.length - 1 ? '' : ' disabled'}>&#9654;</button><button data-op="dup" title="duplicate it after this one">&#10697;</button><button data-op="ren" title="rename (or double-click the name)">&#9998;</button><button data-op="verb" title="a transform: ${Object.keys(VERBS).join(', ')}">&#9889;</button><button data-op="del" title="remove this section (undo brings it back)">&times;</button></span>${layerNames().map((l) => {
+    $('strip').innerHTML = sections.map((s, i) => `<div class="blk${s.name === pinned ? ' pin' : ''}${s === at ? ' on' : ''}" data-i="${i}" style="flex-grow:${s.span}" title="${esc(s.name)}: ${s.cycles} bars${s.role ? ', ' + s.role : ''}. Click to scrub here.${warnsOf(s)}"><span class="nm">${esc(s.name)}<small class="form" title="form letter and energy: the same sounding parts share a letter, a prime is a lift or a breakdown">${formMark(s)}</small></span><span class="ops"><button data-op="pin" title="${s.name === pinned ? 'unpin: follow the playhead again' : 'pin: loop this section, start Play here, keep the mix on it'}">&#128204;</button><button data-op="left" title="move earlier"${i ? '' : ' disabled'}>&#9664;</button><button data-op="right" title="move later"${i < sections.length - 1 ? '' : ' disabled'}>&#9654;</button><button data-op="dup" title="duplicate it after this one">&#10697;</button><button data-op="ren" title="rename (or double-click the name)">&#9998;</button><button data-op="verb" title="a transform: ${Object.keys(VERBS).join(', ')}">&#9889;</button><button data-op="del" title="remove this section (undo brings it back)">&times;</button></span>${layerNames().map((l) => {
       const a = s.layers[l]?.attrs, d = typeof a?.density === 'number' ? a.density : .5;
       const ml = a?.enter ? (100 * a.enter / s.cycles).toFixed(1) : 0, mr = a?.exit ? (100 * a.exit / s.cycles).toFixed(1) : 0;
       return `<i style="opacity:${a ? ((.3 + .7 * d) * Math.min(1, a.level ?? 1)).toFixed(2) : 0};margin-left:${ml}%;margin-right:${mr}%" title="${l}${a ? `: density ${d}${a.enter ? `, after ${a.enter} bars` : ''}${a.exit ? `, out ${a.exit} bars early` : ''}` : ' (silent)'}"></i>`;

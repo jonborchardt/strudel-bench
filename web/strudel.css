@@ -112,6 +112,10 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .knobs b:hover button { opacity: 1; }
 .strip .blk { position: relative; flex: 1 1 0; min-width: 4.5rem; display: grid; gap: 2px; padding: .3rem .45rem; border: 1px solid #111; border-radius: 5px; color: #ddd; background: linear-gradient(#2c2c30, #222225); box-shadow: inset 0 1px 0 #48484e; cursor: pointer; }
 .strip .blk .nm { font-size: .65rem; line-height: 1.6; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.strip .blk .nm .form { margin-left: .4rem; font-size: .6rem; letter-spacing: 0; text-transform: none; color: #9a9aa2; } /* the check's form letter and energy glyph */
+#lintlist { margin: 0; padding: .2rem 1.4rem .4rem; font-size: .8rem; color: #c8c8d0; }
+#lintlist li b { color: #eee; font-weight: 600; margin-right: .3rem; }
+#lintlist li.error { color: #f66; }
 .strip .blk i { display: block; height: 4px; border-radius: 2px; background: var(--accent); box-shadow: inset 0 1px 2px #000; }
 .strip .blk.on { border-color: var(--accent); box-shadow: inset 0 1px 0 #48484e, 0 0 0 1px var(--accent), 0 0 8px #2f6fed88; color: #fff; }
 .strip .blk.on, .strip .blk.pin { min-width: 222px; } /* the selected section gets the room; the rest shrink toward their minimum */
