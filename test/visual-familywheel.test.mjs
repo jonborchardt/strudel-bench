@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
-import wheel, { LINES, RING, BUST, easeAngle } from '../web/visual/familywheel.mjs';
+import wheel, { LINES, RING, BUST, easeAngle, lineage } from '../web/visual/familywheel.mjs';
 import { clockOf, createPerformance, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
@@ -42,6 +42,18 @@ test('familywheel runs over a song with no randomness or clock of its own, deter
   assert.equal(a, b); assert.notEqual(a, c);
   const st = runWorld(wheel, song(g), 16).state;
   assert.deepEqual(JSON.parse(JSON.stringify(st)), st);
+});
+
+test('a kick sends a wave out along the lines; the sides show the newest robot and the line it came down', async () => {
+  const g = await ready, s = long(g), score = composeVisual(song(g));
+  const line = lineage(s);
+  assert.ok(line.length === s.people[line[0].id].gen + 1, 'from the newest robot back to a founder, one a generation');
+  assert.ok(line.slice(1).every((p, i) => s.couples[line[i].parents].a === p.id), 'each the blood parent of the one before');
+  assert.equal(line.at(-1).gen, 0);
+  const t0 = s.t; wheel.step(s, STEP, [KICK], clockOf(score, 0.1)); assert.equal(s.kickT, t0 + STEP, 'the kick starts the wave');
+  const wide = ctxStub(), square = ctxStub();
+  wheel.draw(s, wide, 320, 180); wheel.draw(s, square, 180, 180);
+  assert.ok(wide.calls.save - square.calls.save >= 2, 'a wide frame draws the sides (the newest robot and its line), a square one does not');
 });
 
 test('many lines, most families with children, one to three each, rings a bust apart, going deep', async () => {
