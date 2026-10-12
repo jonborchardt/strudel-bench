@@ -1,4 +1,5 @@
 {
+  "made": "2026-10-10",
   "prompt": "a cathedral of static: industrial darkwave in G minor at 110, 64 bars, the technologic kit at two distances in a two-second church impulse, a driven ladder bass riff, a warm ladder square hook, every note written",
   "requests": [
     {
@@ -48,7 +49,7 @@
           "section": "tempo",
           "from": 110,
           "to": 124,
-          "why": ""
+          "why": "110 read as too slow and lightweight; 124 drives"
         },
         {
           "section": "bass:",
