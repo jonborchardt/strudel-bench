@@ -19,22 +19,22 @@
 import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf, DEFAULT_SLOT } from './kit.mjs';
 import { portraitOps, drawOn, eyeY, feetY, characterFrom, CASTS, mix } from './limner.mjs';
 
-export const ROW = 1.5; // generations apart, in slots (a slot is one bust's width)
+const ROW = 1.5; // generations apart, in slots (a slot is one bust's width)
 export const MAX_PEOPLE = 1000; // a safety cap only: the tree is one line (a couple and its children a generation), so a long song goes deep, not wide
 export const BIRTH_GAP = 0.4, WED_AGE = 4; // seconds between births; seconds a child lives before it may marry
-const HEX = /^#[0-9a-f]{6}$/i, FEATURES = ['face', 'eyes', 'nose', 'mouth', 'ears'];
+const NOISE = 0.04, HEX = /^#[0-9a-f]{6}$/i, FEATURES = ['face', 'eyes', 'nose', 'mouth', 'ears'];
 // the genes: the face's structure and what it is made of; clothes, pose and finish are each one's own
 const GENES = ['face', 'eyes', 'nose', 'mouth', 'ears', 'neck', 'skin', 'build'];
 const CAST = CASTS.robots;
 
 /** Two plain values blended: numbers between (times a little noise), colours mixed, objects key by key, anything else from one side. */
-export function blend(a, b, s, noise = 0.04) {
-  if (typeof a === 'number' && typeof b === 'number') return (a + (b - a) * rand(s)) * (1 + (rand(s) - 0.5) * noise);
+export function blend(a, b, s) {
+  if (typeof a === 'number' && typeof b === 'number') return (a + (b - a) * rand(s)) * (1 + (rand(s) - 0.5) * NOISE);
   if (typeof a === 'string' && typeof b === 'string' && HEX.test(a) && HEX.test(b)) return mix(a, b, rand(s));
   if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
     const o = {};
     for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) {
-      const v = k in a && k in b ? blend(a[k], b[k], s, noise) : (a[k] ?? b[k]);
+      const v = k in a && k in b ? blend(a[k], b[k], s) : (a[k] ?? b[k]);
       if (v !== undefined) o[k] = v; // a key only one side spells out stays unwritten, so the state stays JSON
     }
     return o;
@@ -53,7 +53,7 @@ export function childOf(a, b, s) {
   return c;
 }
 
-export const outsider = (s) => ({ ...characterFrom(CAST, s, 'none', 0.5), hat: { style: 'none' } });
+export const outsider = (s) => characterFrom(CAST, s, 'none', 0.5); // the robots' wardrobe has no hats
 export function person(s, char, gen, parents, inlaw) {
   const p = { id: s.people.length, gen, char, parents, partner: -1, union: -1, inlaw, born: s.t, size: parents < 0 ? 1 : 0.2, x: 0, y: 0 };
   s.people.push(p); s.maxGen = Math.max(s.maxGen, gen); return p;
@@ -83,10 +83,12 @@ export function birth(s) {
   return true;
 }
 
-/** Once the focused family is complete (full, or no birth for WED_AGE), one of its children, picked by the generator, marries an outsider, and the focus goes down to the new couple: the line goes one generation deeper, and the couples above never change again. */
+/** Once the focused family has had no birth for WED_AGE (it is full, or the kicks have stopped, and every child of it is
+ *  grown), one of its children, picked by the generator, marries an outsider, and the focus goes down to the new couple:
+ *  the line goes one generation deeper, and the couples above never change again. */
 export function marry(s) {
   const c = s.couples[s.focus];
-  if (s.people.length >= MAX_PEOPLE || !c.kids.length || (c.kids.length < c.room && s.t - s.lastBirth < WED_AGE)) return false;
+  if (s.people.length >= MAX_PEOPLE || !c.kids.length || s.t - s.lastBirth < WED_AGE) return false;
   // any child, not the eldest: the eldest is always leftmost, and the first grown, so the line would always run down the left
   const p = s.people[c.kids[Math.floor(rand(s) * c.kids.length)]];
   s.focus = wed(s, p); layout(s);
@@ -129,41 +131,57 @@ export function shotOf(s, level) {
 const aim = (b, aspect) => ({ x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2, span: Math.max(b.y1 - b.y0, (b.x1 - b.x0) / aspect) });
 
 /** Look up the line `level` generations for a while, the babies still in frame. A snare asks for one, at most once every two bars. */
-export function lookUp(s, level, clock) {
+function lookUp(s, level, clock) {
   if (clock && clock.index === s.upAt[0] && clock.bar - s.upAt[1] < 2) return;
   s.up = level; s.upUntil = s.t + UP;
   if (clock) s.upAt = [clock.index, clock.bar];
 }
 
 const SHEET = { w: 400, h: 480 };
-const RUST = '#7a4a32', BMP = 240, MAX_RES = 540; // a picture's width in pixels, least and most; a bigger bust gets a bigger one
-export const stageOf = (s, p) => (s.maxGen === 0 ? 1 : Math.min(3, s.maxGen - p.gen)); // 0 child, 1 adult, 2 rusting, 3 sepia; founders alone are adults
+const RUST = '#7a4a32', BMP = 64, MAX_RES = 540; // a picture's width in pixels, least and most; a bigger bust gets a bigger one
+const stageOf = (s, p) => (s.maxGen === 0 ? 1 : Math.min(3, s.maxGen - p.gen)); // 0 child, 1 adult, 2 rusting, 3 sepia; founders alone are adults
 /** The robot as its age shows: rust creeping into the plating from the grandparents up. */
 const aged = (c, st) => (st >= 2 ? { ...c, skin: mix(c.skin, RUST, st >= 3 ? 0.5 : 0.3) } : c);
 const SEPIA = 'sepia(.85) brightness(.9)';
 
-// ponytail: bitmaps outside the state (the state stays data, so determinism is untouched); cleared wholesale at 2000, an LRU if a wall of trees ever thrashes it
-const CACHE = new Map(), LAST = new Map(); // key -> bitmap; person -> the bitmap it showed last, worn until its new one is made
+// Pictures live outside the state (the state stays data, so determinism is untouched), keyed by the world, the tree's
+// seed and the person, least recently used dropped past CACHE_BYTES: a module is shared by every world in a page or a
+// worker, and a long song or a session of songs would otherwise hold gigabytes.
+const CACHE = new Map(); // key -> bitmap, oldest use first
+const CACHE_BYTES = 256 * 2 ** 20;
+let held = 0;
+const bytes = (b) => b.width * b.height * 4;
+/** A cached picture by key, marked as just used. */
+function cached(key) { const b = CACHE.get(key); if (b) { CACHE.delete(key); CACHE.set(key, b); } return b; }
+/** Keep a new picture, dropping the least recently used ones past the budget. */
+function keep(key, b) {
+  const was = CACHE.get(key); if (was) { held -= bytes(was); CACHE.delete(key); }
+  CACHE.set(key, b); held += bytes(b);
+  for (const [k, old] of CACHE) { if (held <= CACHE_BYTES) break; CACHE.delete(k); held -= bytes(old); }
+}
 const BUILDS = 1; // bitmaps made per frame at most (a big one takes limner ~25 ms): a new generation ages two old ones at once, and making them all in one frame stutters
 let budget = BUILDS;
-/** A new frame: the bitmap budget starts again. */
-export const frameStart = () => { budget = BUILDS; };
-/** A person's picture for their age, at least about `px` pixels wide. Each build is a whole limner drawing (~20-30 ms),
- *  so a person gets as few as can be: one per look (a child and an adult look the same; rusting and sepia are one more
- *  each), only ever made bigger, and only when shown well over its size. */
-function bitmap(s, p, st, px) {
+/** The picture under `key`: the cached one while it is at least `minW` wide, else (budget allowing) a new one `w` wide,
+ *  `aspect` tall over wide, painted by `paint(ctx, width)`; null when there is none yet. Each build is a whole limner
+ *  drawing (~20-30 ms), so pictures are only ever made bigger, and only when shown well over their size. */
+function picture(key, w, aspect, minW, paint) {
   if (typeof OffscreenCanvas === 'undefined') return null;
-  const look = Math.max(1, st), who = `${s.key}:${p.id}`, key = `${who}:${look}`, had = CACHE.get(key);
-  if (had && (had.width >= Math.min(MAX_RES, px / 1.25) || budget <= 0)) { LAST.set(who, had); return had; }
-  if (budget <= 0) return LAST.get(who) ?? null; // over budget: the old look a frame or two longer (a newborn waits unseen)
+  const had = cached(key);
+  if (had && (had.width >= minW || budget <= 0)) return had;
+  if (budget <= 0) return null;
   budget--;
-  if (CACHE.size > 2000) { CACHE.clear(); LAST.clear(); }
-  const res = Math.round(Math.min(MAX_RES, Math.max(BMP, px * 1.25)));
-  const b = new OffscreenCanvas(res, Math.round(res * SHEET.h / SHEET.w)), c = b.getContext('2d');
-  c.scale(res / SHEET.w, res / SHEET.w); if (look >= 3) c.filter = SEPIA;
-  drawOn(c, portraitOps(aged(p.char, look)));
-  CACHE.set(key, b); LAST.set(who, b);
+  const res = Math.round(Math.min(MAX_RES, Math.max(BMP, w))), b = new OffscreenCanvas(res, Math.round(res * aspect));
+  paint(b.getContext('2d'), res); keep(key, b);
   return b;
+}
+/** A person's bust for their age, at least about `px` pixels wide: one per look (a child and an adult look the same;
+ *  rusting and sepia are one more each); while a new look waits its turn, the one before it. */
+function bitmap(s, p, st, px) {
+  const look = Math.max(1, st), who = `${s.key}:${p.id}`;
+  return picture(`${who}:${look}`, px * 1.25, SHEET.h / SHEET.w, Math.min(MAX_RES, px / 1.25), (c, res) => {
+    c.scale(res / SHEET.w, res / SHEET.w); if (look >= 3) c.filter = SEPIA;
+    drawOn(c, portraitOps(aged(p.char, look)));
+  }) ?? cached(`${who}:${look - 1}`) ?? null;
 }
 
 /** One person as a bust `sz` wide (canvas units of the current transform, `px` pixels on screen) with its eyes at the
@@ -202,7 +220,7 @@ export function poseOf(s, p) {
   if (s.pulse > 0.4) return k % 2 ? 4 : 5;
   if (s.dance > 0.5) { const b = Math.floor(s.beat + k / 2); return b % 4 === 3 && k > 1 ? 4 + (k % 2) : 1 + (b % 2); }
   if (s.bob > 0.6) return 3;
-  if (Math.abs(s.lookTo.x) > 0.35) return s.lookTo.x < 0 ? 1 : 2;
+  if (Math.abs(s.lookX) > 0.35) return s.lookX < 0 ? 1 : 2;
   return 0;
 }
 /** One person standing whole, `hgt` tall (canvas units) with their feet at the origin, in pose `pose` (POSES), from its
@@ -212,20 +230,12 @@ export function figure(ctx, s, p, hgt, lit, pose = 0) {
   const ph = own(p, 7) / 7 * Math.PI, amp = 0.6 + own(p, 5) * 0.15, beat = s.beat * Math.PI + ph;
   const swing = amp * s.dance * Math.sin(beat), hop = amp * s.dance * Math.abs(Math.sin(beat)), wd = hgt * FIG.w / FIG.h;
   ctx.save(); ctx.translate(0, -0.06 * hgt * hop - 0.03 * hgt * s.bob); ctx.rotate(0.08 * swing + 0.03 * s.sway * (own(p, 2) ? 1 : -1)); ctx.globalAlpha = lit;
-  let b = null;
-  if (typeof OffscreenCanvas !== 'undefined') {
-    const look = Math.max(1, stageOf(s, p)), key = (n) => `${s.key}:${p.id}:figure:${look}:${n}`;
-    b = CACHE.get(key(pose)) ?? null;
-    if (!b && budget > 0) {
-      budget--;
-      const res = Math.round(Math.min(MAX_RES, Math.max(BMP, wd))), c0 = new OffscreenCanvas(res, Math.round(res * FIG.h / FIG.w)), c = c0.getContext('2d'), a = aged(p.char, look), k = res / FIG.w;
-      const { props, ...head } = POSES[pose], posed = { ...a, pose: { ...a.pose, ...head }, ...(props ? { props: [...(a.props ?? []), ...props] } : {}) };
-      c.scale(k, k); c.translate(-FIG.x, FIG.h - feetY(posed)); // the shoes on the bottom edge
-      drawOn(c, portraitOps(posed));
-      CACHE.set(key(pose), (b = c0));
-    }
-    b ??= CACHE.get(key(0)) ?? null;
-  }
+  const look = Math.max(1, stageOf(s, p)), key = (n) => `${s.key}:${p.id}:figure:${look}:${n}`;
+  const b = picture(key(pose), wd * 1.25, FIG.h / FIG.w, Math.min(MAX_RES, wd / 1.25), (c, res) => {
+    const a = aged(p.char, look), { props, ...head } = POSES[pose], posed = { ...a, pose: { ...a.pose, ...head }, ...(props ? { props: [...(a.props ?? []), ...props] } : {}) };
+    c.scale(res / FIG.w, res / FIG.w); c.translate(-FIG.x, FIG.h - feetY(posed)); // the shoes on the bottom edge
+    drawOn(c, portraitOps(posed));
+  }) ?? cached(key(0)) ?? null; // a pose not made yet: standing
   if (b) ctx.drawImage(b, -wd / 2, -hgt, wd, hgt);
   else if (typeof OffscreenCanvas === 'undefined') { ctx.fillStyle = p.char.skin; ctx.fillRect(-wd / 4, -hgt, wd / 2, hgt); }
   ctx.restore();
@@ -240,9 +250,8 @@ export function feel(s, dt, clock) {
   // a dance break: a loud section dances all through, a middling one the last two bars of every eight; everyone bounces on the beat
   s.dance = ease(s.dance ?? 0, clock.energy >= DANCE_LOUD || (clock.energy >= DANCE_SOME && clock.bar % 8 >= 6) ? 1 : 0, 4, dt);
   s.beat = (clock.beat ?? 0) + (clock.beatPhase ?? 0);
-  s.bob = decay(s.bob, 6, dt); s.grin = decay(s.grin, 4, dt); s.blink = decay(s.blink, 20, dt); s.flash = decay(s.flash, 5, dt); s.glow = decay(s.glow, 0.5, dt);
-  s.look.x = ease(s.look.x, s.lookTo.x, 9, dt); s.look.y = ease(s.look.y, s.lookTo.y, 9, dt);
-  s.lookTo.x = ease(s.lookTo.x, 0, 0.6, dt); s.lookTo.y = ease(s.lookTo.y, 0, 0.6, dt); s.hueShift = ease(s.hueShift, s.hueTo, 2, dt);
+  s.bob = decay(s.bob, 6, dt); s.flash = decay(s.flash, 5, dt); s.glow = decay(s.glow, 0.5, dt);
+  s.lookX = ease(s.lookX, 0, 0.6, dt); s.hueShift = ease(s.hueShift, s.hueTo, 2, dt);
 }
 
 /** The events, read the same way by every layout; `on.kick()`, `on.snare()` and `on.note()` are what the layout makes of a birth, a look up and a wedding. */
@@ -251,29 +260,35 @@ export function listen(s, events, on) {
     const slot = s.slotOf?.[e.layer] ?? DEFAULT_SLOT[e.kind] ?? 'grain', g = clamp(e.gain * e.velocity, 0, 1.5);
     if (slot === 'impulse') {
       if (e.role === 'impact') on.snare();
-      else if (e.role === 'grain') { if (s.t - s.lastBlink > 2.5) { s.blink = 1; s.lastBlink = s.t; } }
-      else { s.kickT = s.t; on.kick(); s.bob = Math.max(s.bob, g); s.grin = Math.max(s.grin, g); }
+      else if (e.role !== 'grain') { s.kickT = s.t; on.kick(); s.bob = Math.max(s.bob, g); } // a hat or a shaker is the dance's own beat, nothing more
     } else if (slot === 'ground') { if (e.note !== null) s.hueTo = ((e.note % 12) / 12) * 80 - 40; }
     else if (slot === 'line' || slot === 'counter') {
       if (e.note === null) continue;
-      s.lookTo = { x: (e.pan - 0.5) * 2, y: 1 - 2 * clamp((e.note - 48) / 36) };
+      s.lookX = (e.pan - 0.5) * 2; // which way a standing robot turns its head (poseOf)
       if (slot === 'line') on.note();
     } else if (slot === 'field') s.glow = Math.min(1, 0.5 + 0.5 * g);
     else if (slot === 'transition') { if (e.dur >= 1) s.flash = 1; }
-    else if (s.t - s.lastBlink > 2.5) { s.blink = 1; s.lastBlink = s.t; }
   }
 }
 
-/** The state every layout starts from: the palette, the cast's slots, the faces' dials, the tree's seed. */
-export function baseState(score, rng, size) {
+/** The state every layout starts from: the palette, the cast's slots, the music's dials, and `key`, which names this
+ *  world's tree for the picture cache (two worlds over one score grow different children from the same seed). */
+export function baseState(score, rng, size, world) {
   const s = {
     pal: paletteOf(score, rng), aspect: size.w / size.h, t: 0,
     slotOf: Object.fromEntries(Object.entries(score.cast).map(([n, c]) => [n, c.slot])),
     up: 0, upUntil: -1, upAt: [-1, -9], wedBar: -1, kickT: -9, riser: 0, dark: 0, energy: 0.5,
-    sway: 0, dance: 0, beat: 0, bob: 0, grin: 0, blink: 0, lastBlink: -9, look: { x: 0, y: 0 }, lookTo: { x: 0, y: 0 }, glow: 0, flash: 0, hueShift: 0, hueTo: 0,
+    sway: 0, dance: 0, beat: 0, bob: 0, lookX: 0, glow: 0, flash: 0, hueShift: 0, hueTo: 0,
   };
-  seed(s, rng); s.key = s.rnd;
+  seed(s, rng); s.key = `${world}:${s.rnd}`;
   return s;
+}
+
+/** The pad's light: a soft pool at (x, y) of radius r, brighter with the pad. */
+export function glow(ctx, s, x, y, r, base, lit) {
+  const gl = ctx.createRadialGradient(x, y, 0, x, y, r);
+  gl.addColorStop(0, hsla(s.pal.field, 60, 60, (base + 0.3 * s.glow) * lit)); gl.addColorStop(1, hsla(s.pal.field, 60, 50, 0));
+  ctx.fillStyle = gl; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
 }
 
 const WAVE = 14; // how fast a kick's wave runs through the generations, in generations a second
@@ -288,7 +303,7 @@ export function lineStyle(ctx, s, gen, own, unit, lit) {
 
 /** The room: the background lit by the section, tinted by the bass. */
 export function room(s, ctx, w, h, lit) {
-  frameStart();
+  budget = BUILDS; // a new frame: the picture budget starts again
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.filter = 'none';
   ctx.fillStyle = hsla(s.pal.hue + s.hueShift, s.pal.sat * 0.5, lerp(9, 22, s.energy) * lit); ctx.fillRect(0, 0, w, h);
 }
@@ -297,7 +312,7 @@ export default {
   name: 'family',
 
   init(score, rng, size) {
-    const s = baseState(score, rng, size);
+    const s = baseState(score, rng, size, 'family');
     newTree(s);
     s.cam = aim(shotOf(s, 0), s.aspect);
     return s;
@@ -322,9 +337,8 @@ export default {
     const X = (x) => w / 2 + (x - s.cam.x) * k, Y = (y) => h / 2 + (y - s.cam.y) * k;
     room(s, ctx, w, h, lit);
     // the pad's glow behind the family on screen
-    const f = s.couples[nursery(s)], fa = s.people[f.a], gx = X(fa.x + 0.5), gy = Y(fa.y + 0.4);
-    const gl = ctx.createRadialGradient(gx, gy, 0, gx, gy, 2 * k); gl.addColorStop(0, hsla(s.pal.field, 60, 60, 0.35 * s.glow * lit + 0.05)); gl.addColorStop(1, hsla(s.pal.field, 60, 50, 0));
-    ctx.fillStyle = gl; ctx.fillRect(0, 0, w, h);
+    const f = s.couples[nursery(s)], fa = s.people[f.a];
+    glow(ctx, s, X(fa.x + 0.5), Y(fa.y + 0.4), 2 * k, 0.05, lit);
     // the lines: partners joined at the shoulder, a drop to a bar over the children, a stem to each, playing (lineStyle)
     const fi = nursery(s);
     for (let ci = 0; ci < s.couples.length; ci++) {

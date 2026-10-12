@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
-import wheel, { LINES, RING, BUST, easeAngle, QUEUE } from '../web/visual/familywheel.mjs';
+import wheel, { LINES, RING, BUST, easeAngle, QUEUE, posOf } from '../web/visual/familywheel.mjs';
 import { clockOf, createPerformance, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
@@ -68,7 +68,6 @@ test('many lines, most families with children, one to three each, rings a bust a
   assert.ok(s.couples.every((c) => c.room >= 1 && c.room <= 3 && c.kids.length <= c.room), 'one to three children a couple');
   const settled = s.couples.filter((c) => s.people[c.a].gen < s.maxGen - 1);
   assert.ok(settled.filter((c) => c.kids.length).length >= 0.8 * settled.length, `most families had children (${settled.filter((c) => c.kids.length).length} of ${settled.length})`);
-  assert.ok(s.people.every((p) => p.tz === BUST), 'every robot one size (the newest children are scaled by their growing, not their ring)');
   const radius = [...new Set(s.people.map((p) => p.gen))].sort((a, b) => a - b).map((g) => s.people.find((p) => p.gen === g).tr);
   assert.equal(radius[0], 0, 'the founders in the middle');
   for (let g = 1; g < radius.length; g++) {
@@ -87,6 +86,18 @@ test('a robot whose place crosses 0 goes the short way, never round the wheel', 
   assert.ok(worst < 0.1, `no robot jumps along its ring in a step (worst ${worst.toFixed(3)} rad)`);
 });
 
+test('a portrait frame fits the whole wheel across its width; the founders stay side by side however the wheel turns', async () => {
+  const g = await ready, score = composeVisual(song(g)), s = createPerformance(wheel, score, { w: 9, h: 16 }).state, c = clockOf(score, 0.1);
+  for (let i = 0; i < 1800; i++) wheel.step(s, STEP, i % 30 ? [] : [KICK, MEL], { ...c, bar: Math.floor(i / 120) });
+  const halfW = (s.cam.span / 2) * (9 / 16), reach = Math.max(...s.people.map((p) => p.r + 0.5 * BUST));
+  assert.ok(reach <= halfW + 1e-9, `the wheel's reach ${reach.toFixed(2)} fits half the frame's width ${halfW.toFixed(2)}`);
+  for (const phi of [0, Math.PI / 2, -Math.PI / 2, 2]) {
+    s.cam.phi = phi; // the frame turns the world by phi: where the founders land on screen
+    const [a, b] = s.people.slice(0, 2).map((p) => { const [x, y] = posOf(s, p); return [x * Math.cos(phi) - y * Math.sin(phi), x * Math.sin(phi) + y * Math.cos(phi)]; });
+    assert.ok(Math.abs(a[1] - b[1]) < 1e-9 && Math.abs(a[0] - b[0]) > 0.8 * BUST, `level and apart on screen at a turn of ${phi}`);
+  }
+});
+
 test('everyone is always on screen: the camera zooms out slowly and never in', async () => {
   const g = await ready;
   let checked = 0, last = 0; const turns = new Set();
@@ -95,7 +106,7 @@ test('everyone is always on screen: the camera zooms out slowly and never in', a
     const c = s.cam, half = c.span / 2 + 1e-9;
     assert.ok(c.span >= last - 1e-9, `no zoom in at step ${i}`); last = c.span;
     turns.add(Math.round(c.phi * 4));
-    for (const p of s.people) { assert.ok(Math.hypot(p.r * Math.cos(p.a), p.r * Math.sin(p.a)) + 0.5 * p.z <= half, `robot ${p.id} in frame at step ${i}`); checked++; }
+    for (const p of s.people) { assert.ok(Math.hypot(p.r * Math.cos(p.a), p.r * Math.sin(p.a)) + 0.5 * BUST <= half, `robot ${p.id} in frame at step ${i}`); checked++; }
   });
   assert.ok(checked > 10000, `checked ${checked}`);
   assert.ok(turns.size > 2, 'the wheel turns as it grows');

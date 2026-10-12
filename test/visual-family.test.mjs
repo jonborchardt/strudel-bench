@@ -100,7 +100,7 @@ test('the music drives the tree and the camera', async () => {
   assert.ok(kicked.bob > 0.9);
   assert.equal(kicked.kickT, kicked.t, 'and starts the wave down the lines');
   const hats = one({ ...base, layer: 'drums', kind: 'drums', voice: 'hh', role: 'grain' });
-  assert.ok(hats.blink > 0.9 && hats.people.length === 2, 'a hat blinks, no birth');
+  assert.equal(hats.people.length, 2, 'a hat is no birth');
   const old = fresh(); for (let i = 0; i < 400; i++) family.step(old, STEP, i % 30 ? [] : [KICK], clock);
   const wed = one(MEL, old); assert.equal(wed.couples.length, 2, 'a melody note marries a grown child');
   assert.equal(wed.focus, 1, 'and the camera goes to the new couple');
@@ -130,13 +130,29 @@ test('three minutes of kicks and melody go many generations deep, one line', asy
   assert.ok(at.some((x) => x > 0), `the line is not always the leftmost child (${at.join(' ')})`);
 });
 
+test('a family that has just filled up does not marry off its newborn', () => {
+  const s = tree(); s.couples[0].room = 2;
+  s.t = 10; birth(s); s.t = 10.5; birth(s);
+  assert.equal(s.couples[0].kids.length, 2, 'full');
+  s.t = 11; assert.equal(marry(s), false, 'the newest is a baby');
+  s.t = 14.2; assert.equal(marry(s), false, 'the elder is grown, the newest still not');
+  s.t = 14.6; assert.equal(marry(s), true, 'every child grown: one marries');
+});
+
+test('each world names its own tree for the picture cache', async () => {
+  const g = await ready, score = composeVisual(song(g));
+  const { default: wheel } = await import('../web/visual/familywheel.mjs');
+  const a = createPerformance(family, score, { w: 16, h: 9 }).state.key, b = createPerformance(wheel, score, { w: 16, h: 9 }).state.key;
+  assert.notEqual(a, b, 'the same seed, two different trees, two keys');
+});
+
 test('a standing robot strikes poses to the music, each robot its own way', () => {
-  const calm = { pulse: 0, dance: 0, bob: 0, beat: 0, lookTo: { x: 0, y: 0 } }, a = { id: 1 };
+  const calm = { pulse: 0, dance: 0, bob: 0, beat: 0, lookX: 0 }, a = { id: 1 };
   assert.equal(poseOf(calm, a), 0, 'still music: standing');
   assert.ok([4, 5].includes(poseOf({ ...calm, pulse: 1 }, a)), 'a snare: hands up or a point');
   assert.equal(POSES[poseOf({ ...calm, pulse: 1 }, a)].props?.length, 1, 'an arm pose');
   assert.equal(poseOf({ ...calm, bob: 1 }, a), 3, 'a kick: a nod');
-  assert.deepEqual([poseOf({ ...calm, lookTo: { x: -1, y: 0 } }, a), poseOf({ ...calm, lookTo: { x: 1, y: 0 } }, a)], [1, 2], 'the melody turns the head to its side');
+  assert.deepEqual([poseOf({ ...calm, lookX: -1 }, a), poseOf({ ...calm, lookX: 1 }, a)], [1, 2], 'the melody turns the head to its side');
   const dancing = (p) => [0, 1, 2, 3, 4, 5, 6, 7].map((beat) => poseOf({ ...calm, dance: 1, beat }, p));
   assert.ok(new Set(dancing(a)).size >= 2, 'a dance break moves the head beat by beat');
   const ids = [1, 2, 3, 4, 5, 6, 7, 8].map((id) => dancing({ id }).join());

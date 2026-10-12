@@ -13,8 +13,8 @@
 // and the ones before it receding behind, smaller and dimmer, in a line that runs off the frame. The family that had the last
 // birth sways and bobs; everyone dances, rusts and fades to sepia as in family.mjs, which
 // this file shares its people with. Deterministic: randomness only from the state's own generator (kit.mjs).
-import { ease, decay, hsla, rand } from './kit.mjs';
-import { baseState, feel, listen, bust, figure, poseOf, room, lineStyle, person, wed, outsider, childOf, layout, BIRTH_GAP, WED_AGE, MAX_PEOPLE } from './family.mjs';
+import { ease, decay, rand } from './kit.mjs';
+import { baseState, feel, listen, bust, figure, poseOf, room, glow, lineStyle, person, wed, outsider, childOf, layout, BIRTH_GAP, WED_AGE, MAX_PEOPLE } from './family.mjs';
 
 export const LINES = 12; // couples a generation at most: the wheel keeps this many family lines going
 export const RING = 1; // the least gap between generations, in the units a bust is sized in
@@ -26,7 +26,7 @@ export const easeAngle = (a, to, rate, dt) => a + (((to - a) % TAU + TAU * 1.5) 
 const kids = (s) => 1 + Math.floor(rand(s) * 3); // children a couple will have: one to three
 
 /** The founders, wed, in the middle. */
-export function newWheel(s) {
+function newWheel(s) {
   Object.assign(s, { people: [], couples: [], focus: 0, lastBirth: -BIRTH_GAP, maxGen: 0, pulse: 0, shown: [[0], [1]], shownAt: [-9, -9], side: 0 });
   wed(s, person(s, outsider(s), 0, -1, false), kids(s)); // the founders stand either side until the first births take their places
   place(s, true);
@@ -35,10 +35,10 @@ export function newWheel(s) {
 /** Where everyone goes. Every grown robot is one size (BUST). A ring sits one bust out from the ring inside it, or
  *  further only when it has more robots than that circle holds side by side; on it the robots go evenly round in the
  *  tree's leaf order (family.mjs layout, so children sit out from their parents), the ring turned to fit the tree best. */
-export function place(s, snap = false) {
+function place(s, snap = false) {
   layout(s);
   const W = Math.max(2, ...s.people.map((p) => p.x + 0.5)), rings = new Map();
-  for (const p of s.people) { p.tz = BUST; if (!rings.has(p.gen)) rings.set(p.gen, []); rings.get(p.gen).push(p); }
+  for (const p of s.people) { if (!rings.has(p.gen)) rings.set(p.gen, []); rings.get(p.gen).push(p); }
   let r = 0;
   for (const gen of [...rings.keys()].sort((a, b) => a - b)) {
     const ring = rings.get(gen).sort((a, b) => a.x - b.x);
@@ -50,14 +50,19 @@ export function place(s, snap = false) {
     ring.forEach((p, i) => { p.ta = (even[i] + turn + TAU) % TAU; p.tr = r; });
   }
   s.rim = r;
-  for (const p of s.people) if (snap || p.a === undefined) { p.a = p.ta; p.r = p.tr; p.z = p.tz; }
+  for (const p of s.people) if (snap || p.a === undefined) { p.a = p.ta; p.r = p.tr; }
 }
 
-/** A person's place in the world: the founders side by side in the middle, everyone else on their ring. */
-const posOf = (p) => (p.gen === 0 ? [(p.inlaw ? 0.5 : -0.5) * p.z, 0] : [p.r * Math.cos(p.a), p.r * Math.sin(p.a)]);
+/** A person's place in the world: the founders side by side in the middle (side by side on screen, whatever the wheel's
+ *  turn, or a quarter turn stacks one over the other's face), everyone else on their ring. */
+export const posOf = (s, p) => {
+  if (p.gen > 0) return [p.r * Math.cos(p.a), p.r * Math.sin(p.a)];
+  const d = (p.inlaw ? 0.5 : -0.5) * BUST, phi = s.cam?.phi ?? 0;
+  return [d * Math.cos(phi), -d * Math.sin(phi)];
+};
 
 /** A kick: a child for the family on the outer two rings with room and the fewest children so far. */
-export function birth(s) {
+function birth(s) {
   if (s.people.length >= MAX_PEOPLE || s.t - s.lastBirth < BIRTH_GAP) return false;
   const front = Math.max(...s.couples.map((q) => s.people[q.a].gen));
   const open = s.couples.map((q, i) => i).filter((i) => s.couples[i].kids.length < s.couples[i].room && s.people[s.couples[i].a].gen >= front - 1);
@@ -71,7 +76,7 @@ export function birth(s) {
 }
 
 /** A melody note: a grown child of the oldest generation with room for another line marries, from the family with fewest married children, while the generation has room for another line. */
-export function marry(s) {
+function marry(s) {
   if (s.people.length >= MAX_PEOPLE) return false;
   const lines = new Map(); for (const c of s.couples) { const g = s.people[c.a].gen; lines.set(g, (lines.get(g) ?? 0) + 1); }
   // only where a couple can still have children (births go to the outer two rings of couples), so no line is wed into a dead end
@@ -85,8 +90,9 @@ export function marry(s) {
   return true;
 }
 
-/** The height the camera spans to hold the whole wheel: the outermost ring and a bust beyond it. */
-export const wholeSpan = (s) => 2 * ((s.rim ?? 0) + 1.1 * RING);
+/** The height the camera spans to hold the whole wheel, the outermost ring and a bust beyond it, across the frame's
+ *  narrower side: a portrait frame needs more height for the wheel to fit its width. */
+export const wholeSpan = (s, r = (s.rim ?? 0) + 1.1 * RING) => 2 * r * Math.max(1, 1 / s.aspect);
 /** The turn that puts the family with the last birth at the bottom of the frame. */
 const aimTurn = (s) => { const c = s.couples[s.focus], p = s.people[c.kids.at(-1) ?? c.a]; return p.gen === 0 ? s.cam?.phi ?? 0 : Math.PI / 2 - p.a; };
 
@@ -104,8 +110,7 @@ function sides(s, ctx, w, h, lit) {
   const fh = Math.min(h * 0.8, pw * 0.95 * FIG_ASPECT), fy = h * 0.92;
   s.shown.forEach((q, side) => {
     const out = side ? 1 : -1, cx = side ? w - pw / 2 : pw / 2, arrive = 1 - Math.exp(-(s.t - s.shownAt[side]) * 5);
-    const gy = fy - fh / 2, gl = ctx.createRadialGradient(cx, gy, 0, cx, gy, fh * 0.6); gl.addColorStop(0, hsla(s.pal.field, 60, 60, (0.15 + 0.3 * s.glow) * lit)); gl.addColorStop(1, hsla(s.pal.field, 60, 50, 0));
-    ctx.fillStyle = gl; ctx.fillRect(cx - fh * 0.6, gy - fh * 0.6, fh * 1.2, fh * 1.2);
+    glow(ctx, s, cx, fy - fh / 2, fh * 0.6, 0.15, lit);
     for (let i = q.length - 1; i >= 0; i--) { // back to front
       const e = i - 1 + arrive, sc = RECEDE ** e, x = cx + out * pw * 0.2 * (1 - sc) / (1 - RECEDE), y = fy - h * 0.06 * (1 - sc) / (1 - RECEDE);
       const a = lit * DIM ** Math.max(0, e) * Math.min(1, 1 + e); // the newest fades in as it steps up from in front
@@ -121,7 +126,7 @@ export default {
   name: 'familywheel',
 
   init(score, rng, size) {
-    const s = baseState(score, rng, size);
+    const s = baseState(score, rng, size, 'familywheel');
     newWheel(s);
     s.cam = { span: wholeSpan(s), phi: 0 };
     return s;
@@ -133,12 +138,12 @@ export default {
     s.pulse = decay(s.pulse, 5, dt);
     listen(s, events, { kick: () => { if (birth(s)) showBorn(s, s.people.length - 1); }, snare: () => { s.pulse = 1; }, note: () => { if (clock.bar !== s.wedBar && marry(s)) s.wedBar = clock.bar; } });
     for (const p of s.people) {
-      p.a = easeAngle(p.a, p.ta, 3, dt); p.r = ease(p.r, p.tr, 3, dt); p.z = ease(p.z, p.tz, 3, dt);
+      p.a = easeAngle(p.a, p.ta, 3, dt); p.r = ease(p.r, p.tr, 3, dt);
       p.size = ease(p.size, s.maxGen - p.gen === 0 && p.gen > 0 ? 0.7 : 1, 2, dt);
     }
     // the slow zoom out (never in: nobody leaves the frame) and the slow turn, the shortest way round
     const c = s.cam;
-    c.span = Math.max(ease(c.span, wholeSpan(s), 0.8, dt), 2 * Math.max(...s.people.map((p) => p.r + 0.6 * p.z)));
+    c.span = Math.max(ease(c.span, wholeSpan(s), 0.8, dt), wholeSpan(s, Math.max(...s.people.map((p) => p.r + 0.6 * BUST))));
     c.phi = easeAngle(c.phi, aimTurn(s), 0.4, dt);
   },
 
@@ -146,13 +151,12 @@ export default {
     const lit = 1 - 0.55 * s.dark, c = s.cam, k = h / (c.span * (1 + 0.04 * s.pulse));
     room(s, ctx, w, h, lit);
     ctx.save(); ctx.translate(w / 2, h / 2); ctx.scale(k, k); ctx.rotate(c.phi);
-    const n = s.couples[s.focus], [gx, gy] = posOf(s.people[n.a]), gr = 3 * RING;
-    const gl = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr); gl.addColorStop(0, hsla(s.pal.field, 60, 60, 0.35 * s.glow * lit + 0.05)); gl.addColorStop(1, hsla(s.pal.field, 60, 50, 0));
-    ctx.fillStyle = gl; ctx.fillRect(gx - gr, gy - gr, 2 * gr, 2 * gr); // the glow's own square, not a field four frames wide
+    const n = s.couples[s.focus], [gx, gy] = posOf(s, s.people[n.a]);
+    glow(ctx, s, gx, gy, 3 * RING, 0.05, lit);
     // the lines: partners joined, a spoke out from the couple to an arc half way to the next ring, a spoke to each child,
     // playing (family.mjs lineStyle: a hue a generation, the bass, the energy, a kick's wave out to the rim, the pad's glow)
     for (let qi = 0; qi < s.couples.length; qi++) {
-      const q = s.couples[qi], A = s.people[q.a], B = s.people[q.b], [ax, ay] = posOf(A), [bx, by] = posOf(B), ch = q.kids.map((i) => s.people[i]);
+      const q = s.couples[qi], A = s.people[q.a], B = s.people[q.b], [ax, ay] = posOf(s, A), [bx, by] = posOf(s, B), ch = q.kids.map((i) => s.people[i]);
       lineStyle(ctx, s, A.gen, qi === s.focus, 1 / k, lit);
       ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
       if (ch.length) {
@@ -167,7 +171,7 @@ export default {
     // the people, upright to the frame; the family with the last birth live
     const live = new Set([n.a, n.b, ...n.kids]); // the family with the last birth sways and bobs
     for (const p of s.people) {
-      const z = p.z * p.size, [x, y] = posOf(p);
+      const z = BUST * p.size, [x, y] = posOf(s, p);
       ctx.save(); ctx.translate(x, y); ctx.rotate(-c.phi);
       bust(ctx, s, p, z, z * k, lit, live.has(p.id)); ctx.restore();
     }
