@@ -23,7 +23,7 @@ test('a child sits between its parents: colours mixed, numbers in range, no hat,
   assert.equal(blend(null, null, s), null);
 });
 
-test('births fill the focused couple up to its room, then the youngest couple with room; the cap holds', () => {
+test('births fill the focused couple up to its room and then wait; the line goes deep, one couple a generation; the cap holds', () => {
   const s = tree();
   assert.equal(s.people.length, 2); assert.equal(s.couples.length, 1);
   const room = s.couples[0].room;
@@ -35,7 +35,10 @@ test('births fill the focused couple up to its room, then the youngest couple wi
   assert.equal(s.people.length, n + 1, 'the marriage brought one in-law');
   for (let i = 0; i < 2000; i++) { s.t += 1; birth(s); if (i % 3 === 0) marry(s); }
   assert.ok(s.people.length <= MAX_PEOPLE, 'never past the cap');
-  assert.ok(s.maxGen >= 3, 'the tree went deep');
+  assert.ok(s.maxGen > 100, `the line went deep (${s.maxGen})`);
+  assert.ok(s.couples.every((c, i) => s.people[c.a].gen === i), 'one couple a generation');
+  assert.equal(s.couples[0].kids.length, room, 'the founders never had another child');
+  for (const c of s.couples) assert.ok(c.kids.filter((k) => s.people[k].partner >= 0).length <= 1, 'at most one married child a couple');
 });
 
 test('marry takes the oldest unmarried blood child, old enough, and focuses the new couple', () => {
@@ -101,11 +104,37 @@ test('the music drives the tree and the camera', async () => {
   const back = one(SNARE, wed);
   assert.equal(back.back, 0, 'a snare looks back up to the parents');
   assert.ok(back.backUntil > back.t);
-  const top = one(SNARE); assert.ok(top.back >= 0 && top.back < top.couples.length, 'the founders look back at some couple, never -1');
+  const until = back.backUntil;
+  one(SNARE, back, { ...clock, bar: 1 }); assert.equal(back.backUntil, until, 'not again inside two bars');
+  one(SNARE, back, { ...clock, bar: 2 }); assert.ok(back.backUntil > until, 'two bars on, it may look again');
+  assert.equal(back.back, 0, 'and still only one generation up');
+  const top = one(SNARE); assert.ok(top.backUntil < top.t, 'the founders have no parents: a snare does nothing');
   const bound = fresh(); family.step(bound, STEP, [], clockOf(score, 4, clockOf(score, 3.9)));
   assert.ok(bound.wideUntil > bound.t, 'a boundary is a wide shot');
   const noKick = fresh(); for (let i = 0; i < 900; i++) family.step(noKick, STEP, i % 20 ? [] : [MEL], clockOf(score, i / 60));
   assert.equal(noKick.people.length, 2, 'no kicks, no births: the founders alone');
   const span = fresh().cam.span;
   assert.ok(Number.isFinite(span) && span > 0, 'the camera starts on the founders');
+});
+
+test('three minutes of kicks and melody go many generations deep, one line', async () => {
+  const g = await ready;
+  const score = composeVisual(song(g)), clock = clockOf(score, 0.1), s = createPerformance(family, score, { w: 16, h: 9 }).state;
+  for (let i = 0; i < 180 * 60; i++) family.step(s, STEP, i % 30 ? [] : [KICK, MEL], { ...clock, bar: Math.floor(i / 120) }); // a bar every two seconds
+  assert.ok(s.maxGen > 10, `deep (${s.maxGen} generations)`);
+  assert.ok(s.couples.every((c, i) => s.people[c.a].gen === i), 'one couple a generation');
+  assert.equal(s.focus, s.couples.length - 1, 'the camera follows the newest couple');
+});
+
+test('draw: lines, every person on screen, the focused family live; Node has no OffscreenCanvas and falls back', async () => {
+  const g = await ready;
+  const p = runWorld(family, song(g), 16), ctx = ctxStub();
+  assert.equal(typeof OffscreenCanvas, 'undefined');
+  p.draw(ctx, 320, 180);
+  assert.ok(ctx.calls.stroke > 0, 'tree lines');
+  assert.ok(ctx.calls.save >= 2, 'the focused couple drawn live, each in its own transform');
+  assert.ok(ctx.calls.fill > 40, 'portrait ops filled');
+  const lone = createPerformance(family, composeVisual(song(g)), { w: 16, h: 9 }), c2 = ctxStub();
+  lone.draw(c2, 320, 180);
+  assert.ok(c2.calls.save >= 2, 'founders alone still draw');
 });
