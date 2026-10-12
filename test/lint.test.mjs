@@ -114,3 +114,10 @@ test('tableOf: the check table a page can build from the evaluated song and its 
   assert.ok(lint({ sections: t }).some((f) => /bass plays the seeded line/.test(f.text)), 'the lint runs over the page table');
   assert.deepEqual(tableOf(null, {}), [], 'a plain strudel file has no table');
 });
+
+test('plainAttrs: a pattern nested in a map (a mini-pattern drum voice) prints as signal, never a circular JSON throw', async () => {
+  const { ready } = await import('./_scope.mjs');
+  const g = await ready;
+  const { plainAttrs } = await import('../lib/lint.mjs');
+  assert.deepEqual(plainAttrs({ density: .5, sounds: { bd: g.s('bd'), sd: 'cp' }, sound: ['a', 'b'] }), { density: .5, sounds: '{"bd":"signal","sd":"cp"}', sound: '["a","b"]' });
+});

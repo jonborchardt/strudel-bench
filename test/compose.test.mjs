@@ -141,6 +141,7 @@ test('keyDefault: a sensible first value per key, null when the value wants a pi
   assert.deepEqual(addableKeys(['cps', 'bpm', 'key', 'kit'], ['bpm', 'kit']), ['key'], 'bpm and cps are one tempo: a written one hides the other (song() refuses both, setSongField swaps them)');
   assert.deepEqual(addableKeys(['cps', 'bpm', 'key'], ['cps']), ['key']);
   assert.equal(d('cps'), '.5', "the engine's default tempo, not the log scale's midpoint");
+  assert.equal(d('duckAttack'), '.1', "the engine's default recovery, not a one-second midpoint");
   assert.deepEqual(addableKeys(['sound', 'level', 'position'], [], ['sound', 'level']), ['position']);
 });
 
