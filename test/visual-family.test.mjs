@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { seed, rand } from '../web/visual/kit.mjs';
-import family, { blend, childOf, newTree, birth, marry, layout, MAX_PEOPLE, nursery } from '../web/visual/family.mjs';
+import family, { blend, childOf, newTree, birth, marry, layout, MAX_PEOPLE, nursery, poseOf, POSES } from '../web/visual/family.mjs';
 import { ready } from './_scope.mjs';
 import { clockOf, createPerformance, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
@@ -98,6 +98,7 @@ test('the music drives the tree and the camera', async () => {
   const kicked = one(KICK);
   assert.equal(kicked.couples[0].kids.length, 1, 'a kick is a birth in the focused family');
   assert.ok(kicked.bob > 0.9);
+  assert.equal(kicked.kickT, kicked.t, 'and starts the wave down the lines');
   const hats = one({ ...base, layer: 'drums', kind: 'drums', voice: 'hh', role: 'grain' });
   assert.ok(hats.blink > 0.9 && hats.people.length === 2, 'a hat blinks, no birth');
   const old = fresh(); for (let i = 0; i < 400; i++) family.step(old, STEP, i % 30 ? [] : [KICK], clock);
@@ -127,6 +128,21 @@ test('three minutes of kicks and melody go many generations deep, one line', asy
   assert.equal(s.focus, s.couples.length - 1, 'the camera follows the newest couple');
   const at = s.couples.slice(0, -1).map((c, i) => c.kids.indexOf(s.couples[i + 1].a));
   assert.ok(at.some((x) => x > 0), `the line is not always the leftmost child (${at.join(' ')})`);
+});
+
+test('a standing robot strikes poses to the music, each robot its own way', () => {
+  const calm = { pulse: 0, dance: 0, bob: 0, beat: 0, lookTo: { x: 0, y: 0 } }, a = { id: 1 };
+  assert.equal(poseOf(calm, a), 0, 'still music: standing');
+  assert.ok([4, 5].includes(poseOf({ ...calm, pulse: 1 }, a)), 'a snare: hands up or a point');
+  assert.equal(POSES[poseOf({ ...calm, pulse: 1 }, a)].props?.length, 1, 'an arm pose');
+  assert.equal(poseOf({ ...calm, bob: 1 }, a), 3, 'a kick: a nod');
+  assert.deepEqual([poseOf({ ...calm, lookTo: { x: -1, y: 0 } }, a), poseOf({ ...calm, lookTo: { x: 1, y: 0 } }, a)], [1, 2], 'the melody turns the head to its side');
+  const dancing = (p) => [0, 1, 2, 3, 4, 5, 6, 7].map((beat) => poseOf({ ...calm, dance: 1, beat }, p));
+  assert.ok(new Set(dancing(a)).size >= 2, 'a dance break moves the head beat by beat');
+  const ids = [1, 2, 3, 4, 5, 6, 7, 8].map((id) => dancing({ id }).join());
+  assert.ok(new Set(ids).size >= 3, `robots dance differently (${ids.join(' | ')})`);
+  assert.ok([1, 2, 3, 4, 5, 6, 7, 8].some((id) => poseOf({ ...calm, pulse: 1 }, { id }) !== poseOf({ ...calm, pulse: 1 }, a)), 'and answer a snare differently');
+
 });
 
 test('dance breaks: a loud section dances all through, a middling one the last two bars of every eight, a quiet one never', async () => {

@@ -9,13 +9,15 @@
 // robots; each child is a new robot in its own clothes with its face's genes (head shape, plating, eye and mouth modes)
 // blended from its parents (childOf), so the family's face drifts down the tree and every in-law brings new blood. Age is
 // how many generations sit below you: the newest are children, then adults, then rusting, then sepia, like portraits on
-// a wall. Dance breaks: a loud section dances all through, a middling one the last two bars of every eight.
+// a wall. Dance breaks: a loud section dances all through, a middling one the last two bars of every eight. The lines
+// play (lineStyle, shared with the wheel): a hue a generation moved by the bass, brighter with the section's energy, a
+// bright wave running down the generations on every kick, the family on screen glowing with the pad.
 // Every robot is a cached picture (limner takes ~20 ms to draw one, too slow to draw any frame by frame), moved by the
 // music: the family on screen sways with the bar and bobs on a kick, the bass tints the room, the pad glows behind
 // them, a dropout dims the room.
 // Deterministic: randomness only from the state's own generator (kit.mjs).
 import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf, DEFAULT_SLOT } from './kit.mjs';
-import { portraitOps, drawOn, eyeY, characterFrom, CASTS, mix } from './limner.mjs';
+import { portraitOps, drawOn, eyeY, feetY, characterFrom, CASTS, mix } from './limner.mjs';
 
 export const ROW = 1.5; // generations apart, in slots (a slot is one bust's width)
 export const MAX_PEOPLE = 1000; // a safety cap only: the tree is one line (a couple and its children a generation), so a long song goes deep, not wide
@@ -179,6 +181,56 @@ export function bust(ctx, s, p, sz, px, lit, live = false) {
   ctx.restore();
 }
 
+const FIG = { x: -90, w: 580, h: 1284 }; // limner's whole-figure frame (renderFigure): 90 either side of the sheet, 1284 tall to the shoes
+/** The poses a standing robot can strike, each a picture of its own (a pose is a limner drawing, ~20 ms, so a robot
+ *  gets a handful made once and the music picks among them): the head and the arms. */
+export const POSES = [
+  {}, // standing
+  { headTilt: -0.3, headX: -14 }, // head over to its right
+  { headTilt: 0.3, headX: 14 }, // and to its left
+  { headY: 16, headTilt: 0.05 }, // a nod
+  { props: ['handsUp'], headY: -8 }, // hands up
+  { props: ['reachRight'], headTilt: 0.12, headX: 8, turn: 0.35 }, // pointing out
+];
+/** A small whole number from a person's id, the same every frame: what makes one robot's dance its own. */
+const own = (p, n) => ((p.id * 2654435761) >>> 0) % n;
+/** The pose a robot strikes now, from the music and its own nature: a snare throws its hands up or points (which, is its
+ *  own), a dance break swings its head side to side on the beat (in its own phase) and now and then throws an arm, a kick
+ *  nods it, the melody turns its head toward the side it plays from. */
+export function poseOf(s, p) {
+  const k = own(p, 4);
+  if (s.pulse > 0.4) return k % 2 ? 4 : 5;
+  if (s.dance > 0.5) { const b = Math.floor(s.beat + k / 2); return b % 4 === 3 && k > 1 ? 4 + (k % 2) : 1 + (b % 2); }
+  if (s.bob > 0.6) return 3;
+  if (Math.abs(s.lookTo.x) > 0.35) return s.lookTo.x < 0 ? 1 : 2;
+  return 0;
+}
+/** One person standing whole, `hgt` tall (canvas units) with their feet at the origin, in pose `pose` (POSES), from its
+ *  own cached picture: a pose not made yet shows the standing one until its turn in the frame's budget. Each robot sways
+ *  and hops in its own phase and by its own amount, so a line of them does not move as one. */
+export function figure(ctx, s, p, hgt, lit, pose = 0) {
+  const ph = own(p, 7) / 7 * Math.PI, amp = 0.6 + own(p, 5) * 0.15, beat = s.beat * Math.PI + ph;
+  const swing = amp * s.dance * Math.sin(beat), hop = amp * s.dance * Math.abs(Math.sin(beat)), wd = hgt * FIG.w / FIG.h;
+  ctx.save(); ctx.translate(0, -0.06 * hgt * hop - 0.03 * hgt * s.bob); ctx.rotate(0.08 * swing + 0.03 * s.sway * (own(p, 2) ? 1 : -1)); ctx.globalAlpha = lit;
+  let b = null;
+  if (typeof OffscreenCanvas !== 'undefined') {
+    const look = Math.max(1, stageOf(s, p)), key = (n) => `${s.key}:${p.id}:figure:${look}:${n}`;
+    b = CACHE.get(key(pose)) ?? null;
+    if (!b && budget > 0) {
+      budget--;
+      const res = Math.round(Math.min(MAX_RES, Math.max(BMP, wd))), c0 = new OffscreenCanvas(res, Math.round(res * FIG.h / FIG.w)), c = c0.getContext('2d'), a = aged(p.char, look), k = res / FIG.w;
+      const { props, ...head } = POSES[pose], posed = { ...a, pose: { ...a.pose, ...head }, ...(props ? { props: [...(a.props ?? []), ...props] } : {}) };
+      c.scale(k, k); c.translate(-FIG.x, FIG.h - feetY(posed)); // the shoes on the bottom edge
+      drawOn(c, portraitOps(posed));
+      CACHE.set(key(pose), (b = c0));
+    }
+    b ??= CACHE.get(key(0)) ?? null;
+  }
+  if (b) ctx.drawImage(b, -wd / 2, -hgt, wd, hgt);
+  else if (typeof OffscreenCanvas === 'undefined') { ctx.fillStyle = p.char.skin; ctx.fillRect(-wd / 4, -hgt, wd / 2, hgt); }
+  ctx.restore();
+}
+
 /** What the music does to everyone, whatever the layout: the sway, the dance breaks, the faces' twitches decaying, the riser and the dark. */
 export function feel(s, dt, clock) {
   s.energy = ease(s.energy, clock.energy, 2, dt);
@@ -200,7 +252,7 @@ export function listen(s, events, on) {
     if (slot === 'impulse') {
       if (e.role === 'impact') on.snare();
       else if (e.role === 'grain') { if (s.t - s.lastBlink > 2.5) { s.blink = 1; s.lastBlink = s.t; } }
-      else { on.kick(); s.bob = Math.max(s.bob, g); s.grin = Math.max(s.grin, g); }
+      else { s.kickT = s.t; on.kick(); s.bob = Math.max(s.bob, g); s.grin = Math.max(s.grin, g); }
     } else if (slot === 'ground') { if (e.note !== null) s.hueTo = ((e.note % 12) / 12) * 80 - 40; }
     else if (slot === 'line' || slot === 'counter') {
       if (e.note === null) continue;
@@ -217,11 +269,21 @@ export function baseState(score, rng, size) {
   const s = {
     pal: paletteOf(score, rng), aspect: size.w / size.h, t: 0,
     slotOf: Object.fromEntries(Object.entries(score.cast).map(([n, c]) => [n, c.slot])),
-    up: 0, upUntil: -1, upAt: [-1, -9], wedBar: -1, riser: 0, dark: 0, energy: 0.5,
+    up: 0, upUntil: -1, upAt: [-1, -9], wedBar: -1, kickT: -9, riser: 0, dark: 0, energy: 0.5,
     sway: 0, dance: 0, beat: 0, bob: 0, grin: 0, blink: 0, lastBlink: -9, look: { x: 0, y: 0 }, lookTo: { x: 0, y: 0 }, glow: 0, flash: 0, hueShift: 0, hueTo: 0,
   };
   seed(s, rng); s.key = s.rnd;
   return s;
+}
+
+const WAVE = 14; // how fast a kick's wave runs through the generations, in generations a second
+/** How a couple's lines look: each generation its own hue round the palette's line colour, moved by the bass; brighter
+ *  with the section's energy; lit up as a kick's wave passes their generation (out from the founders); glowing with the
+ *  pad when they are the family on screen (`own`). `unit` is one pixel in the current transform's units. */
+export function lineStyle(ctx, s, gen, own, unit, lit) {
+  const fade = Math.exp(-(s.t - s.kickT) * 1.2), hit = fade * Math.exp(-(((gen + 0.5 - (s.t - s.kickT) * WAVE) / 0.7) ** 2)), g = own ? s.glow : 0;
+  ctx.strokeStyle = hsla(s.pal.line + gen * 23 + s.hueShift, 45 + 40 * hit, 48 + 18 * s.energy + 30 * hit + 15 * g, (0.35 + 0.3 * s.energy + 0.35 * Math.max(hit, g)) * lit);
+  ctx.lineWidth = (1.4 + 3 * hit + 2 * g) * unit; ctx.lineCap = 'round';
 }
 
 /** The room: the background lit by the section, tinted by the bass. */
@@ -263,10 +325,11 @@ export default {
     const f = s.couples[nursery(s)], fa = s.people[f.a], gx = X(fa.x + 0.5), gy = Y(fa.y + 0.4);
     const gl = ctx.createRadialGradient(gx, gy, 0, gx, gy, 2 * k); gl.addColorStop(0, hsla(s.pal.field, 60, 60, 0.35 * s.glow * lit + 0.05)); gl.addColorStop(1, hsla(s.pal.field, 60, 50, 0));
     ctx.fillStyle = gl; ctx.fillRect(0, 0, w, h);
-    // the lines: partners joined at the shoulder, a drop to a bar over the children, a stem to each
-    ctx.strokeStyle = hsla(s.pal.hue, 20, 72, 0.55 * lit); ctx.lineWidth = Math.max(1, 0.025 * k);
-    for (const c of s.couples) {
-      const A = s.people[c.a], B = s.people[c.b], sy = Y(A.y + 0.45), m = (A.x + B.x) / 2;
+    // the lines: partners joined at the shoulder, a drop to a bar over the children, a stem to each, playing (lineStyle)
+    const fi = nursery(s);
+    for (let ci = 0; ci < s.couples.length; ci++) {
+      const c = s.couples[ci], A = s.people[c.a], B = s.people[c.b], sy = Y(A.y + 0.45), m = (A.x + B.x) / 2;
+      lineStyle(ctx, s, A.gen, ci === fi, Math.max(0.7, 0.016 * k), lit);
       ctx.beginPath(); ctx.moveTo(X(A.x), sy); ctx.lineTo(X(B.x), sy);
       if (c.kids.length) {
         const kx = c.kids.map((i) => s.people[i].x), bar = Y(A.y + ROW - 0.75), mid = X(m);

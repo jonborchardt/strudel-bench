@@ -9,18 +9,17 @@
 // a robot with its parents' face genes (family.mjs childOf). A snare bumps the whole wheel. The lines play: each
 // generation its own hue, moved by the bass, brighter with the section's energy, a bright wave running out from the
 // founders to the rim on every kick, the family with the last birth glowing with the pad. Either side of the wheel (when
-// the frame is wider than it) the newest robot stands close on the left, popping in at each birth, and its line back up
-// the generations runs up the right, so the face's drift down the family reads in one column. The family that had the last
+// the frame is wider than it) the newest robots stand whole, births alternating sides, each new one stepping up in front
+// and the ones before it receding behind, smaller and dimmer, in a line that runs off the frame. The family that had the last
 // birth sways and bobs; everyone dances, rusts and fades to sepia as in family.mjs, which
 // this file shares its people with. Deterministic: randomness only from the state's own generator (kit.mjs).
 import { ease, decay, hsla, rand } from './kit.mjs';
-import { baseState, feel, listen, bust, room, person, wed, outsider, childOf, layout, BIRTH_GAP, WED_AGE, MAX_PEOPLE } from './family.mjs';
+import { baseState, feel, listen, bust, figure, poseOf, room, lineStyle, person, wed, outsider, childOf, layout, BIRTH_GAP, WED_AGE, MAX_PEOPLE } from './family.mjs';
 
 export const LINES = 12; // couples a generation at most: the wheel keeps this many family lines going
 export const RING = 1; // the least gap between generations, in the units a bust is sized in
 export const BUST = 0.85; // every grown robot's width, the newest children 0.7 of it
 const SPACE = 1.1; // centre to centre along a ring, in busts
-const WAVE = 14; // how fast a kick's wave runs out along the lines, in rings a second
 const TAU = Math.PI * 2;
 /** An angle eased toward another the short way round, so a robot whose place crosses 0 does not fly round the wheel. */
 export const easeAngle = (a, to, rate, dt) => a + (((to - a) % TAU + TAU * 1.5) % TAU - Math.PI) * (1 - Math.exp(-rate * dt));
@@ -28,8 +27,8 @@ const kids = (s) => 1 + Math.floor(rand(s) * 3); // children a couple will have:
 
 /** The founders, wed, in the middle. */
 export function newWheel(s) {
-  Object.assign(s, { people: [], couples: [], focus: 0, lastBirth: -BIRTH_GAP, maxGen: 0, pulse: 0, kickT: -9, popT: -9 });
-  wed(s, person(s, outsider(s), 0, -1, false), kids(s));
+  Object.assign(s, { people: [], couples: [], focus: 0, lastBirth: -BIRTH_GAP, maxGen: 0, pulse: 0, shown: [[0], [1]], shownAt: [-9, -9], side: 0 });
+  wed(s, person(s, outsider(s), 0, -1, false), kids(s)); // the founders stand either side until the first births take their places
   place(s, true);
 }
 
@@ -91,30 +90,32 @@ export const wholeSpan = (s) => 2 * ((s.rim ?? 0) + 1.1 * RING);
 /** The turn that puts the family with the last birth at the bottom of the frame. */
 const aimTurn = (s) => { const c = s.couples[s.focus], p = s.people[c.kids.at(-1) ?? c.a]; return p.gen === 0 ? s.cam?.phi ?? 0 : Math.PI / 2 - p.a; };
 
-/** The newest robot and the line it came down, back to the founders: itself, its blood parent, theirs, and so on. */
-export function lineage(s) {
-  const c = s.couples[s.focus], out = [];
-  for (let p = s.people[c.kids.at(-1) ?? c.a]; p; p = p.parents >= 0 ? s.people[s.couples[p.parents].a] : null) out.push(p);
-  return out;
-}
+export const QUEUE = 9; // robots kept in each side's line; the back ones are off the frame by then
+/** A birth steps up beside the wheel on the side whose front robot has stood there longer, so births alternate left and
+ *  right; the robots already on that side each step one place back. */
+function showBorn(s, id) { const q = s.shown[s.side]; q.unshift(id); q.length = Math.min(q.length, QUEUE); s.shownAt[s.side] = s.t; s.side = 1 - s.side; }
 
-/** The frame either side of the wheel: the newest robot close on the left, popping in at each birth, and on the right
- *  its line back up the generations, newest at the bottom, so the face's drift down the family reads in one column. */
+/** The frame either side of the wheel: each side a line of robots standing whole, the newest in front and every one
+ *  before it a step further back, smaller, dimmer, higher and nearer the edge, so the line runs off the frame. The line
+ *  steps back smoothly when a robot arrives. */
 function sides(s, ctx, w, h, lit) {
   const pw = (w - h) / 2;
   if (pw < 0.12 * h) return; // a frame about as narrow as the wheel has no sides
-  const line = lineage(s), baby = line[0];
-  const z = Math.min(pw * 0.75, h * 0.42), pop = 1 + 0.25 * Math.exp(-(s.t - s.popT) * 6), cx = pw / 2, cy = h * 0.5;
-  const gl = ctx.createRadialGradient(cx, cy, 0, cx, cy, z); gl.addColorStop(0, hsla(s.pal.field, 60, 60, (0.15 + 0.3 * s.glow) * lit)); gl.addColorStop(1, hsla(s.pal.field, 60, 50, 0));
-  ctx.fillStyle = gl; ctx.fillRect(cx - z, cy - z, 2 * z, 2 * z);
-  ctx.save(); ctx.translate(cx, cy); ctx.scale(pop, pop); bust(ctx, s, baby, z, z * pop, lit, true); ctx.restore();
-  const up = line.slice(1), z2 = Math.min(pw * 0.42, h / 6), step = z2 * 1.25, n = Math.min(up.length, Math.floor((h * 0.9) / step));
-  if (!n) return;
-  const x = w - pw / 2, y = (i) => h * 0.95 - (i + 0.6) * step;
-  ctx.strokeStyle = hsla(s.pal.line + s.hueShift, 40, 60, 0.45 * lit); ctx.lineWidth = Math.max(1, 0.012 * h);
-  ctx.beginPath(); ctx.moveTo(x, y(0)); ctx.lineTo(x, y(n - 1)); ctx.stroke();
-  for (let i = 0; i < n; i++) { ctx.save(); ctx.translate(x, y(i)); bust(ctx, s, up[i], z2, z2, lit, false); ctx.restore(); }
+  const fh = Math.min(h * 0.8, pw * 0.95 * FIG_ASPECT), fy = h * 0.92;
+  s.shown.forEach((q, side) => {
+    const out = side ? 1 : -1, cx = side ? w - pw / 2 : pw / 2, arrive = 1 - Math.exp(-(s.t - s.shownAt[side]) * 5);
+    const gy = fy - fh / 2, gl = ctx.createRadialGradient(cx, gy, 0, cx, gy, fh * 0.6); gl.addColorStop(0, hsla(s.pal.field, 60, 60, (0.15 + 0.3 * s.glow) * lit)); gl.addColorStop(1, hsla(s.pal.field, 60, 50, 0));
+    ctx.fillStyle = gl; ctx.fillRect(cx - fh * 0.6, gy - fh * 0.6, fh * 1.2, fh * 1.2);
+    for (let i = q.length - 1; i >= 0; i--) { // back to front
+      const e = i - 1 + arrive, sc = RECEDE ** e, x = cx + out * pw * 0.2 * (1 - sc) / (1 - RECEDE), y = fy - h * 0.06 * (1 - sc) / (1 - RECEDE);
+      const a = lit * DIM ** Math.max(0, e) * Math.min(1, 1 + e); // the newest fades in as it steps up from in front
+      if (a < 0.03) continue;
+      const who = s.people[q[i]]; ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc); figure(ctx, s, who, fh, a, i ? 0 : poseOf(s, who)); ctx.restore(); // the front one strikes poses to the music; the line behind sways, each its own way
+    }
+  });
 }
+const RECEDE = 0.8, DIM = 0.82; // each step back in a side's line: this much the size, this much the light
+const FIG_ASPECT = 1284 / 580; // limner's whole figure, tall over wide
 
 export default {
   name: 'familywheel',
@@ -130,7 +131,7 @@ export default {
     s.t += dt;
     feel(s, dt, clock);
     s.pulse = decay(s.pulse, 5, dt);
-    listen(s, events, { kick: () => { s.kickT = s.t; if (birth(s)) s.popT = s.t; }, snare: () => { s.pulse = 1; }, note: () => { if (clock.bar !== s.wedBar && marry(s)) s.wedBar = clock.bar; } });
+    listen(s, events, { kick: () => { if (birth(s)) showBorn(s, s.people.length - 1); }, snare: () => { s.pulse = 1; }, note: () => { if (clock.bar !== s.wedBar && marry(s)) s.wedBar = clock.bar; } });
     for (const p of s.people) {
       p.a = easeAngle(p.a, p.ta, 3, dt); p.r = ease(p.r, p.tr, 3, dt); p.z = ease(p.z, p.tz, 3, dt);
       p.size = ease(p.size, s.maxGen - p.gen === 0 && p.gen > 0 ? 0.7 : 1, 2, dt);
@@ -148,17 +149,11 @@ export default {
     const n = s.couples[s.focus], [gx, gy] = posOf(s.people[n.a]), gr = 3 * RING;
     const gl = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr); gl.addColorStop(0, hsla(s.pal.field, 60, 60, 0.35 * s.glow * lit + 0.05)); gl.addColorStop(1, hsla(s.pal.field, 60, 50, 0));
     ctx.fillStyle = gl; ctx.fillRect(gx - gr, gy - gr, 2 * gr, 2 * gr); // the glow's own square, not a field four frames wide
-    // the lines: partners joined, a spoke out from the couple to an arc half way to the next ring, a spoke to each child.
-    // They play too: each generation its own hue round the palette's line colour, moved by the bass; the section's
-    // energy brightens them; a kick sends a bright wave out from the founders to the rim; the family with the last
-    // birth glows with the pad.
-    const wave = (s.t - s.kickT) * WAVE, fade = Math.exp(-(s.t - s.kickT) * 1.2);
-    ctx.lineCap = 'round';
+    // the lines: partners joined, a spoke out from the couple to an arc half way to the next ring, a spoke to each child,
+    // playing (family.mjs lineStyle: a hue a generation, the bass, the energy, a kick's wave out to the rim, the pad's glow)
     for (let qi = 0; qi < s.couples.length; qi++) {
       const q = s.couples[qi], A = s.people[q.a], B = s.people[q.b], [ax, ay] = posOf(A), [bx, by] = posOf(B), ch = q.kids.map((i) => s.people[i]);
-      const hit = fade * Math.exp(-(((A.r + RING / 2 - wave) / (0.7 * RING)) ** 2)), own = qi === s.focus ? s.glow : 0;
-      ctx.strokeStyle = hsla(s.pal.line + A.gen * 23 + s.hueShift, 45 + 40 * hit, 48 + 18 * s.energy + 30 * hit + 15 * own, (0.35 + 0.3 * s.energy + 0.35 * Math.max(hit, own)) * lit);
-      ctx.lineWidth = (1.4 + 3 * hit + 2 * own) / k;
+      lineStyle(ctx, s, A.gen, qi === s.focus, 1 / k, lit);
       ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
       if (ch.length) {
         const rm = (A.r + ch[0].r) / 2, am = A.gen === 0 ? ch[0].a : (Math.atan2(ay + by, ax + bx) + TAU) % TAU; // in the children's 0..TAU, or the arc runs the long way round
