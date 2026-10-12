@@ -1,20 +1,24 @@
 // familywheel: the family world's tree laid out as a wheel, and the whole of it always on screen. The two founders sit
-// in the middle; every generation is a ring one bust further out (RING), so the wheel grows outward and the camera
+// in the middle; every generation is a ring one bust further out (RING, more only when a ring is crowded), every grown
+// robot one size, so the wheel grows outward and the camera
 // zooms out slowly to keep every robot in frame, the wheel turning slowly as it grows so the newest birth drifts to the
 // bottom, every robot upright to the frame like a car on a Ferris wheel. Many lines grow at once (up to LINES couples a
 // generation), each couple with one to three children and most couples having some: a kick is a birth into the family
 // on the outer rings with the fewest children so far, so the births go round the wheel; a melody note, once a bar,
 // marries a grown child off, from the families with fewest married children first, so the lines spread. Each child is
 // a robot with its parents' face genes (family.mjs childOf). A snare bumps the whole wheel. The family that had the last
-// birth is drawn live (blinking, looking, smiling); everyone dances, rusts and fades to sepia as in family.mjs, which
+// birth sways and bobs; everyone dances, rusts and fades to sepia as in family.mjs, which
 // this file shares its people with. Deterministic: randomness only from the state's own generator (kit.mjs).
 import { ease, decay, hsla, rand } from './kit.mjs';
 import { baseState, feel, listen, bust, room, person, wed, outsider, childOf, layout, BIRTH_GAP, WED_AGE, MAX_PEOPLE } from './family.mjs';
 
 export const LINES = 12; // couples a generation at most: the wheel keeps this many family lines going
-export const RING = 1; // the gap between generations, in the units a bust is sized in: a bust is at most RING_FILL of it
-const RING_FILL = 0.85, LIVE = 0.06; // a bust of the family with the last birth wider than this share of the frame is drawn live
+export const RING = 1; // the least gap between generations, in the units a bust is sized in
+export const BUST = 0.85; // every grown robot's width, the newest children 0.7 of it
+const SPACE = 1.1; // centre to centre along a ring, in busts
 const TAU = Math.PI * 2;
+/** An angle eased toward another the short way round, so a robot whose place crosses 0 does not fly round the wheel. */
+export const easeAngle = (a, to, rate, dt) => a + (((to - a) % TAU + TAU * 1.5) % TAU - Math.PI) * (1 - Math.exp(-rate * dt));
 const kids = (s) => 1 + Math.floor(rand(s) * 3); // children a couple will have: one to three
 
 /** The founders, wed, in the middle. */
@@ -24,24 +28,24 @@ export function newWheel(s) {
   place(s, true);
 }
 
-/** Where everyone goes: the angle by the tree's leaf order (family.mjs layout), the radius by generation, the size by the room to the neighbours on the ring. */
+/** Where everyone goes. Every grown robot is one size (BUST). A ring sits one bust out from the ring inside it, or
+ *  further only when it has more robots than that circle holds side by side; on it the robots go evenly round in the
+ *  tree's leaf order (family.mjs layout, so children sit out from their parents), the ring turned to fit the tree best. */
 export function place(s, snap = false) {
   layout(s);
   const W = Math.max(2, ...s.people.map((p) => p.x + 0.5)), rings = new Map();
-  for (const p of s.people) {
-    p.ta = TAU * p.x / W; p.tr = p.gen * RING;
-    if (!rings.has(p.gen)) rings.set(p.gen, []);
-    rings.get(p.gen).push(p);
+  for (const p of s.people) { p.tz = BUST; if (!rings.has(p.gen)) rings.set(p.gen, []); rings.get(p.gen).push(p); }
+  let r = 0;
+  for (const gen of [...rings.keys()].sort((a, b) => a - b)) {
+    const ring = rings.get(gen).sort((a, b) => a.x - b.x);
+    if (gen === 0) { for (const p of ring) { p.ta = 0; p.tr = 0; } continue; }
+    r = Math.max(r + RING, ring.length * BUST * SPACE / TAU);
+    // evenly round the whole ring in the tree's order (no empty sectors), turned to sit as near as it can to where the tree wants each robot
+    const want = ring.map((p) => TAU * p.x / W), even = ring.map((p, i) => TAU * i / ring.length);
+    const turn = Math.atan2(want.reduce((t, a, i) => t + Math.sin(a - even[i]), 0), want.reduce((t, a, i) => t + Math.cos(a - even[i]), 0));
+    ring.forEach((p, i) => { p.ta = (even[i] + turn + TAU) % TAU; p.tr = r; });
   }
-  for (const [gen, ring] of rings) {
-    ring.sort((a, b) => a.ta - b.ta);
-    ring.forEach((p, i) => {
-      if (gen === 0) { p.tz = RING_FILL * RING; return; }
-      const prev = ring[(i - 1 + ring.length) % ring.length], next = ring[(i + 1) % ring.length];
-      const gap = ring.length === 1 ? TAU : Math.min(((p.ta - prev.ta) % TAU + TAU) % TAU || TAU, ((next.ta - p.ta) % TAU + TAU) % TAU || TAU);
-      p.tz = Math.min(RING_FILL * RING, p.tr * gap * 0.92);
-    });
-  }
+  s.rim = r;
   for (const p of s.people) if (snap || p.a === undefined) { p.a = p.ta; p.r = p.tr; p.z = p.tz; }
 }
 
@@ -78,7 +82,7 @@ export function marry(s) {
 }
 
 /** The height the camera spans to hold the whole wheel: the outermost ring and a bust beyond it. */
-export const wholeSpan = (s) => 2 * (s.maxGen * RING + 1.1 * RING);
+export const wholeSpan = (s) => 2 * ((s.rim ?? 0) + 1.1 * RING);
 /** The turn that puts the family with the last birth at the bottom of the frame. */
 const aimTurn = (s) => { const c = s.couples[s.focus], p = s.people[c.kids.at(-1) ?? c.a]; return p.gen === 0 ? s.cam?.phi ?? 0 : Math.PI / 2 - p.a; };
 
@@ -98,13 +102,13 @@ export default {
     s.pulse = decay(s.pulse, 5, dt);
     listen(s, events, { kick: () => birth(s), snare: () => { s.pulse = 1; }, note: () => { if (clock.bar !== s.wedBar && marry(s)) s.wedBar = clock.bar; } });
     for (const p of s.people) {
-      p.a = ease(p.a, p.ta, 3, dt); p.r = ease(p.r, p.tr, 3, dt); p.z = ease(p.z, p.tz, 3, dt);
+      p.a = easeAngle(p.a, p.ta, 3, dt); p.r = ease(p.r, p.tr, 3, dt); p.z = ease(p.z, p.tz, 3, dt);
       p.size = ease(p.size, s.maxGen - p.gen === 0 && p.gen > 0 ? 0.7 : 1, 2, dt);
     }
     // the slow zoom out (never in: nobody leaves the frame) and the slow turn, the shortest way round
-    const c = s.cam, d = ((aimTurn(s) - c.phi) % TAU + TAU * 1.5) % TAU - Math.PI;
+    const c = s.cam;
     c.span = Math.max(ease(c.span, wholeSpan(s), 0.8, dt), 2 * Math.max(...s.people.map((p) => p.r + 0.6 * p.z)));
-    c.phi += d * (1 - Math.exp(-0.4 * dt));
+    c.phi = easeAngle(c.phi, aimTurn(s), 0.4, dt);
   },
 
   draw(s, ctx, w, h) {
@@ -113,7 +117,7 @@ export default {
     ctx.save(); ctx.translate(w / 2, h / 2); ctx.scale(k, k); ctx.rotate(c.phi);
     const n = s.couples[s.focus], [gx, gy] = posOf(s.people[n.a]), gr = 3 * RING;
     const gl = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr); gl.addColorStop(0, hsla(s.pal.field, 60, 60, 0.35 * s.glow * lit + 0.05)); gl.addColorStop(1, hsla(s.pal.field, 60, 50, 0));
-    ctx.fillStyle = gl; ctx.fillRect(-c.span * 2, -c.span * 2, c.span * 4, c.span * 4);
+    ctx.fillStyle = gl; ctx.fillRect(gx - gr, gy - gr, 2 * gr, 2 * gr); // the glow's own square, not a field four frames wide
     // the lines: partners joined, a spoke out from the couple to an arc half way to the next ring, a spoke to each child
     ctx.strokeStyle = hsla(s.pal.hue, 20, 72, 0.5 * lit); ctx.lineWidth = 1.6 / k;
     for (const q of s.couples) {
@@ -121,8 +125,8 @@ export default {
       const A = s.people[q.a], B = s.people[q.b], [ax, ay] = posOf(A), [bx, by] = posOf(B), ch = q.kids.map((i) => s.people[i]);
       ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
       if (ch.length) {
-        const rm = A.r + RING / 2, am = A.gen === 0 ? ch[0].a : (Math.atan2(ay + by, ax + bx) + TAU) % TAU; // in the children's 0..TAU, or the arc runs the long way round
-        const as = ch.map((p) => p.a).concat(am), lo = Math.min(...as), hi = Math.max(...as);
+        const rm = (A.r + ch[0].r) / 2, am = A.gen === 0 ? ch[0].a : (Math.atan2(ay + by, ax + bx) + TAU) % TAU; // in the children's 0..TAU, or the arc runs the long way round
+        const rel = ch.map((p) => ((p.a - am) % TAU + TAU * 1.5) % TAU - Math.PI).concat(0), lo = am + Math.min(...rel), hi = am + Math.max(...rel); // round the short way, whichever side of 0 the children fall
         ctx.moveTo((ax + bx) / 2, (ay + by) / 2); ctx.lineTo(rm * Math.cos(am), rm * Math.sin(am));
         ctx.moveTo(rm * Math.cos(lo), rm * Math.sin(lo)); ctx.arc(0, 0, rm, lo, hi);
         for (const p of ch) { ctx.moveTo(rm * Math.cos(p.a), rm * Math.sin(p.a)); ctx.lineTo(p.r * Math.cos(p.a), p.r * Math.sin(p.a)); }
@@ -130,11 +134,11 @@ export default {
       ctx.stroke();
     }
     // the people, upright to the frame; the family with the last birth live
-    const live = new Set([n.a, n.b, ...n.kids]);
+    const live = new Set([n.a, n.b, ...n.kids]); // the family with the last birth sways and bobs
     for (const p of s.people) {
       const z = p.z * p.size, [x, y] = posOf(p);
       ctx.save(); ctx.translate(x, y); ctx.rotate(-c.phi);
-      bust(ctx, s, p, z, live.has(p.id) && z * k > LIVE * h, lit); ctx.restore();
+      bust(ctx, s, p, z, z * k, lit, live.has(p.id)); ctx.restore();
     }
     ctx.restore();
     if (s.flash > 0.01) { ctx.fillStyle = `rgba(255 250 235 / ${0.5 * s.flash})`; ctx.fillRect(0, 0, w, h); }

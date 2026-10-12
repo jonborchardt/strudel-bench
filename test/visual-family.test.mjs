@@ -152,14 +152,15 @@ test('the babies are always on screen, through births, marriages, snares and bou
   assert.ok(checked > 500);
 });
 
-test('draw: lines, every person on screen, the focused family live; Node has no OffscreenCanvas and falls back', async () => {
+test('draw: lines and a picture per person, never limner frame by frame; Node has no OffscreenCanvas and draws placeholders', async () => {
   const g = await ready;
   const p = runWorld(family, song(g), 16), ctx = ctxStub();
   assert.equal(typeof OffscreenCanvas, 'undefined');
   p.draw(ctx, 320, 180);
   assert.ok(ctx.calls.stroke > 0, 'tree lines');
-  assert.ok(ctx.calls.save >= 2, 'the focused couple drawn live, each in its own transform');
-  assert.ok(ctx.calls.fill > 40, 'portrait ops filled');
+  assert.ok(ctx.calls.save >= 2, 'each person in its own transform');
+  assert.ok(ctx.calls.fillRect >= 3, 'a placeholder per person on screen');
+  assert.ok(!ctx.calls.fill, 'no limner ops drawn in the frame: a robot costs it ~20 ms, so the pictures are cached');
   const lone = createPerformance(family, composeVisual(song(g)), { w: 16, h: 9 }), c2 = ctxStub();
   lone.draw(c2, 320, 180);
   assert.ok(c2.calls.save >= 2, 'founders alone still draw');

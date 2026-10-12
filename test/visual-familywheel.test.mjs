@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ready } from './_scope.mjs';
-import wheel, { LINES, RING } from '../web/visual/familywheel.mjs';
+import wheel, { LINES, RING, BUST, easeAngle } from '../web/visual/familywheel.mjs';
 import { clockOf, createPerformance, STEP } from '../web/visual/host.mjs';
 import { composeVisual } from '../lib/visual.mjs';
 import { ctxStub, run as runWorld, forbid, base, KICK } from './_visual.mjs';
@@ -53,7 +53,23 @@ test('many lines, most families with children, one to three each, rings a bust a
   assert.ok(s.couples.every((c) => c.room >= 1 && c.room <= 3 && c.kids.length <= c.room), 'one to three children a couple');
   const settled = s.couples.filter((c) => s.people[c.a].gen < s.maxGen - 1);
   assert.ok(settled.filter((c) => c.kids.length).length >= 0.8 * settled.length, `most families had children (${settled.filter((c) => c.kids.length).length} of ${settled.length})`);
-  assert.ok(s.people.every((p) => Math.abs(p.tr - p.gen * RING) < 1e-9), 'each generation a ring one bust further out, the founders in the middle');
+  assert.ok(s.people.every((p) => p.tz === BUST), 'every robot one size (the newest children are scaled by their growing, not their ring)');
+  const radius = [...new Set(s.people.map((p) => p.gen))].sort((a, b) => a - b).map((g) => s.people.find((p) => p.gen === g).tr);
+  assert.equal(radius[0], 0, 'the founders in the middle');
+  for (let g = 1; g < radius.length; g++) {
+    const n = s.people.filter((p) => p.gen === g).length, least = Math.max(radius[g - 1] + RING, n * BUST * 1.1 / (2 * Math.PI));
+    assert.ok(Math.abs(radius[g] - least) < 1e-9, `ring ${g} sits one bust out, or just far enough to hold its ${n} robots`);
+    const at = s.people.filter((p) => p.gen === g).map((p) => p.ta).sort((a, b) => a - b);
+    for (let i = 1; i < at.length; i++) assert.ok((at[i] - at[i - 1]) * radius[g] >= BUST - 1e-9, `no two robots on ring ${g} overlap`);
+  }
+});
+
+test('a robot whose place crosses 0 goes the short way, never round the wheel', async () => {
+  assert.ok(easeAngle(6.2, 0.1, 3, 1 / 60) > 6.2, 'from just under a turn to just over 0: forward across 0');
+  assert.ok(easeAngle(0.1, 6.2, 3, 1 / 60) < 0.1, 'and back across it');
+  const g = await ready, was = new Map(); let worst = 0;
+  long(g, (s) => { for (const p of s.people) { if (was.has(p.id)) worst = Math.max(worst, Math.abs(p.a - was.get(p.id))); was.set(p.id, p.a); } });
+  assert.ok(worst < 0.1, `no robot jumps along its ring in a step (worst ${worst.toFixed(3)} rad)`);
 });
 
 test('everyone is always on screen: the camera zooms out slowly and never in', async () => {

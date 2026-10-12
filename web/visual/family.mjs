@@ -10,8 +10,9 @@
 // blended from its parents (childOf), so the family's face drifts down the tree and every in-law brings new blood. Age is
 // how many generations sit below you: the newest are children, then adults, then rusting, then sepia, like portraits on
 // a wall. Dance breaks: a loud section dances all through, a middling one the last two bars of every eight.
-// The family on screen is played as the faces world plays its face: the bar sways it, a kick grins, hats blink, the
-// melody moves the eyes, the bass tints the room, the pad glows behind them, a dropout dims and shuts the eyes.
+// Every robot is a cached picture (limner takes ~20 ms to draw one, too slow to draw any frame by frame), moved by the
+// music: the family on screen sways with the bar and bobs on a kick, the bass tints the room, the pad glows behind
+// them, a dropout dims the room.
 // Deterministic: randomness only from the state's own generator (kit.mjs).
 import { clamp, lerp, decay, ease, hsla, seed, rand, paletteOf, DEFAULT_SLOT } from './kit.mjs';
 import { portraitOps, drawOn, eyeY, characterFrom, CASTS, mix } from './limner.mjs';
@@ -133,49 +134,48 @@ export function lookUp(s, level, clock) {
 }
 
 const SHEET = { w: 400, h: 480 };
-export const LIVE = 0.22; // a bust taller than this share of the frame is drawn live and played; smaller ones come from the cache
-const RUST = '#7a4a32', BMP = 240; // the cache's width in pixels: LIVE of a 1080p frame, so a cached bust is never stretched there
+const RUST = '#7a4a32', BMP = 240, MAX_RES = 540; // a picture's width in pixels, least and most; a bigger bust gets a bigger one
 export const stageOf = (s, p) => (s.maxGen === 0 ? 1 : Math.min(3, s.maxGen - p.gen)); // 0 child, 1 adult, 2 rusting, 3 sepia; founders alone are adults
 /** The robot as its age shows: rust creeping into the plating from the grandparents up. */
 const aged = (c, st) => (st >= 2 ? { ...c, skin: mix(c.skin, RUST, st >= 3 ? 0.5 : 0.3) } : c);
 const SEPIA = 'sepia(.85) brightness(.9)';
 
-// ponytail: bitmaps outside the state (the state stays data, so determinism is untouched); cleared wholesale at 600, an LRU if a wall of trees ever thrashes it
-const CACHE = new Map();
-function bitmap(s, p, st) {
+// ponytail: bitmaps outside the state (the state stays data, so determinism is untouched); cleared wholesale at 2000, an LRU if a wall of trees ever thrashes it
+const CACHE = new Map(), LAST = new Map(); // key -> bitmap; person -> the bitmap it showed last, worn until its new one is made
+const BUILDS = 1; // bitmaps made per frame at most (a big one takes limner ~25 ms): a new generation ages two old ones at once, and making them all in one frame stutters
+let budget = BUILDS;
+/** A new frame: the bitmap budget starts again. */
+export const frameStart = () => { budget = BUILDS; };
+/** A person's picture for their age, at least about `px` pixels wide. Each build is a whole limner drawing (~20-30 ms),
+ *  so a person gets as few as can be: one per look (a child and an adult look the same; rusting and sepia are one more
+ *  each), only ever made bigger, and only when shown well over its size. */
+function bitmap(s, p, st, px) {
   if (typeof OffscreenCanvas === 'undefined') return null;
-  const key = `${s.key}:${p.id}:${st}`;
-  let b = CACHE.get(key);
-  if (b) return b;
-  if (CACHE.size > 600) CACHE.clear();
-  b = new OffscreenCanvas(BMP, Math.round(BMP * SHEET.h / SHEET.w));
-  const c = b.getContext('2d'); c.scale(BMP / SHEET.w, BMP / SHEET.w); if (st >= 3) c.filter = SEPIA;
-  drawOn(c, portraitOps(aged(p.char, st)));
-  CACHE.set(key, b);
+  const look = Math.max(1, st), who = `${s.key}:${p.id}`, key = `${who}:${look}`, had = CACHE.get(key);
+  if (had && (had.width >= Math.min(MAX_RES, px / 1.25) || budget <= 0)) { LAST.set(who, had); return had; }
+  if (budget <= 0) return LAST.get(who) ?? null; // over budget: the old look a frame or two longer (a newborn waits unseen)
+  budget--;
+  if (CACHE.size > 2000) { CACHE.clear(); LAST.clear(); }
+  const res = Math.round(Math.min(MAX_RES, Math.max(BMP, px * 1.25)));
+  const b = new OffscreenCanvas(res, Math.round(res * SHEET.h / SHEET.w)), c = b.getContext('2d');
+  c.scale(res / SHEET.w, res / SHEET.w); if (look >= 3) c.filter = SEPIA;
+  drawOn(c, portraitOps(aged(p.char, look)));
+  CACHE.set(key, b); LAST.set(who, b);
   return b;
 }
 
-/** One person as a bust `sz` wide (canvas units of the current transform) with its eyes at the origin, dancing with the
- *  state, played (blinks, looks, smiles, sways) when `live`, from the cache otherwise. Legs never show: the sheet is clipped. */
-export function bust(ctx, s, p, sz, live, lit) {
+/** One person as a bust `sz` wide (canvas units of the current transform, `px` pixels on screen) with its eyes at the
+ *  origin, from a cached picture: limner draws a robot in about 20 ms, so nobody is drawn by it frame by frame. The music
+ *  moves the picture: the dance swings and hops it, and when `live` the bar sways it and a kick bobs it. Legs never
+ *  show: the picture is the bust sheet. */
+export function bust(ctx, s, p, sz, px, lit, live = false) {
   const side = p.id % 2 ? 1 : -1, swing = s.dance * side * Math.sin(s.beat * Math.PI), hop = s.dance * Math.abs(Math.sin(s.beat * Math.PI));
-  const sc = sz / SHEET.w, st = stageOf(s, p);
-  ctx.save(); ctx.translate(0.14 * sz * swing, -0.18 * sz * hop);
-  if (live) {
-    const c = aged(p.char, st), played = { ...c,
-      pose: { ...c.pose, headX: s.sway * 10 + 30 * swing, headY: (c.pose?.headY ?? 0) - 8 * s.bob - 14 * hop, headTilt: (c.pose?.headTilt ?? 0) + s.sway * 0.06 + 0.28 * swing, bodyX: (c.pose?.bodyX ?? 0) - 14 * swing, bodyTilt: (c.pose?.bodyTilt ?? 0) - 0.12 * swing },
-      eyes: { ...c.eyes, openness: c.eyes.openness * (1 - s.blink) * (1 - 0.85 * s.dark) + 0.02, look: { x: s.look.x, y: s.look.y } },
-      mouth: { ...c.mouth, smile: lerp(-0.1, 0.4, s.energy) + 0.35 * s.grin } };
-    if (st >= 3) ctx.filter = SEPIA;
-    ctx.scale(sc, sc); ctx.translate(-SHEET.w / 2, -eyeY(c));
-    ctx.beginPath(); ctx.rect(0, 0, SHEET.w, SHEET.h); ctx.clip(); // a bust, cut where the cached ones are: the figure goes on to the feet
-    drawOn(ctx, portraitOps(played), lit);
-  } else {
-    const b = bitmap(s, p, st), bh = sz * SHEET.h / SHEET.w, top = -eyeY(p.char) * sc;
-    ctx.rotate(0.24 * swing); ctx.globalAlpha = lit;
-    if (b) ctx.drawImage(b, -sz / 2, top, sz, bh);
-    else { ctx.fillStyle = p.char.skin; ctx.fillRect(-sz / 4, top + bh * 0.2, sz / 2, bh / 2); } // no OffscreenCanvas (Node): a placeholder
-  }
+  const sc = sz / SHEET.w, bh = sz * SHEET.h / SHEET.w, top = -eyeY(p.char) * sc;
+  ctx.save(); ctx.translate(0.14 * sz * swing, -0.18 * sz * hop - (live ? 0.06 * sz * s.bob : 0));
+  ctx.rotate(0.24 * swing + (live ? 0.05 * s.sway : 0)); ctx.globalAlpha = lit;
+  const b = bitmap(s, p, stageOf(s, p), px / Math.max(p.size, 0.2)); // sized for them grown: a growing child is not rebuilt at every step
+  if (b) ctx.drawImage(b, -sz / 2, top, sz, bh);
+  else if (typeof OffscreenCanvas === 'undefined') { ctx.fillStyle = p.char.skin; ctx.fillRect(-sz / 4, top + bh * 0.2, sz / 2, bh / 2); } // no OffscreenCanvas (Node): a placeholder
   ctx.restore();
 }
 
@@ -226,6 +226,7 @@ export function baseState(score, rng, size) {
 
 /** The room: the background lit by the section, tinted by the bass. */
 export function room(s, ctx, w, h, lit) {
+  frameStart();
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.filter = 'none';
   ctx.fillStyle = hsla(s.pal.hue + s.hueShift, s.pal.sat * 0.5, lerp(9, 22, s.energy) * lit); ctx.fillRect(0, 0, w, h);
 }
@@ -275,11 +276,11 @@ export default {
       ctx.stroke();
     }
     // the people: a bust a slot wide, eyes a little above its row line
-    const live = new Set([f.a, f.b, ...f.kids]);
+    const live = new Set([f.a, f.b, ...f.kids]); // the family on screen sways and bobs
     for (const p of s.people) {
       const sz = k * p.size, sx = X(p.x), sy = Y(p.y) - 0.15 * sz;
       if (sx < -sz || sx > w + sz || sy < -sz * 1.5 || sy > h + sz) continue;
-      ctx.save(); ctx.translate(sx, sy); bust(ctx, s, p, sz, live.has(p.id) && sz > LIVE * h, lit); ctx.restore();
+      ctx.save(); ctx.translate(sx, sy); bust(ctx, s, p, sz, sz, lit, live.has(p.id)); ctx.restore();
     }
     if (s.flash > 0.01) { ctx.fillStyle = `rgba(255 250 235 / ${0.5 * s.flash})`; ctx.fillRect(0, 0, w, h); }
   },
