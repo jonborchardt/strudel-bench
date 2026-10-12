@@ -22,7 +22,8 @@
       "faces":    { "base": 0.0,  "melody": 0.4, "sections": 0.3, "drive": 0.3, "tempo": 0.2, "complexity": 0.2, "space": -0.2, "organicness": -0.1 },
       "tableau":  { "base": 0.0,  "aggression": 0.4, "sections": 0.4, "drive": 0.3, "weight": 0.2, "repetition": 0.2, "organicness": -0.3, "space": -0.2 },
       "undead":   { "base": -0.3, "aggression": 0.3, "drive": 0.3, "repetition": 0.3, "weight": 0.2, "sections": 0.2, "brightness": -0.2, "space": -0.2 },
-      "coder":    { "base": 0.1,  "complexity": 0.4, "density": 0.4, "tempo": 0.3, "sections": 0.3, "organicness": -0.4, "space": -0.2 }
+      "coder":    { "base": 0.1,  "complexity": 0.4, "density": 0.4, "tempo": 0.3, "sections": 0.3, "organicness": -0.4, "space": -0.2 },
+      "family":   { "base": 0.0,  "melody": 0.3, "sections": 0.3, "drive": 0.2, "complexity": 0.2, "organicness": 0.2 }
     }
   },
   "temperature": { "major": "warm", "minor": "cool", "dorian": "cool", "phrygian": "dim", "lydian": "pale", "mixolydian": "warm", "default": "cool" },
@@ -119,6 +120,10 @@
     "coder": {
       "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 },
       "about": "An editor where the universe's simulation engine is being written live: hats type, kicks press Enter, snares go back and retune, popups chart the sim."
+    },
+    "family": {
+      "slots": { "impulse": 2, "ground": 1, "line": 1, "counter": 2, "field": 1, "transition": 1 },
+      "about": "A family tree of portraits grown by the song: kicks are births, the melody marries a child off, snares look back up the generations."
     }
   },
   "themes": {
