@@ -124,3 +124,32 @@ test('levelRows: the mix in dBFS, each part relative to the mix, warnings for cl
 test('kitsIn drops banned kits', () => {
   assert.deepEqual(kitsIn(['A', 'B'], ['a_bd', 'a_sd', 'a_hh', 'b_bd', 'b_sd', 'b_hh'], ['B']), ['A']);
 });
+
+test('keyDefault: a sensible first value per key, null when the value wants a pick', async () => {
+  const { keyDefault, addableKeys } = await import('../web/compose.mjs');
+  const { SCHEMA } = await import('../web/hll-schema.mjs');
+  const d = (k) => keyDefault(k, SCHEMA.props[k]);
+  assert.equal(d('saturate'), '.5'); assert.equal(d('position'), '0'); assert.equal(d('postgain'), '1');
+  assert.equal(d('bpm'), '120'); assert.equal(d('seed'), '1'); assert.equal(d('every'), '8');
+  assert.equal(d('enter'), '1'); assert.equal(d('exit'), '1'); assert.equal(d('dropout'), '1'); assert.equal(d('riser'), '4');
+  assert.equal(d('fill'), 'true'); assert.equal(d('stretch'), 'true'); assert.equal(d('follow'), `'tones'`);
+  assert.equal(d('meter'), `'4/4'`); assert.equal(d('progression'), `'i VI'`); // DEFAULT_PROGRESSION in lib/harmony.mjs
+  assert.equal(d('kit'), null); assert.equal(d('sound'), null); assert.equal(d('key'), null); assert.equal(d('duck'), null); assert.equal(d('world'), null);
+  assert.equal(d('room'), '{ size: .5 }'); assert.equal(d('humanize'), '{ timingMs: 10, velocity: .1 }');
+  assert.equal(d('compressor'), '{ threshold: -18, ratio: 4 }'); assert.equal(d('packs'), '[]');
+  assert.equal(d('velocity'), `'1 .8 1 .8'`); assert.equal(d('notes'), `'0 2 4 7'`); assert.equal(d('rhythm'), `'x...x...x...x...'`); assert.equal(d('pattern'), `'0 1 2 3'`); assert.equal(d('chord'), `'0'`);
+  assert.deepEqual(addableKeys(['cps', 'bpm', 'key', 'kit'], ['bpm', 'kit']), ['key'], 'bpm and cps are one tempo: a written one hides the other (song() refuses both, setSongField swaps them)');
+  assert.deepEqual(addableKeys(['cps', 'bpm', 'key'], ['cps']), ['key']);
+  assert.equal(d('cps'), '.5', "the engine's default tempo, not the log scale's midpoint");
+  assert.equal(d('duckAttack'), '.1', "the engine's default recovery, not a one-second midpoint");
+  assert.deepEqual(addableKeys(['sound', 'level', 'position'], [], ['sound', 'level']), ['position']);
+});
+
+test('takesWith: replace, append, remove a take; one take left is the plain name', async () => {
+  const { takesWith } = await import('../web/compose.mjs');
+  assert.deepEqual(takesWith(['bd', 'sd'], 1, 'cp'), ['bd', 'cp']);
+  assert.deepEqual(takesWith(['bd', 'sd'], 2, 'cp'), ['bd', 'sd', 'cp']);
+  assert.equal(takesWith(['bd', 'sd'], 1, ''), 'bd', 'removing down to one take is the plain name');
+  assert.deepEqual(takesWith(['bd', 'sd', 'cp'], 0, ''), ['sd', 'cp']);
+  assert.equal(takesWith(['bd'], 0, ''), null, 'removing the last take removes the key');
+});

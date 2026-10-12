@@ -163,9 +163,8 @@ test('a pane over the song header: the document is the object itself, read as th
 });
 
 test('every key the HLL accepts has a control spec or is listed as free, with the reason', async () => {
-  const { META_KEYS, layerNames, layerMaterial } = await import('../lib/song.mjs');
+  const { META_KEYS, SECTION_KEYS: section, layerNames, layerMaterial } = await import('../lib/song.mjs');
   const { AXIS_NAMES } = await import('../lib/axes.mjs');
-  const section = ['role', 'key', 'progression', 'meter', 'bpm', 'cps', 'kit'];
   const all = new Set([...META_KEYS, ...section, ...AXIS_NAMES, ...layerNames().flatMap(layerMaterial)]);
   const missing = [...all].filter((k) => !SCHEMA.props[k] && !SCHEMA.free[k]);
   assert.deepEqual(missing, [], 'keys without a spec or a reason');

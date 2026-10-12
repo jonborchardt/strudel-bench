@@ -1,6 +1,28 @@
 // Pure helpers behind the Compose page: the kit list, the "Ask Claude" card, notes, verify rows, share links. No DOM, no strudel: index.html feeds
 // them text and gets text back, and test/compose.test.mjs runs them in Node.
 import { axis } from '../lib/axes.mjs';
+import { DEFAULT_PROGRESSION } from '../lib/harmony.mjs';
+import { fmt } from '../lib/resolve.mjs';
+
+// "+ key": the first value written for a key the song does not have yet. A named one here, else the spec's shape (web/hll-schema.mjs:
+// a bounded number at its midpoint, a whole number at 1, a bool on); null means the value is a pick (a sound, a kit, a world, a part to duck under)
+const FIRST = { bpm: '120', cps: '.5', seed: '1', duckAttack: '.1', every: '8', enter: '1', exit: '1', dropout: '1', sweep: '1', riser: '4', follow: `'tones'`, meter: `'4/4'`, progression: `'${DEFAULT_PROGRESSION}'`,
+  packs: '[]', room: '{ size: .5 }', humanize: '{ timingMs: 10, velocity: .1 }', compressor: '{ threshold: -18, ratio: 4 }', velocity: `'1 .8 1 .8'`, notes: `'0 2 4 7'`, rhythm: `'x...x...x...x...'`, chord: `'0'`, pattern: `'0 1 2 3'` };
+export function keyDefault(key, spec) {
+  if (key in FIRST) return FIRST[key];
+  if (!spec) return null; // a free key with no named first value: duck
+  if (spec.type === 'bool') return 'true';
+  if (spec.type === 'number') return spec.max === undefined ? String(Math.max(spec.min, 1)) : fmt((spec.min + spec.max) / 2);
+  return null; // enum, map, tokens: pick the value
+}
+/** A sound list (a take per hit) with take `idx` set to `v`, appended when idx is past the end, removed when v is empty: an array, the plain name when one is left, null when none. */
+export function takesWith(takes, idx, v) {
+  const out = v ? Object.assign([...takes], { [idx]: v }) : takes.filter((_, i) => i !== idx);
+  return out.length === 0 ? null : out.length === 1 ? out[0] : out;
+}
+const PAIR = { bpm: 'cps', cps: 'bpm' }; // one tempo two ways: song() refuses both, so a written one hides the other
+/** The keys a "+ key" menu offers: every key the scope takes, minus the written ones (and a written one's pair) and those a control already shows. */
+export const addableKeys = (all, written, shown = []) => { const out = new Set([...written, ...written.map((k) => PAIR[k]).filter(Boolean), ...shown]); return all.filter((k) => !out.has(k)); };
 
 const VOICES = ['bd', 'sd', 'hh']; // the drums layer's baseline voices: a kit missing one would log "sound not found"
 

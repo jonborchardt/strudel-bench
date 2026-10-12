@@ -237,12 +237,12 @@ test('setSectionField sets, replaces and drops a section key or progression', as
   assert.throws(() => setSectionField(`song({}, [section('a', 1, { key: K })])`, 'a', 'key', "'C:minor'"), /expression/);
 });
 
-test('setSectionField sets a section dropout, and locate exposes dropoutNode', async () => {
+test('setSectionField sets a section dropout, and locate exposes it under fields', async () => {
   await ready;
   const { setSectionField, locate } = await import('../lib/resolve.mjs');
   const a = setSectionField(SRC, 'verse', 'dropout', '1');
   assert.match(a, /section\('verse', 8, \{ role: 'develop', dropout: 1,\n/, 'after role');
-  assert.equal(locate(a).sections[0].dropoutNode.value, 1);
+  assert.equal(locate(a).sections[0].fields.dropout.value.value, 1);
 });
 
 test('addPack declares a pack in the song header: inserts, appends, or leaves an existing one alone', async () => {
@@ -382,4 +382,51 @@ test('verb sidechain skips a section with no drums and notes an overwritten duck
   const { VERBS } = await import('../lib/resolve.mjs'), was = VERBS.sidechain.material.bass.duck;
   VERBS.sidechain.material.bass.duck = '"drums"'; // a double-quoted target is read too
   try { assert.match(applyVerb(src, 'a', 'sidechain').skipped.join(), /bass: no part "drums"/); } finally { VERBS.sidechain.material.bass.duck = was; }
+});
+
+test('locate: section keys (kit, room, meter, bpm) are fields, never layers', async () => {
+  await ready;
+  const { locate } = await import('../lib/resolve.mjs');
+  const src = `const CAVE = { size: .9 };\nsong({}, [section('a', 8, { role: 'develop', kit: 'RolandTR808', room: CAVE, meter: '3/4', bpm: 100, drums: { density: .5 } })])`;
+  const s = locate(src).sections[0];
+  assert.deepEqual(Object.keys(s.layers), ['drums']);
+  assert.deepEqual(Object.keys(s.fields).sort(), ['bpm', 'kit', 'meter', 'role', 'room']);
+  assert.equal(s.fields.kit.value.value, 'RolandTR808');
+});
+
+test('setSectionField: any section key, insert / replace / remove', async () => {
+  await ready;
+  const { setSectionField, locate } = await import('../lib/resolve.mjs');
+  const src = `song({}, [section('a', 8, { role: 'develop', drums: { density: .5 } })])`;
+  let out = setSectionField(src, 'a', 'kit', `'RolandTR808'`);
+  assert.match(out, /role: 'develop', kit: 'RolandTR808',/);
+  out = setSectionField(out, 'a', 'kit', `'LinnDrum'`);
+  assert.match(out, /kit: 'LinnDrum'/); assert.doesNotMatch(out, /TR808/);
+  out = setSectionField(out, 'a', 'bpm', '96');
+  assert.equal(locate(out).sections[0].fields.bpm.value.value, 96);
+  out = setSectionField(out, 'a', 'kit', null);
+  assert.doesNotMatch(out, /kit:/);
+  assert.throws(() => setSectionField(src, 'a', 'drums', '{}'), /not a section field/);
+  assert.throws(() => setSectionField(`song({}, [section('a', 8, { room: CAVE })])`, 'a', 'room', '{ size: .5 }'), /expression/);
+});
+
+test('locate: a negative material literal (position -.5, transpose -5) is a number, not an expression', async () => {
+  await ready;
+  const { locate } = await import('../lib/resolve.mjs');
+  const s = locate(`song({}, [section('a', 8, { pad: { position: -.5 }, sample: { sound: 'loop', transpose: -5 } })])`).sections[0];
+  assert.equal(s.layers.pad.mats.position.value, -.5);
+  assert.equal(s.layers.sample.mats.transpose.value, -5);
+});
+
+test('setVisual writes the world, keeps a seed, refuses a composition', async () => {
+  await ready;
+  const { setVisual } = await import('../lib/resolve.mjs');
+  const base = `song({ cps: .5 }, [section('a', 4, { drums: {} })])`;
+  assert.match(setVisual(base, { world: 'ink' }), /visual: 'ink'/);
+  assert.match(setVisual(base, { world: 'tableau', theme: 'thriller' }), /visual: \{ world: 'tableau', theme: 'thriller' \}/);
+  const seeded = `song({ visual: { world: 'ink', seed: 4 } }, [section('a', 4, { drums: {} })])`;
+  assert.match(setVisual(seeded, { world: 'train' }), /visual: \{ world: 'train', seed: 4 \}/);
+  assert.match(setVisual(`song({ visual: { world: 'tableau', theme: 'elves' } }, [section('a', 4, { drums: {} })])`, { world: 'tableau' }), /visual: 'tableau'/, 'no theme drops the theme');
+  assert.throws(() => setVisual(`song({ visual: { composition: 'overlay', worlds: ['ink', 'train'] } }, [section('a', 4, { drums: {} })])`, { world: 'ink' }), /composes/);
+  assert.throws(() => setVisual(`song({ visual: V }, [section('a', 4, { drums: {} })])`, { world: 'ink' }), /expression/);
 });

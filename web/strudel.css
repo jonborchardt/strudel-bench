@@ -101,9 +101,16 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .stagebox canvas { display: block; width: 100%; height: 100%; }
 .stagebox #fullscreen { position: absolute; top: .4rem; right: .4rem; padding: .2rem .5rem; opacity: .45; background: #0009; color: #fff; border-color: #fff5; }
 .stagebox:hover #fullscreen, .stagebox #fullscreen:focus-visible { opacity: 1; }
-.stagebox #world { position: absolute; bottom: .4rem; left: .4rem; padding: .15rem .3rem; opacity: .45; background: #0009; color: #fff; border: 1px solid #fff5; border-radius: 4px; font: inherit; font-size: .85em; }
-.stagebox:hover #world, .stagebox #world:focus-visible { opacity: 1; }
-.stagebox #world option { background: #111; color: #fff; }
+dialog#newdlg { background: #222225; color: #eee; border: 1px solid #111; border-radius: 6px; padding: 1rem 1.2rem; min-width: 18rem; }
+dialog#newdlg::backdrop { background: #0008; }
+dialog#newdlg h2 { margin: 0 0 .6rem; font-size: 1rem; }
+dialog#newdlg label { display: flex; justify-content: space-between; align-items: center; gap: .8rem; margin: .4rem 0; color: #c8c8d0; }
+dialog#newdlg input, dialog#newdlg select { font: inherit; padding: .15rem .4rem; border: 1px solid #111; border-radius: 4px; background: #1e1e22; color: #eee; width: 11rem; }
+dialog#newdlg menu { display: flex; justify-content: flex-end; gap: .5rem; margin: .8rem 0 0; padding: 0; }
+.stagebox .worldbar { position: absolute; bottom: .4rem; left: .4rem; display: flex; gap: .3rem; opacity: .45; } /* the world pick, a theme pick when the world has themes, and the ✎ that writes them into the song */
+.stagebox .worldbar select, .stagebox .worldbar button { padding: .15rem .3rem; background: #0009; color: #fff; border: 1px solid #fff5; border-radius: 4px; font: inherit; font-size: .85em; cursor: pointer; }
+.stagebox:hover .worldbar, .stagebox .worldbar:focus-within { opacity: 1; }
+.stagebox .worldbar option { background: #111; color: #fff; }
 .stagebox:fullscreen { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; background: #000; }
 .rack .strip { display: flex; gap: 3px; margin-bottom: .6rem; overflow-x: auto; padding-bottom: 2px; } /* many sections scroll the strip, not the page; the page keeps the active block in view */
 .rack .panel.song { margin: 0 0 .6rem; } /* the song header pane sits above the strip */
@@ -112,6 +119,10 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .knobs b:hover button { opacity: 1; }
 .strip .blk { position: relative; flex: 1 1 0; min-width: 4.5rem; display: grid; gap: 2px; padding: .3rem .45rem; border: 1px solid #111; border-radius: 5px; color: #ddd; background: linear-gradient(#2c2c30, #222225); box-shadow: inset 0 1px 0 #48484e; cursor: pointer; }
 .strip .blk .nm { font-size: .65rem; line-height: 1.6; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.strip .blk .nm .form { margin-left: .4rem; font-size: .6rem; letter-spacing: 0; text-transform: none; color: #9a9aa2; } /* the check's form letter and energy glyph */
+#lintlist { margin: 0; padding: .2rem 1.4rem .4rem; font-size: .8rem; color: #c8c8d0; }
+#lintlist li b { color: #eee; font-weight: 600; margin-right: .3rem; }
+#lintlist li.error { color: #f66; }
 .strip .blk i { display: block; height: 4px; border-radius: 2px; background: var(--accent); box-shadow: inset 0 1px 2px #000; }
 .strip .blk.on { border-color: var(--accent); box-shadow: inset 0 1px 0 #48484e, 0 0 0 1px var(--accent), 0 0 8px #2f6fed88; color: #fff; }
 .strip .blk.on, .strip .blk.pin { min-width: 222px; } /* the selected section gets the room; the rest shrink toward their minimum */
@@ -214,6 +225,9 @@ button.on { background: #e6eefc; border-color: var(--accent); }
 .panel summary .tweak { float: right; text-transform: none; letter-spacing: 0; color: #c8c8d0; display: inline-flex; align-items: center; gap: .3rem; cursor: pointer; }
 .panel summary .tweak input { margin: 0; }
 .panel:not([open]) > summary .tweak { display: none; } /* a closed pane has no controls to toggle */
+.panel summary .addkey { float: right; margin-left: .6rem; font: inherit; font-size: .65rem; text-transform: none; letter-spacing: 0; padding: 0 .4rem; color: #c8c8d0; background: #1e1e22; border: 1px solid #111; border-radius: 4px; cursor: pointer; }
+.panel:not([open]) > summary .addkey { display: none; }
+.matrow button.addkey { color: #9a9aa2; }
 .matrow { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin: .3rem 0; }
 .matrow b { min-width: 4.5rem; font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: #eee; }
 .matrow label { display: inline-flex; align-items: center; gap: .3rem; color: #9a9aa2; }
