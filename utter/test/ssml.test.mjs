@@ -49,6 +49,14 @@ test('style only on a voice that has it', () => {
   assert.throws(() => ssmlOf({ text: 'x', voice: styled.name, style: styled.styles[0], styleDegree: 0 }), /styleDegree/);
 });
 
+test('every voice, style and role in the snapshot is accepted as written', () => {
+  for (const v of voices({})) {
+    assert.ok(ssmlOf({ text: 'x', voice: v.name }).includes(`<voice name="${v.name}">`), v.name);
+    for (const style of v.styles) ssmlOf({ text: 'x', voice: v.name, style });
+    for (const role of v.roles) ssmlOf({ text: 'x', voice: v.name, role });
+  }
+});
+
 test('inline breaks', () => {
   assert.equal(body({ text: 'wait [400ms] now' }), 'wait <break time="400ms"/> now');
   assert.equal(body({ text: 'wait [1.5s] now' }), 'wait <break time="1.5s"/> now');

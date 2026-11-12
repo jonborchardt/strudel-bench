@@ -8,7 +8,7 @@ export const DEFAULT_VOICE = 'en-US-AndrewMultilingualNeural';
 const RATE = /^([+-]\d{1,3}%|x-slow|slow|medium|fast|x-fast)$/;
 const PITCH = /^([+-]\d+(\.\d+)?(st|%|Hz)|\d+(\.\d+)?Hz|x-low|low|medium|high|x-high)$/;
 const VOLUME = /^([+-]\d+(\.\d+)?(dB|%)|silent|x-soft|soft|medium|loud|x-loud)$/;
-const NAME = /^[A-Za-z0-9:-]+$/;
+const NAME = /^[A-Za-z0-9:._-]+$/; // voice names carry colons and dots (en-US-Ava:DragonHDLatestNeural, :MAI-Voice-2.1), styles underscores
 
 /** Every parameter `ssmlOf` (and so `speak`) understands: its type, what a value must look like, where it lands in the SSML. */
 export const PARAMS = {
