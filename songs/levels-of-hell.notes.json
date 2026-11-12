@@ -1,0 +1,115 @@
+{
+ "prompt": "There's More Than Two Levels of Hell: slow spoken jazz noir, D minor, 60 bpm; a woman reads fifteen levels of hell like an official directory over written piano, upright bass and a barely-there jazz kit that thin out as the list goes down.",
+ "requests": [
+  {
+   "date": "2026-11-12",
+   "ask": "new song, first two levels only, to prove the speech",
+   "changes": [
+    {
+     "section": "song",
+     "why": "voice en-US-NancyMultilingualNeural as recorded (refrain-a picked over -2st/-8% and -1st), one clip per line placed by hand"
+    },
+    {
+     "section": "level1",
+     "why": "bass .7>.5 and piano .9>1.2, voice 1>1.25: measured, the bass was the loudest part and the mix sat at -24 dBFS"
+    }
+   ]
+  },
+  {
+   "date": "2026-11-12",
+   "ask": "volumes right; backing too sparse; intro too slow and long; 'the coffee' too loud; it is levels of hell, not layers",
+   "changes": [
+    {
+     "section": "song",
+     "why": "renamed to levels of hell, refrain re-recorded with the word 'levels'"
+    },
+    {
+     "section": "intro",
+     "why": "4 bars > 2, the same descent in half the time"
+    },
+    {
+     "section": "song",
+     "why": "a left-hand piano part of shell chords (raw4), a bass note or two in every bar, a second soft kick and a ghost snare"
+    },
+    {
+     "section": "level1",
+     "why": "'the coffee' clip 3 dB down: it came back from Azure hotter than the other lines"
+    }
+   ]
+  },
+  {
+   "date": "2026-11-12",
+   "ask": "Serena locked in; visual orrery; clean up old clips; finish all fifteen levels, with the music changes the brief asks for between levels",
+   "changes": [
+    {
+     "section": "song",
+     "why": "voice en-US-SerenaMultilingualNeural style serious for every line; Nancy, Phoebe, Aria and Sonia takes deleted; visual orrery"
+    },
+    {
+     "section": "song",
+     "why": "levels 3-15, the refrain, a 4-bar passage after six, an 8-bar piano interlude after twelve and the outro; 104 bars"
+    },
+    {
+     "section": "song",
+     "why": "the arrangement thins: both hands and full kit to level 6, one shell every other bar and no snare for 7-9, single keys over one bass note a bar for 10-12, a faint kick only for 13-14, no kit and two piano notes at 15"
+    }
+   ]
+  },
+  {
+   "date": "2026-11-12",
+   "ask": "final balance",
+   "changes": [
+    {
+     "section": "song",
+     "why": "voice clips evened by spoken loudness (was by peak; the clips span 5.7 dB)"
+    },
+    {
+     "section": "song",
+     "why": "right hand a little right (.2), left hand left (-.25), kit left (-.15), voice and bass centre"
+    },
+    {
+     "section": "song",
+     "why": "humanize on both piano hands (phrase) and the bass (bar): loose 4/4; voice and kit untouched"
+    },
+    {
+     "section": "song",
+     "why": "every level down 1.2 dB together: the hottest voice clip and the four-note chords were reaching .9, into the output soft clip; now .82 at most"
+    }
+   ]
+  }
+ ],
+ "youtube": {
+  "url": "",
+  "title": "There's More Than Two Levels of Hell — spoken jazz noir: a calm voice, a piano, an upright bass",
+  "description": "Spoken-word jazz noir in D minor at 60 BPM: a calm, authoritative woman reads fifteen levels of hell like an official directory, over a sparse piano, an upright bass and a barely audible jazz kit. Dark comedy, deadpan, late-night piano bar.\nSpoken word, 6:48. The levels start with cold coffee and end somewhere much quieter.\n\nShe announces every level with the same cadence and the same neutral authority, from level one to level fifteen. The lyrics get worse; the music stays almost aggressively pleasant, and it thins as the list goes down. The first six levels have both piano hands, the bass and the kit. From seven the left hand plays every other bar and the snare is gone. The lower levels are single keys over one bass note a bar. After a long piano interlude only a faint kick is left, and by level fifteen the piano has nearly stopped: two notes in seven bars, the bass holding under her. Every note is written, the piano answers in the gaps between her lines, and no two pauses are the same length. It ends on one unresolved piano note and a last low strum of the bass.\n\nWords: written for this song. Voice: synthetic speech (Azure AI Speech), one clip per line, placed by hand on the beat; nobody's recorded voice is in it. Kit: GBS Jazz (Figure Drum Kits by tripjazz, Freesound, CC0). Piano: the public Strudel piano pack. Bass: a General MIDI acoustic bass soundfont.\n\nChapters\n0:00 Intro — a few piano notes, the bass arrives\n0:10 There's more than two levels of hell\n0:26 Level one — the coffee\n0:50 Level two — what you already know\n1:10 Level three — waiting\n1:30 Level four — approval\n1:46 Level five — very nice people\n2:06 Level six — every decision is yours\n2:18 Piano passage\n2:34 Level seven — understood\n2:50 Level eight — who you are\n3:10 Level nine — exactly what you asked for\n3:30 Refrain — people tend to underestimate the number\n3:46 Level ten — not the feeling\n4:06 Level eleven — a success\n4:26 Level twelve — you can leave whenever you like\n4:42 Piano interlude\n5:14 Level thirteen — nothing wrong\n5:38 Level fourteen — something missing\n6:02 Level fifteen — everything is fine\n6:30 Outro — I haven't listed all of them\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. \n\nEvery song here is a text file. This one is songs/levels-of-hell.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+  "tags": [
+   "spoken word",
+   "jazz noir",
+   "spoken word jazz",
+   "dark comedy",
+   "deadpan",
+   "noir jazz",
+   "piano jazz",
+   "slow jazz",
+   "D minor",
+   "levels of hell",
+   "existential dread",
+   "upright bass",
+   "jazz piano",
+   "jazz drums",
+   "text to speech",
+   "AI voice",
+   "generative music",
+   "live coding",
+   "strudel",
+   "tidalcycles",
+   "creative coding",
+   "music video"
+  ],
+  "hashtags": [
+   "#spokenword",
+   "#jazznoir",
+   "#livecoding"
+  ]
+ }
+}

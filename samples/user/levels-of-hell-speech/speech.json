@@ -1,0 +1,3285 @@
+{
+ "refrain": {
+  "text": "There's more than two levels of hell.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "rate": "-22%",
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\"><prosody rate=\"-22%\">There's more than two levels of hell.</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "There's",
+    "start": 0.112187,
+    "end": 0.368603
+   },
+   {
+    "text": "more",
+    "start": 0.384625,
+    "end": 0.801291
+   },
+   {
+    "text": "than",
+    "start": 0.817312,
+    "end": 1.025645
+   },
+   {
+    "text": "two",
+    "start": 1.041666,
+    "end": 1.314103
+   },
+   {
+    "text": "levels",
+    "start": 1.330125,
+    "end": 1.810895
+   },
+   {
+    "text": "of",
+    "start": 1.826916,
+    "end": 1.923061
+   },
+   {
+    "text": "hell",
+    "start": 1.939104,
+    "end": 2.451916
+   }
+  ],
+  "seconds": 2.8533333333333335,
+  "chars": 37,
+  "wavSha256": "c7efa60937ed048b7268068357388b9106098e581bb4c25e9a4588a75b0f9d35",
+  "made": "2026-11-12T07:21:56.208Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "few": {
+  "text": "Quite a few more.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Quite a few more.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Quite",
+    "start": 0.1375,
+    "end": 0.3875
+   },
+   {
+    "text": "a",
+    "start": 0.4,
+    "end": 0.4375
+   },
+   {
+    "text": "few",
+    "start": 0.45,
+    "end": 0.6625
+   },
+   {
+    "text": "more",
+    "start": 0.675,
+    "end": 1.1
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 17,
+  "wavSha256": "eb758706d116f5fb1282554cf2bd3c38a2121efcbafb8b061b018661557b63dd",
+  "made": "2026-11-12T07:23:51.210Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l1": {
+  "text": "Level one.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level one.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.0875,
+    "end": 0.3625
+   },
+   {
+    "text": "one",
+    "start": 0.375,
+    "end": 0.8
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 10,
+  "wavSha256": "0a879b1e60330eab528de165f5c15474d86312c09c5fa4440d9620cf0520cb1e",
+  "made": "2026-11-12T07:23:54.381Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l1a": {
+  "text": "The coffee is always a little too cold.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">The coffee is always a little too cold.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "The",
+    "start": 0.1,
+    "end": 0.175
+   },
+   {
+    "text": "coffee",
+    "start": 0.1875,
+    "end": 0.8125
+   },
+   {
+    "text": "is",
+    "start": 0.825,
+    "end": 1.075
+   },
+   {
+    "text": "always",
+    "start": 1.15,
+    "end": 1.425
+   },
+   {
+    "text": "a",
+    "start": 1.4375,
+    "end": 1.4875
+   },
+   {
+    "text": "little",
+    "start": 1.5,
+    "end": 1.7
+   },
+   {
+    "text": "too",
+    "start": 1.7125,
+    "end": 1.9125
+   },
+   {
+    "text": "cold",
+    "start": 1.925,
+    "end": 2.4125
+   }
+  ],
+  "seconds": 2.725,
+  "chars": 39,
+  "wavSha256": "37f7b099c88ebc4f3fc0ca5a5aefa38bc82627a5d35e67b19d3b38c15365b10d",
+  "made": "2026-11-12T07:23:57.559Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l1b": {
+  "text": "Not enough to send it back.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Not enough to send it back.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Not",
+    "start": 0.075,
+    "end": 0.35
+   },
+   {
+    "text": "enough",
+    "start": 0.3625,
+    "end": 0.6
+   },
+   {
+    "text": "to",
+    "start": 0.6125,
+    "end": 0.6875
+   },
+   {
+    "text": "send",
+    "start": 0.7,
+    "end": 0.975
+   },
+   {
+    "text": "it",
+    "start": 0.9875,
+    "end": 1.0875
+   },
+   {
+    "text": "back",
+    "start": 1.1,
+    "end": 1.5375
+   }
+  ],
+  "seconds": 1.85,
+  "chars": 27,
+  "wavSha256": "9c117d9f28575fc5c7181d7684bed756a563bbcf522e4fd8463bffc6ca067f79",
+  "made": "2026-11-12T07:24:00.671Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l1c": {
+  "text": "Just enough to notice.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Just enough to notice.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Just",
+    "start": 0.0875,
+    "end": 0.3375
+   },
+   {
+    "text": "enough",
+    "start": 0.35,
+    "end": 0.5875
+   },
+   {
+    "text": "to",
+    "start": 0.6,
+    "end": 0.6875
+   },
+   {
+    "text": "notice",
+    "start": 0.7,
+    "end": 1.275
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 22,
+  "wavSha256": "7933c6b9c922506a8a94fe75a9f2afc10e7e3ce6db05bdb5a5f416e43e9e6aa4",
+  "made": "2026-11-12T07:24:03.968Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l2": {
+  "text": "Level two.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level two.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.1,
+    "end": 0.4125
+   },
+   {
+    "text": "two",
+    "start": 0.425,
+    "end": 0.8
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 10,
+  "wavSha256": "5139ca2eaba82789d4209abcf7384442a1c073b361d3d6519a17755a41b58152",
+  "made": "2026-11-12T07:24:06.818Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l2a": {
+  "text": "Every conversation begins [250ms] with someone telling you something [250ms] you already know.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Every conversation begins <break time=\"250ms\"/> with someone telling you something <break time=\"250ms\"/> you already know.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Every",
+    "start": 0.1,
+    "end": 0.325
+   },
+   {
+    "text": "conversation",
+    "start": 0.3375,
+    "end": 1.1375
+   },
+   {
+    "text": "begins  with someone telling you something  you already know.",
+    "start": 1.15,
+    "end": 1.863
+   },
+   {
+    "text": "with",
+    "start": 2.15,
+    "end": 2.3375
+   },
+   {
+    "text": "someone",
+    "start": 2.35,
+    "end": 2.8375
+   },
+   {
+    "text": "telling",
+    "start": 2.85,
+    "end": 3.1625
+   },
+   {
+    "text": "you",
+    "start": 3.175,
+    "end": 3.275
+   },
+   {
+    "text": "something  you already know.",
+    "start": 3.2875,
+    "end": 3.738
+   },
+   {
+    "text": "you",
+    "start": 4.1375,
+    "end": 4.3125
+   },
+   {
+    "text": "already",
+    "start": 4.325,
+    "end": 4.65
+   },
+   {
+    "text": "know",
+    "start": 4.6625,
+    "end": 5.0375
+   }
+  ],
+  "seconds": 5.35,
+  "chars": 94,
+  "wavSha256": "b09225bb25a69d4f5d8bfb14cf53a4a7fb730a8162f46727adf5e8349b4eeafb",
+  "made": "2026-11-12T07:24:09.959Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "under": {
+  "text": "People tend to underestimate the number.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">People tend to underestimate the number.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "People",
+    "start": 0.1,
+    "end": 0.425
+   },
+   {
+    "text": "tend",
+    "start": 0.4375,
+    "end": 0.75
+   },
+   {
+    "text": "to",
+    "start": 0.7625,
+    "end": 0.9375
+   },
+   {
+    "text": "underestimate",
+    "start": 0.95,
+    "end": 1.8
+   },
+   {
+    "text": "the",
+    "start": 1.8875,
+    "end": 1.975
+   },
+   {
+    "text": "number",
+    "start": 1.9875,
+    "end": 2.4875
+   }
+  ],
+  "seconds": 2.8,
+  "chars": 40,
+  "wavSha256": "db3c138b3655c54e1b119d4c2b9c4f74ad769aa1cee3fa403014049d80cad9e4",
+  "made": "2026-11-12T07:30:20.183Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "listed": {
+  "text": "I haven't listed all of them.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">I haven't listed all of them.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "I",
+    "start": 0.1,
+    "end": 0.25
+   },
+   {
+    "text": "haven't",
+    "start": 0.2625,
+    "end": 0.65
+   },
+   {
+    "text": "listed",
+    "start": 0.6625,
+    "end": 1.0875
+   },
+   {
+    "text": "all",
+    "start": 1.1,
+    "end": 1.3625
+   },
+   {
+    "text": "of",
+    "start": 1.375,
+    "end": 1.4875
+   },
+   {
+    "text": "them",
+    "start": 1.5,
+    "end": 1.8
+   }
+  ],
+  "seconds": 2.1125,
+  "chars": 29,
+  "wavSha256": "54b43fbf44705387a88940ec7309176cde80afc2f8cd2607624f957125738b89",
+  "made": "2026-11-12T07:30:23.757Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l3": {
+  "text": "Level three.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level three.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.0875,
+    "end": 0.4
+   },
+   {
+    "text": "three",
+    "start": 0.4125,
+    "end": 0.9125
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 12,
+  "wavSha256": "1b78416340ee8b1cb36542d859622c28581fd1562d498f3d4f87cda2e3d0049b",
+  "made": "2026-11-12T07:30:25.390Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l3a": {
+  "text": "You are always waiting for someone.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You are always waiting for someone.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1,
+    "end": 0.25
+   },
+   {
+    "text": "are",
+    "start": 0.2625,
+    "end": 0.45
+   },
+   {
+    "text": "always",
+    "start": 0.5125,
+    "end": 0.8875
+   },
+   {
+    "text": "waiting",
+    "start": 0.9,
+    "end": 1.2375
+   },
+   {
+    "text": "for",
+    "start": 1.25,
+    "end": 1.4125
+   },
+   {
+    "text": "someone",
+    "start": 1.425,
+    "end": 1.925
+   }
+  ],
+  "seconds": 2.2375,
+  "chars": 35,
+  "wavSha256": "217243c529a38d9072053c7b761d9f4ebe0dba57676fba6051290c7320f71af2",
+  "made": "2026-11-12T07:30:27.163Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l3b": {
+  "text": "They are never particularly late.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">They are never particularly late.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "They",
+    "start": 0.1,
+    "end": 0.25
+   },
+   {
+    "text": "are",
+    "start": 0.2625,
+    "end": 0.425
+   },
+   {
+    "text": "never",
+    "start": 0.4375,
+    "end": 0.825
+   },
+   {
+    "text": "particularly",
+    "start": 0.8375,
+    "end": 1.4875
+   },
+   {
+    "text": "late",
+    "start": 1.5,
+    "end": 1.9
+   }
+  ],
+  "seconds": 2.2125,
+  "chars": 33,
+  "wavSha256": "bf694e55249fbf9b5175bd17549d2cee064bef8f8d761b42cd83445869c8af74",
+  "made": "2026-11-12T07:30:28.999Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l3c": {
+  "text": "And they always have a good reason.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">And they always have a good reason.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "And",
+    "start": 0.1,
+    "end": 0.4875
+   },
+   {
+    "text": "they",
+    "start": 0.7125,
+    "end": 0.9
+   },
+   {
+    "text": "always",
+    "start": 0.9125,
+    "end": 1.3
+   },
+   {
+    "text": "have",
+    "start": 1.3125,
+    "end": 1.4625
+   },
+   {
+    "text": "a",
+    "start": 1.475,
+    "end": 1.525
+   },
+   {
+    "text": "good",
+    "start": 1.5375,
+    "end": 1.7
+   },
+   {
+    "text": "reason",
+    "start": 1.7125,
+    "end": 2.225
+   }
+  ],
+  "seconds": 2.5375,
+  "chars": 35,
+  "wavSha256": "75ab44163d69eddf8acc30aabada369cf5ca339fea4b30bdcdbf06fde2ea7d74",
+  "made": "2026-11-12T07:30:30.835Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l4": {
+  "text": "Level four.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level four.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.0875,
+    "end": 0.3875
+   },
+   {
+    "text": "four",
+    "start": 0.4,
+    "end": 0.875
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 11,
+  "wavSha256": "d2cb6239f4aa780edcb7aaeb3c584e4c3012394d143fc5253f4f40483e7a2245",
+  "made": "2026-11-12T07:30:32.688Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l4a": {
+  "text": "Every task requires approval.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Every task requires approval.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Every",
+    "start": 0.1,
+    "end": 0.3625
+   },
+   {
+    "text": "task",
+    "start": 0.375,
+    "end": 0.95
+   },
+   {
+    "text": "requires",
+    "start": 1.075,
+    "end": 1.5625
+   },
+   {
+    "text": "approval",
+    "start": 1.575,
+    "end": 2.1625
+   }
+  ],
+  "seconds": 2.475,
+  "chars": 29,
+  "wavSha256": "b1f09494177c5bfc856b5b6b2462dfdbca35eb09cda6f065a9f64803ae1dfb1e",
+  "made": "2026-11-12T07:30:34.483Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l4b": {
+  "text": "The person who approves it [200ms] needs someone else's approval.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">The person who approves it <break time=\"200ms\"/> needs someone else's approval.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "The",
+    "start": 0.1,
+    "end": 0.175
+   },
+   {
+    "text": "person",
+    "start": 0.1875,
+    "end": 0.55
+   },
+   {
+    "text": "who",
+    "start": 0.5625,
+    "end": 0.6875
+   },
+   {
+    "text": "approves",
+    "start": 0.7,
+    "end": 1.1625
+   },
+   {
+    "text": "it  needs someone else's approval.",
+    "start": 1.175,
+    "end": 1.263
+   },
+   {
+    "text": "needs",
+    "start": 1.575,
+    "end": 1.85
+   },
+   {
+    "text": "someone",
+    "start": 1.8625,
+    "end": 2.1875
+   },
+   {
+    "text": "else's",
+    "start": 2.2,
+    "end": 2.525
+   },
+   {
+    "text": "approval",
+    "start": 2.5375,
+    "end": 3.1125
+   }
+  ],
+  "seconds": 3.425,
+  "chars": 65,
+  "wavSha256": "85bafd23465edfcc2fbd9a4af789c60b4daf63449a710517022e7b9350cb8592",
+  "made": "2026-11-12T07:30:36.325Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l4c": {
+  "text": "Nobody knows who that is.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Nobody knows who that is.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Nobody",
+    "start": 0.1,
+    "end": 0.475
+   },
+   {
+    "text": "knows",
+    "start": 0.4875,
+    "end": 0.8
+   },
+   {
+    "text": "who",
+    "start": 0.8125,
+    "end": 0.925
+   },
+   {
+    "text": "that",
+    "start": 0.9375,
+    "end": 1.1875
+   },
+   {
+    "text": "is",
+    "start": 1.2,
+    "end": 1.5375
+   }
+  ],
+  "seconds": 1.85,
+  "chars": 25,
+  "wavSha256": "e90387bf0e90abe0ab94ab7c438a952d438752de25eabe0d532df389bb685a68",
+  "made": "2026-11-12T07:30:38.161Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l5": {
+  "text": "Level five.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level five.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.1,
+    "end": 0.4
+   },
+   {
+    "text": "five",
+    "start": 0.4125,
+    "end": 0.9625
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 11,
+  "wavSha256": "ea014aaf43fbd2ae805f99265e610f238098c9a0b2fbc3dd03e225af1993c326",
+  "made": "2026-11-12T07:30:39.830Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l5a": {
+  "text": "You spend your days correcting mistakes [200ms] that will be made again tomorrow.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You spend your days correcting mistakes <break time=\"200ms\"/> that will be made again tomorrow.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1,
+    "end": 0.2
+   },
+   {
+    "text": "spend",
+    "start": 0.2125,
+    "end": 0.5375
+   },
+   {
+    "text": "your",
+    "start": 0.55,
+    "end": 0.6625
+   },
+   {
+    "text": "days",
+    "start": 0.675,
+    "end": 1.1
+   },
+   {
+    "text": "correcting",
+    "start": 1.1125,
+    "end": 1.575
+   },
+   {
+    "text": "mistakes  that will be made again tomorrow.",
+    "start": 1.5875,
+    "end": 2.213
+   },
+   {
+    "text": "that",
+    "start": 2.45,
+    "end": 2.6
+   },
+   {
+    "text": "will",
+    "start": 2.6125,
+    "end": 2.725
+   },
+   {
+    "text": "be",
+    "start": 2.7375,
+    "end": 2.8375
+   },
+   {
+    "text": "made",
+    "start": 2.85,
+    "end": 3.0875
+   },
+   {
+    "text": "again",
+    "start": 3.1,
+    "end": 3.475
+   },
+   {
+    "text": "tomorrow",
+    "start": 3.4875,
+    "end": 4.1125
+   }
+  ],
+  "seconds": 4.425,
+  "chars": 81,
+  "wavSha256": "720895c4e484da2185819f4309082ef2067f0ce25a5385f0fa59eee0bebd1434",
+  "made": "2026-11-12T07:30:41.598Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l5b": {
+  "text": "The people making them [250ms] are very nice.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">The people making them <break time=\"250ms\"/> are very nice.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "The",
+    "start": 0.1,
+    "end": 0.175
+   },
+   {
+    "text": "people",
+    "start": 0.1875,
+    "end": 0.5125
+   },
+   {
+    "text": "making",
+    "start": 0.525,
+    "end": 0.875
+   },
+   {
+    "text": "them  are very nice.",
+    "start": 0.8875,
+    "end": 1.05
+   },
+   {
+    "text": "are",
+    "start": 1.425,
+    "end": 1.6
+   },
+   {
+    "text": "very",
+    "start": 1.6125,
+    "end": 1.925
+   },
+   {
+    "text": "nice",
+    "start": 1.9375,
+    "end": 2.5
+   }
+  ],
+  "seconds": 2.8125,
+  "chars": 45,
+  "wavSha256": "af256da3ab6b7f97760b0c26d25d3cb00cb8ff0cb8d6038859ee2249398ed96c",
+  "made": "2026-11-12T07:30:43.484Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l6": {
+  "text": "Level six.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level six.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.0875,
+    "end": 0.35
+   },
+   {
+    "text": "six",
+    "start": 0.3625,
+    "end": 0.9125
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 10,
+  "wavSha256": "996582d2f37b9f6ee44ca896249c911825d49ae97a1fd6e90057eeb0a88eef62",
+  "made": "2026-11-12T07:30:45.282Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l6a": {
+  "text": "Every decision is yours to make.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Every decision is yours to make.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Every",
+    "start": 0.1,
+    "end": 0.325
+   },
+   {
+    "text": "decision",
+    "start": 0.3375,
+    "end": 0.95
+   },
+   {
+    "text": "is",
+    "start": 1.0125,
+    "end": 1.1625
+   },
+   {
+    "text": "yours",
+    "start": 1.175,
+    "end": 1.65
+   },
+   {
+    "text": "to",
+    "start": 1.6625,
+    "end": 1.7625
+   },
+   {
+    "text": "make",
+    "start": 1.775,
+    "end": 2.175
+   }
+  ],
+  "seconds": 2.4875,
+  "chars": 32,
+  "wavSha256": "332de047f6e77a25287539e7caca96416a5c3ea40cc98b3c621028f1a0fb7118",
+  "made": "2026-11-12T07:30:47.083Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l6b": {
+  "text": "But you aren't allowed to change anything.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">But you aren't allowed to change anything.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "But",
+    "start": 0.0875,
+    "end": 0.3125
+   },
+   {
+    "text": "you",
+    "start": 0.5375,
+    "end": 0.675
+   },
+   {
+    "text": "aren't",
+    "start": 0.6875,
+    "end": 0.85
+   },
+   {
+    "text": "allowed",
+    "start": 0.8625,
+    "end": 1.2375
+   },
+   {
+    "text": "to",
+    "start": 1.25,
+    "end": 1.325
+   },
+   {
+    "text": "change",
+    "start": 1.3375,
+    "end": 1.875
+   },
+   {
+    "text": "anything",
+    "start": 2.025,
+    "end": 2.55
+   }
+  ],
+  "seconds": 2.8625,
+  "chars": 42,
+  "wavSha256": "83a4b7931a6892240f5c4547c7011c9f2b6006c15e3aee86efef67ae397a27c8",
+  "made": "2026-11-12T07:30:49.132Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l7": {
+  "text": "Level seven.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level seven.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.0875,
+    "end": 0.4
+   },
+   {
+    "text": "seven",
+    "start": 0.4125,
+    "end": 1.0125
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 12,
+  "wavSha256": "5ace814bef2357cf847508c472d53a7ffdf43ed6b3cfbf1bbee70e9020a595d3",
+  "made": "2026-11-12T07:30:50.817Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l7a": {
+  "text": "Everything you say is understood.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Everything you say is understood.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Everything",
+    "start": 0.0875,
+    "end": 0.475
+   },
+   {
+    "text": "you",
+    "start": 0.4875,
+    "end": 0.5875
+   },
+   {
+    "text": "say",
+    "start": 0.6,
+    "end": 1.1125
+   },
+   {
+    "text": "is",
+    "start": 1.125,
+    "end": 1.5625
+   },
+   {
+    "text": "understood",
+    "start": 1.65,
+    "end": 2.3125
+   }
+  ],
+  "seconds": 2.625,
+  "chars": 33,
+  "wavSha256": "747419ed5239596ee0da9ccaa37103945eac6edd57bc31d06663211c794610f4",
+  "made": "2026-11-12T07:30:52.581Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l7b": {
+  "text": "Nothing you say makes a difference.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Nothing you say makes a difference.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Nothing",
+    "start": 0.0875,
+    "end": 0.4875
+   },
+   {
+    "text": "you",
+    "start": 0.5,
+    "end": 0.6
+   },
+   {
+    "text": "say",
+    "start": 0.6125,
+    "end": 0.95
+   },
+   {
+    "text": "makes",
+    "start": 0.9625,
+    "end": 1.2375
+   },
+   {
+    "text": "a",
+    "start": 1.25,
+    "end": 1.3
+   },
+   {
+    "text": "difference",
+    "start": 1.3125,
+    "end": 1.9125
+   }
+  ],
+  "seconds": 2.225,
+  "chars": 35,
+  "wavSha256": "93483264a23d623bdbff7ac179339cad05e12d6b273626ecfab724d6c7720d15",
+  "made": "2026-11-12T07:30:54.653Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l8": {
+  "text": "Level eight.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level eight.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.1,
+    "end": 0.4375
+   },
+   {
+    "text": "eight",
+    "start": 0.45,
+    "end": 0.7375
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 12,
+  "wavSha256": "e32cf831529cb2b6ae8b960c4f5dba9c3d59d66a5f9b531b9dac46ee0dfadb84",
+  "made": "2026-11-12T07:30:56.254Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l8a": {
+  "text": "You are surrounded by people [200ms] who have known you for years.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You are surrounded by people <break time=\"200ms\"/> who have known you for years.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1,
+    "end": 0.2375
+   },
+   {
+    "text": "are",
+    "start": 0.25,
+    "end": 0.375
+   },
+   {
+    "text": "surrounded",
+    "start": 0.3875,
+    "end": 0.9
+   },
+   {
+    "text": "by",
+    "start": 0.9125,
+    "end": 1.0375
+   },
+   {
+    "text": "people  who have known you for years.",
+    "start": 1.05,
+    "end": 1.463
+   },
+   {
+    "text": "who",
+    "start": 1.825,
+    "end": 1.9375
+   },
+   {
+    "text": "have",
+    "start": 1.95,
+    "end": 2.0875
+   },
+   {
+    "text": "known",
+    "start": 2.1,
+    "end": 2.3625
+   },
+   {
+    "text": "you",
+    "start": 2.375,
+    "end": 2.55
+   },
+   {
+    "text": "for",
+    "start": 2.5625,
+    "end": 2.7375
+   },
+   {
+    "text": "years",
+    "start": 2.75,
+    "end": 3.35
+   }
+  ],
+  "seconds": 3.6625,
+  "chars": 66,
+  "wavSha256": "bb4bd3c5f6df1426df7e911465d0fc90466ce1062980dbf65566f2e661269938",
+  "made": "2026-11-12T07:30:58.137Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l8b": {
+  "text": "They all have a slightly different idea [200ms] of who you are.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">They all have a slightly different idea <break time=\"200ms\"/> of who you are.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "They",
+    "start": 0.125,
+    "end": 0.275
+   },
+   {
+    "text": "all",
+    "start": 0.2875,
+    "end": 0.5375
+   },
+   {
+    "text": "have",
+    "start": 0.55,
+    "end": 0.7125
+   },
+   {
+    "text": "a",
+    "start": 0.725,
+    "end": 0.7875
+   },
+   {
+    "text": "slightly",
+    "start": 0.8,
+    "end": 1.4125
+   },
+   {
+    "text": "different",
+    "start": 1.425,
+    "end": 1.725
+   },
+   {
+    "text": "idea  of who you are.",
+    "start": 1.7375,
+    "end": 2.188
+   },
+   {
+    "text": "of",
+    "start": 2.4375,
+    "end": 2.55
+   },
+   {
+    "text": "who",
+    "start": 2.5625,
+    "end": 2.725
+   },
+   {
+    "text": "you",
+    "start": 2.7375,
+    "end": 2.9125
+   },
+   {
+    "text": "are",
+    "start": 2.925,
+    "end": 3.275
+   }
+  ],
+  "seconds": 3.5875,
+  "chars": 63,
+  "wavSha256": "49da0c552fc164af8fe92a5156e415b178d829b8d6e36d4ad160607f56eec678",
+  "made": "2026-11-12T07:31:00.049Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l8c": {
+  "text": "None of them is quite right.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">None of them is quite right.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "None",
+    "start": 0.0875,
+    "end": 0.3375
+   },
+   {
+    "text": "of",
+    "start": 0.35,
+    "end": 0.4375
+   },
+   {
+    "text": "them",
+    "start": 0.45,
+    "end": 0.6875
+   },
+   {
+    "text": "is",
+    "start": 0.75,
+    "end": 1.05
+   },
+   {
+    "text": "quite",
+    "start": 1.4,
+    "end": 1.8
+   },
+   {
+    "text": "right",
+    "start": 1.8125,
+    "end": 2.2
+   }
+  ],
+  "seconds": 2.5125,
+  "chars": 28,
+  "wavSha256": "66bb97a648ac1f2b11f443389638e14f0dda16fea79c38b16c327829eaeba3d2",
+  "made": "2026-11-12T07:31:01.890Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l9": {
+  "text": "Level nine.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level nine.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.0875,
+    "end": 0.4
+   },
+   {
+    "text": "nine",
+    "start": 0.4125,
+    "end": 0.8875
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 11,
+  "wavSha256": "2f9630778bad7655c977fd7f0d092547ac00e02b0114c98d1ca221d421fe9a5e",
+  "made": "2026-11-12T07:31:03.641Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l9a": {
+  "text": "You finally get what you've been working toward.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You finally get what you've been working toward.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1,
+    "end": 0.25
+   },
+   {
+    "text": "finally",
+    "start": 0.2625,
+    "end": 0.8375
+   },
+   {
+    "text": "get",
+    "start": 0.85,
+    "end": 1.15
+   },
+   {
+    "text": "what",
+    "start": 1.1625,
+    "end": 1.3875
+   },
+   {
+    "text": "you've",
+    "start": 1.4,
+    "end": 1.55
+   },
+   {
+    "text": "been",
+    "start": 1.5625,
+    "end": 1.6875
+   },
+   {
+    "text": "working",
+    "start": 1.7,
+    "end": 2.025
+   },
+   {
+    "text": "toward",
+    "start": 2.0375,
+    "end": 2.425
+   }
+  ],
+  "seconds": 2.7375,
+  "chars": 48,
+  "wavSha256": "e3a5d44872f313f210fe7f6e4e1d12ef6401f82f3502e4c7f104567b30fb741b",
+  "made": "2026-11-12T07:31:05.431Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l9b": {
+  "text": "It's exactly what you asked for.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">It's exactly what you asked for.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "It's",
+    "start": 0.1,
+    "end": 0.2625
+   },
+   {
+    "text": "exactly",
+    "start": 0.275,
+    "end": 0.9125
+   },
+   {
+    "text": "what",
+    "start": 0.925,
+    "end": 1.0875
+   },
+   {
+    "text": "you",
+    "start": 1.1,
+    "end": 1.225
+   },
+   {
+    "text": "asked",
+    "start": 1.2375,
+    "end": 1.4875
+   },
+   {
+    "text": "for",
+    "start": 1.5,
+    "end": 1.875
+   }
+  ],
+  "seconds": 2.1875,
+  "chars": 32,
+  "wavSha256": "5bcbc88fdccd9694ad9955c21c74c887794a7d37b0ecd66ddc62f8ea3a3182c0",
+  "made": "2026-11-12T07:31:07.238Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l9c": {
+  "text": "You can't remember why you wanted it.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You can't remember why you wanted it.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1,
+    "end": 0.2125
+   },
+   {
+    "text": "can't",
+    "start": 0.225,
+    "end": 0.5375
+   },
+   {
+    "text": "remember",
+    "start": 0.55,
+    "end": 0.9625
+   },
+   {
+    "text": "why",
+    "start": 0.975,
+    "end": 1.1625
+   },
+   {
+    "text": "you",
+    "start": 1.175,
+    "end": 1.3
+   },
+   {
+    "text": "wanted",
+    "start": 1.3125,
+    "end": 1.6375
+   },
+   {
+    "text": "it",
+    "start": 1.65,
+    "end": 1.8625
+   }
+  ],
+  "seconds": 2.175,
+  "chars": 37,
+  "wavSha256": "0ccca86247e41695ab1cfbb5301979a276a4a9e3631f2b20ed21d84fdafc3335",
+  "made": "2026-11-12T07:31:09.008Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l10": {
+  "text": "Level ten.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level ten.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.0875,
+    "end": 0.3625
+   },
+   {
+    "text": "ten",
+    "start": 0.375,
+    "end": 0.85
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 10,
+  "wavSha256": "abb6f60ff4f54a88e43058d18f3accd8a3561b7bea09bb5b8b5ba653b9949d06",
+  "made": "2026-11-12T07:31:10.727Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l10a": {
+  "text": "You can remember being happy.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You can remember being happy.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.0875,
+    "end": 0.2125
+   },
+   {
+    "text": "can",
+    "start": 0.225,
+    "end": 0.375
+   },
+   {
+    "text": "remember",
+    "start": 0.3875,
+    "end": 0.7375
+   },
+   {
+    "text": "being",
+    "start": 0.75,
+    "end": 1.025
+   },
+   {
+    "text": "happy",
+    "start": 1.0375,
+    "end": 1.5625
+   }
+  ],
+  "seconds": 1.875,
+  "chars": 29,
+  "wavSha256": "1126cd9e499dc89e936dd0850484e5dd8ff268d859cd84e017c9bf6d74b944b0",
+  "made": "2026-11-12T07:31:12.493Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l10b": {
+  "text": "You remember the places, [250ms] the people, [250ms] even what the weather was like.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You remember the places, <break time=\"250ms\"/> the people, <break time=\"250ms\"/> even what the weather was like.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.0875,
+    "end": 0.225
+   },
+   {
+    "text": "remember",
+    "start": 0.2375,
+    "end": 0.575
+   },
+   {
+    "text": "the",
+    "start": 0.5875,
+    "end": 0.6625
+   },
+   {
+    "text": "places",
+    "start": 0.675,
+    "end": 1.3625
+   },
+   {
+    "text": "the",
+    "start": 2.025,
+    "end": 2.1
+   },
+   {
+    "text": "people",
+    "start": 2.1125,
+    "end": 2.625
+   },
+   {
+    "text": "even",
+    "start": 3.3,
+    "end": 3.525
+   },
+   {
+    "text": "what",
+    "start": 3.5375,
+    "end": 3.6875
+   },
+   {
+    "text": "the",
+    "start": 3.7,
+    "end": 3.7875
+   },
+   {
+    "text": "weather",
+    "start": 3.8,
+    "end": 4.1375
+   },
+   {
+    "text": "was",
+    "start": 4.15,
+    "end": 4.375
+   },
+   {
+    "text": "like",
+    "start": 4.3875,
+    "end": 4.7875
+   }
+  ],
+  "seconds": 5.1,
+  "chars": 84,
+  "wavSha256": "bbe1d16e2ebe3c63de76eaf71183298d438e92f25c6be1ec3348d2d145717cdb",
+  "made": "2026-11-12T07:31:14.416Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l10c": {
+  "text": "But not the feeling.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">But not the feeling.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "But",
+    "start": 0.0875,
+    "end": 0.3
+   },
+   {
+    "text": "not",
+    "start": 0.3125,
+    "end": 0.6375
+   },
+   {
+    "text": "the",
+    "start": 0.65,
+    "end": 0.725
+   },
+   {
+    "text": "feeling",
+    "start": 0.7375,
+    "end": 1.3125
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 20,
+  "wavSha256": "15bfaae3aff442f380141f34c9ad07f62c900110cb6ecfa33ee1f21688e38bcb",
+  "made": "2026-11-12T07:31:16.129Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l11": {
+  "text": "Level eleven.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level eleven.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.075,
+    "end": 0.425
+   },
+   {
+    "text": "eleven",
+    "start": 0.4375,
+    "end": 1
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 13,
+  "wavSha256": "863e1eacdc9c8d414c0af207b14ba842c2c9323bde8350cdd497ed3d2507e889",
+  "made": "2026-11-12T07:31:17.895Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l11a": {
+  "text": "Everyone is pleased with you.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Everyone is pleased with you.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Everyone",
+    "start": 0.1,
+    "end": 0.4875
+   },
+   {
+    "text": "is",
+    "start": 0.5,
+    "end": 0.6125
+   },
+   {
+    "text": "pleased",
+    "start": 0.625,
+    "end": 1
+   },
+   {
+    "text": "with",
+    "start": 1.0125,
+    "end": 1.175
+   },
+   {
+    "text": "you",
+    "start": 1.1875,
+    "end": 1.4875
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 29,
+  "wavSha256": "24402188bed22575fa633ad4d4b6bff40a99b53dc91f773970c77c5198beefe7",
+  "made": "2026-11-12T07:31:19.594Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l11b": {
+  "text": "Your work is appreciated.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Your work is appreciated.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Your",
+    "start": 0.0875,
+    "end": 0.3125
+   },
+   {
+    "text": "work",
+    "start": 0.325,
+    "end": 0.675
+   },
+   {
+    "text": "is",
+    "start": 0.8625,
+    "end": 1.0625
+   },
+   {
+    "text": "appreciated",
+    "start": 1.175,
+    "end": 1.975
+   }
+  ],
+  "seconds": 2.2875,
+  "chars": 25,
+  "wavSha256": "4e627120b6b3e3e8de4e1bf6dd72842df98a54da997942effbc4b315533fd676",
+  "made": "2026-11-12T07:31:21.287Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l11c": {
+  "text": "You are considered a success.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You are considered a success.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.0875,
+    "end": 0.3
+   },
+   {
+    "text": "are",
+    "start": 0.3125,
+    "end": 0.5
+   },
+   {
+    "text": "considered",
+    "start": 0.5125,
+    "end": 1
+   },
+   {
+    "text": "a",
+    "start": 1.0125,
+    "end": 1.0625
+   },
+   {
+    "text": "success",
+    "start": 1.075,
+    "end": 1.775
+   }
+  ],
+  "seconds": 2.0875,
+  "chars": 29,
+  "wavSha256": "009b2ff65b7cc17e142725785b7eb56322c3aeec2f54d954aa057d2f53c57fcb",
+  "made": "2026-11-12T07:31:23.055Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l11d": {
+  "text": "You have no idea [200ms] what any of it is for.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You have no idea <break time=\"200ms\"/> what any of it is for.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1125,
+    "end": 0.2
+   },
+   {
+    "text": "have",
+    "start": 0.2125,
+    "end": 0.3875
+   },
+   {
+    "text": "no",
+    "start": 0.4,
+    "end": 0.6375
+   },
+   {
+    "text": "idea  what any of it is for.",
+    "start": 0.65,
+    "end": 1.113
+   },
+   {
+    "text": "what",
+    "start": 1.375,
+    "end": 1.6
+   },
+   {
+    "text": "any",
+    "start": 1.6125,
+    "end": 1.8125
+   },
+   {
+    "text": "of",
+    "start": 1.825,
+    "end": 1.9125
+   },
+   {
+    "text": "it",
+    "start": 1.925,
+    "end": 2.0125
+   },
+   {
+    "text": "is",
+    "start": 2.025,
+    "end": 2.25
+   },
+   {
+    "text": "for",
+    "start": 2.2625,
+    "end": 2.775
+   }
+  ],
+  "seconds": 3.0875,
+  "chars": 47,
+  "wavSha256": "cd1d3b63786c1d2b5ae9af2740bcfeb41f700f214321b2279287a4a89ca67c54",
+  "made": "2026-11-12T07:31:24.893Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l12": {
+  "text": "Level twelve.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level twelve.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.0875,
+    "end": 0.4125
+   },
+   {
+    "text": "twelve",
+    "start": 0.425,
+    "end": 0.9875
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 13,
+  "wavSha256": "ab28368c5df6e6c17414c1e0a66e4306dcea213c65e06a2b27c7eb57ff3ae77c",
+  "made": "2026-11-12T07:31:26.596Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l12a": {
+  "text": "You can leave whenever you like.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You can leave whenever you like.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1,
+    "end": 0.2125
+   },
+   {
+    "text": "can",
+    "start": 0.225,
+    "end": 0.375
+   },
+   {
+    "text": "leave",
+    "start": 0.3875,
+    "end": 0.65
+   },
+   {
+    "text": "whenever",
+    "start": 0.6625,
+    "end": 0.9625
+   },
+   {
+    "text": "you",
+    "start": 0.975,
+    "end": 1.0875
+   },
+   {
+    "text": "like",
+    "start": 1.1,
+    "end": 1.4875
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 32,
+  "wavSha256": "329f20f1ac0bcb6baaeaaf00b4b6761434fa423281e5bbad42d861a5c3ee7e33",
+  "made": "2026-11-12T07:31:28.295Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l12b": {
+  "text": "No one is keeping you here.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">No one is keeping you here.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "No",
+    "start": 0.0875,
+    "end": 0.3875
+   },
+   {
+    "text": "one",
+    "start": 0.4,
+    "end": 0.525
+   },
+   {
+    "text": "is",
+    "start": 0.5375,
+    "end": 0.6625
+   },
+   {
+    "text": "keeping",
+    "start": 0.675,
+    "end": 0.9375
+   },
+   {
+    "text": "you",
+    "start": 0.95,
+    "end": 1.05
+   },
+   {
+    "text": "here",
+    "start": 1.0625,
+    "end": 1.525
+   }
+  ],
+  "seconds": 1.8375,
+  "chars": 27,
+  "wavSha256": "8a30ff9d53fcdc200aa3e8630d36efeef677338491816a4d8cdda11019fc0d98",
+  "made": "2026-11-12T07:31:30.050Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l12c": {
+  "text": "You just can't think of anywhere you would rather go.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You just can't think of anywhere you would rather go.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1,
+    "end": 0.2125
+   },
+   {
+    "text": "just",
+    "start": 0.225,
+    "end": 0.5875
+   },
+   {
+    "text": "can't",
+    "start": 0.6,
+    "end": 0.95
+   },
+   {
+    "text": "think",
+    "start": 0.9625,
+    "end": 1.375
+   },
+   {
+    "text": "of",
+    "start": 1.405,
+    "end": 1.5925
+   },
+   {
+    "text": "anywhere",
+    "start": 1.6225,
+    "end": 2.0225
+   },
+   {
+    "text": "you",
+    "start": 2.035,
+    "end": 2.1475
+   },
+   {
+    "text": "would",
+    "start": 2.16,
+    "end": 2.31
+   },
+   {
+    "text": "rather",
+    "start": 2.3225,
+    "end": 2.5975
+   },
+   {
+    "text": "go",
+    "start": 2.61,
+    "end": 2.9475
+   }
+  ],
+  "seconds": 3.26,
+  "chars": 53,
+  "wavSha256": "7b0ae613c2e65d9377be0f3e382383f132d143eb05c81418e19ca0279524292e",
+  "made": "2026-11-12T08:06:12.395Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  },
+  "edited": "silences between words closed to 30 ms by hand after synthesis"
+ },
+ "l13": {
+  "text": "Level thirteen.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level thirteen.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.075,
+    "end": 0.425
+   },
+   {
+    "text": "thirteen",
+    "start": 0.4375,
+    "end": 1.2
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 15,
+  "wavSha256": "9cf8d421971411834c1d8baeae69bd1aa53ebc892c2ab2449ddfee8687af0681",
+  "made": "2026-11-12T07:31:33.740Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l13a": {
+  "text": "There is nothing wrong.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">There is nothing wrong.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "There",
+    "start": 0.0875,
+    "end": 0.2375
+   },
+   {
+    "text": "is",
+    "start": 0.25,
+    "end": 0.4
+   },
+   {
+    "text": "nothing",
+    "start": 0.4125,
+    "end": 0.8125
+   },
+   {
+    "text": "wrong",
+    "start": 0.825,
+    "end": 1.2625
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 23,
+  "wavSha256": "729b7ce99095582f95850f4114c6c60186dc53c9d15079f2db17bdb05ddd2baf",
+  "made": "2026-11-12T07:31:35.466Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l13b": {
+  "text": "You have enough money.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You have enough money.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1,
+    "end": 0.2
+   },
+   {
+    "text": "have",
+    "start": 0.2125,
+    "end": 0.45
+   },
+   {
+    "text": "enough",
+    "start": 0.4625,
+    "end": 0.725
+   },
+   {
+    "text": "money",
+    "start": 0.7375,
+    "end": 1.175
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 22,
+  "wavSha256": "91f4ca9853873f0ccc6eeecdd86f5d2b6eb29819ea7194e5998578eeb9a82a54",
+  "made": "2026-11-12T07:31:37.175Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l13c": {
+  "text": "Your health is good.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Your health is good.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Your",
+    "start": 0.1,
+    "end": 0.25
+   },
+   {
+    "text": "health",
+    "start": 0.2625,
+    "end": 0.5375
+   },
+   {
+    "text": "is",
+    "start": 0.55,
+    "end": 0.7
+   },
+   {
+    "text": "good",
+    "start": 0.7125,
+    "end": 1.05
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 20,
+  "wavSha256": "aaf927380a25c93c37c794c33ac43c7938d505cda3ded587b920ae4d0d98eabf",
+  "made": "2026-11-12T07:31:38.768Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l13d": {
+  "text": "The people you love are doing well.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">The people you love are doing well.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "The",
+    "start": 0.1,
+    "end": 0.175
+   },
+   {
+    "text": "people",
+    "start": 0.1875,
+    "end": 0.475
+   },
+   {
+    "text": "you",
+    "start": 0.4875,
+    "end": 0.6125
+   },
+   {
+    "text": "love",
+    "start": 0.625,
+    "end": 0.9
+   },
+   {
+    "text": "are",
+    "start": 0.9125,
+    "end": 1.0125
+   },
+   {
+    "text": "doing",
+    "start": 1.025,
+    "end": 1.3375
+   },
+   {
+    "text": "well",
+    "start": 1.35,
+    "end": 1.7375
+   }
+  ],
+  "seconds": 2.05,
+  "chars": 35,
+  "wavSha256": "f0f10881b56c0364f0b2171c211da69009eb94b346807035977410a28896bac9",
+  "made": "2026-11-12T07:31:40.469Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l13e": {
+  "text": "Every morning, [250ms] you wake up disappointed that it's morning.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Every morning, <break time=\"250ms\"/> you wake up disappointed that it's morning.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Every",
+    "start": 0.075,
+    "end": 0.3
+   },
+   {
+    "text": "morning",
+    "start": 0.3125,
+    "end": 0.7625
+   },
+   {
+    "text": "you",
+    "start": 1.4375,
+    "end": 1.5625
+   },
+   {
+    "text": "wake",
+    "start": 1.575,
+    "end": 1.8375
+   },
+   {
+    "text": "up",
+    "start": 1.85,
+    "end": 2.0125
+   },
+   {
+    "text": "disappointed",
+    "start": 2.025,
+    "end": 2.7
+   },
+   {
+    "text": "that",
+    "start": 2.7125,
+    "end": 2.85
+   },
+   {
+    "text": "it's",
+    "start": 2.8625,
+    "end": 3
+   },
+   {
+    "text": "morning",
+    "start": 3.0125,
+    "end": 3.525
+   }
+  ],
+  "seconds": 3.8375,
+  "chars": 66,
+  "wavSha256": "19c205fdbcf6fc0f5b76829af07c6df13a684fa9d974c672937f03928266d058",
+  "made": "2026-11-12T07:50:08.823Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l14": {
+  "text": "Level fourteen.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level fourteen.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.0875,
+    "end": 0.45
+   },
+   {
+    "text": "fourteen",
+    "start": 0.4625,
+    "end": 1.1625
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 15,
+  "wavSha256": "f62b5bd4a3010a81788b22dd4ed418f77aaefa6efd8d12391fac4aba369009e6",
+  "made": "2026-11-12T07:31:44.144Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l14a": {
+  "text": "You begin to suspect [200ms] that something important is missing.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You begin to suspect <break time=\"200ms\"/> that something important is missing.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.0875,
+    "end": 0.2125
+   },
+   {
+    "text": "begin",
+    "start": 0.225,
+    "end": 0.55
+   },
+   {
+    "text": "to",
+    "start": 0.5625,
+    "end": 0.65
+   },
+   {
+    "text": "suspect  that something important is missing.",
+    "start": 0.6625,
+    "end": 1.263
+   },
+   {
+    "text": "that",
+    "start": 1.5375,
+    "end": 1.75
+   },
+   {
+    "text": "something",
+    "start": 2.0375,
+    "end": 2.4375
+   },
+   {
+    "text": "important",
+    "start": 2.45,
+    "end": 2.9875
+   },
+   {
+    "text": "is",
+    "start": 3.125,
+    "end": 3.3625
+   },
+   {
+    "text": "missing",
+    "start": 3.5125,
+    "end": 4.075
+   }
+  ],
+  "seconds": 4.3875,
+  "chars": 65,
+  "wavSha256": "c514cc87e968fe085dc7f63e1c217371fe3b63072e5db7e0b76371cf839a3176",
+  "made": "2026-11-12T07:31:45.991Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l14b": {
+  "text": "You spend a very long time [200ms] trying to remember what it was.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You spend a very long time <break time=\"200ms\"/> trying to remember what it was.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1,
+    "end": 0.2
+   },
+   {
+    "text": "spend",
+    "start": 0.2125,
+    "end": 0.625
+   },
+   {
+    "text": "a",
+    "start": 0.7375,
+    "end": 0.7875
+   },
+   {
+    "text": "very",
+    "start": 0.8,
+    "end": 1.1125
+   },
+   {
+    "text": "long",
+    "start": 1.125,
+    "end": 1.4375
+   },
+   {
+    "text": "time  trying to remember what it was.",
+    "start": 1.45,
+    "end": 1.838
+   },
+   {
+    "text": "trying",
+    "start": 2.1125,
+    "end": 2.5
+   },
+   {
+    "text": "to",
+    "start": 2.5125,
+    "end": 2.625
+   },
+   {
+    "text": "remember",
+    "start": 2.6375,
+    "end": 3.0625
+   },
+   {
+    "text": "what",
+    "start": 3.075,
+    "end": 3.25
+   },
+   {
+    "text": "it",
+    "start": 3.2625,
+    "end": 3.3625
+   },
+   {
+    "text": "was",
+    "start": 3.375,
+    "end": 3.8125
+   }
+  ],
+  "seconds": 4.125,
+  "chars": 66,
+  "wavSha256": "0ec4d7a674a3757cedb72215170938f121c9afb22e2967aa62e2f8707c152862",
+  "made": "2026-11-12T07:31:48.072Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l14c": {
+  "text": "Eventually, [300ms] you stop trying.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Eventually, <break time=\"300ms\"/> you stop trying.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Eventually",
+    "start": 0.075,
+    "end": 0.7125
+   },
+   {
+    "text": "you",
+    "start": 1.4,
+    "end": 1.4875
+   },
+   {
+    "text": "stop",
+    "start": 1.5,
+    "end": 1.8
+   },
+   {
+    "text": "trying",
+    "start": 1.8125,
+    "end": 2.3875
+   }
+  ],
+  "seconds": 2.7,
+  "chars": 36,
+  "wavSha256": "b78af948ec2fe7ca030c6743190ebe09cb00d57c69a5b3bc29f4c852d321d85b",
+  "made": "2026-11-12T07:31:49.871Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l15": {
+  "text": "Level fifteen.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Level fifteen.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Level",
+    "start": 0.0875,
+    "end": 0.3625
+   },
+   {
+    "text": "fifteen",
+    "start": 0.375,
+    "end": 1.025
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 14,
+  "wavSha256": "4dbb859b3f964e8a1e470ee908b4e2ebf91bf7e9241fa6a863978bc936816bef",
+  "made": "2026-11-12T07:31:51.553Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l15a": {
+  "text": "Everything is fine.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">Everything is fine.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "Everything",
+    "start": 0.0875,
+    "end": 0.5
+   },
+   {
+    "text": "is",
+    "start": 0.5125,
+    "end": 0.6625
+   },
+   {
+    "text": "fine",
+    "start": 0.675,
+    "end": 1.175
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 19,
+  "wavSha256": "efad6215960ad9d33d4e45dd5f0674b63f7972d8528a33db26e8805945cf0df6",
+  "made": "2026-11-12T07:31:53.341Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l15b": {
+  "text": "You get up.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You get up.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1125,
+    "end": 0.2
+   },
+   {
+    "text": "get",
+    "start": 0.2125,
+    "end": 0.375
+   },
+   {
+    "text": "up",
+    "start": 0.3875,
+    "end": 0.6
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 11,
+  "wavSha256": "cc4738bfd33f9ba2ef435cd2924470d29d44961860f0e6f56c50c1cc12a80985",
+  "made": "2026-11-12T07:31:55.167Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l15c": {
+  "text": "You make breakfast.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You make breakfast.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1,
+    "end": 0.225
+   },
+   {
+    "text": "make",
+    "start": 0.2375,
+    "end": 0.4875
+   },
+   {
+    "text": "breakfast",
+    "start": 0.5,
+    "end": 1.125
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 19,
+  "wavSha256": "5abfee00414216c8974d356cd642a49d218a62278c49353f03944113f2284f8a",
+  "made": "2026-11-12T07:31:56.810Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l15d": {
+  "text": "You answer your messages.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You answer your messages.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.1,
+    "end": 0.275
+   },
+   {
+    "text": "answer",
+    "start": 0.2875,
+    "end": 0.65
+   },
+   {
+    "text": "your",
+    "start": 0.6625,
+    "end": 0.7875
+   },
+   {
+    "text": "messages",
+    "start": 0.8,
+    "end": 1.5875
+   }
+  ],
+  "seconds": 1.9,
+  "chars": 25,
+  "wavSha256": "c039d670ff4b8be52d540f127be67347f0f17de301449b7d29e7e2cb513040e4",
+  "made": "2026-11-12T07:31:58.594Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l15e": {
+  "text": "You go about your day.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">You go about your day.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "You",
+    "start": 0.125,
+    "end": 0.225
+   },
+   {
+    "text": "go",
+    "start": 0.2375,
+    "end": 0.4125
+   },
+   {
+    "text": "about",
+    "start": 0.425,
+    "end": 0.7
+   },
+   {
+    "text": "your",
+    "start": 0.7125,
+    "end": 0.85
+   },
+   {
+    "text": "day",
+    "start": 0.8625,
+    "end": 1.2125
+   }
+  ],
+  "seconds": 1.82,
+  "chars": 22,
+  "wavSha256": "69ce47386e3475ec85ecc367d663b2fd4a790a0b003fa2d4d5c8a1d41c44ec9f",
+  "made": "2026-11-12T07:32:00.368Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "l15f": {
+  "text": "And you no longer notice [300ms] that you're in [350ms] hell.",
+  "voice": "en-US-SerenaMultilingualNeural",
+  "params": {
+   "style": "serious"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SerenaMultilingualNeural\"><mstts:express-as style=\"serious\">And you no longer notice <break time=\"300ms\"/> that you're in <break time=\"350ms\"/> hell.</mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "And",
+    "start": 0.075,
+    "end": 0.4625
+   },
+   {
+    "text": "you",
+    "start": 0.575,
+    "end": 0.6625
+   },
+   {
+    "text": "no",
+    "start": 0.675,
+    "end": 0.8125
+   },
+   {
+    "text": "longer",
+    "start": 0.825,
+    "end": 1.2
+   },
+   {
+    "text": "notice  that you're in  hell.",
+    "start": 1.2125,
+    "end": 1.738
+   },
+   {
+    "text": "that",
+    "start": 2.075,
+    "end": 2.2375
+   },
+   {
+    "text": "you're",
+    "start": 2.25,
+    "end": 2.4875
+   },
+   {
+    "text": "in  hell.",
+    "start": 2.5,
+    "end": 2.8005
+   },
+   {
+    "text": "hell",
+    "start": 3.275,
+    "end": 3.7917
+   }
+  ],
+  "seconds": 4.208,
+  "chars": 61,
+  "wavSha256": "d45fc553fe9f93c77f4e6d83fbbc66a693222749b62c1023bf3479c15a982b61",
+  "made": "2026-11-12T08:06:53.839Z",
+  "config": {
+   "cps": 0.25,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  },
+  "edited": "the last word replaced by the same word from a reading of the same sentence at rate -25%, joined in the pause before it"
+ }
+}
