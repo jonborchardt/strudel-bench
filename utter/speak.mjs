@@ -118,6 +118,11 @@ export async function speak(spec, { synth, cacheDir, fresh = false, backoff = BA
   }
   const { rate, seconds } = wavInfo(got.wav), words = wordsOf(got.boundaries ?? []);
   if (!words.length) throw new Error(`utter: azure returned no word boundaries for "${ssml.replace(/<[^>]*>/g, '').slice(0, 40)}"`);
+  for (const [i, w] of words.entries()) { // checked before the cache sees it: a result that does not hold together must not be the one that is kept
+    if (i && w.start < words[i - 1].start) throw new Error(`utter: azure reported the word "${w.text}" out of order (${w.start} s after ${words[i - 1].start} s)`);
+    if (!(w.end > w.start)) throw new Error(`utter: azure reported the word "${w.text}" with no duration (${w.start}..${w.end} s)`);
+    if (w.start < 0 || w.end > seconds + 1e-6) throw new Error(`utter: azure reported the word "${w.text}" at ${w.start}..${w.end} s, outside the ${seconds} s of audio`);
+  }
   const meta = { words, seconds, rate, chars, voice, ssml, format: FORMAT, region: region ?? '', wavSha256: sha(got.wav), made: new Date().toISOString() };
   if (cacheDir) writeEntry(cacheDir, key, got.wav, meta);
   return out(got.wav, meta, false);

@@ -47,6 +47,13 @@ test('a result that is not a wav is refused', async () => {
   await assert.rejects(speak({ text: 'x' }, { synth: good(Buffer.from('not audio')) }), /wav/);
 });
 
+test('words that do not fit the audio are refused, and never cached', async () => {
+  const cacheDir = tmp();
+  await assert.rejects(speak({ text: 'x' }, { synth: good(wavOf(1), [tick('a', .2, .3), tick('b', .6, 2)]), cacheDir }), /outside the 1 s of audio/);
+  await assert.rejects(speak({ text: 'x' }, { synth: good(wavOf(1), [tick('a', .2, 0)]), cacheDir }), /no duration/);
+  assert.deepEqual(fs.existsSync(cacheDir) ? fs.readdirSync(cacheDir) : [], []);
+});
+
 test('each transient failure is retried', async () => {
   for (const msg of ['No free synthesizer', 'websocket error code: 1013', 'StatusCode: 1006', 'Unable to contact server', '429', 'Too Many Requests', 'ResourceExhausted']) {
     const synth = sequence(failing(msg), good());
