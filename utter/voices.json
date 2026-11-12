@@ -1,0 +1,4 @@
+[
+ { "name": "en-US-AndrewMultilingualNeural", "locale": "en-US", "gender": "Male", "styles": [], "roles": [] },
+ { "name": "en-US-AriaNeural", "locale": "en-US", "gender": "Female", "styles": ["whispering"], "roles": [] }
+]
