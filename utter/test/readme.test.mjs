@@ -20,11 +20,17 @@ test('every parameter is in the README table', () => {
 test('every js example runs', async () => {
   const blocks = [...README.matchAll(/```js\n([\s\S]*?)```/g)].map((m) => m[1]);
   assert.ok(blocks.length >= 3, `expected several examples, found ${blocks.length}`);
-  const api = { ...utter, speak: (spec, opts = {}) => utter.speak(spec, { ...opts, synth: fakeSynth, cacheDir: undefined }), console: { log() {} } };
+  const api = { ...utter, speak: (spec, opts = {}) => utter.speak(spec, { ...opts, synth: opts.synth ?? fakeSynth, cacheDir: undefined }), console: { log() {} } };
   for (const code of blocks) {
     const body = code.replace(/^import .*$/gm, '');
     await new AsyncFunction(...Object.keys(api), body)(...Object.values(api)).catch((e) => assert.fail(`${e.message}\n--- in:\n${code}`));
   }
+});
+
+test('the example that shows a fake synth does not itself need Azure', () => {
+  const block = [...README.matchAll(/```js\n([\s\S]*?)```/g)].map((m) => m[1]).find((b) => b.includes('synth: fake'));
+  assert.ok(block, 'the example exists');
+  assert.equal(block.match(/\bspeak\(/g).length, 1, 'one call, and it is the one given the fake');
 });
 
 test('it says what must be said, and holds no key', () => {

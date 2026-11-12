@@ -106,6 +106,8 @@ test('rawSnippet is the natural-pitch form: explicit regions on a raw part', () 
   assert.match(s, /\[0\.1, 0\.26\]/);
   assert.match(s, /s\('line'\)\.begin\(0\.1\)\.end\(0\.66\)/);
   assert.ok(!s.includes('"') && !s.includes('`'), 'single quotes only: it is pasted into a song file');
+  assert.equal(s.match(/^raw: /gm).length, 1, 'pasted whole into one section, no key is written twice');
+  assert.match(s, /^raw2: \{ pattern: seq/m);
 });
 
 // ---------- the command ----------
@@ -204,6 +206,32 @@ test('say: different text under an existing name needs --replace', async () => {
   assert.equal(read(root, 'speech.json').line.text, 'hold that line');
   assert.ok(r.wrote.includes('line.wav'));
   assert.equal(read(root, 'meta.json')['p-speech/line.wav'].seconds, 1.2, 'the meta follows the new wav');
+});
+
+test('say: a name that is another clip\'s words definition, or whose words name is another clip, is refused', async () => {
+  const root = tmpRoot(), synth = fake();
+  await run(root, synth, BASE);
+  const words = read(root, 'pack.json').samples['line-words'];
+  await assert.rejects(run(root, synth, ['four five', '--pack', 'p-speech', '--name', 'line-words', '--cps', '.5']), /line-words/);
+  await run(root, synth, ['four five', '--pack', 'p-speech', '--name', 'x-words', '--cps', '.5']);
+  await assert.rejects(run(root, synth, ['one two', '--pack', 'p-speech', '--name', 'x', '--cps', '.5', '--words']), /x-words/);
+  assert.equal(synth.calls, 2);
+  assert.deepEqual(read(root, 'pack.json').samples['line-words'], words);
+});
+
+test('say: a committed wav that no longer matches its record is not silently resynthesized', async () => {
+  const root = tmpRoot(), synth = fake(), wavFile = path.join(packDir(root), 'line.wav'), other = [...BASE.slice(0, 5), '--cps', '.6'];
+  await run(root, synth, BASE);
+  fs.rmSync(path.join(root, 'out'), { recursive: true, force: true });
+  fs.writeFileSync(wavFile, wavOf(1, 330)); // edited by hand
+  const edited = fs.readFileSync(wavFile);
+  await assert.rejects(run(root, synth, other), /does not match.*--fresh/s);
+  assert.ok(fs.readFileSync(wavFile).equals(edited));
+  fs.rmSync(wavFile);
+  await assert.rejects(run(root, synth, other), /missing.*--fresh/s);
+  assert.equal(synth.calls, 1);
+  await run(root, synth, [...other, '--fresh']);
+  assert.equal(synth.calls, 2);
 });
 
 test('say: the same request again changes nothing and spends nothing', async () => {

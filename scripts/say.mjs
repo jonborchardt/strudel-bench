@@ -87,7 +87,7 @@ export function rawSnippet(name, regions, phrase) {
     `const W = [${regions.map((r) => `[${f(r.begin)}, ${f(r.end)}]`).join(', ')}];`,
     `const w = (i) => s('${name}').begin(W[i][0]).end(W[i][1]);`,
     `raw: { pattern: s('${name}').begin(${f(phrase.begin)}).end(${f(phrase.end)}).slow(2) },   // the phrase, once every 2 bars`,
-    `raw: { pattern: seq(w(0), silence, silence, silence, ${regions.length > 1 ? 'w(1)' : 'w(0)'}, silence, silence, silence) },   // words on steps: one entry per step of the bar`,
+    `raw2: { pattern: seq(w(0), silence, silence, silence, ${regions.length > 1 ? 'w(1)' : 'w(0)'}, silence, silence, silence) },   // words on steps: one entry per step of the bar (raw2 only because a section cannot hold two keys named raw)`,
   ].join('\n');
 }
 
@@ -163,8 +163,17 @@ export async function say(args, { synth, root = ROOT, log = console.log, packs, 
   const left = existed ? fs.readdirSync(dir).filter((f) => /\.(say-old|tmp)$/.test(f)) : [];
   if (left.length) throw new Error(`say: samples/user/${pack} holds ${left.join(', ')} from a run that did not finish. A .say-old file is the previous version of the file it is named after: put it back or delete it, then run again`);
   const speech = readJson(at('speech.json')) ?? {}, record = speech[name], onDisk = fs.existsSync(at(wavName)) ? fs.readFileSync(at(wavName)) : null;
+  // a clip's `<name>-words` definition shares the namespace with clip names: neither may take the other's place
+  if (speech[name + '-words']) throw new Error(`say: ${pack} already holds a clip named ${name}-words, which is the name ${name}'s words definition would take. Pick another --name`);
+  if (name.endsWith('-words') && speech[name.slice(0, -6)]) throw new Error(`say: ${name} is the name of the words definition of the clip ${name.slice(0, -6)} in ${pack}. Pick another --name`);
   const differs = record ? specDiffers(record, { text, voice, params }) : [];
   if (differs.length && !o.replace) throw new Error(`say: ${pack}/${name} already holds a different clip (${differs.join(', ')} differ${differs.includes('text') ? `; it says "${record.text}"` : ''}). Pass --replace to overwrite it, or pick another --name`);
+  // the same synthesis as recorded, but the wav is gone or is not the one recorded: synthesizing here would spend
+  // money and overwrite a file nobody asked to replace, so it has to be asked for
+  if (record && !differs.length && !o.fresh && !o.replace && !o.dry) {
+    if (!onDisk) throw new Error(`say: ${pack}/${wavName} is missing though speech.json records it. Pass --fresh to synthesize it again (Azure may not return the same audio)`);
+    if (sha(onDisk) !== record.wavSha256) throw new Error(`say: ${pack}/${wavName} does not match the clip speech.json records (edited, or replaced by hand). Pass --fresh to synthesize over it, or restore the file`);
+  }
   const reuse = !!record && !differs.length && !o.fresh && !!onDisk && sha(onDisk) === record.wavSha256;
 
   if (o.dry) {

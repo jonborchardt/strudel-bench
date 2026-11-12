@@ -172,8 +172,13 @@ network. The key is read only inside that child.
 ```js
 import { speak } from 'utter';
 
+const wav = Buffer.alloc(44 + 96000);     // one second of silence: a 48 kHz 16-bit mono RIFF header, then zeros
+wav.write('RIFF', 0); wav.writeUInt32LE(36 + 96000, 4); wav.write('WAVEfmt ', 8); wav.writeUInt32LE(16, 16);
+wav.writeUInt16LE(1, 20); wav.writeUInt16LE(1, 22); wav.writeUInt32LE(48000, 24); wav.writeUInt32LE(96000, 28);
+wav.writeUInt16LE(2, 32); wav.writeUInt16LE(16, 34); wav.write('data', 36); wav.writeUInt32LE(96000, 40);
+
 const fake = async (ssml, { signal }) => ({
-  wav: await speak({ text: 'any real result will do' }).then((r) => r.wav),
+  wav,
   boundaries: [{ text: 'hello', offset: 1000000, duration: 3000000, type: 'WordBoundary' }],   // 100 ns ticks
 });
 const r = await speak({ text: 'hello' }, { synth: fake });
