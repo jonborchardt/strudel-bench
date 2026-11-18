@@ -1,0 +1,179 @@
+// Someone Is at Your Door
+// Hypnotic jazz-funk / trip-hop, F minor, 70 bpm, swung: a man notices ordinary things slightly out of place, in a whisper.
+// The bass and the kit do the work: a round two-bar figure (f, a flat, low c, e flat) that never changes its notes, only
+// opens its filter and picks up grit; a dry, lazy boom-bap kit with a ride on its own level. The muted trumpet is a second
+// character: three wandering notes, a shrug, a silly fall, the motif a half-step up, and in the climax two of them rubbing.
+// The narrator is Davis alone, two takes of each line taking turns. The voices around him (Jenny, Aria, Sara, Jane) only repeat what he has
+// said: whole lines far left and delayed, or single words cut out of his lines and theirs, so every bar has a voice in it.
+// They thicken through the climax, all close on the word "door", and the song cuts dead; the outro is short.
+// Instruments and voices were chosen in songs/someone-at-your-door-auditions.strudel. Voice clips: pack door-speech
+// (npm run say, style whispering). A whisper's peaks sit ~19 dB over its body, so the voices sit low.
+// One bar is 3.43 s; <...> holds one entry per bar, [...] inside it is that bar in quarters or eighths.
+
+const sw = (p) => p.swingBy(.12, 4);   // the kit's own swing (drums groove .7), so everything sits on the same eighths
+// bars(n, [bar, '[...]'], ...): n bars, each listed bar given its contents, the rest empty
+const bars = (n, ...hits) => '<' + Array.from({ length: n }, (_, i) => hits.find((h) => h[0] === i + 1)?.[1] ?? '~').join(' ') + '>';
+// the figure over two bars, and the bass that plays it: round, almost a sine; cut is its filter, per bar if a string
+const F1 = '[f2 ~ ~ ~ ~ ~ ab2 ~]', F2 = '[~ ~ c2 ~ ~ eb2 ~ ~]', FIG = '<' + F1 + ' ' + F2 + '>';
+// the same figure played harder: its four notes twice as often, with an octave jump on each
+const HARD = '<[f2 ~ f2 f3 ~ f2 ab2 ab2] [~ c2 c3 c2 ~ eb2 eb3 eb2]>';
+const bass = (cut = 420, grit = 0, fig = FIG) => sw(note(fig).s('triangle').lpf(cut).lpq(grit ? 4 : 1).shape(grit).postgain(grit ? .6 : 1).attack(.01).release(.25).clip(1.6));
+// the second bass texture under it from the glass on: the same notes on a dark saw
+const under = sw(note(FIG).s('sawtooth').hpf(110).lpf(280).lpq(2).release(.2).clip(1.6));   // above the round bass's fundamental
+const kit = (sd = '....x.......x...') => ({ level: .46, groove: .7, brightness: .4, fill: false, template: sd ? { bd: 'x.....x...o.....', sd } : { bd: 'x.....x...o.....' } });
+// the ride as its own part, for its own level: hits cut to ~.65 s (the sample rings 1.4 s at the kick's loudness)
+const RIDE = 'x ~ x ~ x ~ ~ x x ~ x ~ ~ x ~ x', BUSY = 'x ~ x x x ~ x x x ~ x ~ x x ~ x';
+const RIDEV = '1 0 .45 0 .7 0 0 .45 1 0 .45 0 0 .7 0 .45';
+const rides = (struct) => sw(s('boom_rd').struct(struct).gain(RIDEV).clip(3).lpf(6000));
+const ride = (struct = RIDE, r = .25) => ({ level: r, position: .3, pattern: rides(struct) });
+// the ride plain for the first bars, then busy
+const rideTo = (n, plain) => '<' + Array.from({ length: n }, (_, i) => '[' + (i < plain ? RIDE : BUSY) + ']').join(' ') + '>';
+// muted trumpet, muffled and off to the right; its phrases
+const tp = (p) => sw(note(p).s('gm_muted_trumpet').lpf(1800).release(.12).room(.35).size(2.5));
+const WANDER = '[~ ~ c5 ~ eb5@2 ~ d5]', SHRUG = '[~ ~ ~ ~ ab4 ~ g4 ~]', FALL = '[eb5@2 ~ c5 b4@2 ~ ~]', UP = '[~ ~ db5 ~ e5@2 ~ eb5]';
+const HANG = '[~ ~ ab4@2 ~ ~ ~ ~]';
+// no trumpet note is longer than a quarter: every phrase holds at most @2 eighths, and the tail is short
+
+// ---- voices ----
+// the narrator dry and centred; the echo far and delayed; the low-right one plain; the distant one band-limited, wandering
+const A = (p) => s(p).hpf(110);
+const B = (p) => (typeof p === 'string' ? s(p) : p).hpf(300).lpf(3500).delay(.3).delaytime(.643).delayfeedback(.25).room(.4).size(3);
+const C = (p) => s(p).hpf(150).lpf(3500).room(.25).size(2);
+const D = (p) => (typeof p === 'string' ? s(p) : p).hpf(400).lpf(3200).room(.45).size(3).pan(sine.slow(8).range(.15, .85));
+// single words cut out of the lines, by name: [sound, begin, end] (speech.json's word times, 10 ms lead, 20 ms tail)
+const WORDS = {
+  dD: ['a_davis', .4132, .6547], dT: ['a_davis2', .4131, .655], dJ: ['b_jenny2', .1769, .5544], dA: ['b_aria2', .1796, .5055],
+  dS: ['b_sara', .1927, .5671], dN: ['b_jane', .1748, .557],
+  downD: ['lights_davis', .3299, .6973], downT: ['lights_davis2', .3298, .6976],
+  offD: ['thought_davis', .4531, .6529], offT: ['thought_davis2', .453, .6532], offJ: ['turned_jane', .321, .6096],
+  peekD: ['peek_davis', .469, .6788], openD: ['curtain_davis', .5026, .7485], openT: ['curtain_davis2', .5065, .7527],
+  tableD: ['glass_davis', .43, .6706], tableT: ['glass_davis2', .4299, .6708],
+  befD: ['before_davis', .3595, .6332], befT: ['before_davis2', .3591, .6328],
+};
+const words = (p) => s(p).withValue((v) => ({ ...v, s: WORDS[v.s][0], begin: WORDS[v.s][1], end: WORDS[v.s][2] }));
+// "door" from everyone at the end: the men centre, the women spread, no delay so it stops dead with the cut
+const DOORPAN = { a_davis: .5, a_davis2: .55, b_jenny2: .15, b_aria2: .85, b_sara: .25, b_jane: .75 };
+const doors = (p) => sw(words(p).withValue((v) => ({ ...v, pan: DOORPAN[v.s] })).hpf(200).room(.15).size(1.5));
+// the parts every verse has
+const narrator = (p) => ({ level: .78, pattern: A(p) });
+const echo = (p, side = -.8) => ({ level: .45, position: side, pattern: B(p) });
+const said = (p) => ({ level: .45, pattern: D(words(p)) });   // single words, distant
+const trumpet = (p, l = .6) => ({ level: l, position: .4, humanize: { timingMs: 12, velocity: .1, correlation: 'phrase' }, pattern: tp(p) });
+// echoes(left, right): the far-left lines and the right ones as one part, on one delay
+const echoes = (left, right) => ({ level: .45, pattern: B(stack(s(left).pan(.1), s(right).pan(.87))) });
+// before... before...: barely there, behind
+const behind = (p) => ({ level: .3, position: .2, pattern: s(p).hpf(500).lpf(2500).room(.6).size(4) });
+
+song({ bpm: 70, key: 'F:minor', seed: 7, kit: 'boom', packs: ['boom', 'jazz', 'door-speech'], visual: { world: 'wallpaper', composition: 'single' } }, [
+  // the room: the bass and the kick, the ride from bar 2 with the trumpet's three wandering notes, then the groove
+  section('intro', 3, { role: 'establish',
+    drums: kit(''),
+    raw:  { level: .6, pattern: bass() },
+    raw9: { ...ride(), pattern: rides(RIDE).mask('<0 1 1>') },
+    raw4: trumpet(bars(3, [2, WANDER])) }),
+
+  // The verses run the four observations in a turning order, four bars each (his line, an echo, the single words), so
+  // no one line repeats back to back: D D L | L D C | C L G | D L C G | D C L D (the climax) | D (alone).
+  // A line that comes back is sometimes only half of itself, his entry moves around the bar, the two takes alternate,
+  // and sometimes the echo answers the half he did not say.
+  // D: "someone is at your door", "your door" far left, "door". L: "the lights are on downstairs" / "I thought I turned
+  // them off", "turned them off" from the right, "downstairs", "off". C: "oh man the curtain is open again" / "someone
+  // must have been peeking", "open again" far left, "peeking". G: "there's a glass on the table" / "that wasn't there
+  // before", "before... before..." behind, "table", "before".
+
+  // D D L: the hook twice, then the first odd thing. The plain groove.
+  section('door', 12, { role: 'develop',
+    drums: kit(), raw: { level: .6, pattern: bass() }, raw9: ride(),
+    raw2: narrator(bars(12, [1, '[~ ~ a_davis ~]'], [5, '[a_davis2 ~ ~ ~]'], [9, '[lights_davis ~ ~ ~]'], [10, '[~ ~ thought_davis ~]'])),
+    raw3: echoes(bars(12, [2, '[~ b_jenny2 ~ ~]'], [6, '[~ ~ b_aria2 ~]']), bars(12, [11, '[~ turned_jane ~ ~]'])),
+    raw6: said(bars(12, [3, '[~ ~ ~ dS]'], [4, '[~ dJ ~ ~]'], [7, '[~ dA ~ dN]'], [8, '[~ ~ dD ~]'], [12, '[~ ~ downD ~]'])),
+    raw4: trumpet(bars(12, [3, HANG], [8, SHRUG], [12, WANDER])) }),
+
+  // L D C: the lights again (familiar now), the hook, then the curtain. A ghost note on the snare.
+  section('lights', 12, { role: 'develop',
+    drums: kit('..o.x.......x.o.'), raw: { level: .6, pattern: bass() }, raw9: ride(),
+    raw2: narrator(bars(12, [1, '[lights_davis2 ~ ~ ~]'], [2, '[~ ~ thought_davis2 ~]'], [5, '[~ ~ a_davis ~]'], [9, '[~ curtain_davis ~ ~]'], [10, '[~ ~ peek_davis ~]'])),
+    raw3: echoes(bars(12, [6, '[~ ~ b_sara ~]'], [11, '[~ ~ open_aria ~]']), bars(12, [3, '[~ turned_jane ~ ~]'])),
+    raw6: said(bars(12, [4, '[offJ ~ ~ downT]'], [7, '[~ dT ~ ~]'], [8, '[dS ~ dJ ~]'], [12, '[~ peekD ~ ~]'])),
+    raw4: trumpet(bars(12, [4, SHRUG], [8, HANG], [11, FALL]), .7) }),
+
+  // loose: the same band playing harder for four bars, no words. The bass keeps its sound and its four notes but
+  // plays them twice as often with octave jumps; the kit keeps its pattern and adds kicks, snare ghosts and soft sixteenth hats; the ride
+  // stays, busier. The bass a little more open than the lights and curtain either side.
+  section('loose', 4, { role: 'develop',
+    drums: { ...kit('..o.x..o..o.x.o.'), level: .27, template: { bd: 'x..x..x.x.x.x..x', sd: 'o.o.x.oo.o.ox.oo', hh: 'ooxoooxoooxoooxo' } },
+    raw:  { level: .41, pattern: bass(520, 0, HARD) },
+    raw9: ride(BUSY, .27),
+    raw11: { level: .25, position: .25, pattern: s(bars(4, [4, '[~ ~ ~ ~ ~ ~ jazz_mt ~ ~ ~ jazz_mt ~ jazz_lt ~ jazz_lt jazz_lt]'])) } }),
+
+  // C L G: the curtain back, the lights only half (he forgets the rest, the echo says it anyway), then the glass.
+  // The bass filter opens bar by bar, the ride gets busier from bar 5, a small tick lands every other bar.
+  section('curtain', 12, { role: 'develop',
+    drums: kit('..o.x.......x.o.'),
+    raw:  { level: .6, pattern: bass('<420 420 420 420 450 480 520 560 600 650 700 760>') },
+    raw9: { ...ride(), pattern: rides(rideTo(12, 4)) },
+    raw2: narrator(bars(12, [1, '[curtain_davis2 ~ ~ ~]'], [2, '[~ peek_davis ~ ~]'], [5, '[~ ~ lights_davis ~]'], [9, '[glass_davis ~ ~ ~]'], [10, '[~ ~ before_davis ~]'])),
+    raw3: echoes(bars(12, [3, '[~ open_jenny ~ ~]']), bars(12, [6, '[~ ~ turned_jane ~]'])),
+    raw6: said(bars(12, [4, '[~ openT ~ peekD]'], [7, '[~ downD ~ ~]'], [8, '[~ ~ offD ~]'], [12, '[~ ~ tableD ~]'])),
+    raw13: behind(bars(12, [11, '[~ before_jane ~ ~]'])),
+    raw4: trumpet(bars(12, [3, FALL], [7, SHRUG], [12, UP]), .7),
+    raw5: { level: 1, position: -.3, pattern: note(bars(12, ...[5, 7, 9, 11].map((b) => [b, '[~ ~ ~ ~ ~ ~ ~ c7]']))).s('sine').decay(.03).sustain(0) } }),
+
+  // D L C G: all four, none twice. The motif a half-step higher, and the second bass texture underneath.
+  section('round', 16, { role: 'develop',
+    drums: kit('..o.x.......x.o.'), raw: { level: .6, pattern: bass(760) }, raw9: ride(BUSY), raw8: { level: .33, pattern: under },
+    raw2: narrator(bars(16, [1, '[~ ~ a_davis2 ~]'], [5, '[~ thought_davis2 ~ ~]'], [9, '[~ ~ curtain_davis ~]'], [10, '[~ ~ ~ peek_davis]'],
+      [13, '[~ glass_davis2 ~ ~]'], [14, '[~ ~ before_davis2 ~]'])),
+    raw3: echoes(bars(16, [2, '[~ b_jane ~ ~]'], [11, '[open_aria ~ ~ ~]']), bars(16, [6, '[turned_jane ~ ~ ~]'])),
+    raw6: said(bars(16, [3, '[~ ~ dN ~]'], [4, '[dD ~ ~ dA]'], [7, '[~ ~ offT ~]'], [8, '[downT ~ offJ ~]'], [12, '[~ peekD ~ openD]'], [16, '[~ tableT ~ befD]'])),
+    raw13: behind(bars(16, [15, '[before_jane ~ ~ ~]'])),
+    raw4: trumpet(bars(16, [4, UP], [8, SHRUG], [12, FALL], [16, UP]), .7) }),
+
+  // loose2: the same band playing harder for four bars, no words. The bass keeps its sound and its four notes but
+  // plays them twice as often with octave jumps; the kit keeps its pattern and adds kicks, snare ghosts and soft sixteenth hats; the ride
+  // stays, busier. The second bass stays under it, as in the round around it.
+  section('loose2', 4, { role: 'develop',
+    drums: { ...kit('..o.x..o..o.x.o.'), level: .27, template: { bd: 'x..x..x.x.x.x..x', sd: 'o.o.x.oo.o.ox.oo', hh: 'ooxoooxoooxoooxo' } },
+    raw:  { level: .38, pattern: bass(800, 0, HARD) },
+    raw8: { level: .33, pattern: under },
+    raw9: ride(BUSY, .27),
+    raw11: { level: .25, position: .25, pattern: s(bars(4, [4, '[~ ~ ~ ~ ~ ~ jazz_mt ~ ~ ~ jazz_mt ~ jazz_lt ~ jazz_lt jazz_lt]'])) } }),
+
+  // everybody's talking: the narrator keeps on as before; around him "open again", "turned them off",
+  // "peeking", "before", staggered and denser every few bars; grit on the bass, toms, two trumpets a half-step apart.
+  // The last three bars are everyone on "door", and a dead stop.
+  section('everybody', 24, { role: 'climax',
+    drums: { ...kit('..o.x.....o.x...'), level: .4 },
+    raw:  { level: .6, pattern: bass('<760 800 850 900 950 1000 1050 1100 1150 1200 1250 1300 1350 1400 1400 1400 1400 1400 1400 1400 1400 1400 1400 1400>', .25) },
+    raw8: { level: .3, pattern: under }, raw9: ride(BUSY, .25),
+    // D C L D: his four lines spaced out while the voices thicken around him
+    raw2: narrator(bars(24, [1, '[~ ~ a_davis ~]'], [5, '[curtain_davis2 ~ ~ ~]'], [6, '[~ ~ peek_davis ~]'], [10, '[lights_davis2 ~ ~ ~]'], [11, '[~ thought_davis ~ ~]'], [15, '[~ ~ a_davis2 ~]'])),
+    // the voices around him, one part with one reverb (four parts with four reverbs cracked the audio thread):
+    // "open again" left, "turned them off" right, "peeking" wandering, single words in the middle
+    raw3: { level: .42, pattern: stack(
+      s(bars(24, [2, '[~ ~ ~ open_aria]'], [5, '[~ open_jenny ~ ~]'], [8, '[~ ~ open_aria ~]'], [10, '[open_jenny ~ ~ ~]'], [12, '[~ open_aria ~ ~]'],
+        [14, '[~ ~ open_jenny ~]'], [16, '[~ open_aria ~ ~]'], [17, '[~ open_jenny ~ ~]'], [18, '[open_aria ~ ~ ~]'], [19, '[~ open_aria ~ open_jenny]'],
+        [20, '[open_jenny ~ ~ ~]'], [21, '[~ open_aria ~ ~]'])).pan(.1).gain(.85),
+      s(bars(24, [3, '[thought_davis ~ ~ ~]'], [6, '[~ ~ turned_davis ~]'], [9, '[~ turned_jane ~ ~]'], [11, '[turned_davis ~ ~ ~]'], [13, '[~ ~ thought_davis2 ~]'],
+        [14, '[turned_jane ~ ~ ~]'], [16, '[~ thought_davis ~ ~]'], [17, '[~ ~ turned_jane ~]'], [18, '[~ turned_davis ~ ~]'], [20, '[turned_jane ~ turned_davis ~]'],
+        [21, '[~ ~ thought_davis2 ~]'])).pan(.87),
+      s(bars(24, [5, '[~ ~ ~ d_sara]'], [8, '[~ d_jane ~ ~]'], [10, '[~ ~ d_sara ~]'], [12, '[~ d_jane ~ ~]'], [13, '[d_sara ~ ~ ~]'], [15, '[~ ~ d_jane ~]'],
+        [16, '[~ d_sara ~ ~]'], [17, '[d_jane ~ ~ ~]'], [18, '[~ ~ d_sara ~]'], [19, '[d_jane ~ ~ d_sara]'], [20, '[~ d_jane ~ ~]'], [21, '[d_sara ~ d_jane ~]'])).pan(sine.slow(8).range(.3, .7)),
+      words(bars(24, [9, '[~ ~ befD ~]'], [12, '[befT ~ ~ ~]'], [15, '[~ befD ~ ~]'], [17, '[~ ~ tableD ~]'], [19, '[befT ~ ~ ~]'], [21, '[~ peekD ~ ~]'])).pan(.5).gain(.9),
+    ).hpf(300).room(.4).size(3) },
+    raw7: { level: .55, pattern: doors(bars(24, [22, '[dD ~ ~ dJ ~ dT ~ dS]'], [23, '[dD dA dT dN dD dJ dT dS]'],
+      [24, '[dD dA dT dN dD dJ dT dS dD dA dT dN]'])) },
+    // the trumpets, both on one part (one reverb): the comments, and from bar 11 a second one a half-step against it
+    raw4: { level: .5, position: .4, pattern: stack(tp(bars(24, [2, WANDER], [6, UP], [9, FALL], [11, WANDER], [13, UP], [15, FALL], [17, WANDER], [18, UP], [19, FALL], [20, WANDER], [21, UP])),
+      tp(bars(24, [11, UP], [13, WANDER], [15, '[~ e5@2 ~ ~ eb5@2 ~ ~]'], [17, UP], [18, WANDER], [19, '[~ e5@2 ~ ~ eb5@2 ~ ~]'], [20, UP], [21, WANDER])).gain(.8)) },
+    raw11: { level: .4, position: .25, pattern: s(bars(24, ...[7, 9, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map((b) => [b, b % 2 ? '[~ ~ ~ jazz_mt ~ ~ jazz_lt ~]' : '[~ jazz_mt ~ ~ ~ ~ jazz_lt jazz_lt]']))) } }),
+
+  // the door, again: one beat of nothing, then the bass alone and soft with one last line dry over it; "the lights
+  // still on" almost not there as he finishes, a single trumpet note, and the low f held under a cymbal drawn backwards.
+  section('again', 3, { role: 'release',
+    raw:  { level: .41, pattern: sw(note('<[~ ~ f2 ~ ~ ~ ab2 ~] ' + F2 + ' [f2@8]>').s('triangle').lpf(380).attack(.01).release(.4).clip(1.6)) },
+    raw2: narrator(bars(3, [1, '[~ a_davis ~ ~]'])),
+    raw3: { level: .3, position: -.6, pattern: s(bars(3, [2, '[~ still_jenny ~ ~]'])).hpf(300).lpf(3000).room(.5).size(3) },
+    raw4: trumpet(bars(3, [2, '[~ ~ ~ ~ ~ c5@2 ~]'])),
+    raw5: { level: .3, position: .3, pattern: s(bars(3, [3, '[jazz_cr ~ ~ ~]'])).speed(-1).lpf(5000) } }),
+]);
