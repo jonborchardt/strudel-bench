@@ -150,6 +150,48 @@ suit its clips; the 2026-09-21 test did, and every clip fitted on paper while th
 7. **Record and commit.** `npm run note` names the clip, its source song and the gap it fills. Commit the clips with the
    export's `LICENSE-ASSETS.md`, since a song must check clean on a fresh clone. The song becomes CC BY-NC-SA.
 
+## Speaking a line (generated speech, sparingly)
+
+`npm run say` makes a voice say a chosen line (utter, Azure AI Speech; the key is in `.env`). The rule is the borrowed
+sounds' rule: the song is written first, the voice is one line over it, and with the voice muted the song still stands.
+`songs/say.strudel` is the worked example.
+
+1. **Song first.** Written parts in place, `npm run check` clean. Decide what the line is for (a phrase every four
+   bars in the verse; three words chopped across the drop).
+2. **Make the clip**, one pack per song, at the song's tempo (`cps` = bpm / 240):
+
+       npm run say -- "hold the line a little while longer" --pack <song>-speech --name holdline --cps .4 --words
+
+   `--dry` prints the SSML and the cost without sending. `npm run say -- --voices --locale en-GB` lists voices;
+   `--voice`, `--rate -10%`, `--pitch -2st`, `--style whispering` shape the reading (`utter/README.md` has the table).
+   A pause in the text is `[120ms]`. For words that will be lifted out one at a time, put pauses between them, or
+   they carry each other's edges: they were spoken as one breath.
+3. **Declare the pack**: `packs: ['<song>-speech']` in the song header.
+4. **Place it at its own pitch with a `raw` part.** `say` prints this form, with the regions filled in:
+
+       const W = [[0.039, 0.125], [0.125, 0.163], ...];              // one [begin, end] per word, fractions of the file
+       const w = (i) => s('holdline').begin(W[i][0]).end(W[i][1]);
+       raw: { pattern: s('holdline').begin(0.043).end(0.864).slow(4) }     // the phrase, once every four bars
+       raw: { pattern: seq(w(6), silence, silence, silence, w(0), silence, w(0), silence, ...) }   // words: one entry per step
+
+   A region played like this sounds as recorded wherever the hit lands. Repeat a word by naming it twice, reorder by
+   writing them in another order. A word longer than the gap to the next hit keeps sounding over it; `.cut(1)` on the
+   pattern makes each hit stop the last. Do not add `.release()`: it cuts the word to the step. Single quotes only.
+5. **Or repitch it on purpose with a `sample` part.** `sample: { sound: 'holdline-words', bars: 2, stretch: true,
+   pattern: '0 ~ 2 2 ~ 6 ~ ~' }` fits each word to its step, and each word comes out at its own speed and pitch.
+   `sample: { sound: 'holdline' }` plays the phrase as recorded at the `--cps` tempo but repeats every fraction of a
+   bar it lasts, so it drifts off the bar grid: use the `raw` form for a phrase on the bar. `say` prints the speed
+   ratio, and says "the voice as recorded" only when it is 1.
+6. **Mix it** like any part: `npm run measure` for its level under the mix, then `level`, `position`, `space`.
+7. **Change your mind cheaply.** Another tempo, `--bars`, dropping `--words` or moving the padding (`--pad-lead`,
+   `--pad-tail`, ms) re-runs with the same text and costs nothing: the clip is reused and only the definitions move.
+   New text under the same name needs `--replace`. The same text will not come back identical from Azure, so a clip
+   you like is kept, not regenerated.
+8. **Commit the pack** (`<name>.wav`, `pack.json`, `speech.json`, `meta.json`, `LICENSE-ASSETS.md`) with the song, so it
+   checks clean on a fresh clone.
+
+Singing is not available: words are not syllables, and `--pitch` nudges the voice, it does not set a note.
+
 ## The mixing pass: muddy, cluttered, a pile of parts
 
 Run this after the material is written, on every new song and whenever the user says a song sounds muddy,

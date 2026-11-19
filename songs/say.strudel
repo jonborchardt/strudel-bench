@@ -1,0 +1,40 @@
+// say: a spoken line over written parts. The worked example for generated speech (utter, npm run say).
+// @hidden
+// The song is the kit, the bass, the pad and the bell line; mute the two raw parts and it still stands. The voice is
+// one clip, samples/user/say-speech/holdline.wav ("hold the line a little while longer", made with
+//   npm run say -- "hold the line a little while longer" --pack say-speech --name holdline --cps .4 --words
+// and recorded in that pack's speech.json). It is used two ways, both at the pitch it was spoken:
+//   verse   the intact phrase, once every four bars
+//   drop    its words placed, repeated and reordered on the sixteenth grid
+// Both are raw parts with explicit regions: a region played at its own speed sounds as recorded wherever the hit
+// lands. (A sample part would resample the clip to fit its bars: that is the repitched route, 'holdline-words'.)
+// 0 hold, 1 the, 2 line, 3 a, 4 little, 5 while, 6 longer: each word's region of the file, as npm run say printed them
+const W = [[0.03913, 0.125], [0.125, 0.16304], [0.16304, 0.36739], [0.40326, 0.42391], [0.42391, 0.54891], [0.54457, 0.63043], [0.63043, 0.87283]];
+const w = (i) => s('holdline').begin(W[i][0]).end(W[i][1]);
+const R = silence;
+song({ bpm: 96, key: 'D:minor', seed: 5, kit: 'LinnDrum', packs: ['say-speech'] }, [
+  section('intro', 4, { role: 'establish', progression: 'i',
+    drums:  { density: .2, space: .7, brightness: .3 },
+    pad:    { space: .8, articulation: .2, brightness: .3, register: .4, level: .8 },
+  }),
+  section('verse', 8, { role: 'develop', progression: 'i VI',
+    drums:  { density: .45, brightness: .35, space: .6 },
+    bass:   { weight: .65, brightness: .3, notes: '0 ~ ~ 0 ~ ~ 4 ~' },
+    pad:    { space: .7, brightness: .3, register: .4, level: .7, sound: 'gm_pad_warm' },
+    // the whole phrase, first word to last, once every four bars
+    raw:    { level: .9, pattern: s('holdline').begin(0.04348).end(0.86413).slow(4) },
+  }),
+  section('drop', 8, { role: 'climax', progression: 'i VII VI VII',
+    drums:  { density: .75, drive: .6, articulation: .65, brightness: .45, level: .5 },
+    bass:   { weight: .85, density: .6, brightness: .35, notes: '0 0 ~ 0 ~ 7 4 ~' },
+    melody: { density: .5, brightness: .55, register: .6, sound: 'gm_vibraphone', notes: '4 ~ 2 ~ 0 ~ ~ 2', level: .7, position: -.35 },
+    pad:    { width: .75, brightness: .4, register: .4, level: .7, sound: 'gm_pad_warm' },
+    // sixteen steps a bar: longer . . . hold . hold . line . . . while . the .
+    raw:    { level: .9, position: .3, pattern: seq(w(6), R, R, R, w(0), R, w(0), R, w(2), R, R, R, w(5), R, w(1), R) },
+    fx:     { impact: true, level: .6 },
+  }),
+  section('outro', 4, { role: 'release', progression: 'i',
+    drums:  { density: .2, space: .7, brightness: .3 },
+    pad:    { space: .9, articulation: .2, brightness: .25, register: .4, level: .8 },
+  }),
+])

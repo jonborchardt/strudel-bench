@@ -1,0 +1,185 @@
+{
+ "made": "2026-11-17",
+  "prompt": "Someone Is at Your Door: whispered jazz-funk / trip-hop, F minor 70 bpm; a man notices ordinary things out of place, background voices only repeat him, all converge on 'door' and cut",
+  "requests": [
+    {
+      "date": "2026-11-18",
+      "ask": "attempt a full song from the auditions; ok to vary",
+      "changes": [
+        {
+          "section": "song",
+          "why": "written from the auditions: triangle bass figure, boom kit + ride part, muted trumpet comments, Davis/Tony narrator, Jenny/Aria/Sara/Jane echoes; glass verse left out (small is instrumental with a hmm)"
+        },
+        {
+          "section": "everybody",
+          "why": "climax by voices, toms, grit and two trumpets a half-step apart, not level; closes on 'door' cut from six clips, no delay so the stop is dead"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "ask": "too much time with no voices; start too slow, end too long; everybody clips; longer with more repeated words; add the glass verse; 4-bar gaps empty; no hmm",
+      "changes": [
+        {
+          "section": "song",
+          "why": "every bar now carries a voice: the narrator every other bar (Davis and Tony in turn), whole-line echoes between, single words cut from the lines (door, downstairs, off, peeking, open again, table, before) in the rest"
+        },
+        {
+          "section": "intro",
+          "from": 8,
+          "to": 4,
+          "why": "bars, again 8>4; door 12>16, curtain 12>16, everybody 16>24; glass verse added (12 bars, before... before... behind), small and its hmm removed; 74>88 bars"
+        },
+        {
+          "section": "everybody",
+          "why": "mix peak .88>.795 (measured): narrator .8>.66, kit .7>.58 everywhere, the auto drum roll off (it peaked the kit at .80 alone before the climax); every section's mix peak now <=.80"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "ask": "replace tony with davis; everybody still clips; again has too much white space",
+      "changes": [
+        {
+          "section": "song",
+          "why": "every Tony line replaced with a second Davis take (-7% rate; Azure returned nearly the same reading, slightly faster)"
+        },
+        {
+          "section": "everybody",
+          "why": "the clipping was the audio thread, not level: traced 50% busy, 70-80% in bars 12-22, 61 dropouts. The four background voice parts merged into one part with one reverb, the two trumpets into one, the band-pass filters dropped, the busiest bars thinned by about a quarter, the last door bar 16>12 words: traced 27% busy, max 38%, 0 dropouts. Kit .58>.5 and bass .9>.8 there: mix peak .799>.739"
+        },
+        {
+          "section": "again",
+          "from": 4,
+          "to": 3,
+          "why": "bars: one beat of silence instead of a bar, the narrator from beat 2, 'the lights still on' as he finishes, the trumpet note in the same bar"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "ask": "one voice now, too repetitive: mix the lines up, D D L | L D C | C L G | D L C G | D C L D | D",
+      "changes": [
+        {
+          "section": "song",
+          "why": "the verses rebuilt in the turning order, four bars per observation (line, echo, single words); door/lights/curtain 12 bars each, glass became round (16, all four), climax narrator D C L D, outro D; 87>83 bars"
+        },
+        {
+          "section": "song",
+          "why": "variety from one voice: two takes alternate, the entry moves around the bar, a returning line is sometimes half (thought without lights, lights without thought) and the echo answers the half he did not say; left and right echoes now one part on one delay"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "ask": "trumpet notes too long (door's first, lights' middle), give raw4 a max note length; short faster sections between some sections, let loose; intro too long, keep its second half",
+      "changes": [
+        {
+          "section": "song",
+          "why": "trumpet: no note longer than a quarter (HANG @6>@2, FALL's last note @4>@2, the climax's e5@3/eb5@4 and the outro's c5@3 to @2), release .12"
+        },
+        {
+          "section": "intro",
+          "from": 4,
+          "to": 2,
+          "why": "bars: its second half, kick and ride from the first beat"
+        },
+        {
+          "section": "loose,",
+          "why": "loose2 new 4-bar double-time sections after lights and after round: sixteenth bass round the figure's notes, pushed kick, hats, trumpet runs, stuttered words; kit .38 and bass .75 there for a .68/.71 mix peak (measured; .92 before)"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "ask": "intro too fast; no 'door' in the intro; loose sections without words and fewer instruments",
+      "changes": [
+        {
+          "section": "intro",
+          "from": 2,
+          "to": 3,
+          "why": "bars: bass and kick alone for a bar, the ride and the trumpet's three notes from bar 2, the far 'door' removed"
+        },
+        {
+          "section": "loose,",
+          "why": "loose2 words, ride and trumpet removed: kit, sixteenth bass and the tom fill only"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "ask": "the loose sections sound like a different song; integrate them, as if the players just play harder or faster for a moment",
+      "changes": [
+        {
+          "section": "loose,",
+          "why": "loose2 rebuilt from the song's own material: the same triangle bass and four notes played twice as often with octave jumps (HARD), the same kit pattern with added kicks and ghost notes, the ride kept (busier), loose2 keeps the second bass; levels set by measure: kit .34, bass .55/.5, toms .25 for mix peaks .74/.77"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "ask": "more drums or slightly faster drums in both loose sections",
+      "changes": [
+        {
+          "section": "loose,",
+          "why": "loose2 kit busier at the same level: kick 4>7 hits a bar, snare ghosts 5>9, soft sixteenth hats added (accent on the off-eighths); mix peaks .74/.77 unchanged (measured)"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "ask": "final remix",
+      "changes": [
+        {
+          "section": "song",
+          "why": "bass x.75 everywhere (level 1 left gain at superdough's .8 default, so 1>.6; .8>.6, .55>.41, .5>.38): it measured 1.5-2 dB under the mix in every section"
+        },
+        {
+          "section": "song",
+          "why": "kit -2 dB everywhere (.58>.46, climax .5>.4, loose .34>.27); narrator .66>.78: now 12.7-14.5 dB under the mix (was ~14-18), every section's mix peak <=.78"
+        },
+        {
+          "section": "song",
+          "why": "second bass: hpf 110 so the round bass owns the fundamental, level .45/.4>.33/.3; curtain tick .35>1 (was -39 dB under the mix); distant words pan .3-.7>.15-.85; trumpet humanize 12 ms, velocity .1, by phrase"
+        },
+        {
+          "section": "everybody",
+          "why": "traced after the remix: 29% busy, max 2.5 ms, 0 dropouts"
+        }
+      ]
+    }
+  ],
+  "youtube": {
+    "url": "",
+    "title": "Someone Is at Your Door — whispered trip-hop jazz-funk: a round bass, a muted trumpet, a dusty kit",
+    "description": "Whispered jazz-funk / downtempo trip-hop in F minor at 70 BPM, swung: a round synth bass, a Harmon-muted trumpet and a dusty boom-bap kit under a man who notices ordinary things slightly out of place. Hypnotic, casually funny, a little suspicious. In the vein of late-night trip-hop and spoken-word jazz.\nSpoken word, 5:08. Someone is at your door. He doesn't get up.\n\nThe bass plays one two-bar figure of four notes the whole way through; it never changes its notes, it only opens its filter and picks up grit. The kit is lazy and dry, with the ride on its own level. The muted trumpet is a second character: three wandering notes, a shrug, a silly falling \"bah... ba-bwaaah\", the motif a half-step higher. The narrator whispers four observations, the door, the lights, the curtain, the glass, in a turning order so no line comes back twice in a row; a line that returns is sometimes only half of itself, and sometimes a voice around him answers the half he left out. Those voices, far left, right, and distant, only ever repeat what he has said. Twice the band leans in and plays harder for four bars. In the climax the voices pile up around him, all of them land on the word \"door\", and the song stops dead.\n\nWords: written for this song. Voices: synthetic whispered speech (Azure AI Speech), one clip per line, placed by hand on the beat; nobody's recorded voice is in it. Kit: a boom-bap kit and toms from GBS Jazz (Figure Drum Kits by tripjazz, Freesound, CC0). Trumpet: a General MIDI muted trumpet soundfont. Bass: Strudel's own synth.\n\nChapters\n0:00 Intro — the bass and the kick, three wandering trumpet notes\n0:11 Someone is at your door\n0:52 The lights are on downstairs\n1:34 The band plays harder\n1:47 The curtain is open again — the glass on the table\n2:28 Door, lights, curtain, glass\n3:23 Harder again\n3:37 Everybody's talking — then everyone on \"door\"\n4:59 Outro — the door, again; the lights still on\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. \n\nEvery song here is a text file. This one is songs/someone-at-your-door.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+    "tags": [
+      "trip hop",
+      "jazz funk",
+      "downtempo",
+      "spoken word",
+      "whisper",
+      "whispered vocals",
+      "hypnotic",
+      "dark comedy",
+      "muted trumpet",
+      "synth bass",
+      "boom bap drums",
+      "F minor",
+      "70 bpm",
+      "text to speech",
+      "AI voice",
+      "generative music",
+      "live coding",
+      "strudel",
+      "tidalcycles",
+      "creative coding",
+      "music video"
+    ],
+    "hashtags": [
+      "#triphop",
+      "#spokenword",
+      "#livecoding"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+ "deploy": true,
+ "license": "Azure AI Speech synthetic voice output; Microsoft product terms",
+ "source": "generated speech (utter, Azure AI Speech); text and settings per clip in speech.json",
+ "samples": {
+  "holdline": {
+   "begin": 0.043478,
+   "end": 0.86413,
+   "bars": 0.755
+  },
+  "holdline-words": {
+   "sound": "holdline",
+   "begin": 0.043478,
+   "end": 0.86413,
+   "bars": 0.755,
+   "slices": [
+    0.125,
+    0.163043,
+    0.407609,
+    0.423913,
+    0.548913,
+    0.630435
+   ]
+  }
+ }
+}

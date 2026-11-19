@@ -1,0 +1,1478 @@
+{
+ "a_davis": {
+  "text": "someone is at your door",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-10%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-10%\">someone is at your door</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "someone",
+    "start": 0.055562,
+    "end": 0.583332
+   },
+   {
+    "text": "is",
+    "start": 0.597229,
+    "end": 0.763895
+   },
+   {
+    "text": "at",
+    "start": 0.77777,
+    "end": 0.90277
+   },
+   {
+    "text": "your",
+    "start": 0.916666,
+    "end": 1.069436
+   },
+   {
+    "text": "door",
+    "start": 1.083333,
+    "end": 1.680562
+   }
+  ],
+  "seconds": 2.597354166666667,
+  "chars": 23,
+  "wavSha256": "06dfab4cda26468702701997c2d364d0dbcf8ab53d83e425b24a339119fbfcc1",
+  "made": "2026-11-18T04:41:32.316Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "a_tony": {
+  "text": "someone is at your door",
+  "voice": "en-US-TonyNeural",
+  "params": {
+   "rate": "-10%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-TonyNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-10%\">someone is at your door</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "someone",
+    "start": 0.055562,
+    "end": 0.527791
+   },
+   {
+    "text": "is",
+    "start": 0.541666,
+    "end": 0.65277
+   },
+   {
+    "text": "at",
+    "start": 0.666666,
+    "end": 0.749999
+   },
+   {
+    "text": "your",
+    "start": 0.763895,
+    "end": 0.916665
+   },
+   {
+    "text": "door",
+    "start": 0.930562,
+    "end": 1.472228
+   }
+  ],
+  "seconds": 2.389,
+  "chars": 23,
+  "wavSha256": "561f9e3de57451b5078f3c9bd7c3540b875455e37d5ebe06ed5140f887fc2fd2",
+  "made": "2026-11-18T04:41:34.552Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "curtain_davis": {
+  "text": "oh man [200ms] the curtain is open again",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-15%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-15%\">oh man <break time=\"200ms\"/> the curtain is open again</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "oh",
+    "start": 0.058833,
+    "end": 0.294124
+   },
+   {
+    "text": "man",
+    "start": 0.308833,
+    "end": 0.941187
+   },
+   {
+    "text": "the",
+    "start": 1.185291,
+    "end": 1.302936
+   },
+   {
+    "text": "curtain",
+    "start": 1.317645,
+    "end": 1.729415
+   },
+   {
+    "text": "is",
+    "start": 1.744125,
+    "end": 1.920604
+   },
+   {
+    "text": "open",
+    "start": 1.935291,
+    "end": 2.229416
+   },
+   {
+    "text": "again",
+    "start": 2.244125,
+    "end": 2.847062
+   }
+  ],
+  "seconds": 3.8302916666666667,
+  "chars": 40,
+  "wavSha256": "a432f8525f852c61466c64622d0bcf2f396d3431d8851874828ca964bb810921",
+  "made": "2026-11-18T04:41:44.280Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "peek_davis": {
+  "text": "someone must have been peeking",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-10%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-10%\">someone must have been peeking</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "someone",
+    "start": 0.055562,
+    "end": 0.624999
+   },
+   {
+    "text": "must",
+    "start": 0.638895,
+    "end": 0.972228
+   },
+   {
+    "text": "have",
+    "start": 0.986104,
+    "end": 1.111104
+   },
+   {
+    "text": "been",
+    "start": 1.125,
+    "end": 1.305562
+   },
+   {
+    "text": "peeking",
+    "start": 1.3194369,
+    "end": 1.8749989
+   }
+  ],
+  "seconds": 2.7918125,
+  "chars": 30,
+  "wavSha256": "e394c0197b16787b997f32f025cd03b7285cb157c45ad88d46206531954fbfe2",
+  "made": "2026-11-18T04:41:49.720Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "b_jenny": {
+  "text": "your door",
+  "voice": "en-US-JennyNeural",
+  "params": {
+   "rate": "-15%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-JennyNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-15%\">your door</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "your",
+    "start": 0.058833,
+    "end": 0.470603
+   },
+   {
+    "text": "door",
+    "start": 0.485291,
+    "end": 1.235291
+   }
+  ],
+  "seconds": 2.2059375,
+  "chars": 9,
+  "wavSha256": "24349442371f18f7d52f4c61513abb00ef1b8f4afacd7c9b2a2bfcd3ea7998a5",
+  "made": "2026-11-18T04:41:55.124Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "d_sara": {
+  "text": "peeking",
+  "voice": "en-US-SaraNeural",
+  "params": {
+   "rate": "-20%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SaraNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-20%\">peeking</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "peeking",
+    "start": 0.0625,
+    "end": 1.078125
+   }
+  ],
+  "seconds": 2.09375,
+  "chars": 7,
+  "wavSha256": "7fb03b31482dfcee6ce16860db64190b47e495bf09f00efdfd527f3d86463bc9",
+  "made": "2026-11-18T04:42:09.545Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "d_jane": {
+  "text": "peeking",
+  "voice": "en-US-JaneNeural",
+  "params": {
+   "rate": "-20%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-JaneNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-20%\">peeking</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "peeking",
+    "start": 0.0625,
+    "end": 1.03125
+   }
+  ],
+  "seconds": 2.046875,
+  "chars": 7,
+  "wavSha256": "7a00005daf42fbc2b2df73954c40305aa91858534a5e0377117377ab341b50a8",
+  "made": "2026-11-18T04:42:11.615Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "b_jenny2": {
+  "text": "your door",
+  "voice": "en-US-JennyNeural",
+  "params": {
+   "rate": "-15%",
+   "style": "whispering",
+   "styleDegree": 2
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-JennyNeural\"><mstts:express-as style=\"whispering\" styledegree=\"2\"><prosody rate=\"-15%\">your door</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "your",
+    "start": 0.058833,
+    "end": 0.367666
+   },
+   {
+    "text": "door",
+    "start": 0.382354,
+    "end": 1.147062
+   }
+  ],
+  "seconds": 2.105020833333333,
+  "chars": 9,
+  "wavSha256": "6a3e9baf573df02dca37abd8e394d6214fb678b35f74bb41243d0e18945c93e5",
+  "made": "2026-11-18T04:42:47.296Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "b_aria2": {
+  "text": "your door",
+  "voice": "en-US-AriaNeural",
+  "params": {
+   "rate": "-15%",
+   "style": "whispering",
+   "styleDegree": 2
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-AriaNeural\"><mstts:express-as style=\"whispering\" styledegree=\"2\"><prosody rate=\"-15%\">your door</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "your",
+    "start": 0.056625,
+    "end": 0.336041
+   },
+   {
+    "text": "door",
+    "start": 0.350729,
+    "end": 0.938958
+   }
+  ],
+  "seconds": 1.8970833333333332,
+  "chars": 9,
+  "wavSha256": "4b72f223a8db5d919bd899771455e0f40860f5636a26399bb3513ac6de4eded8",
+  "made": "2026-11-18T04:42:49.557Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "b_sara": {
+  "text": "your door",
+  "voice": "en-US-SaraNeural",
+  "params": {
+   "rate": "-15%",
+   "style": "whispering",
+   "styleDegree": 2
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-SaraNeural\"><mstts:express-as style=\"whispering\" styledegree=\"2\"><prosody rate=\"-15%\">your door</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "your",
+    "start": 0.058833,
+    "end": 0.41177
+   },
+   {
+    "text": "door",
+    "start": 0.426479,
+    "end": 1.205895
+   }
+  ],
+  "seconds": 2.161791666666667,
+  "chars": 9,
+  "wavSha256": "10bcc7a7f54088524fe9cc1d3669e0f944ae3badc60070c7d61b6279a6b02c9f",
+  "made": "2026-11-18T04:42:51.737Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "b_jane": {
+  "text": "your door",
+  "voice": "en-US-JaneNeural",
+  "params": {
+   "rate": "-15%",
+   "style": "whispering",
+   "styleDegree": 2
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-JaneNeural\"><mstts:express-as style=\"whispering\" styledegree=\"2\"><prosody rate=\"-15%\">your door</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "your",
+    "start": 0.056625,
+    "end": 0.365458
+   },
+   {
+    "text": "door",
+    "start": 0.380145,
+    "end": 1.159561
+   }
+  ],
+  "seconds": 2.1176666666666666,
+  "chars": 9,
+  "wavSha256": "8aaedb542e14c8388a306bcbc255e6c9f6477042ce1dbd573b471dac41418c28",
+  "made": "2026-11-18T04:42:53.898Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": false,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "lights_davis": {
+  "text": "the lights are on downstairs",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-10%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-10%\">the lights are on downstairs</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "the",
+    "start": 0.055562,
+    "end": 0.208332
+   },
+   {
+    "text": "lights",
+    "start": 0.222229,
+    "end": 0.611124
+   },
+   {
+    "text": "are",
+    "start": 0.625,
+    "end": 0.791666
+   },
+   {
+    "text": "on",
+    "start": 0.805562,
+    "end": 0.958332
+   },
+   {
+    "text": "downstairs",
+    "start": 0.972229,
+    "end": 2.013895
+   }
+  ],
+  "seconds": 2.9168125,
+  "chars": 28,
+  "wavSha256": "12e55aaca36d91275e2b1f001f4ba2a3313056222ed76aebf52ca0afba0d75ec",
+  "made": "2026-11-18T05:26:57.244Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "thought_davis": {
+  "text": "I thought I turned them off",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-10%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-10%\">I thought I turned them off</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "I",
+    "start": 0.055562,
+    "end": 0.263895
+   },
+   {
+    "text": "thought",
+    "start": 0.27777,
+    "end": 0.541665
+   },
+   {
+    "text": "I",
+    "start": 0.555562,
+    "end": 0.652791
+   },
+   {
+    "text": "turned",
+    "start": 0.666666,
+    "end": 1.013895
+   },
+   {
+    "text": "them",
+    "start": 1.02777,
+    "end": 1.166665
+   },
+   {
+    "text": "off",
+    "start": 1.1805619,
+    "end": 1.6666659
+   }
+  ],
+  "seconds": 2.583458333333333,
+  "chars": 27,
+  "wavSha256": "a3e1c7910b77dec7e5cf295c6b1c49374b8aa0a3c2d17ddbb32cb93692277d39",
+  "made": "2026-11-18T05:26:59.393Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "turned_jane": {
+  "text": "turned them off",
+  "voice": "en-US-JaneNeural",
+  "params": {
+   "rate": "-15%",
+   "style": "whispering",
+   "styleDegree": 2
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-JaneNeural\"><mstts:express-as style=\"whispering\" styledegree=\"2\"><prosody rate=\"-15%\">turned them off</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "turned",
+    "start": 0.058833,
+    "end": 0.514708
+   },
+   {
+    "text": "them",
+    "start": 0.529416,
+    "end": 0.764707
+   },
+   {
+    "text": "off",
+    "start": 0.779416,
+    "end": 1.441186
+   }
+  ],
+  "seconds": 2.397104166666667,
+  "chars": 15,
+  "wavSha256": "eae243d84e473543ce334adfc3bf17be6a72c6c1502e72a800720e390b9a9260",
+  "made": "2026-11-18T05:27:01.647Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "turned_tony": {
+  "text": "turned them off",
+  "voice": "en-US-TonyNeural",
+  "params": {
+   "rate": "-12%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-TonyNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-12%\">turned them off</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "turned",
+    "start": 0.056812,
+    "end": 0.355103
+   },
+   {
+    "text": "them",
+    "start": 0.369312,
+    "end": 0.497145
+   },
+   {
+    "text": "off",
+    "start": 0.511354,
+    "end": 1.00852
+   }
+  ],
+  "seconds": 1.9461458333333332,
+  "chars": 15,
+  "wavSha256": "4caf249144faddeaabe35abbaa803182d5eb69aff8b69917d7ea1156c11487cc",
+  "made": "2026-11-18T05:27:03.937Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "open_aria": {
+  "text": "open again",
+  "voice": "en-US-AriaNeural",
+  "params": {
+   "rate": "-15%",
+   "style": "whispering",
+   "styleDegree": 2
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-AriaNeural\"><mstts:express-as style=\"whispering\" styledegree=\"2\"><prosody rate=\"-15%\">open again</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "open",
+    "start": 0.056625,
+    "end": 0.468395
+   },
+   {
+    "text": "again",
+    "start": 0.483083,
+    "end": 1.027208
+   }
+  ],
+  "seconds": 1.9853333333333334,
+  "chars": 10,
+  "wavSha256": "a8a7512735624654abacda58949c20a43c6648988e561319584aeccadf170b46",
+  "made": "2026-11-18T05:27:06.349Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "still_jenny": {
+  "text": "the lights still on",
+  "voice": "en-US-JennyNeural",
+  "params": {
+   "rate": "-15%",
+   "style": "whispering",
+   "styleDegree": 2
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-JennyNeural\"><mstts:express-as style=\"whispering\" styledegree=\"2\"><prosody rate=\"-15%\">the lights still on</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "the",
+    "start": 0.058833,
+    "end": 0.235312
+   },
+   {
+    "text": "lights",
+    "start": 0.25,
+    "end": 0.764708
+   },
+   {
+    "text": "still",
+    "start": 0.779416,
+    "end": 1.191186
+   },
+   {
+    "text": "on",
+    "start": 1.205875,
+    "end": 1.647041
+   }
+  ],
+  "seconds": 2.603,
+  "chars": 19,
+  "wavSha256": "8b59f9a7a0c36378e5a170091f0af16b974e89c57d540427eb44d0a2fe72af90",
+  "made": "2026-11-18T05:27:08.722Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "glass_davis": {
+  "text": "there's a glass on the table",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-10%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-10%\">there's a glass on the table</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "there's",
+    "start": 0.055562,
+    "end": 0.361124
+   },
+   {
+    "text": "a",
+    "start": 0.375,
+    "end": 0.444437
+   },
+   {
+    "text": "glass",
+    "start": 0.458333,
+    "end": 0.888895
+   },
+   {
+    "text": "on",
+    "start": 0.90277,
+    "end": 1.041665
+   },
+   {
+    "text": "the",
+    "start": 1.0555619,
+    "end": 1.1666659
+   },
+   {
+    "text": "table",
+    "start": 1.1805619,
+    "end": 1.8055619
+   }
+  ],
+  "seconds": 2.722354166666667,
+  "chars": 28,
+  "wavSha256": "119a74dbb48f379e3e30631c5c1a6be448e1a6663a70cc4669c46b6c9e0e5d65",
+  "made": "2026-11-18T05:39:13.235Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "glass_tony": {
+  "text": "there's a glass on the table",
+  "voice": "en-US-TonyNeural",
+  "params": {
+   "rate": "-12%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-TonyNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-12%\">there's a glass on the table</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "there's",
+    "start": 0.056812,
+    "end": 0.326707
+   },
+   {
+    "text": "a",
+    "start": 0.340916,
+    "end": 0.397728
+   },
+   {
+    "text": "glass",
+    "start": 0.411937,
+    "end": 0.85227
+   },
+   {
+    "text": "on",
+    "start": 0.866479,
+    "end": 0.923291
+   },
+   {
+    "text": "the",
+    "start": 0.9375,
+    "end": 1.036937
+   },
+   {
+    "text": "table",
+    "start": 1.051145,
+    "end": 1.647728
+   }
+  ],
+  "seconds": 2.585395833333333,
+  "chars": 28,
+  "wavSha256": "55980c395a39f3413c1748518a936d888db90888a56ff312ec9428aea742761b",
+  "made": "2026-11-18T05:39:16.954Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "before_davis": {
+  "text": "that wasn't there before",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-10%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-10%\">that wasn't there before</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "that",
+    "start": 0.055562,
+    "end": 0.347228
+   },
+   {
+    "text": "wasn't",
+    "start": 0.361104,
+    "end": 0.694437
+   },
+   {
+    "text": "there",
+    "start": 0.708333,
+    "end": 0.874999
+   },
+   {
+    "text": "before",
+    "start": 0.888895,
+    "end": 1.52779
+   }
+  ],
+  "seconds": 2.4445833333333336,
+  "chars": 24,
+  "wavSha256": "1f88fccbb2e3ce2136fa0b1942208a610a2af7fd431d9e3536e7ebf2d578163d",
+  "made": "2026-11-18T05:39:21.157Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "before_tony": {
+  "text": "that wasn't there before",
+  "voice": "en-US-TonyNeural",
+  "params": {
+   "rate": "-12%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-TonyNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-12%\">that wasn't there before</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "that",
+    "start": 0.056812,
+    "end": 0.298291
+   },
+   {
+    "text": "wasn't",
+    "start": 0.3125,
+    "end": 0.681812
+   },
+   {
+    "text": "there",
+    "start": 0.69602,
+    "end": 0.866478
+   },
+   {
+    "text": "before",
+    "start": 0.880687,
+    "end": 1.47727
+   }
+  ],
+  "seconds": 2.4149166666666666,
+  "chars": 24,
+  "wavSha256": "6be385c18e0417e709aa71abcd9515172d355b79826f6e2659d61d0d5e476628",
+  "made": "2026-11-18T05:39:25.996Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "lights_tony": {
+  "text": "the lights are on downstairs",
+  "voice": "en-US-TonyNeural",
+  "params": {
+   "rate": "-12%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-TonyNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-12%\">the lights are on downstairs</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "the",
+    "start": 0.056812,
+    "end": 0.198853
+   },
+   {
+    "text": "lights",
+    "start": 0.213062,
+    "end": 0.568166
+   },
+   {
+    "text": "are",
+    "start": 0.582395,
+    "end": 0.69604
+   },
+   {
+    "text": "on",
+    "start": 0.710229,
+    "end": 0.866479
+   },
+   {
+    "text": "downstairs",
+    "start": 0.880687,
+    "end": 1.803978
+   }
+  ],
+  "seconds": 2.741625,
+  "chars": 28,
+  "wavSha256": "a1d58e339ffd0a195bda5b0c4066a0e518cf57eb1c4d74f48ccb3e8a0356b60a",
+  "made": "2026-11-18T05:39:31.565Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "thought_tony": {
+  "text": "I thought I turned them off",
+  "voice": "en-US-TonyNeural",
+  "params": {
+   "rate": "-12%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-TonyNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-12%\">I thought I turned them off</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "I",
+    "start": 0.056812,
+    "end": 0.213062
+   },
+   {
+    "text": "thought",
+    "start": 0.22727,
+    "end": 0.468749
+   },
+   {
+    "text": "I",
+    "start": 0.482958,
+    "end": 0.53977
+   },
+   {
+    "text": "turned",
+    "start": 0.553979,
+    "end": 0.823874
+   },
+   {
+    "text": "them",
+    "start": 0.838062,
+    "end": 0.965895
+   },
+   {
+    "text": "off",
+    "start": 0.980104,
+    "end": 1.448854
+   }
+  ],
+  "seconds": 2.3865,
+  "chars": 27,
+  "wavSha256": "20bde576e3a140edf9df3a07d7010026f132365901fa8db5b21de4e2f547e2f7",
+  "made": "2026-11-18T05:39:34.830Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "curtain_tony": {
+  "text": "oh man [200ms] the curtain is open again",
+  "voice": "en-US-TonyNeural",
+  "params": {
+   "rate": "-15%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-TonyNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-15%\">oh man <break time=\"200ms\"/> the curtain is open again</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "oh",
+    "start": 0.058833,
+    "end": 0.235312
+   },
+   {
+    "text": "man",
+    "start": 0.25,
+    "end": 0.764708
+   },
+   {
+    "text": "the",
+    "start": 1.038229,
+    "end": 1.111749
+   },
+   {
+    "text": "curtain",
+    "start": 1.126479,
+    "end": 1.508833
+   },
+   {
+    "text": "is",
+    "start": 1.52352,
+    "end": 1.670582
+   },
+   {
+    "text": "open",
+    "start": 1.685291,
+    "end": 1.964707
+   },
+   {
+    "text": "again",
+    "start": 1.979416,
+    "end": 2.494124
+   }
+  ],
+  "seconds": 3.474,
+  "chars": 40,
+  "wavSha256": "7c3b9ffe86b2d9bbf2101e4d8ece4b37c143f0d65fc07712d3c9927b45fb0add",
+  "made": "2026-11-18T05:39:38.964Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "before_jane": {
+  "text": "before [400ms] before",
+  "voice": "en-US-JaneNeural",
+  "params": {
+   "rate": "-20%",
+   "style": "whispering",
+   "styleDegree": 2
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-JaneNeural\"><mstts:express-as style=\"whispering\" styledegree=\"2\"><prosody rate=\"-20%\">before <break time=\"400ms\"/> before</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "before",
+    "start": 0.0625,
+    "end": 1.0625
+   },
+   {
+    "text": "before",
+    "start": 1.478125,
+    "end": 2.4
+   }
+  ],
+  "seconds": 3.415625,
+  "chars": 21,
+  "wavSha256": "f1ea6ffd2d23759525bcb047cd186acf9842200a3bdbc92ccb1a16ede98b4529",
+  "made": "2026-11-18T05:39:42.508Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "open_jenny": {
+  "text": "open again",
+  "voice": "en-US-JennyNeural",
+  "params": {
+   "rate": "-15%",
+   "style": "whispering",
+   "styleDegree": 2
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-JennyNeural\"><mstts:express-as style=\"whispering\" styledegree=\"2\"><prosody rate=\"-15%\">open again</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "open",
+    "start": 0.058833,
+    "end": 0.514708
+   },
+   {
+    "text": "again",
+    "start": 0.529416,
+    "end": 1.308832
+   }
+  ],
+  "seconds": 2.2815,
+  "chars": 10,
+  "wavSha256": "d61f75f211b22d2aa181cc0f7bd27ac00b94244aee77c1ec3b40e488b270100e",
+  "made": "2026-11-18T05:39:45.669Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "a_davis2": {
+  "text": "someone is at your door",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-7%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-7%\">someone is at your door</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "someone",
+    "start": 0.05377,
+    "end": 0.56452
+   },
+   {
+    "text": "is",
+    "start": 0.577958,
+    "end": 0.739249
+   },
+   {
+    "text": "at",
+    "start": 0.752687,
+    "end": 0.873645
+   },
+   {
+    "text": "your",
+    "start": 0.887104,
+    "end": 1.034958
+   },
+   {
+    "text": "door",
+    "start": 1.048395,
+    "end": 1.626353
+   }
+  ],
+  "seconds": 2.5134583333333333,
+  "chars": 23,
+  "wavSha256": "7ff1ea58d9883ec59b045db98aca1e9e53e2d2f2a4534ceffd4cd143cb55a30b",
+  "made": "2026-11-18T06:03:08.607Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "lights_davis2": {
+  "text": "the lights are on downstairs",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-7%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-7%\">the lights are on downstairs</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "the",
+    "start": 0.05377,
+    "end": 0.201624
+   },
+   {
+    "text": "lights",
+    "start": 0.215062,
+    "end": 0.591416
+   },
+   {
+    "text": "are",
+    "start": 0.604833,
+    "end": 0.766124
+   },
+   {
+    "text": "on",
+    "start": 0.779562,
+    "end": 0.927416
+   },
+   {
+    "text": "downstairs",
+    "start": 0.940854,
+    "end": 1.948916
+   }
+  ],
+  "seconds": 2.822604166666667,
+  "chars": 28,
+  "wavSha256": "3d909b028249e29708501655ef3ba5d7720f14dd972690e5c98b0912760a89e1",
+  "made": "2026-11-18T06:03:12.665Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "thought_davis2": {
+  "text": "I thought I turned them off",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-7%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-7%\">I thought I turned them off</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "I",
+    "start": 0.05377,
+    "end": 0.255374
+   },
+   {
+    "text": "thought",
+    "start": 0.268812,
+    "end": 0.524187
+   },
+   {
+    "text": "I",
+    "start": 0.537625,
+    "end": 0.631708
+   },
+   {
+    "text": "turned",
+    "start": 0.645166,
+    "end": 0.981186
+   },
+   {
+    "text": "them",
+    "start": 0.994625,
+    "end": 1.129041
+   },
+   {
+    "text": "off",
+    "start": 1.142479,
+    "end": 1.612916
+   }
+  ],
+  "seconds": 2.500020833333333,
+  "chars": 27,
+  "wavSha256": "16475d87d004db6724c0359f0fec312f5c070959d506a8dfef584b6252952aca",
+  "made": "2026-11-18T06:03:16.264Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "curtain_davis2": {
+  "text": "oh man [200ms] the curtain is open again",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-7%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-7%\">oh man <break time=\"200ms\"/> the curtain is open again</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "oh",
+    "start": 0.05377,
+    "end": 0.268832
+   },
+   {
+    "text": "man",
+    "start": 0.28225,
+    "end": 0.860208
+   },
+   {
+    "text": "the",
+    "start": 1.100541,
+    "end": 1.208061
+   },
+   {
+    "text": "curtain",
+    "start": 1.2215,
+    "end": 1.597854
+   },
+   {
+    "text": "is",
+    "start": 1.611291,
+    "end": 1.772582
+   },
+   {
+    "text": "open",
+    "start": 1.78602,
+    "end": 2.054832
+   },
+   {
+    "text": "again",
+    "start": 2.06827,
+    "end": 2.619353
+   }
+  ],
+  "seconds": 3.506479166666667,
+  "chars": 40,
+  "wavSha256": "c31d51ae98a9894f864aac1f767f6a123bbcd43e4dceba70d78ac69196dae6af",
+  "made": "2026-11-18T06:03:19.991Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "glass_davis2": {
+  "text": "there's a glass on the table",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-7%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-7%\">there's a glass on the table</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "there's",
+    "start": 0.05377,
+    "end": 0.349478
+   },
+   {
+    "text": "a",
+    "start": 0.362895,
+    "end": 0.430103
+   },
+   {
+    "text": "glass",
+    "start": 0.443541,
+    "end": 0.860207
+   },
+   {
+    "text": "on",
+    "start": 0.873645,
+    "end": 1.008061
+   },
+   {
+    "text": "the",
+    "start": 1.0215,
+    "end": 1.12902
+   },
+   {
+    "text": "table",
+    "start": 1.142479,
+    "end": 1.747312
+   }
+  ],
+  "seconds": 2.6344375,
+  "chars": 28,
+  "wavSha256": "fc86b4c4fdb1a5281162e8c94cec90278c0d18d88ff44796a655df035e8fe6de",
+  "made": "2026-11-18T06:03:24.344Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "before_davis2": {
+  "text": "that wasn't there before",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-7%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-7%\">that wasn't there before</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "that",
+    "start": 0.05377,
+    "end": 0.33602
+   },
+   {
+    "text": "wasn't",
+    "start": 0.349458,
+    "end": 0.672041
+   },
+   {
+    "text": "there",
+    "start": 0.685479,
+    "end": 0.84677
+   },
+   {
+    "text": "before",
+    "start": 0.860208,
+    "end": 1.478478
+   }
+  ],
+  "seconds": 2.3679166666666664,
+  "chars": 24,
+  "wavSha256": "edd1a7215816c865d8d5aedb60040c00c125885ef7c8d4df05f911fff5a2cc19",
+  "made": "2026-11-18T06:03:28.204Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ },
+ "turned_davis": {
+  "text": "turned them off",
+  "voice": "en-US-DavisNeural",
+  "params": {
+   "rate": "-7%",
+   "style": "whispering"
+  },
+  "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xmlns:mstts=\"http://www.w3.org/2001/mstts\" xml:lang=\"en-US\"><voice name=\"en-US-DavisNeural\"><mstts:express-as style=\"whispering\"><prosody rate=\"-7%\">turned them off</prosody></mstts:express-as></voice></speak>",
+  "words": [
+   {
+    "text": "turned",
+    "start": 0.05377,
+    "end": 0.376353
+   },
+   {
+    "text": "them",
+    "start": 0.389791,
+    "end": 0.551082
+   },
+   {
+    "text": "off",
+    "start": 0.56452,
+    "end": 1.034957
+   }
+  ],
+  "seconds": 1.9220625,
+  "chars": 15,
+  "wavSha256": "7c79913aca463f584516d85d780b75ab5add880bf45629eb8fe605a7a78fd664",
+  "made": "2026-11-18T06:03:32.046Z",
+  "config": {
+   "cps": 0.29167,
+   "bars": null,
+   "words": true,
+   "pad": {
+    "lead": 10,
+    "tail": 20
+   }
+  }
+ }
+}

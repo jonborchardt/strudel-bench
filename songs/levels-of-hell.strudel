@@ -1,0 +1,204 @@
+// There's More Than Two Levels of Hell
+// Slow spoken jazz noir, D minor, 60 bpm. A woman reads the levels like an official directory; the piano answers.
+// Every note is written: the piano (a right hand of single keys, a left hand of soft shell chords) and the upright
+// bass are raw parts (a played instrument, no synth envelope), the kit is the recorded jazz kit, barely there.
+// The voice is one clip per line (npm run say, en-US-SerenaMultilingualNeural, style serious, pack
+// levels-of-hell-speech: refrain, few, under, listed, then l<n> for "Level n." and l<n>a, b, c.. for its lines),
+// each placed by hand on a beat, so no two pauses are the same length. "Level n." always falls on beat one.
+// The music thins as the list goes down: levels 1-6 have both hands, bass and the kit; 7-9 lose most of the left
+// hand and the snare; the lower levels (10-12) are single keys over one bass note a bar; after the long interlude
+// 13-14 keep only a faint kick, and at fifteen the piano has nearly stopped. Nothing gets darker: she does not notice.
+// One bar is four seconds; a <...> holds one entry per bar, a [...] inside it is that bar cut into beats or eighths.
+
+// each note is let ring 3.5 s and then released: left to play its whole sample, the notes pile up and the audio thread crackles
+const piano = (p) => note(p).s('piano').clip(7).release(1).room(.3).size(3);
+const bass = (p) => note(p).s('gm_acoustic_bass');
+// the left hand's shells: third and seventh with one colour note, all between e3 and f4, under the voice
+const Dm9 = '[f3,c4,e4]', Dm7 = '[f3,a3,c4]', Gm7 = '[f3,bb3,d4]', BbM = '[a3,d4,f4]', A7 = '[g3,cs4,e4]', A7b9 = '[g3,bb3,cs4]';
+const C7 = '[e3,bb3,d4]', E0 = '[g3,bb3,d4]', FM = '[e3,a3,c4]';
+// the voice: voice(bars, [clip, beat], ...) puts each clip on its beat, counted from the section's start (halves allowed).
+// G evens out the clips Azure returned hot or quiet, by the loudness of their spoken part (rms over the voiced blocks), to the median clip.
+const G = { l1: 1.18, l2: .83, l3a: .85, l4a: 1.17, l4c: .88, l5: .87, l6a: 1.14, l9a: 1.17, l9c: 1.24, l10a: 1.21, l10b: 1.13, l11a: .83, l11b: .87, l13: 1.13, l13d: 1.37, l14a: 1.17, l15a: .88, l15b: .71, l15e: .86 };
+const voice = (bars, ...hits) => s('<' + Array.from({ length: bars }, (_, b) => '[' + Array.from({ length: 8 }, (_, i) => (hits.find((h) => h[1] * 2 === b * 8 + i) || ['~'])[0]).join(' ') + ']').join(' ') + '>')
+  .withValue((v) => ({ ...v, gain: G[v.s] || 1 }));
+const V = 1.1;
+// loose 4/4: the two hands drift together over a phrase, the bass over a bar; the voice and the kit stay put
+const H = { timingMs: 18, velocity: .12, correlation: 'phrase' }, HB = { timingMs: 12, velocity: .08, correlation: 'bar' };
+const kit = { position: -.15, level: .26, brightness: .3, density: .5, template: { bd: 'x.......o.......', hh: '....o.......o...', sd: '..............o.' } };
+const soft = { position: -.15, level: .22, brightness: .3, density: .5, template: { bd: 'x...............', hh: '....o.......o...' } };
+const faint = { position: -.15, level: .18, brightness: .3, density: .5, template: { bd: 'x...............' } };
+
+song({ bpm: 60, key: 'D:minor', seed: 15, kit: 'jazz', visual: 'orrery', packs: ['jazz', 'levels-of-hell-speech'] }, [
+  section('intro', 2, { role: 'establish', progression: 'i',
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[a4 ~ ~ f4 ~ e4 ~ ~] [d4 ~ ~ ~ ~ a3 ~ ~]>') },
+    raw2: { level: .4, humanize: HB, pattern: bass('<~ [d2 ~ ~ a2]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<~ [~ ~ ' + Dm9 + ' ~ ~ ~ ~ ~]>') },
+  }),
+  section('title', 4, { role: 'establish', progression: 'i i iv V',
+    drums: kit,
+    // a low d under the line, the Dm9 after it, then four notes that come home
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ ~ ~ ~ ~ d3] [~ ~ [d3,f3,c4,e4] ~ ~ ~ a4 ~] [~ ~ ~ ~ ~ ~ g4 f4] [~ ~ f4 e4 ~ c4 d4 ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ ~ ~] [d2 ~ a2 ~] [g2 ~ ~ d2] [a2 ~ ~ e2]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm9 + ' ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ' + Dm7 + ' ~ ~] [' + Gm7 + ' ~ ~ ~ ~ ~ ~ ~] [' + A7 + ' ~ ~ ~ ~ ~ ~ ' + A7b9 + ']>') },
+    // "There's more than two levels of hell." ... chord ... "Quite a few more."
+    raw3: { level: V, pattern: voice(4, ['refrain', 0], ['few', 8.5]) },
+  }),
+  section('level1', 6, { role: 'develop', progression: 'i VI iv V i [iv V]',
+    drums: kit,
+    // single keys in the gaps of the reading, a small answer in bar 5, Gm7 in bar 6
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ ~ a3 ~ d4 ~] [~ ~ ~ ~ ~ ~ ~ f4] [d4 ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ e4 a4] [~ a4 g4 f4 ~ e4 ~ d4] [[g2,bb3,d4,f4] ~ ~ ~ ~ ~ e4 ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ ~ a2] [bb1 ~ ~ ~] [g2 ~ d2 ~] [a2 ~ ~ ~] [d2 ~ ~ c2] [g2 ~ a2 ~]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm9 + ' ~ ~ ~ ~ ~ ~ ~] [~ ' + BbM + ' ~ ~ ~ ~ ~ ~] [~ ~ ~ ' + Gm7 + ' ~ ~ ~ ~] [' + A7 + ' ~ ~ ~ ~ ' + A7b9 + ' ~ ~] [' + Dm9 + ' ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ' + A7 + ' ~ ~ ~]>') },
+    // The coffee is always a little too cold. / Not enough to send it back. / Just enough to notice.
+    raw3: { level: V, pattern: voice(6, ['l1', 0], ['l1a', 4], ['l1b', 9], ['l1c', 12.5]) },
+  }),
+  section('level2', 5, { role: 'develop', progression: 'i i iv VI V',
+    drums: kit,
+    // the bass takes a slow two-beat pulse; Bbmaj7 in bar 4, and the right hand ends on the ninth
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ ~ ~ d4 ~ f4] ~ [~ ~ ~ ~ ~ ~ c4 a3] [~ ~ [bb2,d4,f4,a4] ~ ~ g4 f4 ~] [~ ~ ~ e4 ~ ~ ~ ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ a2 ~] [d2 ~ a2 ~] [g2 ~ d2 ~] [bb1 ~ f2 ~] [a2 ~ e2 ~]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm9 + ' ~ ~ ~ ~ ~ ~ ~] [' + Dm7 + ' ~ ~ ~ ~ ~ ' + Dm9 + ' ~] [~ ' + Gm7 + ' ~ ~ ~ ~ ~ ~] ~ [' + A7 + ' ~ ~ ~ ~ ~ ' + A7b9 + ' ~]>') },
+    // Every conversation begins, with someone telling you something, you already know. (one clip, across bars 2-3)
+    raw3: { level: V, pattern: voice(5, ['l2', 0], ['l2a', 5]) },
+  }),
+  section('level3', 5, { role: 'develop', progression: 'i iv VI V i',
+    drums: kit,
+    // after the last line: four soft notes falling, then a bar of pause
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<~ [~ ~ ~ ~ ~ ~ ~ a4] [g4 ~ ~ ~ ~ ~ ~ ~] [~ f4 ~ e4 ~ d4 ~ a3] ~>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ ~ ~] [g2 ~ ~ d2] [bb1 ~ ~ ~] [a2 ~ ~ ~] [d2 ~ a2 ~]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm9 + ' ~ ~ ~ ~ ~ ~ ~] [~ ~ ' + Gm7 + ' ~ ~ ~ ~ ~] [' + BbM + ' ~ ~ ~ ~ ~ ~ ~] [' + A7 + ' ~ ~ ~ ~ ~ ~ ~] [~ ~ ' + Dm9 + ' ~ ~ ~ ~ ~]>') },
+    // You are always waiting for someone. / They are never particularly late. / And they always have a good reason.
+    raw3: { level: V, pattern: voice(5, ['l3', 0], ['l3a', 2.5], ['l3b', 5.5], ['l3c', 9.5]) },
+  }),
+  section('level4', 4, { role: 'develop', progression: 'i VII VI V',
+    drums: kit,
+    // the two-beat bass walks down d c bb a under the chain of approvals; the chord lands after "nobody knows"
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ d4 ~ ~ ~ ~] ~ [~ ~ ~ f4 e4 ~ ~ ~] [~ ~ ~ [a2,g3,cs4,e4] ~ ~ a4 ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ a2 ~] [c2 ~ g2 ~] [bb1 ~ f2 ~] [a2 ~ e2 ~]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm7 + ' ~ ~ ~ ~ ~ ~ ~] [' + C7 + ' ~ ~ ~ ~ ~ ~ ~] [' + BbM + ' ~ ~ ~ ~ ~ ~ ~] [~ ' + A7b9 + ' ~ ~ ~ ~ ~ ~]>') },
+    // Every task requires approval. / The person who approves it, needs someone else's approval. / Nobody knows who that is.
+    raw3: { level: V, pattern: voice(4, ['l4', 0], ['l4a', 3], ['l4b', 6], ['l4c', 11]) },
+  }),
+  section('level5', 5, { role: 'develop', progression: 'i iv i VI V',
+    drums: kit,
+    // "are very nice" gets the friendliest answer in the song, then the dominant
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<~ [~ ~ ~ ~ ~ ~ c4 d4] ~ [~ a4 ~ f4 g4 ~ e4 ~] [[a2,g3,cs4,e4] ~ ~ ~ ~ ~ ~ ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ ~ a2] [g2 ~ ~ ~] [d2 ~ ~ c2] [bb1 ~ ~ f2] [a2 ~ ~ ~]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm9 + ' ~ ~ ~ ~ ~ ~ ~] [~ ' + Gm7 + ' ~ ~ ~ ~ ~ ~] [' + Dm7 + ' ~ ~ ~ ~ ' + Dm9 + ' ~ ~] [' + BbM + ' ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ' + A7b9 + ' ~ ~]>') },
+    // You spend your days correcting mistakes, that will be made again tomorrow. / The people making them, are very nice.
+    raw3: { level: V, pattern: voice(5, ['l5', 0], ['l5a', 2], ['l5b', 8.5]) },
+  }),
+  section('level6', 3, { role: 'develop', progression: 'i iv V',
+    drums: kit,
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ a3 ~ ~ ~ ~] ~ [~ ~ ~ ~ ~ ~ e4 ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ ~ ~] [g2 ~ d2 ~] [a2 ~ ~ e2]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm9 + ' ~ ~ ~ ~ ~ ~ ~] [' + Gm7 + ' ~ ~ ~ ~ ~ ~ ~] [' + A7 + ' ~ ~ ~ ~ ~ ~ ~]>') },
+    // Every decision is yours to make. / But you aren't allowed to change anything.
+    raw3: { level: V, pattern: voice(3, ['l6', 0], ['l6a', 3.5], ['l6b', 7.5]) },
+  }),
+  section('passage', 4, { role: 'develop', progression: 'i VI iv V',
+    drums: kit,
+    // the short instrumental passage: the right hand finally plays a whole phrase, and leaves the last bar nearly empty
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[d4 ~ f4 a4 ~ g4 ~ ~] [f4 ~ ~ d4 ~ ~ a3 ~] [bb3 ~ d4 ~ g4 ~ f4 e4] [~ ~ cs4 ~ ~ ~ ~ ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ a2 ~] [bb1 ~ f2 ~] [g2 ~ d2 ~] [a2 ~ ~ ~]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm9 + ' ~ ~ ~ ~ ~ ' + Dm7 + ' ~] [' + BbM + ' ~ ~ ~ ~ ~ ~ ~] [' + Gm7 + ' ~ ~ ~ ~ ~ ~ ~] [' + A7 + ' ~ ~ ~ ~ ~ ~ ~]>') },
+  }),
+  section('level7', 4, { role: 'develop', progression: 'i i ii V',
+    drums: soft,
+    // sparser from here: one shell every other bar, the snare gone, a half-diminished bar where the old Bb was
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ ~ ~ f4 ~ ~] ~ ~ [~ [a2,g3,cs4,e4] ~ ~ ~ ~ ~ ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ ~ ~] [d2 ~ ~ a2] [e2 ~ ~ ~] [a2 ~ ~ ~]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm9 + ' ~ ~ ~ ~ ~ ~ ~] ~ [' + E0 + ' ~ ~ ~ ~ ~ ~ ~] ~>') },
+    // Everything you say is understood. / Nothing you say makes a difference.
+    raw3: { level: V, pattern: voice(4, ['l7', 0], ['l7a', 4], ['l7b', 8.5]) },
+  }),
+  section('level8', 5, { role: 'develop', progression: 'i VI iv i iv',
+    drums: soft,
+    // ends on the subdominant, not quite right
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<~ [~ ~ ~ ~ d4 ~ ~ ~] [~ ~ ~ ~ ~ ~ c4 ~] ~ [~ ~ [g2,f3,bb3,d4] ~ ~ ~ ~ ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ ~ ~] [bb1 ~ ~ ~] [g2 ~ ~ ~] [d2 ~ ~ ~] [g2 ~ ~ d2]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm7 + ' ~ ~ ~ ~ ~ ~ ~] [' + BbM + ' ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ' + Gm7 + ' ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ ' + Dm9 + ' ~] ~>') },
+    // You are surrounded by people, who have known you for years. / They all have a slightly different idea, of who you are. / None of them is quite right.
+    raw3: { level: V, pattern: voice(5, ['l8', 0], ['l8a', 2.5], ['l8b', 7], ['l8c', 13]) },
+  }),
+  section('level9', 5, { role: 'develop', progression: 'i iv V i i',
+    drums: soft,
+    // the cadence arrives exactly as asked for; two bars of home afterwards, and one question
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ ~ a3 ~ ~ ~] ~ ~ [~ ~ ~ ~ d4 ~ f4 ~] [e4 ~ ~ ~ ~ ~ ~ ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ ~ ~] [g2 ~ ~ ~] [a2 ~ ~ ~] [d2 ~ ~ ~] [d2 ~ ~ ~]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm9 + ' ~ ~ ~ ~ ~ ~ ~] [' + Gm7 + ' ~ ~ ~ ~ ~ ~ ~] [' + A7 + ' ~ ~ ~ ~ ~ ~ ~] [~ ~ ~ ' + Dm7 + ' ~ ~ ~ ~] ~>') },
+    // You finally get what you've been working toward. / It's exactly what you asked for. / You can't remember why you wanted it.
+    raw3: { level: V, pattern: voice(5, ['l9', 0], ['l9a', 3], ['l9b', 7], ['l9c', 11]) },
+  }),
+  section('refrain', 4, { role: 'establish', progression: 'i i VI VI',
+    drums: soft,
+    // the title's low d again; the bass alone answers with two notes down, d c, to the Bb; a chord after the remark
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ ~ ~ ~ ~ d3] ~ ~ [~ ~ [bb2,d4,f4,a4] ~ ~ ~ ~ ~]>') },
+    raw2: { level: .53, humanize: HB, pattern: bass('<[d2 ~ ~ ~] [~ d2 ~ c2] [bb1 ~ ~ ~] [bb1 ~ ~ a2]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm9 + ' ~ ~ ~ ~ ~ ~ ~] ~ [' + BbM + ' ~ ~ ~ ~ ~ ~ ~] ~>') },
+    // There's more than two levels of hell. / People tend to underestimate the number.
+    raw3: { level: V, pattern: voice(4, ['refrain', 0], ['under', 8.5]) },
+  }),
+  section('level10', 5, { role: 'release', progression: 'i VI iv V i',
+    drums: soft,
+    // the lower levels: no left hand, one bass note a bar, single keys; the Dm9 comes only after "but not the feeling"
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ ~ f4 ~ ~ ~] [~ ~ a4 ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ ~ d4 ~] ~ [[d3,f3,c4,e4] ~ ~ ~ ~ ~ ~ ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<d2 bb1 g2 a2 d2>') },
+    // You can remember being happy. / You remember the places, the people, even what the weather was like. / But not the feeling.
+    raw3: { level: V, pattern: voice(5, ['l10', 0], ['l10a', 3], ['l10b', 6], ['l10c', 13.5]) },
+  }),
+  section('level11', 5, { role: 'release', progression: 'i III VI iv iv',
+    drums: soft,
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<~ [~ ~ ~ ~ ~ ~ ~ e4] [~ ~ ~ ~ ~ ~ f4 ~] ~ [~ ~ ~ ~ [g2,f3,bb3,d4] ~ ~ ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<d2 f2 bb1 g2 [g2 ~ ~ a2]>') },
+    // Everyone is pleased with you. / Your work is appreciated. / You are considered a success. / You have no idea, what any of it is for.
+    raw3: { level: V, pattern: voice(5, ['l11', 0], ['l11a', 2.5], ['l11b', 5], ['l11c', 8.5], ['l11d', 13.5]) },
+  }),
+  section('level12', 4, { role: 'release', progression: 'i VII VI V',
+    drums: soft,
+    // the bass walks down to the door, d c bb a, and nobody goes through it
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ ~ a3 ~ ~ ~] [~ ~ ~ d4 ~ ~ ~ ~] [~ ~ c4 ~ ~ ~ ~ ~] ~>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<d2 c2 bb1 a2>') },
+    // You can leave whenever you like. / No one is keeping you here. / You just can't think of anywhere, you would rather go.
+    raw3: { level: V, pattern: voice(4, ['l12', 0], ['l12a', 3], ['l12b', 7], ['l12c', 11.5]) },
+  }),
+  section('interlude', 8, { role: 'breakdown', progression: 'i iv VI V i III iv V',
+    drums: faint,
+    // the long piano interlude: both hands back, a tune that is almost cheerful, and it stops on the ninth
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[d4 ~ ~ f4 ~ a4 ~ ~] [g4 ~ ~ ~ ~ f4 e4 ~] [f4 ~ d4 ~ ~ ~ bb3 ~] [a3 ~ ~ ~ ~ ~ ~ ~] [~ ~ d4 e4 f4 ~ a4 ~] [c5 ~ ~ a4 ~ ~ g4 ~] [f4 ~ e4 ~ ~ d4 ~ ~] [e4 ~ ~ ~ ~ ~ ~ ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<[d2 ~ ~ a2] g2 bb1 [a2 ~ ~ ~] d2 [f2 ~ c2 ~] g2 a2>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<[' + Dm9 + ' ~ ~ ~ ~ ~ ~ ~] [' + Gm7 + ' ~ ~ ~ ~ ~ ~ ~] [' + BbM + ' ~ ~ ~ ~ ~ ~ ~] [' + A7 + ' ~ ~ ~ ~ ' + A7b9 + ' ~ ~] [' + Dm7 + ' ~ ~ ~ ~ ~ ~ ~] [' + FM + ' ~ ~ ~ ~ ~ ~ ~] [' + Gm7 + ' ~ ~ ~ ~ ~ ~ ~] [' + A7 + ' ~ ~ ~ ~ ~ ~ ~]>') },
+  }),
+  section('level13', 6, { role: 'release', progression: 'i III iv V VI VI',
+    drums: faint,
+    // only a kick left; the Bbmaj7 after "that it's morning" is the warmest chord in the piece
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ ~ ~ f4 ~ ~] [~ ~ ~ ~ a4 ~ ~ ~] ~ [~ ~ ~ ~ ~ ~ d4 ~] ~ [~ ~ ~ ~ [bb2,d4,f4,a4] ~ ~ ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<d2 f2 g2 a2 bb1 bb1>') },
+    // There is nothing wrong. / You have enough money. / Your health is good. / The people you love are doing well. / Every morning, you wake up disappointed, that it's morning.
+    raw3: { level: V, pattern: voice(6, ['l13', 0], ['l13a', 4], ['l13b', 7.5], ['l13c', 10], ['l13d', 12], ['l13e', 17]) },
+  }),
+  section('level14', 6, { role: 'release', progression: 'i VII VI iv V V',
+    drums: faint,
+    // four notes in six bars; the bass stops trying in the last one
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<[~ ~ ~ ~ a3 ~ ~ ~] ~ [~ d4 ~ ~ ~ ~ ~ ~] [~ ~ ~ ~ ~ f4 ~ ~] ~ [~ ~ e4 ~ ~ ~ ~ ~]>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<d2 c2 bb1 g2 a2 ~>') },
+    // You begin to suspect, that something important is missing. / You spend a very long time, trying to remember what it was. / Eventually, you stop trying.
+    raw3: { level: V, pattern: voice(6, ['l14', 0], ['l14a', 3.5], ['l14b', 10], ['l14c', 17.5]) },
+  }),
+  section('level15', 7, { role: 'release', progression: 'i V i iv i VI VI',
+    // no kit; the piano has nearly stopped: two notes in seven bars. She reads it exactly as she read level one.
+    raw:  { level: 1.05, position: .2, humanize: H, pattern: piano('<~ [~ ~ ~ ~ d4 ~ ~ ~] ~ ~ [~ ~ a3 ~ ~ ~ ~ ~] ~ ~>') },
+    raw2: { level: .44, humanize: HB, pattern: bass('<d2 a2 d2 g2 d2 bb1 ~>') },
+    // Everything is fine. / You get up. / You make breakfast. / You answer your messages. / You go about your day. / And you no longer notice, that you're in hell.
+    raw3: { level: V, pattern: voice(7, ['l15', 0], ['l15a', 4], ['l15b', 7.5], ['l15c', 9.5], ['l15d', 12], ['l15e', 15], ['l15f', 20]) },
+  }),
+  section('outro', 5, { role: 'release', progression: 'i VI V V i',
+    // one soft Dm9, the refrain, a long pause, the clarification, a last ninth that never resolves, and the bass alone closes: one low strum, d and a together, held the whole last bar
+    // (no long pause any more: the piano answers the refrain over a Bbmaj7, and the clarification comes over the dominant)
+    raw:  { level: .9, position: .2, humanize: H, pattern: piano('<[[d3,f3,c4,e4] ~ ~ ~ ~ ~ ~ ~] [~ ~ f4 ~ e4 ~ d4 ~] [~ ~ ~ ~ ~ a3 ~ ~] [~ ~ ~ e4 ~ ~ ~ ~] ~>') },
+    raw2: { level: .4, humanize: HB, pattern: bass('<d2 bb1 a2 ~ [d2,a2]>') },
+    raw4: { level: .7, position: -.25, humanize: H, pattern: piano('<~ [' + BbM + ' ~ ~ ~ ~ ~ ~ ~] [' + A7 + ' ~ ~ ~ ~ ~ ~ ~] ~ ~>') },
+    // There's more than two levels of hell. / I haven't listed all of them.
+    raw3: { level: V, pattern: voice(5, ['refrain', 2], ['listed', 8.5]) },
+  }),
+])

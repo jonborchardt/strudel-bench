@@ -1,0 +1,56 @@
+// Someone Is at Your Door
+// Auditions, not the song: hypnotic jazz-funk / trip-hop, F minor, 70 bpm, swung. Pin a section and loop it.
+// @hidden
+// Chosen (rounds 1-3): the round triangle bass on a two-bar figure, the boom kit with a short quiet ride, the muted
+// trumpet, Davis and Tony taking turns as the narrator, the curtain lines, the echo voices (Jenny, Aria, Sara, Jane), the
+// distant Sara and Jane in the overlap. Cut: two other basses, the jazz kit, the Rhodes, a low voice (never a slowed
+// voice), a filtered distant section, and the woman's "peeking" under the curtain line.
+// Voice clips: pack door-speech (npm run say, style whispering). Clip names say voice and role: a_davis = narrator, Davis.
+// One bar is 3.43 s; <...> holds one entry per bar, [...] inside it is that bar in eighths.
+
+const sw = (p) => p.swingBy(.12, 4);   // the kit's own swing (drums groove .7), so everything sits on the same eighths
+// the four-note figure over two bars: f, then a flat, low c, e flat, lazily late
+const FIG = '<[f2 ~ ~ ~ ~ ~ ab2 ~] [~ ~ c2 ~ ~ eb2 ~ ~]>';
+const bass = sw(note(FIG).s('triangle').lpf(420).attack(.01).release(.25).clip(1.6));
+const kit = { level: .7, groove: .7, brightness: .4, template: { bd: 'x.....x...o.....', sd: '....x.......x...' } };
+// the ride as its own part, for its own level: each hit cut to ~.65 s (the sample rings 1.4 s at the kick's loudness)
+const RIDE = 'x ~ x ~ x ~ ~ x x ~ x ~ ~ x ~ x', RIDEV = '1 0 .45 0 .7 0 0 .45 1 0 .45 0 0 .7 0 .45';
+const rideOf = (struct, r) => ({ level: r, position: .3, pattern: sw(s('boom_rd').struct(struct).gain(RIDEV).clip(3).lpf(6000)) });
+const groove = { drums: kit, raw: { level: 1, pattern: bass }, raw9: rideOf(RIDE, .25) };
+// muted trumpet, muffled and off to the right
+const tp = (p) => sw(note(p).s('gm_muted_trumpet').lpf(1800).room(.35).size(2.5));
+// voices: the narrator dry and centred, the echo far and delayed, the distant one band-limited and wandering
+const A = (p) => s(p).hpf(110);
+const B = (p) => s(p).hpf(300).lpf(3500).delay(.35).delaytime(.643).delayfeedback(.3).room(.4).size(3);
+const D = (p) => s(p).hpf(400).lpf(3200).room(.45).size(3).pan(sine.slow(8).range(.3, .7));
+
+song({ bpm: 70, key: 'F:minor', seed: 7, kit: 'boom', packs: ['boom', 'jazz', 'door-speech'] }, [
+  section('groove', 2, { role: 'establish', ...groove }),
+
+  section('trumpet', 4, { role: 'develop', ...groove,
+    // three wandering notes; a two-note shrug; the silly fall (bah... ba-bwaaah); the motif a half-step up
+    raw2: { level: .8, position: .4, pattern: tp('<[~ ~ c5 ~ eb5@2 ~ d5] [~ ~ ~ ~ ab4 ~ g4 ~] [eb5@2 ~ c5 b4@4] [~ ~ db5 ~ e5@2 ~ eb5]>') } }),
+
+  // -------- voices --------
+  section('narrator', 8, { role: 'develop', ...groove,
+    // "someone is at your door": Davis twice, then Tony twice
+    raw2: { level: 1.1, pattern: A('<[~ ~ a_davis ~] ~ [~ ~ a_davis ~] ~ [~ ~ a_tony ~] ~ [~ ~ a_tony ~] ~>') } }),
+  section('curtain', 2, { role: 'develop', ...groove,
+    // the sigh, then the reasonable conclusion
+    raw2: { level: 1.1, pattern: A('<[~ curtain_davis ~ ~] [~ ~ peek_davis ~]>') } }),
+  section('echo_b', 10, { role: 'develop', ...groove,
+    // the narrator, then each echo far left: Jenny, Aria, Sara, Jane, then Jenny at a weaker whisper
+    raw2: { level: 1.1, pattern: A('<[a_davis ~ ~ ~] ~>') },
+    raw3: { level: .7, position: -.8, pattern: B('<[~ ~ ~ b_jenny2] ~ [~ ~ ~ b_aria2] ~ [~ ~ ~ b_sara] ~ [~ ~ ~ b_jane] ~ [~ ~ ~ b_jenny] ~>') } }),
+
+  // -------- how dense the end can get --------
+  section('overlap', 4, { role: 'climax',
+    drums: { ...kit, level: .75, template: { bd: 'x.....x...o.....', sd: '..o.x.....o.x...' } },
+    raw:  { level: 1, pattern: sw(note(FIG).s('triangle').lpf(saw.slow(4).range(420, 1400)).lpq(4).shape(.3).attack(.01).release(.25).clip(1.6)) },
+    raw9: rideOf('x ~ x x x ~ x x x ~ x ~ x x ~ x', .3),
+    raw2: { level: 1.1, pattern: A('<[a_davis ~ ~ ~] ~ [a_tony ~ ~ ~] ~>') },
+    raw3: { level: .6, position: -.8, pattern: B('<[~ ~ b_jenny2 ~] [~ b_aria2 ~ ~] ~ [~ b_sara ~ ~]>') },
+    raw5: { level: .8, pattern: D('<[~ ~ ~ d_sara] ~ [~ d_jane ~ d_sara] ~>') },
+    raw6: { level: .6, position: .4, pattern: tp('<~ [~ ~ c5 ~ eb5@2 ~ d5] [~ ~ db5 ~ e5@2 ~ eb5] ~>') },
+    raw7: { level: .45, position: .25, pattern: s('<[~ ~ ~ jazz_mt ~ ~ jazz_lt ~] [~ jazz_mt ~ ~ ~ ~ jazz_lt jazz_lt]>') } }),
+]);

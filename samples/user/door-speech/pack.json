@@ -1,0 +1,427 @@
+{
+ "deploy": true,
+ "license": "Azure AI Speech synthetic voice output; Microsoft product terms",
+ "source": "generated speech (utter, Azure AI Speech); text and settings per clip in speech.json",
+ "samples": {
+  "a_davis": {
+   "begin": 0.021392,
+   "end": 0.647028,
+   "bars": 0.473964
+  },
+  "a_tony": {
+   "begin": 0.023257,
+   "end": 0.616253,
+   "bars": 0.413199
+  },
+  "curtain_davis": {
+   "begin": 0.01536,
+   "end": 0.743302,
+   "bars": 0.813243
+  },
+  "peek_davis": {
+   "begin": 0.019902,
+   "end": 0.671606,
+   "bars": 0.530675
+  },
+  "b_jenny": {
+   "begin": 0.02667,
+   "end": 0.559985,
+   "bars": 0.343138
+  },
+  "d_sara": {
+   "begin": 0.029851,
+   "end": 0.514925,
+   "bars": 0.296227
+  },
+  "d_jane": {
+   "begin": 0.030534,
+   "end": 0.503817,
+   "bars": 0.282555
+  },
+  "b_jenny2": {
+   "begin": 0.027949,
+   "end": 0.544917,
+   "bars": 0.317404
+  },
+  "b_aria2": {
+   "begin": 0.029848,
+   "end": 0.494948,
+   "bars": 0.25735
+  },
+  "b_sara": {
+   "begin": 0.027215,
+   "end": 0.557822,
+   "bars": 0.334564
+  },
+  "b_jane": {
+   "begin": 0.026739,
+   "end": 0.547565,
+   "bars": 0.321693
+  },
+  "lights_davis": {
+   "begin": 0.019049,
+   "end": 0.690444,
+   "bars": 0.571187
+  },
+  "lights_davis-words": {
+   "sound": "lights_davis",
+   "begin": 0.019049,
+   "end": 0.690444,
+   "bars": 0.571187,
+   "slices": [
+    0.076189,
+    0.214275,
+    0.276179,
+    0.333319
+   ]
+  },
+  "thought_davis": {
+   "begin": 0.021507,
+   "end": 0.64513,
+   "bars": 0.469911
+  },
+  "thought_davis-words": {
+   "sound": "thought_davis",
+   "begin": 0.021507,
+   "end": 0.64513,
+   "bars": 0.469911,
+   "slices": [
+    0.107519,
+    0.215046,
+    0.258052,
+    0.397827,
+    0.45697
+   ]
+  },
+  "turned_jane": {
+   "begin": 0.024543,
+   "end": 0.60122,
+   "bars": 0.403191
+  },
+  "turned_jane-words": {
+   "sound": "turned_jane",
+   "begin": 0.024543,
+   "end": 0.60122,
+   "bars": 0.403191,
+   "slices": [
+    0.220856,
+    0.325149
+   ]
+  },
+  "turned_tony": {
+   "begin": 0.029192,
+   "end": 0.518214,
+   "bars": 0.277585
+  },
+  "turned_tony-words": {
+   "sound": "turned_tony",
+   "begin": 0.029192,
+   "end": 0.518214,
+   "bars": 0.277585,
+   "slices": [
+    0.189766,
+    0.262752
+   ]
+  },
+  "open_aria": {
+   "begin": 0.028522,
+   "end": 0.517398,
+   "bars": 0.28309
+  },
+  "open_aria-words": {
+   "sound": "open_aria",
+   "begin": 0.028522,
+   "end": 0.517398,
+   "bars": 0.28309,
+   "slices": [
+    0.243326
+   ]
+  },
+  "still_jenny": {
+   "begin": 0.022602,
+   "end": 0.632747,
+   "bars": 0.463233
+  },
+  "still_jenny-words": {
+   "sound": "still_jenny",
+   "begin": 0.022602,
+   "end": 0.632747,
+   "bars": 0.463233,
+   "slices": [
+    0.096043,
+    0.29943,
+    0.463264
+   ]
+  },
+  "glass_davis": {
+   "begin": 0.02041,
+   "end": 0.663235,
+   "bars": 0.510422
+  },
+  "glass_davis-words": {
+   "sound": "glass_davis",
+   "begin": 0.02041,
+   "end": 0.663235,
+   "bars": 0.510422,
+   "slices": [
+    0.137748,
+    0.168359,
+    0.331614,
+    0.387739,
+    0.433655
+   ]
+  },
+  "glass_tony": {
+   "begin": 0.021974,
+   "end": 0.637321,
+   "bars": 0.464022
+  },
+  "glass_tony-words": {
+   "sound": "glass_tony",
+   "begin": 0.021974,
+   "end": 0.637321,
+   "bars": 0.464022,
+   "slices": [
+    0.131862,
+    0.159332,
+    0.335144,
+    0.362614,
+    0.40657
+   ]
+  },
+  "before_davis": {
+   "begin": 0.022729,
+   "end": 0.624969,
+   "bars": 0.429405
+  },
+  "before_davis-words": {
+   "sound": "before_davis",
+   "begin": 0.022729,
+   "end": 0.624969,
+   "bars": 0.429405,
+   "slices": [
+    0.147716,
+    0.289756,
+    0.363618
+   ]
+  },
+  "before_tony": {
+   "begin": 0.023525,
+   "end": 0.611727,
+   "bars": 0.414305
+  },
+  "before_tony-words": {
+   "sound": "before_tony",
+   "begin": 0.023525,
+   "end": 0.611727,
+   "bars": 0.414305,
+   "slices": [
+    0.129404,
+    0.288217,
+    0.364686
+   ]
+  },
+  "lights_tony": {
+   "begin": 0.020722,
+   "end": 0.657996,
+   "bars": 0.509596
+  },
+  "lights_tony-words": {
+   "sound": "lights_tony",
+   "begin": 0.020722,
+   "end": 0.657996,
+   "bars": 0.509596,
+   "slices": [
+    0.077714,
+    0.212427,
+    0.259054,
+    0.321228
+   ]
+  },
+  "thought_tony": {
+   "begin": 0.023806,
+   "end": 0.607104,
+   "bars": 0.406017
+  },
+  "thought_tony-words": {
+   "sound": "thought_tony",
+   "begin": 0.023806,
+   "end": 0.607104,
+   "bars": 0.406017,
+   "slices": [
+    0.095232,
+    0.202371,
+    0.23213,
+    0.351168,
+    0.410687
+   ]
+  },
+  "curtain_tony": {
+   "begin": 0.016935,
+   "end": 0.71794,
+   "bars": 0.710301
+  },
+  "curtain_tony-words": {
+   "sound": "curtain_tony",
+   "begin": 0.016935,
+   "end": 0.71794,
+   "bars": 0.710301,
+   "slices": [
+    0.071963,
+    0.298857,
+    0.32426,
+    0.438549,
+    0.485115,
+    0.56978
+   ]
+  },
+  "before_jane": {
+   "begin": 0.018298,
+   "end": 0.702653,
+   "bars": 0.681779
+  },
+  "before_jane-words": {
+   "sound": "before_jane",
+   "begin": 0.018298,
+   "end": 0.702653,
+   "bars": 0.681779,
+   "slices": [
+    0.432754
+   ]
+  },
+  "open_jenny": {
+   "begin": 0.025787,
+   "end": 0.573672,
+   "bars": 0.364587
+  },
+  "open_jenny-words": {
+   "sound": "open_jenny",
+   "begin": 0.025787,
+   "end": 0.573672,
+   "bars": 0.364587,
+   "slices": [
+    0.232047
+   ]
+  },
+  "a_davis2": {
+   "begin": 0.021393,
+   "end": 0.647058,
+   "bars": 0.458675
+  },
+  "a_davis2-words": {
+   "sound": "a_davis2",
+   "begin": 0.021393,
+   "end": 0.647058,
+   "bars": 0.458675,
+   "slices": [
+    0.229945,
+    0.299463,
+    0.352942,
+    0.417113
+   ]
+  },
+  "lights_davis2": {
+   "begin": 0.01905,
+   "end": 0.690467,
+   "bars": 0.552757
+  },
+  "lights_davis2-words": {
+   "sound": "lights_davis2",
+   "begin": 0.01905,
+   "end": 0.690467,
+   "bars": 0.552757,
+   "slices": [
+    0.076193,
+    0.214282,
+    0.276185,
+    0.333328
+   ]
+  },
+  "thought_davis2": {
+   "begin": 0.021508,
+   "end": 0.645161,
+   "bars": 0.454756
+  },
+  "thought_davis2-words": {
+   "sound": "thought_davis2",
+   "begin": 0.021508,
+   "end": 0.645161,
+   "bars": 0.454756,
+   "slices": [
+    0.107524,
+    0.215048,
+    0.258064,
+    0.397847,
+    0.456988
+   ]
+  },
+  "curtain_davis2": {
+   "begin": 0.015334,
+   "end": 0.747004,
+   "bars": 0.748304
+  },
+  "curtain_davis2-words": {
+   "sound": "curtain_davis2",
+   "begin": 0.015334,
+   "end": 0.747004,
+   "bars": 0.748304,
+   "slices": [
+    0.080494,
+    0.313859,
+    0.348355,
+    0.459518,
+    0.509349,
+    0.589842
+   ]
+  },
+  "glass_davis2": {
+   "begin": 0.02041,
+   "end": 0.663258,
+   "bars": 0.493955
+  },
+  "glass_davis2-words": {
+   "sound": "glass_davis2",
+   "begin": 0.02041,
+   "end": 0.663258,
+   "bars": 0.493955,
+   "slices": [
+    0.13775,
+    0.168363,
+    0.331625,
+    0.387749,
+    0.433671
+   ]
+  },
+  "before_davis2": {
+   "begin": 0.022708,
+   "end": 0.624379,
+   "bars": 0.415545
+  },
+  "before_davis2-words": {
+   "sound": "before_davis2",
+   "begin": 0.022708,
+   "end": 0.624379,
+   "bars": 0.415545,
+   "slices": [
+    0.14758,
+    0.289486,
+    0.363276
+   ]
+  },
+  "turned_davis": {
+   "begin": 0.027975,
+   "end": 0.538462,
+   "bars": 0.286183
+  },
+  "turned_davis-words": {
+   "sound": "turned_davis",
+   "begin": 0.027975,
+   "end": 0.538462,
+   "bars": 0.286183,
+   "slices": [
+    0.202798,
+    0.293705
+   ]
+  }
+ }
+}

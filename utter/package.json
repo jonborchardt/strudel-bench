@@ -1,0 +1,21 @@
+{
+  "name": "utter",
+  "version": "0.1.0",
+  "description": "Turns one utterance into audio: text and voice parameters in, a wav and its word timings out, through Azure AI Speech.",
+  "keywords": ["tts", "text-to-speech", "speech", "ssml", "azure", "word-timings"],
+  "license": "MIT",
+  "author": "Jonathan Borchardt",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "exports": {
+    ".": "./index.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": ["index.mjs", "ssml.mjs", "speak.mjs", "azure.mjs", "worker.mjs", "voices.mjs", "voices.json", "README.md", "LICENSE", ".env.example"],
+  "dependencies": {
+    "microsoft-cognitiveservices-speech-sdk": "^1.53.0"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
+  }
+}

@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.mjs",
     "stop": "node scripts/stop.mjs",
-    "test": "node --test --test-concurrency=1 \"test/*.test.mjs\" \"limner/test/*.test.mjs\"",
+    "test": "node --test --test-concurrency=1 \"test/*.test.mjs\" \"limner/test/*.test.mjs\" \"utter/test/*.test.mjs\"",
     "check": "node scripts/check.mjs",
     "samples": "node scripts/samples.mjs",
     "pages": "node scripts/pages.mjs",
@@ -25,6 +25,9 @@
     "harden": "node limner/scripts/harden.mjs",
     "harden:gifs": "node limner/scripts/harden/fixgifs.mjs",
     "test:limner": "node --test \"limner/test/*.test.mjs\"",
+    "test:utter": "node --test \"utter/test/*.test.mjs\"",
+    "say": "node scripts/say.mjs",
+    "voices": "node utter/scripts/voices.mjs",
     "vocab": "node scripts/vocab.mjs > .claude/skills/strudel/reference/vocab.md",
     "lint": "node scripts/lint.mjs",
     "measure": "node scripts/measure.mjs",
@@ -49,6 +52,7 @@
     "acorn": "^8.18.0",
     "limner": "file:./limner",
     "mp4-muxer": "^5.2.2",
+    "utter": "file:./utter",
     "webm-muxer": "^5.1.4"
   },
   "devDependencies": {

@@ -24,7 +24,8 @@
       "undead":   { "base": -0.3, "aggression": 0.3, "drive": 0.3, "repetition": 0.3, "weight": 0.2, "sections": 0.2, "brightness": -0.2, "space": -0.2 },
       "coder":    { "base": 0.1,  "complexity": 0.4, "density": 0.4, "tempo": 0.3, "sections": 0.3, "organicness": -0.4, "space": -0.2 },
       "family":   { "base": 0.0,  "melody": 0.3, "sections": 0.3, "drive": 0.2, "complexity": 0.2, "organicness": 0.2 },
-      "familywheel": { "base": 0.0, "melody": 0.3, "sections": 0.3, "density": 0.2, "complexity": 0.2, "organicness": 0.2 }
+      "familywheel": { "base": 0.0, "melody": 0.3, "sections": 0.3, "density": 0.2, "complexity": 0.2, "organicness": 0.2 },
+      "wallpaper": { "base": 0.0, "organicness": 0.4, "space": 0.2, "repetition": 0.3, "sections": 0.2, "aggression": -0.2 }
     }
   },
   "temperature": { "major": "warm", "minor": "cool", "dorian": "cool", "phrygian": "dim", "lydian": "pale", "mixolydian": "warm", "default": "cool" },
@@ -129,6 +130,10 @@
     "familywheel": {
       "slots": { "impulse": 2, "ground": 1, "line": 1, "counter": 2, "field": 1, "transition": 1 },
       "about": "The robot family tree as a wheel: the founders in the middle, every generation a ring further out, many lines at once, the camera following the newest births round the rim."
+    },
+    "wallpaper": {
+      "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 },
+      "about": "A repeating ornamental wallpaper that is alive: it breathes with the bass, flips at the drums, and slowly grows into a different pattern, always pulling back toward order."
     }
   },
   "themes": {

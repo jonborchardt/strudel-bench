@@ -1,0 +1,76 @@
+{
+ "made": "2026-11-17",
+  "prompt": "Someone Is at Your Door: whispered jazz-funk / trip-hop at 70 bpm; auditions of basses, kits, trumpet, Rhodes and whisper voices before the song is arranged",
+  "requests": [
+    {
+      "date": "2026-11-18",
+      "ask": "prove out the voices and instruments first, parts to narrow down, not the whole song",
+      "changes": [
+        {
+          "section": "song",
+          "why": "audition sections, one candidate per section or per two bars, to be cut down once instruments and voices are chosen"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "ask": "bass_a yes but cymbals too loud; no rhodes; davis (tony for variation); curtain loved; echo_b minus nancy; low_c no; far_d inaudible",
+      "changes": [
+        {
+          "section": "song",
+          "why": "ride moved out of the kit into its own part at three candidate levels (.15/.25/.35), clipped to .6 and darkened: its sample rings 1.4 s at the kick's loudness"
+        },
+        {
+          "section": "song",
+          "why": "basses B/C, jazz kit, rhodes, nancy, jason/guy cut; swing matched to the kit's .12"
+        },
+        {
+          "section": "far_d",
+          "why": "hpf 900>400, lpf 2200>3200, level .5>1.2: the band cut away the whispered voice's body"
+        },
+        {
+          "section": "low_c",
+          "why": "Tony replaces Jason and Guy, plainer: no speed drop"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "ask": "ride takes too long; narrator: the four words, voices doubled; no woman under curtain; echo_b perfect; delete low_c and far_d; overlap minus the slowed voice",
+      "changes": [
+        {
+          "section": "song",
+          "why": "ride hits cut to a sixteenth (clip 3>1, release .05), one groove section instead of three ride levels"
+        },
+        {
+          "section": "narrator",
+          "why": "Davis and Tony on the same line at once, Tony 20 ms late, a touch left, x.8"
+        },
+        {
+          "section": "curtain",
+          "why": "the faint woman's peeking removed"
+        },
+        {
+          "section": "overlap",
+          "why": "the pitched-down Tony line removed; low_c and far_d sections and their clips deleted"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "ask": "the sections were too long, not the ride; narrator double length, each voice says it twice",
+      "changes": [
+        {
+          "section": "song",
+          "why": "ride back to ~.65 s hits; groove 4>2 bars, trumpet 6>4 (the gaps between comments closed), curtain 4>2"
+        },
+        {
+          "section": "narrator",
+          "from": 4,
+          "to": 8,
+          "why": "bars: Davis twice, then Tony twice, taking turns rather than doubled"
+        }
+      ]
+    }
+  ]
+}
