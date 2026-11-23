@@ -1,0 +1,232 @@
+// tongues: six synthetic voices chanting. An experiment: Azure TTS makes the syllables, the patterns do the singing.
+// Hypnotic, C minor pentatonic, 100 bpm. Nothing here is a spoken line: every voice clip is a list of syllables
+// (ah oh ha hey ka dum ya na hoo), one wav per voice in the pack tongues-speech (npm run say), and every hit below is one
+// syllable cut out at its measured onset, tuned to the nearest scale tone (or to a written note) and levelled.
+//   low    Davis and Guy: dum / oh on a 3+3+4+2+4 figure, g2 c3 f2, the floor everything stands on
+//   mid    Andrew: ka ya na in the gaps the low chant leaves, g3 falling to b flat
+//   high   Aria and Guy: ha! hey! as accents, then in the climax a written hook, each syllable at its own pitch
+//   phase  Jenny in threes and Jane/Aria in fives against the sixteen: they come round every 3 and 5 bars
+//   choir  four voices holding oh (C minor 7) and ah (B flat), a few ms apart and spread; Jane an octave down under them
+//          in the quiet sections. The choir's is the only reverb: one convolver, the rest are delays or dry
+//   calls  four short phrases at their own pitch: 'oh ma na hey' answered by 'hoo na na hey', 'ka ta ka, ta ka dum' as the fill
+// Under them: a CR-78, a round bass on c2, a woodblock. (A kalimba in the climax cost ten points of audio-thread load and dropouts in the trace; it is gone.) Mute the voices and little is left:
+// that is the point of this one.
+
+const CPS = 100 / 240;
+// per file: its seconds; per syllable: [begin, end (fractions of the file), midi pitch as spoken, rms dB, ms from the cut to the vowel]
+// measured from the wavs (onset = first 5 ms block within 26 dB of the syllable's peak; Azure's own word starts run 50-100 ms early)
+const T = {
+  tg_davis: { sec: 15.625, ah: [0.00646, 0.024, 47.91, -15.8, 49], oh: [0.10294, 0.12032, 47.53, -16.9, 24], ha: [0.2055, 0.2264, 54.03, -17.4, 49], hey: [0.30886, 0.32896, 54.92, -13.7, 19], ka: [0.41126, 0.43168, 51.84, -17.6, 54], dum: [0.51014, 0.53552, 42.93, -19, 59], ya: [0.61814, 0.63744, 48.38, -17.6, 49], na: [0.71942, 0.74208, 50.21, -19.2, 59], hoo: [0.82374, 0.84176, 53.12, -13.3, 14] },
+  tg_guy: { sec: 16.700, ah: [0.00665, 0.02695, 53.44, -21.9, 19], oh: [0.10231, 0.12111, 45.50, -22.4, 14], ha: [0.19991, 0.22126, 58.86, -20.5, 29], hey: [0.29781, 0.32335, 58.33, -23.1, 29], ka: [0.40096, 0.42665, 56.55, -21.4, 74], dum: [0.5041, 0.52784, 41.31, -21.1, 29], ya: [0.6071, 0.63458, 55.79, -21.1, 99], na: [0.71593, 0.74371, 53.96, -20.5, 94], hoo: [0.82012, 0.84311, 42.09, -21.9, 34] },
+  tg_andrew: { sec: 9.713, ah: [0.0104, 0.03372, 50.47, -16.5, 29], oh: [0.11027, 0.13436, 52.93, -15.1, 34], ha: [0.21477, 0.23938, 54.09, -17.7, 49], hey: [0.31773, 0.33822, 55.64, -18.1, 29], ka: [0.41632, 0.44273, 54.99, -18.1, 64], dum: [0.51876, 0.5444, 51.72, -17.9, 24], ya: [0.62353, 0.64813, 45.54, -17.7, 54], na: [0.72546, 0.75367, 45.71, -16, 34], hoo: [0.83537, 0.85586, 54.72, -15.9, 9] },
+  tg_jenny: { sec: 15.750, ah: [0.0061, 0.02635, 50.10, -19.1, 14], oh: [0.10546, 0.13016, 50.86, -16.7, 9], ha: [0.21419, 0.23175, 53.51, -19.1, 49], hey: [0.31149, 0.33095, 52.50, -19.5, 49], ka: [0.41276, 0.43397, 50.70, -19.8, 79], dum: [0.51387, 0.53746, 52.87, -19.1, 24], ya: [0.62022, 0.6381, 52.81, -18.3, 44], na: [0.71959, 0.74143, 52.07, -18.1, 39], hoo: [0.8253, 0.84397, 52.99, -17.8, 14] },
+  tg_jane: { sec: 17.563, ah: [0.0049, 0.03502, 51.84, -19.1, 29], oh: [0.10511, 0.13438, 53.63, -17.7, 24], ha: [0.20831, 0.23715, 53.83, -17.7, 129], hey: [0.30924, 0.34406, 54.30, -21.4, 129], ka: [0.415, 0.4447, 51.84, -20.8, 144], dum: [0.51564, 0.54463, 52.68, -19.2, 34], ya: [0.61486, 0.64, 52.56, -20.1, 49], na: [0.70967, 0.73893, 52.50, -18.5, 89], hoo: [0.81144, 0.8437, 55.42, -21.1, 129] },
+  tg_aria: { sec: 16.462, ah: [0.00583, 0.02536, 51.54, -19.4, 19], oh: [0.10378, 0.12346, 52.74, -19.4, 24], ha: [0.20355, 0.22248, 62.48, -17.3, 54], hey: [0.30333, 0.32787, 54.64, -20.5, 34], ka: [0.40598, 0.43295, 52.25, -18.5, 89], dum: [0.51092, 0.53941, 51.89, -18.8, 69], ya: [0.61707, 0.64343, 56.70, -18.3, 124], na: [0.72261, 0.7511, 53.12, -18.1, 99], hoo: [0.8321, 0.85361, 54.92, -18.3, 29] },
+  tp_davis: { sec: 1.850, all: [0.05730, 0.53243, 48.72, -17.1, 0] },   // "oh ma na hey" 0.88 s
+  tp_andrew: { sec: 1.820, all: [0.05824, 0.42033, 48.77, -17.6, 0] },   // "ya ka dum ya" 0.66 s
+  tp_aria: { sec: 1.938, all: [0.06761, 0.56129, 55.21, -17.9, 0] },   // "hoo na na hey" 0.96 s
+  tp_guy: { sec: 2.750, all: [0.04218, 0.69545, 50.05, -23.5, 0] },   // "ka ta ka, ta ka dum" 1.80 s
+  tl_andrew: { sec: 7.120, ah: [0.02568, 0.11025, 52.99, -16.9, 24], oh: [0.25365, 0.31454, 52.43, -14.4, 49] },
+  tl_davis: { sec: 12.604, ah: [0.01562, 0.07169, 45.95, -16.9, 49], oh: [0.22255, 0.27664, 49.16, -17.3, 44] },
+  tl_jane: { sec: 15.015, ah: [0.01212, 0.10039, 52.50, -20, 34], oh: [0.22769, 0.30709, 55.42, -19.4, 39] },
+  tl_jenny: { sec: 12.764, ah: [0.01464, 0.0635, 53.12, -19.5, 19], oh: [0.2156, 0.26474, 55.35, -16.8, 24] },
+};
+const FILE = { d: 'tg_davis', g: 'tg_guy', a: 'tg_andrew', j: 'tg_jenny', n: 'tg_jane', r: 'tg_aria', dl: 'tl_davis', al: 'tl_andrew', nl: 'tl_jane', jl: 'tl_jenny', pd: 'tp_davis', pa: 'tp_andrew', pr: 'tp_aria', pg: 'tp_guy' };
+const PENT = [0, 3, 5, 7, 10];
+const near = (m) => { let best = 0; for (let k = 24; k < 96; k++) if (PENT.includes(k % 12) && Math.abs(k - m) < Math.abs(best - m)) best = k; return best; };
+// chant('d_dum ~ a_ka_55', len): tokens are voice_syllable or voice_syllable_midi. Each hit becomes its region of the voice's
+// file, sped to the nearest pentatonic tone (or the written midi note; a phrase, 'all', stays as spoken), brought to -18 dB rms (by at most +1 dB: Guy is quiet with sharp consonants, and more put his peaks at full scale),
+// cut to len seconds if given, and moved early by its consonant so the vowel, not the breath before it, lands on the step.
+const chant = (pat, len) => {
+  const p = (typeof pat === 'string' ? s(pat) : pat).withHap((h) => h.withValue((v) => {
+    const [f, syl, to] = v.s.split('_'), file = FILE[f], t = T[file], [b, e, midi, db, vow] = t[syl], t0 = h.whole.begin.valueOf();
+    const speed = to ? 2 ** ((+to - midi) / 12) : syl === 'all' ? 1 : 2 ** ((near(midi) - midi) / 12);
+    // a section's very first step cannot start before the section does: there the consonant is trimmed to 15 ms instead
+    const trim = t0 === 0 ? Math.max(0, vow - 15) / 1000 / t.sec : 0;
+    return { s: file, begin: b + trim, end: len ? Math.min(e, b + trim + len * speed / t.sec) : e, speed, gain: Math.min(1.1, 10 ** ((-18 - db) / 20)), off: trim ? 0 : Math.min(15, Math.round(vow / speed / 10)), t0 };
+  }));
+  return stack(...Array.from({ length: 16 }, (_, k) => p.filterValues((v) => v.off === k).early(k * .01 * CPS)));
+};
+// applied to every section below: its voices drop the one hit the move-early wraps round from the section's own first
+// step onto its last (the sections stay plain section() calls, which is how the page finds them)
+const unwrap = ({ name, cycles, spec }) => section(name, cycles, Object.fromEntries(Object.entries(spec).map(([k, v]) => [k, /^raw/.test(k) ? { ...v, pattern: v.pattern.filterValues((x) => x.t0 !== cycles) } : v])));
+const B = (...bars) => '<' + bars.map((b) => '[' + b + ']').join(' ') + '>';
+
+// ---- the low chant: dum . . oh . . dum . . . oh . dum . . .  (3+3+4+2+4), Davis with Guy answering on the fourth beat
+const L0 = 'd_dum ~ ~ ~ ~ ~ d_dum ~ ~ ~ d_oh ~ ~ ~ ~ ~';
+const D1 = 'd_dum ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~';   // one dum, the bar left open for an answer
+const L1 = 'd_dum ~ ~ d_oh ~ ~ d_dum ~ ~ ~ d_oh ~ g_dum ~ ~ ~';
+const L2 = 'd_dum ~ ~ d_oh ~ ~ d_dum ~ ~ d_ah ~ ~ g_dum ~ g_oh ~';
+const L3 = 'd_dum ~ ~ d_oh ~ ~ d_dum ~ d_na ~ d_oh ~ g_dum ~ ~ d_ya';
+const L4 = 'd_dum ~ d_dum d_oh ~ ~ d_dum ~ d_na ~ d_oh ~ g_dum g_dum ~ g_oh';   // the climax's push
+// what the low chant is put through. Change the one word in LOWFX to try another:
+//   crowd  three of him, a hair apart in pitch and time, spread across the stage: a group murmuring, not one clear man
+//   far    one man at the back of a hall (a second reverb: a few points of load)
+//   phone  band-passed round 900 Hz: small, boxed, no chest and no consonant edge
+//   vowel  through a formant filter on 'o': everything he says leans toward oh
+//   plain  as recorded
+const LOWFX = 'crowd';
+const LOWS = {
+  crowd: (p) => stack(p, p.mul(speed(1.012)).late(.018 * CPS).pan(.2), p.mul(speed(.988)).late(.031 * CPS).pan(.8)).mul(gain(.62)).hpf(70).lpf(4500),
+  far:   (p) => p.hpf(120).lpf(4000).room(.7).size(5),
+  phone: (p) => p.bpf(900).bpq(1.2),
+  vowel: (p) => p.hpf(70).vowel('o'),
+  plain: (p) => p.hpf(70).lpf(5000),
+};
+const low = (p, level = .3) => ({ level, pattern: LOWS[LOWFX](chant(p, .3)) });   // under the others: a floor, not a lead
+// ---- the mid chant: Andrew in the low chant's gaps (it sounds on steps 0 3 6 10 12; he never does)
+const M1 = '~ ~ a_ka ~ a_ya ~ ~ a_ka ~ a_na ~ a_ka ~ ~ a_ya ~';
+const M2 = '~ a_ka a_ka ~ a_ya ~ ~ a_ka ~ a_na ~ ~ ~ a_hoo a_ka a_ya';
+const M3 = '~ ~ a_ka ~ a_ya ~ ~ ~ ~ a_na ~ a_ka ~ ~ ~ ~';
+const M4 = '~ a_ka ~ ~ a_ya a_ya ~ a_ka ~ ~ ~ a_ka ~ a_hoo ~ a_na';
+const mid = (p, level = .7) => ({ level, position: -.3, pattern: chant(p, .2).hpf(120).delay(.13).delaytime(.45).delayfeedback(.3) });
+// ---- high accents: Aria's ha (it sits at e flat 4 as spoken), Guy's ha under it, a hey
+const H1 = '~ ~ ~ ~ ~ ~ ~ r_ha ~ ~ ~ ~ ~ ~ ~ ~';
+const H2 = '~ ~ ~ ~ ~ ~ ~ r_ha ~ ~ ~ ~ ~ r_hey ~ r_ha';
+const H3 = '~ ~ ~ ~ ~ g_ha ~ r_ha ~ ~ ~ ~ ~ ~ ~ ~';
+const H4 = '~ ~ r_hey ~ ~ ~ ~ ~ ~ ~ ~ g_ha ~ r_ha r_ha ~';
+// the hook, two bars: e flat, e flat, b flat, g ... b flat / e flat, b flat, e flat, g, f. No syllable is moved more than
+// a semitone: the tune is made by choosing whose syllable already sits on the note (Aria's ha is e flat 4, Guy's hey and
+// ha are b flat 3, Aria's hoo is g3, her na is f3). Repitching one ha up and down the scale sounded autotuned.
+const K1 = 'r_ha ~ ~ r_ha ~ ~ g_ha ~ r_hoo ~ ~ ~ ~ ~ g_hey ~';
+const K2 = 'r_ha ~ ~ g_hey ~ ~ r_ha ~ r_hoo ~ ~ ~ r_na ~ ~ ~';
+const K3 = 'r_ha ~ ~ r_ha ~ ~ g_ha ~ r_hoo ~ r_ha ~ g_hey ~ r_ha r_ha';   // the last time round, pushed
+const high = (p, level = .7) => ({ level, position: .35, pattern: chant(p, .25).hpf(200).delay(.2).delaytime(.225).delayfeedback(.25) });
+// ---- phasing: three steps and five steps against sixteen
+const threes = (level = .32) => ({ level, position: -.7, pattern: chant(s('j_ka j_na ~').fast(16 / 3), .14).hpf(300) });
+const fives = (level = .32) => ({ level, position: .7, pattern: chant(s('n_dum ~ ~ r_ya ~').fast(16 / 5), .16).hpf(250) });
+// The choir is the first part of every section it is in, on purpose: parts take their audio bus in the order they are
+// written, the reverb lives on the bus, and a reverb on a new bus is built at the moment it is first used. With the choir
+// on a different bus per section the page built a four-second reverb at the start of tongues and of embers, live, and
+// crackled there (the offline render never showed it).
+// ---- the choir: one long vowel per voice, a chord between them, each a few ms late and in its own place
+const choirOf = (p, under) => stack(
+  chant(p.replaceAll('X', 'dl').replaceAll('oh_N', 'oh_48').replaceAll('ah_N', 'ah_46')).pan(.5),
+  chant(p.replaceAll('X', 'al').replaceAll('oh_N', 'oh_51').replaceAll('ah_N', 'ah_53')).pan(.25).late(.012 * CPS),
+  chant(p.replaceAll('X', 'nl').replaceAll('oh_N', 'oh_55').replaceAll('ah_N', 'ah_50')).pan(.8).late(.021 * CPS),
+  chant(p.replaceAll('X', 'jl').replaceAll('oh_N', 'oh_58').replaceAll('ah_N', 'ah_53')).pan(.1).late(.007 * CPS),
+  // Jane's oh an octave down: g2, one bar long, the strange floor of the quiet sections, in the choir's own reverb
+  ...(under ? [chant(under).lpf(1800).mul(gain(1.25))] : []),
+).hpf(90).room(.5).size(4);
+const choir = (p, level = .4, under) => ({ level, pattern: choirOf(p, under) });
+// ---- calls: whole phrases as spoken, on the bar
+const call = (p, level = .8, position = 0) => ({ level, position, pattern: chant(p).hpf(100).delay(.25).delaytime(.3).delayfeedback(.35) });
+// ---- four backgrounds: organ, horns, wind, rumble
+const extra = (level, position, pattern) => ({ level, position, pattern });
+// a low church organ holding the root, fifth and octave under the choir
+const organ = (p = '<[c2,g2,c3]>', level = .3) => extra(level, 0, note(p).s('gm_church_organ').clip(1).attack(.3).release(.6).lpf(1100));
+// long horns: a rising fifth held most of two bars, then two bars of nothing, off to the right with a long echo
+const HORN = '<[c3@5 g3@3] [g3@6 ~@2] ~ ~>';
+const horns = (p = HORN, level = 1) => extra(level, .3, note(p).s('gm_french_horn').clip(1).attack(.2).release(.7).lpf(2000).delay(.3).delaytime(.6).delayfeedback(.4));
+// wind: filtered noise, its colour drifting over eight bars, each quarter-bar fading into the next
+// rampBars: fade in from nothing over that many bars from the section's start
+const wind = (level = .4, rampBars = 0) => extra(level, 0, (rampBars ? (p) => p.mul(gain(saw.slow(rampBars).range(.03, 1))) : (p) => p)(s('pink').struct('x*4').clip(1.6).attack(.3).release(.5).hpf(350).lpf(sine.range(500, 2600).slow(8)).pan(sine.range(.25, .75).slow(11))));
+// the rumble of something large passing overhead: a low saw with a slow engine wobble under brown noise that opens and closes
+const rumble = (level = .13) => extra(level, 0, stack(
+  note('c2').s('sawtooth').clip(1.2).attack(.4).release(.6).lpf(sine.range(110, 260).slow(6)).vib(.3).vibmod(.35),
+  s('brown').struct('x*4').clip(1.6).attack(.3).release(.5).lpf(sine.range(140, 520).slow(8)).pan(sine.range(.15, .85).slow(8)).gain(.8),
+));
+// ---- the band
+const bassOf = (p, cut = 380) => note(p).s('triangle').lpf(cut).attack(.005).release(.15).clip(1.5);
+const BA = '<[c2 ~ ~ ~ ~ ~ c2 ~ ~ ~ ~ ~ eb2 ~ ~ c2] [c2 ~ ~ ~ ~ ~ c2 ~ ~ ~ ~ ~ f2 ~ eb2 ~]>';
+const BB = '<[c2 ~ ~ c2 ~ ~ c2 ~ ~ ~ c3 ~ eb2 ~ ~ c2] [c2 ~ ~ c2 ~ ~ c2 ~ ~ g2 ~ ~ f2 ~ eb2 bb1]>';
+const bass = (p = BA, level = .4, cut = 380) => ({ level, pattern: bassOf(p, cut) });
+const kit = (template, level = .5) => ({ level, brightness: .4, articulation: .6, fill: false, template });
+const KICK = { bd: 'x.........x.....' };
+const WALK = { bd: 'x.....x...x.....', hh: 'o.x.o.xoo.x.o.x.' };
+const FULL = { bd: 'x.....x...x....o', sd: '....o.......x...', hh: 'o.xoo.xoo.xoo.xo' };
+const PEAK = { bd: 'x..x..x...x...x.', sd: '....x..o....x..o', hh: 'xoxoxoxoxoxoxoxo' };
+const block = (level = .8) => ({ sound: 'woodblock:5', rhythm: '..x.....x..x..x.', level, position: .45, space: .5 });
+
+song({ bpm: 100, key: 'C:minor', seed: 11, kit: 'RolandCompurhythm78', packs: ['tongues-speech'], visual: { world: 'dish', composition: 'single' } }, [
+  // four bars of call and answer: the low crowd says the figure (bars 1 and 3), Andrew answers alone over a single dum
+  // (bars 2 and 4); the choir on bars 1 and 3, one ha! before the door opens; two bars in, the kick and the bass
+  section('intro', 4, { role: 'establish', progression: 'i',
+    raw7: choir('<X_oh_N ~ X_ah_N ~>', .34),
+    raw:  low(B(L1, D1, L2, D1), .28),
+    raw3: mid(B('~', M1, '~', M4), .42),
+    raw4: high(B('~', '~', '~', H2), .5),
+    raw8: { ...bass(BA, .27, 260), enter: 2 },
+    raw14: wind(.4, 4), raw15: rumble(.1),
+    drums: { ...kit(KICK, .32), enter: 2 },
+  }),
+
+  // the second voice arrives in the gaps; bass, hats; the first call
+  section('gather', 8, { role: 'develop', progression: 'i',
+    raw:  low(B(L1, L2, L1, L3)),
+    raw3: mid(B(M3, M3, M1, M1, M1, M2, M1, M4)),
+    raw4: high(B('~', '~', '~', H1, '~', H1, '~', H2), .5),
+    raw5: call('<~ ~ ~ ~ pd_all ~ ~ ~>', .8, -.3),
+    raw8: bass(BA, .4, 300),
+    raw14: wind(.3),
+    drums: kit(WALK, .3),
+  }),
+
+  // the chant: three layers interlocking, call and answer every four bars, threes creeping in on the left
+  section('chant', 16, { role: 'develop', progression: 'i',
+    raw:  low(B(L1, L2, L1, L3)),
+    raw3: mid(B(M1, M2, M1, M4)),
+    raw4: high(B(H1, H2, H3, H4)),
+    raw5: call('<pd_all ~ ~ ~ pd_all ~ ~ [~ pg_all ~ ~]>', .8, -.3),          // the call, from the left
+    raw11: call('<~ ~ [~ ~ pr_all ~] ~ ~ ~ [~ ~ pr_all ~] ~>', .8, .45),      // the answer, from the right
+    raw6: { ...threes(.3), enter: 8 },
+    raw8: bass(BA),
+    raw14: wind(.3), raw15: rumble(.1),
+    drums: kit(FULL, .31),
+    perc: block(),
+  }),
+
+  // hollow: the kit stops. The choir holds oh, then ah; the drone under it; one dum a bar; Jenny's threes whisper on
+  section('hollow', 8, { role: 'breakdown', progression: 'i',
+    raw7: choir('<X_oh_N X_oh_N X_ah_N [X_ah_N ~ ~ X_ah_N]>', .45, '<nl_oh_43 ~>'),
+    raw:  low(B('d_dum ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~', 'd_dum ~ ~ ~ ~ ~ ~ ~ ~ ~ d_oh ~ ~ ~ ~ ~'), .3),
+    raw6: threes(.22),
+    raw4: high('<~ ~ ~ [~ ~ ~ ~ ~ ~ ~ r_hoo_55 ~ ~ ~ ~ ~ ~ ~ ~]>', .5),
+    raw8: bass('<c2 c2 bb1 bb1>', .19, 240),
+    raw12: organ('<[c2,g2,c3] [c2,g2,c3] [bb1,f2,bb2] [bb1,f2,d3]>', .3),
+    raw13: { ...horns(), enter: 4 },
+    raw14: wind(), raw15: rumble(.12),
+  }),
+
+  // rise: the floor returns, the fives join the threes, the choir starts to stab, the kit climbs back in
+  section('rise', 8, { role: 'build', progression: 'i',
+    raw7: choir('<~ ~ ~ [X_oh_N ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~]>', .4),
+    raw:  low(B(L1, L2, L1, L3), .27),
+    raw3: { ...mid(B(M3, M1, M1, M2, M1, M2, M4, M4)), enter: 2 },
+    raw6: threes(.3),
+    raw9: { ...fives(.3), enter: 2 },
+    raw4: { ...high(B(H1, H2, H3, 'r_ha ~ ~ ~ r_ha ~ ~ ~ r_ha ~ g_ha ~ r_ha g_hey r_ha r_ha'), .58), enter: 4 },
+    raw5: call('<~ ~ ~ ~ ~ ~ ~ [~ pg_all ~ ~]>', .48),
+    raw8: bass(BA),
+    raw12: { ...organ(), enter: 4 }, raw13: { ...horns('<~ ~ ~ ~ ~ ~ [c3@5 g3@3] [g3@8]>'), enter: 4 }, raw15: rumble(.14),
+    drums: { ...kit(WALK, .35), enter: 4 },
+    fx: { riser: 4, level: .5 },
+  }),
+
+  // tongues: everything, and the high voices stop accenting and sing the hook
+  section('tongues', 16, { role: 'climax', progression: 'i',
+    raw7: choir(B('X_oh_N ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~', '~ ~ ~ ~ ~ ~ ~ ~ ~ ~ X_ah_N ~ ~ ~ ~ ~'), .38),
+    raw:  low(B(L1, L2, L4, L3, L1, L4, L4, L3)),
+    raw3: mid(B(M1, M2, M4, M2), .48),
+    raw4: high(B(K1, K2, K1, K2, K1, K2, K1, K3), .8),
+    raw6: threes(.38),
+    raw9: fives(.38),
+    raw5: call('<~ ~ ~ [~ ~ pa_all ~] ~ ~ ~ ~ ~ ~ ~ [~ ~ pa_all ~] ~ ~ ~ [~ pg_all ~ ~]>', .7, -.3),
+    raw11: call('<~ ~ ~ ~ ~ ~ ~ [~ ~ pr_all ~] ~ ~ ~ ~ ~ ~ ~ ~>', .78, .45),
+    raw8: bass(BB, .36, 480),
+    raw12: organ('<[c2,g2]@3 [bb1,f2]>', .3), raw13: horns(HORN, 1.1),
+    drums: kit(PEAK, .22),
+    perc: block(.85),
+  }),
+
+  // embers: the kit thins and leaves, the choir and the drone stay, the first man says dum until the end
+  section('embers', 8, { role: 'release', progression: 'i',
+    raw7: choir('<X_oh_N ~ X_ah_N ~ X_oh_N ~ ~ X_oh_N>', .4, '<~ nl_oh_43>'),
+    raw:  low(B(L1, L2, L1, L0, L0, L0, L0, 'd_dum ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~'), .27),
+    raw3: { ...mid(B(M3, M3, M3, M3), .5), exit: 4 },
+    raw4: high('<~ ~ [' + K1 + '] ~ ~ ~ ~ ~>', .3),
+    raw8: { ...bass(BA, .36, 280), exit: 2 },
+    raw12: organ('<[c2,g2,c3]>', .26), raw13: horns('<[c3@5 g3@3] [g3@6 ~@2] ~ ~ ~ ~ [g3@4 c3@4] [c3@8]>', .85), raw14: wind(), raw15: rumble(.14),
+    drums: { ...kit(KICK, .3), exit: 2 },
+  }),
+].map(unwrap))

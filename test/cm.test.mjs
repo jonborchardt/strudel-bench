@@ -190,3 +190,7 @@ test('a sample part has sliders for its region, spinners for bars and slices, a 
   const paths = controls(`section('a', 4, { sample: { sound: 'loop', begin: .1, end: .9, bars: 2, slices: 8, pattern: '0 1', stretch: true } })`).map((c) => c.path);
   assert.deepEqual(paths, ['section(1)', 'sample.sound', 'sample.begin', 'sample.end', 'sample.bars', 'sample.slices', 'sample.stretch']);
 });
+
+test('a method named like an Object.prototype member (valueOf, toString) is not looked up in the schema', () => {
+  assert.deepEqual(controls('const t = h.whole.begin.valueOf(); const u = toString(1); const k = x.constructor(2);'), []);
+});

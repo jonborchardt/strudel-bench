@@ -92,8 +92,9 @@ export function findControls(tree, text, schema, root = null) {
         if (spec) add(n.node.lastChild, spec, keys.join('.'));
       } else if (n.name === 'CallExpression') {
         const fn = calleeOf(n.node, text), m = methodOf(n.node, text);
-        if (fn && schema.calls?.[fn]) args(n.node, schema.calls[fn].args, fn);
-        else if (m && schema.methods?.[m]) args(n.node, schema.methods[m].args, m);
+        // own keys only: a song calling .valueOf() or .toString() must not find Object.prototype's in the schema
+        if (fn && Object.hasOwn(schema.calls ?? {}, fn)) args(n.node, schema.calls[fn].args, fn);
+        else if (m && Object.hasOwn(schema.methods ?? {}, m)) args(n.node, schema.methods[m].args, m);
       } else if (n.name === 'VariableName' && signal && schema.signals.includes(text.slice(n.from, n.to))) {
         const inh = enclosingNumber(n.node, text, hll);
         if (inh) add(n.node, signal, `${inh.path}.signal`);

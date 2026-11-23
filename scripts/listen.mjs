@@ -50,7 +50,7 @@ export async function showData(file, { cycles = PLAIN_CYCLES } = {}) {
   try { pat = await (await evaluate(src, transpiler)).pattern; }
   finally { Object.assign(globalThis, was); }
   const ir = pat?.strudel;
-  const score = ir ? composeVisual(ir) : { ...fallbackScore(plainCps ?? 0.5), total: cycles };
+  const score = { ...(ir ? composeVisual(ir) : { ...fallbackScore(plainCps ?? 0.5), total: cycles }), name: name.replace(/\.strudel$/, '') }; // name: for a world that shows it (caseboard's label)
   // streamOf times a plain pattern at its own 0.5 default (it has no song to read a tempo from): scale it onto the
   // tempo the file actually plays at, so event 100 lands where the mp3 has it
   const k = ir ? 1 : 0.5 / score.cps;

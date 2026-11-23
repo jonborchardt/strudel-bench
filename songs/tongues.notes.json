@@ -1,0 +1,185 @@
+{
+  "made": "2026-11-19",
+  "prompt": "An experiment: Microsoft TTS voices as instruments. Six synthetic voices chant syllables; Strudel sets the rhythm, pitch, layering and form.",
+  "requests": [
+    {
+      "date": "2026-11-20",
+      "ask": "Use Microsoft TTS voices as musical instruments in one song built around rhythmic chanting: low, mid and high chant layers with distinct rhythms, an ensemble, call and response, a climax and a breakdown",
+      "changes": [
+        {
+          "section": "song",
+          "why": "voices are syllable lists (ah oh ha hey ka dum ya na hoo) from six Azure voices plus four long-vowel clips and four phrases, pack tongues-speech; each hit is one syllable cut at its measured onset, tuned to the nearest C minor pentatonic tone, levelled to -18 dB rms and moved early by its consonant so the vowel lands on the step (measured 1-20 ms from the grid in the climax render)"
+        },
+        {
+          "section": "tongues",
+          "why": "levels set from the measure: low chant -6.5 dB under the mix, hook -9.5, mid -11, choir -14.5, the threes and fives -19, kit -7, bass -7"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "ask": "intro too sparse and the low dum too loud and clear; the slowed voice in the intro annoying; low chant too much in gather, chant and rise; clipping in tongues and embers",
+      "changes": [
+        {
+          "section": "song",
+          "why": "low chant level .72>.45 and its low-pass 5000>2600 Hz, lower still in the intro, rise and embers: a floor under the other voices, not a lead"
+        },
+        {
+          "section": "intro",
+          "why": "the whole figure from bar one with the whispered threes and two choir chords; the octave-down voice removed here (kept in hollow and embers, inside the choir's reverb)"
+        },
+        {
+          "section": "tongues",
+          "why": "the crackle was audio-thread load (traced 43-58% busy with dropouts): the kalimba and three of four reverbs removed, now 23-24% with none; full-scale peaks were Guy's fill phrase over-boosted by the levelling (capped at +1 dB) and the kit (.38>.27)"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "ask": "raw quieter or darker in every section; intro raw6 annoying; intro half as long",
+      "changes": [
+        {
+          "section": "song",
+          "why": "low chant level .45>.3 and low-pass 2600>1400 Hz in every section"
+        },
+        {
+          "section": "intro",
+          "why": "8 bars > 4, Jenny's threes removed, kick and bass enter at bar 3"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "ask": "intro too boring without raw6; the low-passed raw sounds bad, not muddy: what other effect can we try",
+      "changes": [
+        {
+          "section": "song",
+          "why": "low chant low-pass removed; its treatment is a one-word switch (LOWFX: crowd, far, phone, vowel, plain), set to crowd: three detuned, offset, spread copies"
+        },
+        {
+          "section": "intro",
+          "why": "Andrew's mid chant from bar one and one ha! in bar four"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "ask": "raw3 too much in the intro; maybe call and recall against the raw cluster",
+      "changes": [
+        {
+          "section": "intro",
+          "why": "the low crowd says the figure in bars 1 and 3, the mid chant answers alone in bars 2 and 4 over a single dum; mid level .55>.42"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "ask": "do a final remix; raw4 on tongues is too autotuney, the tone change sounds bad",
+      "changes": [
+        {
+          "section": "tongues",
+          "layer": "raw4",
+          "why": "the hook rewritten so no syllable moves more than a semitone: the tune is made by choosing whose syllable already sits on the note (e flat, b flat, g, f), not by repitching one ha"
+        },
+        {
+          "section": "song",
+          "why": "bass down in every section (it measured 1.5-4 dB under the mix, over the voices); calls from the left and answers from the right as two parts; mid chant under the hook in the climax (.7>.56) with less echo"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "ask": "try epic low organs or wind in the background, long horns like Gladiator, a Blade Runner rumble; be prepared to revert",
+      "changes": [
+        {
+          "section": "song",
+          "why": "a trial behind four switches (EXTRA: organ, horns, wind, rumble): a low church organ under hollow, rise, tongues and embers; long french-horn fifths; filtered-noise wind and a low saw-and-noise rumble in the quiet sections. All four false is the song as it was"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "ask": "keeping the backgrounds; gather and chant should have some wind or other fx; tongues clips",
+      "changes": [
+        {
+          "section": "song",
+          "why": "the four backgrounds kept, their trial switch removed"
+        },
+        {
+          "section": "gather",
+          "why": "wind added; chant wind and a faint rumble added"
+        },
+        {
+          "section": "tongues",
+          "why": "every loud part down about 1.5 dB (hook .88>.76, mid .56>.48, kit .27>.22, bass, choir, impact) and the organ two notes instead of three: peak .92>.80, traced load 40%>31-32%"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "ask": "intro wind needs to ramp in; tongues clips a lot, at the start; embers clips at the start",
+      "changes": [
+        {
+          "section": "intro",
+          "why": "wind fades in over the four bars"
+        },
+        {
+          "section": "song",
+          "why": "the choir is the first part of every section it is in, so its reverb stays on one bus (it was on five, and a four-second reverb was being built live at the start of tongues and embers); the climax's impact hit, which built another, removed"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "ask": "do a final mix",
+      "changes": [
+        {
+          "section": "hollow",
+          "why": "bass .28>.19 and rumble .18>.12: the organ owns the low end there (bass and organ now both 7 dB under the mix, the choir 3.4)"
+        },
+        {
+          "section": "tongues",
+          "why": "choir, threes, fives, calls, organ and horns up so the climax stands over chant (-17.8 against -18.5 dB rms) without raising its peaks (.79)"
+        },
+        {
+          "section": "rise",
+          "why": "the last-bar flurry and the fill down: peak .90>.83; gather kit .34>.3; intro bass and rumble down"
+        }
+      ]
+    }
+  ],
+  "youtube": {
+    "url": "",
+    "title": "tongues — hypnotic chant for six synthetic voices: text-to-speech syllables as instruments",
+    "description": "Hypnotic experimental electronic chant in C minor at 100 BPM: six text-to-speech voices used as instruments, over a CR-78 drum machine, a round synth bass, a low church organ and long horns. Polyrhythmic vocal patterns, call and response, a choir, wind. In the vein of ritual ambient, minimalist phasing and vocal sample music.\nInstrumental chant, 2:43. Nobody speaks a sentence: the voices only say ah, oh, ha, hey, ka, dum, ya, na, hoo.\n\nAn experiment: the speech synthesizer makes the syllables and the patterns do the singing. Each of six voices recorded one list of syllables; every hit in the song is one syllable cut out at its measured onset, nudged to the nearest note of the scale and placed so its vowel lands on the beat. A low crowd murmurs dum and oh on a 3+3+4+2+4 figure. A second voice answers ka, ya, na only in the gaps the first leaves. High voices throw ha! and hey! as accents, and in the climax they become a tune made by choosing whose syllable already sits on each note, so nothing is audibly repitched. Two more voices whisper in threes and in fives against the sixteen, coming round every three and five bars. Four voices hold long vowels as a choir, C minor seven and B flat, and one of them, slowed an octave, lies under the quiet sections. Short invented phrases call from the left and are answered from the right. Half way through the kit stops and the choir, the organ and the wind have the room; then everything returns.\n\nVoices: synthetic speech (Azure AI Speech), syllable lists and four short invented phrases; nobody's recorded voice is in it. Kit: a Roland CompuRhythm CR-78 from the public Strudel drum-machine pack. Organ and horns: General MIDI soundfonts. Bass, wind and rumble: Strudel's own synths and noise.\n\nChapters\n0:00 Intro — the low crowd and one answering voice, the wind coming in\n0:11 Gather — the second voice in the gaps, bass and hats, the first call\n0:30 Chant — three layers interlocking, call from the left, answer from the right\n1:08 Hollow — the kit stops: choir, organ, a slowed voice, long horns\n1:27 Rise — threes and fives, the floor returns\n1:47 Tongues — everything, and the high voices sing the hook\n2:25 Embers — choir, organ and horns; the first voice says dum until the end\n\nPlay and edit this song in your browser at jonborchardt.github.io/strudel-bench — press play, drag a slider, change a note, hear it immediately. Nothing to install. \n\nEvery song here is a text file. This one is songs/tongues.strudel in the repo, along with the harness that plays it:\nhttps://github.com/jonborchardt/strudel-bench\n\nstrudel-bench is a live-coding harness where a song is a text file written in a high-level language: parts, sections, and twelve musical axes (density, brightness, weight, space, articulation and so on) that a phrase like \"darker and more spacious\" can move. Most of the code and the songs were written by coding agents working from a written spec, in the spirit of my blog, \"always shippable, always improving\":\nhttps://jonborchardt.github.io/blog/\n\nThe video is not a screen recording. It is generated from the song itself: every hit in the music drives the animation, and the world it plays in is chosen from the song's own musical features.\n\nBuilt on Strudel, the JavaScript port of TidalCycles: https://strudel.cc\nSamples come from the public Strudel packs, each under its own license: https://strudel.cc/learn/samples/",
+    "tags": [
+      "experimental electronic",
+      "vocal chant",
+      "ritual ambient",
+      "polyrhythm",
+      "minimalism",
+      "phasing",
+      "hypnotic",
+      "text to speech",
+      "AI voice",
+      "vocal samples",
+      "choir",
+      "church organ",
+      "french horn",
+      "CR-78",
+      "C minor",
+      "100 bpm",
+      "generative music",
+      "live coding",
+      "strudel",
+      "tidalcycles",
+      "creative coding",
+      "music video"
+    ],
+    "hashtags": [
+      "#experimentalmusic",
+      "#chant",
+      "#livecoding"
+    ]
+  }
+}
