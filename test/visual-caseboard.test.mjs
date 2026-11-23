@@ -50,11 +50,11 @@ test('every job: a snare pins something up, a melody note ties yarn, the bass pl
   const g = await ready;
   const score = composeVisual(song(g));
   const fresh = () => createPerformance(caseboard, score).state;
-  const mid = clockOf(score, 2), one = (evs, st = fresh()) => { caseboard.step(st, STEP, evs, mid); return st; };
+  const mid = clockOf(score, 0.4), one = (evs, st = fresh()) => { caseboard.step(st, STEP, evs, mid); return st; };
   assert.equal(fresh().items.length, START, 'the board opens with a map and one suspect');
   const sn = one([{ ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }]);
   assert.equal(sn.items.length, START + 1, 'the snare pins one');
-  for (let k = 0; k < 3; k++) one([{ ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }], sn); // the board opens with a map and a suspect: pin up some evidence to tie
+  for (let k = 0; k < 4; k++) { for (let i = 0; i < 30; i++) caseboard.step(sn, STEP, [], mid); one([{ ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }], sn); } // the board opens with a map and a suspect: pin up some evidence to tie, one thing at a time
   for (let i = 0; i < 60; i++) caseboard.step(sn, STEP, [], mid);
   assert.ok(sn.items.every((i) => i.st === 'on'), 'pinned');
   const mel = one([{ ...base, layer: 'melody', kind: 'melody', note: 67 }], sn);
@@ -93,4 +93,32 @@ test('a plain pattern (no song) runs on the fallback score', async () => {
   const [h] = g.note('c4').queryArc(0, 1);
   p.push(eventOf(h, null, null, 0.1)); p.advance(0, 0); p.advance(0.5, 0.25);
   p.draw(ctxStub(), 320, 180);
+});
+
+test('the story: shared facts, a decoy circled then cleared by a note and crossed out first, yarn re-run, a decisive link, pinholes; one hand at a time', async () => {
+  const g = await ready;
+  const score = composeVisual(song(g)), st = createPerformance(caseboard, score).state;
+  const f = st.facts;
+  assert.equal(new Set(f.names).size, SUSPECTS); assert.ok(f.plate && f.place && f.sum && f.tmin > 0, 'a case is a handful of facts the papers share');
+  assert.notEqual(st.decoy, st.culprit);
+  let prev = null;
+  const to = (c0, c1) => { for (let c = c0; c < c1; c += STEP * score.cps) { const k = clockOf(score, c, prev); caseboard.step(st, STEP, [], k); prev = k; } };
+  to(0, score.total * 0.5);
+  const decoy = st.items.find((i) => i.who === st.decoy);
+  assert.ok(st.marks.some((m) => m.id === decoy.id && m.kind === 'circle'), 'the false lead is circled');
+  assert.equal(st.dead.length, 0);
+  assert.ok(st.items.every((i) => i.kind === 'map' || i.kind === 'times' || i.who >= 0 || (i.about >= 0 && i.fact >= 0 && i.fact < 4)), 'every piece of evidence is about a suspect and a fact');
+  to(score.total * 0.5, score.total * 0.7);
+  assert.ok(st.dead[0] === st.decoy && st.dead.length <= 2, 'the decoy goes first');
+  assert.ok(st.items.some((i) => i.role === 'exon' && i.word), 'after a note that clears them');
+  assert.ok(st.marks.some((m) => m.id === decoy.id && m.kind === 'x'));
+  to(score.total * 0.7, score.total * 0.93);
+  assert.equal(st.key, 1); assert.ok(st.yarn.some((y) => y.x === 1) && st.marks.some((m) => m.kind === 'box'), 'two of the culprit\'s papers tied and boxed');
+  assert.ok(st.yarn.every((y) => st.items.some((i) => i.id === y.a) && st.items.some((i) => i.id === y.b)), 'no string hangs from nothing');
+  caseboard.step(st, STEP, [], clockOf(score, 0.01, prev)); // the song comes round: the case is taken down
+  assert.ok(st.holes.length > 0 && st.holes.length <= 40, 'what is taken down leaves its pinholes, and they are bounded');
+  // one hand: a snare while something is being done rattles the board instead of pinning another thing up
+  const busy = createPerformance(caseboard, score).state, sn = { ...base, layer: 'drums', kind: 'drums', voice: 'sd', role: 'impact' }, mid = clockOf(score, 2);
+  caseboard.step(busy, STEP, [sn, sn, sn], mid);
+  assert.equal(busy.items.length, START + 1);
 });
