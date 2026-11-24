@@ -446,7 +446,7 @@
   const vdebug = new URLSearchParams(location.search).get('vdebug'); // ?vdebug draws the overlay; ?vdebug=drums (bass, melody, pad, ...) also solos that kind's events
   const stage = mountStage($('stagebox'), $('stage'), { debug: vdebug !== null, solo: vdebug || null, clock: () => {
     const n = repl ? repl.scheduler.now() - repl.scheduler.latency * repl.scheduler.cps : 0, total = Number($('pos').max);
-    return { now: strudel.getAudioContext().currentTime, cycle: loop ? toSong(n) : sections.length && total > 0 ? ((n % total) + total) % total : Math.max(0, n) };
+    return { now: strudel.getAudioContext().currentTime, cycle: loop ? toSong(n) : sections.length && total > 0 ? Math.max(0, n) % total : Math.max(0, n) }; // before the start (the first lookahead) is the start: wrapped, it read as the song's last moment, and a world that follows the song's progress (caseboard) played its ending first
   } });
   $('fullscreen').onclick = () => stage.fullscreen();
   // the world picker over the stage: auto (the song's own pick, named once a score exists), any built world alone, or a composition preset (the director,
@@ -468,7 +468,7 @@
   const stepWorld = (by) => { const o = $('world'), n = o.options.length; o.selectedIndex = (o.selectedIndex + by + n) % n; o.onchange(); };
   globalThis.strudelBench.stage = stage; // for headless checks: the running performance's state and clock
   const onsets2 = (ir) => (ir.onsets2 ??= onsetsOf(ir, 2)); // two bars per section, once per evaluated song: the stage's energy and the lint's table read the same numbers
-  const stageScore = (pat) => (pat?.strudel ? composeVisual(pat.strudel, { onsets: onsets2(pat.strudel) }) : fallbackScore(0.5)); // two bars per section: enough for the energy, cheap on a 300-bar song
+  const stageScore = (pat) => ({ ...(pat?.strudel ? composeVisual(pat.strudel, { onsets: onsets2(pat.strudel) }) : fallbackScore(0.5)), name: $('song').value.replace(/\.strudel$/, '') }); // name: the song's, for a world that shows it (caseboard's label) // two bars per section: enough for the energy, cheap on a 300-bar song
   // the master scope: analyser 1 (superdough's, fed by the live pattern) drawn each frame while playing, with the peak
   // held a second and read in dBFS, red at clipping; the first sign of a mix with no headroom without a render
   const scopeEl = $('scope'), sctx = scopeEl.getContext('2d');

@@ -25,7 +25,9 @@
       "coder":    { "base": 0.1,  "complexity": 0.4, "density": 0.4, "tempo": 0.3, "sections": 0.3, "organicness": -0.4, "space": -0.2 },
       "family":   { "base": 0.0,  "melody": 0.3, "sections": 0.3, "drive": 0.2, "complexity": 0.2, "organicness": 0.2 },
       "familywheel": { "base": 0.0, "melody": 0.3, "sections": 0.3, "density": 0.2, "complexity": 0.2, "organicness": 0.2 },
-      "wallpaper": { "base": 0.0, "organicness": 0.4, "space": 0.2, "repetition": 0.3, "sections": 0.2, "aggression": -0.2 }
+      "wallpaper": { "base": 0.0, "organicness": 0.4, "space": 0.2, "repetition": 0.3, "sections": 0.2, "aggression": -0.2 },
+      "caseboard": { "base": 0.0, "sections": 0.4, "tempo": -0.3, "space": 0.3, "melody": 0.3, "brightness": -0.3, "aggression": -0.2 },
+      "crawl":     { "base": 0.0, "aggression": 0.5, "drive": 0.4, "sections": 0.4, "weight": 0.3, "density": 0.2, "brightness": -0.2, "organicness": -0.3 }
     }
   },
   "temperature": { "major": "warm", "minor": "cool", "dorian": "cool", "phrygian": "dim", "lydian": "pale", "mixolydian": "warm", "default": "cool" },
@@ -134,6 +136,14 @@
     "wallpaper": {
       "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 },
       "about": "A repeating ornamental wallpaper that is alive: it breathes with the bass, flips at the drums, and slowly grows into a different pattern, always pulling back toward order."
+    },
+    "caseboard": {
+      "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 },
+      "about": "A detective's evidence board worked over the song: snares pin up photos, maps and notes, the melody runs red yarn and the marker, suspects are crossed out one by one, and the case closes at the end."
+    },
+    "crawl": {
+      "slots": { "impulse": 2, "ground": 1, "line": 2, "counter": 2, "field": 1, "transition": 1 },
+      "about": "A 1993 demon shooter that the song is playing: a sector per section, a door on every bar line that matters, the drums on the trigger, and the level is finished when the song is."
     }
   },
   "themes": {
